@@ -453,6 +453,94 @@ function ToteBag({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   );
 }
 
+function Printer3D({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <rect x={-36} y={-56} width={72} height={10} rx={3} fill={INK} opacity={0.55} />
+      <line x1={-30} y1={-56} x2={-30} y2={14} stroke={INK} strokeWidth={5} opacity={0.55} />
+      <line x1={30} y1={-56} x2={30} y2={14} stroke={INK} strokeWidth={5} opacity={0.55} />
+      <rect x={-34} y={8} width={68} height={10} rx={3} fill={DENIM} />
+      <rect x={-18} y={-40} width={36} height={8} rx={2} fill={MUSTARD} />
+      <rect x={-14} y={-30} width={28} height={7} rx={1.5} fill={TERRACOTTA} opacity={0.9} />
+      <rect x={-11} y={-21} width={22} height={7} rx={1.5} fill={TERRACOTTA} opacity={0.75} />
+      <rect x={-8} y={-12} width={16} height={7} rx={1.5} fill={TERRACOTTA} opacity={0.6} />
+      <circle cx={26} cy={-50} r={7} fill={CREAM} />
+      <circle cx={26} cy={-50} r={7} fill="none" stroke={INK} strokeWidth={1} opacity={0.3} />
+    </g>
+  );
+}
+function LaptopCode({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <path d="M -34 -30 L 34 -30 L 34 16 L -34 16 Z" fill={INK} />
+      <rect x={-28} y={-24} width={56} height={34} rx={2} fill={DENIM} />
+      <line x1={-20} y1={-16} x2={2} y2={-16} stroke={CREAM} strokeWidth={3} strokeLinecap="round" opacity={0.85} />
+      <line x1={-20} y1={-8} x2={14} y2={-8} stroke={MUSTARD_LIGHT} strokeWidth={3} strokeLinecap="round" opacity={0.9} />
+      <line x1={-20} y1={0} x2={-2} y2={0} stroke={CREAM} strokeWidth={3} strokeLinecap="round" opacity={0.7} />
+      <path d="M -40 16 L 40 16 L 46 28 Q 47 32 42 32 L -42 32 Q -47 32 -46 28 Z" fill={TERRACOTTA} />
+    </g>
+  );
+}
+function PottedPlant({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <path d="M -22 20 L -16 60 Q -16 66 -10 66 L 10 66 Q 16 66 16 60 L 22 20 Z" fill={TERRACOTTA} />
+      <ellipse cx={0} cy={20} rx={22} ry={6} fill={RUST} />
+      <path d="M 0 18 Q -6 -14 -26 -30" fill="none" stroke={OLIVE} strokeWidth={5} strokeLinecap="round" />
+      <path d="M 0 18 Q 8 -18 30 -26" fill="none" stroke={OLIVE} strokeWidth={5} strokeLinecap="round" />
+      <path d="M 0 18 Q 0 -30 0 -46" fill="none" stroke={SAGE} strokeWidth={5} strokeLinecap="round" />
+      <ellipse cx={-26} cy={-32} rx={13} ry={8} fill={SAGE} transform="rotate(-30 -26 -32)" />
+      <ellipse cx={30} cy={-28} rx={13} ry={8} fill={OLIVE} transform="rotate(25 30 -28)" />
+      <ellipse cx={0} cy={-48} rx={11} ry={8} fill={SAGE} />
+    </g>
+  );
+}
+function WateringCan({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <path d="M -20 -6 L -18 24 Q -18 30 -12 30 L 16 30 Q 22 30 22 24 L 20 -6 Z" fill={DENIM} />
+      <path d="M 18 -10 L 40 -22" stroke={DENIM} strokeWidth={6} strokeLinecap="round" />
+      <circle cx={42} cy={-24} r={5} fill={DENIM} />
+      <path d="M -10 -6 Q -10 -20 4 -20 Q 18 -20 16 -8" fill="none" stroke={DENIM} strokeWidth={4} />
+    </g>
+  );
+}
+function Easel({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <path d="M -30 60 L -6 -40 L 6 -40 L 30 60" fill="none" stroke={RUST} strokeWidth={6} strokeLinecap="round" />
+      <line x1={-22} y1={26} x2={22} y2={26} stroke={RUST} strokeWidth={6} strokeLinecap="round" />
+      <rect x={-30} y={-38} width={60} height={62} rx={2} fill={CREAM} />
+      <path d="M -20 10 Q -6 -14 14 2" fill="none" stroke={TERRACOTTA} strokeWidth={4} strokeLinecap="round" />
+      <circle cx={10} cy={-16} r={9} fill={MUSTARD} opacity={0.85} />
+      <path d="M -14 20 Q 0 8 18 18" fill="none" stroke={OLIVE} strokeWidth={4} strokeLinecap="round" />
+    </g>
+  );
+}
+function DiceAndBoard({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <rect x={-38} y={-14} width={76} height={44} rx={4} fill={DENIM} />
+      {[0, 1, 2].map((r) =>
+        [0, 1, 2, 3, 4].map((c) => (
+          <rect key={`${r}-${c}`} x={-34 + c * 14.4} y={-10 + r * 12.4} width={11} height={9} rx={1.5} fill={CREAM} opacity={0.35} />
+        ))
+      )}
+      <g transform="translate(28 -30) rotate(18)">
+        <rect x={-13} y={-13} width={26} height={26} rx={5} fill={TERRACOTTA} />
+        <circle cx={-5} cy={-5} r={2.4} fill={CREAM} />
+        <circle cx={5} cy={5} r={2.4} fill={CREAM} />
+        <circle cx={0} cy={0} r={2.4} fill={CREAM} />
+      </g>
+      <g transform="translate(-24 -28) rotate(-14)">
+        <rect x={-11} y={-11} width={22} height={22} rx={5} fill={MUSTARD} />
+        <circle cx={-4} cy={-4} r={2.2} fill={INK} opacity={0.6} />
+        <circle cx={4} cy={4} r={2.2} fill={INK} opacity={0.6} />
+      </g>
+    </g>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Scenes: 5 per hobby, each Figure(s) + matching props, laid out over a
 // shared warm background. viewBox is 0 0 200 200.
@@ -767,12 +855,79 @@ const collectingScenes: Scene[] = [
   },
 ];
 
+// Hero scenes for the four brand-new categories — one distinctive scene each
+// for now (used as the space's cover art); more variants can be added later
+// once each space has real posts/products that need visual variety.
+const makerLabScenes: Scene[] = [
+  ({ rand }) => {
+    const { skin, hair } = bg({ rand });
+    return (
+      <>
+        <ellipse cx={100} cy={168} rx={58} ry={9} fill={PAPER_DARK} />
+        <Printer3D x={112} y={126} s={0.95} />
+        <Figure x={54} y={128} skin={skin} hair={hair} outfit={DENIM} pose="lean" scale={0.9} />
+        <Sparkles rand={rand} count={2} avoid={{ x: 110, y: 120, r: 55 }} />
+      </>
+    );
+  },
+];
+const buildStackScenes: Scene[] = [
+  ({ rand }) => {
+    const { skin, hair } = bg({ rand });
+    return (
+      <>
+        <ellipse cx={100} cy={166} rx={58} ry={9} fill={PAPER_DARK} />
+        <Figure x={70} y={112} skin={skin} hair={hair} outfit={OLIVE} pose="sit" />
+        <LaptopCode x={128} y={132} s={0.85} />
+        <Sparkles rand={rand} count={2} avoid={{ x: 100, y: 130, r: 55 }} />
+      </>
+    );
+  },
+];
+const rootedScenes: Scene[] = [
+  ({ rand }) => {
+    const { skin, hair } = bg({ rand });
+    return (
+      <>
+        <ellipse cx={100} cy={172} rx={58} ry={9} fill={PAPER_DARK} />
+        <Figure x={64} y={124} skin={skin} hair={hair} outfit={TERRACOTTA} pose="kneel" />
+        <PottedPlant x={128} y={132} s={0.85} />
+        <WateringCan x={158} y={156} s={0.55} />
+        <Sparkles rand={rand} count={2} avoid={{ x: 100, y: 130, r: 55 }} />
+      </>
+    );
+  },
+];
+const theStudioScenes: Scene[] = [
+  ({ rand }) => {
+    const { skin, hair } = bg({ rand });
+    return (
+      <>
+        <ellipse cx={100} cy={172} rx={58} ry={9} fill={PAPER_DARK} />
+        <Easel x={126} y={118} s={0.85} />
+        <Figure x={62} y={128} skin={skin} hair={hair} outfit={BLUSH} pose="reach" />
+        <PaintPalette x={54} y={162} s={0.5} />
+        <Sparkles rand={rand} count={2} avoid={{ x: 100, y: 120, r: 55 }} />
+      </>
+    );
+  },
+];
+
 const HOBBY_SCENES: Record<string, Scene[]> = {
-  crafting: craftingScenes,
-  mysticism: mysticismScenes,
-  sports: sportsScenes,
-  recreation: recreationScenes,
-  collecting: collectingScenes,
+  // The four categories that map closely to earlier hobby spaces keep their
+  // proven, five-scene-deep art (see the "what belongs inside" overlap:
+  // pottery/embroidery/candle-making -> Workbench, pickleball/padel ->
+  // In Motion, home coffee -> Kitchen Table, trading cards/mending -> Rabbit
+  // Hole) — that's the "reuse the pattern" half of the brief. The four
+  // brand-new categories below get one fresh hero scene each.
+  workbench: craftingScenes,
+  inmotion: sportsScenes,
+  kitchentable: recreationScenes,
+  rabbithole: collectingScenes,
+  makerlab: makerLabScenes,
+  buildstack: buildStackScenes,
+  rooted: rootedScenes,
+  thestudio: theStudioScenes,
 };
 
 // ---------------------------------------------------------------------------
@@ -780,7 +935,9 @@ const HOBBY_SCENES: Record<string, Scene[]> = {
 // actually matches them, instead of a repeated/wrong one.
 // ---------------------------------------------------------------------------
 // Product ids, in file order (see data/products.ts):
-// Crafting 1-7, Mysticism 8-13, Sports 14-19, Recreation 20-25, Collecting 26-31
+// Workbench 1-7, In Motion 14-19, Kitchen Table 20-25, Rabbit Hole 26-31
+// (ids 8-13 were the old Mysticism products, retired when the taxonomy
+// moved to today's 8 categories — no replacement ids were issued.)
 const PRODUCT_VARIANT: Record<number, number> = {
   1: 0, // Pottery Starter Kit -> pottery wheel
   2: 1, // Embroidery Hoop Set -> embroidery
@@ -789,12 +946,6 @@ const PRODUCT_VARIANT: Record<number, number> = {
   5: 3, // Candle-Making Kit -> candle
   6: 4, // Watercolor Sketchbook Set -> palette
   7: 0, // Hand-Building Pottery course -> pottery wheel
-  8: 0, // Tarot Deck -> tarot
-  9: 1, // Crystal Healing Set -> crystals
-  10: 2, // Moon Water Ritual Kit -> moon/jar
-  11: 3, // Natal Chart Journal -> journal
-  12: 4, // Energy Cleansing Candle -> candle meditation
-  13: 3, // Reading Your Birth Chart course -> journal (chart-reading)
   14: 0, // Pickleball Paddle Set -> paddle
   15: 1, // Padel Racket -> racket
   16: 2, // Portable Sport Net -> net
@@ -823,10 +974,6 @@ const POST_VARIANT: Record<number, number> = {
   103: 0, // clay dish
   104: 2, // granny square blanket -> crochet
   105: 3, // candles
-  202: 1, // crystals
-  203: 2, // moon water ritual
-  204: 3, // Saturn return journal page
-  205: 3, // astrology Q&A -> journal
   302: 1, // padel
   303: 2, // pickleball league / net
   304: 3, // court shoes

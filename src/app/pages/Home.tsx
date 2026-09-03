@@ -24,7 +24,7 @@ function initials(name: string) {
 // not real platform numbers.
 const STATS = [
   { value: "48K+", label: "Things created" },
-  { value: "5", label: "Spaces, no feed sludge" },
+  { value: "8", label: "Spaces, no feed sludge" },
   { value: "180+", label: "Hobbies represented" },
 ];
 
@@ -123,7 +123,7 @@ export function Home() {
 
   const circleSample = circles.filter((c) => c.location).slice(0, 3);
   const portfolioSample = seedPosts
-    .filter((p) => ["crafting", "mysticism", "recreation"].includes(p.hobbySlug))
+    .filter((p) => ["workbench", "thestudio", "kitchentable"].includes(p.hobbySlug))
     .slice(0, 6);
   const testimonialPosts = [
     seedPosts.find((p) => p.id === 104),
@@ -167,7 +167,7 @@ export function Home() {
             </p>
             <p className="animate-in fade-in fill-mode-both duration-700 delay-700 text-sm text-muted-foreground/70 mb-10 max-w-xl mx-auto">
               Hobbymaxxing: going all-in on a real, hands-on hobby instead of scrolling.
-              NoSpace is built for it — five spaces, real people, real output.
+              NoSpace is built for it — eight spaces, real people, real output.
             </p>
             <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-700 delay-700 flex flex-wrap items-center justify-center gap-3">
               <Link to="/create">
@@ -212,11 +212,11 @@ export function Home() {
         <div className="container mx-auto px-4">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h2 className="text-3xl mb-2">Five spaces, zero scrolling void</h2>
+              <h2 className="text-3xl mb-2">Eight spaces, zero scrolling void</h2>
               <p className="text-muted-foreground">Pick one to see what people are making right now.</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {hobbies.map((hobby, i) => (
               <div
                 key={hobby.slug}
@@ -300,7 +300,7 @@ export function Home() {
             <div className="font-hud text-2xl mb-1 text-gradient-brand">12 things created</div>
             <div className="text-xs text-muted-foreground mb-4 font-hud">Level 3 on NoSpace</div>
             <div className="flex flex-wrap gap-2 mb-4">
-              {["Crafting", "Mysticism", "Recreation"].map((tag) => (
+              {["Workbench", "The Studio", "Kitchen Table"].map((tag) => (
                 <span
                   key={tag}
                   className="rounded-full border border-white/10 px-3 py-1 text-xs text-muted-foreground"
@@ -325,7 +325,7 @@ export function Home() {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl text-center mb-2">What people are making</h2>
           <p className="text-muted-foreground text-center mb-12">
-            Real captions, real people, five real spaces.
+            Real captions, real people, eight real spaces.
           </p>
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {testimonialPosts.map((post, i) => (
@@ -391,7 +391,7 @@ export function Home() {
                 Spaces you haven't posted in or joined a circle for yet.
               </p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {exploreNext.map((hobby, i) => (
                 <div
                   key={hobby.slug}

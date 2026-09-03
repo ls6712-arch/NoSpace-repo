@@ -28,10 +28,10 @@ const hoursAgo = (h: number) => Date.now() - h * HOUR;
 const PUBLIC = "public" as const;
 
 export const seedPosts: Post[] = [
-  // Crafting
+  // Workbench
   {
     id: 101,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -44,7 +44,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 102,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1599789197514-47270cd526b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -56,7 +56,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 103,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1590605095243-072811dbe64c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -68,7 +68,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 104,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1584992236310-6edddc08acff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -80,7 +80,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 105,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1624479163091-3c000402218d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -91,73 +91,10 @@ export const seedPosts: Post[] = [
     visibility: PUBLIC,
   },
 
-  // Mysticism
-  {
-    id: 201,
-    hobbySlug: "mysticism",
-    type: "photo",
-    media:
-      "https://images.unsplash.com/photo-1621923647893-901f834b3e6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
-    creator: "Luna Ortiz",
-    caption: "Today's pull: The Star. Reversed, but I'll take the hint anyway.",
-    likes: 289,
-    createdAt: hoursAgo(4),
-    visibility: PUBLIC,
-    productId: 13,
-  },
-  {
-    id: 202,
-    hobbySlug: "mysticism",
-    type: "photo",
-    media:
-      "https://images.unsplash.com/photo-1632980205460-e490e885e848?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
-    creator: "Dev Patel",
-    caption: "New rose quartz + citrine combo on the windowsill.",
-    likes: 133,
-    createdAt: hoursAgo(45),
-    visibility: PUBLIC,
-  },
-  {
-    id: 203,
-    hobbySlug: "mysticism",
-    type: "video",
-    media:
-      "https://images.unsplash.com/photo-1654542645844-590f5b8c146a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
-    creator: "Luna Ortiz",
-    caption: "Full moon water ritual, start to finish.",
-    likes: 210,
-    createdAt: hoursAgo(80),
-    visibility: PUBLIC,
-  },
-  {
-    id: 204,
-    hobbySlug: "mysticism",
-    type: "photo",
-    media:
-      "https://images.unsplash.com/photo-1638380660786-cd17b809995e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
-    creator: "Sasha Vale",
-    caption: "Filled in my Saturn return page. Heavier than expected.",
-    likes: 87,
-    createdAt: hoursAgo(150),
-    visibility: PUBLIC,
-  },
-  {
-    id: 205,
-    hobbySlug: "mysticism",
-    type: "photo",
-    media:
-      "https://images.unsplash.com/photo-1600429753199-5376c2738737?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
-    creator: "Luna Ortiz",
-    caption: "Beginner q's welcome — drop your rising sign below.",
-    likes: 305,
-    createdAt: hoursAgo(260),
-    visibility: PUBLIC,
-  },
-
-  // Sports
+  // In Motion
   {
     id: 301,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -170,7 +107,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 302,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1658723826297-fe4d1b1e6600?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -182,7 +119,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 303,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1618551763300-dc7eb8ce3560?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -194,7 +131,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 304,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1663573690125-d326a87a2535?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -206,7 +143,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 305,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -217,10 +154,10 @@ export const seedPosts: Post[] = [
     visibility: PUBLIC,
   },
 
-  // Recreation
+  // Kitchen Table
   {
     id: 401,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -233,7 +170,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 402,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1514066558159-fc8c737ef259?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -245,7 +182,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 403,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1702234683996-9271b4d8231f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -257,7 +194,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 404,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1674475760738-8c7af859f821?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -269,7 +206,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 405,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1577590835286-1cdd24c08fd7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -280,10 +217,10 @@ export const seedPosts: Post[] = [
     visibility: PUBLIC,
   },
 
-  // Collecting
+  // Rabbit Hole
   {
     id: 501,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1767338718786-92f7934e925e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -296,7 +233,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 502,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1699898016940-ac6892b79171?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -308,7 +245,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 503,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1671535108665-eeeb723ebebf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -320,7 +257,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 504,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1620228389798-c685290a453a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -332,7 +269,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 505,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1688126753535-0ca32e3b5cbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",

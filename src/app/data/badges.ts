@@ -1,3 +1,5 @@
+import { hobbies } from "./hobbies";
+
 export interface RewardStats {
   points: number;
   postsCreated: number;
@@ -46,9 +48,9 @@ export const badges: Badge[] = [
   {
     id: "explorer",
     name: "Hobbyist Explorer",
-    description: "Checked out all 5 hobby spaces.",
+    description: `Checked out all ${hobbies.length} hobby spaces.`,
     icon: "Compass",
-    test: (s) => s.hobbiesVisited.length >= 5,
+    test: (s) => s.hobbiesVisited.length >= hobbies.length,
   },
   {
     id: "rising-creator",

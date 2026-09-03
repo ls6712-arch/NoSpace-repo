@@ -14,12 +14,12 @@ export interface Product {
 }
 
 export const products: Product[] = [
-  // Crafting
+  // Workbench
   {
     id: 1,
     name: "Pottery Starter Kit",
     price: 64.0,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     image:
       "https://images.unsplash.com/photo-1595351298020-038700609878?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -33,7 +33,7 @@ export const products: Product[] = [
     id: 2,
     name: "Embroidery Hoop Set",
     price: 32.0,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     image:
       "https://images.unsplash.com/photo-1599589915468-b4c71ed62543?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -47,7 +47,7 @@ export const products: Product[] = [
     id: 3,
     name: "Air-Dry Clay Kit",
     price: 28.0,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     image:
       "https://images.unsplash.com/photo-1590605095243-072811dbe64c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -61,7 +61,7 @@ export const products: Product[] = [
     id: 4,
     name: "Crochet Starter Kit",
     price: 38.0,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     image:
       "https://images.unsplash.com/photo-1584992236310-6edddc08acff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -75,7 +75,7 @@ export const products: Product[] = [
     id: 5,
     name: "Candle-Making Kit",
     price: 44.0,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     image:
       "https://images.unsplash.com/photo-1624479163091-3c000402218d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -89,7 +89,7 @@ export const products: Product[] = [
     id: 6,
     name: "Watercolor Sketchbook Set",
     price: 36.0,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     image:
       "https://images.unsplash.com/photo-1577941796491-999f99ba658f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -103,7 +103,7 @@ export const products: Product[] = [
     id: 7,
     name: "Hand-Building Pottery: Video Course",
     price: 39.0,
-    hobbySlug: "crafting",
+    hobbySlug: "workbench",
     image:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -114,98 +114,12 @@ export const products: Product[] = [
     type: "course",
   },
 
-  // Mysticism
-  {
-    id: 8,
-    name: "Tarot Deck",
-    price: 48.0,
-    hobbySlug: "mysticism",
-    image:
-      "https://images.unsplash.com/photo-1621923647893-901f834b3e6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    description:
-      "78-card illustrated tarot deck with gilded edges and a comprehensive guidebook for beginners and seasoned readers.",
-    rating: 4.9,
-    reviews: 501,
-    creator: "NoSpace Makers",
-    type: "physical",
-  },
-  {
-    id: 9,
-    name: "Crystal Healing Set",
-    price: 55.0,
-    hobbySlug: "mysticism",
-    image:
-      "https://images.unsplash.com/photo-1632980205460-e490e885e848?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    description:
-      "Curated set of 7 tumbled crystals — amethyst, rose quartz, citrine, and more — with a velvet pouch and meaning cards.",
-    rating: 4.8,
-    reviews: 388,
-    creator: "NoSpace Makers",
-    type: "physical",
-  },
-  {
-    id: 10,
-    name: "Moon Water Ritual Kit",
-    price: 62.0,
-    hobbySlug: "mysticism",
-    image:
-      "https://images.unsplash.com/photo-1654542645844-590f5b8c146a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    description:
-      "Full moon ritual set with glass vessel, intention cards, selenite wand, and dried herbs for lunar manifestation.",
-    rating: 4.9,
-    reviews: 274,
-    creator: "NoSpace Makers",
-    type: "physical",
-  },
-  {
-    id: 11,
-    name: "Natal Chart Journal",
-    price: 34.0,
-    hobbySlug: "mysticism",
-    image:
-      "https://images.unsplash.com/photo-1638380660786-cd17b809995e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    description:
-      "A guided journal with prompts for every house and planet placement. Map your inner cosmos one page at a time.",
-    rating: 4.7,
-    reviews: 196,
-    creator: "NoSpace Makers",
-    type: "physical",
-  },
-  {
-    id: 12,
-    name: "Energy Cleansing Candle",
-    price: 26.0,
-    hobbySlug: "mysticism",
-    image:
-      "https://images.unsplash.com/photo-1532592068623-db1978e40df5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    description:
-      "Hand-poured white sage and cedarwood soy candle for space clearing rituals. Burns for 40+ hours.",
-    rating: 4.8,
-    reviews: 445,
-    creator: "NoSpace Makers",
-    type: "physical",
-  },
-  {
-    id: 13,
-    name: "Reading Your Birth Chart: Video Series",
-    price: 45.0,
-    hobbySlug: "mysticism",
-    image:
-      "https://images.unsplash.com/photo-1600429753199-5376c2738737?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    description:
-      "5 lessons on planets, houses, and transits — a friendly, no-jargon intro to reading your own chart.",
-    rating: 4.8,
-    reviews: 91,
-    creator: "Luna Ortiz",
-    type: "course",
-  },
-
-  // Sports
+  // In Motion
   {
     id: 14,
     name: "Pickleball Paddle Set",
     price: 79.0,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     image:
       "https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -219,7 +133,7 @@ export const products: Product[] = [
     id: 15,
     name: "Padel Racket",
     price: 119.0,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     image:
       "https://images.unsplash.com/photo-1658723826297-fe4d1b1e6600?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -233,7 +147,7 @@ export const products: Product[] = [
     id: 16,
     name: "Portable Sport Net",
     price: 54.0,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     image:
       "https://images.unsplash.com/photo-1618551763300-dc7eb8ce3560?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -247,7 +161,7 @@ export const products: Product[] = [
     id: 17,
     name: "Court Shoes",
     price: 88.0,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     image:
       "https://images.unsplash.com/photo-1663573690125-d326a87a2535?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -262,7 +176,7 @@ export const products: Product[] = [
     id: 18,
     name: "Sport Water Bottle",
     price: 28.0,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     image:
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -277,7 +191,7 @@ export const products: Product[] = [
     id: 19,
     name: "Pickleball Fundamentals: 5-Lesson Course",
     price: 29.0,
-    hobbySlug: "sports",
+    hobbySlug: "inmotion",
     image:
       "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -288,12 +202,12 @@ export const products: Product[] = [
     type: "course",
   },
 
-  // Recreation
+  // Kitchen Table
   {
     id: 20,
     name: "Mini Espresso Machine",
     price: 149.0,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     image:
       "https://images.unsplash.com/photo-1596018589855-e9a2a91f687f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -307,7 +221,7 @@ export const products: Product[] = [
     id: 21,
     name: "Latte Syrup Set",
     price: 36.0,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     image:
       "https://images.unsplash.com/photo-1514066558159-fc8c737ef259?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -321,7 +235,7 @@ export const products: Product[] = [
     id: 22,
     name: "Coffee Station Tray",
     price: 48.0,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     image:
       "https://images.unsplash.com/photo-1702234683996-9271b4d8231f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -335,7 +249,7 @@ export const products: Product[] = [
     id: 23,
     name: "Milk Frother",
     price: 32.0,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     image:
       "https://images.unsplash.com/photo-1577590835286-1cdd24c08fd7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -349,7 +263,7 @@ export const products: Product[] = [
     id: 24,
     name: "Cozy Throw Blanket",
     price: 68.0,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     image:
       "https://images.unsplash.com/photo-1674475760738-8c7af859f821?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -364,7 +278,7 @@ export const products: Product[] = [
     id: 25,
     name: "Home Barista Masterclass",
     price: 42.0,
-    hobbySlug: "recreation",
+    hobbySlug: "kitchentable",
     image:
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -375,12 +289,12 @@ export const products: Product[] = [
     type: "course",
   },
 
-  // Collecting
+  // Rabbit Hole
   {
     id: 26,
     name: "Trinket Display Shelf",
     price: 74.0,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     image:
       "https://images.unsplash.com/photo-1767338718786-92f7934e925e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -394,7 +308,7 @@ export const products: Product[] = [
     id: 27,
     name: "Trading Card Binder",
     price: 24.0,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     image:
       "https://images.unsplash.com/photo-1699898016940-ac6892b79171?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -408,7 +322,7 @@ export const products: Product[] = [
     id: 28,
     name: "Sashiko Mending Kit",
     price: 38.0,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     image:
       "https://images.unsplash.com/photo-1671535108665-eeeb723ebebf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -422,7 +336,7 @@ export const products: Product[] = [
     id: 29,
     name: "Keepsake Display Case",
     price: 52.0,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     image:
       "https://images.unsplash.com/photo-1620228389798-c685290a453a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -436,7 +350,7 @@ export const products: Product[] = [
     id: 30,
     name: "Upcycled Tote Bag",
     price: 46.0,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     image:
       "https://images.unsplash.com/photo-1688126753535-0ca32e3b5cbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -450,7 +364,7 @@ export const products: Product[] = [
     id: 31,
     name: "Visible Mending 101: Digital Guide",
     price: 18.0,
-    hobbySlug: "collecting",
+    hobbySlug: "rabbithole",
     image:
       "https://images.unsplash.com/photo-1606213988003-f2f74c4aa22d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
