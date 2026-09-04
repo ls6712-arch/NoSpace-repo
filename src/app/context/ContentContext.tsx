@@ -203,6 +203,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const addPost = async (input: NewPostInput): Promise<Post> => {
     let productId: number | undefined;
+    // What this session counts toward for the craft badges: the specific
+    // hobby when tagged, otherwise just the space it went into.
+    const hobbyKey = input.subHobby ?? `space:${input.hobbySlug}`;
 
     if (input.forSale) {
       const newListing: Product = {
@@ -256,7 +259,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       if (!error && data) {
         const newPost = rowToPost(data, profile?.display_name ?? (input.creator || "You"));
         setRealPosts((prev) => [newPost, ...prev]);
-        rewards.recordPostCreated();
+        rewards.recordPostCreated(hobbyKey);
         return newPost;
       }
       // Falls through to the local-only path below if the insert failed,
@@ -281,7 +284,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       productId,
     };
     setRealPosts((prev) => [newPost, ...prev]);
-    rewards.recordPostCreated();
+    rewards.recordPostCreated(hobbyKey);
     return newPost;
   };
 

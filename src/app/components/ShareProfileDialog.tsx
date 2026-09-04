@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as Icons from "lucide-react";
-import { badges } from "../data/badges";
+import { badges, badgeName } from "../data/badges";
+import { usePrimaryHobbyKey } from "./usePrimaryHobbyKey";
 import { useRewards } from "../context/RewardsContext";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -14,6 +15,7 @@ export function ShareProfileDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { points, level, stats, unlockedBadgeIds } = useRewards();
+  const { slug: hobbySlug, label: hobbyLabel } = usePrimaryHobbyKey();
   const [copied, setCopied] = useState(false);
 
   const unlocked = badges.filter((b) => unlockedBadgeIds.includes(b.id));
@@ -58,7 +60,7 @@ export function ShareProfileDialog({
                   return (
                     <span
                       key={b.id}
-                      title={b.name}
+                      title={badgeName(b, hobbySlug, hobbyLabel)}
                       className="flex size-9 items-center justify-center rounded-full text-white [background-image:var(--gradient-brand)]"
                     >
                       <Icon className="size-4" />

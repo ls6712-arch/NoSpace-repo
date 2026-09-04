@@ -1,13 +1,16 @@
 import { useState } from "react";
 import * as Icons from "lucide-react";
-import { badges, Badge as BadgeDef } from "../data/badges";
+import { badges, badgeName, Badge as BadgeDef } from "../data/badges";
 import { useRewards } from "../context/RewardsContext";
+import { usePrimaryHobbyKey } from "./usePrimaryHobbyKey";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 
 export function AchievementStrip({ onShare }: { onShare: () => void }) {
   const { unlockedBadgeIds } = useRewards();
   const [selected, setSelected] = useState<BadgeDef | null>(null);
+  // The craft badges are named after whatever you're furthest into.
+  const { slug: hobbySlug, label: hobbyLabel } = usePrimaryHobbyKey();
 
   return (
     <>
@@ -39,7 +42,7 @@ export function AchievementStrip({ onShare }: { onShare: () => void }) {
                   unlocked ? "text-foreground" : "text-muted-foreground/60"
                 }`}
               >
-                {badge.name}
+                {badgeName(badge, hobbySlug, hobbyLabel)}
               </span>
             </button>
           );
@@ -50,7 +53,9 @@ export function AchievementStrip({ onShare }: { onShare: () => void }) {
         <DialogContent className="sm:max-w-xs text-center">
           {selected && (
             <>
-              <DialogTitle className="sr-only">{selected.name}</DialogTitle>
+              <DialogTitle className="sr-only">
+                {badgeName(selected, hobbySlug, hobbyLabel)}
+              </DialogTitle>
               {(() => {
                 const Icon = (Icons as any)[selected.icon] ?? Icons.Sparkles;
                 const unlocked = unlockedBadgeIds.includes(selected.id);
@@ -65,7 +70,9 @@ export function AchievementStrip({ onShare }: { onShare: () => void }) {
                     >
                       <Icon className="size-7" />
                     </span>
-                    <h3 className="text-lg mb-1">{selected.name}</h3>
+                    <h3 className="text-lg mb-1">
+                      {badgeName(selected, hobbySlug, hobbyLabel)}
+                    </h3>
                     <p className="text-sm text-muted-foreground mb-5">{selected.description}</p>
                     {unlocked ? (
                       <Button

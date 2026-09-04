@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import * as Icons from "lucide-react";
-import { badges } from "../data/badges";
+import { badges, badgeName } from "../data/badges";
+import { usePrimaryHobbyKey } from "./usePrimaryHobbyKey";
 import { useRewards } from "../context/RewardsContext";
 
 export function BadgeUnlockToast() {
   const { lastUnlockedBadgeId, dismissLastBadge } = useRewards();
+  const { slug: hobbySlug, label: hobbyLabel } = usePrimaryHobbyKey();
   const badge = badges.find((b) => b.id === lastUnlockedBadgeId);
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export function BadgeUnlockToast() {
           <div className="text-xs uppercase tracking-wide text-[#38BDF8] mb-0.5">
             Badge unlocked
           </div>
-          <div className="text-sm font-medium">{badge.name}</div>
+          <div className="text-sm font-medium">{badgeName(badge, hobbySlug, hobbyLabel)}</div>
           <div className="text-xs text-muted-foreground">{badge.description}</div>
         </div>
         <button

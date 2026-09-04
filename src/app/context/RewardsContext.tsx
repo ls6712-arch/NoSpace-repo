@@ -16,6 +16,8 @@ interface StoredState {
   likesGiven: number;
   purchases: number;
   hobbiesVisited: string[];
+  /** One entry per logged session, holding that session's hobby. */
+  hobbiesPosted: string[];
   likedPostIds: number[];
 }
 
@@ -32,6 +34,7 @@ const defaultState: StoredState = {
   likesGiven: 0,
   purchases: 0,
   hobbiesVisited: [],
+  hobbiesPosted: [],
   likedPostIds: [],
 };
 
@@ -56,7 +59,7 @@ interface RewardsContextType {
   activity: ActivityEntry[];
   lastUnlockedBadgeId: string | null;
   dismissLastBadge: () => void;
-  recordPostCreated: () => void;
+  recordPostCreated: (hobbyKey?: string) => void;
   recordPurchase: (count?: number) => void;
   visitHobby: (slug: string) => void;
   toggleLikePost: (postId: number) => boolean;
@@ -85,6 +88,7 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
       likesGiven: state.likesGiven,
       purchases: state.purchases,
       hobbiesVisited: state.hobbiesVisited,
+      hobbiesPosted: state.hobbiesPosted,
     }),
     [state]
   );
@@ -107,10 +111,27 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
     if (newly) setLastUnlockedBadgeId(newly);
   };
 
-  const recordPostCreated = () => {
+  /**
+   * @param hobbyKey the session's hobby — a sub-hobby slug where the post was
+   * tagged with one, else `space:<slug>`. Drives the craft-specific badges.
+   */
+  const recordPostCreated = (hobbyKey?: string) => {
     setState((prev) => {
-      const next = { ...prev, points: prev.points + 50, postsCreated: prev.postsCreated + 1 };
-      checkNewBadges({ ...stats, points: next.points, postsCreated: next.postsCreated });
+      const hobbiesPosted = hobbyKey
+        ? [...prev.hobbiesPosted, hobbyKey]
+        : prev.hobbiesPosted;
+      const next = {
+        ...prev,
+        points: prev.points + 50,
+        postsCreated: prev.postsCreated + 1,
+        hobbiesPosted,
+      };
+      checkNewBadges({
+        ...stats,
+        points: next.points,
+        postsCreated: next.postsCreated,
+        hobbiesPosted,
+      });
       return next;
     });
     logActivity("Posted new content", 50);

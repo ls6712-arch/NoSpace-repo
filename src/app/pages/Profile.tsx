@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { AchievementStrip } from "../components/AchievementStrip";
+import { ProfileHeadline } from "../components/ProfileHeadline";
 import { MyPostsGrid } from "../components/MyPostsGrid";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 
@@ -25,7 +26,7 @@ function timeAgo(ts: number) {
 }
 
 export function Profile() {
-  const { points, level, progress, stats } = useRewards();
+  const { points, progress, stats } = useRewards();
   const { activeHobbySlugs, joinedCircleIds } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
@@ -56,12 +57,7 @@ export function Profile() {
           <Avatar className="size-20 sm:size-24 shrink-0">
             <AvatarFallback className="text-xl">{user ? initials : "YOU"}</AvatarFallback>
           </Avatar>
-          <div>
-            <div className="font-hud text-3xl sm:text-4xl mb-1 text-gradient-brand">
-              {stats.postsCreated} {stats.postsCreated === 1 ? "thing" : "things"} created
-            </div>
-            <div className="text-sm text-muted-foreground font-hud">Level {level} on NoSpace</div>
-          </div>
+          <ProfileHeadline />
         </div>
 
         <div className="mb-1">{user ? displayName : "you"}</div>
@@ -113,6 +109,30 @@ export function Profile() {
           </Link>
         </div>
 
+        {/* Creator vs. consumer — the centerpiece of the page, so it's given
+            more room and a little elevation than everything around it. */}
+        <div className="glass-panel glow-violet rounded-3xl p-6 sm:p-8 mb-10 shadow-2xl ring-1 ring-white/10">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <h2 className="text-base sm:text-lg">Creator vs. consumer</h2>
+            <span className="font-hud text-2xl sm:text-3xl text-gradient-brand shrink-0">
+              {creatorShare}% creator
+            </span>
+          </div>
+          <div className="h-3.5 sm:h-4 w-full overflow-hidden rounded-full bg-white/10 flex">
+            <div
+              className="h-full [background-image:var(--gradient-brand)]"
+              style={{ width: `${creatorShare}%` }}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">
+            {stats.postsCreated === 0
+              ? "Your first post is worth 50 points — and shifts this bar."
+              : creatorShare >= 50
+              ? "You're making more than you're consuming."
+              : "Post something to shift the balance toward creating."}
+          </p>
+        </div>
+
         {/* Achievements — Instagram "highlights" style, quiet, no ranking */}
         <h2 className="text-sm text-muted-foreground mb-3">Achievements</h2>
         <div className="mb-8">
@@ -161,27 +181,6 @@ export function Profile() {
               })}
             </div>
           )}
-        </div>
-
-        {/* Creator vs consumer */}
-        <div className="glass-panel rounded-2xl p-5 mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm">Creator vs. consumer</h2>
-            <span className="text-xs text-muted-foreground">{creatorShare}% creator</span>
-          </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10 flex">
-            <div
-              className="h-full [background-image:var(--gradient-brand)]"
-              style={{ width: `${creatorShare}%` }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {stats.postsCreated === 0
-              ? "Your first post is worth 50 points — and shifts this bar."
-              : creatorShare >= 50
-              ? "You're making more than you're consuming."
-              : "Post something to shift the balance toward creating."}
-          </p>
         </div>
 
         {/* Portfolio + activity */}
