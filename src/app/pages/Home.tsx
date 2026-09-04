@@ -176,9 +176,9 @@ export function Home() {
                   <ArrowRight className="size-4" />
                 </Button>
               </Link>
-              <Link to={`/space/${hobbies[0].slug}`}>
+              <Link to="/discover">
                 <Button variant="outline" size="lg">
-                  Explore spaces
+                  Explore all hobbies
                 </Button>
               </Link>
             </div>
@@ -215,6 +215,12 @@ export function Home() {
               <h2 className="text-3xl mb-2">Eight spaces, zero scrolling void</h2>
               <p className="text-muted-foreground">Pick one to see what people are making right now.</p>
             </div>
+            <Link to="/discover" className="hidden sm:block">
+              <Button variant="outline">
+                All {hobbies.reduce((n, h) => n + h.subItems.length, 0)} hobbies
+                <ArrowRight className="size-4" />
+              </Button>
+            </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {hobbies.map((hobby, i) => (

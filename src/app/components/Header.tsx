@@ -201,6 +201,14 @@ export function Header() {
             </span>
           </Link>
           <nav className="hidden lg:flex items-center gap-5">
+            <Link
+              to="/discover"
+              title="Every hobby on NoSpace"
+              className="text-sm text-foreground hover:text-[#38BDF8] transition-colors"
+            >
+              Discover
+            </Link>
+            <span className="h-4 w-px bg-white/15" aria-hidden="true" />
             {hobbies.map((hobby) => (
               <Link
                 key={hobby.slug}
@@ -293,6 +301,14 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-white/10 bg-background/95 backdrop-blur-xl">
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
+            <Link
+              to="/discover"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm py-2 hover:text-accent transition-colors"
+            >
+              Discover
+            </Link>
+            <div className="my-1 h-px bg-white/10" aria-hidden="true" />
             {hobbies.map((hobby) => (
               <Link
                 key={hobby.slug}

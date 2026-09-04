@@ -1,3 +1,28 @@
+/**
+ * A single hobby inside a space — "Pottery" inside The Workbench. These are
+ * what people actually do; the 8 categories above them are just the shelves
+ * they sit on. Each one has its own illustration (see SubHobbyArt.tsx) and can
+ * be used to filter a space's feed.
+ */
+export interface SubHobby {
+  slug: string;
+  label: string;
+}
+
+/**
+ * Builds a SubHobby, deriving a URL-safe slug from the label unless one is
+ * given explicitly (needed where the label has accents or is a mouthful).
+ */
+const sub = (label: string, slug?: string): SubHobby => ({
+  label,
+  slug:
+    slug ??
+    label
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, ""),
+});
+
 export interface Hobby {
   slug: string;
   /** Full category name, e.g. "The Workbench". */
@@ -9,7 +34,7 @@ export interface Hobby {
   plainLabel: string;
   description: string;
   /** The specific hobbies/activities that live inside this space. */
-  subItems: string[];
+  subItems: SubHobby[];
   gradient: string; // tailwind gradient classes
   coverImage: string;
   /** Demo/placeholder figure — like the rest of this prototype's numbers, not real data. */
@@ -26,10 +51,11 @@ export const hobbies: Hobby[] = [
     description:
       "Pottery, embroidery, crochet, woodworking, candle-making — slow, tactile projects that keep your hands busy and your phone down.",
     subItems: [
-      "Pottery", "Ceramics", "Knitting", "Crochet", "Embroidery", "Sewing",
-      "Woodworking", "Jewelry-making", "Candle-making", "Soap-making",
-      "Furniture flipping", "Restoration", "Upcycling", "Paper crafts",
-      "Zines", "Scrapbooking",
+      sub("Pottery"), sub("Ceramics"), sub("Knitting"), sub("Crochet"),
+      sub("Embroidery"), sub("Sewing"), sub("Woodworking"), sub("Jewelry-making"),
+      sub("Candle-making"), sub("Soap-making"), sub("Furniture flipping"),
+      sub("Restoration"), sub("Upcycling"), sub("Paper crafts"), sub("Zines"),
+      sub("Scrapbooking"),
     ],
     gradient: "from-violet-500 via-fuchsia-500 to-pink-500",
     coverImage:
@@ -45,9 +71,10 @@ export const hobbies: Hobby[] = [
     description:
       "3D printing, CAD, laser cutting, robotics, Arduino, drones — for people who'd rather prototype something real than scroll past one.",
     subItems: [
-      "3D printing", "CAD", "Laser cutting", "CNC", "Electronics", "Arduino",
-      "Raspberry Pi", "Robotics", "Drones", "Model-making", "Miniatures",
-      "Makerspaces", "Product prototyping",
+      sub("3D printing"), sub("CAD"), sub("Laser cutting"), sub("CNC"),
+      sub("Electronics"), sub("Arduino"), sub("Raspberry Pi"), sub("Robotics"),
+      sub("Drones"), sub("Model-making"), sub("Miniatures"), sub("Makerspaces"),
+      sub("Product prototyping"),
     ],
     gradient: "from-sky-500 via-cyan-500 to-teal-500",
     coverImage:
@@ -63,10 +90,12 @@ export const hobbies: Hobby[] = [
     description:
       "Coding, no-code building, creative coding, AI workflows, game dev, data viz — learn the tools, then actually make the thing.",
     subItems: [
-      "Coding", "No-code building", "Creative coding", "Web design",
-      "Game development", "Learning AI creative workflows & prompt craft",
-      "Generative design as a skill", "Data visualization", "AR/VR projects",
-      "Smart-home projects", "Cybersecurity learning",
+      sub("Coding"), sub("No-code building"), sub("Creative coding"),
+      sub("Web design"), sub("Game development"),
+      sub("AI workflows & prompt craft", "ai-workflows"),
+      sub("Generative design", "generative-design"), sub("Data visualization"),
+      sub("AR/VR projects"), sub("Smart-home projects"),
+      sub("Cybersecurity learning"),
     ],
     gradient: "from-indigo-500 via-blue-500 to-cyan-500",
     coverImage:
@@ -82,10 +111,11 @@ export const hobbies: Hobby[] = [
     description:
       "Running, yoga, climbing, pickleball, padel, dance, strength training — easy-entry ways to move and meet people outside.",
     subItems: [
-      "Running", "Run clubs", "Yoga", "Climbing", "Cycling", "Dance",
-      "Pickleball", "Padel", "Tennis", "Hiking", "Swimming", "Martial arts",
-      "Strength training", "Weightlifting/gym", "Basketball", "Soccer",
-      "Volleyball", "Pilates",
+      sub("Running"), sub("Run clubs"), sub("Yoga"), sub("Climbing"),
+      sub("Cycling"), sub("Dance"), sub("Pickleball"), sub("Padel"),
+      sub("Tennis"), sub("Hiking"), sub("Swimming"), sub("Martial arts"),
+      sub("Strength training"), sub("Weightlifting/gym", "weightlifting"),
+      sub("Basketball"), sub("Soccer"), sub("Volleyball"), sub("Pilates"),
     ],
     gradient: "from-cyan-500 via-sky-500 to-blue-500",
     coverImage:
@@ -101,9 +131,10 @@ export const hobbies: Hobby[] = [
     description:
       "Sourdough, fermentation, home coffee, cocktails, supper clubs — turning a slice of your kitchen into the place you keep wishing was closer.",
     subItems: [
-      "Cooking", "Baking", "Sourdough", "Fermentation", "Home coffee", "Tea",
-      "Espresso", "Food photography", "Home brewing", "Kombucha",
-      "Cocktail-making", "Supper clubs",
+      sub("Cooking"), sub("Baking"), sub("Sourdough"), sub("Fermentation"),
+      sub("Home coffee"), sub("Tea"), sub("Espresso"), sub("Food photography"),
+      sub("Home brewing"), sub("Kombucha"), sub("Cocktail-making"),
+      sub("Supper clubs"),
     ],
     gradient: "from-amber-500 via-orange-500 to-pink-500",
     coverImage:
@@ -119,9 +150,10 @@ export const hobbies: Hobby[] = [
     description:
       "Gardening, houseplants, composting, birdwatching, foraging, camping — for people who'd rather get their hands in the dirt than doomscroll.",
     subItems: [
-      "Gardening", "Houseplants", "Vegetable gardens", "Native plants",
-      "Composting", "Indoor growing", "Birdwatching", "Foraging", "Camping",
-      "Fishing", "Outdoor photography", "Nature journaling",
+      sub("Gardening"), sub("Houseplants"), sub("Vegetable gardens"),
+      sub("Native plants"), sub("Composting"), sub("Indoor growing"),
+      sub("Birdwatching"), sub("Foraging"), sub("Camping"), sub("Fishing"),
+      sub("Outdoor photography"), sub("Nature journaling"),
     ],
     gradient: "from-lime-500 via-green-500 to-emerald-500",
     coverImage:
@@ -137,9 +169,11 @@ export const hobbies: Hobby[] = [
     description:
       "Painting, photography, filmmaking, music production, writing, calligraphy — make something and put it out into the world.",
     subItems: [
-      "Painting", "Drawing", "Watercolor", "Photography", "Filmmaking",
-      "Music production", "Learning an instrument", "Singing", "Writing",
-      "Poetry", "Journaling", "Calligraphy", "Theater",
+      sub("Painting"), sub("Drawing"), sub("Watercolor"), sub("Photography"),
+      sub("Filmmaking"), sub("Music production"),
+      sub("Learning an instrument", "instrument"), sub("Singing"),
+      sub("Writing"), sub("Poetry"), sub("Journaling"), sub("Calligraphy"),
+      sub("Theater"),
     ],
     gradient: "from-purple-500 via-fuchsia-500 to-rose-500",
     coverImage:
@@ -155,9 +189,11 @@ export const hobbies: Hobby[] = [
     description:
       "Board games, chess, trading cards, vinyl, thrifted finds, puzzles — for people who'd rather collect than scroll.",
     subItems: [
-      "Board games", "Chess", "Tabletop RPGs", "Trading cards", "Pokémon",
-      "LEGO", "Vinyl", "Books", "Book clubs", "Vintage/thrifting", "Sneakers",
-      "Puzzles", "Language learning",
+      sub("Board games"), sub("Chess"), sub("Tabletop RPGs"),
+      sub("Trading cards"), sub("Pokémon", "pokemon"), sub("LEGO"),
+      sub("Vinyl"), sub("Books"), sub("Book clubs"),
+      sub("Vintage/thrifting", "thrifting"), sub("Sneakers"), sub("Puzzles"),
+      sub("Language learning"),
     ],
     gradient: "from-emerald-500 via-teal-500 to-cyan-500",
     coverImage:
@@ -168,4 +204,18 @@ export const hobbies: Hobby[] = [
 
 export function getHobby(slug: string) {
   return hobbies.find((h) => h.slug === slug);
+}
+
+/** Every sub-hobby across every space, each tagged with the space it lives in. */
+export const allSubHobbies: (SubHobby & { hobbySlug: string })[] = hobbies.flatMap(
+  (h) => h.subItems.map((s) => ({ ...s, hobbySlug: h.slug })),
+);
+
+export function getSubHobby(hobbySlug: string, subSlug: string) {
+  return getHobby(hobbySlug)?.subItems.find((s) => s.slug === subSlug);
+}
+
+/** Human-readable label for a sub-hobby slug, searching every space. */
+export function subHobbyLabel(subSlug: string) {
+  return allSubHobbies.find((s) => s.slug === subSlug)?.label;
 }

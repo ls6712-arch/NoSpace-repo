@@ -33,6 +33,9 @@ export function CreatorStudio() {
   const initialHobby = searchParams.get("hobby") ?? hobbies[0].slug;
 
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
+  const [subHobby, setSubHobby] = useState<string>(
+    searchParams.get("sub") ?? "",
+  );
   const [type, setType] = useState<"photo" | "video">("photo");
   const [creator, setCreator] = useState("You");
   const [caption, setCaption] = useState("");
@@ -86,6 +89,7 @@ export function CreatorStudio() {
     try {
       await addPost({
         hobbySlug,
+        subHobby: subHobby || undefined,
         type,
         file: file ?? undefined,
         creator: creator.trim() || "You",
@@ -192,6 +196,7 @@ export function CreatorStudio() {
               onValueChange={(v) => {
                 setHobbySlug(v);
                 setCircleId(undefined);
+                setSubHobby("");
               }}
             >
               <SelectTrigger>
@@ -205,6 +210,36 @@ export function CreatorStudio() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label className="mb-2 block">
+              Which hobby?{" "}
+              <span className="text-muted-foreground font-normal">— optional</span>
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {(hobbies.find((h) => h.slug === hobbySlug)?.subItems ?? []).map((s) => {
+                const active = subHobby === s.slug;
+                return (
+                  <button
+                    key={s.slug}
+                    type="button"
+                    onClick={() => setSubHobby(active ? "" : s.slug)}
+                    className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                      active
+                        ? "border-transparent text-white [background-image:var(--gradient-brand)]"
+                        : "border-white/15 text-muted-foreground hover:border-white/30"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Tagging it puts your post in front of people browsing that hobby
+              specifically.
+            </p>
           </div>
 
           <div>

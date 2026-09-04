@@ -38,6 +38,8 @@ export interface ForSaleInput {
 
 export interface NewPostInput {
   hobbySlug: string;
+  /** Optional specific hobby within the space, e.g. "pottery" in "workbench". */
+  subHobby?: string;
   type: "photo" | "video";
   media?: string;
   /** A real picked file, uploaded to storage when a real account is signed in. */
@@ -65,6 +67,7 @@ function rowToPost(row: any, creatorName: string): Post {
   return {
     id: row.id,
     hobbySlug: row.hobby_slug,
+    subHobby: row.sub_hobby ?? undefined,
     type: row.type,
     media: row.media_url,
     creator: creatorName,
@@ -240,6 +243,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         .insert({
           user_id: user.id,
           hobby_slug: input.hobbySlug,
+          sub_hobby: input.subHobby ?? null,
           type: input.type,
           media_url: mediaUrl,
           caption: input.caption,
@@ -264,6 +268,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     const newPost: Post = {
       id: Date.now() + 1,
       hobbySlug: input.hobbySlug,
+      subHobby: input.subHobby,
       type: input.type,
       media: input.media ?? "",
       creator: input.creator || "You",

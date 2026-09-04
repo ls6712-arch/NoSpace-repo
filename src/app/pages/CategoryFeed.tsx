@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
-import { Plus, Users } from "lucide-react";
+import { Link, useParams, useSearchParams } from "react-router";
+import { Plus, Users, X } from "lucide-react";
 import { getHobby } from "../data/hobbies";
+import { HobbyTile } from "../components/HobbyTile";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useRewards } from "../context/RewardsContext";
@@ -91,7 +92,12 @@ function CirclesTab({
 
 export function CategoryFeed() {
   const { slug = "" } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const hobby = getHobby(slug);
+  // Which specific hobby the feed is narrowed to, e.g. ?hobby=pottery. Kept in
+  // the URL so Discover can link straight into a filtered space and so a
+  // filtered view is shareable.
+  const activeSub = searchParams.get("hobby") ?? "";
   const { publicFeedByHobby, listingsByHobby, circleFeed, isCircleJoined, joinCircle, leaveCircle } =
     useContent();
   const { visitHobby } = useRewards();
@@ -113,9 +119,21 @@ export function CategoryFeed() {
     );
   }
 
-  const posts = publicFeedByHobby(hobby.slug);
+  const allPosts = publicFeedByHobby(hobby.slug);
+  const posts = activeSub ? allPosts.filter((p) => p.subHobby === activeSub) : allPosts;
   const listings = listingsByHobby(hobby.slug);
   const circles = circlesByHobby(hobby.slug);
+
+  const countFor = (subSlug: string) =>
+    allPosts.filter((p) => p.subHobby === subSlug).length;
+  const activeLabel = hobby.subItems.find((s) => s.slug === activeSub)?.label;
+
+  const setSub = (subSlug: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (subSlug) next.set("hobby", subSlug);
+    else next.delete("hobby");
+    setSearchParams(next, { replace: true });
+  };
 
   return (
     <div className="min-h-screen">
@@ -140,7 +158,44 @@ export function CategoryFeed() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 pb-24">
+      {/* What's actually inside this space — pictures, not a word list. */}
+      <section className="container mx-auto px-4 pt-10">
+        <div className="flex items-end justify-between gap-4 mb-4 flex-wrap">
+          <div>
+            <h2 className="text-xl">What's inside {hobby.shortName}</h2>
+            <p className="text-sm text-muted-foreground">
+              {activeSub
+                ? "Tap it again to see everything."
+                : `${hobby.subItems.length} hobbies live here — tap one to narrow the feed.`}
+            </p>
+          </div>
+          {activeSub && (
+            <button
+              type="button"
+              onClick={() => setSub("")}
+              className="flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-xs text-muted-foreground hover:border-white/30"
+            >
+              <X className="size-3" />
+              Clear filter
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          {hobby.subItems.map((s) => (
+            <HobbyTile
+              key={s.slug}
+              hobbySlug={hobby.slug}
+              subSlug={s.slug}
+              label={s.label}
+              active={activeSub === s.slug}
+              count={countFor(s.slug)}
+              onClick={() => setSub(activeSub === s.slug ? "" : s.slug)}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 pt-12 pb-24">
         <Tabs defaultValue="feed">
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <TabsList>
@@ -157,9 +212,33 @@ export function CategoryFeed() {
           </div>
 
           <TabsContent value="feed">
+            {activeSub && (
+              <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
+                Showing
+                <span className="rounded-full border border-[#38BDF8]/40 bg-[#38BDF8]/10 px-3 py-1 text-xs text-foreground">
+                  {activeLabel ?? activeSub}
+                </span>
+                only
+              </div>
+            )}
             {posts.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
-                Nobody's posted here yet — be the first.
+                {activeSub ? (
+                  <>
+                    No {(activeLabel ?? activeSub).toLowerCase()} posts yet — be the
+                    first.
+                    <div className="mt-4">
+                      <Link to={`/create?hobby=${hobby.slug}&sub=${activeSub}`}>
+                        <Button variant="brand" size="sm">
+                          <Plus className="size-4" />
+                          Post {(activeLabel ?? activeSub).toLowerCase()}
+                        </Button>
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  "Nobody's posted here yet — be the first."
+                )}
               </div>
             ) : (
               <div className="columns-2 md:columns-3 lg:columns-4 gap-4">

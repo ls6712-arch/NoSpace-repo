@@ -3,6 +3,8 @@ export type Visibility = "public" | "circle" | "friends";
 export interface Post {
   id: number;
   hobbySlug: string;
+  /** The specific hobby within the space, e.g. "pottery" inside "workbench". */
+  subHobby?: string;
   type: "photo" | "video";
   media: string;
   creator: string;
@@ -32,6 +34,7 @@ export const seedPosts: Post[] = [
   {
     id: 101,
     hobbySlug: "workbench",
+    subHobby: "pottery",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -45,6 +48,7 @@ export const seedPosts: Post[] = [
   {
     id: 102,
     hobbySlug: "workbench",
+    subHobby: "embroidery",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1599789197514-47270cd526b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -57,6 +61,7 @@ export const seedPosts: Post[] = [
   {
     id: 103,
     hobbySlug: "workbench",
+    subHobby: "ceramics",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1590605095243-072811dbe64c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -69,6 +74,7 @@ export const seedPosts: Post[] = [
   {
     id: 104,
     hobbySlug: "workbench",
+    subHobby: "crochet",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1584992236310-6edddc08acff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -81,6 +87,7 @@ export const seedPosts: Post[] = [
   {
     id: 105,
     hobbySlug: "workbench",
+    subHobby: "candle-making",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1624479163091-3c000402218d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -95,6 +102,7 @@ export const seedPosts: Post[] = [
   {
     id: 301,
     hobbySlug: "inmotion",
+    subHobby: "pickleball",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -108,6 +116,7 @@ export const seedPosts: Post[] = [
   {
     id: 302,
     hobbySlug: "inmotion",
+    subHobby: "padel",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1658723826297-fe4d1b1e6600?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -120,6 +129,7 @@ export const seedPosts: Post[] = [
   {
     id: 303,
     hobbySlug: "inmotion",
+    subHobby: "pickleball",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1618551763300-dc7eb8ce3560?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -132,6 +142,7 @@ export const seedPosts: Post[] = [
   {
     id: 304,
     hobbySlug: "inmotion",
+    subHobby: "pickleball",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1663573690125-d326a87a2535?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -144,6 +155,7 @@ export const seedPosts: Post[] = [
   {
     id: 305,
     hobbySlug: "inmotion",
+    subHobby: "pickleball",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -158,6 +170,7 @@ export const seedPosts: Post[] = [
   {
     id: 401,
     hobbySlug: "kitchentable",
+    subHobby: "espresso",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -171,6 +184,7 @@ export const seedPosts: Post[] = [
   {
     id: 402,
     hobbySlug: "kitchentable",
+    subHobby: "espresso",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1514066558159-fc8c737ef259?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -183,6 +197,7 @@ export const seedPosts: Post[] = [
   {
     id: 403,
     hobbySlug: "kitchentable",
+    subHobby: "home-coffee",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1702234683996-9271b4d8231f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -195,6 +210,7 @@ export const seedPosts: Post[] = [
   {
     id: 404,
     hobbySlug: "kitchentable",
+    subHobby: "tea",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1674475760738-8c7af859f821?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -207,6 +223,7 @@ export const seedPosts: Post[] = [
   {
     id: 405,
     hobbySlug: "kitchentable",
+    subHobby: "espresso",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1577590835286-1cdd24c08fd7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -221,6 +238,7 @@ export const seedPosts: Post[] = [
   {
     id: 501,
     hobbySlug: "rabbithole",
+    subHobby: "books",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1767338718786-92f7934e925e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -234,6 +252,7 @@ export const seedPosts: Post[] = [
   {
     id: 502,
     hobbySlug: "rabbithole",
+    subHobby: "trading-cards",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1699898016940-ac6892b79171?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -246,6 +265,7 @@ export const seedPosts: Post[] = [
   {
     id: 503,
     hobbySlug: "rabbithole",
+    subHobby: "thrifting",
     type: "video",
     media:
       "https://images.unsplash.com/photo-1671535108665-eeeb723ebebf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
@@ -258,6 +278,7 @@ export const seedPosts: Post[] = [
   {
     id: 504,
     hobbySlug: "rabbithole",
+    subHobby: "thrifting",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1620228389798-c685290a453a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
