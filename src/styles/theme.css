@@ -4,6 +4,25 @@
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* Warm high-contrast serif — used for the wordmark, people's names, and
+     hobby titles, where the app should feel like a well-made object rather
+     than a dashboard. Everything else stays on the sans stack. */
+  --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+
+  /* Soft pastels for the quiet milestones and circle cards. Deliberately
+     desaturated so they read as chalky and calm against the navy, never as
+     status colours competing with the brand gradient. */
+  --pastel-sage: #A9C3A0;
+  --pastel-clay: #D2A18A;
+  --pastel-stone: #AEB4C4;
+  --pastel-wheat: #DCC79A;
+  --pastel-sky: #A3BDD6;
+  --pastel-rose: #D6ADB2;
+
+  /* The shelf the hobbies stand on. */
+  --wood-dark: #4A3728;
+  --wood: #6B4E35;
+  --wood-light: #8A6A49;
 
   /* Brand — futuristic but calm: dimmer, more desaturated than a raw neon palette,
      so nothing here is pure/electric enough to feel like it's vibrating. */

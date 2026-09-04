@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Plus, Share2, Users } from "lucide-react";
+import { Plus, Share2, Users, Settings } from "lucide-react";
 import { getHobby } from "../data/hobbies";
 import { getCircle } from "../data/circles";
 import { useRewards } from "../context/RewardsContext";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
-import { Progress } from "../components/ui/progress";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { AchievementStrip } from "../components/AchievementStrip";
-import { ProfileHeadline } from "../components/ProfileHeadline";
+import { QuietMilestones } from "../components/QuietMilestones";
 import { MyPostsGrid } from "../components/MyPostsGrid";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
+import { ProfileHeadline } from "../components/ProfileHeadline";
+import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -25,12 +25,25 @@ function timeAgo(ts: number) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+/** Pastel tints cycled across circle cards, so a list of them reads as calm. */
+const CIRCLE_TINTS = [
+  "var(--pastel-sage)",
+  "var(--pastel-stone)",
+  "var(--pastel-clay)",
+  "var(--pastel-sky)",
+  "var(--pastel-wheat)",
+  "var(--pastel-rose)",
+];
+
 export function Profile() {
-  const { points, progress, stats } = useRewards();
-  const { activeHobbySlugs, joinedCircleIds } = useContent();
+  const { points, stats } = useRewards();
+  const { joinedCircleIds } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
   const [circlesVisible, setCirclesVisible] = useState(true);
+
+  const sessions = useSessionsByHobby();
+  const totalSessions = sessions.reduce((n, s) => n + s.sessions, 0);
 
   const displayName = profile?.display_name || "You";
   const initials = displayName
@@ -50,24 +63,78 @@ export function Profile() {
     .filter((c): c is NonNullable<typeof c> => !!c);
 
   return (
-    <div className="min-h-screen py-10">
-      <div className="container mx-auto px-4 max-w-2xl">
-        {/* Header: avatar + a single headline stat, not a dashboard */}
-        <div className="flex items-center gap-6 sm:gap-8 mb-6">
-          <Avatar className="size-20 sm:size-24 shrink-0">
-            <AvatarFallback className="text-xl">{user ? initials : "YOU"}</AvatarFallback>
-          </Avatar>
-          <ProfileHeadline />
+    <div className="min-h-screen py-8 sm:py-10">
+      <div className="container mx-auto max-w-2xl px-4">
+        {/* Wordmark + settings, matching the phone layout */}
+        <div className="mb-6 flex items-start justify-between">
+          <span
+            className="text-3xl sm:text-4xl"
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+          >
+            No Space
+          </span>
+          <button
+            type="button"
+            aria-label="Settings"
+            className="flex size-9 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Settings className="size-4" strokeWidth={1.7} />
+          </button>
         </div>
 
-        <div className="mb-1">{user ? displayName : "you"}</div>
-        <p className="text-sm text-muted-foreground mb-4">Create, Don't Just Consume.</p>
-        <Progress value={progress} className="max-w-xs mb-5" />
+        {/* Who you are, and how much you've done */}
+        <div className="mb-5 flex items-center gap-5 sm:gap-6">
+          <Avatar className="size-20 shrink-0 sm:size-24">
+            <AvatarFallback className="text-xl">{user ? initials : "YOU"}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <h1
+              className="truncate text-3xl leading-tight sm:text-4xl"
+              style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+            >
+              {user ? displayName : "You"}
+            </h1>
+            <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="text-[var(--pastel-sage)]">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 21c0-6 3-10 8-12-1 7-4 10-8 12Zm0 0c0-5-2.5-8.5-7-10 1 6 3.5 8.5 7 10Z" />
+                </svg>
+              </span>
+              <span>
+                <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
+                {totalSessions === 1 ? "session" : "sessions"}
+              </span>
+            </div>
+            <div className="mt-1">
+              <ProfileHeadline variant="quiet" />
+            </div>
+          </div>
+        </div>
+
+        {/* Hobby chips — what you actually do */}
+        {sessions.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {sessions.slice(0, 6).map((s) => (
+              <Link
+                key={s.key}
+                to={
+                  s.subSlug
+                    ? `/space/${s.hobbySlug}?hobby=${s.subSlug}`
+                    : `/space/${s.hobbySlug}`
+                }
+                className="rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-white/25 hover:text-foreground"
+                style={{ fontFamily: "var(--font-serif)" }}
+              >
+                {s.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
         {isConfigured && !user && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
             <p className="text-xs text-muted-foreground">
-              You're not logged in — points and posts here are just local to this browser.
+              You're not logged in — sessions here are just local to this browser.
             </p>
             <Link to="/login" className="shrink-0">
               <Button variant="outline" size="sm">
@@ -77,26 +144,7 @@ export function Profile() {
           </div>
         )}
 
-        {/* Hobby tags — what you actually engage with, not a category picker */}
-        {activeHobbySlugs.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {activeHobbySlugs.map((slug) => {
-              const hobby = getHobby(slug);
-              if (!hobby) return null;
-              return (
-                <Link
-                  key={slug}
-                  to={`/space/${slug}`}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {hobby.shortName}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="flex gap-2 mb-8">
+        <div className="mb-8 flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => setShareOpen(true)}>
             <Share2 className="size-4" />
             Share profile
@@ -104,49 +152,59 @@ export function Profile() {
           <Link to="/create" className="flex-1">
             <Button variant="brand" className="w-full">
               <Plus className="size-4" />
-              Create
+              Log a session
             </Button>
           </Link>
         </div>
 
-        {/* Creator vs. consumer — the centerpiece of the page, so it's given
-            more room and a little elevation than everything around it. */}
-        <div className="glass-panel glow-violet rounded-3xl p-6 sm:p-8 mb-10 shadow-2xl ring-1 ring-white/10">
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <h2 className="text-base sm:text-lg">Creator vs. consumer</h2>
-            <span className="font-hud text-2xl sm:text-3xl text-gradient-brand shrink-0">
+        {/* The shelf — the centrepiece of the page */}
+        <div className="mb-9">
+          <HobbyShelf />
+        </div>
+
+        {/* Creator vs. consumer */}
+        <div className="glass-panel glow-violet mb-9 rounded-3xl p-6 shadow-2xl ring-1 ring-white/10 sm:p-8">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              Creator vs. consumer
+            </h2>
+            <span className="shrink-0 font-hud text-2xl text-gradient-brand sm:text-3xl">
               {creatorShare}% creator
             </span>
           </div>
-          <div className="h-3.5 sm:h-4 w-full overflow-hidden rounded-full bg-white/10 flex">
+          <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-white/10 sm:h-4">
             <div
               className="h-full [background-image:var(--gradient-brand)]"
               style={{ width: `${creatorShare}%` }}
             />
           </div>
-          <p className="text-sm text-muted-foreground mt-3">
+          <p className="mt-3 text-sm text-muted-foreground">
             {stats.postsCreated === 0
-              ? "Your first post is worth 50 points — and shifts this bar."
+              ? "Log your first session and this bar starts moving."
               : creatorShare >= 50
               ? "You're making more than you're consuming."
-              : "Post something to shift the balance toward creating."}
+              : "Log a session to shift the balance toward making."}
           </p>
         </div>
 
-        {/* Achievements — Instagram "highlights" style, quiet, no ranking */}
-        <h2 className="text-sm text-muted-foreground mb-3">Achievements</h2>
-        <div className="mb-8">
-          <AchievementStrip onShare={() => setShareOpen(true)} />
+        {/* Quiet milestones */}
+        <div className="mb-9">
+          <h2 className="mb-3 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            Quiet Milestones
+          </h2>
+          <QuietMilestones onShare={() => setShareOpen(true)} />
         </div>
 
-        {/* Circles joined */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm text-muted-foreground">Circles joined</h2>
+        {/* Circles joined — soft colour-tinted cards */}
+        <div className="mb-9">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              Circles Joined
+            </h2>
             {joinedCircles.length > 0 && (
               <button
                 type="button"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => setCirclesVisible((v) => !v)}
               >
                 {circlesVisible ? "Visible on profile" : "Hidden — only you see this"}
@@ -164,18 +222,31 @@ export function Profile() {
               Hidden. Only you can see which circles you've joined.
             </p>
           ) : (
-            <div className="space-y-2">
-              {joinedCircles.map((circle) => {
+            <div className="grid grid-cols-2 gap-3">
+              {joinedCircles.map((circle, i) => {
                 const hobby = getHobby(circle.hobbySlug);
+                const tint = CIRCLE_TINTS[i % CIRCLE_TINTS.length];
                 return (
                   <Link
                     key={circle.id}
                     to={`/space/${circle.hobbySlug}`}
-                    className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 text-sm hover:border-white/20 transition-colors"
+                    className="rounded-2xl px-4 py-3.5 transition-transform duration-200 hover:-translate-y-0.5"
+                    style={{
+                      backgroundColor: `color-mix(in srgb, ${tint} 13%, transparent)`,
+                      border: `1px solid color-mix(in srgb, ${tint} 26%, transparent)`,
+                    }}
                   >
-                    <Users className="size-3.5 text-muted-foreground shrink-0" />
-                    <span className="flex-1">{circle.name}</span>
-                    <span className="text-xs text-muted-foreground">{hobby?.shortName}</span>
+                    <div
+                      className="text-sm leading-snug"
+                      style={{ fontFamily: "var(--font-serif)" }}
+                    >
+                      {circle.name}
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <Users className="size-3" strokeWidth={1.8} />
+                      {circle.memberCount.toLocaleString()} members
+                      {hobby && <span className="opacity-60">· {hobby.shortName}</span>}
+                    </div>
                   </Link>
                 );
               })}
@@ -196,8 +267,8 @@ export function Profile() {
 
           <TabsContent value="activity">
             {stats.postsCreated === 0 && stats.likesGiven === 0 && stats.purchases === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                Nothing yet — like a post or create something to start earning points.
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Nothing yet — log a session to start filling this in.
               </p>
             ) : (
               <ActivityLog />
@@ -215,7 +286,7 @@ function ActivityLog() {
   const { activity } = useRewards();
   if (activity.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-8 text-center">
+      <p className="py-8 text-center text-sm text-muted-foreground">
         Nothing logged this session yet.
       </p>
     );
@@ -230,7 +301,7 @@ function ActivityLog() {
           <span>{entry.label}</span>
           <div className="flex items-center gap-3">
             <span className="text-[#38BDF8]">+{entry.delta}</span>
-            <span className="text-muted-foreground text-xs">{timeAgo(entry.at)}</span>
+            <span className="text-xs text-muted-foreground">{timeAgo(entry.at)}</span>
           </div>
         </div>
       ))}

@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
 import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
+import { BottomTabBar } from "../components/BottomTabBar";
 import { Login } from "./Login";
 
 export function Root() {
@@ -32,6 +33,7 @@ export function Root() {
       </main>
       <CartDrawer />
       <BadgeUnlockToast />
+      <BottomTabBar />
     </div>
   );
 }

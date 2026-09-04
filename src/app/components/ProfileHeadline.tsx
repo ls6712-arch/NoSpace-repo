@@ -84,9 +84,15 @@ export function milestoneText(label: string, firstActivityAt: number, now = Date
 export function ProfileHeadline({
   hobbyLabel,
   firstActivityAt,
+  variant = "hero",
 }: {
   hobbyLabel?: string;
   firstActivityAt?: number;
+  /**
+   * "hero" is the big gradient headline. "quiet" is the one-line form used
+   * under a name, where the shelf is carrying the visual weight instead.
+   */
+  variant?: "hero" | "quiet";
 }) {
   const derived = usePrimaryHobby();
 
@@ -95,6 +101,14 @@ export function ProfileHeadline({
 
   const headline =
     label && startedAt ? milestoneText(label, startedAt) : "Just getting started";
+
+  if (variant === "quiet") {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {headline} <span className="text-muted-foreground/60">· Keep going.</span>
+      </p>
+    );
+  }
 
   return (
     <div>

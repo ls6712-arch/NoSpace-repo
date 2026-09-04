@@ -1,6 +1,5 @@
 export interface RewardStats {
   points: number;
-  /** Every logged session, newest last — one entry per post, holding the hobby it was in. */
   postsCreated: number;
   likesGiven: number;
   purchases: number;
@@ -15,10 +14,12 @@ export interface RewardStats {
 
 export interface Badge {
   id: string;
-  /** Generic name. Craft-specific badges override this per hobby — see badgeName(). */
+  /** Generic name. Craft-flavoured milestones override this — see badgeName(). */
   name: string;
   description: string;
   icon: string; // lucide icon name, resolved in the UI
+  /** Soft pastel used for the badge ring — see --pastel-* in theme.css. */
+  tint: string;
   test: (stats: RewardStats) => boolean;
 }
 
@@ -33,130 +34,148 @@ export function primaryHobbySessions(stats: RewardStats): number {
 }
 
 /**
- * Milestones tied to what you've actually made, not to platform tenure or how
- * often you show up. "Sessions" are logged posts — in this app, one post is one
- * time you sat down and did the thing.
+ * Quiet milestones. Named for what the time felt like, not for what rank it
+ * earns — "Clay in My Hands", not "Level 4". Nothing here ranks you against
+ * anyone else, and nothing counts followers or likes: every one of these is
+ * about showing up and making something.
  *
- * Two of these are craft-specific and get renamed per hobby (see CRAFT_NAMES):
- * "First Piece Fired" and "Master Potter" only make sense for pottery, so they
- * carry generic names here and are resolved against your primary hobby at
- * render time. Badge *ids* stay global and stable, so unlock state survives a
+ * Two of them take on the wording of whatever craft you're deepest in (see
+ * CRAFT_NAMES). Badge *ids* stay global and stable so unlock state survives a
  * change of primary hobby — only the wording follows the craft.
  */
 export const badges: Badge[] = [
   {
-    id: "first-spark",
-    name: "First Spark",
-    description: "Logged your first session.",
-    icon: "Sparkles",
+    id: "first-session",
+    name: "First Session",
+    description: "You showed up once. That's the hard one.",
+    icon: "Sprout",
+    tint: "var(--pastel-sage)",
     test: (s) => s.postsCreated >= 1,
   },
   {
-    id: "sessions-10",
-    name: "10 Sessions",
-    description: "Logged 10 sessions. It's a habit now.",
-    icon: "Flame",
-    test: (s) => s.postsCreated >= 10,
+    id: "hands-on",
+    name: "Getting My Hands In",
+    description: "Ten sessions in one hobby — past the beginner wobble.",
+    icon: "Hand",
+    tint: "var(--pastel-clay)",
+    test: (s) => primaryHobbySessions(s) >= 10,
   },
   {
-    id: "first-output",
-    name: "First Finished Piece",
-    description: "15 sessions in one hobby — long enough to finish something real.",
-    icon: "Award",
+    id: "made-something",
+    name: "Made Something",
+    description: "Fifteen sessions in one hobby. Long enough to finish a real thing.",
+    icon: "Package",
+    tint: "var(--pastel-wheat)",
     test: (s) => primaryHobbySessions(s) >= 15,
   },
   {
-    id: "sessions-50",
-    name: "50 Sessions",
-    description: "Logged 50 sessions.",
-    icon: "Repeat",
-    test: (s) => s.postsCreated >= 50,
-  },
-  {
-    id: "skill-explorer",
-    name: "Skill Explorer",
-    description: "Logged sessions in 3 different hobbies.",
+    id: "curious-hands",
+    name: "Curious Hands",
+    description: "Sessions logged across three different hobbies.",
     icon: "Compass",
+    tint: "var(--pastel-stone)",
     test: (s) => new Set(s.hobbiesPosted).size >= 3,
   },
   {
-    id: "sessions-100",
-    name: "100 Sessions",
-    description: "Logged 100 sessions.",
+    id: "consistency-club",
+    name: "Consistency Club",
+    description: "Fifty sessions. You keep coming back.",
+    icon: "Coffee",
+    tint: "var(--pastel-sky)",
+    test: (s) => s.postsCreated >= 50,
+  },
+  {
+    id: "still-going",
+    name: "Still Going",
+    description: "A hundred sessions in. Quietly remarkable.",
     icon: "Mountain",
+    tint: "var(--pastel-rose)",
     test: (s) => s.postsCreated >= 100,
   },
   {
-    id: "mastery",
-    name: "Mastery",
-    description: "150 sessions in a single hobby.",
-    icon: "Crown",
+    id: "second-nature",
+    name: "Second Nature",
+    description: "A hundred and fifty sessions in one hobby. It's part of you now.",
+    icon: "Feather",
+    tint: "var(--pastel-sage)",
     test: (s) => primaryHobbySessions(s) >= 150,
   },
 ];
 
-/** Badges whose wording depends on the craft rather than the platform. */
-const CRAFT_BADGE_IDS = new Set(["first-output", "mastery"]);
+/** Milestones whose wording follows the craft rather than the platform. */
+const CRAFT_BADGE_IDS = new Set(["hands-on", "second-nature"]);
 
 /**
- * Per-hobby wording for the two craft badges: [first finished piece, mastery].
+ * Per-hobby wording: [ten sessions in, deeply settled in].
  * Anything not listed falls back to the generic pair, so this table can stay
- * short and grow only where a hobby has a name worth using.
+ * short and grow only where a hobby has a phrase worth using.
  */
 const CRAFT_NAMES: Record<string, [string, string]> = {
-  pottery: ["First Piece Fired", "Master Potter"],
-  ceramics: ["First Piece Fired", "Master Ceramicist"],
-  knitting: ["First Finished Knit", "Master Knitter"],
-  crochet: ["First Finished Piece", "Master Crocheter"],
-  embroidery: ["First Hoop Finished", "Master Embroiderer"],
-  sewing: ["First Garment Finished", "Master Tailor"],
-  woodworking: ["First Build Finished", "Master Woodworker"],
-  "jewelry-making": ["First Piece Set", "Master Jeweller"],
-  "candle-making": ["First Clean Pour", "Master Chandler"],
-  "3d-printing": ["First Clean Print", "Master Fabricator"],
-  electronics: ["First Working Circuit", "Master Tinkerer"],
-  robotics: ["First Robot Walking", "Master Roboticist"],
-  coding: ["First Thing Shipped", "Master Builder"],
-  "game-development": ["First Playable Build", "Master Game Dev"],
-  running: ["First Long Run Logged", "Master Runner"],
-  yoga: ["First Held Pose", "Master Yogi"],
-  climbing: ["First Route Sent", "Master Climber"],
-  pickleball: ["First Match Won", "Master of the Court"],
-  cooking: ["First Dish Nailed", "Master Cook"],
-  baking: ["First Perfect Bake", "Master Baker"],
-  sourdough: ["First Perfect Loaf", "Master Baker"],
-  espresso: ["First Clean Pour", "Master Barista"],
-  "home-coffee": ["First Clean Pour", "Master Barista"],
-  gardening: ["First Harvest", "Master Gardener"],
-  houseplants: ["First Plant Thriving", "Master Grower"],
-  foraging: ["First Full Basket", "Master Forager"],
-  painting: ["First Canvas Finished", "Master Painter"],
-  drawing: ["First Piece Finished", "Master Draughtsman"],
-  watercolor: ["First Wash Finished", "Master Watercolourist"],
-  photography: ["First Roll Finished", "Master Photographer"],
-  "music-production": ["First Track Finished", "Master Producer"],
-  instrument: ["First Piece Played Through", "Master Musician"],
-  writing: ["First Draft Finished", "Master Writer"],
-  calligraphy: ["First Page Finished", "Master Calligrapher"],
-  chess: ["First Game Won", "Master of the Board"],
-  "board-games": ["First Game Won", "Master Strategist"],
-  lego: ["First Build Finished", "Master Builder"],
-  puzzles: ["First Puzzle Finished", "Master Solver"],
+  pottery: ["Clay in My Hands", "At Home in Clay"],
+  ceramics: ["Clay in My Hands", "At Home in Clay"],
+  knitting: ["Rhythm in the Needles", "Knitting Without Looking"],
+  crochet: ["Rhythm in the Hook", "Crocheting Without Looking"],
+  embroidery: ["Steady Stitches", "The Needle Knows"],
+  sewing: ["Straight Seams", "Cutting Without Fear"],
+  woodworking: ["Sawdust Everywhere", "The Grain Speaks"],
+  "jewelry-making": ["Small and Precise", "Steady at the Bench"],
+  "candle-making": ["The House Smells Good", "Perfect Pour"],
+  "3d-printing": ["First Clean Layer", "The Printer Obeys"],
+  electronics: ["It Lit Up", "Reading the Board"],
+  robotics: ["It Moved", "It Listens Now"],
+  coding: ["It Compiles", "Fluent in the Machine"],
+  "game-development": ["Someone Played It", "Worlds on Demand"],
+  running: ["Early Miles", "The Long Way Home"],
+  "run-clubs": ["Early Miles", "The Long Way Home"],
+  yoga: ["Breath and Balance", "Stillness Comes Easy"],
+  climbing: ["New Height", "The Wall Reads Itself"],
+  cycling: ["Wind in the Spokes", "Any Distance, Any Day"],
+  dance: ["Found the Beat", "The Body Remembers"],
+  pickleball: ["Dinks and Drives", "Owning the Kitchen"],
+  swimming: ["Lengths and Lengths", "At Home in the Water"],
+  hiking: ["Boots Broken In", "The Trail Is Home"],
+  "strength-training": ["Something Got Heavier", "Strong on Purpose"],
+  weightlifting: ["Something Got Heavier", "Strong on Purpose"],
+  cooking: ["Cooking Without the Recipe", "The Kitchen Obeys"],
+  baking: ["Warm From the Oven", "Baker's Hands"],
+  sourdough: ["The Starter Lives", "Bread on Instinct"],
+  espresso: ["The Shot Ran True", "Dialled In"],
+  "home-coffee": ["The Pour Slowed Down", "Dialled In"],
+  "cocktail-making": ["Balanced at Last", "Free Pour"],
+  gardening: ["Dirt Under the Nails", "The Garden Keeps Itself"],
+  houseplants: ["Nothing Died", "Everything Thriving"],
+  foraging: ["A Full Basket", "The Woods Are Legible"],
+  birdwatching: ["Learned Their Calls", "Knows Them by Wing"],
+  camping: ["Slept Outside", "At Home Outdoors"],
+  painting: ["Colour on My Hands", "The Brush Knows"],
+  drawing: ["Filled a Sketchbook", "Drawing Without Looking"],
+  watercolor: ["Let the Water Work", "Wet on Wet, on Purpose"],
+  photography: ["Started Seeing Light", "Frames It Instantly"],
+  filmmaking: ["Finished a Cut", "Tells It in Pictures"],
+  "music-production": ["Finished a Track", "Hears It Before It Plays"],
+  instrument: ["Played It Through", "Music Without Thinking"],
+  singing: ["Found My Range", "The Voice Obeys"],
+  writing: ["Filled the Page", "Words Come Easy"],
+  poetry: ["Filled the Page", "Words Come Easy"],
+  journaling: ["Kept at It", "The Page Waits Patiently"],
+  calligraphy: ["Steady Line", "Ink Behaves"],
+  chess: ["Saw It Coming", "Thinks in Positions"],
+  "board-games": ["Learned the Table", "Knows Every Rule"],
+  books: ["A Real Stack", "Read Everything Here"],
+  puzzles: ["Edges First", "Sees the Whole Picture"],
+  thrifting: ["A Good Find", "Knows a Treasure"],
+  "language-learning": ["First Real Sentence", "Dreams in It"],
 };
 
 /**
- * The name to show for a badge, given the hobby someone is furthest into.
- * `hobbySlug` is a sub-hobby slug (e.g. "pottery"); pass the label too so an
- * unlisted hobby still reads naturally ("Master of Pilates").
+ * The name to show for a milestone, given the hobby someone is deepest in.
+ * `hobbySlug` is a sub-hobby slug (e.g. "pottery").
  */
-export function badgeName(badge: Badge, hobbySlug?: string, hobbyLabel?: string): string {
+export function badgeName(badge: Badge, hobbySlug?: string, _hobbyLabel?: string): string {
   if (!CRAFT_BADGE_IDS.has(badge.id) || !hobbySlug) return badge.name;
-
   const named = CRAFT_NAMES[hobbySlug];
-  if (named) return badge.id === "mastery" ? named[1] : named[0];
-
-  if (badge.id === "mastery" && hobbyLabel) return `Master of ${hobbyLabel}`;
-  return badge.name;
+  if (!named) return badge.name;
+  return badge.id === "second-nature" ? named[1] : named[0];
 }
 
 export function levelForPoints(points: number) {
