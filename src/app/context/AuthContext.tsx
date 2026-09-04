@@ -50,11 +50,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      if (data.session) loadProfile(data.session.user.id);
-      setLoading(false);
-    });
+    // The whole site is public now, so this check must never be able to hold
+    // the app hostage. It resolves on success, on failure, and on a timeout —
+    // a visitor with a flaky connection gets a browsable site as a signed-out
+    // guest rather than an endless spinner.
+    const settle = setTimeout(() => setLoading(false), 5000);
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSession(data.session);
+        if (data.session) loadProfile(data.session.user.id);
+      })
+      .catch(() => {
+        // Unreachable auth server — carry on as a guest.
+      })
+      .finally(() => {
+        clearTimeout(settle);
+        setLoading(false);
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);

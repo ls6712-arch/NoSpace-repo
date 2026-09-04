@@ -14,6 +14,7 @@ import { MyPostsGrid } from "../components/MyPostsGrid";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
+import { SignUpPrompt } from "../components/SignUpPrompt";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -61,6 +62,18 @@ export function Profile() {
   const joinedCircles = joinedCircleIds
     .map((id) => getCircle(id))
     .filter((c): c is NonNullable<typeof c> => !!c);
+
+  // Your own profile is the one page that genuinely needs to know who you are.
+  // Anyone else's shelf is open at /u/<username>.
+  if (isConfigured && !user) {
+    return (
+      <SignUpPrompt
+        title="Your shelf lives here"
+        body="Make an account and everything you log builds up on a shelf of your own — hobbies, sessions, milestones. You can keep browsing everything else without one."
+        cta="Start my shelf"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen py-8 sm:py-10">

@@ -11,6 +11,7 @@ import { CategoryFeed } from "./pages/CategoryFeed";
 import { Discover } from "./pages/Discover";
 import { CreatorStudio } from "./pages/CreatorStudio";
 import { Profile } from "./pages/Profile";
+import { PublicProfile } from "./pages/PublicProfile";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
@@ -26,6 +27,7 @@ export const router = createHashRouter([
       { path: "space/:slug", Component: CategoryFeed },
       { path: "create", Component: CreatorStudio },
       { path: "profile", Component: Profile },
+      { path: "u/:username", Component: PublicProfile },
       { path: "login", Component: Login },
       { path: "shop", Component: Shop },
       { path: "product/:id", Component: ProductDetail },

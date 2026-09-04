@@ -3,6 +3,7 @@ import * as Icons from "lucide-react";
 import { badges, badgeName } from "../data/badges";
 import { usePrimaryHobbyKey } from "./usePrimaryHobbyKey";
 import { useRewards } from "../context/RewardsContext";
+import { useAuth } from "../context/AuthContext";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -16,6 +17,12 @@ export function ShareProfileDialog({
 }) {
   const { points, level, stats, unlockedBadgeIds } = useRewards();
   const { slug: hobbySlug, label: hobbyLabel } = usePrimaryHobbyKey();
+  const { profile } = useAuth();
+  // The link has to be one anyone can actually open — the page you are
+  // standing on requires an account, the public shelf does not.
+  const publicUrl = profile?.username
+    ? `${window.location.origin}${window.location.pathname}#/u/${profile.username}`
+    : window.location.href;
   const [copied, setCopied] = useState(false);
 
   const unlocked = badges.filter((b) => unlockedBadgeIds.includes(b.id));
@@ -24,7 +31,7 @@ export function ShareProfileDialog({
     (creatorPoints / Math.max(creatorPoints + Math.max(points - creatorPoints, 0), 1)) * 100
   );
 
-  const summary = `I've created ${stats.postsCreated} things on NoSpace (Level ${level}) — ${unlocked.length} badges unlocked. Create, don't just consume: ${window.location.href}`;
+  const summary = `${stats.postsCreated} ${stats.postsCreated === 1 ? "session" : "sessions"} logged on NoSpace, ${unlocked.length} quiet ${unlocked.length === 1 ? "milestone" : "milestones"} reached. Create, don't just consume: ${publicUrl}`;
 
   const handleCopy = async () => {
     try {

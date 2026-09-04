@@ -12,10 +12,23 @@ import { Button } from "./ui/button";
  * present, so you can see what's ahead, but never nagging. No counts, no
  * ranking, no comparison to anyone else.
  */
-export function QuietMilestones({ onShare }: { onShare: () => void }) {
-  const { unlockedBadgeIds } = useRewards();
+export function QuietMilestones({
+  onShare,
+  unlockedIds,
+  primary,
+}: {
+  onShare?: () => void;
+  /** Supply to render someone else's milestones (public profiles). */
+  unlockedIds?: string[];
+  /** Which craft names to use, when not reading the viewer's own ledger. */
+  primary?: { slug?: string; label?: string };
+}) {
+  const { unlockedBadgeIds: ownUnlocked } = useRewards();
+  const ownPrimary = usePrimaryHobbyKey();
   const [selected, setSelected] = useState<BadgeDef | null>(null);
-  const { slug: hobbySlug, label: hobbyLabel } = usePrimaryHobbyKey();
+
+  const unlockedBadgeIds = unlockedIds ?? ownUnlocked;
+  const { slug: hobbySlug, label: hobbyLabel } = primary ?? ownPrimary;
 
   return (
     <>
@@ -94,7 +107,7 @@ export function QuietMilestones({ onShare }: { onShare: () => void }) {
                       {badgeName(selected, hobbySlug, hobbyLabel)}
                     </h3>
                     <p className="mb-5 text-sm text-muted-foreground">{selected.description}</p>
-                    {unlocked ? (
+                    {unlocked && onShare ? (
                       <Button
                         variant="outline"
                         className="w-full"
@@ -106,7 +119,7 @@ export function QuietMilestones({ onShare }: { onShare: () => void }) {
                         <Icons.Share2 className="size-4" />
                         Share your profile
                       </Button>
-                    ) : (
+                    ) : unlocked ? null : (
                       <p className="text-xs text-muted-foreground">Not yet — no rush.</p>
                     )}
                   </>
