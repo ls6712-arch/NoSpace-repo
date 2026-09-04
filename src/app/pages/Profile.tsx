@@ -76,7 +76,7 @@ export function Profile() {
   }
 
   return (
-    <div className="min-h-screen py-8 sm:py-10">
+    <div className="min-h-screen bg-surface py-8 sm:py-10">
       <div className="container mx-auto max-w-2xl px-4">
         {/* Wordmark + settings, matching the phone layout */}
         <div className="mb-6 flex items-start justify-between">

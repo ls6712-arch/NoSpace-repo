@@ -18,7 +18,7 @@ export function Shop() {
   const filtered = selected === "all" ? listings : listings.filter((p) => p.hobbySlug === selected);
 
   return (
-    <div className="min-h-screen py-14">
+    <div className="min-h-screen bg-surface py-14">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl mb-3">The marketplace</h1>

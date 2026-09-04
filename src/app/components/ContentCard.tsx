@@ -1,4 +1,5 @@
 import { Heart, Play, ShoppingBag, Users, UserRound } from "lucide-react";
+import { PostReactions } from "./PostReactions";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
@@ -79,6 +80,9 @@ export function ContentCard({ post }: { post: Post }) {
           )}
         </div>
         <p className="text-sm text-muted-foreground mb-3">{post.caption}</p>
+
+        {/* Every creation carries the same five reactions. */}
+        <PostReactions postId={post.id} className="mb-3" />
 
         {listing && (
           <Link to={`/product/${listing.id}`}>

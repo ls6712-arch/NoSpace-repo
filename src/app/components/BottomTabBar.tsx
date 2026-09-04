@@ -69,7 +69,7 @@ export function BottomTabBar() {
               <Link
                 key={tab.label || "create"}
                 to={tab.to}
-                className={`flex w-16 flex-col items-center gap-1 py-1 transition-colors ${
+                className={`flex min-h-11 w-16 flex-col items-center justify-center gap-1 py-2 transition-colors ${
                   active ? "text-foreground" : "text-muted-foreground/70"
                 }`}
                 aria-current={active ? "page" : undefined}

@@ -36,7 +36,7 @@ export function ProductDetail() {
   const inWishlist = isInWishlist(product.id);
 
   return (
-    <div className="min-h-screen py-10">
+    <div className="min-h-screen bg-surface py-10">
       <div className="container mx-auto px-4">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="size-4" />

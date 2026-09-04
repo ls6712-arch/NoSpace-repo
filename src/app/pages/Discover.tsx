@@ -45,10 +45,10 @@ export function Discover() {
   return (
     <div className="min-h-screen">
       <section className="relative py-14 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-fuchsia-500 to-amber-500 opacity-[0.10]" />
+        <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
         <div className="container mx-auto px-4 relative">
           <h1 className="text-4xl md:text-5xl mb-3">Discover</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mb-6">
+          <p className="text-foreground text-lg max-w-2xl mb-6">
             Every hobby on NoSpace — {totalAll} of them, across {hobbies.length}{" "}
             spaces. Find the one you've been meaning to start.
           </p>
@@ -81,6 +81,7 @@ export function Discover() {
         </div>
       </section>
 
+      <div className="bg-surface pt-10">
       <section className="container mx-auto px-4 pb-24 space-y-12">
         {sections.length === 0 && (
           <div className="text-center py-20 text-muted-foreground">
@@ -121,6 +122,7 @@ export function Discover() {
           </div>
         ))}
       </section>
+      </div>
     </div>
   );
 }

@@ -141,12 +141,12 @@ export function CategoryFeed() {
         <div className={`absolute inset-0 bg-gradient-to-br ${hobby.gradient} opacity-[0.12]`} />
         <div className="container mx-auto px-4 relative flex flex-col md:flex-row items-center gap-8">
           <div className="flex-1 min-w-0">
-            <p className="text-sm uppercase tracking-wide text-muted-foreground mb-2">
+            <p className="text-sm uppercase tracking-wide text-foreground mb-2">
               {hobby.plainLabel}
             </p>
             <h1 className="text-4xl md:text-5xl mb-3">{hobby.shortName}</h1>
-            <p className="text-lg mb-2 italic text-muted-foreground">{hobby.tagline}</p>
-            <p className="text-muted-foreground text-lg max-w-xl">{hobby.description}</p>
+            <p className="text-lg mb-2 italic text-foreground">{hobby.tagline}</p>
+            <p className="text-foreground text-lg max-w-xl">{hobby.description}</p>
           </div>
           <div className="w-full max-w-xs md:w-72 md:max-w-none shrink-0 rounded-3xl overflow-hidden border border-border bg-surface-muted">
             <GeneratedArt
@@ -158,6 +158,7 @@ export function CategoryFeed() {
         </div>
       </section>
 
+      <div className="bg-surface">
       {/* What's actually inside this space — pictures, not a word list. */}
       <section className="container mx-auto px-4 pt-10">
         <div className="flex items-end justify-between gap-4 mb-4 flex-wrap">
@@ -277,6 +278,7 @@ export function CategoryFeed() {
         <Plus className="size-4" />
         Contribute
       </Link>
+      </div>
     </div>
   );
 }

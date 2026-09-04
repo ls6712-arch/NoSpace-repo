@@ -198,7 +198,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-[var(--hairline)] [background-color:color-mix(in_srgb,var(--sky)_92%,#FFFFFF)] backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-6 min-w-0">
           <Button
@@ -210,7 +210,7 @@ export function Header() {
             {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </Button>
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-2xl font-semibold text-gradient-brand" style={{ fontFamily: "var(--font-heading)" }}>
+            <span className="text-2xl font-semibold text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>
               NoSpace
             </span>
           </Link>
@@ -226,7 +226,7 @@ export function Header() {
                   title={item.hint}
                   aria-current={active ? "page" : undefined}
                   className={`relative py-1 text-sm transition-colors ${
-                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                    active ? "text-foreground" : "text-foreground/80 hover:text-foreground"
                   }`}
                 >
                   {item.label}
@@ -320,7 +320,7 @@ export function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-border bg-background/95 backdrop-blur-xl">
+        <div className="lg:hidden border-t border-[var(--hairline)] [background-color:var(--sky)] backdrop-blur-xl">
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
             <Link
               to="/discover"
@@ -350,7 +350,7 @@ export function Header() {
             <Link
               to="/shop"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm py-2 text-muted-foreground"
+              className="text-sm py-2 text-foreground"
             >
               Marketplace
             </Link>

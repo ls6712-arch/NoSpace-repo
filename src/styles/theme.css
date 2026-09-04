@@ -25,47 +25,51 @@
   --wood-light: #8A6A49;
 
   /* ── NoSpace palette ──────────────────────────────────────────────────────
-     Sky blue, deep forest green, coral, mustard, cream.
+     Sky blue world, forest brand, coral action, cream surfaces, yellow accent.
 
-     Each hue that carries text has an accessible sibling, because the bright
-     versions do not pass WCAG AA on their own — measured, not guessed:
-       white on #4A9FD8 = 2.90  ✗   white on --sky-deep   = 4.91  ✓
-       white on #FF6B4A = 2.82  ✗   white on --coral-deep = 5.15  ✓
-       #FF6B4A on cream = 2.56  ✗   --coral-text everywhere >= 4.94 ✓
-     Use the bright ones for fills, illustration and decoration; the deep ones
-     anywhere a label sits on top. Mustard is decorative only — as text on
-     cream it measures 1.61 and cannot be fixed without ceasing to be mustard. */
-  /* The pale sky the hero sits on. Forest text on it measures 13.4:1. */
-  --sky-soft: #D8EDFB;
-  --sky: #4A9FD8;
+     Measured, not guessed. The saturated blue is a real constraint: forest
+     #0E4D3A on it is 3.76:1 — fine for the headline (large text needs 3:1)
+     but short of the 4.5:1 body text needs. So --forest stays the brand
+     colour for display type and dark sections, and --forest-ink (one notch
+     deeper) carries anything at body size. It reads as the same green.
+
+       forest    on sky   3.76  large only      forest-ink on sky    4.62 ✓
+       forest    on cream 8.93 ✓                forest-ink on cream 10.98 ✓
+       white     on coral 2.82 ✗                white on coral-deep  5.15 ✓
+       coral-text on cream 4.94 ✓               coral-text on sky     1.85 ✗
+
+     Two hard rules that fall out of this: never put coral, white or cream
+     TEXT on the sky (all fail badly — coral belongs there as a filled button,
+     where white sits on the coral instead), and never put muted metadata on
+     the sky either (2.64). Metadata lives on cream. */
+  --sky: #5DA8D8;
   --sky-deep: #2F76A8;
-  --forest: #1B4332;
+  --forest: #0E4D3A;
+  --forest-ink: #0B3E2E;
   --coral: #FF6B4A;
   --coral-deep: #C43F22;
-  --coral-text: #B03A1E;
-  --mustard: #F4B942;
-  --cream: #FAF3E8;
+  --coral-text: #BC3F21;
+  --yellow: #F5C542;
+  /* Kept as an alias: milestone tints and chart-4 already reference it. */
+  --mustard: var(--yellow);
+  --cream: #F8F4EB;
 
   /* ── Semantic UI tokens ───────────────────────────────────────────────────
      Everything in the interface reads these, never a raw hue. Swapping the
-     palette again means editing this block only.
-
-     Bright hues are for surfaces, fills and illustration; the deep variants
-     carry text. That split is the whole reason this palette passes AA. */
-  --background: var(--sky-soft);
+     palette again means editing this block only. */
+  --background: var(--sky);
   --surface: var(--cream);
-  --surface-muted: #F1E7D6;
-  --foreground: var(--forest);
-  --foreground-muted: #4A6357;
-  --border: rgba(27, 67, 50, 0.18);
-  --hairline: rgba(27, 67, 50, 0.10);
+  --surface-muted: #EFE8D8;
+  --foreground: var(--forest-ink);
+  --foreground-muted: #456055;
+  --border: rgba(14, 77, 58, 0.20);
+  --hairline: rgba(14, 77, 58, 0.12);
   --primary: var(--coral-deep);
   --primary-foreground: #FFFFFF;
 
-  /* Forest is also used as a large dark surface (the banded sections in the
-     design). Text on it flips to cream — 10.05:1. */
+  /* Forest also serves as a large dark surface for banded sections. */
   --on-forest: var(--cream);
-  --on-forest-muted: rgba(250, 243, 232, 0.72);
+  --on-forest-muted: rgba(248, 244, 235, 0.74);
 
   /* ── shadcn/ui mappings ───────────────────────────────────────────────────
      The ui/ primitives consume these names, so pointing them at the semantic
@@ -106,10 +110,10 @@
   --sidebar-ring: var(--ring);
 
   /* Used for filled CTAs, where white sits on top — both stops clear AA. */
-  --gradient-brand: linear-gradient(120deg, var(--coral-deep) 0%, #B3381D 100%);
+  --gradient-brand: linear-gradient(120deg, var(--coral-deep) 0%, #A83318 100%);
   --gradient-brand-soft: linear-gradient(120deg, rgba(255,107,74,0.14) 0%, rgba(244,185,66,0.12) 55%, rgba(74,159,216,0.12) 100%);
   /* For gradient *text*, which needs to stay legible on light ground. */
-  --gradient-ink: linear-gradient(105deg, var(--coral-text) 0%, var(--forest) 78%);
+  --gradient-ink: linear-gradient(105deg, var(--coral-text) 0%, var(--forest) 72%);
 }
 
 @theme inline {
@@ -142,11 +146,12 @@
   --color-coral-deep: var(--coral-deep);
   --color-coral-text: var(--coral-text);
   --color-sky: var(--sky);
-  --color-sky-soft: var(--sky-soft);
   --color-sky-deep: var(--sky-deep);
   --color-forest: var(--forest);
   --color-mustard: var(--mustard);
   --color-cream: var(--cream);
+  --color-yellow: var(--yellow);
+  --color-forest-ink: var(--forest-ink);
   --color-on-forest: var(--on-forest);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -180,9 +185,8 @@
     @apply bg-background text-foreground;
     font-family: var(--font-body);
     background-image:
-      radial-gradient(ellipse 90% 55% at 20% -8%, rgba(255, 255, 255, 0.55), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 4%, rgba(244, 185, 66, 0.10), transparent),
-      radial-gradient(ellipse 70% 45% at 85% 96%, rgba(74, 159, 216, 0.14), transparent);
+      radial-gradient(ellipse 95% 55% at 18% -10%, rgba(255, 255, 255, 0.34), transparent),
+      radial-gradient(ellipse 55% 38% at 96% 2%, rgba(245, 197, 66, 0.16), transparent);
     background-size: auto, auto, auto;
     background-attachment: fixed;
   }
@@ -278,10 +282,60 @@
     transform-origin: center;
   }
 
+  /* Applied to groups inside hero illustrations. transform-box keeps the
+     transform origin on the shape itself rather than the whole SVG canvas. */
+  .ns-breathe, .ns-sway, .ns-drift, .ns-twinkle {
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform;
+  }
+  .ns-breathe { animation: ns-breathe 6.5s ease-in-out infinite; }
+  .ns-sway    { transform-origin: bottom center; animation: ns-sway 7.5s ease-in-out infinite; }
+  .ns-drift   { animation: ns-drift 34s ease-in-out infinite alternate; }
+  .ns-twinkle { animation: ns-twinkle 3.4s ease-in-out infinite; }
+
+  /* Hero entrance: headline, copy, CTA, then the illustration. Each step
+     starts from a visible resting state on the last frame, so nothing is
+     left parked at opacity 0 if animations never run. */
+  .ns-enter {
+    opacity: 0;
+    animation: ns-rise .62s cubic-bezier(.22,.61,.36,1) forwards;
+  }
+  .ns-enter-1 { animation-delay: .05s; }
+  .ns-enter-2 { animation-delay: .16s; }
+  .ns-enter-3 { animation-delay: .27s; }
+  .ns-enter-4 { animation-delay: .38s; }
+
   .generated-art-sparkle {
     animation: generated-art-twinkle 2.4s ease-in-out infinite;
     transform-origin: center;
   }
+}
+
+/* ── Illustration motion ───────────────────────────────────────────────────
+   Slow enough to read as "alive", not as an advertisement. Characters
+   breathe, plants sway, clouds drift, sparkles pulse — each on a different
+   period so the scene never falls into lockstep. All of it is switched off
+   wholesale under prefers-reduced-motion at the bottom of this file. */
+@keyframes ns-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-1.5px) scale(1.012); }
+}
+@keyframes ns-sway {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50%      { transform: rotate(1.6deg); }
+}
+@keyframes ns-drift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(26px); }
+}
+@keyframes ns-twinkle {
+  0%, 100% { opacity: .45; transform: scale(.86); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+@keyframes ns-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes gradient-shift {
@@ -375,4 +429,42 @@ body,
 #root {
   background-color: var(--background);
   color: var(--foreground);
+}
+
+/* One visible keyboard focus ring for the whole app, deliberately unlayered
+   so it beats the utility `outline-none` that ships on the shadcn primitives.
+   :where() keeps specificity at zero, so a component that genuinely needs its
+   own focus treatment can still opt out. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--coral-deep) !important;
+  outline-offset: 2px !important;
+}
+
+/* Honour the OS setting: no continuous loops, no parallax, no entrance
+   offsets — everything simply present. */
+@media (prefers-reduced-motion: reduce) {
+  .ns-breathe, .ns-sway, .ns-drift, .ns-twinkle,
+  .generated-art-float, .generated-art-sparkle,
+  .animate-float-slow, .animate-float-slower, .animate-pulse-soft,
+  .animate-marquee, .animate-in, .animate-spin,
+  .text-gradient-animated {
+    animation: none !important;
+  }
+  .ns-enter {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .ns-parallax { transform: none !important; }
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

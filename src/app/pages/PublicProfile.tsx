@@ -132,7 +132,7 @@ export function PublicProfile() {
   const primaryHobby = pickPrimaryHobby(posts);
 
   return (
-    <div className="min-h-screen py-8 sm:py-10">
+    <div className="min-h-screen bg-surface py-8 sm:py-10">
       <div className="container mx-auto max-w-2xl px-4">
         <div className="mb-6">
           <span

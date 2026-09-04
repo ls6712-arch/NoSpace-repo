@@ -172,7 +172,7 @@ export function CreatorStudio() {
   }
 
   return (
-    <div className="min-h-screen py-14">
+    <div className="min-h-screen bg-surface py-14">
       <div className="container mx-auto px-4 max-w-2xl">
         <div className="mb-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-muted px-4 py-1.5 text-xs text-muted-foreground mb-4">

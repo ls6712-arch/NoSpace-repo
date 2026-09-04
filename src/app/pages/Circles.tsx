@@ -33,7 +33,7 @@ export function Circles() {
   }
 
   return (
-    <div className="min-h-screen py-10">
+    <div className="min-h-screen bg-surface py-10">
       <div className="container mx-auto max-w-3xl px-4">
         <h1 className="text-4xl sm:text-5xl mb-3" style={{ fontFamily: "var(--font-serif)" }}>
           Circles
