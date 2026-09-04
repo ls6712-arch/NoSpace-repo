@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { LogOut, Menu, Package, Plus, Search, ShoppingBag, Sparkle, User, X } from "lucide-react";
+import { Package, Plus, Search, ShoppingBag, Sparkle, User, X } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { hobbies } from "../data/hobbies";
@@ -9,6 +9,7 @@ import { products } from "../data/products";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import { NotificationsMenu } from "./NotificationsMenu";
 
 function initials(name: string) {
   return name
@@ -20,17 +21,7 @@ function initials(name: string) {
 }
 
 function AccountMenu() {
-  const { user, profile, isConfigured, signOut } = useAuth();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
+  const { user, profile, isConfigured } = useAuth();
 
   if (!isConfigured) return null;
 
@@ -47,37 +38,11 @@ function AccountMenu() {
   const name = profile?.display_name || "You";
 
   return (
-    <div className="relative" ref={ref}>
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-label="Account menu">
-        <Avatar className="size-8">
-          <AvatarFallback className="text-[11px]">{initials(name)}</AvatarFallback>
-        </Avatar>
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl border border-border bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
-          <div className="px-4 py-3 text-sm truncate border-b border-border">{name}</div>
-          <Link
-            to="/profile"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-surface-muted transition-colors"
-          >
-            <User className="size-3.5" />
-            Profile
-          </Link>
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              signOut();
-            }}
-            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left hover:bg-surface-muted transition-colors"
-          >
-            <LogOut className="size-3.5" />
-            Log out
-          </button>
-        </div>
-      )}
-    </div>
+    <Link to="/you" aria-label="You — your work, saved ideas, and settings" title="You">
+      <Avatar className="size-8">
+        <AvatarFallback className="text-[11px]">{initials(name)}</AvatarFallback>
+      </Avatar>
+    </Link>
   );
 }
 
@@ -148,24 +113,27 @@ const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
 };
 
 /**
- * The three primary destinations. Individual hobby spaces live inside
- * Discover; putting eight category names in the bar made it a directory
- * rather than a navigation.
+ * The four primary destinations, identical on desktop and mobile so the app
+ * has one mental model rather than two. "You" is deliberately absent: it hangs
+ * off the avatar, because a personal archive is somewhere you go on purpose,
+ * not a tab competing with the places you go to make and find things.
  */
 const PRIMARY_NAV = [
-  { to: "/discover", label: "Discover", hint: "Explore hobbies, creations and people",
+  { to: "/discover", label: "Discover", hint: "Projects, people, and hobbies worth exploring",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") },
-  { to: "/profile", label: "My Space", hint: "Your activity, portfolio and progress",
-    match: (p: string) => p.startsWith("/profile") },
-  { to: "/circles", label: "Circles", hint: "Hobby communities and local groups",
+  { to: "/my-space", label: "My Space", hint: "New work from people and Circles you follow",
+    match: (p: string) => p.startsWith("/my-space") },
+  { to: "/circles", label: "Circles", hint: "Smaller communities built around doing",
     match: (p: string) => p.startsWith("/circles") },
+  { to: "/log", label: "Log", hint: "Record your progress", accent: true,
+    match: (p: string) => p.startsWith("/log") },
 ];
 
 export function Header() {
   const { openCart, cartCount } = useCart();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -201,14 +169,6 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-[var(--hairline)] [background-color:color-mix(in_srgb,var(--sky)_92%,#FFFFFF)] backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-6 min-w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-          >
-            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </Button>
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <span className="text-2xl font-semibold text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>
               NoSpace
@@ -225,13 +185,18 @@ export function Header() {
                   to={item.to}
                   title={item.hint}
                   aria-current={active ? "page" : undefined}
-                  className={`relative py-1 text-sm transition-colors ${
-                    active ? "text-foreground" : "text-foreground/80 hover:text-foreground"
-                  }`}
+                  className={
+                    item.accent
+                      ? "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm text-white transition-[filter] [background-color:var(--coral-deep)] hover:brightness-110"
+                      : `relative py-1 text-sm transition-colors ${
+                          active ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+                        }`
+                  }
                 >
+                  {item.accent && <Plus className="size-3.5" aria-hidden="true" />}
                   {item.label}
                   {/* Understated active marker — a short rule, not a pill */}
-                  {active && (
+                  {active && !item.accent && (
                     <span
                       className="absolute -bottom-0.5 left-0 right-0 h-px"
                       style={{ backgroundColor: "var(--coral)" }}
@@ -244,13 +209,14 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="hidden md:flex flex-1 max-w-sm">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="hidden w-56 md:block lg:w-64">
           <div className="relative w-full" ref={searchRef}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               type="search"
-              aria-label="Search creators, spaces, and drops"
-              placeholder="Search creators, spaces, drops..."
+              aria-label="Search projects, spaces, and makers"
+              placeholder="Search projects, spaces, makers..."
               className="pl-9 w-full rounded-full"
               value={query}
               onChange={(e) => {
@@ -293,68 +259,69 @@ export function Header() {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <Link to="/create" className="hidden sm:block">
-            <Button variant="coral" size="sm" className="rounded-full px-4">
-              <Plus className="size-4" />
-              Create
-            </Button>
-          </Link>
+          </div>
           <Button
             variant="ghost"
             size="icon"
-            onClick={openCart}
-            className="relative"
+            className="md:hidden"
+            aria-label="Search"
+            onClick={() => setMobileSearchOpen((v) => !v)}
           >
-            <ShoppingBag className="size-5" />
-            {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-[var(--coral)] text-[10px] text-white">
+            <Search className="size-5" />
+          </Button>
+          <NotificationsMenu />
+          {cartCount > 0 && (
+            <Button variant="ghost" size="icon" onClick={openCart} className="relative" aria-label={`Cart (${cartCount})`}>
+              <ShoppingBag className="size-5" />
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white">
                 {cartCount}
               </span>
-            )}
-          </Button>
+            </Button>
+          )}
           <AccountMenu />
         </div>
       </div>
 
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-[var(--hairline)] [background-color:var(--sky)] backdrop-blur-xl">
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
-            <Link
-              to="/discover"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-sm py-2 hover:text-accent transition-colors"
-            >
-              Discover
-            </Link>
-            <div className="my-1 h-px bg-surface-muted" aria-hidden="true" />
-            {PRIMARY_NAV.filter((i) => i.to !== "/discover").map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-sm py-2 hover:text-accent transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
-            <Link
-              to="/create"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-sm py-2 text-[var(--coral-text)]"
-            >
-              + Create something
-            </Link>
-            <Link
-              to="/shop"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-sm py-2 text-foreground"
-            >
-              Marketplace
-            </Link>
-          </nav>
+      {mobileSearchOpen && (
+        <div className="border-t border-[var(--hairline)] px-4 py-3 md:hidden">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              autoFocus
+              aria-label="Search projects, spaces, and makers"
+              placeholder="Search projects, spaces, makers..."
+              className="w-full rounded-full pl-9"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onSearchKeyDown}
+            />
+          </div>
+          {query.trim() && (
+            <ul className="mt-2 max-h-64 overflow-y-auto rounded-2xl border border-border bg-popover">
+              {results.length === 0 ? (
+                <li className="px-4 py-3 text-sm text-muted-foreground">No matches for "{query}"</li>
+              ) : (
+                results.map((result) => (
+                  <li key={result.key}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        goToResult(result);
+                        setMobileSearchOpen(false);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-muted"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm">{result.label}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{result.sub}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
         </div>
       )}
     </header>

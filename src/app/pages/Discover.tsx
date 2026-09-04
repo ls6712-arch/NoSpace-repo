@@ -1,56 +1,113 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Search, X } from "lucide-react";
-import { hobbies } from "../data/hobbies";
+import { Bookmark, PenLine, Search, Users, X } from "lucide-react";
+import { hobbies, subHobbyLabel } from "../data/hobbies";
+import { circles } from "../data/circles";
 import { useContent } from "../context/ContentContext";
+import { deriveProjects, useJournal } from "../lib/journal";
+import { ContentCard } from "../components/ContentCard";
 import { HobbyTile } from "../components/HobbyTile";
+import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
+import { Button } from "../components/ui/button";
 
 /**
- * The whole world of NoSpace on one page — every hobby in every space, as a
- * picture. This is the browse-and-find-something-to-try view: the 8 spaces are
- * shelves, and this is everything sitting on them. Each tile links into its
- * space with that hobby's filter already applied.
+ * Discover has an end. That is the whole design: a bounded gallery of work,
+ * then a deliberate choice about what to do next — explore a space, find a
+ * Circle, log your own progress — rather than another page of work loading
+ * itself under your thumb.
+ *
+ * PAGE_SIZE is the size of one "look". "Show more" is a button someone
+ * presses on purpose; nothing here loads on scroll.
  */
-export function Discover() {
-  const { posts } = useContent();
-  const [query, setQuery] = useState("");
+const PAGE_SIZE = 24;
 
-  const postCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const p of posts) {
-      if (p.visibility !== "public" || !p.subHobby) continue;
-      counts[p.subHobby] = (counts[p.subHobby] ?? 0) + 1;
-    }
-    return counts;
-  }, [posts]);
+const DAY = 86_400_000;
+
+type Chip = { id: string; label: string };
+
+const BASE_CHIPS: Chip[] = [
+  { id: "all", label: "All" },
+  { id: "new", label: "New today" },
+  { id: "near", label: "Near me" },
+  { id: "progress", label: "Projects in progress" },
+];
+
+export function Discover() {
+  const { publicFeed, posts } = useContent();
+  const journal = useJournal();
+  const [query, setQuery] = useState("");
+  const [chip, setChip] = useState("all");
+  const [shown, setShown] = useState(PAGE_SIZE);
 
   const q = query.trim().toLowerCase();
-  const sections = hobbies
-    .map((h) => ({
-      hobby: h,
-      items: q
-        ? h.subItems.filter(
-            (s) =>
-              s.label.toLowerCase().includes(q) ||
-              h.shortName.toLowerCase().includes(q) ||
-              h.plainLabel.toLowerCase().includes(q),
-          )
-        : h.subItems,
-    }))
-    .filter((s) => s.items.length > 0);
 
-  const totalShown = sections.reduce((n, s) => n + s.items.length, 0);
-  const totalAll = hobbies.reduce((n, h) => n + h.subItems.length, 0);
+  const chips: Chip[] = useMemo(
+    () => [...BASE_CHIPS, ...hobbies.map((h) => ({ id: h.slug, label: h.shortName }))],
+    [],
+  );
+
+  // Ongoing work, so "Projects in progress" means something specific rather
+  // than being a mood.
+  const projects = useMemo(
+    () => deriveProjects(publicFeed, subHobbyLabel),
+    [publicFeed],
+  );
+  const inProgressIds = useMemo(
+    () => new Set(projects.flatMap((p) => p.updates.map((u) => u.id))),
+    [projects],
+  );
+
+  const filtered = useMemo(() => {
+    let list = publicFeed;
+    if (chip === "new") list = list.filter((p) => Date.now() - p.createdAt < DAY);
+    else if (chip === "progress") list = list.filter((p) => inProgressIds.has(p.id));
+    else if (chip !== "all" && chip !== "near") list = list.filter((p) => p.hobbySlug === chip);
+
+    if (q) {
+      list = list.filter(
+        (p) =>
+          p.caption.toLowerCase().includes(q) ||
+          p.creator.toLowerCase().includes(q) ||
+          (p.subHobby ? (subHobbyLabel(p.subHobby) ?? "").toLowerCase().includes(q) : false),
+      );
+    }
+    return list;
+  }, [publicFeed, chip, q, inProgressIds]);
+
+  const visible = filtered.slice(0, shown);
+  const remaining = filtered.length - visible.length;
+
+  const newMakers = useMemo(() => {
+    const seen = new Map<string, number>();
+    for (const p of publicFeed) {
+      if (!seen.has(p.creator)) seen.set(p.creator, p.createdAt);
+    }
+    return [...seen.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([name]) => name);
+  }, [publicFeed]);
+
+  const savedWork = journal.saved
+    .map((id) => posts.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => !!p)
+    .slice(0, 4);
+
+  // "Near you" only appears if there is actually somewhere near you. Circles
+  // with a city attached are the only geography this app honestly has, and it
+  // says so rather than inventing a location.
+  const localCircles = useMemo(() => circles.filter((c) => c.location), []);
 
   return (
     <div className="min-h-screen">
-      <section className="relative py-14 overflow-hidden">
+      <section className="relative overflow-hidden py-12 sm:py-14">
         <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
-        <div className="container mx-auto px-4 relative">
-          <h1 className="text-4xl md:text-5xl mb-3">Discover</h1>
-          <p className="text-foreground text-lg max-w-2xl mb-6">
-            Every hobby on NoSpace — {totalAll} of them, across {hobbies.length}{" "}
-            spaces. Find the one you've been meaning to start.
+        <div className="container mx-auto max-w-6xl px-4 relative">
+          <h1 className="text-4xl md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+            Discover
+          </h1>
+          <p className="mb-6 mt-2 max-w-2xl text-lg text-foreground">
+            Projects, people, and hobbies worth exploring.
           </p>
 
           <div className="relative max-w-md">
@@ -58,9 +115,12 @@ export function Discover() {
             <input
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search hobbies — pottery, chess, sourdough..."
-              className="w-full rounded-full border border-border bg-surface-muted py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShown(PAGE_SIZE);
+              }}
+              placeholder="Search projects, makers, hobbies..."
+              className="w-full rounded-full border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
             />
             {query && (
               <button
@@ -73,55 +133,231 @@ export function Discover() {
               </button>
             )}
           </div>
-          {q && (
-            <p className="text-sm text-muted-foreground mt-3">
-              {totalShown} {totalShown === 1 ? "hobby" : "hobbies"} match "{query}"
-            </p>
-          )}
         </div>
       </section>
 
-      <div className="bg-surface pt-10">
-      <section className="container mx-auto px-4 pb-24 space-y-12">
-        {sections.length === 0 && (
-          <div className="text-center py-20 text-muted-foreground">
-            Nothing matches "{query}" yet — try a broader word.
-          </div>
-        )}
+      <div className="bg-surface pb-24 pt-8">
+        <div className="container mx-auto max-w-6xl px-4">
+          {/* Filters */}
+          <ul className="mb-9 flex flex-wrap gap-2">
+            {chips.map((c) => {
+              const active = chip === c.id;
+              return (
+                <li key={c.id}>
+                  <button
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => {
+                      setChip(c.id);
+                      setShown(PAGE_SIZE);
+                    }}
+                    className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                      active
+                        ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                        : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
 
-        {sections.map(({ hobby, items }) => (
-          <div key={hobby.slug}>
-            <div className="flex items-end justify-between gap-4 mb-4 flex-wrap">
-              <div>
-                <Link to={`/space/${hobby.slug}`} className="group">
-                  <h2 className="text-2xl group-hover:text-[var(--coral-text)] transition-colors">
-                    {hobby.name}
-                  </h2>
-                </Link>
-                <p className="text-sm text-muted-foreground">{hobby.plainLabel}</p>
-              </div>
-              <Link
-                to={`/space/${hobby.slug}`}
-                className="text-xs text-[var(--coral-text)] hover:underline"
-              >
-                Open space →
-              </Link>
+          {/* Across NoSpace — the gallery */}
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+                {chip === "near" ? "Near you" : "Across NoSpace"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {chip === "near"
+                  ? "Location isn't switched on yet — Circles with a city are the closest thing for now."
+                  : `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"} of work${q ? ` matching "${query}"` : ""}.`}
+              </p>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-              {items.map((s) => (
-                <HobbyTile
-                  key={s.slug}
-                  hobbySlug={hobby.slug}
-                  subSlug={s.slug}
-                  label={s.label}
-                  count={postCounts[s.slug]}
-                  to={`/space/${hobby.slug}?hobby=${s.slug}`}
-                />
+          </div>
+
+          {chip === "near" ? (
+            <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+              <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                NoSpace doesn't know where you are, and won't until you tell it.
+                These Circles have a city attached — the closest thing to near you.
+              </p>
+              <ul className="mx-auto grid max-w-2xl gap-2 text-left sm:grid-cols-2">
+                {localCircles.map((c) => (
+                  <li key={c.id}>
+                    <Link
+                      to="/circles"
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                          {c.name}
+                        </span>
+                        <span className="block text-[11px] text-muted-foreground">{c.location}</span>
+                      </span>
+                      <Users className="size-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
+              Nothing matches that yet — try a broader word or a different filter.
+            </div>
+          ) : (
+            <div className="columns-2 gap-4 md:columns-3 xl:columns-4">
+              {visible.map((post) => (
+                <ContentCard key={post.id} post={post} />
               ))}
             </div>
-          </div>
-        ))}
-      </section>
+          )}
+
+          {/* The end of the gallery — an intentional choice, not more scroll */}
+          {visible.length > 0 && (
+            <div className="mt-10 rounded-3xl border border-border bg-card px-6 py-9 text-center">
+              {remaining > 0 ? (
+                <>
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    That's {visible.length} of {filtered.length}. Nothing loads on
+                    its own — keep going only if you want to.
+                  </p>
+                  <Button variant="outline" onClick={() => setShown((n) => n + PAGE_SIZE)}>
+                    Show more
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                    That's everything here.
+                  </p>
+                  <p className="mb-5 text-sm text-muted-foreground">
+                    A good place to stop scrolling and go make something.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Link to="/log">
+                      <Button variant="coral">
+                        <PenLine className="size-4" />
+                        Log your progress
+                      </Button>
+                    </Link>
+                    <Link to="/circles">
+                      <Button variant="outline">
+                        <Users className="size-4" />
+                        Find a Circle
+                      </Button>
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* New makers */}
+          <section className="mt-14">
+            <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              New makers
+            </h2>
+            <p className="mb-4 mt-1 text-sm text-muted-foreground">
+              People who've shared work most recently.
+            </p>
+            <ul className="flex flex-wrap gap-2">
+              {newMakers.map((name) => (
+                <li
+                  key={name}
+                  className="rounded-full border border-border bg-card px-3.5 py-1.5 text-xs"
+                  style={{ fontFamily: "var(--font-serif)" }}
+                >
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Explore spaces */}
+          <section className="mt-14">
+            <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Explore spaces
+            </h2>
+            <p className="mb-5 mt-1 text-sm text-muted-foreground">
+              Eight shelves. Open one to see the hobbies on it.
+            </p>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              {hobbies.map((hobby) => (
+                <HobbyCategoryCard key={hobby.slug} hobby={hobby} />
+              ))}
+            </div>
+          </section>
+
+          {/* Every hobby, as pictures — the bookshelf view */}
+          <section className="mt-14">
+            <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Every hobby on NoSpace
+            </h2>
+            <p className="mb-5 mt-1 text-sm text-muted-foreground">
+              {hobbies.reduce((n, h) => n + h.subItems.length, 0)} of them. Pick
+              the one you've been meaning to start.
+            </p>
+            <div className="space-y-9">
+              {hobbies.map((hobby) => (
+                <div key={hobby.slug}>
+                  <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                      <Link to={`/space/${hobby.slug}`} className="group">
+                        <h3 className="text-lg transition-colors group-hover:text-[var(--coral-text)]">
+                          {hobby.name}
+                        </h3>
+                      </Link>
+                      <p className="text-xs text-muted-foreground">{hobby.plainLabel}</p>
+                    </div>
+                    <Link
+                      to={`/space/${hobby.slug}`}
+                      className="text-xs text-[var(--coral-text)] hover:underline"
+                    >
+                      Open space →
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                    {hobby.subItems.map((s) => (
+                      <HobbyTile
+                        key={s.slug}
+                        hobbySlug={hobby.slug}
+                        subSlug={s.slug}
+                        label={s.label}
+                        to={`/space/${hobby.slug}?hobby=${s.slug}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Saved for later */}
+          <section className="mt-14">
+            <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Saved for later
+            </h2>
+            <p className="mb-5 mt-1 text-sm text-muted-foreground">
+              Work you kept. Only you can see this.
+            </p>
+            {savedWork.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center text-sm text-muted-foreground">
+                <Bookmark className="mx-auto mb-3 size-5" />
+                Nothing saved yet — the Save button on any piece of work keeps it
+                here.
+              </div>
+            ) : (
+              <div className="columns-2 gap-4 md:columns-4">
+                {savedWork.map((post) => (
+                  <ContentCard key={post.id} post={post} />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );

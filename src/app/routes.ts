@@ -4,14 +4,15 @@
 // disk path) and fails to match any route, landing on the 404 page. Hash-
 // based routing ("#/space/crafting") works identically under file://, a
 // plain static host, or the published Artifact page.
-import { createHashRouter } from "react-router";
+import { createHashRouter, redirect } from "react-router";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CategoryFeed } from "./pages/CategoryFeed";
 import { Discover } from "./pages/Discover";
+import { MySpace } from "./pages/MySpace";
 import { Circles } from "./pages/Circles";
-import { CreatorStudio } from "./pages/CreatorStudio";
-import { Profile } from "./pages/Profile";
+import { Log } from "./pages/Log";
+import { You } from "./pages/You";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
@@ -25,14 +26,21 @@ export const router = createHashRouter([
     children: [
       { index: true, Component: Home },
       { path: "discover", Component: Discover },
+      { path: "my-space", Component: MySpace },
       { path: "circles", Component: Circles },
+      { path: "log", Component: Log },
+      { path: "you", Component: You },
       { path: "space/:slug", Component: CategoryFeed },
-      { path: "create", Component: CreatorStudio },
-      { path: "profile", Component: Profile },
       { path: "u/:username", Component: PublicProfile },
       { path: "login", Component: Login },
       { path: "shop", Component: Shop },
       { path: "product/:id", Component: ProductDetail },
+
+      // Old paths people may have bookmarked or shared. Kept as redirects so
+      // no link that used to work quietly turns into a 404.
+      { path: "create", loader: () => redirect("/log") },
+      { path: "profile", loader: () => redirect("/you") },
+
       { path: "*", Component: NotFound },
     ],
   },

@@ -66,7 +66,7 @@ export function Login() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signup"
-              ? "Real posts, saved for real — not just this browser tab."
+              ? "Real work, saved for real — not just this browser tab."
               : "Log in to pick up where you left off."}
           </p>
         </div>

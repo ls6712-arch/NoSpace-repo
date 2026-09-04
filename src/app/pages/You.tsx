@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Plus, Share2, Users, Settings } from "lucide-react";
+import { Bookmark, Lock, PenLine, Share2, UserRound, Users, Settings } from "lucide-react";
 import { getHobby } from "../data/hobbies";
 import { getCircle } from "../data/circles";
 import { useRewards } from "../context/RewardsContext";
@@ -15,6 +15,8 @@ import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
+import { ContentCard } from "../components/ContentCard";
+import { removePrivateLog, toggleFollowing, useJournal } from "../lib/journal";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -36,12 +38,17 @@ const CIRCLE_TINTS = [
   "var(--pastel-rose)",
 ];
 
-export function Profile() {
+export function You() {
   const { points, stats } = useRewards();
-  const { joinedCircleIds } = useContent();
-  const { user, profile, isConfigured } = useAuth();
+  const { joinedCircleIds, posts } = useContent();
+  const journal = useJournal();
+  const { user, profile, isConfigured, signOut } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
   const [circlesVisible, setCirclesVisible] = useState(true);
+
+  const savedWork = journal.saved
+    .map((id) => posts.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => !!p);
 
   const sessions = useSessionsByHobby();
   const totalSessions = sessions.reduce((n, s) => n + s.sessions, 0);
@@ -78,21 +85,13 @@ export function Profile() {
   return (
     <div className="min-h-screen bg-surface py-8 sm:py-10">
       <div className="container mx-auto max-w-2xl px-4">
-        {/* Wordmark + settings, matching the phone layout */}
-        <div className="mb-6 flex items-start justify-between">
-          <span
-            className="text-3xl sm:text-4xl"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
-          >
-            No Space
-          </span>
-          <button
-            type="button"
-            aria-label="Settings"
-            className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Settings className="size-4" strokeWidth={1.7} />
-          </button>
+        <div className="mb-7">
+          <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+            You
+          </h1>
+          <p className="mt-1.5 text-muted-foreground">
+            Your work, your saved ideas, your space.
+          </p>
         </div>
 
         {/* Who you are, and how much you've done */}
@@ -101,12 +100,12 @@ export function Profile() {
             <AvatarFallback className="text-xl">{user ? initials : "YOU"}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <h1
+            <h2
               className="truncate text-3xl leading-tight sm:text-4xl"
               style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
             >
               {user ? displayName : "You"}
-            </h1>
+            </h2>
             <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
               <span className="text-[var(--pastel-sage)]">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -160,12 +159,12 @@ export function Profile() {
         <div className="mb-8 flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => setShareOpen(true)}>
             <Share2 className="size-4" />
-            Share profile
+            Share your work
           </Button>
-          <Link to="/create" className="flex-1">
-            <Button variant="brand" className="w-full">
-              <Plus className="size-4" />
-              Log a session
+          <Link to="/log" className="flex-1">
+            <Button variant="coral" className="w-full">
+              <PenLine className="size-4" />
+              Log progress
             </Button>
           </Link>
         </div>
@@ -208,8 +207,109 @@ export function Profile() {
           <QuietMilestones onShare={() => setShareOpen(true)} />
         </div>
 
-        {/* Circles joined — soft colour-tinted cards */}
-        <div className="mb-9">
+        <Tabs defaultValue="work">
+          <TabsList className="mb-5 flex w-full flex-wrap justify-start gap-1">
+            <TabsTrigger value="work">Your work</TabsTrigger>
+            <TabsTrigger value="private">Private logs</TabsTrigger>
+            <TabsTrigger value="saved">Saved</TabsTrigger>
+            <TabsTrigger value="following">People you follow</TabsTrigger>
+            <TabsTrigger value="circles">Your Circles</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="work">
+            <MyPostsGrid />
+          </TabsContent>
+
+          <TabsContent value="private">
+            {journal.privateLogs.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+                <Lock className="mx-auto mb-3 size-5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Nothing private yet. Anything you save as a private log stays
+                  here — never shown to anyone.
+                </p>
+                <Link to="/log" className="mt-4 inline-block">
+                  <Button variant="outline" size="sm">Write one</Button>
+                </Link>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {journal.privateLogs.map((entry) => (
+                  <li key={entry.id} className="rounded-2xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <Lock className="size-3" />
+                        Only you · {timeAgo(entry.createdAt)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removePrivateLog(entry.id)}
+                        className="text-[11px] text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <p className="whitespace-pre-line text-sm leading-relaxed">{entry.note}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TabsContent>
+
+          <TabsContent value="saved">
+            {savedWork.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+                <Bookmark className="mx-auto mb-3 size-5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Nothing saved yet. Save anything on Discover to keep it here.
+                </p>
+                <Link to="/discover" className="mt-4 inline-block">
+                  <Button variant="outline" size="sm">Go to Discover</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="columns-2 gap-4">
+                {savedWork.map((post) => (
+                  <ContentCard key={post.id} post={post} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="following">
+            {journal.following.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+                <UserRound className="mx-auto mb-3 size-5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  You're not following anyone yet. Following a maker brings their
+                  updates into My Space.
+                </p>
+              </div>
+            ) : (
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {journal.following.map((name) => (
+                  <li
+                    key={name}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+                  >
+                    <span className="truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                      {name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleFollowing(name)}
+                      className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
+                    >
+                      Unfollow
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TabsContent>
+
+          <TabsContent value="circles">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               Circles Joined
@@ -265,27 +365,43 @@ export function Profile() {
               })}
             </div>
           )}
-        </div>
-
-        {/* Portfolio + activity */}
-        <Tabs defaultValue="portfolio">
-          <TabsList className="mb-5">
-            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="portfolio">
-            <MyPostsGrid />
           </TabsContent>
 
-          <TabsContent value="activity">
-            {stats.postsCreated === 0 && stats.likesGiven === 0 && stats.purchases === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                Nothing yet — log a session to start filling this in.
-              </p>
-            ) : (
-              <ActivityLog />
-            )}
+          <TabsContent value="settings">
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <div className="mb-1 flex items-center gap-2 text-sm">
+                  <Settings className="size-4 text-muted-foreground" />
+                  Account
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {user
+                    ? `Signed in as ${profile?.username ?? displayName}.`
+                    : "You're browsing without an account — nothing here is saved beyond this browser."}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <div className="mb-1 text-sm">Who sees your Circles</div>
+                <button
+                  type="button"
+                  onClick={() => setCirclesVisible((v) => !v)}
+                  className="text-xs text-[var(--coral-text)] hover:underline"
+                >
+                  {circlesVisible
+                    ? "Visible on your work — hide them"
+                    : "Hidden — show them on your work"}
+                </button>
+              </div>
+              {user && (
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="w-full rounded-2xl border border-border bg-card p-4 text-left text-sm transition-colors hover:border-[var(--coral-deep)]"
+                >
+                  Log out
+                </button>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>

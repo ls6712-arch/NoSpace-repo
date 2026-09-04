@@ -16,12 +16,12 @@ export function MyPostsGrid() {
     return (
       <div className="text-center py-14 rounded-2xl border border-dashed border-border">
         <p className="text-muted-foreground mb-4">
-          Nothing here yet — your posts will show up in a grid, just like this.
+          Nothing here yet — your work will show up in a grid, just like this.
         </p>
-        <Link to="/create">
+        <Link to="/log">
           <Button variant="brand">
             <Plus className="size-4" />
-            Post your first thing
+            Log your first thing
           </Button>
         </Link>
       </div>
@@ -78,7 +78,7 @@ export function MyPostsGrid() {
                 <p className="text-sm mb-3">{selected.caption}</p>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Heart className="size-3.5" />
-                  {selected.likes} likes
+                  {selected.reflection ? "Has a private reflection" : "No private reflection"}
                 </div>
                 {selected.reflection && (
                   <div className="mt-3 rounded-xl border border-border bg-surface-muted p-3">

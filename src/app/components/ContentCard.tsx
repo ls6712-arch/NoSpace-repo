@@ -1,9 +1,9 @@
-import { Heart, Play, ShoppingBag, Users, UserRound } from "lucide-react";
+import { Bookmark, Play, ShoppingBag, Users, UserRound } from "lucide-react";
 import { PostReactions } from "./PostReactions";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
-import { useRewards } from "../context/RewardsContext";
+import { toggleSaved, useJournalSlice } from "../lib/journal";
 import { PostMedia } from "./PostMedia";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -18,16 +18,26 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-// Varying aspect ratios per post gives the masonry feed its natural, uneven rhythm
-// even though every card is generated art rather than a photo of a different shape.
+/**
+ * How an entry describes its own audience. Deliberately the same words the
+ * maker chose in "Choose who sees this", so nothing is renamed between the
+ * moment you set it and the moment someone reads it.
+ */
+const AUDIENCE: Record<string, { label: string; icon: typeof Users }> = {
+  circle: { label: "A Circle", icon: Users },
+  friends: { label: "People you follow", icon: UserRound },
+};
+
+// Varying aspect ratios give the gallery its natural, uneven rhythm even though
+// every card is generated art rather than a photo of a different shape.
 const ASPECTS = ["aspect-square", "aspect-[4/5]", "aspect-[3/4]", "aspect-[5/4]"];
 
-export function ContentCard({ post }: { post: Post }) {
-  const { toggleLike, findListing } = useContent();
-  const { isPostLiked } = useRewards();
-  const liked = isPostLiked(post.id);
+export function ContentCard({ post, label }: { post: Post; label?: string }) {
+  const { findListing } = useContent();
+  const saved = useJournalSlice((s) => s.saved.includes(post.id));
   const listing = post.productId ? findListing(post.productId) : undefined;
   const aspect = ASPECTS[Math.abs(post.id) % ASPECTS.length];
+  const audience = AUDIENCE[post.visibility];
 
   return (
     <div className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-border bg-card group">
@@ -40,22 +50,33 @@ export function ContentCard({ post }: { post: Post }) {
           className={`w-full ${aspect} transition-transform duration-500 group-hover:scale-105`}
         />
         {post.type === "video" && !/^https?:\/\//.test(post.media) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <span className="flex size-12 items-center justify-center rounded-full bg-black/50 backdrop-blur-md">
+          <div className="absolute inset-0 flex items-center justify-center bg-[var(--forest-ink)]/25">
+            <span className="flex size-12 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-md">
               <Play className="size-5 text-white fill-white" />
             </span>
           </div>
         )}
+        {/* Save, not a like count. Keeping something is a private act of
+            intent; it isn't a score shown back to the maker. */}
         <button
-          onClick={() => toggleLike(post.id)}
-          className={`absolute top-3 right-3 flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs backdrop-blur-md transition-colors ${
-            liked ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white hover:bg-black/60"
+          type="button"
+          onClick={() => toggleSaved(post.id)}
+          aria-pressed={saved}
+          className={`absolute top-3 right-3 flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs backdrop-blur-md transition-colors ${
+            saved
+              ? "text-white [background-color:var(--coral-deep)]"
+              : "bg-[var(--forest-ink)]/45 text-white hover:bg-[var(--forest-ink)]/65"
           }`}
         >
-          <Heart className={`size-3.5 ${liked ? "fill-white" : ""}`} />
-          {post.likes}
+          <Bookmark className={`size-3.5 ${saved ? "fill-white" : ""}`} />
+          {saved ? "Saved" : "Save"}
         </button>
-        {listing && (
+        {label && (
+          <Badge variant="brand" className="absolute top-3 left-3">
+            {label}
+          </Badge>
+        )}
+        {!label && listing && (
           <Badge variant="brand" className="absolute top-3 left-3">
             For sale
           </Badge>
@@ -68,27 +89,28 @@ export function ContentCard({ post }: { post: Post }) {
             <AvatarFallback className="text-[10px]">{initials(post.creator)}</AvatarFallback>
           </Avatar>
           <span className="text-sm text-foreground/90">{post.creator}</span>
-          {post.visibility !== "public" && (
+          {audience && (
             <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">
-              {post.visibility === "circle" ? (
-                <Users className="size-3" />
-              ) : (
-                <UserRound className="size-3" />
-              )}
-              {post.visibility === "circle" ? "Circle" : "Friends"}
+              <audience.icon className="size-3" />
+              {audience.label}
             </span>
           )}
         </div>
         <p className="text-sm text-muted-foreground mb-3">{post.caption}</p>
 
-        {/* Every creation carries the same five reactions. */}
+        {/* Every entry carries the same five reactions. */}
         <PostReactions postId={post.id} className="mb-3" />
 
         {listing && (
           <Link to={`/product/${listing.id}`}>
             <Button size="sm" variant="outline" className="w-full">
               <ShoppingBag className="size-3.5" />
-              {listing.type === "course" ? "View course" : listing.type === "digital" ? "Get the guide" : "Shop this"} · ${listing.price.toFixed(0)}
+              {listing.type === "course"
+                ? "View course"
+                : listing.type === "digital"
+                  ? "Get the guide"
+                  : "Shop this"}{" "}
+              · ${listing.price.toFixed(0)}
             </Button>
           </Link>
         )}

@@ -264,7 +264,7 @@ export function HobbyShelf({ items: override }: { items?: HobbySession[] } = {})
           This shelf is empty. Log a session and it starts filling up.
         </p>
         <Link
-          to="/create"
+          to="/log"
           className="mt-4 inline-block rounded-full px-5 py-2 text-sm text-white [background-image:var(--gradient-brand)]"
         >
           Log the first session

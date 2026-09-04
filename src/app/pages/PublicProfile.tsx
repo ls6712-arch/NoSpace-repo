@@ -7,6 +7,7 @@ import { badges, RewardStats } from "../data/badges";
 import { subHobbyLabel } from "../data/hobbies";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
+import { toggleFollowing, useJournalSlice } from "../lib/journal";
 import { HobbyShelf, sessionsFromPosts } from "../components/HobbyShelf";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { PostMedia } from "../components/PostMedia";
@@ -130,6 +131,7 @@ export function PublicProfile() {
     : { label: top?.label };
 
   const primaryHobby = pickPrimaryHobby(posts);
+  const isFollowing = useJournalSlice((j) => j.following.includes(displayName));
 
   return (
     <div className="min-h-screen bg-surface py-8 sm:py-10">
@@ -170,6 +172,16 @@ export function PublicProfile() {
                 {milestoneText(primaryHobby.label, primaryHobby.firstActivityAt)}
               </p>
             )}
+            <div className="mt-3">
+              <Button
+                variant={isFollowing ? "outline" : "coral"}
+                size="sm"
+                aria-pressed={isFollowing}
+                onClick={() => toggleFollowing(displayName)}
+              >
+                {isFollowing ? "Following" : "Follow"}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -202,7 +214,7 @@ export function PublicProfile() {
         {posts.length > 0 && (
           <div className="mb-10">
             <h2 className="mb-3 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              What {displayName.split(" ")[0]} has made
+              {displayName.split(" ")[0]}'s work
             </h2>
             <div className="grid grid-cols-3 gap-1.5">
               {posts.slice(0, 12).map((post) => (
@@ -227,7 +239,7 @@ export function PublicProfile() {
           </h2>
           <p className="mx-auto mb-6 max-w-sm text-sm text-muted-foreground">
             Pick a hobby, log what you make, and watch it stack up. Free, and there's
-            no feed to fall into.
+            nothing here that scrolls forever.
           </p>
           <div className="flex flex-col justify-center gap-2.5 sm:flex-row">
             <Link to="/login">

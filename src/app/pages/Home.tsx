@@ -74,7 +74,7 @@ function initials(name: string) {
 // not real platform numbers.
 const STATS = [
   { value: "48K+", label: "Things created" },
-  { value: "8", label: "Spaces, no feed sludge" },
+  { value: "8", label: "Spaces, no endless scroll" },
   { value: "180+", label: "Hobbies represented" },
 ];
 
@@ -252,7 +252,7 @@ export function Home() {
               </ul>
 
               <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-                <Link to="/create">
+                <Link to="/log">
                   <Button variant="coral" size="lg">
                     Start creating
                     <ArrowRight className="size-4" />
@@ -347,14 +347,14 @@ export function Home() {
       {/* Feature: Log → Reflect → Share → Earn */}
       <FeatureSection
         eyebrow="1 · THE LOOP"
-        title="Log it. Reflect for a second. Then decide who sees it."
-        copy="Every post follows the same loop: log what you made, jot a private reflection that's never shown publicly, then choose your audience before you earn anything. Rewards never gate creating — they just add texture to it."
+        title="Log it. Reflect for a second. Then choose who sees it."
+        copy="Every entry follows the same loop: log what you made, jot a private reflection that's never shown to anyone, then choose who sees it. You never have to share something in order to keep a record of it."
         visual={
           <div className="glass-panel rounded-3xl p-6 space-y-3">
             {[
-              { n: "1", label: "Log", desc: "Post a photo or video of what you made" },
+              { n: "1", label: "Log", desc: "A photo, a note, or a small update" },
               { n: "2", label: "Reflect", desc: "A private note — only you ever see it" },
-              { n: "3", label: "Share", desc: "Friends, a circle, or public — your call, per post" },
+              { n: "3", label: "Share", desc: "Only you, people you follow, a Circle, or everyone" },
             ].map((step) => (
               <div
                 key={step.n}
@@ -479,13 +479,13 @@ export function Home() {
             <div>
               <h2 className="text-3xl mb-2">Fresh across NoSpace</h2>
               <p className="text-muted-foreground">
-                Recent posts from every space, weighted toward what you're actually into —
-                not just what's most liked.
+                Recent work from every space, weighted toward what you're actually into —
+                never toward whatever got the most attention.
               </p>
             </div>
-            <Link to="/create" className="hidden sm:block">
+            <Link to="/log" className="hidden sm:block">
               <Button variant="outline">
-                Post your own
+                Log your own
               </Button>
             </Link>
           </div>
@@ -510,7 +510,7 @@ export function Home() {
             <div className="mb-8">
               <h2 className="text-3xl mb-2">Explore next</h2>
               <p className="text-muted-foreground">
-                Spaces you haven't posted in or joined a circle for yet.
+                Spaces you haven't logged anything in or joined a Circle for yet.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -562,13 +562,13 @@ export function Home() {
               You don't just consume. You create too.
             </h2>
             <p className="text-muted-foreground mb-8">
-              Post your first piece of content and earn 50 points on the spot — plus your
-              first badge.
+              Start a project, add an update, or just write a note to yourself. None of it
+              has to be public.
             </p>
-            <Link to="/create">
+            <Link to="/log">
               <Button variant="brand" size="lg">
                 <Sparkles className="size-4" />
-                Create your first post
+                Log your progress
               </Button>
             </Link>
           </div>
@@ -580,7 +580,7 @@ export function Home() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl mb-2">Free in early access</h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Bring the hobby — points, badges, and buyers come with it.
+            Bring the hobby. We'll keep the record.
           </p>
           <WaitlistForm />
         </div>

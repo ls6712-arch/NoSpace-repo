@@ -65,14 +65,14 @@ function CirclesTab({
                 className="text-xs text-[var(--coral-text)] mt-3"
                 onClick={() => setExpanded((e) => (e === circle.id ? null : circle.id))}
               >
-                {expanded === circle.id ? "Hide posts" : "View circle posts"}
+                {expanded === circle.id ? "Hide updates" : "View updates"}
               </button>
             )}
 
             {expanded === circle.id && (
               <div className="mt-3 space-y-2">
                 {feed.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Nothing posted here yet.</p>
+                  <p className="text-xs text-muted-foreground">No updates here yet.</p>
                 ) : (
                   feed.map((post) => (
                     <div key={post.id} className="text-xs text-muted-foreground rounded-lg bg-surface-muted px-3 py-2">
@@ -167,7 +167,7 @@ export function CategoryFeed() {
             <p className="text-sm text-muted-foreground">
               {activeSub
                 ? "Tap it again to see everything."
-                : `${hobby.subItems.length} hobbies live here — tap one to narrow the feed.`}
+                : `${hobby.subItems.length} hobbies live here — tap one to narrow what you see.`}
             </p>
           </div>
           {activeSub && (
@@ -200,7 +200,7 @@ export function CategoryFeed() {
         <Tabs defaultValue="feed">
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <TabsList>
-              <TabsTrigger value="feed">For you</TabsTrigger>
+              <TabsTrigger value="feed">Work</TabsTrigger>
               <TabsTrigger value="circles">Circles{circles.length ? ` (${circles.length})` : ""}</TabsTrigger>
               <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
             </TabsList>
@@ -226,19 +226,19 @@ export function CategoryFeed() {
               <div className="text-center py-16 text-muted-foreground">
                 {activeSub ? (
                   <>
-                    No {(activeLabel ?? activeSub).toLowerCase()} posts yet — be the
+                    No {(activeLabel ?? activeSub).toLowerCase()} work yet — be the
                     first.
                     <div className="mt-4">
                       <Link to={`/create?hobby=${hobby.slug}&sub=${activeSub}`}>
                         <Button variant="brand" size="sm">
                           <Plus className="size-4" />
-                          Post {(activeLabel ?? activeSub).toLowerCase()}
+                          Log {(activeLabel ?? activeSub).toLowerCase()}
                         </Button>
                       </Link>
                     </div>
                   </>
                 ) : (
-                  "Nobody's posted here yet — be the first."
+                  "Nobody's logged anything here yet — be the first."
                 )}
               </div>
             ) : (
