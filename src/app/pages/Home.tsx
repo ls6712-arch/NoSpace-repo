@@ -151,8 +151,10 @@ export function Home() {
               </span>
               Welcome to hobbymaxxing
             </div>
-            <h1 className="animate-in fade-in slide-in-from-bottom-6 fill-mode-both duration-700 delay-150 text-5xl md:text-7xl mb-6 text-gradient-animated">
-              NoSpace
+            <h1 className="animate-in fade-in slide-in-from-bottom-6 fill-mode-both duration-700 delay-150 text-5xl md:text-7xl mb-6 text-gradient-animated leading-[1.05]">
+              Made something today?
+              <br />
+              <span className="block">Show it.</span>
             </h1>
             <p
               className="animate-in fade-in slide-in-from-bottom-6 fill-mode-both duration-700 delay-300 text-2xl md:text-3xl mb-4"
@@ -161,13 +163,11 @@ export function Home() {
               Create, Don't Just Consume.
             </p>
             <p className="animate-in fade-in slide-in-from-bottom-6 fill-mode-both duration-700 delay-500 text-muted-foreground text-lg mb-3 max-w-xl mx-auto">
-              Pick a hobby, see what people are actually making, and post your own —
-              photos, videos, courses, or things you'd sell. Every contribution earns
-              points, badges, and real rewards.
+              Pick a hobby, share what you're actually making, and find people doing
+              the same thing.
             </p>
             <p className="animate-in fade-in fill-mode-both duration-700 delay-700 text-sm text-muted-foreground/70 mb-10 max-w-xl mx-auto">
-              Hobbymaxxing: going all-in on a real, hands-on hobby instead of scrolling.
-              NoSpace is built for it — eight spaces, real people, real output.
+              Real people. Real progress. Real output.
             </p>
             <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-700 delay-700 flex flex-wrap items-center justify-center gap-3">
               <Link to="/create">
@@ -178,7 +178,7 @@ export function Home() {
               </Link>
               <Link to="/discover">
                 <Button variant="outline" size="lg">
-                  Explore all hobbies
+                  Explore hobbies
                 </Button>
               </Link>
             </div>

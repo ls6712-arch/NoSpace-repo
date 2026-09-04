@@ -1,25 +1,36 @@
 import { Link, useLocation } from "react-router";
-import { Home, Compass, Plus, Library, User } from "lucide-react";
+import { Compass, Plus, Library, Users, User } from "lucide-react";
 
 /**
- * Phone navigation: Home · Explore · + · Shelf · Profile, with the create
- * action raised into a wooden disc in the middle. Shown only on small screens
- * — the desktop header already carries the same destinations, and two navs at
- * once would be noise.
+ * Phone and tablet navigation, five positions: Discover · My Space · [+] · Circles ·
+ * Profile. Create is not a flat tab — it's raised out of the bar as a coral
+ * disc, because logging something you made is the one action the whole app
+ * exists for.
  *
- * "Shelf" is the marketplace for now, as the closest existing destination.
+ * Visible below lg, exactly where the desktop top nav is hidden, so there is
+ * never a width with no primary navigation and never two at once.
  */
 const TABS = [
-  { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
   {
     to: "/discover",
-    label: "Explore",
+    label: "Discover",
     icon: Compass,
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space"),
+    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p === "/",
+  },
+  {
+    to: "/profile",
+    label: "My Space",
+    icon: Library,
+    match: (p: string) => p.startsWith("/profile"),
   },
   { to: "/create", label: "", icon: Plus, match: () => false, primary: true },
-  { to: "/shop", label: "Shelf", icon: Library, match: (p: string) => p.startsWith("/shop") },
-  { to: "/profile", label: "Profile", icon: User, match: (p: string) => p.startsWith("/profile") },
+  {
+    to: "/circles",
+    label: "Circles",
+    icon: Users,
+    match: (p: string) => p.startsWith("/circles"),
+  },
+  { to: "/profile", label: "Profile", icon: User, match: () => false },
 ];
 
 export function BottomTabBar() {
@@ -28,10 +39,10 @@ export function BottomTabBar() {
   return (
     <>
       {/* Keeps page content clear of the bar, including the iOS home indicator. */}
-      <div className="h-[76px] sm:hidden" aria-hidden="true" />
+      <div className="h-[76px] lg:hidden" aria-hidden="true" />
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0A0B14]/95 backdrop-blur-xl sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0A0B14]/95 backdrop-blur-xl lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Main"
       >
@@ -43,23 +54,20 @@ export function BottomTabBar() {
             if (tab.primary) {
               return (
                 <Link
-                  key={tab.to}
+                  key={tab.label || "create"}
                   to={tab.to}
-                  aria-label="Log a session"
-                  className="-mt-6 flex size-14 items-center justify-center rounded-full text-[#F3EDE0] shadow-[0_8px_20px_rgba(0,0,0,0.5)]"
-                  style={{
-                    background:
-                      "linear-gradient(160deg, var(--wood-light) 0%, var(--wood) 60%, var(--wood-dark) 100%)",
-                  }}
+                  aria-label="Create — log something you made"
+                  className="-mt-7 flex size-15 items-center justify-center rounded-full text-white shadow-[0_8px_20px_rgba(0,0,0,0.45)] ring-4 ring-[#0A0B14] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-95"
+                  style={{ backgroundColor: "var(--coral-deep)", width: 60, height: 60 }}
                 >
-                  <Icon className="size-6" strokeWidth={2} />
+                  <Icon className="size-7" strokeWidth={2.2} />
                 </Link>
               );
             }
 
             return (
               <Link
-                key={tab.to}
+                key={tab.label || "create"}
                 to={tab.to}
                 className={`flex w-16 flex-col items-center gap-1 py-1 transition-colors ${
                   active ? "text-foreground" : "text-muted-foreground/70"

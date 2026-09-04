@@ -9,6 +9,7 @@ import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CategoryFeed } from "./pages/CategoryFeed";
 import { Discover } from "./pages/Discover";
+import { Circles } from "./pages/Circles";
 import { CreatorStudio } from "./pages/CreatorStudio";
 import { Profile } from "./pages/Profile";
 import { PublicProfile } from "./pages/PublicProfile";
@@ -24,6 +25,7 @@ export const router = createHashRouter([
     children: [
       { index: true, Component: Home },
       { path: "discover", Component: Discover },
+      { path: "circles", Component: Circles },
       { path: "space/:slug", Component: CategoryFeed },
       { path: "create", Component: CreatorStudio },
       { path: "profile", Component: Profile },

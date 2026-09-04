@@ -24,6 +24,26 @@
   --wood: #6B4E35;
   --wood-light: #8A6A49;
 
+  /* ── NoSpace palette ──────────────────────────────────────────────────────
+     Sky blue, deep forest green, coral, mustard, cream.
+
+     Each hue that carries text has an accessible sibling, because the bright
+     versions do not pass WCAG AA on their own — measured, not guessed:
+       white on #4A9FD8 = 2.90  ✗   white on --sky-deep   = 4.91  ✓
+       white on #FF6B4A = 2.82  ✗   white on --coral-deep = 5.15  ✓
+       #FF6B4A on cream = 2.56  ✗   --coral-text on cream = 4.37  ✓
+     Use the bright ones for fills, illustration and decoration; the deep ones
+     anywhere a label sits on top. Mustard is decorative only — as text on
+     cream it measures 1.61 and cannot be fixed without ceasing to be mustard. */
+  --sky: #4A9FD8;
+  --sky-deep: #2F76A8;
+  --forest: #1B4332;
+  --coral: #FF6B4A;
+  --coral-deep: #C43F22;
+  --coral-text: #C94526;
+  --mustard: #F4B942;
+  --cream: #FAF3E8;
+
   /* Brand — futuristic but calm: dimmer, more desaturated than a raw neon palette,
      so nothing here is pure/electric enough to feel like it's vibrating. */
   --violet: #6366F1;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import { LogOut, Menu, Package, Plus, Search, ShoppingBag, Sparkle, User, X } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -9,7 +9,6 @@ import { products } from "../data/products";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { RewardsWidget } from "./RewardsWidget";
 
 function initials(name: string) {
   return name
@@ -148,9 +147,24 @@ const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
   creator: User,
 };
 
+/**
+ * The three primary destinations. Individual hobby spaces live inside
+ * Discover; putting eight category names in the bar made it a directory
+ * rather than a navigation.
+ */
+const PRIMARY_NAV = [
+  { to: "/discover", label: "Discover", hint: "Explore hobbies, creations and people",
+    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") },
+  { to: "/profile", label: "My Space", hint: "Your activity, portfolio and progress",
+    match: (p: string) => p.startsWith("/profile") },
+  { to: "/circles", label: "Circles", hint: "Hobby communities and local groups",
+    match: (p: string) => p.startsWith("/circles") },
+];
+
 export function Header() {
   const { openCart, cartCount } = useCart();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -200,25 +214,33 @@ export function Header() {
               NoSpace
             </span>
           </Link>
-          <nav className="hidden lg:flex items-center gap-5">
-            <Link
-              to="/discover"
-              title="Every hobby on NoSpace"
-              className="text-sm text-foreground hover:text-[#38BDF8] transition-colors"
-            >
-              Discover
-            </Link>
-            <span className="h-4 w-px bg-white/15" aria-hidden="true" />
-            {hobbies.map((hobby) => (
-              <Link
-                key={hobby.slug}
-                to={`/space/${hobby.slug}`}
-                title={hobby.name}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {hobby.shortName}
-              </Link>
-            ))}
+          {/* Three destinations, generously spaced. Individual hobby spaces
+              are reached through Discover rather than crowding the bar. */}
+          <nav className="hidden lg:flex items-center gap-8" aria-label="Primary">
+            {PRIMARY_NAV.map((item) => {
+              const active = item.match(pathname);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  title={item.hint}
+                  aria-current={active ? "page" : undefined}
+                  className={`relative py-1 text-sm transition-colors ${
+                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                  {/* Understated active marker — a short rule, not a pill */}
+                  {active && (
+                    <span
+                      className="absolute -bottom-0.5 left-0 right-0 h-px"
+                      style={{ backgroundColor: "var(--coral)" }}
+                      aria-hidden="true"
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
@@ -275,12 +297,11 @@ export function Header() {
 
         <div className="flex items-center gap-2 shrink-0">
           <Link to="/create" className="hidden sm:block">
-            <Button variant="brand" size="sm">
+            <Button variant="coral" size="sm" className="rounded-full px-4">
               <Plus className="size-4" />
               Create
             </Button>
           </Link>
-          <RewardsWidget />
           <Button
             variant="ghost"
             size="icon"
@@ -309,14 +330,14 @@ export function Header() {
               Discover
             </Link>
             <div className="my-1 h-px bg-white/10" aria-hidden="true" />
-            {hobbies.map((hobby) => (
+            {PRIMARY_NAV.filter((i) => i.to !== "/discover").map((item) => (
               <Link
-                key={hobby.slug}
-                to={`/space/${hobby.slug}`}
+                key={item.to}
+                to={item.to}
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-sm py-2 hover:text-accent transition-colors"
               >
-                {hobby.name}
+                {item.label}
               </Link>
             ))}
             <Link

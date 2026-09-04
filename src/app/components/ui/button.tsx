@@ -12,6 +12,10 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         brand:
           "text-white shadow-lg hover:brightness-110 hover:scale-[1.02] active:scale-[0.99] [background-image:var(--gradient-brand)]",
+        // The primary NoSpace action. Uses --coral-deep rather than raw coral
+        // so the white label clears WCAG AA (5.15:1 vs 2.82:1).
+        coral:
+          "text-white shadow-sm [background-color:var(--coral-deep)] hover:brightness-110 active:brightness-95",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20",
         outline:
