@@ -115,7 +115,7 @@ export function Login() {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 rounded-xl border border-[#D8739B]/30 bg-[#D8739B]/10 px-3 py-2.5 text-xs text-[#D8739B]">
+            <div className="flex items-start gap-2 rounded-xl border border-[var(--coral)]/30 bg-[var(--coral)]/10 px-3 py-2.5 text-xs text-[var(--coral)]">
               <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
               {error}
             </div>
@@ -130,7 +130,7 @@ export function Login() {
           {mode === "signup" ? "Already have an account? " : "New here? "}
           <button
             type="button"
-            className="text-[#38BDF8] hover:underline"
+            className="text-[var(--coral-text)] hover:underline"
             onClick={() => {
               setError(null);
               setMode((m) => (m === "signup" ? "signin" : "signup"));

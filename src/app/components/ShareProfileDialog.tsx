@@ -48,7 +48,7 @@ export function ShareProfileDialog({
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
         <DialogTitle className="sr-only">Share your NoSpace profile</DialogTitle>
         <div className="rounded-3xl p-[1.5px] [background-image:var(--gradient-brand)]">
-          <div className="rounded-[calc(1.5rem-1.5px)] bg-[#05060B] p-7 text-center">
+          <div className="rounded-[calc(1.5rem-1.5px)] bg-[var(--surface)] p-7 text-center">
             <Avatar className="size-16 mx-auto mb-4">
               <AvatarFallback className="text-lg">YOU</AvatarFallback>
             </Avatar>

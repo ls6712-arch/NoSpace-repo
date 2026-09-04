@@ -44,7 +44,7 @@ export function ProductDetail() {
         </Button>
 
         <div className="grid md:grid-cols-2 gap-10 mb-16">
-          <div className="relative aspect-square rounded-3xl overflow-hidden border border-white/10">
+          <div className="relative aspect-square rounded-3xl overflow-hidden border border-border">
             <GeneratedArt
               hobbySlug={product.hobbySlug}
               seed={product.id}
@@ -54,7 +54,7 @@ export function ProductDetail() {
               size="icon"
               variant="ghost"
               className={`absolute top-5 right-5 rounded-full backdrop-blur-md ${
-                inWishlist ? "bg-[#D8739B] text-white" : "bg-black/40 text-white"
+                inWishlist ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white"
               }`}
               onClick={() => toggleWishlist(product.id)}
             >
@@ -64,7 +64,7 @@ export function ProductDetail() {
 
           <div className="glass-panel rounded-3xl p-8">
             {hobby && (
-              <Link to={`/space/${hobby.slug}`} className="text-sm text-[#38BDF8] mb-2 inline-block">
+              <Link to={`/space/${hobby.slug}`} className="text-sm text-[var(--coral-text)] mb-2 inline-block">
                 {hobby.name}
               </Link>
             )}
@@ -77,7 +77,7 @@ export function ProductDetail() {
                   <Star
                     key={i}
                     className={`size-4 ${
-                      i < Math.floor(product.rating) ? "fill-[#E8B84B] text-[#E8B84B]" : "text-white/20"
+                      i < Math.floor(product.rating) ? "fill-[var(--mustard)] text-[var(--mustard)]" : "text-white/20"
                     }`}
                   />
                 ))}
@@ -87,7 +87,7 @@ export function ProductDetail() {
               </span>
             </div>
 
-            <div className="text-4xl mb-6 text-[#38BDF8]">${product.price.toFixed(2)}</div>
+            <div className="text-4xl mb-6 text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
 
             <p className="text-muted-foreground mb-8 leading-relaxed">{product.description}</p>
 
@@ -102,7 +102,7 @@ export function ProductDetail() {
                       className={`px-4 py-2 rounded-full border text-sm transition-all ${
                         selectedColor === color
                           ? "border-transparent text-white [background-image:var(--gradient-brand)]"
-                          : "border-white/15 hover:border-white/30"
+                          : "border-border hover:border-foreground/30"
                       }`}
                     >
                       {color}
@@ -123,7 +123,7 @@ export function ProductDetail() {
                       className={`px-4 py-2 rounded-full border text-sm transition-all ${
                         selectedSize === size
                           ? "border-transparent text-white [background-image:var(--gradient-brand)]"
-                          : "border-white/15 hover:border-white/30"
+                          : "border-border hover:border-foreground/30"
                       }`}
                     >
                       {size}
@@ -146,7 +146,7 @@ export function ProductDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {related.map((item) => (
                 <Link key={item.id} to={`/product/${item.id}`}>
-                  <div className="group rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-colors">
+                  <div className="group rounded-2xl overflow-hidden border border-border hover:border-border transition-colors">
                     <div className="aspect-square overflow-hidden bg-white/[0.03]">
                       <GeneratedArt
                         hobbySlug={item.hobbySlug}
@@ -156,7 +156,7 @@ export function ProductDetail() {
                     </div>
                     <div className="p-4">
                       <h3 className="mb-1 line-clamp-1 text-sm">{item.name}</h3>
-                      <div className="text-[#38BDF8]">${item.price.toFixed(2)}</div>
+                      <div className="text-[var(--coral-text)]">${item.price.toFixed(2)}</div>
                     </div>
                   </div>
                 </Link>

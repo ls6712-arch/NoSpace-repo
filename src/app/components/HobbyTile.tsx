@@ -52,8 +52,8 @@ export function HobbyTile({
 
   const className = `group block rounded-2xl border p-1.5 text-left transition-colors ${
     active
-      ? "border-[#38BDF8] bg-white/[0.07]"
-      : "border-white/10 hover:border-white/25 hover:bg-white/[0.04]"
+      ? "border-[var(--coral-text)] bg-white/[0.07]"
+      : "border-border hover:border-foreground/30 hover:bg-white/[0.04]"
   }`;
 
   if (to) {

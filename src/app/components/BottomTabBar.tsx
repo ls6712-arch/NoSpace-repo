@@ -42,7 +42,7 @@ export function BottomTabBar() {
       <div className="h-[76px] lg:hidden" aria-hidden="true" />
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0A0B14]/95 backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur-xl lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Main"
       >
@@ -57,7 +57,7 @@ export function BottomTabBar() {
                   key={tab.label || "create"}
                   to={tab.to}
                   aria-label="Create — log something you made"
-                  className="-mt-7 flex size-15 items-center justify-center rounded-full text-white shadow-[0_8px_20px_rgba(0,0,0,0.45)] ring-4 ring-[#0A0B14] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-95"
+                  className="-mt-7 flex size-15 items-center justify-center rounded-full text-white shadow-[0_8px_20px_rgba(0,0,0,0.45)] ring-4 ring-surface transition-[filter,transform] duration-150 hover:brightness-110 active:scale-95"
                   style={{ backgroundColor: "var(--coral-deep)", width: 60, height: 60 }}
                 >
                   <Icon className="size-7" strokeWidth={2.2} />

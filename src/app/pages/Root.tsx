@@ -19,7 +19,7 @@ export function Root() {
   if (isConfigured && loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <span className="size-8 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
+        <span className="size-8 rounded-full border-2 border-border border-t-white/70 animate-spin" />
       </div>
     );
   }

@@ -60,7 +60,7 @@ export function Discover() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search hobbies — pottery, chess, sourdough..."
-              className="w-full rounded-full border border-white/15 bg-white/5 py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-white/30"
+              className="w-full rounded-full border border-border bg-surface-muted py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
             />
             {query && (
               <button
@@ -93,7 +93,7 @@ export function Discover() {
             <div className="flex items-end justify-between gap-4 mb-4 flex-wrap">
               <div>
                 <Link to={`/space/${hobby.slug}`} className="group">
-                  <h2 className="text-2xl group-hover:text-[#38BDF8] transition-colors">
+                  <h2 className="text-2xl group-hover:text-[var(--coral-text)] transition-colors">
                     {hobby.name}
                   </h2>
                 </Link>
@@ -101,7 +101,7 @@ export function Discover() {
               </div>
               <Link
                 to={`/space/${hobby.slug}`}
-                className="text-xs text-[#38BDF8] hover:underline"
+                className="text-xs text-[var(--coral-text)] hover:underline"
               >
                 Open space →
               </Link>

@@ -35,7 +35,7 @@ function CirclesTab({
         const joined = isCircleJoined(circle.id);
         const feed = expanded === circle.id ? circleFeed(circle.id) : [];
         return (
-          <div key={circle.id} className="rounded-2xl border border-white/10 p-4">
+          <div key={circle.id} className="rounded-2xl border border-border p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -62,7 +62,7 @@ function CirclesTab({
             {joined && (
               <button
                 type="button"
-                className="text-xs text-[#38BDF8] mt-3"
+                className="text-xs text-[var(--coral-text)] mt-3"
                 onClick={() => setExpanded((e) => (e === circle.id ? null : circle.id))}
               >
                 {expanded === circle.id ? "Hide posts" : "View circle posts"}
@@ -75,7 +75,7 @@ function CirclesTab({
                   <p className="text-xs text-muted-foreground">Nothing posted here yet.</p>
                 ) : (
                   feed.map((post) => (
-                    <div key={post.id} className="text-xs text-muted-foreground rounded-lg bg-white/5 px-3 py-2">
+                    <div key={post.id} className="text-xs text-muted-foreground rounded-lg bg-surface-muted px-3 py-2">
                       <span className="text-foreground/90">{post.creator}: </span>
                       {post.caption}
                     </div>
@@ -148,7 +148,7 @@ export function CategoryFeed() {
             <p className="text-lg mb-2 italic text-muted-foreground">{hobby.tagline}</p>
             <p className="text-muted-foreground text-lg max-w-xl">{hobby.description}</p>
           </div>
-          <div className="w-full max-w-xs md:w-72 md:max-w-none shrink-0 rounded-3xl overflow-hidden border border-white/10 bg-white/5">
+          <div className="w-full max-w-xs md:w-72 md:max-w-none shrink-0 rounded-3xl overflow-hidden border border-border bg-surface-muted">
             <GeneratedArt
               hobbySlug={hobby.slug}
               seed={hobby.slug}
@@ -173,7 +173,7 @@ export function CategoryFeed() {
             <button
               type="button"
               onClick={() => setSub("")}
-              className="flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-xs text-muted-foreground hover:border-white/30"
+              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:border-foreground/30"
             >
               <X className="size-3" />
               Clear filter
@@ -215,7 +215,7 @@ export function CategoryFeed() {
             {activeSub && (
               <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
                 Showing
-                <span className="rounded-full border border-[#38BDF8]/40 bg-[#38BDF8]/10 px-3 py-1 text-xs text-foreground">
+                <span className="rounded-full border border-[var(--coral-text)]/40 bg-[var(--coral-text)]/10 px-3 py-1 text-xs text-foreground">
                   {activeLabel ?? activeSub}
                 </span>
                 only

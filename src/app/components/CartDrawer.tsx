@@ -57,7 +57,7 @@ export function CartDrawer() {
               {cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3"
+                  className="flex gap-3 rounded-2xl border border-border bg-white/[0.03] p-3"
                 >
                   <div className="size-20 shrink-0 overflow-hidden rounded-xl">
                     <GeneratedArt
@@ -89,7 +89,7 @@ export function CartDrawer() {
                       >
                         <Plus className="size-3" />
                       </Button>
-                      <span className="ml-auto text-sm text-[#38BDF8]">
+                      <span className="ml-auto text-sm text-[var(--coral-text)]">
                         ${(item.price * item.quantity).toFixed(2)}
                       </span>
                       <Button
@@ -109,10 +109,10 @@ export function CartDrawer() {
         </div>
 
         {cartItems.length > 0 && !justCheckedOut && (
-          <div className="border-t border-white/10 p-4 space-y-3">
+          <div className="border-t border-border p-4 space-y-3">
             <div className="flex justify-between text-lg">
               <span>Total</span>
-              <span className="text-[#38BDF8]">${cartTotal.toFixed(2)}</span>
+              <span className="text-[var(--coral-text)]">${cartTotal.toFixed(2)}</span>
             </div>
             <Button variant="brand" size="lg" className="w-full" onClick={handleCheckout}>
               Checkout · +{cartCount * 10} pts

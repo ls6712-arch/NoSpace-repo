@@ -26,11 +26,11 @@ export function AchievementStrip({ onShare }: { onShare: () => void }) {
             >
               <span
                 className={`flex size-14 items-center justify-center rounded-full p-[2px] ${
-                  unlocked ? "[background-image:var(--gradient-brand)]" : "bg-white/10"
+                  unlocked ? "[background-image:var(--gradient-brand)]" : "bg-surface-muted"
                 }`}
               >
                 <span
-                  className={`flex size-full items-center justify-center rounded-full bg-[#05060B] ${
+                  className={`flex size-full items-center justify-center rounded-full bg-[var(--surface)] ${
                     unlocked ? "text-white" : "text-muted-foreground/50"
                   }`}
                 >
@@ -65,7 +65,7 @@ export function AchievementStrip({ onShare }: { onShare: () => void }) {
                       className={`mx-auto mb-4 flex size-16 items-center justify-center rounded-full ${
                         unlocked
                           ? "text-white [background-image:var(--gradient-brand)]"
-                          : "bg-white/10 text-muted-foreground"
+                          : "bg-surface-muted text-muted-foreground"
                       }`}
                     >
                       <Icon className="size-7" />

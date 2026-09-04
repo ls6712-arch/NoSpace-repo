@@ -6,7 +6,7 @@ import { GeneratedArt } from "./GeneratedArt";
 export function HobbyCategoryCard({ hobby }: { hobby: Hobby }) {
   return (
     <Link to={`/space/${hobby.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border">
         <GeneratedArt
           hobbySlug={hobby.slug}
           seed={hobby.slug}
@@ -26,7 +26,7 @@ export function HobbyCategoryCard({ hobby }: { hobby: Hobby }) {
               <h3 className="text-white text-xl mb-1">{hobby.shortName}</h3>
               <p className="text-white/70 text-sm line-clamp-2">{hobby.tagline}</p>
             </div>
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 backdrop-blur-md transition-transform group-hover:translate-x-1 group-hover:-translate-y-1">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted backdrop-blur-md transition-transform group-hover:translate-x-1 group-hover:-translate-y-1">
               <ArrowUpRight className="size-4 text-white" />
             </span>
           </div>

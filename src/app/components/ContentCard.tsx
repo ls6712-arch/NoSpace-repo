@@ -29,7 +29,7 @@ export function ContentCard({ post }: { post: Post }) {
   const aspect = ASPECTS[Math.abs(post.id) % ASPECTS.length];
 
   return (
-    <div className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-white/10 bg-card group">
+    <div className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-border bg-card group">
       <div className="relative overflow-hidden">
         <PostMedia
           media={post.media}
@@ -48,7 +48,7 @@ export function ContentCard({ post }: { post: Post }) {
         <button
           onClick={() => toggleLike(post.id)}
           className={`absolute top-3 right-3 flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs backdrop-blur-md transition-colors ${
-            liked ? "bg-[#D8739B] text-white" : "bg-black/40 text-white hover:bg-black/60"
+            liked ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white hover:bg-black/60"
           }`}
         >
           <Heart className={`size-3.5 ${liked ? "fill-white" : ""}`} />

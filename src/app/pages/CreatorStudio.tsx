@@ -175,8 +175,8 @@ export function CreatorStudio() {
     <div className="min-h-screen py-14">
       <div className="container mx-auto px-4 max-w-2xl">
         <div className="mb-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-muted-foreground mb-4">
-            <Sparkles className="size-3.5 text-[#38BDF8]" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-muted px-4 py-1.5 text-xs text-muted-foreground mb-4">
+            <Sparkles className="size-3.5 text-[var(--coral-text)]" />
             Creator studio
           </div>
           <h1 className="text-4xl mb-2">Post something real</h1>
@@ -188,7 +188,7 @@ export function CreatorStudio() {
         </div>
 
         <div className="glass-panel rounded-3xl p-6 md:p-8 space-y-6">
-          <div className="text-xs text-[#38BDF8] tracking-wide">1 · LOG</div>
+          <div className="text-xs text-[var(--coral-text)] tracking-wide">1 · LOG</div>
           <div>
             <Label className="mb-2 block">Space</Label>
             <Select
@@ -228,7 +228,7 @@ export function CreatorStudio() {
                     className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                       active
                         ? "border-transparent text-white [background-image:var(--gradient-brand)]"
-                        : "border-white/15 text-muted-foreground hover:border-white/30"
+                        : "border-border text-muted-foreground hover:border-foreground/30"
                     }`}
                   >
                     {s.label}
@@ -251,7 +251,7 @@ export function CreatorStudio() {
                 className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-colors ${
                   type === "photo"
                     ? "border-transparent text-white [background-image:var(--gradient-brand)]"
-                    : "border-white/10 text-muted-foreground hover:text-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Camera className="size-4" />
@@ -263,7 +263,7 @@ export function CreatorStudio() {
                 className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-colors ${
                   type === "video"
                     ? "border-transparent text-white [background-image:var(--gradient-brand)]"
-                    : "border-white/10 text-muted-foreground hover:text-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Video className="size-4" />
@@ -275,7 +275,7 @@ export function CreatorStudio() {
           <div>
             <Label className="mb-2 block">Cover</Label>
             <div className="flex items-center gap-4">
-              <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-white/10">
+              <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border">
                 {filePreviewUrl ? (
                   type === "video" ? (
                     <video src={filePreviewUrl} className="h-full w-full object-cover" muted />
@@ -336,7 +336,7 @@ export function CreatorStudio() {
             />
           </div>
 
-          <div className="text-xs text-[#38BDF8] tracking-wide pt-2">2 · REFLECT</div>
+          <div className="text-xs text-[var(--coral-text)] tracking-wide pt-2">2 · REFLECT</div>
           <div>
             <Label htmlFor="reflection" className="mb-2 block">
               How'd it go? <span className="text-muted-foreground font-normal">(optional, private)</span>
@@ -349,7 +349,7 @@ export function CreatorStudio() {
             />
           </div>
 
-          <div className="text-xs text-[#38BDF8] tracking-wide pt-2">3 · SHARE (OPTIONAL)</div>
+          <div className="text-xs text-[var(--coral-text)] tracking-wide pt-2">3 · SHARE (OPTIONAL)</div>
           <div>
             <Label className="mb-2 block">Who sees this</Label>
             <div className="grid grid-cols-3 gap-2">
@@ -364,7 +364,7 @@ export function CreatorStudio() {
                   className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-center transition-colors ${
                     visibility === opt.value
                       ? "border-transparent text-white [background-image:var(--gradient-brand)]"
-                      : "border-white/10 text-muted-foreground hover:text-foreground"
+                      : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <opt.icon className="size-4" />
@@ -404,7 +404,7 @@ export function CreatorStudio() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-white/10 p-4">
+          <div className="rounded-2xl border border-border p-4">
             <button
               type="button"
               onClick={() => setForSale((v) => !v)}
@@ -418,7 +418,7 @@ export function CreatorStudio() {
               </div>
               <span
                 className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
-                  forSale ? "bg-[#6366F1] justify-end" : "bg-white/10 justify-start"
+                  forSale ? "bg-[var(--sky-deep)] justify-end" : "bg-surface-muted justify-start"
                 }`}
               >
                 <span className="size-5 rounded-full bg-white" />
@@ -467,9 +467,9 @@ export function CreatorStudio() {
             )}
           </div>
 
-          <div className="text-xs text-[#38BDF8] tracking-wide pt-2">4 · EARN</div>
+          <div className="text-xs text-[var(--coral-text)] tracking-wide pt-2">4 · EARN</div>
           {postError && (
-            <p className="text-xs text-[#D8739B]">{postError}</p>
+            <p className="text-xs text-[var(--coral)]">{postError}</p>
           )}
           <Button
             variant="brand"

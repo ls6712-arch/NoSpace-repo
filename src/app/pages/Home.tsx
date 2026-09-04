@@ -59,7 +59,7 @@ function WaitlistForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email address"
-          className="w-full rounded-full border border-white/15 bg-white/5 py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:border-white/30"
+          className="w-full rounded-full border border-border bg-surface-muted py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
         />
       </div>
       <Button type="submit" variant="brand">
@@ -95,7 +95,7 @@ function FeatureSection({
           }`}
         >
           <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-700 max-w-md">
-            <div className="text-xs text-[#38BDF8] tracking-wide mb-3">{eyebrow}</div>
+            <div className="text-xs text-[var(--coral-text)] tracking-wide mb-3">{eyebrow}</div>
             <h2 className="text-3xl md:text-4xl mb-4">{title}</h2>
             <p className="text-muted-foreground mb-6">{copy}</p>
             {cta && ctaTo && (
@@ -138,16 +138,16 @@ export function Home() {
       <section className="relative overflow-hidden py-24 md:py-32">
         {/* Floating glow orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div className="animate-float-slow absolute -top-16 left-[8%] size-72 rounded-full bg-[#6366F1]/14 blur-[110px]" />
-          <div className="animate-float-slower absolute top-1/3 right-[6%] size-80 rounded-full bg-[#38BDF8]/12 blur-[120px]" />
-          <div className="animate-float-slow absolute bottom-0 left-1/3 size-64 rounded-full bg-[#D8739B]/10 blur-[110px]" />
+          <div className="animate-float-slow absolute -top-16 left-[8%] size-72 rounded-full bg-[var(--sky-deep)]/14 blur-[110px]" />
+          <div className="animate-float-slower absolute top-1/3 right-[6%] size-80 rounded-full bg-[var(--coral-text)]/12 blur-[120px]" />
+          <div className="animate-float-slow absolute bottom-0 left-1/3 size-64 rounded-full bg-[var(--coral)]/10 blur-[110px]" />
         </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
-            <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-700 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-muted-foreground mb-8">
+            <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-700 inline-flex items-center gap-2 rounded-full border border-border bg-surface-muted px-4 py-1.5 text-xs text-muted-foreground mb-8">
               <span className="relative flex size-1.5">
-                <span className="animate-pulse-soft inline-flex size-1.5 rounded-full bg-[#38BDF8]" />
+                <span className="animate-pulse-soft inline-flex size-1.5 rounded-full bg-[var(--coral-text)]" />
               </span>
               Welcome to hobbymaxxing
             </div>
@@ -187,7 +187,7 @@ export function Home() {
       </section>
 
       {/* Hobbymaxxing marquee — big, always moving, like Fable's book carousel */}
-      <div className="relative overflow-hidden border-y border-white/10 py-6 md:py-8">
+      <div className="relative overflow-hidden border-y border-border py-6 md:py-8">
         <div className="flex w-max animate-marquee">
           {[0, 1].map((rep) => (
             <div key={rep} className="flex items-center shrink-0" aria-hidden={rep === 1}>
@@ -250,7 +250,7 @@ export function Home() {
             ].map((step) => (
               <div
                 key={step.n}
-                className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3"
+                className="flex items-center gap-3 rounded-xl border border-border px-4 py-3"
               >
                 <span className="font-hud flex size-7 shrink-0 items-center justify-center rounded-full text-xs text-white [background-image:var(--gradient-brand)]">
                   {step.n}
@@ -276,7 +276,7 @@ export function Home() {
             {circleSample.map((circle) => (
               <div
                 key={circle.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3"
               >
                 <div>
                   <div className="text-sm">{circle.name}</div>
@@ -285,7 +285,7 @@ export function Home() {
                     {circle.location} · {circle.memberCount} members
                   </div>
                 </div>
-                <span className="shrink-0 rounded-full border border-white/15 px-3 py-1 text-xs text-muted-foreground">
+                <span className="shrink-0 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
                   Join
                 </span>
               </div>
@@ -309,7 +309,7 @@ export function Home() {
               {["Workbench", "The Studio", "Kitchen Table"].map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-muted-foreground"
+                  className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground"
                 >
                   {tag}
                 </span>
@@ -327,7 +327,7 @@ export function Home() {
       />
 
       {/* What people are making */}
-      <section className="py-16 border-y border-white/10 bg-white/[0.02]">
+      <section className="py-16 border-y border-border bg-white/[0.02]">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl text-center mb-2">What people are making</h2>
           <p className="text-muted-foreground text-center mb-12">
@@ -389,7 +389,7 @@ export function Home() {
 
       {/* Explore next */}
       {exploreNext.length > 0 && (
-        <section className="py-16 border-t border-white/10 bg-white/[0.02]">
+        <section className="py-16 border-t border-border bg-white/[0.02]">
           <div className="container mx-auto px-4">
             <div className="mb-8">
               <h2 className="text-3xl mb-2">Explore next</h2>
@@ -413,7 +413,7 @@ export function Home() {
       )}
 
       {/* Stats */}
-      <section className="py-16 border-t border-white/10">
+      <section className="py-16 border-t border-border">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center max-w-3xl mx-auto">
             {STATS.map((stat, i) => (
@@ -452,7 +452,7 @@ export function Home() {
       </section>
 
       {/* Waitlist */}
-      <section className="py-16 border-t border-white/10 bg-white/[0.02]">
+      <section className="py-16 border-t border-border bg-white/[0.02]">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl mb-2">Free in early access</h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
@@ -462,7 +462,7 @@ export function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-white/10 py-10">
+      <footer className="border-t border-border py-10">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span className="text-gradient-brand" style={{ fontFamily: "var(--font-heading)" }}>
             NoSpace

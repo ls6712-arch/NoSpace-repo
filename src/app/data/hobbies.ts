@@ -57,7 +57,7 @@ export const hobbies: Hobby[] = [
       sub("Restoration"), sub("Upcycling"), sub("Paper crafts"), sub("Zines"),
       sub("Scrapbooking"),
     ],
-    gradient: "from-violet-500 via-fuchsia-500 to-pink-500",
+    gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1599589915468-b4c71ed62543?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "9.4K",
@@ -76,7 +76,7 @@ export const hobbies: Hobby[] = [
       sub("Drones"), sub("Model-making"), sub("Miniatures"), sub("Makerspaces"),
       sub("Product prototyping"),
     ],
-    gradient: "from-sky-500 via-cyan-500 to-teal-500",
+    gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1631545806609-946d4f37b2a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "4.1K",
@@ -97,7 +97,7 @@ export const hobbies: Hobby[] = [
       sub("AR/VR projects"), sub("Smart-home projects"),
       sub("Cybersecurity learning"),
     ],
-    gradient: "from-indigo-500 via-blue-500 to-cyan-500",
+    gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1518770660439-4636190af475?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "6.7K",
@@ -117,7 +117,7 @@ export const hobbies: Hobby[] = [
       sub("Strength training"), sub("Weightlifting/gym", "weightlifting"),
       sub("Basketball"), sub("Soccer"), sub("Volleyball"), sub("Pilates"),
     ],
-    gradient: "from-cyan-500 via-sky-500 to-blue-500",
+    gradient: "from-[var(--sky-deep)] to-[var(--coral-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "11.2K",
@@ -136,7 +136,7 @@ export const hobbies: Hobby[] = [
       sub("Home brewing"), sub("Kombucha"), sub("Cocktail-making"),
       sub("Supper clubs"),
     ],
-    gradient: "from-amber-500 via-orange-500 to-pink-500",
+    gradient: "from-[var(--mustard)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1596018589855-e9a2a91f687f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "7.6K",
@@ -155,7 +155,7 @@ export const hobbies: Hobby[] = [
       sub("Birdwatching"), sub("Foraging"), sub("Camping"), sub("Fishing"),
       sub("Outdoor photography"), sub("Nature journaling"),
     ],
-    gradient: "from-lime-500 via-green-500 to-emerald-500",
+    gradient: "from-[var(--sky)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "5.2K",
@@ -175,7 +175,7 @@ export const hobbies: Hobby[] = [
       sub("Writing"), sub("Poetry"), sub("Journaling"), sub("Calligraphy"),
       sub("Theater"),
     ],
-    gradient: "from-purple-500 via-fuchsia-500 to-rose-500",
+    gradient: "from-[var(--coral)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1513364776144-60967b0f800f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "8.9K",
@@ -195,7 +195,7 @@ export const hobbies: Hobby[] = [
       sub("Vintage/thrifting", "thrifting"), sub("Sneakers"), sub("Puzzles"),
       sub("Language learning"),
     ],
-    gradient: "from-emerald-500 via-teal-500 to-cyan-500",
+    gradient: "from-[var(--forest)] to-[var(--coral-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1767338718786-92f7934e925e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "5.9K",

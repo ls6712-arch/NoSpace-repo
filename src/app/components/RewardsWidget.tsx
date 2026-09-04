@@ -8,9 +8,9 @@ export function RewardsWidget() {
   return (
     <Link
       to="/profile"
-      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm hover:bg-white/10 transition-colors"
+      className="flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-sm hover:bg-surface-muted transition-colors"
     >
-      <Zap className="size-3.5 text-[#E8B84B] fill-[#E8B84B]" />
+      <Zap className="size-3.5 text-[var(--mustard)] fill-[var(--mustard)]" />
       <span className="font-hud tabular-nums">{points}</span>
       <span className="text-muted-foreground hidden sm:inline font-hud">· Lv.{level}</span>
     </Link>

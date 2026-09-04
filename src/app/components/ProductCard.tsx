@@ -31,14 +31,14 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link to={`/product/${product.id}`}>
-      <Card className="group overflow-hidden hover:border-white/20 transition-all duration-300">
+      <Card className="group overflow-hidden hover:border-border transition-all duration-300">
         <div className="relative aspect-square overflow-hidden bg-white/[0.03]">
           <GeneratedArt
             hobbySlug={product.hobbySlug}
             seed={product.id}
             className="h-full w-full transition-transform duration-500 group-hover:scale-110"
           />
-          <Badge variant="outline" className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border-white/20">
+          <Badge variant="outline" className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border-border">
             <Meta.icon className="size-3" />
             {Meta.label}
           </Badge>
@@ -53,7 +53,7 @@ export function ProductCard({ product }: { product: Product }) {
             size="icon"
             variant="ghost"
             className={`absolute bottom-3 right-3 rounded-full backdrop-blur-md ${
-              inWishlist ? "bg-[#D8739B] text-white" : "bg-black/40 text-white hover:bg-black/60"
+              inWishlist ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white hover:bg-black/60"
             }`}
             onClick={handleWishlistToggle}
           >
@@ -65,12 +65,12 @@ export function ProductCard({ product }: { product: Product }) {
           <h3 className="mb-2 line-clamp-1">{product.name}</h3>
           <div className="flex items-center gap-2 mb-3">
             <div className="flex items-center">
-              <Star className="size-3.5 fill-[#E8B84B] text-[#E8B84B]" />
+              <Star className="size-3.5 fill-[var(--mustard)] text-[var(--mustard)]" />
               <span className="ml-1 text-sm">{product.rating}</span>
             </div>
             <span className="text-xs text-muted-foreground">({product.reviews})</span>
           </div>
-          <div className="text-lg text-[#38BDF8]">${product.price.toFixed(2)}</div>
+          <div className="text-lg text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
         </div>
       </Card>
     </Link>

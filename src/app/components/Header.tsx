@@ -54,12 +54,12 @@ function AccountMenu() {
         </Avatar>
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl border border-white/10 bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
-          <div className="px-4 py-3 text-sm truncate border-b border-white/10">{name}</div>
+        <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl border border-border bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+          <div className="px-4 py-3 text-sm truncate border-b border-border">{name}</div>
           <Link
             to="/profile"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-white/5 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-surface-muted transition-colors"
           >
             <User className="size-3.5" />
             Profile
@@ -70,7 +70,7 @@ function AccountMenu() {
               setOpen(false);
               signOut();
             }}
-            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left hover:bg-white/5 transition-colors"
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left hover:bg-surface-muted transition-colors"
           >
             <LogOut className="size-3.5" />
             Log out
@@ -198,7 +198,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-6 min-w-0">
           <Button
@@ -261,7 +261,7 @@ export function Header() {
               onKeyDown={onSearchKeyDown}
             />
             {searchOpen && query.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl border border-white/10 bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+              <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl border border-border bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
                 {results.length === 0 ? (
                   <p className="px-4 py-3 text-sm text-muted-foreground">
                     No matches for "{query}"
@@ -275,9 +275,9 @@ export function Header() {
                           <button
                             type="button"
                             onClick={() => goToResult(result)}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 transition-colors"
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-muted transition-colors"
                           >
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/5">
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
                               <Icon className="size-3.5 text-muted-foreground" />
                             </span>
                             <span className="min-w-0">
@@ -310,7 +310,7 @@ export function Header() {
           >
             <ShoppingBag className="size-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-[#D8739B] text-[10px] text-white">
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-[var(--coral)] text-[10px] text-white">
                 {cartCount}
               </span>
             )}
@@ -320,7 +320,7 @@ export function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-white/10 bg-background/95 backdrop-blur-xl">
+        <div className="lg:hidden border-t border-border bg-background/95 backdrop-blur-xl">
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
             <Link
               to="/discover"
@@ -329,7 +329,7 @@ export function Header() {
             >
               Discover
             </Link>
-            <div className="my-1 h-px bg-white/10" aria-hidden="true" />
+            <div className="my-1 h-px bg-surface-muted" aria-hidden="true" />
             {PRIMARY_NAV.filter((i) => i.to !== "/discover").map((item) => (
               <Link
                 key={item.to}
@@ -343,7 +343,7 @@ export function Header() {
             <Link
               to="/create"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm py-2 text-[#38BDF8]"
+              className="text-sm py-2 text-[var(--coral-text)]"
             >
               + Create something
             </Link>

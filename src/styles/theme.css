@@ -1,5 +1,5 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --font-size: 16px;
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -31,67 +31,85 @@
      versions do not pass WCAG AA on their own — measured, not guessed:
        white on #4A9FD8 = 2.90  ✗   white on --sky-deep   = 4.91  ✓
        white on #FF6B4A = 2.82  ✗   white on --coral-deep = 5.15  ✓
-       #FF6B4A on cream = 2.56  ✗   --coral-text on cream = 4.37  ✓
+       #FF6B4A on cream = 2.56  ✗   --coral-text everywhere >= 4.94 ✓
      Use the bright ones for fills, illustration and decoration; the deep ones
      anywhere a label sits on top. Mustard is decorative only — as text on
      cream it measures 1.61 and cannot be fixed without ceasing to be mustard. */
+  /* The pale sky the hero sits on. Forest text on it measures 13.4:1. */
+  --sky-soft: #D8EDFB;
   --sky: #4A9FD8;
   --sky-deep: #2F76A8;
   --forest: #1B4332;
   --coral: #FF6B4A;
   --coral-deep: #C43F22;
-  --coral-text: #C94526;
+  --coral-text: #B03A1E;
   --mustard: #F4B942;
   --cream: #FAF3E8;
 
-  /* Brand — futuristic but calm: dimmer, more desaturated than a raw neon palette,
-     so nothing here is pure/electric enough to feel like it's vibrating. */
-  --violet: #6366F1;
-  --cyan: #38BDF8;
-  --magenta: #D8739B;
-  --amber: #E8B84B;
-  --emerald: #4ADE80;
+  /* ── Semantic UI tokens ───────────────────────────────────────────────────
+     Everything in the interface reads these, never a raw hue. Swapping the
+     palette again means editing this block only.
 
-  --background: #07080F;
-  --foreground: #E7E9F5;
-  --card: #0D0F1C;
-  --card-foreground: #E7E9F5;
-  --popover: #0D0F1C;
-  --popover-foreground: #E7E9F5;
-  --primary: #6366F1;
-  --primary-foreground: #08090F;
-  --secondary: #12142A;
-  --secondary-foreground: #E7E9F5;
-  --muted: #12142A;
-  --muted-foreground: #888CAD;
-  --accent: #38BDF8;
-  --accent-foreground: #07080F;
-  --destructive: #E5566E;
-  --destructive-foreground: #ffffff;
-  --border: rgba(99, 102, 241, 0.14);
-  --input: transparent;
-  --input-background: rgba(99, 102, 241, 0.05);
-  --switch-background: rgba(99, 102, 241, 0.16);
+     Bright hues are for surfaces, fills and illustration; the deep variants
+     carry text. That split is the whole reason this palette passes AA. */
+  --background: var(--sky-soft);
+  --surface: var(--cream);
+  --surface-muted: #F1E7D6;
+  --foreground: var(--forest);
+  --foreground-muted: #4A6357;
+  --border: rgba(27, 67, 50, 0.18);
+  --hairline: rgba(27, 67, 50, 0.10);
+  --primary: var(--coral-deep);
+  --primary-foreground: #FFFFFF;
+
+  /* Forest is also used as a large dark surface (the banded sections in the
+     design). Text on it flips to cream — 10.05:1. */
+  --on-forest: var(--cream);
+  --on-forest-muted: rgba(250, 243, 232, 0.72);
+
+  /* ── shadcn/ui mappings ───────────────────────────────────────────────────
+     The ui/ primitives consume these names, so pointing them at the semantic
+     tokens above converts every button, dialog, select, tab and input at once
+     without touching those files. */
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
+  --primary-fg: var(--primary-foreground);
+  --secondary: var(--surface-muted);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-muted);
+  --muted-foreground: var(--foreground-muted);
+  --accent: var(--coral);
+  --accent-foreground: #FFFFFF;
+  --destructive: #B3261E;
+  --destructive-foreground: #FFFFFF;
+  --input: var(--border);
+  --input-background: var(--surface);
+  --switch-background: rgba(27, 67, 50, 0.20);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #38BDF8;
-  --chart-1: #6366F1;
-  --chart-2: #38BDF8;
-  --chart-3: #D8739B;
-  --chart-4: #E8B84B;
-  --chart-5: #4ADE80;
+  --ring: var(--coral-deep);
+  --chart-1: var(--coral);
+  --chart-2: var(--sky-deep);
+  --chart-3: var(--forest);
+  --chart-4: var(--mustard);
+  --chart-5: #6B9E78;
   --radius: 0.875rem;
-  --sidebar: #0D0F1C;
-  --sidebar-foreground: #E7E9F5;
-  --sidebar-primary: #6366F1;
-  --sidebar-primary-foreground: #08090F;
-  --sidebar-accent: #12142A;
-  --sidebar-accent-foreground: #E7E9F5;
-  --sidebar-border: rgba(99, 102, 241, 0.14);
-  --sidebar-ring: #38BDF8;
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--surface-muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 
-  --gradient-brand: linear-gradient(120deg, #6366F1 0%, #38BDF8 50%, #D8739B 100%);
-  --gradient-brand-soft: linear-gradient(120deg, rgba(99,102,241,0.16) 0%, rgba(56,189,248,0.12) 50%, rgba(216,115,155,0.16) 100%);
+  /* Used for filled CTAs, where white sits on top — both stops clear AA. */
+  --gradient-brand: linear-gradient(120deg, var(--coral-deep) 0%, #B3381D 100%);
+  --gradient-brand-soft: linear-gradient(120deg, rgba(255,107,74,0.14) 0%, rgba(244,185,66,0.12) 55%, rgba(74,159,216,0.12) 100%);
+  /* For gradient *text*, which needs to stay legible on light ground. */
+  --gradient-ink: linear-gradient(105deg, var(--coral-text) 0%, var(--forest) 78%);
 }
 
 @theme inline {
@@ -116,6 +134,20 @@
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-hairline: var(--hairline);
+  --color-coral: var(--coral);
+  --color-coral-deep: var(--coral-deep);
+  --color-coral-text: var(--coral-text);
+  --color-sky: var(--sky);
+  --color-sky-soft: var(--sky-soft);
+  --color-sky-deep: var(--sky-deep);
+  --color-forest: var(--forest);
+  --color-mustard: var(--mustard);
+  --color-cream: var(--cream);
+  --color-on-forest: var(--on-forest);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -148,12 +180,10 @@
     @apply bg-background text-foreground;
     font-family: var(--font-body);
     background-image:
-      linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-      radial-gradient(ellipse 80% 50% at 15% -10%, rgba(99, 102, 241, 0.16), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(56, 189, 248, 0.10), transparent),
-      radial-gradient(ellipse 60% 40% at 90% 90%, rgba(216, 115, 155, 0.08), transparent);
-    background-size: 48px 48px, 48px 48px, auto, auto, auto;
+      radial-gradient(ellipse 90% 55% at 20% -8%, rgba(255, 255, 255, 0.55), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 4%, rgba(244, 185, 66, 0.10), transparent),
+      radial-gradient(ellipse 70% 45% at 85% 96%, rgba(74, 159, 216, 0.14), transparent);
+    background-size: auto, auto, auto;
     background-attachment: fixed;
   }
 
@@ -191,28 +221,30 @@
 
 @layer components {
   .text-gradient-brand {
-    background-image: var(--gradient-brand);
+    background-image: var(--gradient-ink);
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
   }
 
   .glass-panel {
-    background: rgba(99, 102, 241, 0.03);
+    background: var(--surface);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(99, 102, 241, 0.12);
+    border: 1px solid var(--border);
   }
 
+  /* Names kept so existing markup keeps working; all three now read as a soft
+     lift off the page rather than a neon rim. */
   .glow-violet {
-    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.22), 0 8px 32px -10px rgba(99, 102, 241, 0.32);
+    box-shadow: 0 0 0 1px rgba(27, 67, 50, 0.10), 0 10px 30px -12px rgba(27, 67, 50, 0.22);
   }
 
   .glow-cyan {
-    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.22), 0 8px 32px -10px rgba(56, 189, 248, 0.32);
+    box-shadow: 0 0 0 1px rgba(47, 118, 168, 0.16), 0 10px 30px -12px rgba(47, 118, 168, 0.26);
   }
 
   .glow-magenta {
-    box-shadow: 0 0 0 1px rgba(216, 115, 155, 0.22), 0 8px 32px -10px rgba(216, 115, 155, 0.32);
+    box-shadow: 0 0 0 1px rgba(196, 63, 34, 0.16), 0 10px 30px -12px rgba(196, 63, 34, 0.24);
   }
 
   .font-hud {
@@ -221,7 +253,7 @@
   }
 
   .text-gradient-animated {
-    background-image: var(--gradient-brand);
+    background-image: var(--gradient-ink);
     background-size: 200% 200%;
     background-clip: text;
     -webkit-background-clip: text;

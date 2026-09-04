@@ -22,7 +22,7 @@ export function ImageWithFallback(
 
   return didError ? (
     <div
-      className={`inline-flex items-center justify-center bg-white/5 text-center align-middle ${className ?? ""}`}
+      className={`inline-flex items-center justify-center bg-surface-muted text-center align-middle ${className ?? ""}`}
       style={style}
     >
       <img

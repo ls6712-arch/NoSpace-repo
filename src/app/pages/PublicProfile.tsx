@@ -81,7 +81,7 @@ export function PublicProfile() {
   if (state.status === "loading") {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
-        <span className="size-8 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+        <span className="size-8 animate-spin rounded-full border-2 border-border border-t-white/70" />
       </div>
     );
   }
@@ -179,7 +179,7 @@ export function PublicProfile() {
               <Link
                 key={s.key}
                 to={s.subSlug ? `/space/${s.hobbySlug}?hobby=${s.subSlug}` : `/space/${s.hobbySlug}`}
-                className="rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-white/25 hover:text-foreground"
+                className="rounded-full border border-border bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 {s.label}

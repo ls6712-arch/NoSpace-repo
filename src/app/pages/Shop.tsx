@@ -28,7 +28,7 @@ export function Shop() {
         </div>
 
         <div className="mb-10 flex justify-center">
-          <div className="flex flex-wrap gap-2 justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-2">
+          <div className="flex flex-wrap gap-2 justify-center rounded-2xl border border-border bg-white/[0.03] p-2">
             <Button
               variant="ghost"
               onClick={() => setSelected("all")}

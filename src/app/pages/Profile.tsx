@@ -89,7 +89,7 @@ export function Profile() {
           <button
             type="button"
             aria-label="Settings"
-            className="flex size-9 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:text-foreground"
+            className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
           >
             <Settings className="size-4" strokeWidth={1.7} />
           </button>
@@ -135,7 +135,7 @@ export function Profile() {
                     ? `/space/${s.hobbySlug}?hobby=${s.subSlug}`
                     : `/space/${s.hobbySlug}`
                 }
-                className="rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-white/25 hover:text-foreground"
+                className="rounded-full border border-border bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 {s.label}
@@ -145,7 +145,7 @@ export function Profile() {
         )}
 
         {isConfigured && !user && (
-          <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted px-4 py-3">
             <p className="text-xs text-muted-foreground">
               You're not logged in — sessions here are just local to this browser.
             </p>
@@ -176,7 +176,7 @@ export function Profile() {
         </div>
 
         {/* Creator vs. consumer */}
-        <div className="glass-panel glow-violet mb-9 rounded-3xl p-6 shadow-2xl ring-1 ring-white/10 sm:p-8">
+        <div className="glass-panel glow-violet mb-9 rounded-3xl p-6 shadow-2xl ring-1 ring-border sm:p-8">
           <div className="mb-4 flex items-center justify-between gap-4">
             <h2 className="text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               Creator vs. consumer
@@ -185,7 +185,7 @@ export function Profile() {
               {creatorShare}% creator
             </span>
           </div>
-          <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-white/10 sm:h-4">
+          <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-surface-muted sm:h-4">
             <div
               className="h-full [background-image:var(--gradient-brand)]"
               style={{ width: `${creatorShare}%` }}
@@ -309,11 +309,11 @@ function ActivityLog() {
       {activity.map((entry) => (
         <div
           key={entry.id}
-          className="flex items-center justify-between rounded-xl border border-white/10 px-4 py-3 text-sm"
+          className="flex items-center justify-between rounded-xl border border-border px-4 py-3 text-sm"
         >
           <span>{entry.label}</span>
           <div className="flex items-center gap-3">
-            <span className="text-[#38BDF8]">+{entry.delta}</span>
+            <span className="text-[var(--coral-text)]">+{entry.delta}</span>
             <span className="text-xs text-muted-foreground">{timeAgo(entry.at)}</span>
           </div>
         </div>

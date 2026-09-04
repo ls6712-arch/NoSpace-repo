@@ -259,7 +259,7 @@ export function HobbyShelf({ items: override }: { items?: HobbySession[] } = {})
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/15 px-6 py-12 text-center">
+      <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
         <p className="text-sm text-muted-foreground">
           This shelf is empty. Log a session and it starts filling up.
         </p>
