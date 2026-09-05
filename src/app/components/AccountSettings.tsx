@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Check, Settings } from "lucide-react";
+import { Link } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useCategories } from "../context/CategoriesContext";
 import { supabase } from "../../lib/supabase";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -17,6 +19,7 @@ import { Label } from "./ui/label";
  */
 export function AccountSettings() {
   const { user, profile, updatePassword, refreshProfile } = useAuth();
+  const { isAdmin, pendingCount } = useCategories();
 
   const [name, setName] = useState(profile?.display_name ?? "");
   const [savingName, setSavingName] = useState(false);
@@ -124,6 +127,25 @@ export function AccountSettings() {
         {nameError && <p className="mt-1.5 text-[11px] text-[var(--coral-text)]">{nameError}</p>}
         {nameDone && <p className="mt-1.5 text-[11px] text-muted-foreground">Name updated.</p>}
       </div>
+
+      {/* Only visible to whoever reviews suggestions — nobody, until the
+          is_admin flag is granted by hand in SQL. */}
+      {isAdmin && (
+        <Link
+          to="/admin/categories"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm transition-colors hover:border-[var(--coral-deep)]"
+        >
+          <span>
+            Review category suggestions
+            {pendingCount > 0 && (
+              <span className="ml-2 text-xs text-[var(--coral-text)]">
+                {pendingCount} waiting
+              </span>
+            )}
+          </span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+      )}
 
       <div className="rounded-2xl border border-border bg-card p-4">
         <Label htmlFor="acct-pw" className="mb-1.5 block text-xs">

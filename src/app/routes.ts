@@ -16,6 +16,8 @@ import { You } from "./pages/You";
 import { Messages } from "./pages/Messages";
 import { Inbox } from "./pages/Inbox";
 import { People } from "./pages/People";
+import { CategoryPage } from "./pages/CategoryPage";
+import { AdminCategories } from "./pages/AdminCategories";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Shop } from "./pages/Shop";
@@ -40,6 +42,8 @@ export const router = createHashRouter([
       { path: "circles", Component: Circles },
       { path: "create", Component: Log },
       { path: "people", Component: People },
+      { path: "category/:slug", Component: CategoryPage },
+      { path: "admin/categories", Component: AdminCategories },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },

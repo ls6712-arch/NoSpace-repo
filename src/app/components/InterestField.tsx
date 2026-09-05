@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import { hobbies } from "../data/hobbies";
+import { CATEGORIES } from "../data/categories";
 import { useContent } from "../context/ContentContext";
 import { Input } from "./ui/input";
 
@@ -41,6 +42,9 @@ export function InterestField({
     };
     for (const post of posts) add(post.interest);
     for (const hobby of hobbies) for (const sub of hobby.subItems) add(sub.label);
+    // The category examples too, so the words people see while browsing are
+    // the words offered when they write — without ever being required.
+    for (const c of CATEGORIES) for (const e of c.examples) add(e);
     return [...seen.values()];
   }, [posts]);
 

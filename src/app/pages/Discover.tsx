@@ -5,6 +5,8 @@ import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
 import { usePeopleSearch } from "../lib/people";
 import { PeopleRow } from "../components/PersonCard";
+import { SuggestCategory } from "../components/SuggestCategory";
+import { useCategories } from "../context/CategoriesContext";
 import { useContent } from "../context/ContentContext";
 import { deriveProjects, useJournal } from "../lib/journal";
 import { ContentCard } from "../components/ContentCard";
@@ -36,6 +38,7 @@ const BASE_CHIPS: Chip[] = [
 
 export function Discover() {
   const { publicFeed, posts } = useContent();
+  const { categories } = useCategories();
   const journal = useJournal();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("about") ?? "");
@@ -150,6 +153,47 @@ export function Discover() {
 
       <div className="bg-surface pb-24 pt-8">
         <div className="container mx-auto max-w-6xl px-4">
+          {/* Fifteen plain-named ways in, plus the sixteenth that admits the
+              list is incomplete. These are signage over content that already
+              exists — nothing is stored on a post, so the list can change
+              without touching anybody's work. */}
+          <section className="mb-10">
+            <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Browse by category
+            </h2>
+            <p className="mb-4 mt-1 text-sm text-muted-foreground">
+              A way in, not a list you have to pick from — you can post about
+              anything you like.
+            </p>
+            <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {categories.map((c) => (
+                <li key={c.slug}>
+                  <Link
+                    to={`/category/${c.slug}`}
+                    className="flex h-full min-h-[104px] flex-col justify-center gap-1 rounded-2xl border border-border bg-card px-4 py-4 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
+                  >
+                    <span
+                      className="size-9 rounded-full"
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${c.tint} 52%, var(--cream))`,
+                      }}
+                      aria-hidden="true"
+                    />
+                    <span className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                      {c.name}
+                    </span>
+                    <span className="text-xs leading-relaxed text-muted-foreground">
+                      {c.description}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <SuggestCategory />
+              </li>
+            </ul>
+          </section>
+
           {/* The other two things Discover is for. On a phone these are the
               only route to them, since the tab bar carries five destinations
               and Discover is defined as the place they live. */}
