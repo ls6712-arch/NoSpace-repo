@@ -202,13 +202,16 @@ export function PublicProfile() {
   return (
     <div className="min-h-screen bg-surface py-8 sm:py-10">
       <div className="container mx-auto max-w-2xl px-4">
+        {/* The wordmark is how someone arriving on a shared profile link gets
+            into the rest of the app. It looked like a way out and wasn't one. */}
         <div className="mb-6">
-          <span
-            className="text-3xl sm:text-4xl"
+          <Link
+            to="/"
+            className="inline-block text-3xl transition-colors hover:text-[var(--coral-text)] sm:text-4xl"
             style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
           >
-            No Space
-          </span>
+            NoSpace
+          </Link>
         </div>
 
         <div className="mb-5 flex items-center gap-5 sm:gap-6">

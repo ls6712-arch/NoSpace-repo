@@ -64,7 +64,9 @@ export function PersonActions({
   }, [open]);
 
   const isSelf = !!user && !!personId && personId === user.id;
-  const canAsk = !!personId && !!personName && !isSelf;
+  // Both of these write to the database as you, so they need an account.
+  // Offering them signed out produced a failure instead of a prompt.
+  const canAsk = !!user && !!personId && !!personName && !isSelf;
   const status = personId ? connections.statusWith(personId) : "none";
   const existing = personId ? connections.connectionWith(personId) : undefined;
 
@@ -115,11 +117,11 @@ export function PersonActions({
           name: newSpaceName.trim(),
           interest: chosenHobby ?? undefined,
         });
-        if (!created) {
-          setError("Couldn't make that Space.");
+        if (!created.space) {
+          setError(created.error ?? "Couldn't make that Space.");
           return;
         }
-        spaceId = String(created.id);
+        spaceId = String(created.space.id);
       }
       if (!spaceId) {
         setError("Choose a Space, or name a new one.");

@@ -95,7 +95,7 @@ interface ConnectionsContextType {
     description?: string;
     hobbySlug?: string;
     interest?: string;
-  }) => Promise<Space | null>;
+  }) => Promise<{ space: Space | null; error: string | null }>;
   inviteToSpace: (
     spaceId: number | string,
     personId: string,
@@ -354,39 +354,58 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
   const spaceInvitations = spaces.filter((s) => s.myStatus === "invited");
 
   const createSpace: ConnectionsContextType["createSpace"] = async (input) => {
-    if (!supabase || !user) return null;
-    const { data, error } = await supabase
-      .from("spaces")
-      .insert({
-        owner: user.id,
-        name: input.name.trim(),
-        description: input.description?.trim() || null,
-        hobby_slug: input.hobbySlug ?? null,
-        interest: input.interest?.trim() || null,
-      })
-      .select()
-      .single();
-    if (error || !data) return null;
+    if (!supabase || !user) {
+      return { space: null, error: "Sign in to make a Space." };
+    }
+    try {
+      const { data, error } = await supabase
+        .from("spaces")
+        .insert({
+          owner: user.id,
+          name: input.name.trim(),
+          description: input.description?.trim() || null,
+          hobby_slug: input.hobbySlug ?? null,
+          interest: input.interest?.trim() || null,
+        })
+        .select()
+        .single();
 
-    // The owner is a member too, so one rule covers who can post and invite.
-    await supabase.from("space_members").insert({
-      space_id: data.id,
-      user_id: user.id,
-      role: "owner",
-      status: "joined",
-      invited_by: user.id,
-    });
-    await refresh();
-    return {
-      id: data.id,
-      owner: data.owner,
-      name: data.name,
-      description: data.description ?? undefined,
-      hobbySlug: data.hobby_slug ?? undefined,
-      interest: data.interest ?? undefined,
-      visibility: data.visibility,
-      myStatus: "owner",
-    };
+      // Say what actually went wrong. A bare "couldn't do it" hid a database
+      // policy error for an entire round of testing.
+      if (error || !data) {
+        return {
+          space: null,
+          error: /recursion/i.test(error?.message ?? "")
+            ? "The database is rejecting Space queries — run sql/space-fix.sql in Supabase."
+            : (error?.message ?? "Couldn't make that Space."),
+        };
+      }
+
+      // The owner is a member too, so one rule covers who can post and invite.
+      await supabase.from("space_members").insert({
+        space_id: data.id,
+        user_id: user.id,
+        role: "owner",
+        status: "joined",
+        invited_by: user.id,
+      });
+      await refresh();
+      return {
+        space: {
+          id: data.id,
+          owner: data.owner,
+          name: data.name,
+          description: data.description ?? undefined,
+          hobbySlug: data.hobby_slug ?? undefined,
+          interest: data.interest ?? undefined,
+          visibility: data.visibility,
+          myStatus: "owner",
+        },
+        error: null,
+      };
+    } catch (e: any) {
+      return { space: null, error: e?.message ?? "Couldn't reach the server." };
+    }
   };
 
   const inviteToSpace = async (
