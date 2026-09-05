@@ -54,12 +54,14 @@ export function NotificationsMenu() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  // Requests waiting on you specifically.
+  // Requests waiting on you specifically — never ones you sent. The signed-out
+  // case used to fall through to "show everything", so your own outgoing ask
+  // reappeared here with an Accept button and you could answer yourself.
   const incoming = social.participations.filter(
     (p) =>
       p.status === "pending" &&
       (p.kind === "make_together" || p.kind === "explore_together") &&
-      (!user || p.toUser === user.id),
+      (user ? p.toUser === user.id : false),
   );
 
   const dot = social.unreadCount > 0 || incoming.length > 0;

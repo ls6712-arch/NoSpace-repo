@@ -27,16 +27,26 @@ export function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setError(null);
     setSubmitting(true);
-    const result =
-      mode === "signup" ? await signUp(email, password, displayName) : await signIn(email, password);
-    setSubmitting(false);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result =
+        mode === "signup"
+          ? await signUp(email, password, displayName)
+          : await signIn(email, password);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      navigate(redirectTo);
+    } catch {
+      setError("Couldn't reach the server. Check your connection and try again.");
+    } finally {
+      // Without this, a thrown error left the button reading "One sec..."
+      // forever and the only way out was reloading the page.
+      setSubmitting(false);
     }
-    navigate(redirectTo);
   };
 
   if (!isConfigured) {

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
+import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import { ParticipationKind } from "../data/participation";
 
 /**
@@ -74,6 +75,11 @@ interface SocialContextType {
   joinIn: (postId: number, title: string, ownerId?: string) => Promise<void>;
   leaveActivity: (postId: number) => Promise<void>;
   /** Ask someone to make or explore together. */
+  /**
+   * Ask someone to make or explore something together. Returns why it was
+   * refused, so the UI can say so rather than silently doing nothing:
+   * "self" — you can't ask yourself; "no-recipient" — nobody to ask.
+   */
   requestTogether: (input: {
     kind: "make_together" | "explore_together";
     toUser?: string;
@@ -82,11 +88,12 @@ interface SocialContextType {
     postId?: number;
     intent: string;
     note?: string;
-  }) => Promise<void>;
+  }) => Promise<{ error: "self" | "no-recipient" | null }>;
   respond: (id: number | string, accept: boolean) => Promise<void>;
   /** The accepted request between you and this person, if any. */
-  threadWith: (name: string) => Participation | undefined;
-  canMessage: (name: string) => boolean;
+  /** Keyed by user id — display names are not unique. */
+  threadWith: (personId: string) => Participation | undefined;
+  canMessage: (personId: string) => boolean;
 
   thoughtsFor: (postId: number) => Thought[];
   addThought: (postId: number, body: string, prompt: string | undefined, postOwnerId?: string, postOwnerName?: string) => Promise<void>;
@@ -144,11 +151,28 @@ function saveLocal(state: LocalState) {
 
 const localId = () => `l-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
+/** Signing out empties the browser's copy of all of this. */
+function clearLocal() {
+  try {
+    window.localStorage.removeItem(KEY);
+  } catch {
+    // nothing stored to clear
+  }
+}
+
 export function SocialProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const shared = !!supabase && !!user;
 
   const [local, setLocal] = useState<LocalState>(loadLocal);
+
+  // Sign-out wipes the browser's stores; drop the in-memory copy too, so the
+  // last account's requests and thoughts don't linger on screen.
+  useEffect(() => {
+    const onCleared = () => setLocal(EMPTY);
+    window.addEventListener(LOCAL_CLEARED_EVENT, onCleared);
+    return () => window.removeEventListener(LOCAL_CLEARED_EVENT, onCleared);
+  }, []);
   const [remote, setRemote] = useState<LocalState>(EMPTY);
   const state = shared ? remote : local;
 
@@ -367,11 +391,19 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
   const requestTogether: SocialContextType["requestTogether"] = async (input) => {
     const label = input.kind === "make_together" ? "Make together" : "Explore together";
+
+    // A request needs someone on the other end. Without a recipient it can
+    // never be notified, accepted, or withdrawn — it just sits pending
+    // forever, and (because two unknown recipients compare equal) makes
+    // unrelated profiles claim you had already asked them.
+    if (!input.toUser) return { error: "no-recipient" as const };
+    if (user && input.toUser === user.id) return { error: "self" as const };
+
     if (supabase && user) {
       await supabase.from("participations").insert({
         kind: input.kind,
         from_user: user.id,
-        to_user: input.toUser ?? null,
+        to_user: input.toUser,
         post_id: input.postId ?? null,
         hobby_key: input.hobbyKey ?? null,
         intent: input.intent,
@@ -385,7 +417,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         "/you",
       );
       refresh();
-      return;
+      return { error: null };
     }
     setState({
       ...state,
@@ -395,6 +427,9 @@ export function SocialProvider({ children }: { children: ReactNode }) {
           kind: input.kind,
           fromUser: myId,
           fromName: myName,
+          // Kept in both paths. It used to be saved only when signed in, so
+          // the same feature read a different field depending on auth state.
+          toUser: input.toUser,
           toName: input.toName,
           postId: input.postId,
           hobbyKey: input.hobbyKey,
@@ -406,11 +441,15 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         ...state.participations,
       ],
     });
+    return { error: null };
   };
 
   const respond = async (id: number | string, accept: boolean) => {
     const target = state.participations.find((p) => p.id === id);
     if (!target) return;
+    // Only the person who was asked gets to answer. The sender withdrawing is
+    // a different action (leaveActivity / delete), not an accept.
+    if (user && target.toUser && target.toUser !== user.id) return;
     const label = target.kind === "make_together" ? "Make together" : "Explore together";
 
     if (supabase && user) {
@@ -437,12 +476,14 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const threadWith = (name: string) =>
+  // Matched by user id: two people can share a display name, and picking the
+  // wrong thread would show one person's messages under another's name.
+  const threadWith = (personId: string) =>
     state.participations.find(
       (p) =>
         p.status === "accepted" &&
         (p.kind === "make_together" || p.kind === "explore_together") &&
-        (p.toName === name || p.fromName === name),
+        (p.toUser === personId || p.fromUser === personId),
     );
 
   const canMessage = (name: string) => !!threadWith(name);

@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { Post } from "../data/posts";
+import { LOCAL_CLEARED_EVENT } from "./localData";
 
 /**
  * The journal layer: the concepts NoSpace is actually built around, kept
@@ -32,6 +33,14 @@ export interface PrivateLog {
   id: string;
   projectId?: string;
   note: string;
+  /**
+   * A private log can be a photo with no words. The capture flow always
+   * offered that, but the picture used to be dropped on save and replaced
+   * with a generated placeholder, which read as the app losing your moment.
+   */
+  media?: string;
+  mediaType?: "image" | "video";
+  hobbySlug?: string;
   createdAt: number;
 }
 
@@ -42,8 +51,6 @@ interface JournalState {
   privateLogs: PrivateLog[];
   /** Post ids kept for later. */
   saved: number[];
-  /** Makers whose work you follow, by name — one-way, no follower count. */
-  following: string[];
 }
 
 const EMPTY: JournalState = {
@@ -51,7 +58,6 @@ const EMPTY: JournalState = {
   entryProject: {},
   privateLogs: [],
   saved: [],
-  following: [],
 };
 
 function load(): JournalState {
@@ -84,6 +90,15 @@ function subscribe(listener: () => void) {
 
 const snapshot = () => state;
 const serverSnapshot = () => EMPTY;
+
+// Signing out empties local storage; the in-memory copy has to follow, or the
+// previous account's private logs stay on screen until a reload.
+if (typeof window !== "undefined") {
+  window.addEventListener(LOCAL_CLEARED_EVENT, () => {
+    state = EMPTY;
+    listeners.forEach((l) => l());
+  });
+}
 
 /** Reads the whole journal. Components pick what they need off it. */
 export function useJournal() {
@@ -128,8 +143,20 @@ export function finishProject(projectId: string) {
   });
 }
 
-export function addPrivateLog(note: string, projectId?: string): PrivateLog {
-  const entry: PrivateLog = { id: id(), note, projectId, createdAt: Date.now() };
+export function addPrivateLog(
+  note: string,
+  projectId?: string,
+  media?: { url: string; type: "image" | "video"; hobbySlug?: string },
+): PrivateLog {
+  const entry: PrivateLog = {
+    id: id(),
+    note,
+    projectId,
+    media: media?.url,
+    mediaType: media?.type,
+    hobbySlug: media?.hobbySlug,
+    createdAt: Date.now(),
+  };
   commit({ ...state, privateLogs: [entry, ...state.privateLogs] });
   return entry;
 }
@@ -147,13 +174,6 @@ export function toggleSaved(postId: number) {
 
 export function isSaved(postId: number) {
   return state.saved.includes(postId);
-}
-
-export function toggleFollowing(name: string) {
-  const following = state.following.includes(name)
-    ? state.following.filter((n) => n !== name)
-    : [name, ...state.following];
-  commit({ ...state, following });
 }
 
 /**

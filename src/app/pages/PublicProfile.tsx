@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Plus } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
 import { badges, RewardStats } from "../data/badges";
 import { subHobbyLabel } from "../data/hobbies";
@@ -27,14 +28,21 @@ import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
  */
 export function PublicProfile() {
   const { username = "" } = useParams();
+  const { user } = useAuth();
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "missing" }
-    | { status: "ready"; displayName: string; avatarUrl?: string; posts: Post[] }
+    | { status: "ready"; personId: string; displayName: string; avatarUrl?: string; posts: Post[] }
   >({ status: "loading" });
 
   useEffect(() => {
     let cancelled = false;
+
+    // A profile that can't be reached shows "no shelf here" rather than
+    // spinning indefinitely on a slow or offline connection.
+    const timer = setTimeout(() => {
+      if (!cancelled) setState((s) => (s.status === "loading" ? { status: "missing" } : s));
+    }, 10000);
 
     (async () => {
       if (!supabase) return setState({ status: "missing" });
@@ -102,6 +110,7 @@ export function PublicProfile() {
 
       setState({
         status: "ready",
+        personId: profileRow.id,
         displayName: profileRow.display_name,
         avatarUrl: profileRow.avatar_url ?? undefined,
         posts,
@@ -110,6 +119,7 @@ export function PublicProfile() {
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [username]);
 
@@ -139,7 +149,8 @@ export function PublicProfile() {
     );
   }
 
-  const { displayName, avatarUrl, posts } = state;
+  const { personId, displayName, avatarUrl, posts } = state;
+  const isMe = !!user && user.id === personId;
   const sessions = sessionsFromPosts(posts);
   const totalSessions = posts.length;
   const initials = displayName
@@ -209,12 +220,17 @@ export function PublicProfile() {
             <div className="mt-3">
               {/* Not a Follow button. You attach to the hobby, or ask to do a
                   specific thing together — never to the person as a person. */}
-              <BePart
-                personName={displayName}
-                personId={posts[0]?.userId}
-                hobbySlug={posts[0]?.hobbySlug ?? "workbench"}
-                subSlug={posts[0]?.subHobby}
-              />
+              {/* Not shown on your own shelf — you can't ask yourself to
+                  make something together. personId comes from the profile
+                  itself, so it exists even before this person has posted. */}
+              {!isMe && (
+                <BePart
+                  personName={displayName}
+                  personId={personId}
+                  hobbySlug={posts[0]?.hobbySlug ?? "workbench"}
+                  subSlug={posts[0]?.subHobby}
+                />
+              )}
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
   ArrowLeft,
@@ -141,7 +141,7 @@ function Preview({
 
 export function Log() {
   const [searchParams] = useSearchParams();
-  const { addPost, mediaError, clearMediaError } = useContent();
+  const { addPost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const journal = useJournal();
 
@@ -180,8 +180,12 @@ export function Log() {
   const libraryRef = useRef<HTMLInputElement>(null);
   const detailFileRef = useRef<HTMLInputElement>(null);
 
+  // Fill the name in from the profile, but never overwrite what someone has
+  // already typed — on a slow connection the profile used to arrive mid-edit
+  // and silently replace their input.
+  const creatorTouched = useRef(false);
   useEffect(() => {
-    if (profile?.display_name) setCreator(profile.display_name);
+    if (profile?.display_name && !creatorTouched.current) setCreator(profile.display_name);
   }, [profile?.display_name]);
 
   useEffect(() => {
@@ -218,7 +222,20 @@ export function Log() {
       .filter(Boolean)
       .join("\n\n");
     if (!note && !file) return;
-    addPrivateLog(note || `A ${tagLabel.toLowerCase()} moment`, projectId || undefined);
+    addPrivateLog(
+      note || `A ${tagLabel.toLowerCase()} moment`,
+      projectId || undefined,
+      // The picture is the point of a wordless capture. It used to be dropped
+      // here and replaced with a generated placeholder, which read as the app
+      // losing the moment you'd just taken.
+      filePreviewUrl
+        ? {
+            url: filePreviewUrl,
+            type: type === "video" ? "video" : "image",
+            hobbySlug,
+          }
+        : undefined,
+    );
     setSavedAs("private");
     setScreen("saved");
   };
@@ -279,6 +296,7 @@ export function Log() {
 
   const reset = () => {
     clearMediaError();
+    clearSaveError();
     setThought("");
     setProgress("");
     setChanged("");
@@ -298,15 +316,27 @@ export function Log() {
   const requiresLogin =
     isConfigured && !user && screen !== "capture" && audience !== "private" && mode !== "private";
 
-  const Back = ({ to }: { to: Screen }) => <BackLink onClick={() => setScreen(to)} />;
-  const MediaPreview = ({ className = "" }: { className?: string }) => (
-    <Preview
-      url={filePreviewUrl}
-      type={type}
-      hobbySlug={hobbySlug}
-      seed={seed}
-      className={className}
-    />
+  // Both of these are declared inside Log(), so they get a new component
+  // identity on every render and React remounts their subtree. For Back that
+  // costs nothing, but MediaPreview wraps a <video>, which reloads from the
+  // start each time — so a captured video restarted on every keystroke while
+  // someone typed the caption beside it. useCallback keeps the identity
+  // stable between renders that don't change the preview.
+  const Back = useCallback(
+    ({ to }: { to: Screen }) => <BackLink onClick={() => setScreen(to)} />,
+    [],
+  );
+  const MediaPreview = useCallback(
+    ({ className = "" }: { className?: string }) => (
+      <Preview
+        url={filePreviewUrl}
+        type={type}
+        hobbySlug={hobbySlug}
+        seed={seed}
+        className={className}
+      />
+    ),
+    [filePreviewUrl, type, hobbySlug, seed],
   );
 
   // ── 1 · Capture ─────────────────────────────────────────────────────────
@@ -488,18 +518,29 @@ export function Log() {
           </span>
 
           <h1 className="text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-            Saved.
+            {saveError ? "Not saved." : "Saved."}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {subHobby ? `${tagLabel} · ${hobby.name}` : hobby.name}
           </p>
-          <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-sm">
-            {savedAs === "private" ? "Kept just for you." : "Another one made."}
-          </p>
+          {!saveError && (
+            <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-sm">
+              {savedAs === "private" ? "Kept just for you." : "Another one made."}
+            </p>
+          )}
 
           <div className="mx-auto my-6 w-40 overflow-hidden rounded-xl border border-border">
             <MediaPreview className="aspect-square w-full" />
           </div>
+
+          {/* An honest failure beats a cheerful lie: the post is on screen but
+              only in this tab, and it will be gone after a reload. */}
+          {saveError && (
+            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--cream))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+              {saveError} Nothing you wrote is lost yet — try again before you
+              close this tab.
+            </p>
+          )}
 
           {mediaError && (
             <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--cream))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
@@ -957,7 +998,10 @@ export function Log() {
                     <Input
                       id="creator"
                       value={creator}
-                      onChange={(e) => setCreator(e.target.value)}
+                      onChange={(e) => {
+                        creatorTouched.current = true;
+                        setCreator(e.target.value);
+                      }}
                     />
                   </div>
                 </div>

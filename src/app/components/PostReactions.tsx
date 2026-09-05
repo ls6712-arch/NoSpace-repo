@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { Heart, Hand, Sparkles, Bookmark, Lightbulb, ArrowUp } from "lucide-react";
 import { toggleSaved, useJournalSlice } from "../lib/journal";
+import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 
 /**
  * The five NoSpace reactions, plus Save as a sixth cell in the same grid.
@@ -64,6 +65,15 @@ function emit() {
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+// Your reactions are yours; a sign-out must not leave them on the next
+// person's screen.
+if (typeof window !== "undefined") {
+  window.addEventListener(LOCAL_CLEARED_EVENT, () => {
+    state = {};
+    listeners.forEach((l) => l());
+  });
 }
 
 /** Empty array identity is stable so useSyncExternalStore doesn't loop. */

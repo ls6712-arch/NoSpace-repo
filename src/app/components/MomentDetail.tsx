@@ -91,15 +91,20 @@ export function MomentDetail({
   const isNote = !post.media || !/^https?:\/\//.test(post.media);
 
   const save = async () => {
+    if (saving) return;
     setSaving(true);
     setSaveError(null);
-    const ok = await updatePost(post.id, { caption, reflection });
-    setSaving(false);
-    if (ok) setEditing(false);
-    else
-      setSaveError(
-        "Couldn't save that change. The database is refusing edits — see the note in your handoff doc about adding an update policy.",
-      );
+    try {
+      const ok = await updatePost(post.id, { caption, reflection });
+      if (ok) setEditing(false);
+      else setSaveError("Couldn't save that change. Your edit is still here — try again.");
+    } catch {
+      setSaveError("Couldn't reach the server. Your edit is still here — try again.");
+    } finally {
+      // Always runs, so the button can't stay stuck on "Saving…" and strand
+      // an edit the person can no longer submit.
+      setSaving(false);
+    }
   };
 
   const share = async () => {

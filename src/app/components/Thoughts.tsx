@@ -71,14 +71,24 @@ export function Thoughts({
 
   const thoughts = social.thoughtsFor(postId);
 
+  const [failed, setFailed] = useState(false);
+
   const submit = async () => {
     if (!body.trim() || saving) return;
     setSaving(true);
-    await social.addThought(postId, body, prompt ?? undefined, postOwnerId, postOwnerName);
-    setBody("");
-    setPrompt(null);
-    setOpenComposer(false);
-    setSaving(false);
+    setFailed(false);
+    try {
+      await social.addThought(postId, body, prompt ?? undefined, postOwnerId, postOwnerName);
+      setBody("");
+      setPrompt(null);
+      setOpenComposer(false);
+    } catch {
+      // Keep what they wrote on screen — losing a thought to a dropped
+      // connection is worse than showing an error.
+      setFailed(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -138,6 +148,11 @@ export function Thoughts({
             placeholder={prompt ?? "What did this make you think?"}
             className="min-h-20"
           />
+          {failed && (
+            <p className="mt-2 text-[11px] text-[var(--coral-text)]">
+              That didn't send. Your words are still here — try again.
+            </p>
+          )}
           <div className="mt-2 flex items-center justify-between gap-3">
             <span className="text-[11px] text-muted-foreground">
               {privateThoughts

@@ -19,7 +19,7 @@ import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { ContentCard } from "../components/ContentCard";
-import { removePrivateLog, toggleFollowing, useJournal } from "../lib/journal";
+import { removePrivateLog, useJournal } from "../lib/journal";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -221,6 +221,16 @@ export function You() {
                         Delete
                       </button>
                     </div>
+                    {/* A wordless capture is a picture, so show the picture. */}
+                    {entry.media && (
+                      <div className="mb-3 overflow-hidden rounded-xl border border-[var(--hairline)]">
+                        {entry.mediaType === "video" ? (
+                          <video src={entry.media} controls className="w-full" />
+                        ) : (
+                          <img src={entry.media} alt="" className="w-full" />
+                        )}
+                      </div>
+                    )}
                     <p className="whitespace-pre-line text-sm leading-relaxed">{entry.note}</p>
                   </li>
                 ))}

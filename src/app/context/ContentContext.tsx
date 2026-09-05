@@ -106,6 +106,9 @@ interface ContentContextType {
    */
   mediaError: string | null;
   clearMediaError: () => void;
+  /** Set when a post failed to reach the database. Cleared when a save starts. */
+  saveError: string | null;
+  clearSaveError: () => void;
   /** Edits a moment you own. Returns false if the change couldn't be saved. */
   updatePost: (
     postId: number,
@@ -137,6 +140,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   );
   const [likeDeltas, setLikeDeltas] = useState<Record<number, number>>({});
   const [mediaError, setMediaError] = useState<string | null>(null);
+  /** Set when a post couldn't reach the database, so the flow can say so. */
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const refetchRealPosts = async () => {
     if (!supabase) return;
@@ -223,6 +228,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setJoinedCircleIds((prev) => prev.filter((id) => id !== circleId));
 
   const addPost = async (input: NewPostInput): Promise<Post> => {
+    setSaveError(null);
     let productId: number | undefined;
     // What this session counts toward for the craft badges: the specific
     // hobby when tagged, otherwise just the space it went into.
@@ -299,12 +305,24 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
       if (!error && data) {
         const newPost = rowToPost(data, profile?.display_name ?? (input.creator || "You"));
-        setRealPosts((prev) => [newPost, ...prev]);
+        // A sale listing is tracked separately from the post row; without
+        // this, a real post never knew it was for sale and the buy link
+        // disappeared the moment the page reloaded.
+        const withListing = productId ? { ...newPost, productId } : newPost;
+        setRealPosts((prev) => [withListing, ...prev]);
         rewards.recordPostCreated(hobbyKey);
-        return newPost;
+        return withListing;
       }
-      // Falls through to the local-only path below if the insert failed,
-      // so posting still works even if something's misconfigured.
+
+      // The insert failed while signed in. It still falls through to a local
+      // copy so nothing typed is thrown away on screen — but that copy lives
+      // only in this tab, so the flow must not claim it was saved. Telling
+      // someone "Saved." and then losing the post is worse than an error.
+      setSaveError(
+        error?.message
+          ? `This didn't save to your account: ${error.message}`
+          : "This didn't save to your account. It's still on screen, but it will go when you reload.",
+      );
     }
 
     // Local-only fallback — used when accounts aren't set up on this build,
@@ -404,6 +422,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         updatePost,
         mediaError,
         clearMediaError: () => setMediaError(null),
+        saveError,
+        clearSaveError: () => setSaveError(null),
         toggleLike,
         joinedCircleIds,
         isCircleJoined,

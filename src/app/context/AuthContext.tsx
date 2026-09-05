@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
+import { clearLocalData } from "../lib/localData";
 
 export interface Profile {
   id: string;
@@ -90,10 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // The profile row is created automatically by a database trigger with a
     // default name derived from the email; overwrite it with what they typed.
     if (data.user && displayName.trim()) {
-      await supabase
-        .from("profiles")
-        .update({ display_name: displayName.trim() })
-        .eq("id", data.user.id);
+      try {
+        await supabase
+          .from("profiles")
+          .update({ display_name: displayName.trim() })
+          .eq("id", data.user.id);
+      } catch {
+        // The account exists either way; they can rename themselves in
+        // Settings. Failing the whole sign-up over a name would be worse.
+      }
     }
     return { error: null };
   };
@@ -105,8 +111,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear the browser's copy first, and regardless of whether the network
+    // call succeeds. Private logs, saved work, reactions and joined Circles all
+    // live in localStorage; leaving them behind meant the next person to sign
+    // in on a shared laptop inherited the last person's private reflections.
+    clearLocalData();
     if (!supabase) return;
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Already signed out locally; the session token expires on its own.
+    }
   };
 
   const refreshProfile = async () => {

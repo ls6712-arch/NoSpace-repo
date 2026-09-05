@@ -4,6 +4,7 @@ import { BookOpen, Check, ChevronDown, ChevronRight, Hammer, Sprout, Users } fro
 import { intentsFor } from "../data/participation";
 import { subHobbyLabel, getHobby } from "../data/hobbies";
 import { useSocial } from "../context/SocialContext";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -81,16 +82,25 @@ export function BePart({
   className?: string;
 }) {
   const social = useSocial();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [pane, setPane] = useState<Option | null>(null);
   const [text, setText] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // You can't ask yourself, and you can't ask someone the app can't identify.
+  const isSelf = !!user && !!personId && personId === user.id;
+  const canAsk = !!personName && !!personId && !isSelf;
 
   useEffect(() => {
     if (!open) {
       setPane(null);
       setText("");
       setSent(false);
+      setError(null);
+      setSending(false);
     }
   }, [open]);
 
@@ -104,12 +114,17 @@ export function BePart({
   const exploring = social.isFollowingHobby(hobbyKey);
   const going = postId ? social.isGoing(postId) : false;
   const goingCount = postId ? social.goingCount(postId) : 0;
-  const pending = social.participations.find(
-    (p) =>
-      p.status === "pending" &&
-      (p.kind === "make_together" || p.kind === "explore_together") &&
-      (p.toName === personName || p.toUser === personId),
-  );
+  // Matched on user id only. Matching on name meant two people called Sam
+  // shared a state, and matching on an absent id meant every unidentified
+  // profile claimed you had already asked them.
+  const pending = personId
+    ? social.participations.find(
+        (p) =>
+          p.status === "pending" &&
+          (p.kind === "make_together" || p.kind === "explore_together") &&
+          p.toUser === personId,
+      )
+    : undefined;
 
   // The button reflects whichever state you're actually in.
   const state = going
@@ -123,21 +138,33 @@ export function BePart({
   // date on it — the hobby's own activities — rather than a dead pane.
   const options = OPTIONS.filter((o) => {
     if (o.id === "join_in") return !!postId;
-    if (o.id === "make_together" || o.id === "explore_together") return !!personName;
+    if (o.id === "make_together" || o.id === "explore_together") return canAsk;
     return true;
   });
 
   const send = async (kind: "make_together" | "explore_together") => {
-    if (!text.trim() || !personName) return;
-    await social.requestTogether({
-      kind,
-      toUser: personId,
-      toName: personName,
-      hobbyKey,
-      postId,
-      intent: text.trim().slice(0, LIMIT),
-    });
-    setSent(true);
+    if (!text.trim() || !canAsk || sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      const result = await social.requestTogether({
+        kind,
+        toUser: personId,
+        toName: personName!,
+        hobbyKey,
+        postId,
+        intent: text.trim().slice(0, LIMIT),
+      });
+      if (result?.error === "self") setError("That's you.");
+      else if (result?.error === "no-recipient")
+        setError("We can't reach this maker yet — try from their profile.");
+      else setSent(true);
+    } catch {
+      setError("That didn't send. Check your connection and try again.");
+    } finally {
+      // Always runs, so the button can never stay stuck on "Sending…".
+      setSending(false);
+    }
   };
 
   const active = pane ? OPTIONS.find((o) => o.id === pane)! : null;
@@ -356,12 +383,17 @@ export function BePart({
                         </div>
                       </div>
 
+                      {error && (
+                        <p className="rounded-xl bg-surface-muted px-4 py-2.5 text-xs text-[var(--coral-text)]">
+                          {error}
+                        </p>
+                      )}
                       <Button
                         className="w-full text-white [background-color:var(--forest)]"
-                        disabled={!text.trim()}
+                        disabled={!text.trim() || sending}
                         onClick={() => send(active.id as "make_together" | "explore_together")}
                       >
-                        Send request
+                        {sending ? "Sending…" : "Send request"}
                       </Button>
                       <p className="text-center text-xs leading-relaxed text-muted-foreground">
                         They'll be notified and can accept.
