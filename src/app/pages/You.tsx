@@ -169,10 +169,10 @@ export function You() {
             <Share2 className="size-4" />
             Share your work
           </Button>
-          <Link to="/log" className="flex-1">
+          <Link to="/create" className="flex-1">
             <Button variant="coral" className="w-full">
               <PenLine className="size-4" />
-              Log progress
+              Create
             </Button>
           </Link>
         </div>
@@ -208,7 +208,7 @@ export function You() {
                   Nothing private yet. Anything you save as a private log stays
                   here — never shown to anyone.
                 </p>
-                <Link to="/log" className="mt-4 inline-block">
+                <Link to="/create" className="mt-4 inline-block">
                   <Button variant="outline" size="sm">Write one</Button>
                 </Link>
               </div>

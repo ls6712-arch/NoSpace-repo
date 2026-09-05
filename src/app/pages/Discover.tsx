@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Bookmark, PenLine, Search, Users, X } from "lucide-react";
+import { Bookmark, PenLine, Search, UserRound, Users, X } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
 import { usePeopleSearch } from "../lib/people";
@@ -15,7 +15,7 @@ import { Button } from "../components/ui/button";
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
  * then a deliberate choice about what to do next — explore a space, find a
- * Circle, log your own progress — rather than another page of work loading
+ * Circle, create something of your own — rather than another page of work loading
  * itself under your thumb.
  *
  * PAGE_SIZE is the size of one "look". "Show more" is a button someone
@@ -118,7 +118,7 @@ export function Discover() {
             Discover
           </h1>
           <p className="mb-6 mt-2 max-w-2xl text-lg text-foreground">
-            Projects, people, and hobbies worth exploring.
+            Hobbies, interests, people, Circles and projects.
           </p>
 
           <div className="relative max-w-md">
@@ -150,6 +150,50 @@ export function Discover() {
 
       <div className="bg-surface pb-24 pt-8">
         <div className="container mx-auto max-w-6xl px-4">
+          {/* The other two things Discover is for. On a phone these are the
+              only route to them, since the tab bar carries five destinations
+              and Discover is defined as the place they live. */}
+          <div className="mb-8 grid gap-2.5 sm:grid-cols-2">
+            <Link
+              to="/people"
+              className="flex items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
+            >
+              <span
+                className="flex size-10 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: "color-mix(in srgb, var(--pastel-sky) 42%, var(--cream))" }}
+              >
+                <UserRound className="size-5 text-[var(--forest-ink)]" strokeWidth={1.7} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                  People
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Find people by what they make
+                </span>
+              </span>
+            </Link>
+            <Link
+              to="/circles"
+              className="flex items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
+            >
+              <span
+                className="flex size-10 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: "color-mix(in srgb, var(--pastel-sage) 42%, var(--cream))" }}
+              >
+                <Users className="size-5 text-[var(--forest-ink)]" strokeWidth={1.7} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                  Circles
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Communities you can join
+                </span>
+              </span>
+            </Link>
+          </div>
+
           {/* Filters */}
           <ul className="mb-9 flex flex-wrap gap-2">
             {chips.map((c) => {
@@ -267,10 +311,10 @@ export function Discover() {
                     A good place to stop scrolling and go make something.
                   </p>
                   <div className="flex flex-wrap items-center justify-center gap-3">
-                    <Link to="/log">
+                    <Link to="/create">
                       <Button variant="coral">
                         <PenLine className="size-4" />
-                        Log your progress
+                        Create something
                       </Button>
                     </Link>
                     <Link to="/circles">

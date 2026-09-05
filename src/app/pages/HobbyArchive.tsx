@@ -30,7 +30,7 @@ type FilterId = (typeof FILTERS)[number]["id"];
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
   public: { label: "Everyone", icon: Globe2 },
   circle: { label: "A Circle", icon: Users },
-  friends: { label: "People you follow", icon: UserRound },
+  friends: { label: "Connections", icon: UserRound },
 };
 
 const hasMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
@@ -104,7 +104,7 @@ export function HobbyArchive() {
   }
 
   const space = getHobby(target.hobbySlug)!;
-  const logTo = `/log?hobby=${target.hobbySlug}${target.subSlug ? `&sub=${target.subSlug}` : ""}`;
+  const logTo = `/create?hobby=${target.hobbySlug}${target.subSlug ? `&sub=${target.subSlug}` : ""}`;
 
   const filtered = moments.filter((p) =>
     filter === "media" ? hasMedia(p) : filter === "notes" ? !hasMedia(p) : true,
@@ -144,7 +144,7 @@ export function HobbyArchive() {
           <Link to={logTo}>
             <Button variant="coral">
               <PenLine className="size-4" />
-              Log a {target.label.toLowerCase()} moment
+              Create a {target.label.toLowerCase()} moment
             </Button>
           </Link>
         </div>
@@ -199,7 +199,7 @@ export function HobbyArchive() {
                 </p>
                 <Link to={logTo} className="mt-4 inline-block">
                   <Button variant="outline" size="sm">
-                    Log a moment
+                    Create something
                   </Button>
                 </Link>
               </div>

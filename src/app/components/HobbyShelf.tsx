@@ -243,10 +243,10 @@ export function HobbyShelf({
         </p>
         {emptyCta && (
           <Link
-            to="/log"
+            to="/create"
             className="mt-4 inline-block rounded-full px-5 py-2 text-sm text-white [background-color:var(--coral-deep)]"
           >
-            Log your first moment
+            Create your first moment
           </Link>
         )}
       </div>

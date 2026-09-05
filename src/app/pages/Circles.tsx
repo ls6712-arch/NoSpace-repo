@@ -115,7 +115,7 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
         <p className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
           {circle.prompt}
         </p>
-        <Link to={`/log?hobby=${circle.hobbySlug}`} className="mt-2 inline-block">
+        <Link to={`/create?hobby=${circle.hobbySlug}`} className="mt-2 inline-block">
           <Button variant="coral" size="sm">
             <PenLine className="size-3.5" />
             Add an update

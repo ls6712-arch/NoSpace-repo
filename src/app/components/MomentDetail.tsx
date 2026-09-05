@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
   public: { label: "Everyone", icon: Globe2 },
   circle: { label: "A Circle", icon: Users },
-  friends: { label: "People you follow", icon: UserRound },
+  friends: { label: "Connections", icon: UserRound },
 };
 
 function fullDate(ts: number) {

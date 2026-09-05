@@ -15,6 +15,7 @@ import { Log } from "./pages/Log";
 import { You } from "./pages/You";
 import { Messages } from "./pages/Messages";
 import { Inbox } from "./pages/Inbox";
+import { People } from "./pages/People";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Shop } from "./pages/Shop";
@@ -27,11 +28,16 @@ export const router = createHashRouter([
     path: "/",
     Component: Root,
     children: [
-      { index: true, Component: Home },
+      { index: true, Component: MySpace },
+      // Home was the marketing page; My Space is the destination now.
+      { path: "welcome", Component: Home },
       { path: "discover", Component: Discover },
-      { path: "my-space", Component: MySpace },
+      { path: "my-space", loader: () => redirect("/") },
       { path: "circles", Component: Circles },
-      { path: "log", Component: Log },
+      { path: "create", Component: Log },
+      { path: "people", Component: People },
+      // "Log" was the old name for creating; keep old links working.
+      { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },
       { path: "inbox", Component: Inbox },
       // Messages was the old destination; Inbox subsumes it.
@@ -45,7 +51,7 @@ export const router = createHashRouter([
 
       // Old paths people may have bookmarked or shared. Kept as redirects so
       // no link that used to work quietly turns into a 404.
-      { path: "create", loader: () => redirect("/log") },
+
       { path: "profile", loader: () => redirect("/you") },
 
       { path: "*", Component: NotFound },

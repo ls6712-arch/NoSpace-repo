@@ -29,7 +29,7 @@ function initials(name: string) {
  */
 const AUDIENCE: Record<string, { label: string; icon: typeof Users }> = {
   circle: { label: "A Circle", icon: Users },
-  friends: { label: "People you follow", icon: UserRound },
+  friends: { label: "Connections", icon: UserRound },
 };
 
 // Varying aspect ratios give the gallery its natural, uneven rhythm even though

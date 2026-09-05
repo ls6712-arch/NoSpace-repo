@@ -252,7 +252,7 @@ export function Home() {
               </ul>
 
               <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-                <Link to="/log">
+                <Link to="/create">
                   <Button variant="coral" size="lg">
                     Start creating
                     <ArrowRight className="size-4" />
@@ -347,14 +347,14 @@ export function Home() {
       {/* Feature: Log → Reflect → Share → Earn */}
       <FeatureSection
         eyebrow="1 · THE LOOP"
-        title="Log it. Reflect for a second. Then choose who sees it."
+        title="Create it. Reflect for a second. Then choose who sees it."
         copy="Every entry follows the same loop: log what you made, jot a private reflection that's never shown to anyone, then choose who sees it. You never have to share something in order to keep a record of it."
         visual={
           <div className="glass-panel rounded-3xl p-6 space-y-3">
             {[
-              { n: "1", label: "Log", desc: "A photo, a note, or a small update" },
+              { n: "1", label: "Create", desc: "A photo, a note, or a small update" },
               { n: "2", label: "Reflect", desc: "A private note — only you ever see it" },
-              { n: "3", label: "Share", desc: "Only you, people you follow, a Circle, or everyone" },
+              { n: "3", label: "Share", desc: "Only you, your connections, a Circle, or everyone" },
             ].map((step) => (
               <div
                 key={step.n}
@@ -483,9 +483,9 @@ export function Home() {
                 never toward whatever got the most attention.
               </p>
             </div>
-            <Link to="/log" className="hidden sm:block">
+            <Link to="/create" className="hidden sm:block">
               <Button variant="outline">
-                Log your own
+                Create your own
               </Button>
             </Link>
           </div>
@@ -565,10 +565,10 @@ export function Home() {
               Start a project, add an update, or just write a note to yourself. None of it
               has to be public.
             </p>
-            <Link to="/log">
+            <Link to="/create">
               <Button variant="brand" size="lg">
                 <Sparkles className="size-4" />
-                Log your progress
+                Create something
               </Button>
             </Link>
           </div>

@@ -51,7 +51,7 @@ import { InterestField } from "../components/InterestField";
  *
  *   capture → moment → (save | share → saved)
  *
- * "More ways to log" opens the deliberate four-option chooser — start a
+ * "More ways to create" opens the deliberate four-option chooser — start a
  * project, add an update, quick moment, reflect privately — for when you know
  * what you're doing before you start. Both roads lead to the same record.
  */
@@ -75,7 +75,7 @@ const AUDIENCE: {
   icon: typeof Globe2;
 }[] = [
   { value: "private", label: "Only you", copy: "Kept as a private log — nobody else ever sees it", icon: Lock },
-  { value: "friends", label: "People you follow", copy: "Visible to the makers you follow", icon: UserRound },
+  { value: "friends", label: "Connections", copy: "Only people you have connected with - both of you agreed", icon: UserRound },
   { value: "circle", label: "A Circle", copy: "Only members of one Circle you pick", icon: Users },
   { value: "public", label: "Everyone", copy: "Anyone browsing this space can find it", icon: Globe2 },
 ];
@@ -157,6 +157,8 @@ export function Log() {
   const [type, setType] = useState<"photo" | "video">("photo");
   const [creator, setCreator] = useState("You");
   const [interest, setInterest] = useState("");
+  // A Space is a place to put something, not a gate in front of making it.
+  const [spaceOpen, setSpaceOpen] = useState(false);
   const [thought, setThought] = useState("");
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
@@ -320,6 +322,7 @@ export function Log() {
     setForSale(false);
     setSaleTitle("");
     setInterest("");
+    setSpaceOpen(false);
     setProjectTitle("");
     setProjectId("");
     setCircleId(undefined);
@@ -361,7 +364,7 @@ export function Log() {
     return (
       <Shell>
         <h1 className="text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Log a moment
+          Create something
         </h1>
         <p className="mt-1.5 text-muted-foreground">A little progress counts.</p>
 
@@ -423,7 +426,7 @@ export function Log() {
           onClick={() => setScreen("ways")}
           className="mx-auto mt-7 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          More ways to log
+          More ways to create
           <ArrowRight className="size-3.5" />
         </button>
       </Shell>
@@ -436,7 +439,7 @@ export function Log() {
       <Shell>
         <Back to="capture" />
         <h1 className="text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Log your progress
+          Create something
         </h1>
         <p className="mt-1.5 text-muted-foreground">
           A photo, a note, or a small update counts.
@@ -488,7 +491,7 @@ export function Log() {
             time — not just in this browser tab.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link to="/login?redirect=/log">
+            <Link to="/login?redirect=/create">
               <Button variant="coral">Log in or sign up</Button>
             </Link>
             <Button variant="outline" onClick={saveAsPrivateLog}>
@@ -592,7 +595,7 @@ export function Log() {
               onClick={reset}
               className="w-full py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              Log another
+              Create another
             </button>
           </div>
         </div>
@@ -732,36 +735,76 @@ export function Log() {
           Share this moment
         </h1>
 
-        {/* Two questions, in the order people actually think:
-            what it's about, then where it goes. No taxonomy quiz. */}
+        {/* One question that matters, asked first and given the whole width.
+            Three separate ideas, kept separate on purpose:
+              interest — what this is about
+              Space    — where it lives, optional
+              audience — who can see it, its own step below */}
         <h2 className="mb-2 text-sm">
           <label htmlFor="interest">What is it about?</label>
         </h2>
-        <InterestField value={interest} onChange={setInterest} />
+        <InterestField
+          value={interest}
+          onChange={setInterest}
+          placeholder="Search or type a hobby or interest..."
+        />
 
-        <h2 className="mb-2 mt-7 text-sm">Which Space?</h2>
-        <Select
-          value={hobbySlug}
-          onValueChange={(v) => {
-            setHobbySlug(v);
-            setSubHobby("");
-            setCircleId(undefined);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {hobbies.map((h) => (
-              <SelectItem key={h.slug} value={h.slug}>
-                {h.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="mb-7 mt-1.5 text-xs text-muted-foreground">
-          {hobby.plainLabel} — {hobby.tagline.toLowerCase()}
-        </p>
+        {/* Secondary, and genuinely optional — nothing here blocks posting. */}
+        <div className="mb-7 mt-5">
+          {!spaceOpen ? (
+            <button
+              type="button"
+              onClick={() => setSpaceOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 py-2 text-xs text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+            >
+              <Plus className="size-3.5" />
+              Add to a Space
+            </button>
+          ) : (
+            <div className="rounded-2xl border border-border bg-card px-4 py-3.5">
+              <div className="mb-2.5 flex items-center justify-between gap-3">
+                <span className="text-sm">Add to a Space</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSpaceOpen(false);
+                    setHobbySlug(initialHobby);
+                  }}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Skip
+                </button>
+              </div>
+              <Select
+                value={hobbySlug}
+                onValueChange={(v) => {
+                  setHobbySlug(v);
+                  setSubHobby("");
+                  setCircleId(undefined);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a Space…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {hobbies.map((h) => (
+                    <SelectItem key={h.slug} value={h.slug}>
+                      {h.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {hobby.plainLabel} — {hobby.tagline.toLowerCase()}
+              </p>
+            </div>
+          )}
+          {!spaceOpen && (
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Optional. Without one it still shows up under whatever it's about.
+            </p>
+          )}
+        </div>
 
         {/* Only a thing that happens at a time needs a time. */}
         <div className="mb-7 rounded-2xl border border-border bg-card px-4 py-3.5">
@@ -900,7 +943,7 @@ export function Log() {
                   ? `${hobby.name}`
                   : audience === "circle"
                     ? "that Circle"
-                    : "My Space for people who follow you"
+                    : "My Space for people you've connected with"
               }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
         </p>
 
@@ -919,7 +962,7 @@ export function Log() {
     );
   }
 
-  // ── The considered form, reached from "More ways to log" or "Add details" ─
+  // ── The considered form, reached from "More ways to create" or "Add details" ─
   const activeMode = MODES.find((m) => m.id === mode) ?? MODES[2];
   const isPrivateOnly = mode === "private";
 
@@ -994,7 +1037,7 @@ export function Log() {
                   </div>
                   <div>
                     <Label htmlFor="creator" className="mb-2 block text-xs">
-                      Logging as
+                      Posting as
                     </Label>
                     <Input
                       id="creator"
@@ -1254,7 +1297,7 @@ export function Log() {
               onClick={publish}
             >
               <PenLine className="size-4" />
-              {saving ? "Saving…" : "Log progress"}
+              {saving ? "Saving…" : "Create"}
             </Button>
             {!isPrivateOnly && (
               <Button

@@ -276,7 +276,7 @@ export function CategoryFeed() {
                       <Link to={`/create?hobby=${hobby.slug}&sub=${activeSub}`}>
                         <Button variant="brand" size="sm">
                           <Plus className="size-4" />
-                          Log {(activeLabel ?? activeSub).toLowerCase()}
+                          Create {(activeLabel ?? activeSub).toLowerCase()}
                         </Button>
                       </Link>
                     </div>

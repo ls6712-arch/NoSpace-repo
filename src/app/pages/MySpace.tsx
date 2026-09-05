@@ -158,10 +158,10 @@ export function MySpace() {
         <Section
           title="Continue where you left off"
           copy="Your projects, and what they're waiting on."
-          action={{ label: "Log progress", to: "/log" }}
+          action={{ label: "Create", to: "/create" }}
         >
           {myProjects.length === 0 ? (
-            <Empty to="/log" cta="Start a project">
+            <Empty to="/create" cta="Start a project">
               You haven't started a project yet. A project is just a thing you
               come back to — six mugs, a bench, a language.
             </Empty>
@@ -175,7 +175,7 @@ export function MySpace() {
                 return (
                   <li key={project.id}>
                     <Link
-                      to="/log"
+                      to="/create"
                       className="flex h-full flex-col rounded-2xl border border-border bg-card p-4 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
                     >
                       <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
@@ -211,7 +211,7 @@ export function MySpace() {
               </strong>{" "}
               hasn't moved in {nudgeDays} days. Even a photo counts as an update.
             </p>
-            <Link to="/log" className="ml-auto shrink-0">
+            <Link to="/create" className="ml-auto shrink-0">
               <Button variant="coral" size="sm">
                 Add an update
               </Button>
@@ -324,10 +324,10 @@ export function MySpace() {
           <p className="w-full text-sm text-muted-foreground">
             That's everything new in your space. Nothing loads below this.
           </p>
-          <Link to="/log">
+          <Link to="/create">
             <Button variant="coral">
               <PenLine className="size-4" />
-              Log your progress
+              Create something
             </Button>
           </Link>
           <Link to="/discover">

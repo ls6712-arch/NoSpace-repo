@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { Compass, House, Inbox, PenLine, UserRound } from "lucide-react";
+import { Compass, Library, Inbox, PlusCircle, UserRound } from "lucide-react";
 import { useConnections } from "../context/ConnectionsContext";
 
 /**
@@ -18,22 +18,28 @@ import { useConnections } from "../context/ConnectionsContext";
 export const TABS = [
   {
     to: "/",
-    label: "Home",
-    icon: House,
+    label: "My Space",
+    icon: Library,
     match: (p: string) => p === "/" || p.startsWith("/my-space"),
   },
   {
+    // Discover holds hobbies, projects, Circles and People — a phone bar can't
+    // carry all four as separate tabs, and Discover is defined as the place
+    // those live, so they sit inside it rather than competing with it.
     to: "/discover",
-    label: "Explore",
+    label: "Discover",
     icon: Compass,
     match: (p: string) =>
-      p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/circles"),
+      p.startsWith("/discover") ||
+      p.startsWith("/space") ||
+      p.startsWith("/circles") ||
+      p.startsWith("/people"),
   },
   {
-    to: "/log",
-    label: "Log",
-    icon: PenLine,
-    match: (p: string) => p.startsWith("/log"),
+    to: "/create",
+    label: "Create",
+    icon: PlusCircle,
+    match: (p: string) => p.startsWith("/create") || p.startsWith("/log"),
     accent: true,
   },
   {

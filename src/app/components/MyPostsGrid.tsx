@@ -18,10 +18,10 @@ export function MyPostsGrid() {
         <p className="text-muted-foreground mb-4">
           Nothing here yet — your work will show up in a grid, just like this.
         </p>
-        <Link to="/log">
+        <Link to="/create">
           <Button variant="brand">
             <Plus className="size-4" />
-            Log your first thing
+            Create your first thing
           </Button>
         </Link>
       </div>

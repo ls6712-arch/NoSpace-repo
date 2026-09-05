@@ -173,15 +173,23 @@ const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
  * off the avatar, because a personal archive is somewhere you go on purpose,
  * not a tab competing with the places you go to make and find things.
  */
+/**
+ * Desktop has room for the full set. The phone bar carries five of these and
+ * folds Circles and People into Discover, which is where they're defined to
+ * live anyway — so the two bars name the same places in the same order rather
+ * than describing two different apps.
+ */
 const PRIMARY_NAV = [
-  { to: "/", label: "Home", hint: "New work from the hobbies and people you're part of",
+  { to: "/", label: "My Space", hint: "New work from the people, hobbies and Circles you're part of",
     match: (p: string) => p === "/" || p.startsWith("/my-space") },
-  { to: "/discover", label: "Explore", hint: "Spaces, projects, and people worth finding",
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/circles") },
-  { to: "/log", label: "Log", hint: "Record your progress", accent: true,
-    match: (p: string) => p.startsWith("/log") },
-  { to: "/inbox", label: "Inbox", hint: "Messages, requests, and activity",
-    match: (p: string) => p.startsWith("/inbox") || p.startsWith("/messages") },
+  { to: "/discover", label: "Discover", hint: "Hobbies, interests, people, Circles and projects",
+    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") },
+  { to: "/circles", label: "Circles", hint: "Communities you can join",
+    match: (p: string) => p.startsWith("/circles") },
+  { to: "/people", label: "People", hint: "Find people by what they make",
+    match: (p: string) => p.startsWith("/people") },
+  { to: "/create", label: "Create", hint: "Share a moment, post or project", accent: true,
+    match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
 
 export function Header() {
