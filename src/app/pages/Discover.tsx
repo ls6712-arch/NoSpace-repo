@@ -208,7 +208,7 @@ export function Discover() {
               Nothing matches that yet — try a broader word or a different filter.
             </div>
           ) : (
-            <div className="columns-2 gap-4 md:columns-3 xl:columns-4">
+            <div className="columns-1 gap-4 sm:columns-2 md:columns-3 xl:columns-4">
               {visible.map((post) => (
                 <ContentCard key={post.id} post={post} />
               ))}
@@ -350,7 +350,7 @@ export function Discover() {
                 here.
               </div>
             ) : (
-              <div className="columns-2 gap-4 md:columns-4">
+              <div className="columns-1 gap-4 sm:columns-2 md:columns-4">
                 {savedWork.map((post) => (
                   <ContentCard key={post.id} post={post} />
                 ))}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Lock, MessageCircleQuestion, Trash2 } from "lucide-react";
+import { ChevronRight, Lock, MessageCircleQuestion, Trash2 } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
@@ -62,8 +62,10 @@ export function Thoughts({
   className?: string;
 }) {
   const social = useSocial();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const myName = profile?.display_name || "You";
   const [prompt, setPrompt] = useState<string | null>(null);
+  const [openComposer, setOpenComposer] = useState(false);
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -75,53 +77,65 @@ export function Thoughts({
     await social.addThought(postId, body, prompt ?? undefined, postOwnerId, postOwnerName);
     setBody("");
     setPrompt(null);
+    setOpenComposer(false);
     setSaving(false);
   };
 
   return (
     <div className={className}>
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h4 className="text-xs text-muted-foreground">Add a thought</h4>
-        {isOwner && onTogglePrivate && (
+      {isOwner && onTogglePrivate && (
+        <div className="mb-2 flex justify-end">
           <button
             type="button"
             onClick={() => onTogglePrivate(!privateThoughts)}
             aria-pressed={privateThoughts}
-            className="flex shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
           >
             <Lock className="size-3" />
             {privateThoughts ? "Private thoughts only" : "Thoughts are public"}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* A prompt, not an empty box */}
-      <ul className="mb-2 flex flex-wrap gap-1.5">
-        {PROMPTS.map((p) => (
-          <li key={p}>
-            <button
-              type="button"
-              aria-pressed={prompt === p}
-              onClick={() => setPrompt(prompt === p ? null : p)}
-              className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
-                prompt === p
-                  ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                  : "border-[var(--border)] bg-surface text-foreground hover:border-[var(--foreground)]/35"
-              }`}
-            >
-              {p}
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {prompt && (
+      {!openComposer ? (
+        <button
+          type="button"
+          onClick={() => setOpenComposer(true)}
+          className="mb-3 flex w-full items-center gap-2.5 rounded-full border border-[var(--border)] bg-surface px-3 py-2.5 text-left transition-colors hover:border-[var(--foreground)]/30"
+        >
+          <Avatar className="size-6 shrink-0">
+            <AvatarFallback className="text-[9px]">{initials(myName)}</AvatarFallback>
+          </Avatar>
+          <span className="flex-1 truncate text-sm text-muted-foreground">Add a thought…</span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </button>
+      ) : (
         <div className="mb-3">
+          <ul className="mb-2 flex flex-wrap gap-1.5">
+            {PROMPTS.map((p) => (
+              <li key={p}>
+                <button
+                  type="button"
+                  aria-pressed={prompt === p}
+                  onClick={() => setPrompt(prompt === p ? null : p)}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                    prompt === p
+                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                      : "border-[var(--border)] bg-surface text-foreground hover:border-[var(--foreground)]/35"
+                  }`}
+                >
+                  {p}
+                </button>
+              </li>
+            ))}
+          </ul>
+
           <Textarea
+            autoFocus
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={400}
-            placeholder={prompt}
+            placeholder={prompt ?? "What did this make you think?"}
             className="min-h-20"
           />
           <div className="mt-2 flex items-center justify-between gap-3">
@@ -130,14 +144,14 @@ export function Thoughts({
                 ? "Only you and the maker will see this."
                 : "Visible to anyone who can see this moment."}
             </span>
-            <Button
-              variant="coral"
-              size="sm"
-              disabled={!body.trim() || saving}
-              onClick={submit}
-            >
-              {saving ? "Adding…" : "Add thought"}
-            </Button>
+            <span className="flex shrink-0 gap-2">
+              <Button variant="outline" size="sm" onClick={() => setOpenComposer(false)}>
+                Cancel
+              </Button>
+              <Button variant="coral" size="sm" disabled={!body.trim() || saving} onClick={submit}>
+                {saving ? "Adding…" : "Add thought"}
+              </Button>
+            </span>
           </div>
         </div>
       )}

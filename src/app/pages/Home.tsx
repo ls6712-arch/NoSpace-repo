@@ -489,7 +489,7 @@ export function Home() {
               </Button>
             </Link>
           </div>
-          <div className="columns-2 md:columns-3 xl:columns-4 gap-4">
+          <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-4">
             {trending.map((post, i) => (
               <div
                 key={post.id}

@@ -1,19 +1,32 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { Heart, Hand, Sparkles, Bookmark, ArrowUp } from "lucide-react";
+import { Heart, Hand, Sparkles, Bookmark, Lightbulb, ArrowUp } from "lucide-react";
+import { toggleSaved, useJournalSlice } from "../lib/journal";
 
 /**
- * The five NoSpace reactions. Deliberately not Like / Love / Nice work —
- * each one means something different about what the viewer intends, which is
- * the whole point: a reaction here tells the maker something useful rather
- * than incrementing a number.
+ * The five NoSpace reactions, plus Save as a sixth cell in the same grid.
+ * Deliberately not Like / Love / Nice work — each one means something
+ * different about what the viewer intends, which is the whole point: a
+ * reaction here tells the maker something useful rather than incrementing a
+ * number. Save is the odd one out — it's for the viewer, and the maker never
+ * sees it — but it belongs in the grid rather than floating on the photo.
  */
 export const REACTIONS = [
   { id: "love", label: "Love this", icon: Heart, meaning: "appreciation" },
   { id: "in", label: "I'm in", icon: Hand, meaning: "intent to try or participate" },
   { id: "obsessed", label: "Obsessed", icon: Sparkles, meaning: "strong enthusiasm" },
-  { id: "needed", label: "Needed it", icon: Bookmark, meaning: "usefulness or relevance" },
+  { id: "needed", label: "Needed it", icon: Lightbulb, meaning: "usefulness or relevance" },
   { id: "keepgoing", label: "Keep going", icon: ArrowUp, meaning: "encouragement" },
 ] as const;
+
+/** The tint each one carries when chosen — coral for warmth, forest for intent. */
+const TINT: Record<string, string> = {
+  love: "var(--coral-deep)",
+  in: "var(--forest)",
+  obsessed: "var(--coral-deep)",
+  needed: "var(--forest)",
+  keepgoing: "var(--coral-deep)",
+  save: "var(--forest)",
+};
 
 export type ReactionId = (typeof REACTIONS)[number]["id"];
 
@@ -91,7 +104,7 @@ export function PostReactions({
   );
 
   return (
-    <ul className={`flex flex-wrap gap-1.5 ${className}`}>
+    <ul className={`grid grid-cols-2 gap-2 ${className}`}>
       {REACTIONS.map(({ id, label, icon: Icon, meaning }) => {
         const pressed = mine.includes(id);
         const count = (baseCounts?.[id] ?? 0) + (pressed ? 1 : 0);
@@ -102,23 +115,58 @@ export function PostReactions({
               aria-pressed={pressed}
               title={`${label} — ${meaning}`}
               onClick={() => toggle(postId, id)}
-              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors duration-150 ${
+              className={`flex w-full items-center gap-2 rounded-full border px-3 py-2 text-[13px] transition-colors duration-150 ${
                 pressed
-                  ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                  ? "border-[var(--border)] bg-surface text-foreground"
                   : "border-[var(--border)] bg-surface text-foreground hover:border-[var(--foreground)]/35"
               }`}
             >
-              <Icon className="size-3" strokeWidth={2} aria-hidden="true" />
+              <Icon
+                className="size-4 shrink-0"
+                strokeWidth={1.9}
+                style={{
+                  color: pressed ? TINT[id] : "var(--foreground-muted)",
+                  fill: pressed ? TINT[id] : "none",
+                }}
+                aria-hidden="true"
+              />
               {label}
               {count > 0 && (
-                <span className={pressed ? "text-white/70" : "text-muted-foreground"}>
-                  {count}
-                </span>
+                <span className="ml-auto text-[11px] text-muted-foreground">{count}</span>
               )}
             </button>
           </li>
         );
       })}
+
+      {/* Save is one of the six, not a separate control floating on the photo. */}
+      <li>
+        <SaveReaction postId={postId} />
+      </li>
     </ul>
+  );
+}
+
+function SaveReaction({ postId }: { postId: string | number }) {
+  const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
+  return (
+    <button
+      type="button"
+      aria-pressed={saved}
+      title="Save — keep it to come back to"
+      onClick={() => toggleSaved(Number(postId))}
+      className="flex w-full items-center gap-2 rounded-full border border-[var(--border)] bg-surface px-3 py-2 text-[13px] text-foreground transition-colors duration-150 hover:border-[var(--foreground)]/35"
+    >
+      <Bookmark
+        className="size-4 shrink-0"
+        strokeWidth={1.9}
+        style={{
+          color: saved ? TINT.save : "var(--foreground-muted)",
+          fill: saved ? TINT.save : "none",
+        }}
+        aria-hidden="true"
+      />
+      {saved ? "Saved" : "Save"}
+    </button>
   );
 }

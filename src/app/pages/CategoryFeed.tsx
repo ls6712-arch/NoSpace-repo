@@ -249,7 +249,7 @@ export function CategoryFeed() {
                 )}
               </div>
             ) : (
-              <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
+              <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4">
                 {posts.map((post) => (
                   <ContentCard key={post.id} post={post} />
                 ))}

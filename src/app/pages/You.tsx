@@ -240,7 +240,7 @@ export function You() {
                 </Link>
               </div>
             ) : (
-              <div className="columns-2 gap-4">
+              <div className="columns-1 gap-4 sm:columns-2">
                 {savedWork.map((post) => (
                   <ContentCard key={post.id} post={post} />
                 ))}

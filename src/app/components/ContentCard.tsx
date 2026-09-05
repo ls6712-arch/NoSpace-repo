@@ -1,4 +1,4 @@
-import { Bookmark, CalendarDays, MapPin, Play, ShoppingBag, Users, UserRound } from "lucide-react";
+import { CalendarDays, MapPin, Play, ShoppingBag, Users, UserRound } from "lucide-react";
 import { PostReactions } from "./PostReactions";
 import { Thoughts } from "./Thoughts";
 import { BePart } from "./BePart";
@@ -8,7 +8,6 @@ import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
-import { toggleSaved, useJournalSlice } from "../lib/journal";
 import { PostMedia } from "./PostMedia";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -41,7 +40,6 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
   const { findListing } = useContent();
   const social = useSocial();
   const { user } = useAuth();
-  const saved = useJournalSlice((s) => s.saved.includes(post.id));
   const isOwner = !!user && post.userId === user.id;
 
   // An activity is a moment with a time attached — a photo walk, a workshop,
@@ -70,21 +68,6 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
             </span>
           </div>
         )}
-        {/* Save, not a like count. Keeping something is a private act of
-            intent; it isn't a score shown back to the maker. */}
-        <button
-          type="button"
-          onClick={() => toggleSaved(post.id)}
-          aria-pressed={saved}
-          className={`absolute top-3 right-3 flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs backdrop-blur-md transition-colors ${
-            saved
-              ? "text-white [background-color:var(--coral-deep)]"
-              : "bg-[var(--forest-ink)]/45 text-white hover:bg-[var(--forest-ink)]/65"
-          }`}
-        >
-          <Bookmark className={`size-3.5 ${saved ? "fill-white" : ""}`} />
-          {saved ? "Saved" : "Save"}
-        </button>
         {label && (
           <Badge variant="brand" className="absolute top-3 left-3">
             {label}
@@ -109,17 +92,6 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
               {audience.label}
             </span>
           )}
-          {!isOwner && !isActivity && (
-            <span className="ml-auto shrink-0">
-              <BePart
-                personName={post.creator}
-                personId={post.userId}
-                hobbySlug={post.hobbySlug}
-                subSlug={post.subHobby}
-                postId={post.id}
-              />
-            </span>
-          )}
         </div>
         <p className="text-sm text-muted-foreground mb-3">{post.caption}</p>
 
@@ -142,24 +114,13 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
                 {place}
               </div>
             )}
-            <div className="mt-2.5 flex items-center justify-between gap-3">
-              <span className="text-xs text-muted-foreground">
-                {going} {going === 1 ? "person" : "people"} going
-              </span>
-              <BePart
-                personName={post.creator}
-                personId={post.userId}
-                hobbySlug={post.hobbySlug}
-                subSlug={post.subHobby}
-                postId={post.id}
-                activityTitle={post.caption.slice(0, 40)}
-                isActivity
-              />
+            <div className="mt-2 text-xs text-muted-foreground">
+              {going} {going === 1 ? "person" : "people"} going
             </div>
           </div>
         )}
 
-        {/* Every entry carries the same five reactions. */}
+        {/* Every entry carries the same reactions, Save among them. */}
         <PostReactions postId={post.id} className="mb-3" />
 
         <Thoughts
@@ -170,6 +131,31 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
           privateThoughts={post.thoughtsPrivate}
           className="mb-3"
         />
+
+        {!isOwner && (
+          <BePart
+            personName={post.creator}
+            personId={post.userId}
+            hobbySlug={post.hobbySlug}
+            subSlug={post.subHobby}
+            postId={post.id}
+            activityTitle={post.caption.slice(0, 60)}
+            activityWhen={
+              post.startsAt
+                ? new Date(post.startsAt).toLocaleString(undefined, {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
+                : undefined
+            }
+            activityWhere={place}
+            isActivity={isActivity}
+            className="mb-3"
+          />
+        )}
 
         {listing && (
           <Link to={`/product/${listing.id}`}>
