@@ -5,6 +5,7 @@ import { hobbies, getHobby } from "../data/hobbies";
 import { seedPosts } from "../data/posts";
 import { circles } from "../data/circles";
 import { useContent } from "../context/ContentContext";
+import { useAuth } from "../context/AuthContext";
 import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
 import { ContentCard } from "../components/ContentCard";
 import { GeneratedArt } from "../components/GeneratedArt";
@@ -168,6 +169,7 @@ function FeatureSection({
 
 export function Home() {
   const parallaxRef = useHeroParallax();
+  const { user } = useAuth();
   const { publicFeed, activeHobbySlugs } = useContent();
   const trending = publicFeed.slice(0, 6);
   const exploreNext = hobbies.filter((h) => !activeHobbySlugs.includes(h.slug));
@@ -251,6 +253,9 @@ export function Home() {
                 ))}
               </ul>
 
+              {/* This page is the wordmark's destination for everyone, so a
+                  signed-in person needs a way straight back to their own feed
+                  rather than only an invitation to start. */}
               <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <Link to="/create">
                   <Button variant="coral" size="lg">
@@ -258,6 +263,14 @@ export function Home() {
                     <ArrowRight className="size-4" />
                   </Button>
                 </Link>
+                {user && (
+                  <Link
+                    to="/my-space"
+                    className="inline-flex h-11 items-center rounded-full bg-surface px-6 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-[var(--surface-muted)]"
+                  >
+                    Go to My Space
+                  </Link>
+                )}
                 <Link
                   to="/discover"
                   className="inline-flex h-11 items-center rounded-full bg-surface px-6 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-[var(--surface-muted)]"

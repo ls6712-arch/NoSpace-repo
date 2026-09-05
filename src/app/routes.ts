@@ -7,7 +7,6 @@
 import { createHashRouter, redirect } from "react-router";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
-import { Start } from "./pages/Start";
 import { CategoryFeed } from "./pages/CategoryFeed";
 import { Discover } from "./pages/Discover";
 import { MySpace } from "./pages/MySpace";
@@ -29,11 +28,12 @@ export const router = createHashRouter([
     path: "/",
     Component: Root,
     children: [
-      // "/" is the landing page for a visitor and My Space for a signed-in
-      // person. The wordmark points here from everywhere and has to land both
-      // of them somewhere that makes sense.
-      { index: true, Component: Start },
-      { path: "welcome", Component: Home },
+      // "/" is the landing page, for everyone. The wordmark points here from
+      // every page and is the way back to what NoSpace says it is — sending a
+      // signed-in person to their feed instead took that away. My Space is a
+      // destination of its own, at /my-space.
+      { index: true, Component: Home },
+      { path: "welcome", loader: () => redirect("/") },
       { path: "my-space", Component: MySpace },
       { path: "discover", Component: Discover },
 
