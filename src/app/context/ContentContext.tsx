@@ -91,6 +91,11 @@ interface ContentContextType {
   myListings: Product[];
   findListing: (id: number) => Product | undefined;
   addPost: (input: NewPostInput) => Promise<Post>;
+  /** Edits a moment you own. Returns false if the change couldn't be saved. */
+  updatePost: (
+    postId: number,
+    patch: { caption?: string; reflection?: string },
+  ) => Promise<boolean>;
   toggleLike: (postId: number) => void;
   joinedCircleIds: number[];
   isCircleJoined: (circleId: number) => boolean;
@@ -288,6 +293,50 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return newPost;
   };
 
+  /**
+   * Editing a moment. Writes through to Supabase when the row is a real one
+   * you own, and always updates locally so the UI stays truthful either way.
+   * Requires an UPDATE policy on public.posts — without one Postgres accepts
+   * the statement and changes nothing, which is why the caller is told
+   * whether the row actually came back changed.
+   */
+  const updatePost = async (
+    postId: number,
+    patch: { caption?: string; reflection?: string },
+  ): Promise<boolean> => {
+    const target = realPosts.find((p) => p.id === postId);
+    const apply = (list: Post[]) =>
+      list.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              caption: patch.caption ?? p.caption,
+              reflection:
+                patch.reflection === undefined
+                  ? p.reflection
+                  : patch.reflection.trim() || undefined,
+            }
+          : p,
+      );
+
+    if (supabase && user && target?.userId === user.id) {
+      const { data, error } = await supabase
+        .from("posts")
+        .update({
+          ...(patch.caption !== undefined ? { caption: patch.caption } : {}),
+          ...(patch.reflection !== undefined
+            ? { reflection: patch.reflection.trim() || null }
+            : {}),
+        })
+        .eq("id", postId)
+        .select();
+      if (error || !data || data.length === 0) return false;
+    }
+
+    setRealPosts(apply);
+    return true;
+  };
+
   const toggleLike = (postId: number) => {
     const nowLiked = rewards.toggleLikePost(postId);
     setLikeDeltas((prev) => ({
@@ -309,6 +358,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         myListings,
         findListing,
         addPost,
+        updatePost,
         toggleLike,
         joinedCircleIds,
         isCircleJoined,

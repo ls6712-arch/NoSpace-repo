@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { QuietMilestones } from "../components/QuietMilestones";
-import { MyPostsGrid } from "../components/MyPostsGrid";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
@@ -61,11 +60,6 @@ export function You() {
     .slice(0, 2)
     .toUpperCase();
 
-  const creatorPoints = stats.postsCreated * 50;
-  const consumerPoints = Math.max(points - creatorPoints, 0);
-  const totalForSplit = Math.max(creatorPoints + consumerPoints, 1);
-  const creatorShare = Math.round((creatorPoints / totalForSplit) * 100);
-
   const joinedCircles = joinedCircleIds
     .map((id) => getCircle(id))
     .filter((c): c is NonNullable<typeof c> => !!c);
@@ -84,7 +78,7 @@ export function You() {
 
   return (
     <div className="min-h-screen bg-surface py-8 sm:py-10">
-      <div className="container mx-auto max-w-2xl px-4">
+      <div className="container mx-auto max-w-4xl px-4">
         <div className="mb-7">
           <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
             You
@@ -169,36 +163,6 @@ export function You() {
           </Link>
         </div>
 
-        {/* The shelf — the centrepiece of the page */}
-        <div className="mb-9">
-          <HobbyShelf />
-        </div>
-
-        {/* Creator vs. consumer */}
-        <div className="glass-panel glow-violet mb-9 rounded-3xl p-6 shadow-2xl ring-1 ring-border sm:p-8">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Creator vs. consumer
-            </h2>
-            <span className="shrink-0 font-hud text-2xl text-gradient-brand sm:text-3xl">
-              {creatorShare}% creator
-            </span>
-          </div>
-          <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-surface-muted sm:h-4">
-            <div
-              className="h-full [background-image:var(--gradient-brand)]"
-              style={{ width: `${creatorShare}%` }}
-            />
-          </div>
-          <p className="mt-3 text-sm text-muted-foreground">
-            {stats.postsCreated === 0
-              ? "Log your first session and this bar starts moving."
-              : creatorShare >= 50
-              ? "You're making more than you're consuming."
-              : "Log a session to shift the balance toward making."}
-          </p>
-        </div>
-
         {/* Quiet milestones */}
         <div className="mb-9">
           <h2 className="mb-3 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
@@ -208,7 +172,7 @@ export function You() {
         </div>
 
         <Tabs defaultValue="work">
-          <TabsList className="mb-5 flex w-full flex-wrap justify-start gap-1">
+          <TabsList className="mb-5 flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
             <TabsTrigger value="work">Your work</TabsTrigger>
             <TabsTrigger value="private">Private logs</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
@@ -218,7 +182,11 @@ export function You() {
           </TabsList>
 
           <TabsContent value="work">
-            <MyPostsGrid />
+            <p className="mb-5 text-sm text-muted-foreground">
+              One book per hobby, shelved under the Space it belongs to. Open one
+              to see everything you've logged in it.
+            </p>
+            <HobbyShelf />
           </TabsContent>
 
           <TabsContent value="private">

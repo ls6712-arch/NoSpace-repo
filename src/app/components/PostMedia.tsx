@@ -12,12 +12,15 @@ export function PostMedia({
   hobbySlug,
   seed,
   className,
+  preview,
 }: {
   media?: string;
   type?: "photo" | "video";
   hobbySlug: string;
   seed: string | number;
   className?: string;
+  /** Thumbnail context: no controls, no sound — the tile is a target, not a player. */
+  preview?: boolean;
 }) {
   const isRealMedia = !!media && /^https?:\/\//.test(media);
 
@@ -25,8 +28,11 @@ export function PostMedia({
     return (
       <video
         src={media}
-        controls
-        className={`${className ?? ""} object-cover bg-black`}
+        controls={!preview}
+        muted={preview}
+        playsInline
+        preload="metadata"
+        className={`${className ?? ""} object-cover [background-color:var(--forest-ink)]`}
       />
     );
   }
