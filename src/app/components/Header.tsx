@@ -10,6 +10,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useSocial } from "../context/SocialContext";
+import { usePeopleSearch, profilePath } from "../lib/people";
 import { NotificationsMenu } from "./NotificationsMenu";
 
 function initials(name: string) {
@@ -65,12 +66,39 @@ function AccountMenu() {
 }
 
 type SearchResult = {
-  kind: "hobby" | "product" | "creator";
+  kind: "hobby" | "product" | "creator" | "person";
   key: string;
   label: string;
   sub: string;
   to: string;
+  avatarUrl?: string;
 };
+
+/**
+ * Real accounts, searched live. The rest of this box searches the app's
+ * sample content, which is fine for hobbies and products but meant that a
+ * person who had actually signed up could never be found here.
+ */
+function usePersonResults(query: string): SearchResult[] {
+  const { people } = usePeopleSearch(query);
+  return useMemo(
+    () =>
+      people.map((person) => ({
+        kind: "person" as const,
+        key: `person-${person.id}`,
+        label: person.displayName,
+        sub:
+          person.hobbyKeys
+            .map((k) => hobbies.find((h) => h.slug === k)?.shortName)
+            .filter(Boolean)
+            .slice(0, 2)
+            .join(" · ") || "On NoSpace",
+        to: profilePath(person),
+        avatarUrl: person.avatarUrl,
+      })),
+    [people],
+  );
+}
 
 function useSearchResults(query: string): SearchResult[] {
   return useMemo(() => {
@@ -128,6 +156,7 @@ const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
   hobby: Sparkle,
   product: Package,
   creator: User,
+  person: User,
 };
 
 /**
@@ -155,7 +184,20 @@ export function Header() {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const results = useSearchResults(query);
+  const sampleResults = useSearchResults(query);
+  const personResults = usePersonResults(query);
+  // Real people first — someone typing a name is looking for the person.
+  const results = useMemo(() => {
+    // A real account always wins over a sample creator of the same name, so
+    // the same person never appears twice in one list.
+    const realNames = new Set(personResults.map((r) => r.label.toLowerCase()));
+    return [
+      ...personResults,
+      ...sampleResults.filter(
+        (r) => !(r.kind === "creator" && realNames.has(r.label.toLowerCase())),
+      ),
+    ];
+  }, [personResults, sampleResults]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -233,8 +275,8 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               type="search"
-              aria-label="Search projects, spaces, and makers"
-              placeholder="Search projects, spaces, makers..."
+              aria-label="Search people, projects, and spaces"
+              placeholder="Search people, projects, spaces..."
               className="pl-9 w-full rounded-full"
               value={query}
               onChange={(e) => {
@@ -261,9 +303,16 @@ export function Header() {
                             onClick={() => goToResult(result)}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-muted transition-colors"
                           >
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
-                              <Icon className="size-3.5 text-muted-foreground" />
-                            </span>
+                            {result.kind === "person" ? (
+                              <Avatar className="size-8 shrink-0">
+                                {result.avatarUrl && <AvatarImage src={result.avatarUrl} alt="" className="object-cover" />}
+                                <AvatarFallback className="text-[10px]">{initials(result.label)}</AvatarFallback>
+                              </Avatar>
+                            ) : (
+                              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
+                                <Icon className="size-3.5 text-muted-foreground" />
+                              </span>
+                            )}
                             <span className="min-w-0">
                               <span className="block text-sm truncate">{result.label}</span>
                               <span className="block text-xs text-muted-foreground truncate">{result.sub}</span>
@@ -308,8 +357,8 @@ export function Header() {
             <Input
               type="search"
               autoFocus
-              aria-label="Search projects, spaces, and makers"
-              placeholder="Search projects, spaces, makers..."
+              aria-label="Search people, projects, and spaces"
+              placeholder="Search people, projects, spaces..."
               className="w-full rounded-full pl-9"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

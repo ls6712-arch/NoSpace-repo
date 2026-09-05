@@ -3,6 +3,8 @@ import { Link } from "react-router";
 import { Bookmark, PenLine, Search, Users, X } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
+import { usePeopleSearch } from "../lib/people";
+import { PeopleRow } from "../components/PersonCard";
 import { useContent } from "../context/ContentContext";
 import { deriveProjects, useJournal } from "../lib/journal";
 import { ContentCard } from "../components/ContentCard";
@@ -40,6 +42,7 @@ export function Discover() {
   const [shown, setShown] = useState(PAGE_SIZE);
 
   const q = query.trim().toLowerCase();
+  const { people, loading: peopleLoading } = usePeopleSearch(query);
 
   const chips: Chip[] = useMemo(
     () => [...BASE_CHIPS, ...hobbies.map((h) => ({ id: h.slug, label: h.shortName }))],
@@ -119,7 +122,7 @@ export function Discover() {
                 setQuery(e.target.value);
                 setShown(PAGE_SIZE);
               }}
-              placeholder="Search projects, makers, hobbies..."
+              placeholder="Search people, projects, hobbies..."
               className="w-full rounded-full border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
             />
             {query && (
@@ -163,6 +166,24 @@ export function Discover() {
               );
             })}
           </ul>
+
+          {/* People first when you're clearly looking for a person. Searching
+              posts alone meant anyone who hadn't posted yet was unfindable. */}
+          {q.length >= 2 && (
+            <section className="mb-10">
+              <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+                People
+              </h2>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">
+                {peopleLoading
+                  ? "Looking…"
+                  : people.length === 0
+                    ? `Nobody on NoSpace matches "${query}" yet.`
+                    : `${people.length} ${people.length === 1 ? "person" : "people"} matching "${query}".`}
+              </p>
+              {people.length > 0 && <PeopleRow people={people} />}
+            </section>
+          )}
 
           {/* Across NoSpace — the gallery */}
           <div className="mb-4 flex items-end justify-between gap-4">

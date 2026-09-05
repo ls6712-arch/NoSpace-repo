@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { Post } from "../data/posts";
 import { badges, RewardStats } from "../data/badges";
 import { subHobbyLabel } from "../data/hobbies";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { BePart } from "../components/BePart";
 import { HobbyShelf, sessionsFromPosts } from "../components/HobbyShelf";
@@ -30,7 +30,7 @@ export function PublicProfile() {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "missing" }
-    | { status: "ready"; displayName: string; posts: Post[] }
+    | { status: "ready"; displayName: string; avatarUrl?: string; posts: Post[] }
   >({ status: "loading" });
 
   useEffect(() => {
@@ -39,11 +39,40 @@ export function PublicProfile() {
     (async () => {
       if (!supabase) return setState({ status: "missing" });
 
-      const { data: profileRow } = await supabase
-        .from("profiles")
-        .select("id, username, display_name")
-        .eq("username", username)
-        .maybeSingle();
+      // The URL segment is a username where someone has one, and a user id
+      // where the link came from a post card. Both resolve to the same person.
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        username,
+      );
+
+      type Row = { id: string; username: string | null; display_name: string; avatar_url: string | null };
+      let profileRow: Row | null = null;
+
+      if (isUuid) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url")
+          .eq("id", username)
+          .maybeSingle();
+        profileRow = (data as Row | null) ?? null;
+      } else {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url")
+          .eq("username", username)
+          .maybeSingle();
+        profileRow = (data as Row | null) ?? null;
+
+        // Someone shared a link before usernames existed, or typed a name.
+        if (!profileRow) {
+          const { data: byName } = await supabase
+            .from("profiles")
+            .select("id, username, display_name, avatar_url")
+            .ilike("display_name", username)
+            .limit(1);
+          profileRow = (byName?.[0] as Row | undefined) ?? null;
+        }
+      }
 
       if (cancelled) return;
       if (!profileRow) return setState({ status: "missing" });
@@ -71,7 +100,12 @@ export function PublicProfile() {
         userId: row.user_id,
       }));
 
-      setState({ status: "ready", displayName: profileRow.display_name, posts });
+      setState({
+        status: "ready",
+        displayName: profileRow.display_name,
+        avatarUrl: profileRow.avatar_url ?? undefined,
+        posts,
+      });
     })();
 
     return () => {
@@ -105,7 +139,7 @@ export function PublicProfile() {
     );
   }
 
-  const { displayName, posts } = state;
+  const { displayName, avatarUrl, posts } = state;
   const sessions = sessionsFromPosts(posts);
   const totalSessions = posts.length;
   const initials = displayName
@@ -146,6 +180,7 @@ export function PublicProfile() {
 
         <div className="mb-5 flex items-center gap-5 sm:gap-6">
           <Avatar className="size-20 shrink-0 sm:size-24">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
             <AvatarFallback className="text-xl">{initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">

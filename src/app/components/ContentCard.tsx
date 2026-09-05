@@ -82,10 +82,26 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
 
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Avatar className="size-7">
-            <AvatarFallback className="text-[10px]">{initials(post.creator)}</AvatarFallback>
-          </Avatar>
-          <span className="text-sm text-foreground/90">{post.creator}</span>
+          {/* The maker's name is the way to them. Sample posts have no account
+              behind them, so those stay plain text rather than a dead link. */}
+          {post.userId ? (
+            <Link
+              to={`/u/${encodeURIComponent(post.userId)}`}
+              className="flex min-w-0 items-center gap-2 transition-colors hover:text-[var(--coral-text)]"
+            >
+              <Avatar className="size-7 shrink-0">
+                <AvatarFallback className="text-[10px]">{initials(post.creator)}</AvatarFallback>
+              </Avatar>
+              <span className="truncate text-sm text-foreground/90">{post.creator}</span>
+            </Link>
+          ) : (
+            <>
+              <Avatar className="size-7">
+                <AvatarFallback className="text-[10px]">{initials(post.creator)}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-foreground/90">{post.creator}</span>
+            </>
+          )}
           {audience && (
             <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <audience.icon className="size-3" />

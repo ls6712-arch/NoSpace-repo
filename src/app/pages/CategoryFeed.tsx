@@ -10,9 +10,45 @@ import { ContentCard } from "../components/ContentCard";
 import { ProductCard } from "../components/ProductCard";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { HobbyActivity } from "../components/HobbyActivity";
+import { usePeopleInHobby } from "../lib/people";
+import { PeopleRow } from "../components/PersonCard";
 import { BePart } from "../components/BePart";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+
+/**
+ * Everyone present in this hobby — the people who post here and the people
+ * exploring it. This is the intended way to find someone: through the craft
+ * you both do, rather than a global list of accounts ranked by popularity.
+ */
+function PeopleTab({ hobbySlug, hobbyName }: { hobbySlug: string; hobbyName: string }) {
+  const { people, loading } = usePeopleInHobby(hobbySlug);
+
+  if (loading) {
+    return <div className="py-16 text-center text-sm text-muted-foreground">Looking…</div>;
+  }
+
+  if (people.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+        <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+          Nobody's turned up in {hobbyName} yet. Share something here, or choose
+          Keep exploring on a post, and you'll be the first.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <p className="mb-5 max-w-lg text-sm text-muted-foreground">
+        People who share {hobbyName} work here, or who are exploring it. No
+        follower counts — tap through to see what they're making.
+      </p>
+      <PeopleRow people={people} />
+    </div>
+  );
+}
 
 function CirclesTab({
   hobbySlug,
@@ -208,6 +244,7 @@ export function CategoryFeed() {
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <TabsList>
               <TabsTrigger value="feed">Work</TabsTrigger>
+              <TabsTrigger value="people">People</TabsTrigger>
               <TabsTrigger value="circles">Circles{circles.length ? ` (${circles.length})` : ""}</TabsTrigger>
               <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
             </TabsList>
@@ -255,6 +292,10 @@ export function CategoryFeed() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="people">
+            <PeopleTab hobbySlug={hobby.slug} hobbyName={hobby.shortName.toLowerCase()} />
           </TabsContent>
 
           <TabsContent value="circles">
