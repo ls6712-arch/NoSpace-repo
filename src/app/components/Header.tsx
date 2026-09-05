@@ -180,7 +180,7 @@ const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
  * than describing two different apps.
  */
 const PRIMARY_NAV = [
-  { to: "/", label: "My Space", hint: "New work from the people, hobbies and Circles you're part of",
+  { to: "/my-space", label: "My Space", hint: "New work from the people, hobbies and Circles you're part of",
     match: (p: string) => p === "/" || p.startsWith("/my-space") },
   { to: "/discover", label: "Discover", hint: "Hobbies, interests, people, Circles and projects",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") },

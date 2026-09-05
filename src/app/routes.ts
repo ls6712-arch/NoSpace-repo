@@ -7,6 +7,7 @@
 import { createHashRouter, redirect } from "react-router";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
+import { Start } from "./pages/Start";
 import { CategoryFeed } from "./pages/CategoryFeed";
 import { Discover } from "./pages/Discover";
 import { MySpace } from "./pages/MySpace";
@@ -28,11 +29,14 @@ export const router = createHashRouter([
     path: "/",
     Component: Root,
     children: [
-      { index: true, Component: MySpace },
-      // Home was the marketing page; My Space is the destination now.
+      // "/" is the landing page for a visitor and My Space for a signed-in
+      // person. The wordmark points here from everywhere and has to land both
+      // of them somewhere that makes sense.
+      { index: true, Component: Start },
       { path: "welcome", Component: Home },
+      { path: "my-space", Component: MySpace },
       { path: "discover", Component: Discover },
-      { path: "my-space", loader: () => redirect("/") },
+
       { path: "circles", Component: Circles },
       { path: "create", Component: Log },
       { path: "people", Component: People },

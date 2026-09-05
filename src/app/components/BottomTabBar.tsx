@@ -17,7 +17,7 @@ import { useConnections } from "../context/ConnectionsContext";
  */
 export const TABS = [
   {
-    to: "/",
+    to: "/my-space",
     label: "My Space",
     icon: Library,
     match: (p: string) => p === "/" || p.startsWith("/my-space"),
