@@ -14,6 +14,7 @@ import { Circles } from "./pages/Circles";
 import { Log } from "./pages/Log";
 import { You } from "./pages/You";
 import { Messages } from "./pages/Messages";
+import { Inbox } from "./pages/Inbox";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Shop } from "./pages/Shop";
@@ -32,7 +33,9 @@ export const router = createHashRouter([
       { path: "circles", Component: Circles },
       { path: "log", Component: Log },
       { path: "you", Component: You },
-      { path: "messages", Component: Messages },
+      { path: "inbox", Component: Inbox },
+      // Messages was the old destination; Inbox subsumes it.
+      { path: "messages", loader: () => redirect("/inbox") },
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
       { path: "space/:slug", Component: CategoryFeed },
       { path: "u/:username", Component: PublicProfile },

@@ -5,6 +5,7 @@ import { CartProvider } from "./context/CartContext";
 import { RewardsProvider } from "./context/RewardsContext";
 import { ContentProvider } from "./context/ContentContext";
 import { SocialProvider } from "./context/SocialContext";
+import { ConnectionsProvider } from "./context/ConnectionsContext";
 
 export default function App() {
   return (
@@ -12,9 +13,11 @@ export default function App() {
       <RewardsProvider>
         <ContentProvider>
           <SocialProvider>
-            <CartProvider>
-              <RouterProvider router={router} />
-            </CartProvider>
+            <ConnectionsProvider>
+              <CartProvider>
+                <RouterProvider router={router} />
+              </CartProvider>
+            </ConnectionsProvider>
           </SocialProvider>
         </ContentProvider>
       </RewardsProvider>

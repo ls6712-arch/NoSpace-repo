@@ -1,7 +1,7 @@
 import { CalendarDays, MapPin, Play, ShoppingBag, Users, UserRound } from "lucide-react";
 import { PostReactions } from "./PostReactions";
 import { Thoughts } from "./Thoughts";
-import { BePart } from "./BePart";
+import { PersonActions } from "./PersonActions";
 import { displayLocation } from "../data/participation";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
@@ -111,6 +111,17 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
         </div>
         <p className="text-sm text-muted-foreground mb-3">{post.caption}</p>
 
+        {/* What it's about, in the maker's words. A subject, not a hashtag —
+            it links to everyone else working on the same thing. */}
+        {post.interest && (
+          <Link
+            to={`/discover?about=${encodeURIComponent(post.interest)}`}
+            className="mb-3 inline-flex rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/30 hover:text-foreground"
+          >
+            {post.interest}
+          </Link>
+        )}
+
         {/* When it's a thing happening, say when and where — and let people in. */}
         {isActivity && (
           <div className="mb-3 rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-3">
@@ -149,26 +160,10 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
         />
 
         {!isOwner && (
-          <BePart
+          <PersonActions
             personName={post.creator}
             personId={post.userId}
-            hobbySlug={post.hobbySlug}
-            subSlug={post.subHobby}
-            postId={post.id}
-            activityTitle={post.caption.slice(0, 60)}
-            activityWhen={
-              post.startsAt
-                ? new Date(post.startsAt).toLocaleString(undefined, {
-                    weekday: "long",
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })
-                : undefined
-            }
-            activityWhere={place}
-            isActivity={isActivity}
+            hobbyKeys={[post.subHobby ?? `space:${post.hobbySlug}`]}
             className="mb-3"
           />
         )}

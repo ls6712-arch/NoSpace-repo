@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { Bookmark, PenLine, Search, Users, X } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
@@ -37,7 +37,14 @@ const BASE_CHIPS: Chip[] = [
 export function Discover() {
   const { publicFeed, posts } = useContent();
   const journal = useJournal();
-  const [query, setQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("about") ?? "");
+
+  // Tapping what a post is about lands here with that subject already searched.
+  useEffect(() => {
+    const about = searchParams.get("about");
+    if (about) setQuery(about);
+  }, [searchParams]);
   const [chip, setChip] = useState("all");
   const [shown, setShown] = useState(PAGE_SIZE);
 
@@ -71,6 +78,7 @@ export function Discover() {
         (p) =>
           p.caption.toLowerCase().includes(q) ||
           p.creator.toLowerCase().includes(q) ||
+          (p.interest ?? "").toLowerCase().includes(q) ||
           (p.subHobby ? (subHobbyLabel(p.subHobby) ?? "").toLowerCase().includes(q) : false),
       );
     }
@@ -121,6 +129,7 @@ export function Discover() {
               onChange={(e) => {
                 setQuery(e.target.value);
                 setShown(PAGE_SIZE);
+                if (searchParams.get("about")) setSearchParams({}, { replace: true });
               }}
               placeholder="Search people, projects, hobbies..."
               className="w-full rounded-full border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"

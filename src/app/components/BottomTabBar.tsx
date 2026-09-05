@@ -1,36 +1,33 @@
 import { Link, useLocation } from "react-router";
-import { Compass, PenLine, Library, Users } from "lucide-react";
+import { Compass, House, Inbox, PenLine, UserRound } from "lucide-react";
+import { useConnections } from "../context/ConnectionsContext";
 
 /**
- * Phone and tablet navigation: four evenly spaced, labelled destinations —
- * the same four as the desktop bar, in the same order, so the app has one
- * mental model rather than two.
+ * Phone and tablet navigation: five labelled destinations — the same five as
+ * the desktop bar, in the same order, so the app has one mental model rather
+ * than two.
  *
- * Log is not a floating disc. A raised centre "+" is the grammar of a
- * post-something-now social app, and it also hides the word; here the word
- * Log stays visible and the coral accent does the emphasis instead.
+ * Log sits in the middle because it's the thing you came to do, and it keeps
+ * its word rather than becoming an anonymous "+". Inbox carries a dot when
+ * something is actually waiting on you — a count would turn correspondence
+ * into a score.
  *
  * Visible below lg, exactly where the desktop top nav is hidden, so there is
  * never a width with no primary navigation and never two at once.
  */
-const TABS = [
+export const TABS = [
+  {
+    to: "/",
+    label: "Home",
+    icon: House,
+    match: (p: string) => p === "/" || p.startsWith("/my-space"),
+  },
   {
     to: "/discover",
-    label: "Discover",
+    label: "Explore",
     icon: Compass,
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p === "/",
-  },
-  {
-    to: "/my-space",
-    label: "My Space",
-    icon: Library,
-    match: (p: string) => p.startsWith("/my-space"),
-  },
-  {
-    to: "/circles",
-    label: "Circles",
-    icon: Users,
-    match: (p: string) => p.startsWith("/circles"),
+    match: (p: string) =>
+      p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/circles"),
   },
   {
     to: "/log",
@@ -39,10 +36,26 @@ const TABS = [
     match: (p: string) => p.startsWith("/log"),
     accent: true,
   },
+  {
+    to: "/inbox",
+    label: "Inbox",
+    icon: Inbox,
+    match: (p: string) => p.startsWith("/inbox") || p.startsWith("/messages"),
+  },
+  {
+    to: "/you",
+    label: "Profile",
+    icon: UserRound,
+    match: (p: string) => p.startsWith("/you"),
+  },
 ];
 
 export function BottomTabBar() {
   const { pathname } = useLocation();
+  const connections = useConnections();
+  const waiting =
+    connections.connections.filter((c) => c.status === "pending" && c.addressee).length > 0 ||
+    connections.spaceInvitations.length > 0;
 
   return (
     <>
@@ -54,7 +67,7 @@ export function BottomTabBar() {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Main"
       >
-        <div className="mx-auto grid max-w-md grid-cols-4 px-2 pb-1.5 pt-1.5">
+        <div className="mx-auto grid max-w-md grid-cols-5 px-1 pb-1.5 pt-1.5">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = tab.match(pathname);
@@ -80,8 +93,18 @@ export function BottomTabBar() {
                       : undefined,
                 }}
               >
-                <Icon className="size-5" strokeWidth={active || tab.accent ? 2.1 : 1.7} />
-                <span className="text-[11px] font-medium leading-none">{tab.label}</span>
+                <span className="relative">
+                  <Icon className="size-5" strokeWidth={active || tab.accent ? 2.1 : 1.7} />
+                  {/* A dot, not a number: something is waiting, not how much. */}
+                  {tab.to === "/inbox" && waiting && (
+                    <span
+                      className="absolute -right-0.5 -top-0.5 size-2 rounded-full"
+                      style={{ backgroundColor: "var(--coral-deep)" }}
+                      aria-hidden="true"
+                    />
+                  )}
+                </span>
+                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
               </Link>
             );
           })}

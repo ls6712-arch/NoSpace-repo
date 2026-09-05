@@ -12,7 +12,7 @@ import { GeneratedArt } from "../components/GeneratedArt";
 import { HobbyActivity } from "../components/HobbyActivity";
 import { usePeopleInHobby } from "../lib/people";
 import { PeopleRow } from "../components/PersonCard";
-import { BePart } from "../components/BePart";
+import { PersonActions } from "../components/PersonActions";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
@@ -188,7 +188,7 @@ export function CategoryFeed() {
             {/* What's happening here — never how many people are watching. */}
             <HobbyActivity hobbySlug={hobby.slug} className="mt-3 text-foreground" />
             <div className="mt-4">
-              <BePart hobbySlug={hobby.slug} subSlug={activeSub ?? undefined} />
+              <PersonActions hobbyKeys={[activeSub ?? `space:${hobby.slug}`]} />
             </div>
           </div>
           <div className="w-full max-w-xs md:w-72 md:max-w-none shrink-0 rounded-3xl overflow-hidden border border-border bg-surface-muted">

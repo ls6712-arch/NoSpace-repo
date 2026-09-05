@@ -40,6 +40,8 @@ export interface NewPostInput {
   hobbySlug: string;
   /** Optional specific hobby within the space, e.g. "pottery" in "workbench". */
   subHobby?: string;
+  /** What it's about, typed by the person: "Pottery", "Bouldering". */
+  interest?: string;
   type: "photo" | "video";
   media?: string;
   /** A real picked file, uploaded to storage when a real account is signed in. */
@@ -72,6 +74,7 @@ function rowToPost(row: any, creatorName: string): Post {
     id: row.id,
     hobbySlug: row.hobby_slug,
     subHobby: row.sub_hobby ?? undefined,
+    interest: row.interest ?? undefined,
     type: row.type,
     media: row.media_url,
     creator: creatorName,
@@ -291,6 +294,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           user_id: user.id,
           hobby_slug: input.hobbySlug,
           sub_hobby: input.subHobby ?? null,
+          interest: input.interest?.trim() ? input.interest.trim() : null,
           type: input.type,
           media_url: mediaUrl,
           caption: input.caption,
@@ -331,6 +335,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       id: Date.now() + 1,
       hobbySlug: input.hobbySlug,
       subHobby: input.subHobby,
+      interest: input.interest?.trim() || undefined,
       type: input.type,
       // The signed-out path used to drop the picked file entirely, so the photo
       // someone had just chosen silently became generated art. This local post

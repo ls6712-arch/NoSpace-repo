@@ -8,7 +8,7 @@ import { badges, RewardStats } from "../data/badges";
 import { subHobbyLabel } from "../data/hobbies";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { BePart } from "../components/BePart";
+import { PersonActions } from "../components/PersonActions";
 import { HobbyShelf, sessionsFromPosts } from "../components/HobbyShelf";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { PostMedia } from "../components/PostMedia";
@@ -224,11 +224,10 @@ export function PublicProfile() {
                   make something together. personId comes from the profile
                   itself, so it exists even before this person has posted. */}
               {!isMe && (
-                <BePart
+                <PersonActions
                   personName={displayName}
                   personId={personId}
-                  hobbySlug={posts[0]?.hobbySlug ?? "workbench"}
-                  subSlug={posts[0]?.subHobby}
+                  hobbyKeys={posts.map((p) => p.subHobby ?? `space:${p.hobbySlug}`)}
                 />
               )}
             </div>

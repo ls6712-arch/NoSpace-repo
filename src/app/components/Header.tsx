@@ -166,14 +166,14 @@ const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
  * not a tab competing with the places you go to make and find things.
  */
 const PRIMARY_NAV = [
-  { to: "/discover", label: "Discover", hint: "Projects, people, and hobbies worth exploring",
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") },
-  { to: "/my-space", label: "My Space", hint: "New work from people and Circles you follow",
-    match: (p: string) => p.startsWith("/my-space") },
-  { to: "/circles", label: "Circles", hint: "Smaller communities built around doing",
-    match: (p: string) => p.startsWith("/circles") },
+  { to: "/", label: "Home", hint: "New work from the hobbies and people you're part of",
+    match: (p: string) => p === "/" || p.startsWith("/my-space") },
+  { to: "/discover", label: "Explore", hint: "Spaces, projects, and people worth finding",
+    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/circles") },
   { to: "/log", label: "Log", hint: "Record your progress", accent: true,
     match: (p: string) => p.startsWith("/log") },
+  { to: "/inbox", label: "Inbox", hint: "Messages, requests, and activity",
+    match: (p: string) => p.startsWith("/inbox") || p.startsWith("/messages") },
 ];
 
 export function Header() {

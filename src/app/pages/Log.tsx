@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { GeneratedArt } from "../components/GeneratedArt";
+import { InterestField } from "../components/InterestField";
 
 /**
  * Logging, in the order the act actually happens: capture the thing first,
@@ -155,6 +156,7 @@ export function Log() {
   const [projectTitle, setProjectTitle] = useState("");
   const [type, setType] = useState<"photo" | "video">("photo");
   const [creator, setCreator] = useState("You");
+  const [interest, setInterest] = useState("");
   const [thought, setThought] = useState("");
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
@@ -206,7 +208,10 @@ export function Log() {
   const hobby = hobbies.find((h) => h.slug === hobbySlug)!;
   const hobbyCircles = circlesByHobby(hobbySlug);
   const openProjects = journal.projects.filter((p) => !p.finishedAt);
-  const tagLabel = subHobby ? subHobbyLabel(subHobby) ?? subHobby : hobby.shortName;
+  // What the post is about, in the person's own words where they gave them.
+  const tagLabel =
+    interest.trim() ||
+    (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : hobby.shortName);
 
   const pickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
@@ -265,6 +270,7 @@ export function Log() {
       const entry = await addPost({
         hobbySlug,
         subHobby: subHobby || undefined,
+        interest: interest.trim() || undefined,
         type,
         file: file ?? undefined,
         creator: creator.trim() || "You",
@@ -303,6 +309,7 @@ export function Log() {
     setReflection("");
     setForSale(false);
     setSaleTitle("");
+    setInterest("");
     setProjectTitle("");
     setProjectId("");
     setCircleId(undefined);
@@ -521,7 +528,7 @@ export function Log() {
             {saveError ? "Not saved." : "Saved."}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {subHobby ? `${tagLabel} · ${hobby.name}` : hobby.name}
+            {interest.trim() ? `${tagLabel} · ${hobby.name}` : hobby.name}
           </p>
           {!saveError && (
             <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-sm">
@@ -715,7 +722,14 @@ export function Log() {
           Share this moment
         </h1>
 
-        <h2 className="mb-2 text-sm">What is this about?</h2>
+        {/* Two questions, in the order people actually think:
+            what it's about, then where it goes. No taxonomy quiz. */}
+        <h2 className="mb-2 text-sm">
+          <label htmlFor="interest">What is it about?</label>
+        </h2>
+        <InterestField value={interest} onChange={setInterest} />
+
+        <h2 className="mb-2 mt-7 text-sm">Which Space?</h2>
         <Select
           value={hobbySlug}
           onValueChange={(v) => {
@@ -724,7 +738,7 @@ export function Log() {
             setCircleId(undefined);
           }}
         >
-          <SelectTrigger className="mb-3">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -735,31 +749,8 @@ export function Log() {
             ))}
           </SelectContent>
         </Select>
-
-        <ul className="mb-2 flex flex-wrap gap-2">
-          {hobby.subItems.map((s) => {
-            const active = subHobby === s.slug;
-            return (
-              <li key={s.slug}>
-                <button
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setSubHobby(active ? "" : s.slug)}
-                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                    active
-                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                      : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
-                  }`}
-                >
-                  {s.label}
-                  {active && <Check className="size-3" />}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        <p className="mb-7 text-xs text-muted-foreground">
-          {subHobby ? `${tagLabel} · ${hobby.name}` : `Untagged — it'll sit in ${hobby.name}`}
+        <p className="mb-7 mt-1.5 text-xs text-muted-foreground">
+          {hobby.plainLabel} — {hobby.tagline.toLowerCase()}
         </p>
 
         {/* Only a thing that happens at a time needs a time. */}
@@ -900,7 +891,7 @@ export function Log() {
                   : audience === "circle"
                     ? "that Circle"
                     : "My Space for people who follow you"
-              }${subHobby ? ` and be tagged ${tagLabel}.` : "."}`}
+              }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
         </p>
 
         {error && <p className="mt-3 text-center text-xs text-[var(--coral-text)]">{error}</p>}

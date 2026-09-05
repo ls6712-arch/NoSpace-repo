@@ -5,6 +5,8 @@ export interface Post {
   hobbySlug: string;
   /** The specific hobby within the space, e.g. "pottery" inside "workbench". */
   subHobby?: string;
+  /** What the post is about, in the maker's own words: "Pottery", "Bouldering". */
+  interest?: string;
   type: "photo" | "video";
   media: string;
   creator: string;
