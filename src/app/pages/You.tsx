@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { QuietMilestones } from "../components/QuietMilestones";
+import { CirclesJoined } from "../components/CirclesJoined";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
@@ -165,10 +166,35 @@ export function You() {
 
         {/* Quiet milestones */}
         <div className="mb-9">
-          <h2 className="mb-3 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-            Quiet Milestones
-          </h2>
+          <div className="mb-3 flex items-baseline justify-between gap-4">
+            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              Quiet Milestones
+            </h2>
+            <button
+              type="button"
+              onClick={() => setShareOpen(true)}
+              className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Share these →
+            </button>
+          </div>
           <QuietMilestones onShare={() => setShareOpen(true)} />
+        </div>
+
+        {/* Circles joined — a preview here, the full list under Your Circles */}
+        <div className="mb-10">
+          <div className="mb-3 flex items-baseline justify-between gap-4">
+            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              Circles Joined
+            </h2>
+            <Link
+              to="/circles"
+              className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              View all →
+            </Link>
+          </div>
+          <CirclesJoined limit={4} />
         </div>
 
         <Tabs defaultValue="work">
@@ -278,61 +304,27 @@ export function You() {
           </TabsContent>
 
           <TabsContent value="circles">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Circles Joined
-            </h2>
-            {joinedCircles.length > 0 && (
-              <button
-                type="button"
-                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => setCirclesVisible((v) => !v)}
-              >
-                {circlesVisible ? "Visible on profile" : "Hidden — only you see this"}
-              </button>
-            )}
-          </div>
-
-          {joinedCircles.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              You haven't joined a circle yet — spaces have local and topic-based circles
-              worth a look.
-            </p>
-          ) : !circlesVisible ? (
-            <p className="text-sm text-muted-foreground">
-              Hidden. Only you can see which circles you've joined.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {joinedCircles.map((circle, i) => {
-                const hobby = getHobby(circle.hobbySlug);
-                const tint = CIRCLE_TINTS[i % CIRCLE_TINTS.length];
-                return (
-                  <Link
-                    key={circle.id}
-                    to={`/space/${circle.hobbySlug}`}
-                    className="rounded-2xl px-4 py-3.5 transition-transform duration-200 hover:-translate-y-0.5"
-                    style={{
-                      backgroundColor: `color-mix(in srgb, ${tint} 13%, transparent)`,
-                      border: `1px solid color-mix(in srgb, ${tint} 26%, transparent)`,
-                    }}
-                  >
-                    <div
-                      className="text-sm leading-snug"
-                      style={{ fontFamily: "var(--font-serif)" }}
-                    >
-                      {circle.name}
-                    </div>
-                    <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <Users className="size-3" strokeWidth={1.8} />
-                      {circle.memberCount.toLocaleString()} members
-                      {hobby && <span className="opacity-60">· {hobby.shortName}</span>}
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="mb-3 flex items-baseline justify-between gap-4">
+              <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                Circles Joined
+              </h2>
+              {joinedCircles.length > 0 && (
+                <button
+                  type="button"
+                  className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => setCirclesVisible((v) => !v)}
+                >
+                  {circlesVisible ? "Visible on your work" : "Hidden — only you see this"}
+                </button>
+              )}
             </div>
-          )}
+            {circlesVisible ? (
+              <CirclesJoined />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Hidden. Only you can see which Circles you've joined.
+              </p>
+            )}
           </TabsContent>
 
           <TabsContent value="settings">

@@ -32,7 +32,7 @@ export function QuietMilestones({
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 [scrollbar-width:thin]">
+      <div className="-mx-1 flex gap-5 overflow-x-auto px-1 pb-2 [scrollbar-width:thin]">
         {badges.map((badge) => {
           const unlocked = unlockedBadgeIds.includes(badge.id);
           const Icon = (Icons as any)[badge.icon] ?? Icons.Sparkles;
@@ -40,29 +40,29 @@ export function QuietMilestones({
             <button
               key={badge.id}
               onClick={() => setSelected(badge)}
-              className="flex w-[74px] shrink-0 flex-col items-center gap-2"
+              className="flex w-[82px] shrink-0 flex-col items-center gap-2.5"
             >
               <span
-                className="flex size-14 items-center justify-center rounded-full transition-transform duration-200 hover:scale-105"
+                className="flex size-16 items-center justify-center rounded-full transition-transform duration-200 hover:scale-105"
                 style={
                   unlocked
                     ? {
-                        backgroundColor: `color-mix(in srgb, ${badge.tint} 24%, transparent)`,
-                        border: `1.5px solid color-mix(in srgb, ${badge.tint} 55%, transparent)`,
-                        color: badge.tint,
+                        backgroundColor: `color-mix(in srgb, ${badge.tint} 46%, var(--cream))`,
+                        border: `1px solid color-mix(in srgb, ${badge.tint} 62%, transparent)`,
+                        color: "var(--forest-ink)",
                       }
                     : {
-                        backgroundColor: "rgba(255,255,255,0.03)",
-                        border: "1.5px solid rgba(255,255,255,0.08)",
-                        color: "rgba(255,255,255,0.22)",
+                        backgroundColor: "var(--surface-muted)",
+                        border: "1px dashed var(--border)",
+                        color: "color-mix(in srgb, var(--forest-ink) 32%, transparent)",
                       }
                 }
               >
-                <Icon className="size-[22px]" strokeWidth={1.6} />
+                <Icon className="size-6" strokeWidth={1.5} />
               </span>
               <span
-                className={`text-center text-[11px] leading-tight ${
-                  unlocked ? "text-foreground/85" : "text-muted-foreground/45"
+                className={`text-center text-[11.5px] leading-tight ${
+                  unlocked ? "text-foreground" : "text-muted-foreground"
                 }`}
                 style={{ fontFamily: "var(--font-serif)" }}
               >
@@ -90,14 +90,14 @@ export function QuietMilestones({
                       style={
                         unlocked
                           ? {
-                              backgroundColor: `color-mix(in srgb, ${selected.tint} 24%, transparent)`,
-                              border: `1.5px solid color-mix(in srgb, ${selected.tint} 55%, transparent)`,
-                              color: selected.tint,
+                              backgroundColor: `color-mix(in srgb, ${selected.tint} 46%, var(--cream))`,
+                              border: `1px solid color-mix(in srgb, ${selected.tint} 62%, transparent)`,
+                              color: "var(--forest-ink)",
                             }
                           : {
-                              backgroundColor: "rgba(255,255,255,0.03)",
-                              border: "1.5px solid rgba(255,255,255,0.08)",
-                              color: "rgba(255,255,255,0.25)",
+                              backgroundColor: "var(--surface-muted)",
+                              border: "1px dashed var(--border)",
+                              color: "color-mix(in srgb, var(--forest-ink) 32%, transparent)",
                             }
                       }
                     >

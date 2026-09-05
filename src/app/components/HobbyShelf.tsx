@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import * as Icons from "lucide-react";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
 import { hobbyPhoto } from "../data/hobbyPhotos";
+import { hobbyIconName } from "../data/hobbyIcons";
 import { SubHobbyArt } from "./SubHobbyArt";
 
 export interface HobbySession {
@@ -84,50 +86,118 @@ export function updatedLabel(ts: number) {
   return `Updated ${new Date(ts).toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
 }
 
+/** The same fact, short enough to sit on a book spine label without clipping. */
+function compactUpdated(ts: number) {
+  const days = Math.floor((Date.now() - ts) / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
+}
+
 /**
- * One hobby, as a book on the shelf. The cover is a photograph of the craft,
- * falling back to that hobby's own illustration if the photo can't load, so a
- * dead URL never leaves a hole. Everything on the face is information someone
- * would actually use to decide whether to open it: what it is, which Space it
- * belongs to, how much is in there, and when it last moved.
+ * Book spines, cycled within a Space so a stack of three never repeats a
+ * colour. Straight from the brand set — forest, coral, sky, mustard.
  */
-function HobbyBook({ item }: { item: HobbySession }) {
+const SPINES = ["var(--forest)", "var(--coral)", "var(--sky)", "var(--yellow)"];
+
+/** Each book in a stack sits a little askew, the way real ones do. */
+const TILT = [-2.2, 1.6, -1.1, 2.4];
+
+/**
+ * One hobby, as a hardcover book: coloured spine down the left edge, a
+ * photograph of the craft as the cover, and a cream label band across the
+ * bottom carrying a small line icon and the hobby's name.
+ *
+ * Books in a stack overlap and tilt slightly. Hovering lifts the book and
+ * straightens it, which is also what makes it obvious the whole thing is one
+ * target rather than decoration.
+ */
+function HobbyBook({
+  item,
+  index,
+  count,
+}: {
+  item: HobbySession;
+  index: number;
+  count: number;
+}) {
   const [photoFailed, setPhotoFailed] = useState(false);
   const photo = photoFailed ? undefined : hobbyPhoto(item.subSlug ?? "", item.hobbySlug, 600);
-  const space = getHobby(item.hobbySlug);
+  const Icon = (Icons as any)[hobbyIconName(item.subSlug, item.hobbySlug)] ?? Icons.Sparkles;
+
+  const spine = SPINES[index % SPINES.length];
+  const tilt = TILT[index % TILT.length];
+  // Later books sit lower and further right, so the stack fans out.
+  const offset = index * 16;
 
   return (
     <Link
       to={`/you/work/${archiveKey(item)}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-left transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-[0_16px_30px_-18px_rgba(11,62,46,0.5)] focus-visible:-translate-y-1"
+      title={`${item.label} — ${item.sessions} ${item.sessions === 1 ? "moment" : "moments"}, ${updatedLabel(item.lastAt).toLowerCase()}`}
+      className="group relative block origin-top transition-transform duration-300 ease-out hover:z-20 hover:-translate-y-2 hover:rotate-0 focus-visible:z-20 focus-visible:-translate-y-2 focus-visible:rotate-0"
+      style={{
+        transform: `rotate(${tilt}deg)`,
+        marginLeft: offset,
+        marginTop: index === 0 ? 0 : -10,
+        zIndex: count - index,
+      }}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-surface-muted">
-        {photo ? (
-          <img
-            src={photo}
-            alt=""
-            loading="lazy"
-            onError={() => setPhotoFailed(true)}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-          />
-        ) : (
-          <SubHobbyArt
-            hobbySlug={item.hobbySlug}
-            subSlug={item.subSlug ?? ""}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-          />
-        )}
-      </div>
+      <div
+        className="flex overflow-hidden rounded-r-lg rounded-l-sm bg-[var(--cream)]"
+        style={{ boxShadow: "0 14px 26px -14px rgba(11,62,46,0.45), 0 2px 4px rgba(11,62,46,0.12)" }}
+      >
+        {/* The spine */}
+        <span
+          className="w-2.5 shrink-0 sm:w-3"
+          style={{ backgroundColor: spine }}
+          aria-hidden="true"
+        />
 
-      <div className="flex flex-1 flex-col px-4 py-3">
-        <div className="text-base leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-          {item.label}
-        </div>
-        <div className="mt-0.5 text-xs text-muted-foreground">{space?.name ?? item.hobbySlug}</div>
-        <div className="mt-auto pt-2 text-xs text-muted-foreground">
-          {item.sessions} {item.sessions === 1 ? "moment" : "moments"} ·{" "}
-          {updatedLabel(item.lastAt)}
-        </div>
+        <span className="min-w-0 flex-1">
+          {/* The cover */}
+          <span className="block aspect-[16/9] overflow-hidden bg-surface-muted">
+            {photo ? (
+              <img
+                src={photo}
+                alt=""
+                loading="lazy"
+                onError={() => setPhotoFailed(true)}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              />
+            ) : (
+              <SubHobbyArt
+                hobbySlug={item.hobbySlug}
+                subSlug={item.subSlug ?? ""}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              />
+            )}
+          </span>
+
+          {/* The label band */}
+          <span className="flex items-center gap-2.5 px-3.5 py-2.5">
+            <Icon
+              className="size-4 shrink-0 text-[var(--coral-deep)]"
+              strokeWidth={1.7}
+              aria-hidden="true"
+            />
+            <span className="min-w-0 flex-1">
+              <span
+                className="block truncate text-[15px] leading-tight text-[var(--forest-ink)]"
+                style={{ fontFamily: "var(--font-serif)" }}
+              >
+                {item.label}
+              </span>
+              {/* The facts stay on the book, just quieter than the name. */}
+              <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                {item.sessions} {item.sessions === 1 ? "moment" : "moments"} ·{" "}
+                {compactUpdated(item.lastAt)}
+              </span>
+            </span>
+          </span>
+        </span>
       </div>
     </Link>
   );
@@ -135,13 +205,12 @@ function HobbyBook({ item }: { item: HobbySession }) {
 
 /**
  * Your work, shelved. Hobbies group under the Space they belong to — Pottery
- * under The Studio, Running under In Motion — with a thin rule under each
- * group standing in for the shelf board.
+ * under The Studio, Running under In Motion — as a small stack of books per
+ * Space, with the Space name above it in caps.
  *
- * The old version was a dark wooden cabinet with tiny spines and decorative
- * plants: nice to look at once, useless to use. The bookshelf feeling now
- * comes from the grouping and the dividers, and every pixel of a book is
- * information or a target.
+ * No wooden carcass, no plants, no tiny unreadable spines: the shelf feeling
+ * comes from the stacking and the label bands, and every book is a link into
+ * that hobby's own archive.
  */
 export function HobbyShelf({ items: override }: { items?: HobbySession[] } = {}) {
   const derived = useSessionsByHobby();
@@ -175,32 +244,26 @@ export function HobbyShelf({ items: override }: { items?: HobbySession[] } = {})
     .map((h) => ({ space: h, books: bySpace.get(h.slug)! }));
 
   return (
-    <div className="space-y-8">
-      {groups.map(({ space, books }) => (
-        <section key={space.slug}>
-          <div className="mb-3 flex items-baseline justify-between gap-4">
-            <h3 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+    <div className="rounded-3xl bg-[var(--cream)] px-4 py-8 sm:px-6">
+      <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
+        {groups.map(({ space, books }) => (
+          <section key={space.slug}>
+            <h3
+              className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.14em] text-[var(--forest)]"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
               {space.name}
             </h3>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {books.length} {books.length === 1 ? "hobby" : "hobbies"}
-            </span>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-            {books.map((item) => (
-              <HobbyBook key={item.key} item={item} />
-            ))}
-          </div>
-
-          {/* The shelf board: one thin rule, not a slab of wood. */}
-          <div
-            className="mt-4 h-px w-full"
-            style={{ backgroundColor: "var(--border)" }}
-            aria-hidden="true"
-          />
-        </section>
-      ))}
+            {/* The stack. Extra right padding leaves room for the fan-out. */}
+            <div className="relative pr-8">
+              {books.map((item, i) => (
+                <HobbyBook key={item.key} item={item} index={i} count={books.length} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </div>
   );
 }
