@@ -91,6 +91,13 @@ interface ContentContextType {
   myListings: Product[];
   findListing: (id: number) => Product | undefined;
   addPost: (input: NewPostInput) => Promise<Post>;
+  /**
+   * Set when a photo or video failed to reach storage. The entry still saves —
+   * losing someone's words because their picture didn't upload would be worse —
+   * but the UI has to say so rather than quietly showing generated art.
+   */
+  mediaError: string | null;
+  clearMediaError: () => void;
   /** Edits a moment you own. Returns false if the change couldn't be saved. */
   updatePost: (
     postId: number,
@@ -121,6 +128,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     loadFromStorage<number>(CIRCLES_KEY)
   );
   const [likeDeltas, setLikeDeltas] = useState<Record<number, number>>({});
+  const [mediaError, setMediaError] = useState<string | null>(null);
 
   const refetchRealPosts = async () => {
     if (!supabase) return;
@@ -237,12 +245,29 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     if (supabase && user) {
       let mediaUrl = input.media ?? "";
       if (input.file) {
-        const path = `${user.id}/${Date.now()}-${input.file.name}`;
+        // Storage keys reject most punctuation and anything non-ASCII, which a
+        // phone's own filename ("Foto 5 sept. 2026, 10.32.png") routinely has.
+        const dot = input.file.name.lastIndexOf(".");
+        const ext = (dot > -1 ? input.file.name.slice(dot + 1) : "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "")
+          .slice(0, 5);
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? `.${ext}` : ""}`;
+
         const { error: uploadError } = await supabase.storage
           .from("post-media")
-          .upload(path, input.file);
-        if (!uploadError) {
+          .upload(path, input.file, {
+            contentType: input.file.type || undefined,
+            upsert: false,
+          });
+
+        if (uploadError) {
+          setMediaError(
+            `Your ${input.type === "video" ? "video" : "photo"} didn't upload — ${uploadError.message}. The entry was saved without it.`,
+          );
+        } else {
           mediaUrl = supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl;
+          setMediaError(null);
         }
       }
 
@@ -278,7 +303,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       hobbySlug: input.hobbySlug,
       subHobby: input.subHobby,
       type: input.type,
-      media: input.media ?? "",
+      // The signed-out path used to drop the picked file entirely, so the photo
+      // someone had just chosen silently became generated art. This local post
+      // only lives as long as the tab does, and so does the object URL — they
+      // disappear together, which is at least honest.
+      media: input.media ?? (input.file ? URL.createObjectURL(input.file) : ""),
       creator: input.creator || "You",
       caption: input.caption,
       reflection: input.reflection?.trim() ? input.reflection.trim() : undefined,
@@ -359,6 +388,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         findListing,
         addPost,
         updatePost,
+        mediaError,
+        clearMediaError: () => setMediaError(null),
         toggleLike,
         joinedCircleIds,
         isCircleJoined,

@@ -164,39 +164,6 @@ export function You() {
           </Link>
         </div>
 
-        {/* Quiet milestones */}
-        <div className="mb-9">
-          <div className="mb-3 flex items-baseline justify-between gap-4">
-            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Quiet Milestones
-            </h2>
-            <button
-              type="button"
-              onClick={() => setShareOpen(true)}
-              className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Share these →
-            </button>
-          </div>
-          <QuietMilestones onShare={() => setShareOpen(true)} />
-        </div>
-
-        {/* Circles joined — a preview here, the full list under Your Circles */}
-        <div className="mb-10">
-          <div className="mb-3 flex items-baseline justify-between gap-4">
-            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Circles Joined
-            </h2>
-            <Link
-              to="/circles"
-              className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              View all →
-            </Link>
-          </div>
-          <CirclesJoined limit={4} />
-        </div>
-
         <Tabs defaultValue="work">
           <TabsList className="mb-5 flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
             <TabsTrigger value="work">Your work</TabsTrigger>
@@ -364,6 +331,40 @@ export function You() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Quiet milestones */}
+        <div className="mb-9">
+          <div className="mb-3 flex items-baseline justify-between gap-4">
+            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              Quiet Milestones
+            </h2>
+            <button
+              type="button"
+              onClick={() => setShareOpen(true)}
+              className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Share these →
+            </button>
+          </div>
+          <QuietMilestones onShare={() => setShareOpen(true)} />
+        </div>
+
+        {/* Circles joined — a preview here, the full list under Your Circles */}
+        <div className="mb-10">
+          <div className="mb-3 flex items-baseline justify-between gap-4">
+            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              Circles Joined
+            </h2>
+            <Link
+              to="/circles"
+              className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              View all →
+            </Link>
+          </div>
+          <CirclesJoined limit={4} />
+        </div>
+
       </div>
 
       <ShareProfileDialog open={shareOpen} onOpenChange={setShareOpen} />

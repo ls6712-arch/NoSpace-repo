@@ -96,9 +96,51 @@ function Sprout() {
   );
 }
 
+function BackLink({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <ArrowLeft className="size-4" />
+      Back
+    </button>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-surface py-10 sm:py-14">
+      <div className="container mx-auto max-w-lg px-4">{children}</div>
+    </div>
+  );
+}
+
+function Preview({
+  url,
+  type,
+  hobbySlug,
+  seed,
+  className = "",
+}: {
+  url: string | null;
+  type: "photo" | "video";
+  hobbySlug: string;
+  seed: number;
+  className?: string;
+}) {
+  if (!url) return <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />;
+  return type === "video" ? (
+    <video src={url} className={`${className} object-cover`} muted playsInline />
+  ) : (
+    <img src={url} alt="" className={`${className} object-cover`} />
+  );
+}
+
 export function Log() {
   const [searchParams] = useSearchParams();
-  const { addPost } = useContent();
+  const { addPost, mediaError, clearMediaError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const journal = useJournal();
 
@@ -228,6 +270,7 @@ export function Log() {
   };
 
   const reset = () => {
+    clearMediaError();
     setThought("");
     setProgress("");
     setChanged("");
@@ -247,33 +290,16 @@ export function Log() {
   const requiresLogin =
     isConfigured && !user && screen !== "capture" && audience !== "private" && mode !== "private";
 
-  const Back = ({ to }: { to: Screen }) => (
-    <button
-      type="button"
-      onClick={() => setScreen(to)}
-      className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-    >
-      <ArrowLeft className="size-4" />
-      Back
-    </button>
+  const Back = ({ to }: { to: Screen }) => <BackLink onClick={() => setScreen(to)} />;
+  const MediaPreview = ({ className = "" }: { className?: string }) => (
+    <Preview
+      url={filePreviewUrl}
+      type={type}
+      hobbySlug={hobbySlug}
+      seed={seed}
+      className={className}
+    />
   );
-
-  const Shell = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen bg-surface py-10 sm:py-14">
-      <div className="container mx-auto max-w-lg px-4">{children}</div>
-    </div>
-  );
-
-  const MediaPreview = ({ className = "" }: { className?: string }) =>
-    filePreviewUrl ? (
-      type === "video" ? (
-        <video src={filePreviewUrl} className={`${className} object-cover`} muted playsInline />
-      ) : (
-        <img src={filePreviewUrl} alt="" className={`${className} object-cover`} />
-      )
-    ) : (
-      <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />
-    );
 
   // ── 1 · Capture ─────────────────────────────────────────────────────────
   if (screen === "capture") {
@@ -466,6 +492,12 @@ export function Log() {
           <div className="mx-auto my-6 w-40 overflow-hidden rounded-xl border border-border">
             <MediaPreview className="aspect-square w-full" />
           </div>
+
+          {mediaError && (
+            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--cream))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+              {mediaError}
+            </p>
+          )}
 
           <div className="space-y-2">
             <Link
