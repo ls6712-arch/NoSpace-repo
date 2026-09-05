@@ -20,6 +20,12 @@ export interface Post {
   productId?: number;
   /** Set on real (Supabase-backed) posts — the Supabase auth user id that made this post. */
   userId?: string;
+  /** Set when this moment is a thing happening at a time — a walk, a workshop. */
+  startsAt?: number;
+  locationName?: string;
+  locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
+  /** When on, only the poster and each thought's author can read the thoughts. */
+  thoughtsPrivate?: boolean;
 }
 
 const HOUR = 3600 * 1000;

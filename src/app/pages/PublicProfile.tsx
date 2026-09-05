@@ -7,7 +7,7 @@ import { badges, RewardStats } from "../data/badges";
 import { subHobbyLabel } from "../data/hobbies";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { toggleFollowing, useJournalSlice } from "../lib/journal";
+import { BePart } from "../components/BePart";
 import { HobbyShelf, sessionsFromPosts } from "../components/HobbyShelf";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { PostMedia } from "../components/PostMedia";
@@ -131,7 +131,6 @@ export function PublicProfile() {
     : { label: top?.label };
 
   const primaryHobby = pickPrimaryHobby(posts);
-  const isFollowing = useJournalSlice((j) => j.following.includes(displayName));
 
   return (
     <div className="min-h-screen bg-surface py-8 sm:py-10">
@@ -173,14 +172,14 @@ export function PublicProfile() {
               </p>
             )}
             <div className="mt-3">
-              <Button
-                variant={isFollowing ? "outline" : "coral"}
-                size="sm"
-                aria-pressed={isFollowing}
-                onClick={() => toggleFollowing(displayName)}
-              >
-                {isFollowing ? "Following" : "Follow"}
-              </Button>
+              {/* Not a Follow button. You attach to the hobby, or ask to do a
+                  specific thing together — never to the person as a person. */}
+              <BePart
+                personName={displayName}
+                personId={posts[0]?.userId}
+                hobbySlug={posts[0]?.hobbySlug ?? "workbench"}
+                subSlug={posts[0]?.subHobby}
+              />
             </div>
           </div>
         </div>

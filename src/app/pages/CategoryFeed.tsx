@@ -9,6 +9,8 @@ import { useRewards } from "../context/RewardsContext";
 import { ContentCard } from "../components/ContentCard";
 import { ProductCard } from "../components/ProductCard";
 import { GeneratedArt } from "../components/GeneratedArt";
+import { HobbyActivity } from "../components/HobbyActivity";
+import { BePart } from "../components/BePart";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
@@ -147,6 +149,11 @@ export function CategoryFeed() {
             <h1 className="text-4xl md:text-5xl mb-3">{hobby.shortName}</h1>
             <p className="text-lg mb-2 italic text-foreground">{hobby.tagline}</p>
             <p className="text-foreground text-lg max-w-xl">{hobby.description}</p>
+            {/* What's happening here — never how many people are watching. */}
+            <HobbyActivity hobbySlug={hobby.slug} className="mt-3 text-foreground" />
+            <div className="mt-4">
+              <BePart hobbySlug={hobby.slug} subSlug={activeSub ?? undefined} />
+            </div>
           </div>
           <div className="w-full max-w-xs md:w-72 md:max-w-none shrink-0 rounded-3xl overflow-hidden border border-border bg-surface-muted">
             <GeneratedArt

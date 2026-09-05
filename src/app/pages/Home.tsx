@@ -412,7 +412,7 @@ export function Home() {
         visual={
           <div className="glass-panel rounded-3xl p-6">
             <div className="font-hud text-2xl mb-1 text-gradient-brand">12 things created</div>
-            <div className="text-xs text-muted-foreground mb-4 font-hud">Level 3 on NoSpace</div>
+            <div className="text-xs text-muted-foreground mb-4">3 months into pottery</div>
             <div className="flex flex-wrap gap-2 mb-4">
               {["Workbench", "The Studio", "Kitchen Table"].map((tag) => (
                 <span

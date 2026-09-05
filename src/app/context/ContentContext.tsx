@@ -50,6 +50,10 @@ export interface NewPostInput {
   visibility: Visibility;
   circleId?: number;
   forSale?: ForSaleInput;
+  /** Set when this moment is a thing happening at a time. */
+  startsAt?: number;
+  locationName?: string;
+  locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
 }
 
 function loadFromStorage<T>(key: string): T[] {
@@ -77,6 +81,10 @@ function rowToPost(row: any, creatorName: string): Post {
     createdAt: new Date(row.created_at).getTime(),
     visibility: row.visibility,
     userId: row.user_id,
+    startsAt: row.starts_at ? new Date(row.starts_at).getTime() : undefined,
+    locationName: row.location_name ?? undefined,
+    locationPrivacy: row.location_privacy ?? undefined,
+    thoughtsPrivate: row.thoughts_private ?? false,
   };
 }
 
@@ -282,6 +290,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           caption: input.caption,
           reflection: input.reflection?.trim() ? input.reflection.trim() : null,
           visibility: input.visibility,
+          starts_at: input.startsAt ? new Date(input.startsAt).toISOString() : null,
+          location_name: input.locationName ?? null,
+          location_privacy: input.locationPrivacy ?? "neighborhood",
         })
         .select()
         .single();
@@ -316,6 +327,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       visibility: input.visibility,
       circleId: input.visibility === "circle" ? input.circleId : undefined,
       productId,
+      startsAt: input.startsAt,
+      locationName: input.locationName,
+      locationPrivacy: input.locationPrivacy,
     };
     setRealPosts((prev) => [newPost, ...prev]);
     rewards.recordPostCreated(hobbyKey);

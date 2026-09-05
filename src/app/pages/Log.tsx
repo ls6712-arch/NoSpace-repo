@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
+import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility } from "../data/posts";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
@@ -164,6 +165,10 @@ export function Log() {
   const [saleTitle, setSaleTitle] = useState("");
   const [salePrice, setSalePrice] = useState("25");
   const [saleType, setSaleType] = useState<"physical" | "digital" | "course">("digital");
+  const [isActivity, setIsActivity] = useState(false);
+  const [startsAt, setStartsAt] = useState("");
+  const [locationName, setLocationName] = useState("");
+  const [locationPrivacy, setLocationPrivacy] = useState<LocationPrivacy>("neighborhood");
   const [savedAs, setSavedAs] = useState<null | "shared" | "private">(null);
   const [seed] = useState(() => Date.now());
   const [file, setFile] = useState<File | null>(null);
@@ -250,6 +255,9 @@ export function Log() {
         reflection: reflection.trim() || undefined,
         visibility: audience,
         circleId: audience === "circle" ? circleId : undefined,
+        startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
+        locationName: isActivity && locationName.trim() ? locationName.trim() : undefined,
+        locationPrivacy: isActivity ? locationPrivacy : undefined,
         forSale: forSale
           ? {
               name: saleTitle.trim() || caption.slice(0, 40),
@@ -712,6 +720,80 @@ export function Log() {
         <p className="mb-7 text-xs text-muted-foreground">
           {subHobby ? `${tagLabel} · ${hobby.name}` : `Untagged — it'll sit in ${hobby.name}`}
         </p>
+
+        {/* Only a thing that happens at a time needs a time. */}
+        <div className="mb-7 rounded-2xl border border-border bg-card px-4 py-3.5">
+          <button
+            type="button"
+            onClick={() => setIsActivity((v) => !v)}
+            aria-pressed={isActivity}
+            className="flex w-full items-center justify-between gap-3"
+          >
+            <span className="text-left">
+              <span className="block text-sm">This is something happening</span>
+              <span className="block text-xs text-muted-foreground">
+                A walk, a workshop, a meetup, a challenge — people can join in
+              </span>
+            </span>
+            <span
+              className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
+                isActivity
+                  ? "justify-end [background-color:var(--forest)]"
+                  : "justify-start bg-surface-muted"
+              }`}
+            >
+              <span className="size-5 rounded-full bg-white" />
+            </span>
+          </button>
+
+          {isActivity && (
+            <div className="mt-4 space-y-3">
+              <div>
+                <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
+                  When
+                </Label>
+                <Input
+                  id="startsAt"
+                  type="datetime-local"
+                  value={startsAt}
+                  onChange={(e) => setStartsAt(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="place" className="mb-1.5 block text-xs">
+                  Where
+                </Label>
+                <Input
+                  id="place"
+                  value={locationName}
+                  onChange={(e) => setLocationName(e.target.value)}
+                  placeholder="e.g. Prospect Park, Brooklyn"
+                />
+              </div>
+              <div>
+                <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
+                <Select
+                  value={locationPrivacy}
+                  onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOCATION_PRIVACY.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label} — {o.copy}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Neighborhood by default. Exact is never assumed.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
 
         <h2 className="mb-2 text-sm">Choose who sees this</h2>
         <ul className="space-y-2">

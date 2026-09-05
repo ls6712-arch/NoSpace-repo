@@ -1,5 +1,10 @@
-import { Bookmark, Play, ShoppingBag, Users, UserRound } from "lucide-react";
+import { Bookmark, CalendarDays, MapPin, Play, ShoppingBag, Users, UserRound } from "lucide-react";
 import { PostReactions } from "./PostReactions";
+import { Thoughts } from "./Thoughts";
+import { BePart } from "./BePart";
+import { displayLocation } from "../data/participation";
+import { useSocial } from "../context/SocialContext";
+import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
@@ -34,7 +39,16 @@ const ASPECTS = ["aspect-square", "aspect-[4/5]", "aspect-[3/4]", "aspect-[5/4]"
 
 export function ContentCard({ post, label }: { post: Post; label?: string }) {
   const { findListing } = useContent();
+  const social = useSocial();
+  const { user } = useAuth();
   const saved = useJournalSlice((s) => s.saved.includes(post.id));
+  const isOwner = !!user && post.userId === user.id;
+
+  // An activity is a moment with a time attached — a photo walk, a workshop,
+  // a meetup. Everything else is just a moment and gets none of this.
+  const isActivity = !!post.startsAt;
+  const place = displayLocation(post.locationName, post.locationPrivacy);
+  const going = social.goingCount(post.id);
   const listing = post.productId ? findListing(post.productId) : undefined;
   const aspect = ASPECTS[Math.abs(post.id) % ASPECTS.length];
   const audience = AUDIENCE[post.visibility];
@@ -90,16 +104,72 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
           </Avatar>
           <span className="text-sm text-foreground/90">{post.creator}</span>
           {audience && (
-            <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <audience.icon className="size-3" />
               {audience.label}
+            </span>
+          )}
+          {!isOwner && !isActivity && (
+            <span className="ml-auto shrink-0">
+              <BePart
+                personName={post.creator}
+                personId={post.userId}
+                hobbySlug={post.hobbySlug}
+                subSlug={post.subHobby}
+                postId={post.id}
+              />
             </span>
           )}
         </div>
         <p className="text-sm text-muted-foreground mb-3">{post.caption}</p>
 
+        {/* When it's a thing happening, say when and where — and let people in. */}
+        {isActivity && (
+          <div className="mb-3 rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-3">
+            <div className="flex items-center gap-1.5 text-xs">
+              <CalendarDays className="size-3.5 shrink-0 text-[var(--forest)]" />
+              {new Date(post.startsAt!).toLocaleString(undefined, {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </div>
+            {place && (
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <MapPin className="size-3.5 shrink-0" />
+                {place}
+              </div>
+            )}
+            <div className="mt-2.5 flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">
+                {going} {going === 1 ? "person" : "people"} going
+              </span>
+              <BePart
+                personName={post.creator}
+                personId={post.userId}
+                hobbySlug={post.hobbySlug}
+                subSlug={post.subHobby}
+                postId={post.id}
+                activityTitle={post.caption.slice(0, 40)}
+                isActivity
+              />
+            </div>
+          </div>
+        )}
+
         {/* Every entry carries the same five reactions. */}
         <PostReactions postId={post.id} className="mb-3" />
+
+        <Thoughts
+          postId={post.id}
+          postOwnerId={post.userId}
+          postOwnerName={post.creator}
+          isOwner={isOwner}
+          privateThoughts={post.thoughtsPrivate}
+          className="mb-3"
+        />
 
         {listing && (
           <Link to={`/product/${listing.id}`}>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { Package, Plus, Search, ShoppingBag, Sparkle, User, X } from "lucide-react";
+import { MessagesSquare, Package, Plus, Search, ShoppingBag, Sparkle, User, X } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { hobbies } from "../data/hobbies";
@@ -8,7 +8,8 @@ import { seedPosts } from "../data/posts";
 import { products } from "../data/products";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useSocial } from "../context/SocialContext";
 import { NotificationsMenu } from "./NotificationsMenu";
 
 function initials(name: string) {
@@ -18,6 +19,22 @@ function initials(name: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+/** Only appears once an accepted request has actually opened a thread. */
+function MessagesLink() {
+  const social = useSocial();
+  const open = social.participations.some(
+    (p) => p.status === "accepted" && (p.kind === "make_together" || p.kind === "explore_together"),
+  );
+  if (!open) return null;
+  return (
+    <Link to="/messages" aria-label="Messages" title="Messages">
+      <Button variant="ghost" size="icon">
+        <MessagesSquare className="size-5" />
+      </Button>
+    </Link>
+  );
 }
 
 function AccountMenu() {
@@ -40,6 +57,7 @@ function AccountMenu() {
   return (
     <Link to="/you" aria-label="You — your work, saved ideas, and settings" title="You">
       <Avatar className="size-8">
+        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />}
         <AvatarFallback className="text-[11px]">{initials(name)}</AvatarFallback>
       </Avatar>
     </Link>
@@ -269,6 +287,7 @@ export function Header() {
           >
             <Search className="size-5" />
           </Button>
+          <MessagesLink />
           <NotificationsMenu />
           {cartCount > 0 && (
             <Button variant="ghost" size="icon" onClick={openCart} className="relative" aria-label={`Cart (${cartCount})`}>

@@ -4,6 +4,7 @@ import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { daysSince, deriveProjects, useJournal } from "../lib/journal";
+import { useSocial } from "../context/SocialContext";
 import { ContentCard } from "../components/ContentCard";
 import { Button } from "../components/ui/button";
 
@@ -66,16 +67,21 @@ function Empty({ children, to, cta }: { children: React.ReactNode; to: string; c
 export function MySpace() {
   const { publicFeed, posts, isCircleJoined } = useContent();
   const journal = useJournal();
+  const social = useSocial();
 
-  const followed = new Set(journal.following);
+  const exploring = new Set(social.followedHobbies);
   const joinedCircles = circles.filter((c) => isCircleJoined(c.id));
   const joinedSpaces = new Set(joinedCircles.map((c) => c.hobbySlug));
 
   // "Today" means the makers and Circles you actually chose. If you've chosen
   // nobody yet, it falls back to the spaces your Circles live in rather than
   // pretending an algorithm knows you.
+  // What you chose is a set of hobbies and Circles — never a set of people.
   const chosen = publicFeed.filter(
-    (p) => followed.has(p.creator) || joinedSpaces.has(p.hobbySlug),
+    (p) =>
+      (p.subHobby && exploring.has(p.subHobby)) ||
+      exploring.has(`space:${p.hobbySlug}`) ||
+      joinedSpaces.has(p.hobbySlug),
   );
   // Before you've followed anyone or joined anything there is nothing personal
   // to show. Rather than an empty page or a fake "for you", it shows recent
@@ -88,7 +94,9 @@ export function MySpace() {
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, 4);
 
-  const followedWork = publicFeed.filter((p) => followed.has(p.creator)).slice(0, 4);
+  const exploringWork = publicFeed
+    .filter((p) => (p.subHobby && exploring.has(p.subHobby)) || exploring.has(`space:${p.hobbySlug}`))
+    .slice(0, 4);
 
   const savedWork = journal.saved
     .map((id) => posts.find((p) => p.id === id))
@@ -114,14 +122,13 @@ export function MySpace() {
             Today in your space
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            New work from people and Circles you follow.
+            New work from the hobbies and Circles you're part of.
           </p>
 
           {!hasChosen && (
             <p className="mt-3 rounded-xl border border-[var(--hairline)] bg-card px-4 py-2.5 text-xs leading-relaxed text-muted-foreground">
-              You haven't followed anyone or joined a Circle yet, so this is
-              recent work from across NoSpace. Once you choose, only what you
-              chose appears here.
+              You aren't exploring any hobbies or Circles yet, so this is recent
+              work from across NoSpace. Once you pick some, only those appear here.
             </p>
           )}
 
@@ -246,18 +253,18 @@ export function MySpace() {
         </Section>
 
         <Section
-          title="People you follow"
-          copy="Their latest work, newest first."
+          title="Hobbies you're exploring"
+          copy="New work in the hobbies you chose to keep up with."
           action={{ label: "Manage", to: "/you" }}
         >
-          {followedWork.length === 0 ? (
-            <Empty to="/discover" cta="Find makers">
-              Following someone is how you keep up with a project over months
-              rather than catching one finished photo of it.
+          {exploringWork.length === 0 ? (
+            <Empty to="/discover" cta="Find a hobby">
+              Keep exploring attaches you to a hobby rather than a person — so
+              you see the craft develop, not somebody's posting habits.
             </Empty>
           ) : (
             <div className="columns-1 gap-4 sm:columns-2">
-              {followedWork.map((post) => (
+              {exploringWork.map((post) => (
                 <ContentCard key={post.id} post={post} />
               ))}
             </div>
@@ -265,8 +272,8 @@ export function MySpace() {
         </Section>
 
         <Section
-          title="Projects worth following"
-          copy="Ongoing work across NoSpace — more than one entry, still moving."
+          title="Projects still moving"
+          copy="Ongoing work across NoSpace you could be part of."
           action={{ label: "Discover", to: "/discover" }}
         >
           <ul className="grid gap-3 sm:grid-cols-3">

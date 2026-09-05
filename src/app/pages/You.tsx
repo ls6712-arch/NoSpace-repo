@@ -11,6 +11,9 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { CirclesJoined } from "../components/CirclesJoined";
+import { AvatarPicker } from "../components/AvatarPicker";
+import { useSocial } from "../context/SocialContext";
+import { subHobbyLabel } from "../data/hobbies";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
@@ -42,6 +45,8 @@ export function You() {
   const { points, stats } = useRewards();
   const { joinedCircleIds, posts } = useContent();
   const journal = useJournal();
+  const social = useSocial();
+  const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const { user, profile, isConfigured, signOut } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
   const [circlesVisible, setCirclesVisible] = useState(true);
@@ -90,10 +95,15 @@ export function You() {
         </div>
 
         {/* Who you are, and how much you've done */}
+        <div className="mb-5">
+          <AvatarPicker
+            name={displayName}
+            url={avatar ?? profile?.avatar_url}
+            onChange={setAvatar}
+          />
+        </div>
+
         <div className="mb-5 flex items-center gap-5 sm:gap-6">
-          <Avatar className="size-20 shrink-0 sm:size-24">
-            <AvatarFallback className="text-xl">{user ? initials : "YOU"}</AvatarFallback>
-          </Avatar>
           <div className="min-w-0">
             <h2
               className="truncate text-3xl leading-tight sm:text-4xl"
@@ -169,7 +179,7 @@ export function You() {
             <TabsTrigger value="work">Your work</TabsTrigger>
             <TabsTrigger value="private">Private logs</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
-            <TabsTrigger value="following">People you follow</TabsTrigger>
+            <TabsTrigger value="following">Exploring</TabsTrigger>
             <TabsTrigger value="circles">Your Circles</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -239,33 +249,44 @@ export function You() {
           </TabsContent>
 
           <TabsContent value="following">
-            {journal.following.length === 0 ? (
+            {social.followedHobbies.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
                 <UserRound className="mx-auto mb-3 size-5 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  You're not following anyone yet. Following a maker brings their
-                  updates into My Space.
+                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+                  You're not exploring any hobbies yet. "Keep exploring" attaches
+                  you to a hobby — pottery, film photography, sourdough — rather
+                  than to a person, and their new work turns up in My Space.
                 </p>
+                <Link to="/discover" className="mt-4 inline-block">
+                  <Button variant="outline" size="sm">Find a hobby</Button>
+                </Link>
               </div>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2">
-                {journal.following.map((name) => (
-                  <li
-                    key={name}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
-                  >
-                    <span className="truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                      {name}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => toggleFollowing(name)}
-                      className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
+                {social.followedHobbies.map((key) => {
+                  const isSpace = key.startsWith("space:");
+                  const slug = isSpace ? key.slice(6) : key;
+                  const label = isSpace
+                    ? getHobby(slug)?.name ?? slug
+                    : subHobbyLabel(slug) ?? slug;
+                  return (
+                    <li
+                      key={key}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
                     >
-                      Unfollow
-                    </button>
-                  </li>
-                ))}
+                      <span className="truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                        {label}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => social.toggleHobbyFollow(key, label)}
+                        className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
+                      >
+                        Stop exploring
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </TabsContent>

@@ -12,6 +12,7 @@ export interface Profile {
   id: string;
   username: string;
   display_name: string;
+  avatar_url?: string;
 }
 
 interface AuthContextType {
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, display_name")
+      .select("id, username, display_name, avatar_url")
       .eq("id", userId)
       .maybeSingle();
     setProfile(data as Profile | null);

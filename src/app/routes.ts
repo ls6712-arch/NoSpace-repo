@@ -13,6 +13,7 @@ import { MySpace } from "./pages/MySpace";
 import { Circles } from "./pages/Circles";
 import { Log } from "./pages/Log";
 import { You } from "./pages/You";
+import { Messages } from "./pages/Messages";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Shop } from "./pages/Shop";
@@ -31,6 +32,7 @@ export const router = createHashRouter([
       { path: "circles", Component: Circles },
       { path: "log", Component: Log },
       { path: "you", Component: You },
+      { path: "messages", Component: Messages },
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
       { path: "space/:slug", Component: CategoryFeed },
       { path: "u/:username", Component: PublicProfile },

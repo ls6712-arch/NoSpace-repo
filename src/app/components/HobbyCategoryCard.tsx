@@ -1,7 +1,8 @@
 import { Link } from "react-router";
-import { ArrowUpRight, Users } from "lucide-react";
+import { ArrowUpRight, Activity } from "lucide-react";
 import { Hobby } from "../data/hobbies";
 import { GeneratedArt } from "./GeneratedArt";
+import { useHobbyActivity } from "./HobbyActivity";
 
 /**
  * Hover is a single coordinated gesture rather than four unrelated effects:
@@ -12,6 +13,7 @@ import { GeneratedArt } from "./GeneratedArt";
  * focus gets the same treatment via focus-visible on the link.
  */
 export function HobbyCategoryCard({ hobby }: { hobby: Hobby }) {
+  const stats = useHobbyActivity(hobby.slug);
   return (
     <Link
       to={`/space/${hobby.slug}`}
@@ -30,8 +32,12 @@ export function HobbyCategoryCard({ hobby }: { hobby: Hobby }) {
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--forest-ink)] from-0% via-[var(--forest-ink)]/25 via-42% to-transparent to-70%" />
 
         <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-[var(--forest-ink)]/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-md transition-transform duration-[280ms] ease-out group-hover:-translate-y-0.5">
-          <Users className="size-3" />
-          <span className="font-hud">{hobby.creatorCount}</span> creators
+          <Activity className="size-3" />
+          {stats.newThisWeek > 0
+            ? `${stats.newThisWeek} new this week`
+            : stats.upcoming > 0
+              ? `${stats.upcoming} coming up`
+              : "Quiet this week"}
         </div>
 
         <div className="absolute inset-x-0 bottom-0 p-5">
