@@ -13,6 +13,8 @@ import { Post } from "../data/posts";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { getCircle } from "../data/circles";
 import { useContent } from "../context/ContentContext";
+import { PostReactions } from "./PostReactions";
+import { Thoughts } from "./Thoughts";
 import { attachEntry, startProject, useJournal } from "../lib/journal";
 import { PostMedia } from "./PostMedia";
 import { Button } from "./ui/button";
@@ -108,7 +110,12 @@ export function MomentDetail({
   };
 
   const share = async () => {
-    const url = `${window.location.origin}${window.location.pathname}#/u/${encodeURIComponent(post.creator)}`;
+    // A link to this moment, not to the whole profile. Sharing "this" and
+    // handing someone a person's front page is a small betrayal of the verb.
+    const who = post.userId ?? post.creator;
+    const url = `${window.location.origin}${window.location.pathname}#/u/${encodeURIComponent(
+      who,
+    )}?moment=${post.id}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -145,6 +152,19 @@ export function MomentDetail({
               className="w-full"
             />
           </div>
+        )}
+
+        {!editing && (
+          <>
+            <PostReactions postId={post.id} />
+            <Thoughts
+              postId={post.id}
+              postOwnerId={post.userId}
+              postOwnerName={post.creator}
+              isOwner={owned}
+              privateThoughts={post.thoughtsPrivate}
+            />
+          </>
         )}
 
         {editing ? (

@@ -227,9 +227,19 @@ export function Log() {
       .filter(Boolean)
       .join("\n\n");
     if (!note && !file) return;
+    // A project named on the moment screen used to be dropped entirely when
+    // you kept the moment private — the name was typed, then silently lost.
+    let linkTo = projectId;
+    if (!linkTo && projectTitle.trim()) {
+      linkTo = startProject({
+        title: projectTitle.trim(),
+        hobbySlug,
+        subHobby: subHobby || undefined,
+      }).id;
+    }
     addPrivateLog(
       note || `A ${tagLabel.toLowerCase()} moment`,
-      projectId || undefined,
+      linkTo || undefined,
       // The picture is the point of a wordless capture. It used to be dropped
       // here and replaced with a generated placeholder, which read as the app
       // losing the moment you'd just taken.

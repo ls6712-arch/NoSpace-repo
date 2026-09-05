@@ -7,7 +7,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export function Login() {
-  const { user, signIn, signUp, isConfigured } = useAuth();
+  const { user, signIn, signUp, resetPassword, isConfigured } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
@@ -18,16 +18,58 @@ export function Login() {
     if (user) navigate(redirectTo, { replace: true });
   }, [user]);
 
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  // The nav button says "Log in", so ?mode=signin lands on the login form.
+  // It used to always open Sign up, and the only way back was a small link
+  // at the bottom of the page.
+  const [mode, setMode] = useState<"signin" | "signup">(
+    searchParams.get("mode") === "signin" ? "signin" : "signup",
+  );
+  const [resetSent, setResetSent] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Checked here as well as by the browser, because an account created with
+  // a typo'd address can never be recovered — there's nowhere to send the
+  // reset mail.
+  const validate = () => {
+    const mail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) {
+      return "That doesn't look like an email address.";
+    }
+    if (password.length < 8) {
+      return "Your password needs at least 8 characters.";
+    }
+    if (mode === "signup" && !displayName.trim()) {
+      return "What should people call you?";
+    }
+    return null;
+  };
+
+  const sendReset = async () => {
+    const mail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) {
+      setError("Type your email address above first, then tap this again.");
+      return;
+    }
+    setError(null);
+    setSubmitting(true);
+    const res = await resetPassword(mail);
+    setSubmitting(false);
+    if (res.error) setError(res.error);
+    else setResetSent(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+    const invalid = validate();
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
@@ -119,10 +161,29 @@ export function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              minLength={6}
+              minLength={8}
               required
             />
+            {mode === "signup" && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">At least 8 characters.</p>
+            )}
+            {mode === "signin" && (
+              <button
+                type="button"
+                onClick={sendReset}
+                className="mt-2 text-xs text-[var(--coral-text)] hover:underline"
+              >
+                Forgot your password?
+              </button>
+            )}
           </div>
+
+          {resetSent && (
+            <p className="rounded-xl border border-[var(--hairline)] bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+              If there's an account for that address, a reset link is on its way.
+              Check your spam folder if it doesn't arrive.
+            </p>
+          )}
 
           {error && (
             <div className="flex items-start gap-2 rounded-xl border border-[var(--coral)]/30 bg-[var(--coral)]/10 px-3 py-2.5 text-xs text-[var(--coral)]">

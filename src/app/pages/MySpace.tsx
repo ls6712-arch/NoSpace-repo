@@ -77,10 +77,16 @@ export function MySpace() {
   // nobody yet, it falls back to the spaces your Circles live in rather than
   // pretending an algorithm knows you.
   // What you chose is a set of hobbies and Circles — never a set of people.
+  // A hobby you typed yourself is followed as "interest:<lowercased>", and
+  // matches posts whose own free-text interest says the same thing.
+  const ownInterests = new Set(
+    [...exploring].filter((k) => k.startsWith("interest:")).map((k) => k.slice(9)),
+  );
   const chosen = publicFeed.filter(
     (p) =>
       (p.subHobby && exploring.has(p.subHobby)) ||
       exploring.has(`space:${p.hobbySlug}`) ||
+      (p.interest && ownInterests.has(p.interest.trim().toLowerCase())) ||
       joinedSpaces.has(p.hobbySlug),
   );
   // Before you've followed anyone or joined anything there is nothing personal

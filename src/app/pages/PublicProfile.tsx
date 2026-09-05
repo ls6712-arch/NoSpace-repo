@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { Plus } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -12,6 +12,7 @@ import { PersonActions } from "../components/PersonActions";
 import { HobbyShelf, sessionsFromPosts } from "../components/HobbyShelf";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { PostMedia } from "../components/PostMedia";
+import { MomentDetail } from "../components/MomentDetail";
 import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
 
 /**
@@ -29,11 +30,16 @@ import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
 export function PublicProfile() {
   const { username = "" } = useParams();
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "missing" }
     | { status: "ready"; personId: string; displayName: string; avatarUrl?: string; posts: Post[] }
   >({ status: "loading" });
+  // Opening a piece is how you react to it or leave a thought. Declared up
+  // here with the other hooks — anything after the early returns below would
+  // run conditionally, which React forbids.
+  const [openPost, setOpenPost] = useState<Post | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -152,6 +158,22 @@ export function PublicProfile() {
   const { personId, displayName, avatarUrl, posts } = state;
   const isMe = !!user && user.id === personId;
   const sessions = sessionsFromPosts(posts);
+
+  // Focusing a hobby narrows THEIR work on THEIR page. It used to navigate to
+  // the global Space, which showed the viewer their own empty version.
+  const focusKey = searchParams.get("hobby");
+  const setFocus = (key: string | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (key) next.set("hobby", key);
+    else next.delete("hobby");
+    setSearchParams(next, { replace: true });
+  };
+  // A shared link carries ?moment=<id>; open it once the posts have loaded.
+  const momentParam = searchParams.get("moment");
+  const focused = sessions.find((s) => s.key === focusKey);
+  const shownPosts = focused
+    ? posts.filter((p) => (p.subHobby ?? `space:${p.hobbySlug}`) === focused.key)
+    : posts;
   const totalSessions = posts.length;
   const initials = displayName
     .split(" ")
@@ -236,21 +258,38 @@ export function PublicProfile() {
 
         {sessions.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
-            {sessions.slice(0, 6).map((s) => (
-              <Link
-                key={s.key}
-                to={s.subSlug ? `/space/${s.hobbySlug}?hobby=${s.subSlug}` : `/space/${s.hobbySlug}`}
-                className="rounded-full border border-border bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-                style={{ fontFamily: "var(--font-serif)" }}
-              >
-                {s.label}
-              </Link>
-            ))}
+            {sessions.slice(0, 6).map((s) => {
+              const on = focusKey === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setFocus(on ? null : s.key)}
+                  className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
+                    on
+                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                      : "border-border bg-white/[0.04] text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                  }`}
+                  style={{ fontFamily: "var(--font-serif)" }}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
           </div>
         )}
 
         <div className="mb-9">
-          <HobbyShelf items={sessions} />
+          {/* Their books stay on their profile. These used to link into your
+              own archive, so tapping someone's Workbench showed you your own
+              empty Space instead of their work. */}
+          <HobbyShelf
+            items={sessions}
+            linkTo={(item) => `?hobby=${encodeURIComponent(item.key)}`}
+            emptyCopy={`${displayName} hasn't shared any work publicly yet.`}
+            emptyCta={false}
+          />
         </div>
 
         <div className="mb-9">
@@ -262,12 +301,36 @@ export function PublicProfile() {
 
         {posts.length > 0 && (
           <div className="mb-10">
-            <h2 className="mb-3 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              {displayName.split(" ")[0]}'s work
-            </h2>
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
+              <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                {focused
+                  ? `${displayName.split(" ")[0]}'s ${focused.label.toLowerCase()}`
+                  : `${displayName.split(" ")[0]}'s work`}
+              </h2>
+              {focused && (
+                <button
+                  type="button"
+                  onClick={() => setFocus(null)}
+                  className="text-xs text-[var(--coral-text)] hover:underline"
+                >
+                  Show everything
+                </button>
+              )}
+            </div>
+            {shownPosts.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
+                Nothing public here yet.
+              </p>
+            ) : (
             <div className="grid grid-cols-3 gap-1.5">
-              {posts.slice(0, 12).map((post) => (
-                <div key={post.id} className="aspect-square overflow-hidden rounded-md">
+              {shownPosts.slice(0, 12).map((post) => (
+                <button
+                  key={post.id}
+                  type="button"
+                  onClick={() => setOpenPost(post)}
+                  className="aspect-square overflow-hidden rounded-md transition-transform duration-200 hover:scale-[1.03]"
+                  aria-label={`Open: ${post.caption.slice(0, 60)}`}
+                >
                   <PostMedia
                     media={post.media}
                     type={post.type}
@@ -275,11 +338,26 @@ export function PublicProfile() {
                     seed={post.id}
                     className="h-full w-full object-cover"
                   />
-                </div>
+                </button>
               ))}
             </div>
+            )}
           </div>
         )}
+
+        <MomentDetail
+          post={openPost ?? (momentParam ? (posts.find((p) => String(p.id) === momentParam) ?? null) : null)}
+          owned={isMe}
+          onOpenChange={(o) => {
+            if (o) return;
+            setOpenPost(null);
+            if (momentParam) {
+              const next = new URLSearchParams(searchParams);
+              next.delete("moment");
+              setSearchParams(next, { replace: true });
+            }
+          }}
+        />
 
         {/* The one place this page asks for anything */}
         <div className="glass-panel rounded-3xl p-7 text-center">

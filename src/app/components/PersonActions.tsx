@@ -48,6 +48,7 @@ export function PersonActions({
   const [chosenHobby, setChosenHobby] = useState<string | null>(null);
   const [chosenSpace, setChosenSpace] = useState<string>("");
   const [newSpaceName, setNewSpaceName] = useState("");
+  const [ownInterest, setOwnInterest] = useState("");
 
   useEffect(() => {
     if (!open) {
@@ -57,6 +58,7 @@ export function PersonActions({
       setBusy(false);
       setChosenHobby(null);
       setNewSpaceName("");
+      setOwnInterest("");
       setPane(null);
     }
   }, [open]);
@@ -241,7 +243,7 @@ export function PersonActions({
                     hobby itself — {personName ?? "they"} won't be notified, and
                     you aren't following them.
                   </p>
-                  <ul className="max-h-64 space-y-1 overflow-y-auto">
+                  <ul className="max-h-52 space-y-1 overflow-y-auto">
                     {exploreOptions.map((o) => {
                       const following = social.isFollowingHobby(o.key);
                       return (
@@ -265,6 +267,33 @@ export function PersonActions({
                       );
                     })}
                   </ul>
+                  {/* The list is what they happen to work in — never the set of
+                      hobbies that exist. Anything you can name, you can follow. */}
+                  <div className="border-t border-[var(--hairline)] pt-4">
+                    <label htmlFor="explore-own" className="mb-2 block text-sm">
+                      Not listed? Enter your own
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="explore-own"
+                        value={ownInterest}
+                        maxLength={40}
+                        onChange={(e) => setOwnInterest(e.target.value)}
+                        placeholder="Pottery, bouldering, sourdough…"
+                      />
+                      <Button
+                        variant="outline"
+                        disabled={!ownInterest.trim()}
+                        onClick={() => {
+                          const label = ownInterest.trim();
+                          startExplore(`interest:${label.toLowerCase()}`, label);
+                          setOwnInterest("");
+                        }}
+                      >
+                        Explore
+                      </Button>
+                    </div>
+                  </div>
                   {done && <p className="text-center text-xs text-muted-foreground">{done}</p>}
                 </>
               )}
@@ -416,7 +445,10 @@ export function PersonActions({
 
                       <div>
                         <label htmlFor="inv-hobby" className="mb-2 block text-sm">
-                          What's it about? <span className="text-muted-foreground">(optional)</span>
+                          What's it about?{" "}
+                          <span className="text-muted-foreground">
+                            (optional — type anything)
+                          </span>
                         </label>
                         <Input
                           id="inv-hobby"

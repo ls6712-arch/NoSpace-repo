@@ -119,10 +119,13 @@ function HobbyBook({
   item,
   index,
   count,
+  linkTo,
 }: {
   item: HobbySession;
   index: number;
   count: number;
+  /** Where this book opens. Defaults to your own archive. */
+  linkTo?: (item: HobbySession) => string;
 }) {
   const [photoFailed, setPhotoFailed] = useState(false);
   const photo = photoFailed ? undefined : hobbyPhoto(item.subSlug ?? "", item.hobbySlug, 600);
@@ -135,7 +138,7 @@ function HobbyBook({
 
   return (
     <Link
-      to={`/you/work/${archiveKey(item)}`}
+      to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`}
       title={`${item.label} — ${item.sessions} ${item.sessions === 1 ? "moment" : "moments"}, ${updatedLabel(item.lastAt).toLowerCase()}`}
       className="group relative block origin-top transition-transform duration-300 ease-out hover:z-20 hover:-translate-y-2 hover:rotate-0 focus-visible:z-20 focus-visible:-translate-y-2 focus-visible:rotate-0"
       style={{
@@ -212,7 +215,22 @@ function HobbyBook({
  * comes from the stacking and the label bands, and every book is a link into
  * that hobby's own archive.
  */
-export function HobbyShelf({ items: override }: { items?: HobbySession[] } = {}) {
+export function HobbyShelf({
+  items: override,
+  linkTo,
+  emptyCopy,
+  emptyCta = true,
+}: {
+  items?: HobbySession[];
+  /**
+   * Where each book opens. On your own profile that's your archive; on
+   * someone else's it has to stay on their profile, or you end up looking at
+   * your own empty Space wondering where their work went.
+   */
+  linkTo?: (item: HobbySession) => string;
+  emptyCopy?: string;
+  emptyCta?: boolean;
+} = {}) {
   const derived = useSessionsByHobby();
   const items = override ?? derived;
 
@@ -220,15 +238,17 @@ export function HobbyShelf({ items: override }: { items?: HobbySession[] } = {})
     return (
       <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
         <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-          Your shelf is empty. Every hobby you log gets its own book here, with
-          everything you've made in it inside.
+          {emptyCopy ??
+            "Your shelf is empty. Every hobby you log gets its own book here, with everything you've made in it inside."}
         </p>
-        <Link
-          to="/log"
-          className="mt-4 inline-block rounded-full px-5 py-2 text-sm text-white [background-color:var(--coral-deep)]"
-        >
-          Log your first moment
-        </Link>
+        {emptyCta && (
+          <Link
+            to="/log"
+            className="mt-4 inline-block rounded-full px-5 py-2 text-sm text-white [background-color:var(--coral-deep)]"
+          >
+            Log your first moment
+          </Link>
+        )}
       </div>
     );
   }
@@ -258,7 +278,7 @@ export function HobbyShelf({ items: override }: { items?: HobbySession[] } = {})
             {/* The stack. Extra right padding leaves room for the fan-out. */}
             <div className="relative pr-8">
               {books.map((item, i) => (
-                <HobbyBook key={item.key} item={item} index={i} count={books.length} />
+                <HobbyBook key={item.key} item={item} index={i} count={books.length} linkTo={linkTo} />
               ))}
             </div>
           </section>

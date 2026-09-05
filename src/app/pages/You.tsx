@@ -20,6 +20,7 @@ import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { ContentCard } from "../components/ContentCard";
 import { removePrivateLog, useJournal } from "../lib/journal";
+import { AccountSettings } from "../components/AccountSettings";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -58,8 +59,10 @@ export function You() {
   const sessions = useSessionsByHobby();
   const totalSessions = sessions.reduce((n, s) => n + s.sessions, 0);
 
-  const displayName = profile?.display_name || "You";
-  const initials = displayName
+  // Never abbreviate the placeholder: "You" becomes a meaningless "Y".
+  const realName = profile?.display_name?.trim();
+  const displayName = realName || "You";
+  const initials = (realName ?? "")
     .split(" ")
     .map((p) => p[0])
     .join("")
@@ -193,6 +196,11 @@ export function You() {
           </TabsContent>
 
           <TabsContent value="private">
+            <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+              Kept here and nowhere else. Private logs never appear in a Space,
+              a feed, or your public shelf — which is why they can look missing
+              if you go looking for them there.
+            </p>
             {journal.privateLogs.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
                 <Lock className="mx-auto mb-3 size-5 text-muted-foreground" />
@@ -275,10 +283,14 @@ export function You() {
               <ul className="grid gap-2 sm:grid-cols-2">
                 {social.followedHobbies.map((key) => {
                   const isSpace = key.startsWith("space:");
-                  const slug = isSpace ? key.slice(6) : key;
-                  const label = isSpace
-                    ? getHobby(slug)?.name ?? slug
-                    : subHobbyLabel(slug) ?? slug;
+                  // A hobby someone typed themselves, e.g. "interest:bouldering".
+                  const isOwn = key.startsWith("interest:");
+                  const slug = isSpace ? key.slice(6) : isOwn ? key.slice(9) : key;
+                  const label = isOwn
+                    ? slug.replace(/\b\w/g, (c) => c.toUpperCase())
+                    : isSpace
+                      ? getHobby(slug)?.name ?? slug
+                      : subHobbyLabel(slug) ?? slug;
                   return (
                     <li
                       key={key}
@@ -327,17 +339,7 @@ export function You() {
 
           <TabsContent value="settings">
             <div className="space-y-3">
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <div className="mb-1 flex items-center gap-2 text-sm">
-                  <Settings className="size-4 text-muted-foreground" />
-                  Account
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {user
-                    ? `Signed in as ${profile?.username ?? displayName}.`
-                    : "You're browsing without an account — nothing here is saved beyond this browser."}
-                </p>
-              </div>
+              <AccountSettings />
               <div className="rounded-2xl border border-border bg-card p-4">
                 <div className="mb-1 text-sm">Who sees your Circles</div>
                 <button

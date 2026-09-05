@@ -67,6 +67,11 @@ export function InterestField({
         onBlur={() => window.setTimeout(() => setFocused(false), 150)}
         placeholder={placeholder}
       />
+      {!value.trim() && !focused && (
+        <p className="mt-1.5 text-[11px] text-muted-foreground">
+          Anything you like — not listed? Enter your own.
+        </p>
+      )}
 
       {value.trim() && (
         <p className="mt-1.5 text-[11px] text-muted-foreground">
@@ -81,8 +86,8 @@ export function InterestField({
         </p>
       )}
 
-      {focused && suggestions.length > 0 && (
-        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-52 overflow-y-auto rounded-2xl border border-border bg-popover py-1 shadow-xl">
+      {focused && (suggestions.length > 0 || query.length > 0) && (
+        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border border-border bg-popover py-1 shadow-xl">
           {suggestions.map((s) => (
             <li key={s}>
               <button
@@ -98,6 +103,26 @@ export function InterestField({
               </button>
             </li>
           ))}
+
+          {/* The suggestions are a convenience, never a list you must pick
+              from. Saying so out loud stops people abandoning a hobby that
+              isn't offered — which is most of them. */}
+          <li className="border-t border-[var(--hairline)] px-4 py-2.5">
+            {query.length > 0 && !exact ? (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setFocused(false)}
+                className="text-left text-xs text-[var(--coral-text)]"
+              >
+                Use “{value.trim()}” — your own
+              </button>
+            ) : (
+              <span className="text-[11px] text-muted-foreground">
+                Not listed? Just type your own.
+              </span>
+            )}
+          </li>
         </ul>
       )}
     </div>

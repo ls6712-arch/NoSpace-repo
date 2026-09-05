@@ -288,9 +288,19 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     });
     if (error) return { error: error.message };
 
+    // actor_name is what the bell renders in bold before the body; without
+    // it a request read "wants to connect" with no idea who from.
+    const me = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    const myName = (me.data as any)?.display_name?.trim() || "Someone";
+
     await supabase.from("notifications").insert({
       user_id: personId,
       kind: "connect_request",
+      actor_name: myName,
       body: note?.trim()
         ? `wants to connect: "${note.trim().slice(0, 120)}"`
         : "wants to connect with you.",
@@ -316,9 +326,15 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       .eq("id", id);
 
     if (accept) {
+      const me = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .maybeSingle();
       await supabase.from("notifications").insert({
         user_id: target.requester,
         kind: "connect_accepted",
+        actor_name: (me.data as any)?.display_name?.trim() || "Someone",
         body: "accepted your connection. You can message each other now.",
         href: "/inbox",
       });
@@ -397,9 +413,15 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     }
 
     const space = spaces.find((s) => s.id === spaceId);
+    const me = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle();
     await supabase.from("notifications").insert({
       user_id: personId,
       kind: "space_invite",
+      actor_name: (me.data as any)?.display_name?.trim() || "Someone",
       body: `invited you to ${space?.name ?? "a Space"}.`,
       href: "/inbox",
     });

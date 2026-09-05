@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { MessagesSquare, Package, Plus, Search, ShoppingBag, Sparkle, User, X } from "lucide-react";
+import { MessagesSquare, Package, Plus, Search, ShoppingBag, Sparkle, User, UserRound, X } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { hobbies } from "../data/hobbies";
@@ -45,7 +45,8 @@ function AccountMenu() {
 
   if (!user) {
     return (
-      <Link to="/login">
+      // The button says Log in, so it opens the login form rather than sign-up.
+      <Link to="/login?mode=signin">
         <Button variant="outline" size="sm">
           Log in
         </Button>
@@ -53,13 +54,20 @@ function AccountMenu() {
     );
   }
 
-  const name = profile?.display_name || "You";
+  // Until the profile row arrives there is no name to abbreviate. It used to
+  // fall back to "You", so the avatar flashed a stray "Y" that belonged to
+  // nobody — worse than showing nothing for a moment.
+  const name = profile?.display_name?.trim();
 
   return (
     <Link to="/you" aria-label="You — your work, saved ideas, and settings" title="You">
       <Avatar className="size-8">
-        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />}
-        <AvatarFallback className="text-[11px]">{initials(name)}</AvatarFallback>
+        {profile?.avatar_url && (
+          <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />
+        )}
+        <AvatarFallback className="text-[11px]">
+          {name ? initials(name) : <UserRound className="size-4 text-muted-foreground" />}
+        </AvatarFallback>
       </Avatar>
     </Link>
   );

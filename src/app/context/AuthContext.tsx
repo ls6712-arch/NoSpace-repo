@@ -25,6 +25,8 @@ interface AuthContextType {
   isConfigured: boolean;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (next: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -36,14 +38,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  const loadProfile = async (userId: string) => {
+  /**
+   * Reads the profile row. The row is created by a database trigger the
+   * moment an account is made, so right after signup it can be missing, or
+   * present with the email-derived placeholder name the trigger sets before
+   * our own update lands. Either way the person's first impression used to be
+   * the app getting their name wrong, so this retries briefly.
+   */
+  const loadProfile = async (userId: string, expectName?: string) => {
     if (!supabase) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, username, display_name, avatar_url")
-      .eq("id", userId)
-      .maybeSingle();
-    setProfile(data as Profile | null);
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .eq("id", userId)
+        .maybeSingle();
+      const row = data as Profile | null;
+      if (row) {
+        setProfile(row);
+        // Settled if we weren't waiting for a particular name, or it arrived.
+        if (!expectName || row.display_name?.trim() === expectName.trim()) return;
+      }
+      await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+    }
   };
 
   useEffect(() => {
@@ -92,10 +109,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // default name derived from the email; overwrite it with what they typed.
     if (data.user && displayName.trim()) {
       try {
+        // The trigger may not have created the row yet, so upsert rather than
+        // update — an update against a missing row silently changes nothing,
+        // which is how people ended up named after their email address.
         await supabase
           .from("profiles")
-          .update({ display_name: displayName.trim() })
-          .eq("id", data.user.id);
+          .upsert({ id: data.user.id, display_name: displayName.trim() }, { onConflict: "id" });
+        // Read it back before returning, so the first screen after signup
+        // already has the right name rather than correcting itself later.
+        await loadProfile(data.user.id, displayName.trim());
       } catch {
         // The account exists either way; they can rename themselves in
         // Settings. Failing the whole sign-up over a name would be worse.
@@ -108,6 +130,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return { error: "Accounts aren't set up for this build yet." };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? error.message : null };
+  };
+
+  /**
+   * Sends the reset mail. Deliberately reports success either way at the UI
+   * layer, so this can't be used to find out which addresses have accounts.
+   */
+  const resetPassword: AuthContextType["resetPassword"] = async (email) => {
+    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}${window.location.pathname}#/you`,
+      });
+      return { error: error ? error.message : null };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
+  /** Changing your own password, from Settings, while signed in. */
+  const updatePassword: AuthContextType["updatePassword"] = async (next) => {
+    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    if (next.length < 8) return { error: "Your password needs at least 8 characters." };
+    try {
+      const { error } = await supabase.auth.updateUser({ password: next });
+      return { error: error ? error.message : null };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
   };
 
   const signOut = async () => {
@@ -137,6 +187,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isConfigured: isSupabaseConfigured,
         signUp,
         signIn,
+        resetPassword,
+        updatePassword,
         signOut,
         refreshProfile,
       }}
