@@ -1,15 +1,17 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { Heart, Hand, Sparkles, Bookmark, Lightbulb, ArrowUp } from "lucide-react";
 import { toggleSaved, useJournalSlice } from "../lib/journal";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 
 /**
- * The five NoSpace reactions, plus Save as a sixth cell in the same grid.
+ * The five NoSpace reactions, plus Try This as a sixth cell in the same grid.
  * Deliberately not Like / Love / Nice work — each one means something
  * different about what the viewer intends, which is the whole point: a
  * reaction here tells the maker something useful rather than incrementing a
- * number. Save is the odd one out — it's for the viewer, and the maker never
- * sees it — but it belongs in the grid rather than floating on the photo.
+ * number. Try This is the odd one out — it's for the viewer, and the maker
+ * never sees it — but it belongs in the grid rather than floating on the
+ * photo. It's a nudge to go make the thing yourself, not a task: no due
+ * date, no streak, nothing tracking whether you followed through.
  */
 export const REACTIONS = [
   { id: "love", label: "Love this", icon: Heart, meaning: "appreciation" },
@@ -163,37 +165,65 @@ export function PostReactions({
         );
       })}
 
-      {/* Save is one of the six, not a separate control floating on the photo. */}
+      {/* Try This is one of the six, not a separate control floating on the photo. */}
       <li>
-        <SaveReaction postId={postId} compact={compact} />
+        <TryThisAction postId={postId} compact={compact} />
       </li>
     </ul>
   );
 }
 
-function SaveReaction({ postId, compact = false }: { postId: string | number; compact?: boolean }) {
+/**
+ * Try This saves the creation to the viewer's own Space (the same journal
+ * "saved" list that already backed the old Save button — see lib/journal.ts)
+ * so it turns up under "Ready When You Are" on My Space. It's an invitation
+ * to go make the thing, not a task: clicking it never creates a deadline,
+ * streak, or to-do — just a brief, dismissing-itself confirmation.
+ */
+function TryThisAction({ postId, compact = false }: { postId: string | number; compact?: boolean }) {
   const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
+  const [justAdded, setJustAdded] = useState(false);
+
+  function handleClick() {
+    const wasSaved = saved;
+    toggleSaved(Number(postId));
+    if (!wasSaved) {
+      setJustAdded(true);
+      window.setTimeout(() => setJustAdded(false), 2200);
+    }
+  }
+
   return (
-    <button
-      type="button"
-      aria-pressed={saved}
-      aria-label={saved ? "Saved: keep it to come back to" : "Save: keep it to come back to"}
-      title="Save: keep it to come back to"
-      onClick={() => toggleSaved(Number(postId))}
-      className={`flex w-full items-center rounded-full border border-[var(--border)] bg-surface text-foreground transition-colors duration-150 hover:border-[var(--foreground)]/35 ${
-        compact ? "justify-center gap-1 px-2 py-2 text-[13px]" : "gap-2 px-3 py-2 text-[13px]"
-      }`}
-    >
-      <Bookmark
-        className="size-4 shrink-0"
-        strokeWidth={1.9}
-        style={{
-          color: saved ? TINT.save : "var(--foreground-muted)",
-          fill: saved ? TINT.save : "none",
-        }}
-        aria-hidden="true"
-      />
-      {saved ? "Saved" : "Save"}
-    </button>
+    <div className="relative">
+      {justAdded && (
+        <span
+          role="status"
+          className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-[var(--forest-ink)] px-2.5 py-1 text-[11px] text-white shadow-md animate-in fade-in slide-in-from-bottom-1"
+        >
+          Added to your Space
+        </span>
+      )}
+      <button
+        type="button"
+        aria-pressed={saved}
+        aria-label={saved ? "Added to your Space. Try This again to remove it" : "Try This: save it to come back to"}
+        title={saved ? "Added to your Space" : "Try This"}
+        onClick={handleClick}
+        className={`flex w-full items-center rounded-full border border-[var(--border)] bg-surface text-foreground transition-colors duration-150 hover:border-[var(--foreground)]/35 ${
+          compact ? "justify-center gap-1 px-2 py-2 text-[13px]" : "gap-2 px-3 py-2 text-[13px]"
+        }`}
+      >
+        <Bookmark
+          className="size-4 shrink-0"
+          strokeWidth={1.9}
+          style={{
+            color: saved ? TINT.save : "var(--foreground-muted)",
+            fill: saved ? TINT.save : "none",
+          }}
+          aria-hidden="true"
+        />
+        {saved ? "Added" : "Try This"}
+      </button>
+    </div>
   );
 }

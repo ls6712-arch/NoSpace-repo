@@ -143,7 +143,7 @@ function rankFeatured(posts: Post[], followedHobbies: string[], take: number): P
 }
 
 /** A light tile for the Featured Creations row — image, caption, creator,
- * and Save. Deliberately not a full ContentCard: no reaction grid, no
+ * and Try This. Deliberately not a full ContentCard: no reaction grid, no
  * counts, nothing that reads as a leaderboard entry. */
 function FeaturedCreationTile({ post }: { post: Post }) {
   const saved = useJournalSlice((s) => s.saved.includes(post.id));
@@ -162,7 +162,8 @@ function FeaturedCreationTile({ post }: { post: Post }) {
         <button
           type="button"
           aria-pressed={saved}
-          title={saved ? "Saved" : "Save"}
+          title={saved ? "Added to your Space" : "Try This"}
+          aria-label={saved ? "Added to your Space" : "Try This"}
           onClick={() => toggleSaved(post.id)}
           className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-md transition-colors hover:bg-[var(--forest-ink)]/75"
         >
