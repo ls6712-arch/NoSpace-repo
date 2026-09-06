@@ -4,17 +4,36 @@ import { Post } from "../data/posts";
 import { PostMedia } from "./PostMedia";
 import { Button } from "./ui/button";
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 15;
 
 function dateLabel(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 /**
- * The photo-forward grid on a profile's "Work" tab — a Space label, the
- * maker's own caption, and the date, under each photo. Deliberately not
- * ContentCard: no reaction grid here, and no counts next to the photo. This
- * is a record of what got made, not a place to keep score.
+ * A repeating rhythm of tile shapes, not a uniform grid — a feature moment,
+ * tall ones, wide ones, small ones, in a sequence that (with grid-auto-flow:
+ * dense) tessellates into an editorial composition rather than rows. Mobile
+ * gets its own, simpler rhythm on a 2-column base rather than the desktop
+ * shapes just shrinking in place.
+ */
+const TILE_SHAPES = [
+  "col-span-2 row-span-2 sm:col-span-2 sm:row-span-2",
+  "row-span-2 sm:row-span-2",
+  "row-span-1",
+  "col-span-2 row-span-1 sm:col-span-1 sm:row-span-1",
+  "row-span-1 sm:col-span-2 sm:row-span-1",
+  "row-span-2 sm:row-span-1",
+  "col-span-2 row-span-1 sm:col-span-1 sm:row-span-2",
+  "row-span-1",
+];
+
+/**
+ * Your Moments, as a personal visual journal rather than a feed: a large
+ * feature piece, tall ones, wide ones, mixed freely across hobbies — not
+ * grouped into rows by category, and never a same-size Instagram grid. Real
+ * photos crop to fill their tile; seed content and anything without an
+ * upload keeps NoSpace's own illustrated look. No counts anywhere on it.
  */
 export function WorkGrid({
   posts,
@@ -40,15 +59,15 @@ export function WorkGrid({
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {visible.map((post) => {
+      <div className="grid grid-cols-2 [grid-auto-flow:dense] auto-rows-[120px] gap-1.5 sm:grid-cols-4 sm:auto-rows-[150px]">
+        {visible.map((post, i) => {
           const hobby = getHobby(post.hobbySlug);
           return (
             <button
               key={post.id}
               type="button"
               onClick={() => onOpen(post)}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-left transition-transform duration-200 hover:-translate-y-0.5"
+              className={`group relative overflow-hidden rounded-lg border border-[var(--hairline)] text-left ${TILE_SHAPES[i % TILE_SHAPES.length]}`}
               aria-label={`Open: ${post.caption.slice(0, 60)}`}
             >
               <PostMedia
@@ -57,19 +76,18 @@ export function WorkGrid({
                 hobbySlug={post.hobbySlug}
                 seed={post.id}
                 preview
-                className="aspect-square w-full transition-transform duration-500 group-hover:scale-[1.04]"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
               />
-              <span className="flex flex-1 flex-col gap-1 p-3">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--forest-ink)]/85 via-[var(--forest-ink)]/5 to-transparent opacity-90" />
+              <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
                 {hobby && (
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--coral-text)]">
+                  <span className="text-[9px] font-medium uppercase tracking-wide text-white/75 sm:text-[10px]">
                     {hobby.shortName}
                   </span>
                 )}
-                <span className="line-clamp-2 text-sm text-foreground/90">{post.caption}</span>
-                <span className="mt-auto pt-1 text-[11px] text-muted-foreground">
-                  {dateLabel(post.createdAt)}
-                </span>
-              </span>
+                <p className="line-clamp-2 text-xs text-white sm:text-sm">{post.caption}</p>
+                <span className="mt-0.5 block text-[10px] text-white/65">{dateLabel(post.createdAt)}</span>
+              </div>
             </button>
           );
         })}

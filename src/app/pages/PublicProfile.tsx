@@ -11,14 +11,15 @@ import { usePeopleInHobby } from "../lib/people";
 import { sessionsFromPosts } from "../components/HobbyShelf";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { PersonActions } from "../components/PersonActions";
 import { HandwrittenNote } from "../components/HandwrittenNote";
 import { WorkGrid } from "../components/WorkGrid";
+import { PursuitCard } from "../components/PursuitCard";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { MomentDetail } from "../components/MomentDetail";
 import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
+import { fetchSharedPursuits, SharedPursuit } from "../lib/pursuitsRemote";
 
 /** Whichever Space shows up most in their posts — used to pick a Circles
  * suggestion and the closing banner's illustration, not to claim membership
@@ -58,6 +59,10 @@ export function PublicProfile() {
   // here with the other hooks — anything after the early returns below would
   // run conditionally, which React forbids.
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  // Only what this person explicitly marked shared — never their private
+  // Pursuits, which this query can't even see (sql/pursuits.sql's row
+  // security only returns shared=true rows to anyone but the owner).
+  const [sharedPursuits, setSharedPursuits] = useState<SharedPursuit[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +151,17 @@ export function PublicProfile() {
       clearTimeout(timer);
     };
   }, [username]);
+
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    let cancelled = false;
+    fetchSharedPursuits(state.personId).then((rows) => {
+      if (!cancelled) setSharedPursuits(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.status === "ready" ? state.personId : null]);
 
   if (state.status === "loading") {
     return (
@@ -303,17 +319,16 @@ export function PublicProfile() {
           </div>
         )}
 
-        <Tabs defaultValue="work">
-          <TabsList className="mb-6 flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
-            <TabsTrigger value="work">Their Work</TabsTrigger>
-            <TabsTrigger value="circles">Their Circles</TabsTrigger>
-            <TabsTrigger value="people">People They Make With</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="work">
+        {/* Their Moments and their shared Pursuits, side by side — the same
+            portfolio-first layout as the owner's own profile. A Pursuit
+            only ever shows up here when its owner explicitly shared it;
+            the section itself doesn't render at all when there are none,
+            rather than showing an empty "Pursuits" box. */}
+        <div className="mb-12 grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+          <section>
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
               <div>
-                <h2 className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+                <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
                   {focusKey
                     ? `What ${firstName} makes in ${sessions.find((s) => s.key === focusKey)?.label.toLowerCase()}`
                     : `What ${firstName} makes`}
@@ -335,12 +350,41 @@ export function PublicProfile() {
             <WorkGrid
               posts={shownPosts}
               onOpen={setOpenPost}
-              emptyLabel={`${firstName} hasn't shared any work publicly yet.`}
+              emptyLabel={`${firstName} hasn't shared any Moments publicly yet.`}
             />
-          </TabsContent>
+          </section>
 
-          <TabsContent value="circles">
-            <p className="mb-4 text-sm text-muted-foreground">
+          {sharedPursuits.length > 0 && (
+            <section>
+              <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+                {firstName}'s Pursuits
+              </h2>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">
+                The things they're bringing to life, that they've chosen to share.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {sharedPursuits.map((pursuit) => (
+                  <PursuitCard key={pursuit.id} pursuit={pursuit} className="w-full" />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <div className="mb-10">
+          <h2 className="mb-1 flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            Quiet Milestones
+          </h2>
+          <p className="mb-3 text-sm text-muted-foreground">Their non-metric growth, just for them.</p>
+          <QuietMilestones unlockedIds={unlockedIds} primary={primary} />
+        </div>
+
+        <div className="mb-10 grid gap-6 sm:grid-cols-2">
+          <div>
+            <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              Their Circles
+            </h2>
+            <p className="mb-3 text-sm text-muted-foreground">
               {hobby
                 ? `Circles built around ${hobby.name.toLowerCase()} — the craft ${firstName} is deepest in, not a claim about which ones they've joined.`
                 : "Nothing to build a suggestion from yet."}
@@ -350,7 +394,7 @@ export function PublicProfile() {
                 No Circles for this Space yet.
               </p>
             ) : (
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid gap-2">
                 {relatedCircles.map((circle) => (
                   <li key={circle.id}>
                     <Link
@@ -371,19 +415,14 @@ export function PublicProfile() {
                 ))}
               </ul>
             )}
-          </TabsContent>
+          </div>
 
-          <TabsContent value="people">
+          <div>
+            <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              People They Make With
+            </h2>
             <PeopleWhoAlsoMake hobbySlug={hobbySlug} excludePersonId={personId} firstName={firstName} />
-          </TabsContent>
-        </Tabs>
-
-        <div className="mb-10 mt-10">
-          <h2 className="mb-1 flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-            Quiet Milestones
-          </h2>
-          <p className="mb-3 text-sm text-muted-foreground">Their non-metric growth, just for them.</p>
-          <QuietMilestones unlockedIds={unlockedIds} primary={primary} />
+          </div>
         </div>
 
         {hobby && (
