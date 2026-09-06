@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
 import { badges, RewardStats } from "../data/badges";
-import { subHobbyLabel } from "../data/hobbies";
+import { subHobbyLabel, currentSpaceSlug } from "../data/hobbies";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { PersonActions } from "../components/PersonActions";
@@ -102,7 +102,7 @@ export function PublicProfile() {
 
       const posts: Post[] = (rows ?? []).map((row: any) => ({
         id: row.id,
-        hobbySlug: row.hobby_slug,
+        hobbySlug: currentSpaceSlug(row.hobby_slug),
         subHobby: row.sub_hobby ?? undefined,
         type: row.type,
         media: row.media_url,
@@ -379,7 +379,7 @@ export function PublicProfile() {
               </Button>
             </Link>
             <Link to="/discover">
-              <Button variant="outline">Browse 108 hobbies</Button>
+              <Button variant="outline">Browse every hobby</Button>
             </Link>
           </div>
         </div>

@@ -1,8 +1,8 @@
 /**
- * A single hobby inside a space — "Pottery" inside The Workbench. These are
- * what people actually do; the 8 categories above them are just the shelves
- * they sit on. Each one has its own illustration (see SubHobbyArt.tsx) and can
- * be used to filter a space's feed.
+ * A single hobby inside a Space — "Pottery" inside Crafts & Making. These are
+ * what people actually do; the Spaces above them are the shelves they sit on.
+ * Each one can filter a Space's feed, and each keeps the slug it already had,
+ * so nothing stored on an existing post stops resolving.
  */
 export interface SubHobby {
   slug: string;
@@ -25,15 +25,15 @@ const sub = (label: string, slug?: string): SubHobby => ({
 
 export interface Hobby {
   slug: string;
-  /** Full category name, e.g. "The Workbench". */
+  /** Full Space name, e.g. "Crafts & Making". */
   name: string;
-  /** Short label for nav/cards, e.g. "Workbench". */
+  /** Short label for nav/cards. Same as the name — these are plain already. */
   shortName: string;
   tagline: string;
-  /** Plain-language description of the category, shown under the name. */
+  /** Plain-language description of the Space, shown under the name. */
   plainLabel: string;
   description: string;
-  /** The specific hobbies/activities that live inside this space. */
+  /** The specific hobbies/activities that live inside this Space. */
   subItems: SubHobby[];
   gradient: string; // tailwind gradient classes
   coverImage: string;
@@ -41,172 +41,306 @@ export interface Hobby {
   creatorCount: string;
 }
 
+/**
+ * The Spaces.
+ *
+ * These used to be eight invented names — Workbench, Rabbit Hole, Rooted &
+ * Wild. They read well and meant nothing to anyone arriving for the first
+ * time, so they are now the fifteen plainly-named categories. A Space is
+ * both the shelf and the signpost; there is no second taxonomy sitting over
+ * the top of it.
+ *
+ * Every sub-hobby keeps the slug it already had. A post that stored
+ * sub_hobby "pottery" still resolves to Pottery, still shows its label, and
+ * still filters correctly — it simply sits under Crafts & Making now instead
+ * of The Workbench.
+ */
 export const hobbies: Hobby[] = [
   {
-    slug: "workbench",
-    name: "The Workbench",
-    shortName: "Workbench",
-    tagline: "Make it by hand.",
-    plainLabel: "Crafts, DIY & Handmade",
-    description:
-      "Pottery, embroidery, crochet, woodworking, candle-making — slow, tactile projects that keep your hands busy and your phone down.",
+    slug: "food-cooking",
+    name: "Food & Cooking",
+    shortName: "Food & Cooking",
+    tagline: "Made in the kitchen.",
+    plainLabel: "Cooking, baking, coffee, bread, fermentation, BBQ",
+    description: "Cooking, baking, coffee, bread, fermentation, BBQ.",
     subItems: [
-      sub("Pottery"), sub("Ceramics"), sub("Knitting"), sub("Crochet"),
-      sub("Embroidery"), sub("Sewing"), sub("Woodworking"), sub("Jewelry-making"),
-      sub("Candle-making"), sub("Soap-making"), sub("Furniture flipping"),
-      sub("Restoration"), sub("Upcycling"), sub("Paper crafts"), sub("Zines"),
-      sub("Scrapbooking"),
+      sub("Cooking"), sub("Baking"), sub("Sourdough"), sub("Fermentation"),
+      sub("Home coffee"), sub("Tea"), sub("Espresso"), sub("Food photography"),
+      sub("Home brewing"), sub("Kombucha"), sub("Cocktail-making"), sub("Supper clubs"),
+      sub("Coffee"), sub("BBQ"),
     ],
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1599589915468-b4c71ed62543?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "9.4K",
+    creatorCount: "—",
   },
   {
-    slug: "makerlab",
-    name: "The Maker Lab",
-    shortName: "Maker Lab",
-    tagline: "Print it, wire it, build it.",
-    plainLabel: "3D Printing, Robotics & Fabrication",
-    description:
-      "3D printing, CAD, laser cutting, robotics, Arduino, drones — for people who'd rather prototype something real than scroll past one.",
+    slug: "sports-fitness",
+    name: "Sports & Fitness",
+    shortName: "Sports & Fitness",
+    tagline: "Moving, and getting better at it.",
+    plainLabel: "Running, gym, cycling, climbing, tennis, swimming",
+    description: "Running, gym, cycling, climbing, tennis, swimming.",
     subItems: [
-      sub("3D printing"), sub("CAD"), sub("Laser cutting"), sub("CNC"),
-      sub("Electronics"), sub("Arduino"), sub("Raspberry Pi"), sub("Robotics"),
-      sub("Drones"), sub("Model-making"), sub("Miniatures"), sub("Makerspaces"),
-      sub("Product prototyping"),
+      sub("Running"), sub("Run clubs"), sub("Climbing"), sub("Cycling"),
+      sub("Dance"), sub("Pickleball"), sub("Padel"), sub("Tennis"),
+      sub("Swimming"), sub("Martial arts"), sub("Strength training"), sub("Basketball"),
+      sub("Soccer"), sub("Volleyball"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1631545806609-946d4f37b2a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "4.1K",
+    creatorCount: "—",
   },
   {
-    slug: "buildstack",
-    name: "The Build Stack",
-    shortName: "Build Stack",
-    tagline: "Learn the tools. Make the thing.",
-    plainLabel: "Code, AI & Digital Projects",
-    description:
-      "Coding, no-code building, creative coding, AI workflows, game dev, data viz — learn the tools, then actually make the thing.",
+    slug: "art-creative",
+    name: "Art & Creative",
+    shortName: "Art & Creative",
+    tagline: "Made by hand and eye.",
+    plainLabel: "Drawing, painting, illustration, ceramics, sculpture",
+    description: "Drawing, painting, illustration, ceramics, sculpture.",
     subItems: [
-      sub("Coding"), sub("No-code building"), sub("Creative coding"),
-      sub("Web design"), sub("Game development"),
-      sub("AI workflows & prompt craft", "ai-workflows"),
-      sub("Generative design", "generative-design"), sub("Data visualization"),
-      sub("AR/VR projects"), sub("Smart-home projects"),
-      sub("Cybersecurity learning"),
+      sub("Ceramics"), sub("Painting"), sub("Drawing"), sub("Watercolor"),
+      sub("Calligraphy"), sub("Theater"), sub("Illustration"), sub("Sculpture"),
+    ],
+    gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
+    coverImage:
+      "https://images.unsplash.com/photo-1518770660439-4636190af475?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    creatorCount: "—",
+  },
+  {
+    slug: "crafts-making",
+    name: "Crafts & Making",
+    shortName: "Crafts & Making",
+    tagline: "Made it yourself.",
+    plainLabel: "Sewing, knitting, crochet, pottery, woodworking, jewelry",
+    description: "Sewing, knitting, crochet, pottery, woodworking, jewelry.",
+    subItems: [
+      sub("Pottery"), sub("Knitting"), sub("Crochet"), sub("Embroidery"),
+      sub("Sewing"), sub("Woodworking"), sub("Jewelry-making"), sub("Candle-making"),
+      sub("Soap-making"), sub("Upcycling"), sub("Paper crafts"), sub("Zines"),
+      sub("Scrapbooking"), sub("Model-making"), sub("Miniatures"), sub("Makerspaces"),
     ],
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
-      "https://images.unsplash.com/photo-1518770660439-4636190af475?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "6.7K",
-  },
-  {
-    slug: "inmotion",
-    name: "In Motion",
-    shortName: "In Motion",
-    tagline: "Move, stretch, compete.",
-    plainLabel: "Sport, Movement & Wellness",
-    description:
-      "Running, yoga, climbing, pickleball, padel, dance, strength training — easy-entry ways to move and meet people outside.",
-    subItems: [
-      sub("Running"), sub("Run clubs"), sub("Yoga"), sub("Climbing"),
-      sub("Cycling"), sub("Dance"), sub("Pickleball"), sub("Padel"),
-      sub("Tennis"), sub("Hiking"), sub("Swimming"), sub("Martial arts"),
-      sub("Strength training"), sub("Weightlifting/gym", "weightlifting"),
-      sub("Basketball"), sub("Soccer"), sub("Volleyball"), sub("Pilates"),
-    ],
-    gradient: "from-[var(--sky-deep)] to-[var(--coral-deep)]",
-    coverImage:
       "https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "11.2K",
+    creatorCount: "—",
   },
   {
-    slug: "kitchentable",
-    name: "The Kitchen Table",
-    shortName: "Kitchen Table",
-    tagline: "Cook it, ferment it, pour it.",
-    plainLabel: "Cooking, Baking & Coffee",
-    description:
-      "Sourdough, fermentation, home coffee, cocktails, supper clubs — turning a slice of your kitchen into the place you keep wishing was closer.",
+    slug: "books-writing",
+    name: "Books & Writing",
+    shortName: "Books & Writing",
+    tagline: "Words, read and written.",
+    plainLabel: "Reading, book clubs, poetry, journaling, creative writing",
+    description: "Reading, book clubs, poetry, journaling, creative writing.",
     subItems: [
-      sub("Cooking"), sub("Baking"), sub("Sourdough"), sub("Fermentation"),
-      sub("Home coffee"), sub("Tea"), sub("Espresso"), sub("Food photography"),
-      sub("Home brewing"), sub("Kombucha"), sub("Cocktail-making"),
-      sub("Supper clubs"),
+      sub("Nature journaling"), sub("Writing"), sub("Poetry"), sub("Journaling"),
+      sub("Books"), sub("Book clubs"), sub("Language learning"), sub("Reading"),
+      sub("Creative writing"),
     ],
-    gradient: "from-[var(--mustard)] to-[var(--forest)]",
+    gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1596018589855-e9a2a91f687f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "7.6K",
+    creatorCount: "—",
   },
   {
-    slug: "rooted",
-    name: "Rooted & Wild",
-    shortName: "Rooted & Wild",
-    tagline: "Grow it, find it, get outside.",
-    plainLabel: "Gardening, Plants & Outdoors",
-    description:
-      "Gardening, houseplants, composting, birdwatching, foraging, camping — for people who'd rather get their hands in the dirt than doomscroll.",
+    slug: "nature-outdoors",
+    name: "Nature & Outdoors",
+    shortName: "Nature & Outdoors",
+    tagline: "Out where the weather is.",
+    plainLabel: "Hiking, camping, birding, fishing, foraging, gardening",
+    description: "Hiking, camping, birding, fishing, foraging, gardening.",
     subItems: [
-      sub("Gardening"), sub("Houseplants"), sub("Vegetable gardens"),
-      sub("Native plants"), sub("Composting"), sub("Indoor growing"),
-      sub("Birdwatching"), sub("Foraging"), sub("Camping"), sub("Fishing"),
-      sub("Outdoor photography"), sub("Nature journaling"),
+      sub("Hiking"), sub("Birdwatching"), sub("Foraging"), sub("Camping"),
+      sub("Fishing"), sub("Outdoor photography"), sub("Nature journaling"),
     ],
-    gradient: "from-[var(--sky)] to-[var(--forest)]",
+    gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "5.2K",
+    creatorCount: "—",
   },
   {
-    slug: "thestudio",
-    name: "The Studio",
-    shortName: "The Studio",
-    tagline: "Paint it, shoot it, write it, play it.",
-    plainLabel: "Art, Music, Writing & Film",
-    description:
-      "Painting, photography, filmmaking, music production, writing, calligraphy — make something and put it out into the world.",
+    slug: "home-garden",
+    name: "Home & Garden",
+    shortName: "Home & Garden",
+    tagline: "The place you live in.",
+    plainLabel: "Gardening, plants, interior design, DIY, restoration",
+    description: "Gardening, plants, interior design, DIY, restoration.",
     subItems: [
-      sub("Painting"), sub("Drawing"), sub("Watercolor"), sub("Photography"),
-      sub("Filmmaking"), sub("Music production"),
-      sub("Learning an instrument", "instrument"), sub("Singing"),
-      sub("Writing"), sub("Poetry"), sub("Journaling"), sub("Calligraphy"),
-      sub("Theater"),
+      sub("Furniture flipping"), sub("Restoration"), sub("Gardening"), sub("Houseplants"),
+      sub("Vegetable gardens"), sub("Native plants"), sub("Composting"), sub("Indoor growing"),
+      sub("Interior design"), sub("DIY"),
     ],
-    gradient: "from-[var(--coral)] to-[var(--forest)]",
+    gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1513364776144-60967b0f800f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "8.9K",
+    creatorCount: "—",
   },
   {
-    slug: "rabbithole",
-    name: "The Rabbit Hole",
-    shortName: "Rabbit Hole",
-    tagline: "Collect it, play it, go deep.",
-    plainLabel: "Games, Collecting & Culture",
-    description:
-      "Board games, chess, trading cards, vinyl, thrifted finds, puzzles — for people who'd rather collect than scroll.",
+    slug: "gaming-tabletop",
+    name: "Gaming & Tabletop",
+    shortName: "Gaming & Tabletop",
+    tagline: "Around a table, or a screen.",
+    plainLabel: "Video games, board games, D&D, cards, puzzles, RPGs",
+    description: "Video games, board games, D&D, cards, puzzles, RPGs.",
     subItems: [
-      sub("Board games"), sub("Chess"), sub("Tabletop RPGs"),
-      sub("Trading cards"), sub("Pokémon", "pokemon"), sub("LEGO"),
-      sub("Vinyl"), sub("Books"), sub("Book clubs"),
-      sub("Vintage/thrifting", "thrifting"), sub("Sneakers"), sub("Puzzles"),
-      sub("Language learning"),
+      sub("Board games"), sub("Chess"), sub("Tabletop RPGs"), sub("Trading cards"),
+      sub("Puzzles"), sub("D&D"), sub("Video games"),
     ],
-    gradient: "from-[var(--forest)] to-[var(--coral-deep)]",
+    gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1767338718786-92f7934e925e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "5.9K",
+    creatorCount: "—",
+  },
+  {
+    slug: "music",
+    name: "Music",
+    shortName: "Music",
+    tagline: "Played, sung, and made.",
+    plainLabel: "Instruments, singing, songwriting, DJing, music production",
+    description: "Instruments, singing, songwriting, DJing, music production.",
+    subItems: [
+      sub("Music production"), sub("Singing"), sub("Guitar"), sub("Songwriting"),
+      sub("DJing"),
+    ],
+    gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
+    coverImage:
+      "https://images.unsplash.com/photo-1599589915468-b4c71ed62543?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    creatorCount: "—",
+  },
+  {
+    slug: "photography-film",
+    name: "Photography & Film",
+    shortName: "Photography & Film",
+    tagline: "Looking, and keeping it.",
+    plainLabel: "Photography, film photography, filmmaking, video",
+    description: "Photography, film photography, filmmaking, video.",
+    subItems: [
+      sub("Food photography"), sub("Outdoor photography"), sub("Photography"), sub("Filmmaking"),
+      sub("Film photography"), sub("Video"),
+    ],
+    gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
+    coverImage:
+      "https://images.unsplash.com/photo-1631545806609-946d4f37b2a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    creatorCount: "—",
+  },
+  {
+    slug: "health-wellness",
+    name: "Health & Wellness",
+    shortName: "Health & Wellness",
+    tagline: "Looking after yourself.",
+    plainLabel: "Yoga, Pilates, meditation, mindfulness, breathwork",
+    description: "Yoga, Pilates, meditation, mindfulness, breathwork.",
+    subItems: [
+      sub("Yoga"), sub("Pilates"), sub("Meditation"), sub("Mindfulness"),
+      sub("Breathwork"),
+    ],
+    gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
+    coverImage:
+      "https://images.unsplash.com/photo-1518770660439-4636190af475?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    creatorCount: "—",
+  },
+  {
+    slug: "fashion-beauty",
+    name: "Fashion & Beauty",
+    shortName: "Fashion & Beauty",
+    tagline: "What you wear and how.",
+    plainLabel: "Fashion, styling, thrifting, makeup, nails, fragrance",
+    description: "Fashion, styling, thrifting, makeup, nails, fragrance.",
+    subItems: [
+      sub("Sneakers"), sub("Fashion"), sub("Thrifting"), sub("Makeup"),
+      sub("Nails"), sub("Fragrance"),
+    ],
+    gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
+    coverImage:
+      "https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    creatorCount: "—",
+  },
+  {
+    slug: "tech-building",
+    name: "Tech & Building",
+    shortName: "Tech & Building",
+    tagline: "Built, wired, and shipped.",
+    plainLabel: "Coding, electronics, robotics, 3D printing, AI projects",
+    description: "Coding, electronics, robotics, 3D printing, AI projects.",
+    subItems: [
+      sub("3D printing"), sub("CAD"), sub("Laser cutting"), sub("CNC"),
+      sub("Electronics"), sub("Arduino"), sub("Raspberry Pi"), sub("Robotics"),
+      sub("Drones"), sub("Product prototyping"), sub("Coding"), sub("No-code building"),
+      sub("Creative coding"), sub("Web design"), sub("Game development"), sub("Data visualization"),
+      sub("AR/VR projects"), sub("Smart-home projects"), sub("Cybersecurity learning"), sub("AI projects"),
+    ],
+    gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
+    coverImage:
+      "https://images.unsplash.com/photo-1596018589855-e9a2a91f687f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    creatorCount: "—",
+  },
+  {
+    slug: "collecting-fandom",
+    name: "Collecting & Fandom",
+    shortName: "Collecting & Fandom",
+    tagline: "The things you keep.",
+    plainLabel: "Vinyl, cards, books, antiques, toys, memorabilia, anime",
+    description: "Vinyl, cards, books, antiques, toys, memorabilia, anime.",
+    subItems: [
+      sub("Trading cards"), sub("LEGO"), sub("Vinyl"), sub("Antiques"),
+      sub("Toys"), sub("Anime"),
+    ],
+    gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
+    coverImage:
+      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    creatorCount: "—",
+  },
+  {
+    slug: "travel-adventure",
+    name: "Travel & Adventure",
+    shortName: "Travel & Adventure",
+    tagline: "Going somewhere.",
+    plainLabel: "Travel, road trips, backpacking, skiing, exploration",
+    description: "Travel, road trips, backpacking, skiing, exploration.",
+    subItems: [
+      sub("Travel"), sub("Road trips"), sub("Backpacking"), sub("Skiing"),
+      sub("Exploration"),
+    ],
+    gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
+    coverImage:
+      "https://images.unsplash.com/photo-1513364776144-60967b0f800f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    creatorCount: "—",
   },
 ];
 
+/**
+ * The eight original Space slugs, and where their content lives now.
+ *
+ * Posts, Circles and saved links created before this change still carry these
+ * in the database. Nothing was migrated — the map means nothing had to be,
+ * and an old bookmark still lands somewhere sensible.
+ */
+export const LEGACY_SPACES: Record<string, string> = {
+  workbench: "crafts-making",
+  makerlab: "tech-building",
+  buildstack: "tech-building",
+  inmotion: "sports-fitness",
+  kitchentable: "food-cooking",
+  rooted: "nature-outdoors",
+  thestudio: "art-creative",
+  rabbithole: "gaming-tabletop",
+};
+
+/** Resolves a Space by slug, including the eight names it used to have. */
 export function getHobby(slug: string) {
-  return hobbies.find((h) => h.slug === slug);
+  return (
+    hobbies.find((h) => h.slug === slug) ??
+    hobbies.find((h) => h.slug === LEGACY_SPACES[slug])
+  );
 }
 
-/** Every sub-hobby across every space, each tagged with the space it lives in. */
+/** The current slug for a Space, translating an old one where needed. */
+export function currentSpaceSlug(slug: string) {
+  return LEGACY_SPACES[slug] ?? slug;
+}
+
+/** Every sub-hobby across every Space, each tagged with the Space it lives in. */
 export const allSubHobbies: (SubHobby & { hobbySlug: string })[] = hobbies.flatMap(
   (h) => h.subItems.map((s) => ({ ...s, hobbySlug: h.slug })),
 );
@@ -215,7 +349,7 @@ export function getSubHobby(hobbySlug: string, subSlug: string) {
   return getHobby(hobbySlug)?.subItems.find((s) => s.slug === subSlug);
 }
 
-/** Human-readable label for a sub-hobby slug, searching every space. */
+/** Human-readable label for a sub-hobby slug, searching every Space. */
 export function subHobbyLabel(subSlug: string) {
   return allSubHobbies.find((s) => s.slug === subSlug)?.label;
 }

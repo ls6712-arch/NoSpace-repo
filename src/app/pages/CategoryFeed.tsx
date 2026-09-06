@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { Plus, Users, X } from "lucide-react";
-import { getHobby } from "../data/hobbies";
+import { getHobby, currentSpaceSlug } from "../data/hobbies";
 import { HobbyTile } from "../components/HobbyTile";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
@@ -132,6 +132,9 @@ export function CategoryFeed() {
   const { slug = "" } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const hobby = getHobby(slug);
+  // An old /space/workbench link still lands here; use the current slug for
+  // everything downstream so filters compare like with like.
+  const spaceSlug = hobby?.slug ?? currentSpaceSlug(slug);
   // Which specific hobby the feed is narrowed to, e.g. ?hobby=pottery. Kept in
   // the URL so Discover can link straight into a filtered space and so a
   // filtered view is shareable.
@@ -157,7 +160,7 @@ export function CategoryFeed() {
     );
   }
 
-  const allPosts = publicFeedByHobby(hobby.slug);
+  const allPosts = publicFeedByHobby(spaceSlug);
   const posts = activeSub ? allPosts.filter((p) => p.subHobby === activeSub) : allPosts;
   const listings = listingsByHobby(hobby.slug);
   const circles = circlesByHobby(hobby.slug);

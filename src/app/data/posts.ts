@@ -41,7 +41,7 @@ export const seedPosts: Post[] = [
   // Workbench
   {
     id: 101,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     subHobby: "pottery",
     type: "photo",
     media:
@@ -55,7 +55,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 102,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     subHobby: "embroidery",
     type: "video",
     media:
@@ -68,7 +68,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 103,
-    hobbySlug: "workbench",
+    hobbySlug: "art-creative",
     subHobby: "ceramics",
     type: "photo",
     media:
@@ -81,7 +81,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 104,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     subHobby: "crochet",
     type: "photo",
     media:
@@ -94,7 +94,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 105,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     subHobby: "candle-making",
     type: "video",
     media:
@@ -109,7 +109,7 @@ export const seedPosts: Post[] = [
   // In Motion
   {
     id: 301,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     subHobby: "pickleball",
     type: "video",
     media:
@@ -123,7 +123,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 302,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     subHobby: "padel",
     type: "photo",
     media:
@@ -136,7 +136,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 303,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     subHobby: "pickleball",
     type: "photo",
     media:
@@ -149,7 +149,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 304,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     subHobby: "pickleball",
     type: "photo",
     media:
@@ -162,7 +162,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 305,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     subHobby: "pickleball",
     type: "video",
     media:
@@ -177,7 +177,7 @@ export const seedPosts: Post[] = [
   // Kitchen Table
   {
     id: 401,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     subHobby: "espresso",
     type: "video",
     media:
@@ -191,7 +191,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 402,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     subHobby: "espresso",
     type: "photo",
     media:
@@ -204,7 +204,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 403,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     subHobby: "home-coffee",
     type: "photo",
     media:
@@ -217,7 +217,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 404,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     subHobby: "tea",
     type: "photo",
     media:
@@ -230,7 +230,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 405,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     subHobby: "espresso",
     type: "photo",
     media:
@@ -245,7 +245,7 @@ export const seedPosts: Post[] = [
   // Rabbit Hole
   {
     id: 501,
-    hobbySlug: "rabbithole",
+    hobbySlug: "books-writing",
     subHobby: "books",
     type: "photo",
     media:
@@ -259,7 +259,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 502,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     subHobby: "trading-cards",
     type: "photo",
     media:
@@ -272,7 +272,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 503,
-    hobbySlug: "rabbithole",
+    hobbySlug: "fashion-beauty",
     subHobby: "thrifting",
     type: "video",
     media:
@@ -285,7 +285,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 504,
-    hobbySlug: "rabbithole",
+    hobbySlug: "fashion-beauty",
     subHobby: "thrifting",
     type: "photo",
     media:
@@ -298,7 +298,7 @@ export const seedPosts: Post[] = [
   },
   {
     id: 505,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     type: "photo",
     media:
       "https://images.unsplash.com/photo-1688126753535-0ca32e3b5cbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",

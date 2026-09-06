@@ -1,5 +1,3 @@
-import { hobbies } from "./hobbies";
-
 /**
  * The fifteen things people are here to do.
  *
@@ -262,21 +260,6 @@ export function categoriesFor(label?: string): Category[] {
 /** The first category a hobby belongs to, for places that can only show one. */
 export function primaryCategory(label?: string): Category | undefined {
   return categoriesFor(label)[0];
-}
-
-/**
- * Every category one of the app's eight Spaces feeds into, worked out from
- * the sub-hobbies inside it. This is what lets existing posts appear under
- * the new categories without anybody editing a single one.
- */
-export function categoriesForSpace(hobbySlug: string): Category[] {
-  const space = hobbies.find((h) => h.slug === hobbySlug);
-  if (!space) return [];
-  const found = new Map<string, Category>();
-  for (const sub of space.subItems) {
-    for (const c of categoriesFor(sub.label)) found.set(c.slug, c);
-  }
-  return [...found.values()];
 }
 
 /**

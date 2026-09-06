@@ -11,7 +11,6 @@ import { useContent } from "../context/ContentContext";
 import { deriveProjects, useJournal } from "../lib/journal";
 import { ContentCard } from "../components/ContentCard";
 import { HobbyTile } from "../components/HobbyTile";
-import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
 import { Button } from "../components/ui/button";
 
 /**
@@ -54,10 +53,9 @@ export function Discover() {
   const q = query.trim().toLowerCase();
   const { people, loading: peopleLoading } = usePeopleSearch(query);
 
-  const chips: Chip[] = useMemo(
-    () => [...BASE_CHIPS, ...hobbies.map((h) => ({ id: h.slug, label: h.shortName }))],
-    [],
-  );
+  // Just the cross-cutting filters. The Spaces have their own cards above,
+  // so repeating all fifteen as chips said the same thing twice.
+  const chips: Chip[] = useMemo(() => BASE_CHIPS, []);
 
   // Ongoing work, so "Projects in progress" means something specific rather
   // than being a mood.
@@ -159,17 +157,17 @@ export function Discover() {
               without touching anybody's work. */}
           <section className="mb-10">
             <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Browse by category
+              Spaces
             </h2>
             <p className="mb-4 mt-1 text-sm text-muted-foreground">
-              A way in, not a list you have to pick from — you can post about
-              anything you like.
+              Fifteen Spaces, named so you can tell what's in them. A way in,
+              not a list you have to pick from — you can post about anything.
             </p>
             <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
               {categories.map((c) => (
                 <li key={c.slug}>
                   <Link
-                    to={`/category/${c.slug}`}
+                    to={`/space/${c.slug}`}
                     className="flex h-full min-h-[104px] flex-col justify-center gap-1 rounded-2xl border border-border bg-card px-4 py-4 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
                   >
                     <span
@@ -392,21 +390,6 @@ export function Discover() {
                 </li>
               ))}
             </ul>
-          </section>
-
-          {/* Explore spaces */}
-          <section className="mt-14">
-            <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Explore spaces
-            </h2>
-            <p className="mb-5 mt-1 text-sm text-muted-foreground">
-              Eight shelves. Open one to see the hobbies on it.
-            </p>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {hobbies.map((hobby) => (
-                <HobbyCategoryCard key={hobby.slug} hobby={hobby} />
-              ))}
-            </div>
           </section>
 
           {/* Every hobby, as pictures — the bookshelf view */}

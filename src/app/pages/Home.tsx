@@ -333,7 +333,7 @@ export function Home() {
         <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h2 className="text-3xl mb-2">Eight spaces, zero scrolling void</h2>
+              <h2 className="text-3xl mb-2">Fifteen Spaces, zero scrolling void</h2>
               <p className="text-muted-foreground">Pick one to see what people are making right now.</p>
             </div>
             <Link to="/discover" className="hidden sm:block">

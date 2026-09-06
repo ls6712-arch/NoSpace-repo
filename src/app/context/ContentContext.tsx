@@ -6,6 +6,7 @@ import {
   ReactNode,
 } from "react";
 import { Post, seedPosts, Visibility } from "../data/posts";
+import { currentSpaceSlug } from "../data/hobbies";
 import { Product, products as seedProducts } from "../data/products";
 import { circles as allCircles } from "../data/circles";
 import { useRewards } from "./RewardsContext";
@@ -72,7 +73,9 @@ function loadFromStorage<T>(key: string): T[] {
 function rowToPost(row: any, creatorName: string): Post {
   return {
     id: row.id,
-    hobbySlug: row.hobby_slug,
+    // An older post stored one of the eight original Space slugs. Nothing was
+    // migrated in the database; it is translated on the way in instead.
+    hobbySlug: currentSpaceSlug(row.hobby_slug),
     subHobby: row.sub_hobby ?? undefined,
     interest: row.interest ?? undefined,
     type: row.type,

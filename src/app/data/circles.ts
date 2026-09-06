@@ -23,7 +23,7 @@ export const circles: Circle[] = [
   // Workbench
   {
     id: 1,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     name: "Crafting Beginners",
     description: "Just starting out with any tactile craft — questions welcome.",
     purpose: "For anyone in their first year of a hands-on craft, whatever the craft is.",
@@ -40,7 +40,7 @@ export const circles: Circle[] = [
   },
   {
     id: 2,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     name: "NYC Pottery Beginners",
     location: "New York City",
     description: "Wheel-throwing and hand-building meetups around NYC.",
@@ -60,7 +60,7 @@ export const circles: Circle[] = [
   // In Motion
   {
     id: 5,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     name: "Pickleball & Padel Regulars",
     description: "Find a match, share drills, compare paddles.",
     purpose: "For people who already play weekly and want better games, not an intro to the sport.",
@@ -77,7 +77,7 @@ export const circles: Circle[] = [
   },
   {
     id: 6,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     name: "Austin Weekend Pickleball",
     location: "Austin",
     description: "Sunday morning games at Pease Park courts.",
@@ -97,7 +97,7 @@ export const circles: Circle[] = [
   // Kitchen Table
   {
     id: 7,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     name: "Home Barista Club",
     description: "Latte art, grind settings, and gear talk for the home setup.",
     purpose: "For people dialling in espresso at home — not cafés, not competition.",
@@ -114,7 +114,7 @@ export const circles: Circle[] = [
   },
   {
     id: 8,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     name: "Portland Coffee Corners",
     location: "Portland",
     description: "Show off your home café setup, swap beans.",
@@ -134,7 +134,7 @@ export const circles: Circle[] = [
   // Rabbit Hole
   {
     id: 9,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     name: "Nostalgic Collectors",
     description: "Trading cards, thrifted finds, and visible mending.",
     purpose: "For collectors who care about where an object came from more than what it's worth.",
@@ -151,7 +151,7 @@ export const circles: Circle[] = [
   },
   {
     id: 10,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     name: "Chicago Thrift & Trade",
     location: "Chicago",
     description: "Meetups to trade cards and secondhand finds in person.",
