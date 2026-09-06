@@ -152,6 +152,13 @@ const PHOTO: Record<string, string> = {
   thrifting: "photo-1441984904996-e0b6ba687e04",
   sneakers: "photo-1552346154-21d32810aba3",
   fashion: "photo-1490481651871-ab68de25d43d",
+
+  // Travel & Adventure
+  travel: "photo-1488646953014-85cb44e25828",
+  "road-trips": "photo-1469854523086-cc02fe5d8800",
+  backpacking: "photo-1527631746610-bca00a040d60",
+  skiing: "photo-1551698618-1dfe5d97d256",
+  exploration: "photo-1500534623283-312aade485b7",
   makeup: "photo-1522335789203-aabd1fc54bc9",
   nails: "photo-1604654894610-df63bc536371",
   fragrance: "photo-1541643600914-78b084683601",
