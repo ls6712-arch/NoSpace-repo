@@ -1,39 +1,41 @@
 import { Link, useLocation } from "react-router";
-import { Compass, Library, Inbox, PlusCircle, UserRound } from "lucide-react";
+import { Compass, Library, PlusCircle, UserRound, Users } from "lucide-react";
 import { useConnections } from "../context/ConnectionsContext";
 
 /**
- * Phone and tablet navigation: five labelled destinations — the same five as
- * the desktop bar, in the same order, so the app has one mental model rather
- * than two.
+ * Phone and tablet navigation: five labelled destinations, matching the
+ * desktop top nav's Discover / My Space / Circles / Create in the same
+ * order (plus Profile, which hangs off the avatar on desktop) — one mental
+ * model, not two.
  *
- * Log sits in the middle because it's the thing you came to do, and it keeps
- * its word rather than becoming an anonymous "+". Inbox carries a dot when
- * something is actually waiting on you — a count would turn correspondence
- * into a score.
+ * Create sits in the middle because it's the thing you came to do, and it
+ * keeps its word rather than becoming an anonymous "+".
+ *
+ * Inbox isn't a tab of its own here: the header's notification bell and
+ * message icon (Header.tsx) are visible on every breakpoint, including this
+ * one, so /inbox stays one tap away without needing a sixth slot. The one
+ * inbox-adjacent signal that lived on this bar — a dot for a pending
+ * connection request or Circle invitation someone's waiting on — moves to
+ * Profile below, the nearest personal-content tab, so it isn't lost.
  *
  * Visible below lg, exactly where the desktop top nav is hidden, so there is
  * never a width with no primary navigation and never two at once.
  */
 export const TABS = [
   {
-    to: "/my-space",
-    label: "My Space",
-    icon: Library,
-    match: (p: string) => p === "/" || p.startsWith("/my-space"),
-  },
-  {
-    // Discover holds hobbies, projects, Circles and People — a phone bar can't
-    // carry all four as separate tabs, and Discover is defined as the place
-    // those live, so they sit inside it rather than competing with it.
     to: "/discover",
     label: "Discover",
     icon: Compass,
     match: (p: string) =>
       p.startsWith("/discover") ||
       p.startsWith("/space") ||
-      p.startsWith("/circles") ||
       p.startsWith("/people"),
+  },
+  {
+    to: "/my-space",
+    label: "My Space",
+    icon: Library,
+    match: (p: string) => p === "/" || p.startsWith("/my-space"),
   },
   {
     to: "/create",
@@ -43,10 +45,10 @@ export const TABS = [
     accent: true,
   },
   {
-    to: "/inbox",
-    label: "Inbox",
-    icon: Inbox,
-    match: (p: string) => p.startsWith("/inbox") || p.startsWith("/messages"),
+    to: "/circles",
+    label: "Circles",
+    icon: Users,
+    match: (p: string) => p.startsWith("/circles"),
   },
   {
     to: "/you",
@@ -102,7 +104,7 @@ export function BottomTabBar() {
                 <span className="relative">
                   <Icon className="size-5" strokeWidth={active || tab.accent ? 2.1 : 1.7} />
                   {/* A dot, not a number: something is waiting, not how much. */}
-                  {tab.to === "/inbox" && waiting && (
+                  {tab.to === "/you" && waiting && (
                     <span
                       className="absolute -right-0.5 -top-0.5 size-2 rounded-full"
                       style={{ backgroundColor: "var(--coral-deep)" }}

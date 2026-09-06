@@ -64,6 +64,13 @@ interface SocialContextType {
   /** True when this is really shared with other people rather than local-only. */
   isShared: boolean;
 
+  /**
+   * TODO(social graph): Discover's "Following" tab currently reads this list
+   * — posts in hobbies you follow — because there is no person-to-person
+   * follow relationship yet. That's an honest stand-in, not the real thing:
+   * once people can follow people, "Following" on Discover should switch to
+   * that instead of (or alongside) hobby follows.
+   */
   followedHobbies: string[];
   isFollowingHobby: (key: string) => boolean;
   toggleHobbyFollow: (key: string, label: string) => Promise<void>;
