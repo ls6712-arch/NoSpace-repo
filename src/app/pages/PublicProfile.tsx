@@ -1,19 +1,34 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
-import { Plus } from "lucide-react";
+import { ArrowRight, Plus, Share2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
 import { badges, RewardStats } from "../data/badges";
-import { subHobbyLabel, currentSpaceSlug } from "../data/hobbies";
+import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
+import { circlesByHobby } from "../data/circles";
+import { usePeopleInHobby } from "../lib/people";
+import { sessionsFromPosts } from "../components/HobbyShelf";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { PersonActions } from "../components/PersonActions";
-import { HobbyShelf, sessionsFromPosts } from "../components/HobbyShelf";
+import { HandwrittenNote } from "../components/HandwrittenNote";
+import { WorkGrid } from "../components/WorkGrid";
 import { QuietMilestones } from "../components/QuietMilestones";
-import { PostMedia } from "../components/PostMedia";
+import { GeneratedArt } from "../components/GeneratedArt";
 import { MomentDetail } from "../components/MomentDetail";
 import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
+
+/** Whichever Space shows up most in their posts — used to pick a Circles
+ * suggestion and the closing banner's illustration, not to claim membership
+ * in anything we can't actually see. */
+function primaryHobbySlug(posts: Post[]): string | undefined {
+  if (posts.length === 0) return undefined;
+  const counts = new Map<string, number>();
+  for (const p of posts) counts.set(p.hobbySlug, (counts.get(p.hobbySlug) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+}
 
 /**
  * Somebody's shelf, open to anyone with the link — no account needed to look.
@@ -21,7 +36,10 @@ import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
  *
  * Deliberately shows only what's public: their name, what they've made, and
  * how long they've been at it. Private reflections never leave the owner's own
- * view, and neither do their circles.
+ * view, and neither do their circles or connections — this app has no way to
+ * read either from anyone but the account they belong to, so the Circles and
+ * People shown here are honestly labelled as built around their craft, not
+ * claimed as their actual memberships or connections.
  *
  * Milestones here are derived from their public posts rather than from a
  * rewards ledger, since that ledger lives in the owner's browser and can't be
@@ -157,6 +175,7 @@ export function PublicProfile() {
 
   const { personId, displayName, avatarUrl, posts } = state;
   const isMe = !!user && user.id === personId;
+  const firstName = displayName.split(" ")[0];
   const sessions = sessionsFromPosts(posts);
 
   // Focusing a hobby narrows THEIR work on THEIR page. It used to navigate to
@@ -170,9 +189,8 @@ export function PublicProfile() {
   };
   // A shared link carries ?moment=<id>; open it once the posts have loaded.
   const momentParam = searchParams.get("moment");
-  const focused = sessions.find((s) => s.key === focusKey);
-  const shownPosts = focused
-    ? posts.filter((p) => (p.subHobby ?? `space:${p.hobbySlug}`) === focused.key)
+  const shownPosts = focusKey
+    ? posts.filter((p) => (p.subHobby ?? `space:${p.hobbySlug}`) === focusKey)
     : posts;
   const totalSessions = posts.length;
   const initials = displayName
@@ -198,69 +216,71 @@ export function PublicProfile() {
     : { label: top?.label };
 
   const primaryHobby = pickPrimaryHobby(posts);
+  const hobbySlug = primaryHobbySlug(posts);
+  const hobby = hobbySlug ? getHobby(hobbySlug) : undefined;
+  const relatedCircles = hobbySlug ? circlesByHobby(hobbySlug).slice(0, 4) : [];
 
   return (
     <div className="ns-public-profile min-h-screen bg-surface py-8 sm:py-10">
-      <div className="container mx-auto max-w-3xl px-4">
-        {/* The wordmark is how someone arriving on a shared profile link gets
-            into the rest of the app. It looked like a way out and wasn't one. */}
-        <div className="mb-6">
-          <Link
-            to="/"
-            className="inline-block text-3xl transition-colors hover:text-[var(--coral-text)] sm:text-4xl"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
-          >
-            NoSpace
-          </Link>
-        </div>
-
-        <div className="ns-profile-header mb-7 flex items-center gap-5 sm:gap-6">
-          <Avatar className="size-20 shrink-0 sm:size-24">
-            {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
-            <AvatarFallback className="text-xl">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <h1
-              className="truncate text-3xl leading-tight sm:text-4xl"
-              style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
-            >
-              {displayName}
-            </h1>
-            <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="text-[var(--pastel-sage)]">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 21c0-6 3-10 8-12-1 7-4 10-8 12Zm0 0c0-5-2.5-8.5-7-10 1 6 3.5 8.5 7 10Z" />
-                </svg>
-              </span>
-              <span>
-                <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
-                {totalSessions === 1 ? "session" : "sessions"}
-              </span>
-            </div>
-            {primaryHobby && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {milestoneText(primaryHobby.label, primaryHobby.firstActivityAt)}
-              </p>
-            )}
-            <div className="mt-3">
-              {/* Not a Follow button. You attach to the hobby, or ask to do a
-                  specific thing together — never to the person as a person. */}
-              {/* Not shown on your own shelf — you can't ask yourself to
-                  make something together. personId comes from the profile
-                  itself, so it exists even before this person has posted. */}
-              {!isMe && (
-                <PersonActions
-                  personName={displayName}
-                  personId={personId}
-                  hobbyKeys={posts.map((p) => p.subHobby ?? `space:${p.hobbySlug}`)}
-                />
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-5 sm:gap-6">
+            <Avatar className="size-20 shrink-0 sm:size-28">
+              {avatarUrl && <AvatarImage src={avatarUrl} alt="" className="object-cover" />}
+              <AvatarFallback className="text-xl">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <h1
+                className="truncate text-3xl leading-tight sm:text-4xl"
+                style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+              >
+                {displayName}
+              </h1>
+              {sessions.length > 0 && (
+                <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
+                  {sessions.slice(0, 5).map((s) => s.label).join(", ")}.
+                </p>
               )}
+              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="text-[var(--coral-deep)]" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21c0-6 3-10 8-12-1 7-4 10-8 12Zm0 0c0-5-2.5-8.5-7-10 1 6 3.5 8.5 7 10Z" />
+                  </svg>
+                </span>
+                <span>
+                  <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
+                  {totalSessions === 1 ? "session" : "sessions"}
+                </span>
+              </div>
+              {primaryHobby && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {milestoneText(primaryHobby.label, primaryHobby.firstActivityAt)} · Keep going.
+                </p>
+              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {/* Not a Follow button. You attach to the hobby, or ask to do a
+                    specific thing together — never to the person as a person.
+                    Not shown on your own shelf — you can't ask yourself to
+                    make something together. personId comes from the profile
+                    itself, so it exists even before this person has posted. */}
+                {!isMe && (
+                  <PersonActions
+                    personName={displayName}
+                    personId={personId}
+                    hobbyKeys={posts.map((p) => p.subHobby ?? `space:${p.hobbySlug}`)}
+                  />
+                )}
+                <CopyLinkButton />
+              </div>
             </div>
           </div>
+          <HandwrittenNote className="max-w-[220px] sm:mt-2">
+            Curious creators make a brighter world.
+          </HandwrittenNote>
         </div>
 
         {sessions.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2">
+          <div className="mb-8 flex flex-wrap gap-2">
             {sessions.slice(0, 6).map((s) => {
               const on = focusKey === s.key;
               return (
@@ -283,34 +303,26 @@ export function PublicProfile() {
           </div>
         )}
 
-        <div className="ns-profile-shelf mb-10">
-          {/* Their books stay on their profile. These used to link into your
-              own archive, so tapping someone's Workbench showed you your own
-              empty Space instead of their work. */}
-          <HobbyShelf
-            items={sessions}
-            linkTo={(item) => `?hobby=${encodeURIComponent(item.key)}`}
-            emptyCopy={`${displayName} hasn't shared any work publicly yet.`}
-            emptyCta={false}
-          />
-        </div>
+        <Tabs defaultValue="work">
+          <TabsList className="mb-6 flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
+            <TabsTrigger value="work">Their Work</TabsTrigger>
+            <TabsTrigger value="circles">Their Circles</TabsTrigger>
+            <TabsTrigger value="people">People They Make With</TabsTrigger>
+          </TabsList>
 
-        <div className="mb-9">
-          <h2 className="mb-3 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-            Quiet Milestones
-          </h2>
-          <QuietMilestones unlockedIds={unlockedIds} primary={primary} />
-        </div>
-
-        {posts.length > 0 && (
-          <div className="mb-10">
-            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
-              <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-                {focused
-                  ? `${displayName.split(" ")[0]}'s ${focused.label.toLowerCase()}`
-                  : `${displayName.split(" ")[0]}'s work`}
-              </h2>
-              {focused && (
+          <TabsContent value="work">
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <h2 className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+                  {focusKey
+                    ? `What ${firstName} makes in ${sessions.find((s) => s.key === focusKey)?.label.toLowerCase()}`
+                    : `What ${firstName} makes`}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  A look into the things they've created, explored, and loved.
+                </p>
+              </div>
+              {focusKey && (
                 <button
                   type="button"
                   onClick={() => setFocus(null)}
@@ -320,32 +332,82 @@ export function PublicProfile() {
                 </button>
               )}
             </div>
-            {shownPosts.length === 0 ? (
+            <WorkGrid
+              posts={shownPosts}
+              onOpen={setOpenPost}
+              emptyLabel={`${firstName} hasn't shared any work publicly yet.`}
+            />
+          </TabsContent>
+
+          <TabsContent value="circles">
+            <p className="mb-4 text-sm text-muted-foreground">
+              {hobby
+                ? `Circles built around ${hobby.name.toLowerCase()} — the craft ${firstName} is deepest in, not a claim about which ones they've joined.`
+                : "Nothing to build a suggestion from yet."}
+            </p>
+            {relatedCircles.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
-                Nothing public here yet.
+                No Circles for this Space yet.
               </p>
             ) : (
-            <div className="ns-profile-grid grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {shownPosts.slice(0, 12).map((post, index) => (
-                <button
-                  key={post.id}
-                  type="button"
-                  onClick={() => setOpenPost(post)}
-                  className={`ns-profile-tile overflow-hidden transition-transform duration-200 hover:scale-[1.03] ${index % 5 === 0 ? "ns-profile-feature" : ""}`}
-                  aria-label={`Open: ${post.caption.slice(0, 60)}`}
-                >
-                  <PostMedia
-                    media={post.media}
-                    type={post.type}
-                    hobbySlug={post.hobbySlug}
-                    seed={post.id}
-                    className="h-full w-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {relatedCircles.map((circle) => (
+                  <li key={circle.id}>
+                    <Link
+                      to="/circles"
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-[var(--coral-deep)]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                          {circle.name}
+                        </span>
+                        <span className="block text-[11px] text-muted-foreground">
+                          {circle.memberCount.toLocaleString()} members
+                        </span>
+                      </span>
+                      <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
-          </div>
+          </TabsContent>
+
+          <TabsContent value="people">
+            <PeopleWhoAlsoMake hobbySlug={hobbySlug} excludePersonId={personId} firstName={firstName} />
+          </TabsContent>
+        </Tabs>
+
+        <div className="mb-10 mt-10">
+          <h2 className="mb-1 flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            Quiet Milestones
+          </h2>
+          <p className="mb-3 text-sm text-muted-foreground">Their non-metric growth, just for them.</p>
+          <QuietMilestones unlockedIds={unlockedIds} primary={primary} />
+        </div>
+
+        {hobby && (
+          <Link
+            to={`/space/${hobby.slug}`}
+            className="group mb-10 flex flex-col overflow-hidden rounded-3xl border border-border sm:flex-row sm:items-center"
+          >
+            <div className="h-40 w-full shrink-0 overflow-hidden sm:h-auto sm:w-64">
+              <GeneratedArt
+                hobbySlug={hobby.slug}
+                seed={hobby.slug}
+                className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="flex flex-1 flex-wrap items-center justify-between gap-4 p-6">
+              <p className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+                Same hobbies.<br />Brighter days.
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-sm text-[var(--coral-text)]">
+                Explore their world
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </span>
+            </div>
+          </Link>
         )}
 
         <MomentDetail
@@ -385,5 +447,83 @@ export function PublicProfile() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Real people who post in the same hobby — the closest honest stand-in for
+ * "people they make with" the client can actually see, since nothing here
+ * can read who a stranger is personally connected to. */
+function PeopleWhoAlsoMake({
+  hobbySlug,
+  excludePersonId,
+  firstName,
+}: {
+  hobbySlug?: string;
+  excludePersonId: string;
+  firstName: string;
+}) {
+  const { people, loading } = usePeopleInHobby(hobbySlug ?? "");
+  const others = people.filter((p) => p.id !== excludePersonId).slice(0, 6);
+
+  return (
+    <div>
+      <p className="mb-4 text-sm text-muted-foreground">
+        {hobbySlug
+          ? `Other people making ${getHobby(hobbySlug)?.name.toLowerCase() ?? "the same thing"} — not ${firstName}'s connections, which only they can see.`
+          : "Nothing to suggest yet."}
+      </p>
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Looking…</p>
+      ) : others.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
+          Nobody else here yet.
+        </p>
+      ) : (
+        <ul className="flex flex-wrap gap-5">
+          {others.map((person) => (
+            <li key={person.id}>
+              <Link
+                to={person.username ? `/u/${person.username}` : `/u/${person.id}`}
+                className="flex w-20 flex-col items-center gap-2 text-center transition-transform duration-200 hover:-translate-y-0.5"
+              >
+                <Avatar className="size-14">
+                  {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" className="object-cover" />}
+                  <AvatarFallback>
+                    {person.displayName
+                      .split(" ")
+                      .map((p) => p[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="w-full truncate text-xs text-foreground">{person.displayName}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function CopyLinkButton() {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          // clipboard may be unavailable — the URL bar still has the link
+        }
+      }}
+    >
+      <Share2 className="size-4" />
+      {copied ? "Link copied" : "Share"}
+    </Button>
   );
 }

@@ -8,6 +8,10 @@
      hobby titles, where the app should feel like a well-made object rather
      than a dashboard. Everything else stays on the sans stack. */
   --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  /* A single casual script, used only for the small marginal notes on
+     profile pages (the "someone actually wrote this" touch) — never for
+     anything that has to be read quickly or at length. */
+  --font-hand: 'Caveat', cursive;
 
   /* Soft pastels for the quiet milestones and circle cards. Deliberately
      desaturated so they read as chalky and calm against the navy, never as
