@@ -20,6 +20,7 @@ import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
 import { ContentCard } from "../components/ContentCard";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { GeneratedArt } from "../components/GeneratedArt";
+import { DiscoverHeroArt } from "../components/DiscoverHeroArt";
 import { PostMedia } from "../components/PostMedia";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
@@ -311,7 +312,7 @@ export function Discover() {
       <section className="ns-discover-hero relative overflow-hidden">
         <div className="ns-discover-hero-art" aria-hidden="true">
           <div className="ns-discover-hero-ring" />
-          <DiscoverSpaceArt hobbySlug="art-creative" seed="discover-hero" className="h-full w-full" />
+          <DiscoverHeroArt className="h-full w-full" />
         </div>
         <div className="container relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:py-10 lg:grid-cols-[1fr_0.8fr] lg:gap-14 lg:py-12">
           <div className="relative z-10 max-w-2xl">

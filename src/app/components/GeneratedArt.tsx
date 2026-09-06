@@ -25,7 +25,7 @@ import { hobbies } from "../data/hobbies";
  * id), so a feed never looks like five copies of the same card.
  */
 
-function hashSeed(seed: string | number): number {
+export function hashSeed(seed: string | number): number {
   const str = String(seed);
   let h = 0;
   for (let i = 0; i < str.length; i++) {
@@ -34,7 +34,7 @@ function hashSeed(seed: string | number): number {
   return h >>> 0;
 }
 
-function mulberry32(seed: number) {
+export function mulberry32(seed: number) {
   let t = seed;
   return function () {
     t += 0x6d2b79f5;
@@ -49,30 +49,30 @@ function mulberry32(seed: number) {
 // hobby), same idea as the reference style: a cohesive set of terracotta,
 // mustard, olive and denim tones that reads as one illustration family.
 // ---------------------------------------------------------------------------
-const INK = "#3A2A1F";
-const PAPER = "#F1E3C8";
-const PAPER_DARK = "#E8D5AC";
-const TERRACOTTA = "#C96F49";
-const RUST = "#A8492F";
-const MUSTARD = "#E3A83E";
-const MUSTARD_LIGHT = "#F0C572";
-const OLIVE = "#7C8A54";
-const SAGE = "#A9B98C";
-const DENIM = "#5C7C97";
-const BLUSH = "#D98A82";
-const CREAM = "#FBF3E2";
+export const INK = "#3A2A1F";
+export const PAPER = "#F1E3C8";
+export const PAPER_DARK = "#E8D5AC";
+export const TERRACOTTA = "#C96F49";
+export const RUST = "#A8492F";
+export const MUSTARD = "#E3A83E";
+export const MUSTARD_LIGHT = "#F0C572";
+export const OLIVE = "#7C8A54";
+export const SAGE = "#A9B98C";
+export const DENIM = "#5C7C97";
+export const BLUSH = "#D98A82";
+export const CREAM = "#FBF3E2";
 const SKIN_TONES = ["#E8B98C", "#C68A5E", "#8B5A3C", "#F0C9A0"];
 const HAIR_TONES = ["#3A2A1F", "#6B4226", "#1E1512", "#8A5A32"];
 
-function skinFor(rand: () => number) {
+export function skinFor(rand: () => number) {
   return SKIN_TONES[Math.floor(rand() * SKIN_TONES.length) % SKIN_TONES.length];
 }
-function hairFor(rand: () => number) {
+export function hairFor(rand: () => number) {
   return HAIR_TONES[Math.floor(rand() * HAIR_TONES.length) % HAIR_TONES.length];
 }
 
 /** A handful of small twinkling accents, scattered by the seed. */
-function Sparkles({ rand, count, avoid, color = MUSTARD }: { rand: () => number; count: number; avoid?: { x: number; y: number; r: number }; color?: string }) {
+export function Sparkles({ rand, count, avoid, color = MUSTARD }: { rand: () => number; count: number; avoid?: { x: number; y: number; r: number }; color?: string }) {
   const dots = Array.from({ length: count }).map((_, i) => {
     let x = 16 + rand() * 168;
     let y = 16 + rand() * 168;
@@ -111,7 +111,7 @@ function Sparkles({ rand, count, avoid, color = MUSTARD }: { rand: () => number;
 // ---------------------------------------------------------------------------
 type Pose = "sit" | "kneel" | "stand" | "lean" | "reach";
 
-function Figure({
+export function Figure({
   x,
   y,
   skin,
@@ -235,7 +235,7 @@ function Candle({ x, y, color = OLIVE, s = 1 }: { x: number; y: number; color?: 
     </g>
   );
 }
-function PaintPalette({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+export function PaintPalette({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
       <path d="M -30 0 Q -32 -28 0 -30 Q 32 -28 30 4 Q 28 22 8 18 Q 4 16 8 12 Q 12 8 4 6 Q -30 6 -30 0 Z" fill={PAPER_DARK} />
@@ -481,7 +481,7 @@ function LaptopCode({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
     </g>
   );
 }
-function PottedPlant({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+export function PottedPlant({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
       <path d="M -22 20 L -16 60 Q -16 66 -10 66 L 10 66 Q 16 66 16 60 L 22 20 Z" fill={TERRACOTTA} />
@@ -505,7 +505,50 @@ function WateringCan({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
     </g>
   );
 }
-function Easel({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+/** A small sitting cat — same flat, rounded language as the Figure: simple
+ * shapes, one flat color, no outline detail beyond what reads at a glance. */
+export function Cat({
+  x,
+  y,
+  s = 1,
+  color = INK,
+  flip = false,
+}: {
+  x: number;
+  y: number;
+  s?: number;
+  color?: string;
+  flip?: boolean;
+}) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${(flip ? -1 : 1) * s} ${s})`}>
+      {/* tail, curled up behind the body */}
+      <path
+        d="M 18 6 Q 34 2 32 -16 Q 31 -26 21 -24"
+        fill="none"
+        stroke={color}
+        strokeWidth={7}
+        strokeLinecap="round"
+      />
+      {/* body */}
+      <path d="M -22 10 Q -24 -14 -2 -16 Q 20 -16 20 6 Q 20 16 8 17 L -12 17 Q -22 17 -22 10 Z" fill={color} />
+      {/* head */}
+      <circle cx={-10} cy={-24} r={13} fill={color} />
+      {/* ears */}
+      <path d="M -20 -32 L -14 -14 L -8 -30 Z" fill={color} />
+      <path d="M 0 -30 L -4 -14 L 6 -30 Z" fill={color} />
+      {/* face */}
+      <ellipse cx={-10} cy={-19} rx={7} ry={5} fill={CREAM} opacity={0.9} />
+      <circle cx={-13} cy={-20} r={1.3} fill={INK} />
+      <circle cx={-7} cy={-20} r={1.3} fill={INK} />
+      {/* front legs */}
+      <path d="M -12 16 L -12 26" stroke={color} strokeWidth={6} strokeLinecap="round" />
+      <path d="M 0 16 L 0 26" stroke={color} strokeWidth={6} strokeLinecap="round" />
+    </g>
+  );
+}
+
+export function Easel({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
       <path d="M -30 60 L -6 -40 L 6 -40 L 30 60" fill="none" stroke={RUST} strokeWidth={6} strokeLinecap="round" />
