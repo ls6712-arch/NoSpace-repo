@@ -415,11 +415,10 @@ export function Discover() {
           {/* Every hobby, as pictures — the bookshelf view */}
           <section className="mt-14">
             <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Every hobby on NoSpace
+              Hobby Hub
             </h2>
             <p className="mb-5 mt-1 text-sm text-muted-foreground">
-              {hobbies.reduce((n, h) => n + h.subItems.length, 0)} of them. Pick
-              the one you've been meaning to start.
+              Find a thread to follow, then open a space and stay awhile.
             </p>
             <div className="space-y-9">
               {hobbies.map((hobby) => (

@@ -363,7 +363,7 @@ export function Home() {
                   </Button>
                 </Link>
                 {user && <Link to="/my-space" className="ns-hero-secondary-link">Go to My Space</Link>}
-                <Link to="/discover" className="ns-hero-secondary-link">Explore hobbies</Link>
+                <Link to="/discover" className="ns-hero-secondary-link">Hobby Hub</Link>
               </div>
             </div>
 
@@ -414,7 +414,7 @@ export function Home() {
               <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Pick a hobby, share what you&apos;re actually making, and find people doing the same thing.</p>
             </div>
             <Link to="/discover" className="ns-text-link hidden shrink-0 sm:inline-flex">
-              All {hobbies.reduce((n, h) => n + h.subItems.length, 0)} hobbies
+              Hobby Hub
               <ArrowRight className="size-4" />
             </Link>
           </div>
