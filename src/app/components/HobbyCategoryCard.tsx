@@ -4,7 +4,7 @@ import { Hobby } from "../data/hobbies";
 import { GeneratedArt } from "./GeneratedArt";
 
 /**
- * Hover is a single coordinated gesture: the space lifts, the photograph pushes
+ * Hover is a single coordinated gesture: the space lifts, the artwork pushes
  * in behind it, and the title and arrow lean toward the space it opens.
  */
 export function HobbyCategoryCard({ hobby }: { hobby: Hobby }) {

@@ -71,24 +71,6 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function HeroMarginalia() {
-  return (
-    <svg
-      className="ns-hero-marginalia"
-      viewBox="0 0 180 162"
-      aria-hidden="true"
-    >
-      <path d="M18 32C49 16 86 20 109 42c22 21 24 52 48 68" fill="none" stroke="var(--forest)" strokeWidth="1.5" strokeDasharray="2 4" />
-      <path d="M17 130c28-24 62-21 90-4 22 14 39 13 56 2" fill="none" stroke="var(--coral-deep)" strokeWidth="2" strokeLinecap="round" />
-      <path d="M102 28l8 7-10 2M82 119l5-10 6 9" fill="none" stroke="var(--coral-deep)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="27" cy="31" r="4" fill="var(--yellow)" />
-      <circle cx="157" cy="111" r="4" fill="var(--yellow)" />
-      <text x="16" y="18" fill="var(--forest-ink)" fontSize="9" fontFamily="var(--font-mono)">MAKE A MARK</text>
-      <text x="87" y="153" fill="var(--forest-ink)" fontSize="9" fontFamily="var(--font-mono)">KEEP GOING</text>
-    </svg>
-  );
-}
-
 function WaitlistForm() {
   const [email, setEmail] = useState("");
   const [joined, setJoined] = useState(false);
@@ -199,19 +181,19 @@ export function Home() {
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-10 pt-12 sm:px-8 sm:pt-16 lg:px-12 lg:pb-16 lg:pt-24 xl:px-16">
           <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,.94fr)_minmax(0,1.06fr)] lg:gap-14 xl:gap-20">
             <div className="text-center lg:text-left">
-              <div className="ns-hero-eyebrow ns-enter ns-enter-1 mb-7 lg:mb-9">
+              <div className="ns-hero-eyebrow ns-enter ns-enter-1 mb-7 lg:mb-8">
                 <span className="animate-pulse-soft size-1.5 bg-[var(--coral-deep)]" />
-                The clubhouse for people who make things
+                Welcome to hobbymaxxing
               </div>
 
               <h1
-                className="ns-enter ns-enter-1 mb-6 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-[var(--forest)]"
+                className="ns-enter ns-enter-1 mb-5 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-[var(--forest)]"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 Made something today?
                 <br />
                 <span className="relative inline-block">
-                  Keep it close.
+                  Show it.
                   <svg
                     className="pointer-events-none absolute -bottom-2 left-0 h-[0.26em] w-full"
                     viewBox="0 0 220 14"
@@ -227,48 +209,31 @@ export function Home() {
                 Create, Don&apos;t Just Consume.
               </p>
 
-              <p className="ns-enter ns-enter-2 mx-auto mb-7 max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg lg:mx-0 lg:max-w-lg">
-                A warm corner of the internet for works-in-progress, tiny breakthroughs, and the people who understand why they matter.
+              <p className="ns-enter ns-enter-2 mx-auto mb-5 max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg lg:mx-0 lg:max-w-lg">
+                Pick a hobby, share what you&apos;re actually making, and find people doing the same thing.
               </p>
 
-              <ul className="ns-hero-claims ns-enter ns-enter-3 mb-9 flex flex-wrap justify-center lg:justify-start" aria-label="What NoSpace is for">
-                {["A place to begin", "A record that stays yours", "People who get it"].map((claim, index) => (
-                  <li key={claim}>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    {claim}
-                  </li>
+              <ul className="ns-hero-claims ns-enter ns-enter-3 mb-8 flex flex-wrap justify-center lg:justify-start" aria-label="What NoSpace is for">
+                {["Real people", "Real progress", "Real output"].map((claim) => (
+                  <li key={claim}>{claim}</li>
                 ))}
               </ul>
 
-              <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:justify-start">
+              <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
                 <Link to="/create">
                   <Button variant="coral" size="lg">
                     Start creating
                     <ArrowRight className="size-4" />
                   </Button>
                 </Link>
-                {user && (
-                  <Link to="/my-space" className="ns-text-link">
-                    Go to My Space
-                    <ArrowRight className="size-4" />
-                  </Link>
-                )}
-                <Link to="/discover" className="ns-text-link">
-                  Explore the spaces
-                  <ArrowRight className="size-4" />
-                </Link>
+                {user && <Link to="/my-space" className="ns-hero-secondary-link">Go to My Space</Link>}
+                <Link to="/discover" className="ns-hero-secondary-link">Explore hobbies</Link>
               </div>
-              <p className="ns-enter ns-enter-3 mt-8 font-hud text-[10px] tracking-[0.14em] text-[var(--forest-ink)]/75">
-                NO SCORES · NO PERFORMANCE · JUST PRACTICE
-              </p>
             </div>
 
             <div ref={parallaxRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
               <div className="ns-hero-art mx-auto max-w-[640px] lg:max-w-none">
-                <div className="ns-hero-art-label">A SMALL WORLD<br />OF MAKERS</div>
-                <HeroMarginalia />
                 <HeroScene className="relative z-10 mx-auto w-full" />
-                <div className="ns-hero-caption"><span>01</span> Find your own way in</div>
               </div>
             </div>
           </div>
@@ -302,8 +267,8 @@ export function Home() {
           <div className="mb-10 flex items-end justify-between gap-5 lg:mb-12">
             <div className="max-w-xl">
               <div className="ns-section-kicker mb-4">CHOOSE A SPACE</div>
-              <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>A room for every obsession.</h2>
-              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Take your coat off. Find the corner where your kind of making already lives.</p>
+              <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>A space for every obsession.</h2>
+              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Pick a hobby, share what you&apos;re actually making, and find people doing the same thing.</p>
             </div>
             <Link to="/discover" className="ns-text-link hidden shrink-0 sm:inline-flex">
               All {hobbies.reduce((n, h) => n + h.subItems.length, 0)} hobbies
@@ -433,7 +398,7 @@ export function Home() {
             <div className="max-w-xl">
               <div className="ns-section-kicker mb-4">WORK LEFT ON THE TABLE</div>
               <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>See what&apos;s taking shape.</h2>
-              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Recent work from across the rooms, with no popularity contest attached.</p>
+              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Recent work from across the spaces, with no popularity contest attached.</p>
             </div>
             <Link to="/create" className="ns-text-link hidden shrink-0 sm:inline-flex">Start your own <ArrowRight className="size-4" /></Link>
           </div>
@@ -457,7 +422,7 @@ export function Home() {
             <div className="mb-10 max-w-xl lg:mb-12">
               <div className="ns-section-kicker mb-4">WANDER A LITTLE</div>
               <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>Your next rabbit hole.</h2>
-              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Rooms you have not opened yet. The first try counts.</p>
+              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Spaces you have not opened yet. The first try counts.</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {exploreNext.map((hobby, i) => (

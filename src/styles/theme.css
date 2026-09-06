@@ -275,17 +275,30 @@
 
   .ns-hero-claims li {
     display: inline-flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    border-right: 1px solid var(--hairline);
-    padding: 0 0.75rem;
-    font-size: 0.78rem;
+    align-items: center;
+    margin: 0.2rem 0.2rem 0.2rem 0;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--cream) 75%, transparent);
+    padding: 0.35rem 0.65rem;
     color: var(--forest-ink);
+    font-size: 0.72rem;
   }
 
-  .ns-hero-claims li:first-child { padding-left: 0; }
-  .ns-hero-claims li:last-child { border-right: 0; }
-  .ns-hero-claims span { font-family: var(--font-mono); font-size: 0.64rem; color: var(--coral-text); }
+  .ns-hero-secondary-link {
+    display: inline-flex;
+    height: 2.75rem;
+    align-items: center;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: var(--cream);
+    padding: 0 1rem;
+    color: var(--forest-ink);
+    font-size: 0.75rem;
+    transition: border-color 180ms ease, transform 180ms ease;
+  }
+
+  .ns-hero-secondary-link:hover { border-color: var(--coral-deep); transform: translateY(-1px); }
 
   .ns-hero-art {
     position: relative;
@@ -484,6 +497,88 @@
     color: var(--coral-deep);
     font-size: 1.6rem;
     transform: translateX(-50%);
+  }
+
+  .ns-myspace-page {
+    background-image:
+      radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--sky) 20%, transparent) 0 1px, transparent 1.5px),
+      linear-gradient(90deg, transparent 0 8%, color-mix(in srgb, var(--forest) 4%, transparent) 8.1% 8.2%, transparent 8.3% 100%);
+    background-size: 26px 26px, 100% 100%;
+  }
+
+  .ns-myspace-masthead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 1.4rem;
+  }
+
+  .ns-myspace-mark {
+    border-left: 1px solid var(--coral-deep);
+    padding-left: 0.7rem;
+    color: var(--forest-ink);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
+    text-align: right;
+  }
+
+  .ns-myspace-mark span { color: var(--coral-text); }
+
+  .ns-myspace-today {
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--cream) 72%, transparent);
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .ns-myspace-feed > .group {
+    border-color: var(--hairline);
+    border-radius: 0.25rem;
+    box-shadow: 4px 4px 0 color-mix(in srgb, var(--sky-deep) 18%, transparent);
+  }
+
+  .ns-myspace-projects a,
+  .ns-myspace-circle-links a {
+    border-radius: 0;
+    border-color: var(--border);
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    box-shadow: 3px 3px 0 color-mix(in srgb, var(--yellow) 22%, transparent);
+  }
+
+  .ns-public-profile {
+    background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--yellow) 25%, transparent) 0 1px, transparent 1.5px);
+    background-size: 24px 24px;
+  }
+
+  .ns-profile-header {
+    border-block: 1px solid var(--hairline);
+    padding-block: 1.25rem;
+  }
+
+  .ns-profile-shelf {
+    border-top: 1px solid var(--hairline);
+    padding-top: 1.25rem;
+  }
+
+  .ns-profile-grid {
+    grid-auto-rows: clamp(8rem, 20vw, 13rem);
+  }
+
+  .ns-profile-tile {
+    min-height: 0;
+    border: 1px solid var(--hairline);
+    background: var(--surface-muted);
+  }
+
+  .ns-profile-feature { grid-row: span 2; }
+
+  .ns-profile-cta {
+    border-color: var(--border);
+    background: var(--surface-muted);
+    box-shadow: 6px 6px 0 color-mix(in srgb, var(--coral) 24%, transparent);
   }
 
   .ns-discover-hero {
@@ -739,8 +834,23 @@
     .ns-you-lower-grid { grid-template-columns: 1fr; }
   }
 
-  .ns-marquee { border-block: 1px solid var(--hairline); }
-  .ns-marquee-mark { display: inline-block; animation: ns-twinkle 3.4s ease-in-out infinite; }
+  .ns-marquee {
+    border-block: 1px solid var(--hairline);
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 28px, color-mix(in srgb, var(--forest) 5%, transparent) 29px);
+    mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent);
+  }
+
+  .ns-marquee .animate-marquee {
+    align-items: center;
+    will-change: transform;
+  }
+
+  .ns-marquee-mark {
+    display: inline-block;
+    color: var(--coral-deep);
+    animation: ns-twinkle 3.4s ease-in-out infinite;
+    text-shadow: 0 0 0 var(--coral-deep), 0 0 15px color-mix(in srgb, var(--coral) 40%, transparent);
+  }
 
   .ns-site-header {
     background-color: color-mix(in srgb, var(--sky) 93%, var(--cream));

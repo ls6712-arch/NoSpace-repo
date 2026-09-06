@@ -1,4 +1,6 @@
 import { Link } from "react-router";
+import { useState } from "react";
+import { hobbyPhoto } from "../data/hobbyPhotos";
 import { SubHobbyArt } from "./SubHobbyArt";
 
 /**
@@ -26,14 +28,27 @@ export function HobbyTile({
   /** Number of posts, shown as a small badge when there are any. */
   count?: number;
 }) {
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const photo = photoFailed ? undefined : hobbyPhoto(subSlug, hobbySlug, 420);
+
   const inner = (
     <>
       <div className="relative overflow-hidden rounded-xl">
-        <SubHobbyArt
-          hobbySlug={hobbySlug}
-          subSlug={subSlug}
-          className="w-full h-auto aspect-square transition-transform duration-300 group-hover:scale-[1.06]"
-        />
+        {photo ? (
+          <img
+            src={photo}
+            alt=""
+            loading="lazy"
+            onError={() => setPhotoFailed(true)}
+            className="h-auto w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-[1.06]"
+          />
+        ) : (
+          <SubHobbyArt
+            hobbySlug={hobbySlug}
+            subSlug={subSlug}
+            className="w-full h-auto aspect-square transition-transform duration-300 group-hover:scale-[1.06]"
+          />
+        )}
         {!!count && (
           <span className="absolute top-1.5 right-1.5 rounded-full bg-black/55 px-1.5 py-0.5 text-[10px] leading-none text-white backdrop-blur-sm">
             {count}
