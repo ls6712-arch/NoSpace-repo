@@ -47,7 +47,7 @@ function DiscoverSpaceArt({
   className?: string;
 }) {
   const [photoFailed, setPhotoFailed] = useState(false);
-  const photo = photoFailed ? undefined : spacePhoto(hobbySlug, 900);
+  const photo = photoFailed ? undefined : spacePhoto(hobbySlug, 1200);
 
   if (!photo) {
     return <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />;
@@ -144,7 +144,7 @@ export function Discover() {
       <section className="ns-discover-hero relative overflow-hidden">
         <div className="ns-discover-hero-art" aria-hidden="true">
           <div className="ns-discover-hero-ring" />
-          <GeneratedArt hobbySlug="art-creative" seed="discover-hero" className="h-full w-full" />
+          <DiscoverSpaceArt hobbySlug="art-creative" seed="discover-hero" className="h-full w-full" />
         </div>
         <div className="container relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-14 sm:py-20 lg:grid-cols-[1fr_0.8fr] lg:gap-14 lg:py-24">
           <div className="relative z-10 max-w-2xl">

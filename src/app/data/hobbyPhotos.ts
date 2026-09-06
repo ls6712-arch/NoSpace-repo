@@ -154,10 +154,10 @@ const SPACE_COVER_HOBBY: Record<string, string> = {
 const UNSPLASH = "https://images.unsplash.com/";
 
 function photoUrl(id: string, width: number) {
-  return `${UNSPLASH}${id}?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=${width}`;
+  return `${UNSPLASH}${id}?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=${width}`;
 }
 
-export function spacePhoto(hobbySlug: string, width = 900) {
+export function spacePhoto(hobbySlug: string, width = 1200) {
   const subSlug = SPACE_COVER_HOBBY[hobbySlug];
   const id = subSlug ? PHOTO[subSlug] : undefined;
   return id ? photoUrl(id, width) : undefined;

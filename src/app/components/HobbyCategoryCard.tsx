@@ -11,7 +11,7 @@ import { GeneratedArt } from "./GeneratedArt";
  */
 export function HobbyCategoryCard({ hobby }: { hobby: Hobby }) {
   const [photoFailed, setPhotoFailed] = useState(false);
-  const photo = photoFailed ? undefined : spacePhoto(hobby.slug, 900);
+  const photo = photoFailed ? undefined : spacePhoto(hobby.slug, 1200);
 
   return (
     <Link
