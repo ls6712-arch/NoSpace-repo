@@ -27,11 +27,14 @@ export function PersonActions({
   personId,
   /** Hobbies this person works in, so Explore has something concrete to offer. */
   hobbyKeys = [],
+  compact = false,
   className = "",
 }: {
   personName?: string;
   personId?: string;
   hobbyKeys?: string[];
+  /** Smaller buttons for a denser card. Opens the exact same dialogs. */
+  compact?: boolean;
   className?: string;
 }) {
   const social = useSocial();
@@ -190,7 +193,9 @@ export function PersonActions({
                 setPane(o.id);
                 setOpen(true);
               }}
-              className={`flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-[13px] font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded-full font-medium transition-colors ${
+                compact ? "min-h-8 px-2 py-1.5 text-[11px]" : "min-h-11 px-3 py-2.5 text-[13px]"
+              } ${
                 primary
                   ? "text-white [background-color:var(--forest)]"
                   : settled

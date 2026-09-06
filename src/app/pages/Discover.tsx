@@ -9,12 +9,11 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { subHobbyLabel } from "../data/hobbies";
+import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { spacePhoto } from "../data/hobbyPhotos";
 import { categoryIcon } from "../data/categoryIcons";
 import { circles } from "../data/circles";
 import { Post } from "../data/posts";
-import { useCategories } from "../context/CategoriesContext";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
@@ -226,7 +225,6 @@ function SpaceTile({
 
 export function Discover() {
   const { publicFeed } = useContent();
-  const { categories } = useCategories();
   const social = useSocial();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("about") ?? "");
@@ -315,14 +313,14 @@ export function Discover() {
           <div className="ns-discover-hero-ring" />
           <DiscoverSpaceArt hobbySlug="art-creative" seed="discover-hero" className="h-full w-full" />
         </div>
-        <div className="container relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-14 sm:py-20 lg:grid-cols-[1fr_0.8fr] lg:gap-14 lg:py-24">
+        <div className="container relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:py-10 lg:grid-cols-[1fr_0.8fr] lg:gap-14 lg:py-12">
           <div className="relative z-10 max-w-2xl">
-            <div className="ns-section-kicker mb-5 text-[var(--forest-ink)]">THE FRONT DOOR</div>
-            <h1 className="mb-5 text-[clamp(3rem,7vw,5.5rem)] leading-[.92] tracking-[-.04em] text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>
+            <div className="ns-section-kicker mb-3 text-[var(--forest-ink)]">THE FRONT DOOR</div>
+            <h1 className="mb-4 text-[clamp(3rem,7vw,5.5rem)] leading-[.92] tracking-[-.04em] text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>
               Find spaces, circles<br /><em className="text-[var(--coral-deep)]">and people who make things.</em>
             </h1>
-            <p className="mb-8 max-w-lg text-lg leading-relaxed text-[var(--forest-ink)]">
-              Curiosity creates community — arranged like a good afternoon, not an endless feed.
+            <p className="mb-5 max-w-lg text-lg leading-relaxed text-[var(--forest-ink)]">
+              Browse Spaces, join Circles, and find people making things — all in one place.
             </p>
             {tab === "spaces" && (
               <div className="ns-discover-search relative max-w-xl">
@@ -340,7 +338,7 @@ export function Discover() {
                     }
                   }}
                   placeholder="Search hobbies, people, or spaces..."
-                  className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-sm text-[var(--forest-ink)] outline-none placeholder:text-[var(--forest-ink)]/65 focus:ring-0"
+                  className="w-full border-0 bg-transparent py-3 pl-11 pr-11 text-sm text-[var(--forest-ink)] outline-none placeholder:text-[var(--forest-ink)]/65 focus:ring-0"
                 />
                 {query && (
                   <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--forest-ink)] hover:text-[var(--coral-deep)]" aria-label="Clear search">
@@ -354,10 +352,10 @@ export function Discover() {
         </div>
       </section>
 
-      <div className="bg-surface pb-24 pt-8">
+      <div className="bg-surface pb-24 pt-5">
         <div className="container mx-auto max-w-6xl px-4">
           {/* Spaces / Circles / People — Discover's own front door */}
-          <div role="tablist" aria-label="Discover" className="mb-10 inline-flex rounded-full border border-border bg-card p-1">
+          <div role="tablist" aria-label="Discover" className="mb-6 inline-flex rounded-full border border-border bg-card p-1">
             {DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
               const active = tab === id;
               return (
@@ -385,7 +383,13 @@ export function Discover() {
 
           {tab === "spaces" && (
             <>
-              {/* Explore Spaces */}
+              {/* Explore Spaces — the real, built-out Spaces (data/hobbies.ts,
+                  the same list /space/:slug resolves against), not the wider
+                  category taxonomy. CategoriesContext's `categories` can grow
+                  with admin-approved suggestions that don't have a Space built
+                  for them yet; showing those here as clickable Spaces would be
+                  promising a place that isn't actually there. Suggesting a new
+                  one is still offered, honestly, as a suggestion. */}
               <section className="mb-14">
                 <div className="mb-5 flex items-end justify-between gap-4">
                   <div>
@@ -396,8 +400,8 @@ export function Discover() {
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-2">
                   <SpaceTile to="/discover" label="All Spaces" icon={LayoutGrid} />
-                  {categories.map((c) => (
-                    <SpaceTile key={c.slug} to={`/space/${c.slug}`} label={c.name} icon={categoryIcon(c.slug)} />
+                  {hobbies.map((hobby) => (
+                    <SpaceTile key={hobby.slug} to={`/space/${hobby.slug}`} label={hobby.shortName} icon={categoryIcon(hobby.slug)} />
                   ))}
                   <div className="w-28 shrink-0">
                     <SuggestCategory className="h-full" />
@@ -524,7 +528,7 @@ export function Discover() {
               ) : (
                 <div className="columns-1 gap-4 sm:columns-2 md:columns-3 xl:columns-4">
                   {visible.map((post) => (
-                    <ContentCard key={post.id} post={post} />
+                    <ContentCard key={post.id} post={post} compact />
                   ))}
                 </div>
               )}

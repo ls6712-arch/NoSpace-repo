@@ -622,7 +622,9 @@
   }
 
   .ns-discover-hero {
-    min-height: 31rem;
+    /* ~32% shorter than the original 31rem, so Spaces/Circles/People lands
+       much closer to the fold without losing the headline or the art. */
+    min-height: 21rem;
     background: var(--sky);
     isolation: isolate;
   }
@@ -854,7 +856,10 @@
   }
 
   @media (max-width: 639px) {
-    .ns-discover-hero { min-height: 39rem; }
+    /* No forced min-height on phones: the toggle below the hero should sit
+       right under whatever the (now-tightened) headline/copy/search actually
+       take up, not under an artificially tall block. */
+    .ns-discover-hero { min-height: 0; }
     .ns-discover-hero-art {
       top: auto;
       right: -18%;

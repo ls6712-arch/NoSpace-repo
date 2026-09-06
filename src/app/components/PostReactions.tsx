@@ -100,11 +100,15 @@ function toggle(postId: string | number, reaction: ReactionId) {
 export function PostReactions({
   postId,
   baseCounts,
+  compact = false,
   className = "",
 }: {
   postId: string | number;
   /** Optional seed counts. Kept subordinate — never the dominant signal. */
   baseCounts?: Partial<Record<ReactionId, number>>;
+  /** Same six controls, smaller and in three columns instead of two, for a
+   * denser grid of cards. Nothing about what they do changes. */
+  compact?: boolean;
   className?: string;
 }) {
   const mine = useSyncExternalStore(
@@ -113,8 +117,13 @@ export function PostReactions({
     () => NONE,
   );
 
+  // Compact still has all six controls and all six meanings — "Obsessed",
+  // "Needed it" and "Keep going" just don't fit as text at a third of a
+  // card's width without truncating into nonsense. Icon + tooltip + an
+  // sr-only label keeps the meaning (hover, or a screen reader) without
+  // guessing at a truncated word.
   return (
-    <ul className={`grid grid-cols-2 gap-2 ${className}`}>
+    <ul className={`grid ${compact ? "grid-cols-3 gap-1.5" : "grid-cols-2 gap-2"} ${className}`}>
       {REACTIONS.map(({ id, label, icon: Icon, meaning }) => {
         const pressed = mine.includes(id);
         const count = (baseCounts?.[id] ?? 0) + (pressed ? 1 : 0);
@@ -123,16 +132,19 @@ export function PostReactions({
             <button
               type="button"
               aria-pressed={pressed}
+              aria-label={`${label} — ${meaning}`}
               title={`${label} — ${meaning}`}
               onClick={() => toggle(postId, id)}
-              className={`flex w-full items-center gap-2 rounded-full border px-3 py-2 text-[13px] transition-colors duration-150 ${
+              className={`flex w-full items-center rounded-full border transition-colors duration-150 ${
+                compact ? "justify-center gap-1 px-2 py-2 text-[13px]" : "gap-2 px-3 py-2 text-[13px]"
+              } ${
                 pressed
                   ? "border-[var(--border)] bg-surface text-foreground"
                   : "border-[var(--border)] bg-surface text-foreground hover:border-[var(--foreground)]/35"
               }`}
             >
               <Icon
-                className="size-4 shrink-0"
+                className={compact ? "size-4 shrink-0" : "size-4 shrink-0"}
                 strokeWidth={1.9}
                 style={{
                   color: pressed ? TINT[id] : "var(--foreground-muted)",
@@ -140,9 +152,11 @@ export function PostReactions({
                 }}
                 aria-hidden="true"
               />
-              {label}
+              <span className={compact ? "sr-only" : ""}>{label}</span>
               {count > 0 && (
-                <span className="ml-auto text-[11px] text-muted-foreground">{count}</span>
+                <span className={compact ? "text-[10px] text-muted-foreground" : "ml-auto text-[11px] text-muted-foreground"}>
+                  {count}
+                </span>
               )}
             </button>
           </li>
@@ -151,21 +165,24 @@ export function PostReactions({
 
       {/* Save is one of the six, not a separate control floating on the photo. */}
       <li>
-        <SaveReaction postId={postId} />
+        <SaveReaction postId={postId} compact={compact} />
       </li>
     </ul>
   );
 }
 
-function SaveReaction({ postId }: { postId: string | number }) {
+function SaveReaction({ postId, compact = false }: { postId: string | number; compact?: boolean }) {
   const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
   return (
     <button
       type="button"
       aria-pressed={saved}
+      aria-label={saved ? "Saved — keep it to come back to" : "Save — keep it to come back to"}
       title="Save — keep it to come back to"
       onClick={() => toggleSaved(Number(postId))}
-      className="flex w-full items-center gap-2 rounded-full border border-[var(--border)] bg-surface px-3 py-2 text-[13px] text-foreground transition-colors duration-150 hover:border-[var(--foreground)]/35"
+      className={`flex w-full items-center rounded-full border border-[var(--border)] bg-surface text-foreground transition-colors duration-150 hover:border-[var(--foreground)]/35 ${
+        compact ? "justify-center gap-1 px-2 py-2 text-[13px]" : "gap-2 px-3 py-2 text-[13px]"
+      }`}
     >
       <Bookmark
         className="size-4 shrink-0"
