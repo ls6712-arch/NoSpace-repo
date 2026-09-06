@@ -9,7 +9,6 @@ import { useAuth } from "../context/AuthContext";
 import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
 import { ContentCard } from "../components/ContentCard";
 import { GeneratedArt } from "../components/GeneratedArt";
-import { HeroScene } from "../components/HeroScene";
 import { PostReactions } from "../components/PostReactions";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -69,6 +68,105 @@ function initials(name: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+function CommunityHobbyScene({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 720 520"
+      className={className}
+      role="img"
+      aria-label="A shared outdoor space where two friends play a board game, a man hikes, and a girl practices yoga"
+    >
+      <g transform="translate(0 12)">
+        <g className="ns-drift" fill="#F8F4EB" opacity=".82">
+          <ellipse cx="122" cy="76" rx="52" ry="22" />
+          <ellipse cx="162" cy="62" rx="36" ry="18" />
+          <ellipse cx="92" cy="66" rx="30" ry="16" />
+        </g>
+        <g className="ns-drift" style={{ animationDuration: "44s" }} fill="#F8F4EB" opacity=".68">
+          <ellipse cx="570" cy="104" rx="42" ry="18" />
+          <ellipse cx="604" cy="92" rx="28" ry="14" />
+        </g>
+        <circle cx="640" cy="70" r="25" fill="#F5C542" opacity=".92" />
+      </g>
+
+      <path d="M0 334c96-54 181-43 266-18 92 27 151 17 224-12 84-33 157-28 230 15v115H0Z" fill="#2C7A57" />
+      <path d="M0 383c84-44 165-34 242-12 94 27 166 23 246-4 81-27 159-21 232 11v96H0Z" fill="#1B6244" />
+      <ellipse cx="360" cy="455" rx="330" ry="67" fill="#0E4D3A" opacity=".72" />
+      <path d="M342 520c-6-54 18-85 56-112 26-18 49-30 78-46" fill="none" stroke="#F5C542" strokeWidth="12" strokeLinecap="round" opacity=".82" />
+
+      <g fill="#0E4D3A">
+        <path d="M54 362h9v67h-9zM58 260l34 66H24ZM58 299l39 73H19Z" />
+        <path d="M667 350h8v73h-8zM671 242l34 66h-68ZM671 284l40 75h-80Z" />
+      </g>
+
+      <g className="ns-breathe" style={{ animationDuration: "7.4s" }}>
+        <ellipse cx="210" cy="411" rx="124" ry="18" fill="#0B3E2E" opacity=".24" />
+        <path d="M127 346h21l-2 57h-17Z" fill="#0E4D3A" />
+        <path d="M275 346h21l12 57h-17Z" fill="#0E4D3A" />
+        <path d="M96 338c0-14 11-24 28-24s29 10 29 24l-5 31h-48Z" fill="#FF6B4A" />
+        <path d="M268 336c0-15 11-25 29-25s29 10 29 25l-5 33h-49Z" fill="#5A88A8" />
+        <path d="M104 339c-18 8-20 19-14 30M146 339c17 10 20 19 17 31" stroke="#E8A87C" strokeWidth="11" strokeLinecap="round" fill="none" />
+        <path d="M276 338c-17 8-23 18-24 30M315 338c16 8 21 18 22 29" stroke="#C68A5E" strokeWidth="11" strokeLinecap="round" fill="none" />
+        <circle cx="124" cy="287" r="22" fill="#E8A87C" />
+        <path d="M102 285c1-19 11-29 25-29 16 0 25 11 23 28-10-7-25-9-42 2Z" fill="#0E4D3A" />
+        <circle cx="296" cy="286" r="22" fill="#C68A5E" />
+        <path d="M274 284c1-19 11-29 25-29 16 0 25 11 23 28-10-7-25-9-42 2Z" fill="#231F20" />
+        <circle cx="117" cy="288" r="2" fill="#0E4D3A" />
+        <circle cx="132" cy="288" r="2" fill="#0E4D3A" />
+        <circle cx="289" cy="287" r="2" fill="#0E4D3A" />
+        <circle cx="304" cy="287" r="2" fill="#0E4D3A" />
+      </g>
+
+      <g>
+        <path d="M121 354h183l-10 17H130Z" fill="#F8F4EB" stroke="#0E4D3A" strokeWidth="4" />
+        <path d="M147 371v39M278 371v39" stroke="#0E4D3A" strokeWidth="7" strokeLinecap="round" />
+        <rect x="159" y="343" width="105" height="16" rx="4" fill="#FF6B4A" transform="rotate(-4 211 351)" />
+        <circle cx="181" cy="350" r="5" fill="#F5C542" />
+        <circle cx="214" cy="347" r="5" fill="#2F76A8" />
+        <circle cx="245" cy="350" r="5" fill="#0E4D3A" />
+        <path d="M202 357l8-8 8 8-8 8ZM232 357l8-8 8 8-8 8Z" fill="#C43F22" />
+      </g>
+
+      <g className="ns-breathe" style={{ animationDelay: "1.1s", animationDuration: "8s" }}>
+        <ellipse cx="472" cy="351" rx="54" ry="12" fill="#0B3E2E" opacity=".2" />
+        <path d="M454 286l-12 61 17 4 20-61Z" fill="#0E4D3A" />
+        <path d="M483 288l20 61 16-5-18-62Z" fill="#0E4D3A" />
+        <path d="M437 348c0-5 9-8 19-5l10 8-30 4ZM497 349c9-3 19 0 22 6l-27 2Z" fill="#F8F4EB" />
+        <path d="M447 232c0-14 11-24 27-24s28 10 28 24l-7 59h-46Z" fill="#FF6B4A" />
+        <path d="M449 237c-15 10-22 22-24 38M496 237c17 8 26 18 31 32" stroke="#E8A87C" strokeWidth="11" strokeLinecap="round" fill="none" />
+        <circle cx="474" cy="198" r="23" fill="#C68A5E" />
+        <path d="M452 197c0-19 10-30 25-30 16 0 25 12 24 29-10-8-27-10-49 1Z" fill="#231F20" />
+        <path d="M436 235c-15-16-12-39 5-53l28 21-10 52Z" fill="#F5C542" opacity=".88" />
+        <path d="M426 351l-14 23M516 351l16 20" stroke="#0E4D3A" strokeWidth="4" strokeLinecap="round" />
+        <path d="M414 374l-13 8M532 371l14 7" stroke="#F8F4EB" strokeWidth="5" strokeLinecap="round" />
+      </g>
+
+      <g className="ns-breathe" style={{ animationDelay: "2.2s", animationDuration: "7.8s" }}>
+        <rect x="526" y="438" width="147" height="8" rx="4" fill="#F8F4EB" opacity=".9" />
+        <circle cx="590" cy="321" r="21" fill="#E8A87C" />
+        <path d="M569 319c0-18 10-28 24-28 12 0 22 8 24 22-8-3-16-2-23 3-7 5-16 7-25 3Z" fill="#0E4D3A" />
+        <path d="M607 302c21 1 24 17 9 25" fill="none" stroke="#0E4D3A" strokeWidth="8" strokeLinecap="round" />
+        <path d="M574 345c0-13 7-22 17-22s18 9 18 22l-2 47h-34Z" fill="#FF6B4A" />
+        <path d="M578 347l-45 28M605 347l47 26" stroke="#E8A87C" strokeWidth="10" strokeLinecap="round" />
+        <circle cx="533" cy="375" r="5" fill="#E8A87C" />
+        <circle cx="652" cy="373" r="5" fill="#E8A87C" />
+        <path d="M579 386l-34 48h25l37-39M602 386l43 48h25l-48-55Z" fill="#0E4D3A" />
+        <path d="M534 434h34M646 434h31" stroke="#F8F4EB" strokeWidth="7" strokeLinecap="round" />
+      </g>
+
+      <g fill="#FF6B4A" className="ns-sway" style={{ animationDuration: "8s" }}>
+        <circle cx="360" cy="437" r="7" />
+        <circle cx="350" cy="447" r="6" />
+        <circle cx="370" cy="447" r="6" />
+      </g>
+      <g fill="#F5C542" className="ns-twinkle">
+        <path d="M382 236l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" />
+        <path d="M594 222l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" />
+      </g>
+    </svg>
+  );
 }
 
 function WaitlistForm() {
@@ -175,12 +273,6 @@ export function Home() {
     seedPosts.find((p) => p.id === 502),
   ].filter((p): p is (typeof seedPosts)[number] => !!p);
 
-  const heroHobbies = [
-    { slug: "rooted", seed: "hero-garden", label: "GROW TOGETHER", className: "ns-hero-hobby-one" },
-    { slug: "workbench", seed: "hero-making", label: "MAKE TOGETHER", className: "ns-hero-hobby-two" },
-    { slug: "thestudio", seed: "hero-studio", label: "CREATE TOGETHER", className: "ns-hero-hobby-three" },
-  ];
-
   const marqueeHobbies = [
     { slug: "kitchentable", seed: "marquee-cooking", className: "ns-marquee-hobby-one" },
     { slug: "makerlab", seed: "marquee-making", className: "ns-marquee-hobby-two" },
@@ -246,15 +338,7 @@ export function Home() {
 
             <div ref={parallaxRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
               <div className="ns-hero-art mx-auto max-w-[640px] lg:max-w-none">
-                <div className="ns-hero-photo-collage" aria-label="A community making, growing, and creating together">
-                  <HeroScene className="absolute inset-0 z-10 h-full w-full" />
-                  {heroHobbies.map((hobby) => (
-                    <div key={hobby.seed} className={`ns-hero-photo-card z-20 ${hobby.className}`}>
-                      <GeneratedArt hobbySlug={hobby.slug} seed={hobby.seed} className="h-full w-full" />
-                      <span className="ns-hero-photo-label">{hobby.label}</span>
-                    </div>
-                  ))}
-                </div>
+                <CommunityHobbyScene className="relative z-10 mx-auto h-auto w-full" />
               </div>
             </div>
           </div>
