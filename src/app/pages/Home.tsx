@@ -105,28 +105,39 @@ function CommunityHobbyScene({ className = "" }: { className?: string }) {
         <ellipse cx="210" cy="411" rx="124" ry="18" fill="#0B3E2E" opacity=".24" />
         <path d="M127 346h21l-2 57h-17Z" fill="#0E4D3A" />
         <path d="M275 346h21l12 57h-17Z" fill="#0E4D3A" />
+        <path d="M112 400h33l8 10h-47ZM280 400h33l13 10h-47Z" fill="#F8F4EB" />
         <path d="M96 338c0-14 11-24 28-24s29 10 29 24l-5 31h-48Z" fill="#FF6B4A" />
+        <path d="M107 337c8 6 19 8 35 3M105 346c8 4 18 5 29 3" fill="none" stroke="#C43F22" strokeWidth="3" opacity=".7" />
         <path d="M268 336c0-15 11-25 29-25s29 10 29 25l-5 33h-49Z" fill="#5A88A8" />
+        <path d="M278 338h39M286 330l9 8 9-8" fill="none" stroke="#D7E3E4" strokeWidth="3" opacity=".9" />
         <path d="M104 339c-18 8-20 19-14 30M146 339c17 10 20 19 17 31" stroke="#E8A87C" strokeWidth="11" strokeLinecap="round" fill="none" />
         <path d="M276 338c-17 8-23 18-24 30M315 338c16 8 21 18 22 29" stroke="#C68A5E" strokeWidth="11" strokeLinecap="round" fill="none" />
+        <circle cx="94" cy="372" r="5" fill="#E8A87C" />
+        <circle cx="163" cy="371" r="5" fill="#E8A87C" />
         <circle cx="124" cy="287" r="22" fill="#E8A87C" />
-        <path d="M102 285c1-19 11-29 25-29 16 0 25 11 23 28-10-7-25-9-42 2Z" fill="#0E4D3A" />
-        <circle cx="296" cy="286" r="22" fill="#C68A5E" />
-        <path d="M274 284c1-19 11-29 25-29 16 0 25 11 23 28-10-7-25-9-42 2Z" fill="#231F20" />
+        <path d="M101 286c-2-20 10-32 25-32 16 0 28 11 26 28l-4 7c-6-10-15-15-26-15-8 0-15 4-21 12Z" fill="#0E4D3A" />
+        <path d="M113 280c4-4 8-6 13-6M127 280c4-4 8-5 12-3" fill="none" stroke="#0E4D3A" strokeWidth="2" strokeLinecap="round" />
         <circle cx="117" cy="288" r="2" fill="#0E4D3A" />
         <circle cx="132" cy="288" r="2" fill="#0E4D3A" />
+        <path d="M120 299c3 3 7 3 10 0" fill="none" stroke="#0E4D3A" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="296" cy="286" r="22" fill="#C68A5E" />
+        <path d="M273 284c0-20 11-32 26-32 16 0 28 12 25 29-6-9-15-14-26-14-9 0-17 5-24 17Z" fill="#231F20" />
+        <path d="M309 261c9 3 14 9 15 18" fill="none" stroke="#231F20" strokeWidth="8" strokeLinecap="round" />
         <circle cx="289" cy="287" r="2" fill="#0E4D3A" />
         <circle cx="304" cy="287" r="2" fill="#0E4D3A" />
+        <path d="M292 299c3 3 7 3 10 0" fill="none" stroke="#0E4D3A" strokeWidth="2" strokeLinecap="round" />
       </g>
 
       <g>
         <path d="M121 354h183l-10 17H130Z" fill="#F8F4EB" stroke="#0E4D3A" strokeWidth="4" />
         <path d="M147 371v39M278 371v39" stroke="#0E4D3A" strokeWidth="7" strokeLinecap="round" />
         <rect x="159" y="343" width="105" height="16" rx="4" fill="#FF6B4A" transform="rotate(-4 211 351)" />
+        <path d="M166 348h91" stroke="#C43F22" strokeWidth="2" opacity=".65" />
         <circle cx="181" cy="350" r="5" fill="#F5C542" />
         <circle cx="214" cy="347" r="5" fill="#2F76A8" />
         <circle cx="245" cy="350" r="5" fill="#0E4D3A" />
         <path d="M202 357l8-8 8 8-8 8ZM232 357l8-8 8 8-8 8Z" fill="#C43F22" />
+        <path d="M189 357l7-7M260 356l7-7" stroke="#F5C542" strokeWidth="3" strokeLinecap="round" />
       </g>
 
       <g className="ns-breathe" style={{ animationDelay: "1.1s", animationDuration: "8s" }}>
@@ -135,24 +146,41 @@ function CommunityHobbyScene({ className = "" }: { className?: string }) {
         <path d="M483 288l20 61 16-5-18-62Z" fill="#0E4D3A" />
         <path d="M437 348c0-5 9-8 19-5l10 8-30 4ZM497 349c9-3 19 0 22 6l-27 2Z" fill="#F8F4EB" />
         <path d="M447 232c0-14 11-24 27-24s28 10 28 24l-7 59h-46Z" fill="#FF6B4A" />
+        <path d="M449 246h49M457 232v48" stroke="#C43F22" strokeWidth="3" opacity=".7" />
         <path d="M449 237c-15 10-22 22-24 38M496 237c17 8 26 18 31 32" stroke="#E8A87C" strokeWidth="11" strokeLinecap="round" fill="none" />
+        <circle cx="423" cy="276" r="5" fill="#E8A87C" />
+        <circle cx="528" cy="270" r="5" fill="#E8A87C" />
         <circle cx="474" cy="198" r="23" fill="#C68A5E" />
         <path d="M452 197c0-19 10-30 25-30 16 0 25 12 24 29-10-8-27-10-49 1Z" fill="#231F20" />
+        <path d="M454 184c7-13 19-18 31-14M495 181c5 5 7 10 7 17" fill="none" stroke="#231F20" strokeWidth="7" strokeLinecap="round" />
+        <circle cx="466" cy="199" r="2" fill="#3A2A1F" />
+        <circle cx="481" cy="199" r="2" fill="#3A2A1F" />
+        <path d="M469 211c3 3 7 3 10 0" fill="none" stroke="#3A2A1F" strokeWidth="2" strokeLinecap="round" />
         <path d="M436 235c-15-16-12-39 5-53l28 21-10 52Z" fill="#F5C542" opacity=".88" />
+        <path d="M442 210l23 9M451 198l23 11" stroke="#D39A2F" strokeWidth="3" opacity=".8" />
         <path d="M426 351l-14 23M516 351l16 20" stroke="#0E4D3A" strokeWidth="4" strokeLinecap="round" />
         <path d="M414 374l-13 8M532 371l14 7" stroke="#F8F4EB" strokeWidth="5" strokeLinecap="round" />
+        <path d="M402 376l-9 42M540 371l14 42" stroke="#F5C542" strokeWidth="3" strokeLinecap="round" />
+        <path d="M392 418l-3 4M554 413l3 4" stroke="#F8F4EB" strokeWidth="5" strokeLinecap="round" />
       </g>
 
       <g className="ns-breathe" style={{ animationDelay: "2.2s", animationDuration: "7.8s" }}>
         <rect x="526" y="438" width="147" height="8" rx="4" fill="#F8F4EB" opacity=".9" />
+        <path d="M545 437h113" stroke="#F5C542" strokeWidth="3" opacity=".8" />
         <circle cx="590" cy="321" r="21" fill="#E8A87C" />
         <path d="M569 319c0-18 10-28 24-28 12 0 22 8 24 22-8-3-16-2-23 3-7 5-16 7-25 3Z" fill="#0E4D3A" />
         <path d="M607 302c21 1 24 17 9 25" fill="none" stroke="#0E4D3A" strokeWidth="8" strokeLinecap="round" />
+        <path d="M580 314c4-3 8-3 12 0M592 314c4-3 8-2 11 1" fill="none" stroke="#0E4D3A" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="584" cy="321" r="2" fill="#0E4D3A" />
+        <circle cx="599" cy="321" r="2" fill="#0E4D3A" />
+        <path d="M587 333c3 2 6 2 9-1" fill="none" stroke="#0E4D3A" strokeWidth="2" strokeLinecap="round" />
         <path d="M574 345c0-13 7-22 17-22s18 9 18 22l-2 47h-34Z" fill="#FF6B4A" />
+        <path d="M577 353h31M585 338l-3 47" stroke="#C43F22" strokeWidth="3" opacity=".65" />
         <path d="M578 347l-45 28M605 347l47 26" stroke="#E8A87C" strokeWidth="10" strokeLinecap="round" />
         <circle cx="533" cy="375" r="5" fill="#E8A87C" />
         <circle cx="652" cy="373" r="5" fill="#E8A87C" />
         <path d="M579 386l-34 48h25l37-39M602 386l43 48h25l-48-55Z" fill="#0E4D3A" />
+        <path d="M575 394l-25 36M610 395l38 38" stroke="#2C7A57" strokeWidth="3" opacity=".8" />
         <path d="M534 434h34M646 434h31" stroke="#F8F4EB" strokeWidth="7" strokeLinecap="round" />
       </g>
 
