@@ -254,7 +254,7 @@ export function Home() {
                   </Link>
                 )}
                 <Link to="/discover" className="ns-text-link">
-                  Explore the rooms
+                  Explore the spaces
                   <ArrowRight className="size-4" />
                 </Link>
               </div>
@@ -301,7 +301,7 @@ export function Home() {
         <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
           <div className="mb-10 flex items-end justify-between gap-5 lg:mb-12">
             <div className="max-w-xl">
-              <div className="ns-section-kicker mb-4">CHOOSE A ROOM</div>
+              <div className="ns-section-kicker mb-4">CHOOSE A SPACE</div>
               <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>A room for every obsession.</h2>
               <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Take your coat off. Find the corner where your kind of making already lives.</p>
             </div>
@@ -484,7 +484,7 @@ export function Home() {
             {[
               ["No performance", "Make it because it pulls at you, not because it plays well."],
               ["No scorekeeping", "A quiet record of your practice is enough."],
-              ["No endless scroll", "Every room is a place to arrive, not disappear into."],
+              ["No endless scroll", "Every space is a place to arrive, not disappear into."],
             ].map(([title, copy], index) => (
               <div key={title} className="ns-principle p-7 sm:p-8">
                 <span className="mb-10 block font-hud text-xs text-[var(--coral-text)]">0{index + 1}</span>

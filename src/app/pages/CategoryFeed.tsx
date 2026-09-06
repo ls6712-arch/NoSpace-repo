@@ -215,38 +215,31 @@ export function CategoryFeed() {
 
   return (
     <div className="min-h-screen">
-      <section className="relative py-12 md:py-16 overflow-hidden">
+      <section className="ns-space-hero relative overflow-hidden">
         <div className={`absolute inset-0 bg-gradient-to-br ${hobby.gradient} opacity-[0.12]`} />
-        <div className="container mx-auto px-4 relative flex flex-col md:flex-row items-center gap-8">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm uppercase tracking-wide text-foreground mb-2">
-              {hobby.plainLabel}
-            </p>
-            <h1 className="text-4xl md:text-5xl mb-3">{hobby.shortName}</h1>
-            <p className="text-lg mb-2 italic text-foreground">{hobby.tagline}</p>
-            <p className="text-foreground text-lg max-w-xl">{hobby.description}</p>
-            {/* What's happening here — never how many people are watching. */}
-            <HobbyActivity hobbySlug={hobby.slug} className="mt-3 text-foreground" />
-            <div className="mt-4">
-              <PersonActions hobbyKeys={[activeSub ?? `space:${hobby.slug}`]} />
-            </div>
+        <div className="ns-space-hero-grid absolute inset-0" aria-hidden="true" />
+        <div className="container relative mx-auto flex flex-col items-center gap-10 px-4 py-14 md:flex-row md:gap-14 md:py-20">
+          <div className="min-w-0 flex-1">
+            <div className="ns-section-kicker mb-5 text-[var(--coral-text)]">OPEN SPACE · {hobby.plainLabel}</div>
+            <h1 className="mb-4 text-[clamp(2.8rem,6vw,5rem)] leading-[.94] tracking-[-.035em]" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h1>
+            <p className="mb-3 text-xl text-foreground" style={{ fontFamily: "var(--font-heading)" }}>{hobby.tagline}</p>
+            <p className="max-w-xl text-lg leading-relaxed text-foreground">{hobby.description}</p>
+            <HobbyActivity hobbySlug={hobby.slug} className="mt-4 text-foreground" />
+            <div className="mt-6"><PersonActions hobbyKeys={[activeSub ?? `space:${hobby.slug}`]} /></div>
           </div>
-          <div className="w-full max-w-xs md:w-72 md:max-w-none shrink-0 rounded-3xl overflow-hidden border border-border bg-surface-muted">
-            <GeneratedArt
-              hobbySlug={hobby.slug}
-              seed={hobby.slug}
-              className="w-full h-auto aspect-[4/3]"
-            />
+          <div className="ns-space-hero-art w-full max-w-sm shrink-0 md:w-[22rem] md:max-w-none">
+            <GeneratedArt hobbySlug={hobby.slug} seed={`${hobby.slug}-space`} className="h-auto w-full" />
+            <span className="ns-space-hero-caption">A place to practice<br />without an audience.</span>
           </div>
         </div>
       </section>
 
       <div className="bg-surface">
-      {/* What's actually inside this space — pictures, not a word list. */}
-      <section className="container mx-auto px-4 pt-10">
-        <div className="flex items-end justify-between gap-4 mb-4 flex-wrap">
+      <section className="container mx-auto px-4 pt-14">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-xl">What's inside {hobby.shortName}</h2>
+            <div className="ns-section-kicker mb-3">FOLLOW A THREAD</div>
+            <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Find your way into {hobby.shortName}</h2>
             <p className="text-sm text-muted-foreground">
               {activeSub
                 ? "Tap it again to see everything."
@@ -264,7 +257,7 @@ export function CategoryFeed() {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+        <div className="ns-space-thread-grid grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
           {hobby.subItems.map((s) => (
             <HobbyTile
               key={s.slug}
