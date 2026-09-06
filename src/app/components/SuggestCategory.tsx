@@ -68,7 +68,7 @@ export function SuggestCategory({ className = "" }: { className?: string }) {
           <Plus className="size-4 text-muted-foreground" />
         </span>
         <span className="text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-          Suggest a category
+          Suggest a Category
         </span>
         <span className="text-xs leading-relaxed text-muted-foreground">
           Yours isn't here? Tell us what's missing.
@@ -79,11 +79,12 @@ export function SuggestCategory({ className = "" }: { className?: string }) {
         <DialogContent className="max-w-md">
           <DialogHeader className="gap-1 text-left">
             <DialogTitle className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Suggest a category
+              Suggest a Category
             </DialogTitle>
             <DialogDescription className="leading-relaxed">
-              These are just the ways in. You can already post about anything —
-              this is for when the list itself is missing something.
+              Spaces are ways in, never a list you have to pick from — you can
+              already post about anything. This is for when the list itself is
+              missing something.
             </DialogDescription>
           </DialogHeader>
 

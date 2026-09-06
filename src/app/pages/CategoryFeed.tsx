@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { Plus, Users, X } from "lucide-react";
-import { getHobby, currentSpaceSlug } from "../data/hobbies";
+import { getHobby, currentSpaceSlug, subHobbyLabel } from "../data/hobbies";
+import { postInCategory } from "../data/categories";
+import { useCategories } from "../context/CategoriesContext";
 import { HobbyTile } from "../components/HobbyTile";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
@@ -131,7 +133,38 @@ function CirclesTab({
 export function CategoryFeed() {
   const { slug = "" } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const hobby = getHobby(slug);
+  const { categories } = useCategories();
+  const { publicFeed } = useContent();
+
+  const builtIn = getHobby(slug);
+
+  /**
+   * A Space approved from a suggestion exists only in the database, so it has
+   * no entry in the built-in list and none of the sub-hobbies those carry.
+   * It still needs a real page — otherwise approving a suggestion produces a
+   * card on Discover that leads nowhere, which is worse than not offering it.
+   *
+   * Its posts are found by what people typed rather than by a stored slug,
+   * since no existing post could have been filed under a category that did
+   * not exist when it was written.
+   */
+  const approved = !builtIn ? categories.find((c) => c.slug === slug) : undefined;
+  const hobby = builtIn
+    ? builtIn
+    : approved
+      ? {
+          slug: approved.slug,
+          name: approved.name,
+          shortName: approved.name,
+          tagline: approved.description,
+          plainLabel: approved.description,
+          description: approved.description,
+          subItems: [],
+          gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
+          coverImage: "",
+          creatorCount: "—",
+        }
+      : undefined;
   // An old /space/workbench link still lands here; use the current slug for
   // everything downstream so filters compare like with like.
   const spaceSlug = hobby?.slug ?? currentSpaceSlug(slug);
@@ -160,7 +193,11 @@ export function CategoryFeed() {
     );
   }
 
-  const allPosts = publicFeedByHobby(spaceSlug);
+  // A built-in Space collects by stored slug; an approved one collects by
+  // matching what the maker typed against its own vocabulary.
+  const allPosts = builtIn
+    ? publicFeedByHobby(spaceSlug)
+    : publicFeed.filter((p) => postInCategory(p, approved!, subHobbyLabel));
   const posts = activeSub ? allPosts.filter((p) => p.subHobby === activeSub) : allPosts;
   const listings = listingsByHobby(hobby.slug);
   const circles = circlesByHobby(hobby.slug);

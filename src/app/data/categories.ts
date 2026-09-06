@@ -269,13 +269,16 @@ export function primaryCategory(label?: string): Category | undefined {
  */
 export function postInCategory(
   post: { interest?: string; subHobby?: string; hobbySlug: string },
-  categorySlug: string,
+  category: Category,
   subHobbyLabel: (slug: string) => string | undefined,
 ): boolean {
-  if (post.interest && categoriesFor(post.interest).some((c) => c.slug === categorySlug)) {
-    return true;
-  }
-  const subLabel = post.subHobby ? subHobbyLabel(post.subHobby) : undefined;
-  if (subLabel && categoriesFor(subLabel).some((c) => c.slug === categorySlug)) return true;
-  return false;
+  // Matched against the category's own keywords rather than looked up in the
+  // built-in fifteen — otherwise a category approved from a suggestion could
+  // never collect a single post, and approving one would produce an empty
+  // page for ever.
+  const hit = (label?: string) =>
+    !!label && category.keywords.some((k) => mentions(normalise(label), normalise(k)));
+
+  if (hit(post.interest)) return true;
+  return hit(post.subHobby ? subHobbyLabel(post.subHobby) : undefined);
 }
