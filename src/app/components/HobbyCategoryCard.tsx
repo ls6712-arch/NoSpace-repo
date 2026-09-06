@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Hobby } from "../data/hobbies";
-import { hobbyPhoto } from "../data/hobbyPhotos";
+import { spacePhoto } from "../data/hobbyPhotos";
 import { GeneratedArt } from "./GeneratedArt";
 
 /**
@@ -11,7 +11,7 @@ import { GeneratedArt } from "./GeneratedArt";
  */
 export function HobbyCategoryCard({ hobby }: { hobby: Hobby }) {
   const [photoFailed, setPhotoFailed] = useState(false);
-  const photo = photoFailed ? undefined : hobbyPhoto("", hobby.slug, 900);
+  const photo = photoFailed ? undefined : spacePhoto(hobby.slug, 900);
 
   return (
     <Link

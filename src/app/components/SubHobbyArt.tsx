@@ -1,4 +1,5 @@
 import { INK, PAPER, PAPER_DARK, MUSTARD, type SubArtDrawing } from "./subart/palette";
+import { LEGACY_SPACES } from "../data/hobbies";
 import { workbenchArt } from "./subart/workbench";
 import { makerlabArt } from "./subart/makerlab";
 import { buildstackArt } from "./subart/buildstack";
@@ -63,7 +64,8 @@ export function SubHobbyArt({
   subSlug: string;
   className?: string;
 }) {
-  const Drawing = SUB_ART[hobbySlug]?.[subSlug] ?? FLAT_ART[subSlug] ?? Fallback;
+  const resolvedHobbySlug = SUB_ART[hobbySlug] ? hobbySlug : LEGACY_SPACES[hobbySlug] ?? hobbySlug;
+  const Drawing = SUB_ART[resolvedHobbySlug]?.[subSlug] ?? FLAT_ART[subSlug] ?? Fallback;
 
   return (
     <svg

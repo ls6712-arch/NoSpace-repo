@@ -1,11 +1,8 @@
-import { getHobby } from "./hobbies";
-
 /**
  * A photograph per hobby, for the places where the profile wants warmth and
- * texture rather than illustration — chiefly the shelf. The flat-vector
- * drawings in SubHobbyArt.tsx still own Discover and the space feeds; this is
- * the one surface that goes photographic, because it's the one that reads as a
- * personal object rather than a catalogue.
+ * texture rather than illustration — chiefly the space and hobby shelves. The
+ * generated art remains the reliable fallback, while this mapping keeps every
+ * photographic card tied to the activity it names.
  *
  * Chosen for a consistent look: warm light, muted colour, hands or landscape
  * rather than stock-posed people, so a shelf of four sits together calmly.
@@ -136,19 +133,44 @@ const PHOTO: Record<string, string> = {
   "language-learning": "photo-1546410531-bb4caa6b424d",
 };
 
+const SPACE_COVER_HOBBY: Record<string, string> = {
+  "food-cooking": "cooking",
+  "sports-fitness": "running",
+  "art-creative": "painting",
+  "crafts-making": "pottery",
+  "books-writing": "books",
+  "nature-outdoors": "hiking",
+  "home-garden": "gardening",
+  "gaming-tabletop": "board-games",
+  music: "instrument",
+  "photography-film": "photography",
+  "health-wellness": "yoga",
+  "fashion-beauty": "thrifting",
+  "tech-building": "electronics",
+  "collecting-fandom": "vinyl",
+  "travel-adventure": "camping",
+};
+
 const UNSPLASH = "https://images.unsplash.com/";
 
+function photoUrl(id: string, width: number) {
+  return `${UNSPLASH}${id}?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=${width}`;
+}
+
+export function spacePhoto(hobbySlug: string, width = 900) {
+  const subSlug = SPACE_COVER_HOBBY[hobbySlug];
+  const id = subSlug ? PHOTO[subSlug] : undefined;
+  return id ? photoUrl(id, width) : undefined;
+}
+
 /**
- * A photo URL for a hobby, sized for a card. Falls back to the hobby's parent
- * category cover so a shelf never shows a hole, even for a hobby that hasn't
- * been given its own picture yet.
+ * A photo URL for a hobby, sized for a card. Falls back to the correct parent
+ * Space cover so a shelf never shows a hole or an unrelated category image.
  */
 export function hobbyPhoto(subSlug: string, hobbySlug?: string, width = 600) {
   const id = PHOTO[subSlug];
-  if (id) {
-    return `${UNSPLASH}${id}?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=${width}`;
-  }
-  return hobbySlug ? getHobby(hobbySlug)?.coverImage : undefined;
+  if (id) return photoUrl(id, width);
+  return hobbySlug ? spacePhoto(hobbySlug, width) : undefined;
 }
 
 export function hasHobbyPhoto(subSlug: string) {

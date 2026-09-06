@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Bookmark, PenLine, Search, UserRound, Users, X } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
+import { spacePhoto } from "../data/hobbyPhotos";
 import { circles } from "../data/circles";
 import { usePeopleSearch } from "../lib/people";
 import { PeopleRow } from "../components/PersonCard";
@@ -35,6 +36,33 @@ const BASE_CHIPS: Chip[] = [
   { id: "near", label: "Near me" },
   { id: "progress", label: "Projects in progress" },
 ];
+
+function DiscoverSpaceArt({
+  hobbySlug,
+  seed,
+  className,
+}: {
+  hobbySlug: string;
+  seed: string;
+  className?: string;
+}) {
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const photo = photoFailed ? undefined : spacePhoto(hobbySlug, 900);
+
+  if (!photo) {
+    return <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />;
+  }
+
+  return (
+    <img
+      src={photo}
+      alt=""
+      loading="lazy"
+      onError={() => setPhotoFailed(true)}
+      className={`h-full w-full object-cover ${className ?? ""}`}
+    />
+  );
+}
 
 export function Discover() {
   const { publicFeed, posts } = useContent();
@@ -167,7 +195,7 @@ export function Discover() {
                 <li key={c.slug}>
                   <Link to={`/space/${c.slug}`} className="ns-discover-space-card group block">
                     <div className="ns-discover-space-art">
-                      <GeneratedArt hobbySlug={c.slug} seed={`discover-${c.slug}`} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.06]" />
+                      <DiscoverSpaceArt hobbySlug={c.slug} seed={`discover-${c.slug}`} className="transition-transform duration-500 group-hover:scale-[1.06]" />
                       <span className="ns-discover-space-number">{String(index + 1).padStart(2, "0")}</span>
                     </div>
                     <div className="ns-discover-space-copy">
