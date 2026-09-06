@@ -175,6 +175,19 @@ export function Home() {
     seedPosts.find((p) => p.id === 502),
   ].filter((p): p is (typeof seedPosts)[number] => !!p);
 
+  const heroHobbies = [
+    { slug: "books-writing", seed: "hero-reading", className: "ns-hero-hobby-one" },
+    { slug: "music", seed: "hero-music", className: "ns-hero-hobby-two" },
+    { slug: "tech-building", seed: "hero-building", className: "ns-hero-hobby-three" },
+  ];
+
+  const marqueeHobbies = [
+    { slug: "books-writing", seed: "marquee-writing", className: "ns-marquee-hobby-one" },
+    { slug: "food-cooking", seed: "marquee-cooking", className: "ns-marquee-hobby-two" },
+    { slug: "music", seed: "marquee-music", className: "ns-marquee-hobby-three" },
+    { slug: "nature-outdoors", seed: "marquee-nature", className: "ns-marquee-hobby-four" },
+  ];
+
   return (
     <div className="min-h-screen">
       <section className="ns-home-hero relative isolate overflow-hidden">
@@ -233,6 +246,13 @@ export function Home() {
 
             <div ref={parallaxRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
               <div className="ns-hero-art mx-auto max-w-[640px] lg:max-w-none">
+                <div className="ns-hero-hobby-orbit" aria-hidden="true">
+                  {heroHobbies.map((hobby) => (
+                    <div key={hobby.seed} className={`ns-hero-hobby ${hobby.className}`}>
+                      <GeneratedArt hobbySlug={hobby.slug} seed={hobby.seed} className="h-full w-full" />
+                    </div>
+                  ))}
+                </div>
                 <HeroScene className="relative z-10 mx-auto w-full" />
               </div>
             </div>
@@ -245,7 +265,14 @@ export function Home() {
       </section>
 
       <div className="ns-marquee relative overflow-hidden bg-surface py-5 md:py-7">
-        <div className="flex w-max animate-marquee">
+        <div className="ns-marquee-art" aria-hidden="true">
+          {marqueeHobbies.map((hobby) => (
+            <div key={hobby.seed} className={`ns-marquee-hobby ${hobby.className}`}>
+              <GeneratedArt hobbySlug={hobby.slug} seed={hobby.seed} className="h-full w-full" />
+            </div>
+          ))}
+        </div>
+        <div className="relative z-10 flex w-max animate-marquee">
           {[0, 1].map((rep) => (
             <div key={rep} className="flex shrink-0 items-center" aria-hidden={rep === 1}>
               {Array.from({ length: 4 }).map((_, i) => (
