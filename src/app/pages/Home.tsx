@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Check, Mail, Quote, Sparkles, Users } from "lucide-react";
+import { ArrowRight, Check, Mail, Quote, Sparkles } from "lucide-react";
 import { hobbies, getHobby } from "../data/hobbies";
 import { seedPosts } from "../data/posts";
 import { circles } from "../data/circles";
@@ -71,13 +71,23 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-// Demo/placeholder figures, like the rest of this prototype's seed data —
-// not real platform numbers.
-const STATS = [
-  { value: "48K+", label: "Things created" },
-  { value: "8", label: "Spaces, no endless scroll" },
-  { value: "180+", label: "Hobbies represented" },
-];
+function HeroMarginalia() {
+  return (
+    <svg
+      className="ns-hero-marginalia"
+      viewBox="0 0 180 162"
+      aria-hidden="true"
+    >
+      <path d="M18 32C49 16 86 20 109 42c22 21 24 52 48 68" fill="none" stroke="var(--forest)" strokeWidth="1.5" strokeDasharray="2 4" />
+      <path d="M17 130c28-24 62-21 90-4 22 14 39 13 56 2" fill="none" stroke="var(--coral-deep)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M102 28l8 7-10 2M82 119l5-10 6 9" fill="none" stroke="var(--coral-deep)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="27" cy="31" r="4" fill="var(--yellow)" />
+      <circle cx="157" cy="111" r="4" fill="var(--yellow)" />
+      <text x="16" y="18" fill="var(--forest-ink)" fontSize="9" fontFamily="var(--font-mono)">MAKE A MARK</text>
+      <text x="87" y="153" fill="var(--forest-ink)" fontSize="9" fontFamily="var(--font-mono)">KEEP GOING</text>
+    </svg>
+  );
+}
 
 function WaitlistForm() {
   const [email, setEmail] = useState("");
@@ -138,23 +148,21 @@ function FeatureSection({
   visual: ReactNode;
 }) {
   return (
-    <section className="py-14 lg:py-18">
+    <section className="ns-feature py-16 lg:py-24">
       <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
         <div
-          className={`grid md:grid-cols-2 gap-10 md:gap-16 items-center ${
+          className={`grid items-center gap-10 md:grid-cols-2 md:gap-20 ${
             reverse ? "md:[&>*:first-child]:order-2" : ""
           }`}
         >
           <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-700 max-w-lg">
-            <div className="text-xs text-[var(--coral-text)] tracking-wide mb-3">{eyebrow}</div>
-            <h2 className="text-3xl md:text-4xl mb-4" style={{ fontFamily: "var(--font-serif)" }}>{title}</h2>
-            <p className="text-muted-foreground mb-6">{copy}</p>
+            <div className="ns-section-kicker mb-4">{eyebrow}</div>
+            <h2 className="mb-5 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>{title}</h2>
+            <p className="mb-7 max-w-md text-[1.05rem] leading-relaxed text-muted-foreground">{copy}</p>
             {cta && ctaTo && (
-              <Link to={ctaTo}>
-                <Button variant="outline">
-                  {cta}
-                  <ArrowRight className="size-4" />
-                </Button>
+              <Link to={ctaTo} className="ns-text-link">
+                {cta}
+                <ArrowRight className="size-4" />
               </Link>
             )}
           </div>
@@ -187,76 +195,52 @@ export function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* ── Hero ──────────────────────────────────────────────────────────
-          Composed for the desktop first: a wide two-column band where the
-          type occupies the left third and the illustration is given real
-          horizontal room on the right, so the two read as one picture rather
-          than a centred column with a graphic tacked underneath. It collapses
-          to a single stacked column below 1024px. */}
-      <section className="relative isolate overflow-hidden">
-        <div className="mx-auto w-full max-w-[1440px] px-5 pt-12 pb-4 sm:px-8 sm:pt-16 lg:px-12 lg:pt-24 lg:pb-16 xl:px-16">
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] lg:gap-10 xl:gap-14">
-            {/* Type column */}
+      <section className="ns-home-hero relative isolate overflow-hidden">
+        <div className="mx-auto w-full max-w-[1440px] px-5 pb-10 pt-12 sm:px-8 sm:pt-16 lg:px-12 lg:pb-16 lg:pt-24 xl:px-16">
+          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,.94fr)_minmax(0,1.06fr)] lg:gap-14 xl:gap-20">
             <div className="text-center lg:text-left">
-              <div className="ns-enter ns-enter-1 mb-6 inline-flex items-center gap-2 rounded-full bg-surface px-4 py-1.5 text-xs text-foreground lg:mb-8">
-                <span className="animate-pulse-soft inline-flex size-1.5 rounded-full bg-[var(--coral-deep)]" />
-                Welcome to hobbymaxxing
+              <div className="ns-hero-eyebrow ns-enter ns-enter-1 mb-7 lg:mb-9">
+                <span className="animate-pulse-soft size-1.5 bg-[var(--coral-deep)]" />
+                The clubhouse for people who make things
               </div>
 
               <h1
-                className="ns-enter ns-enter-1 mb-5 text-[clamp(2.4rem,4.6vw,3.85rem)] font-semibold leading-[1.02] tracking-[-0.02em] text-balance text-[var(--forest)] lg:mb-6"
+                className="ns-enter ns-enter-1 mb-6 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-[var(--forest)]"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 Made something today?
                 <br />
                 <span className="relative inline-block">
-                  Show it.
-                  {/* Hand-drawn underline — the one flourish in the hero. */}
+                  Keep it close.
                   <svg
-                    className="pointer-events-none absolute -bottom-1 left-0 h-[0.28em] w-full lg:-bottom-2"
+                    className="pointer-events-none absolute -bottom-2 left-0 h-[0.26em] w-full"
                     viewBox="0 0 220 14"
                     preserveAspectRatio="none"
                     aria-hidden="true"
                   >
-                    <path
-                      d="M3 10C46 4 122 2 217 6"
-                      fill="none"
-                      stroke="var(--coral-deep)"
-                      strokeWidth="6"
-                      strokeLinecap="round"
-                    />
+                    <path d="M3 10C46 4 122 2 217 6" fill="none" stroke="var(--coral-deep)" strokeWidth="6" strokeLinecap="round" />
                   </svg>
                 </span>
               </h1>
 
-              <p
-                className="ns-enter ns-enter-2 mb-4 text-xl text-foreground sm:text-2xl"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                Create, Don't Just Consume.
+              <p className="ns-enter ns-enter-2 mb-4 text-xl text-foreground sm:text-2xl" style={{ fontFamily: "var(--font-heading)" }}>
+                Create, Don&apos;t Just Consume.
               </p>
 
-              <p className="ns-enter ns-enter-2 mx-auto mb-5 max-w-md text-base text-foreground/90 sm:text-lg lg:mx-0 lg:max-w-lg">
-                Pick a hobby, share what you're actually making, and find people
-                doing the same thing.
+              <p className="ns-enter ns-enter-2 mx-auto mb-7 max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg lg:mx-0 lg:max-w-lg">
+                A warm corner of the internet for works-in-progress, tiny breakthroughs, and the people who understand why they matter.
               </p>
 
-              {/* Three claims, three chips — reads as a promise, not a stat bar. */}
-              <ul className="ns-enter ns-enter-3 mb-8 flex flex-wrap justify-center gap-1.5 lg:justify-start">
-                {["Real people", "Real progress", "Real output"].map((claim) => (
-                  <li
-                    key={claim}
-                    className="rounded-full bg-surface px-3 py-1 text-xs text-foreground"
-                  >
+              <ul className="ns-hero-claims ns-enter ns-enter-3 mb-9 flex flex-wrap justify-center lg:justify-start" aria-label="What NoSpace is for">
+                {["A place to begin", "A record that stays yours", "People who get it"].map((claim, index) => (
+                  <li key={claim}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
                     {claim}
                   </li>
                 ))}
               </ul>
 
-              {/* This page is the wordmark's destination for everyone, so a
-                  signed-in person needs a way straight back to their own feed
-                  rather than only an invitation to start. */}
-              <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:justify-start">
                 <Link to="/create">
                   <Button variant="coral" size="lg">
                     Start creating
@@ -264,58 +248,47 @@ export function Home() {
                   </Button>
                 </Link>
                 {user && (
-                  <Link
-                    to="/my-space"
-                    className="inline-flex h-11 items-center rounded-full bg-surface px-6 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-[var(--surface-muted)]"
-                  >
+                  <Link to="/my-space" className="ns-text-link">
                     Go to My Space
+                    <ArrowRight className="size-4" />
                   </Link>
                 )}
-                <Link
-                  to="/discover"
-                  className="inline-flex h-11 items-center rounded-full bg-surface px-6 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-[var(--surface-muted)]"
-                >
-                  Explore hobbies
+                <Link to="/discover" className="ns-text-link">
+                  Explore the rooms
+                  <ArrowRight className="size-4" />
                 </Link>
               </div>
+              <p className="ns-enter ns-enter-3 mt-8 font-hud text-[10px] tracking-[0.14em] text-[var(--forest-ink)]/75">
+                NO SCORES · NO PERFORMANCE · JUST PRACTICE
+              </p>
             </div>
 
-            {/* Illustration column */}
             <div ref={parallaxRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
-              <HeroScene className="mx-auto w-full max-w-[560px] lg:max-w-none" />
+              <div className="ns-hero-art mx-auto max-w-[640px] lg:max-w-none">
+                <div className="ns-hero-art-label">A SMALL WORLD<br />OF MAKERS</div>
+                <HeroMarginalia />
+                <HeroScene className="relative z-10 mx-auto w-full" />
+                <div className="ns-hero-caption"><span>01</span> Find your own way in</div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* The sky meets the cream page on a soft ridge rather than a hard
-            edge, so the hero and the content below it feel like one world. */}
-        <svg
-          className="-mb-px block w-full"
-          viewBox="0 0 1440 96"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M0 96V52c214-32 430-44 648-34 106 5 210 17 312 26 168 15 328 12 480-10v62Z"
-            fill="var(--cream)"
-          />
+        <svg className="-mb-px block w-full" viewBox="0 0 1440 96" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 96V52c214-32 430-44 648-34 106 5 210 17 312 26 168 15 328 12 480-10v62Z" fill="var(--cream)" />
         </svg>
       </section>
 
-      {/* Hobbymaxxing marquee — big, always moving, like Fable's book carousel */}
-      <div className="relative overflow-hidden bg-surface py-5 md:py-7">
+      <div className="ns-marquee relative overflow-hidden bg-surface py-5 md:py-7">
         <div className="flex w-max animate-marquee">
           {[0, 1].map((rep) => (
-            <div key={rep} className="flex items-center shrink-0" aria-hidden={rep === 1}>
+            <div key={rep} className="flex shrink-0 items-center" aria-hidden={rep === 1}>
               {Array.from({ length: 4 }).map((_, i) => (
-                <span key={i} className="flex items-center shrink-0">
-                  <span
-                    className="mx-6 text-4xl font-semibold text-[var(--forest)] md:text-6xl"
-                    style={{ fontFamily: "var(--font-heading)" }}
-                  >
+                <span key={i} className="flex shrink-0 items-center">
+                  <span className="mx-6 text-4xl font-semibold tracking-[-.03em] text-[var(--forest)] md:text-6xl" style={{ fontFamily: "var(--font-heading)" }}>
                     HOBBYMAXXING
                   </span>
-                  <span className="text-3xl text-[var(--coral-deep)] md:text-5xl">·</span>
+                  <span className="ns-marquee-mark text-3xl text-[var(--coral-deep)] md:text-5xl">✦</span>
                 </span>
               ))}
             </div>
@@ -323,24 +296,18 @@ export function Home() {
         </div>
       </div>
 
-      {/* Everything below the hero sits on cream. The sky is the world the
-          brand lives in; cream is where text is actually read — muted copy on
-          the saturated blue only clears 2.64:1, which is why body content
-          gets its own ground rather than floating on the background. */}
       <div className="bg-surface">
-      {/* Hobby categories */}
-      <section className="py-16 lg:py-20">
+      <section className="py-20 lg:py-28">
         <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="text-3xl mb-2">Fifteen Spaces, zero scrolling void</h2>
-              <p className="text-muted-foreground">Pick one to see what people are making right now.</p>
+          <div className="mb-10 flex items-end justify-between gap-5 lg:mb-12">
+            <div className="max-w-xl">
+              <div className="ns-section-kicker mb-4">CHOOSE A ROOM</div>
+              <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>A room for every obsession.</h2>
+              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Take your coat off. Find the corner where your kind of making already lives.</p>
             </div>
-            <Link to="/discover" className="hidden sm:block">
-              <Button variant="outline">
-                All {hobbies.reduce((n, h) => n + h.subItems.length, 0)} hobbies
-                <ArrowRight className="size-4" />
-              </Button>
+            <Link to="/discover" className="ns-text-link hidden shrink-0 sm:inline-flex">
+              All {hobbies.reduce((n, h) => n + h.subItems.length, 0)} hobbies
+              <ArrowRight className="size-4" />
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -363,22 +330,17 @@ export function Home() {
         title="Create it. Reflect for a second. Then choose who sees it."
         copy="Every entry follows the same loop: log what you made, jot a private reflection that's never shown to anyone, then choose who sees it. You never have to share something in order to keep a record of it."
         visual={
-          <div className="glass-panel rounded-3xl p-6 space-y-3">
+          <div className="ns-paper-panel ns-process-panel space-y-0">
             {[
-              { n: "1", label: "Create", desc: "A photo, a note, or a small update" },
-              { n: "2", label: "Reflect", desc: "A private note — only you ever see it" },
-              { n: "3", label: "Share", desc: "Only you, your connections, a Circle, or everyone" },
+              { n: "01", label: "Create", desc: "A photo, a note, or a small update" },
+              { n: "02", label: "Reflect", desc: "A private note — only you ever see it" },
+              { n: "03", label: "Share", desc: "Only you, your connections, a Circle, or everyone" },
             ].map((step) => (
-              <div
-                key={step.n}
-                className="flex items-center gap-3 rounded-xl border border-border px-4 py-3"
-              >
-                <span className="font-hud flex size-7 shrink-0 items-center justify-center rounded-full text-xs text-white [background-image:var(--gradient-brand)]">
-                  {step.n}
-                </span>
+              <div key={step.n} className="ns-process-step">
+                <span className="font-hud text-xs text-[var(--coral-text)]">{step.n}</span>
                 <div>
-                  <div className="text-sm">{step.label}</div>
-                  <div className="text-xs text-muted-foreground">{step.desc}</div>
+                  <div className="mb-0.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>{step.label}</div>
+                  <div className="text-xs leading-relaxed text-muted-foreground">{step.desc}</div>
                 </div>
               </div>
             ))}
@@ -393,22 +355,18 @@ export function Home() {
         title="Find your circle — down to your city."
         copy="Circles are hobby-first, not region-first: join a global topic circle, or one with a geographic layer for real-world meetups nearby. No separate app per city — geography is just a filter inside a hobby."
         visual={
-          <div className="glass-panel rounded-3xl p-6 space-y-3">
+          <div className="ns-paper-panel ns-circle-panel">
+            <div className="mb-5 flex items-center justify-between border-b border-[var(--hairline)] pb-3">
+              <span className="font-hud text-[10px] tracking-[.16em] text-[var(--coral-text)]">DOING IT TOGETHER</span>
+              <span className="size-2 rotate-45 bg-[var(--yellow)]" />
+            </div>
             {circleSample.map((circle) => (
-              <div
-                key={circle.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3"
-              >
+              <div key={circle.id} className="ns-circle-row">
                 <div>
-                  <div className="text-sm">{circle.name}</div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                    <Users className="size-3" />
-                    {circle.location} · {circle.memberCount} members
-                  </div>
+                  <div className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>{circle.name}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">Gathering in {circle.location}</div>
                 </div>
-                <span className="shrink-0 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-                  Join
-                </span>
+                <span className="font-hud text-xs text-[var(--coral-text)]">OPEN ↗</span>
               </div>
             ))}
           </div>
@@ -423,22 +381,17 @@ export function Home() {
         cta="See a profile"
         ctaTo="/profile"
         visual={
-          <div className="glass-panel rounded-3xl p-6">
-            <div className="font-hud text-2xl mb-1 text-gradient-brand">12 things created</div>
-            <div className="text-xs text-muted-foreground mb-4">3 months into pottery</div>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {["Workbench", "The Studio", "Kitchen Table"].map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground"
-                >
-                  {tag}
-                </span>
-              ))}
+          <div className="ns-paper-panel ns-portfolio-panel">
+            <div className="mb-5 flex items-end justify-between border-b border-[var(--hairline)] pb-3">
+              <div>
+                <div className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>A record in the making</div>
+                <div className="mt-1 text-xs text-muted-foreground">A shelf, not a score.</div>
+              </div>
+              <span className="font-hud text-[10px] text-[var(--coral-text)]">POTTERY</span>
             </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {portfolioSample.map((post) => (
-                <div key={post.id} className="aspect-square overflow-hidden rounded-md">
+            <div className="grid grid-cols-3 gap-2">
+              {portfolioSample.map((post, index) => (
+                <div key={post.id} className={`aspect-square overflow-hidden ${index === 1 ? "translate-y-3" : ""}`}>
                   <GeneratedArt hobbySlug={post.hobbySlug} seed={post.id} className="h-full w-full" />
                 </div>
               ))}
@@ -447,62 +400,44 @@ export function Home() {
         }
       />
 
-      {/* What people are making — the one dark band on the page, so the
-          cream cards and the coral reactions carry real weight. */}
-      <section className="py-16 lg:py-20 [background-color:var(--forest)]">
+      <section className="ns-maker-notes py-20 lg:py-28 [background-color:var(--forest)]">
         <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">
-          <h2
-            className="text-3xl text-center mb-2 text-[var(--on-forest)] lg:text-4xl"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            What people are making
-          </h2>
-          <p className="text-center mb-12 text-[var(--on-forest-muted)]">
-            Real captions, real people, eight real spaces.
-          </p>
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <div className="mb-4 font-hud text-[10px] tracking-[.18em] text-[var(--yellow)]">NOTES FROM THE CLUBHOUSE</div>
+            <h2 className="mb-3 text-3xl text-[var(--on-forest)] lg:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+              The good stuff is usually unfinished.
+            </h2>
+            <p className="text-[var(--on-forest-muted)]">Small observations from people keeping at it.</p>
+          </div>
+          <div className="grid max-w-5xl gap-4 md:grid-cols-2 md:gap-5 lg:gap-6 mx-auto">
             {testimonialPosts.map((post, i) => (
-              <div
-                key={post.id}
-                className="rounded-2xl bg-surface p-6 animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <Quote className="size-5 text-[var(--coral-text)] mb-3" />
-                <p className="text-sm mb-4">"{post.caption}"</p>
-                <div className="flex items-center gap-2 mb-4">
-                  <Avatar className="size-7">
-                    <AvatarFallback className="text-[10px]">{initials(post.creator)}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-xs text-muted-foreground">
-                    {post.creator} · {getHobby(post.hobbySlug)?.shortName}
+              <div key={post.id} className="ns-maker-note animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500" style={{ animationDelay: `${i * 100}ms` }}>
+                <Quote className="mb-4 size-5 text-[var(--coral-text)]" />
+                <p className="mb-6 text-lg leading-snug" style={{ fontFamily: "var(--font-serif)" }}>“{post.caption}”</p>
+                <div className="flex items-center justify-between gap-3 border-t border-[var(--hairline)] pt-4">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="size-7"><AvatarFallback className="text-[10px]">{initials(post.creator)}</AvatarFallback></Avatar>
+                    <div className="text-xs text-muted-foreground">{post.creator} · {getHobby(post.hobbySlug)?.shortName}</div>
                   </div>
+                  <PostReactions postId={post.id} />
                 </div>
-                {/* Same five reactions as every other post surface. */}
-                <PostReactions postId={post.id} />
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Trending */}
-      <section className="py-16 lg:py-20">
+      <section className="py-20 lg:py-28">
         <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="text-3xl mb-2">Fresh across NoSpace</h2>
-              <p className="text-muted-foreground">
-                Recent work from every space, weighted toward what you're actually into —
-                never toward whatever got the most attention.
-              </p>
+          <div className="mb-10 flex items-end justify-between gap-5 lg:mb-12">
+            <div className="max-w-xl">
+              <div className="ns-section-kicker mb-4">WORK LEFT ON THE TABLE</div>
+              <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>See what&apos;s taking shape.</h2>
+              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Recent work from across the rooms, with no popularity contest attached.</p>
             </div>
-            <Link to="/create" className="hidden sm:block">
-              <Button variant="outline">
-                Create your own
-              </Button>
-            </Link>
+            <Link to="/create" className="ns-text-link hidden shrink-0 sm:inline-flex">Start your own <ArrowRight className="size-4" /></Link>
           </div>
-          <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-4">
+          <div className="columns-1 gap-4 sm:columns-2 md:columns-3 xl:columns-4">
             {trending.map((post, i) => (
               <div
                 key={post.id}
@@ -516,15 +451,13 @@ export function Home() {
         </div>
       </section>
 
-      {/* Explore next */}
       {exploreNext.length > 0 && (
-        <section className="py-16 border-t border-[var(--hairline)] lg:py-20">
+        <section className="border-t border-[var(--hairline)] py-20 lg:py-28">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-            <div className="mb-8">
-              <h2 className="text-3xl mb-2">Explore next</h2>
-              <p className="text-muted-foreground">
-                Spaces you haven't logged anything in or joined a Circle for yet.
-              </p>
+            <div className="mb-10 max-w-xl lg:mb-12">
+              <div className="ns-section-kicker mb-4">WANDER A LITTLE</div>
+              <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>Your next rabbit hole.</h2>
+              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Rooms you have not opened yet. The first try counts.</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {exploreNext.map((hobby, i) => (
@@ -541,60 +474,47 @@ export function Home() {
         </section>
       )}
 
-      {/* Stats — the sky returns as a full-width band. Figures are display
-          size in forest (3.76:1, clears the 3:1 large-text bar) and the
-          labels step down to forest-ink (4.62:1) rather than muted, which
-          would be unreadable on this blue. */}
-      <section className="py-16 [background-color:var(--sky)] lg:py-20">
+      <section className="ns-principles py-20 [background-color:var(--sky)] lg:py-28">
         <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
-            {STATS.map((stat, i) => (
-              <div
-                key={stat.label}
-                className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <div
-                  className="mb-2 text-5xl font-semibold text-[var(--forest)] md:text-6xl"
-                  style={{ fontFamily: "var(--font-serif)" }}
-                >
-                  {stat.value}
-                </div>
-                <div className="text-sm text-foreground">{stat.label}</div>
+          <div className="mb-12 max-w-lg">
+            <div className="mb-4 font-hud text-[10px] tracking-[.18em] text-[var(--forest-ink)]">WHAT WE LEAVE OUT</div>
+            <h2 className="text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>More room for the part that matters.</h2>
+          </div>
+          <div className="grid gap-px overflow-hidden border border-[var(--forest-ink)]/25 sm:grid-cols-3">
+            {[
+              ["No performance", "Make it because it pulls at you, not because it plays well."],
+              ["No scorekeeping", "A quiet record of your practice is enough."],
+              ["No endless scroll", "Every room is a place to arrive, not disappear into."],
+            ].map(([title, copy], index) => (
+              <div key={title} className="ns-principle p-7 sm:p-8">
+                <span className="mb-10 block font-hud text-xs text-[var(--coral-text)]">0{index + 1}</span>
+                <h3 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>{title}</h3>
+                <p className="text-sm leading-relaxed text-[var(--forest-ink)]">{copy}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="glass-panel glow-violet rounded-3xl p-10 md:p-14 text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl mb-4">
-              You don't just consume. You create too.
+      <section className="py-20 lg:py-28">
+        <div className="mx-auto w-full max-w-[900px] px-5 sm:px-8">
+          <div className="ns-invitation text-center">
+            <div className="ns-invitation-spark" aria-hidden="true">✦</div>
+            <div className="ns-section-kicker mb-5">COME AS YOU ARE</div>
+            <h2 className="mb-5 text-4xl leading-[1.02] md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+              You don&apos;t just consume.<br />You make things, too.
             </h2>
-            <p className="text-muted-foreground mb-8">
-              Start a project, add an update, or just write a note to yourself. None of it
-              has to be public.
-            </p>
-            <Link to="/create">
-              <Button variant="brand" size="lg">
-                <Sparkles className="size-4" />
-                Create something
-              </Button>
-            </Link>
+            <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">Start a project, add a small update, or make a note for yourself. None of it has to be public.</p>
+            <Link to="/create"><Button variant="brand" size="lg"><Sparkles className="size-4" /> Make a start</Button></Link>
           </div>
         </div>
       </section>
 
-      {/* Waitlist */}
-      <section className="py-16 border-t border-[var(--hairline)]">
+      <section className="border-t border-[var(--hairline)] py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl mb-2">Free in early access</h2>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Bring the hobby. We'll keep the record.
-          </p>
+          <div className="ns-section-kicker mb-3">EARLY ACCESS</div>
+          <h2 className="mb-2 text-2xl md:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>Bring the hobby. We&apos;ll keep the record.</h2>
+          <p className="mx-auto mb-6 max-w-md text-muted-foreground">NoSpace is free while the clubhouse grows.</p>
           <WaitlistForm />
         </div>
       </section>
