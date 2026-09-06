@@ -19,13 +19,33 @@ import { LOCAL_CLEARED_EVENT } from "./localData";
 
 const KEY = "nospace.journal.v1";
 
+/**
+ * A Pursuit — something you're bringing to life. User-facing text calls
+ * these Pursuits everywhere; the type keeps the name `Project` internally
+ * only to avoid a mechanical rename across every existing call site.
+ *
+ * A Pursuit needs nothing but a name. `hobbySlug` (an existing, real Space)
+ * and `interest` (free text, same spirit as a post's own `interest` field)
+ * are both optional and independent of each other — naming a Pursuit never
+ * forces it into NoSpace's taxonomy. `customSpace` holds a made-up Space
+ * name when neither existing Space fits ("Other").
+ */
 export interface Project {
   id: string;
   title: string;
-  hobbySlug: string;
+  hobbySlug?: string;
   subHobby?: string;
+  /** Free-text interest, e.g. "Bookbinding" — not required to match a real sub-hobby. */
+  interest?: string;
+  /** A made-up Space name, used only when no real Space fits. */
+  customSpace?: string;
+  /** The Try This'd post that inspired this Pursuit, if it started that way. */
+  inspiredByPostId?: number;
+  /** Private by default. Only a Pursuit explicitly marked shared appears on
+   * a public profile — this is a per-Pursuit flag, never an account-wide one. */
+  shared?: boolean;
   startedAt: number;
-  /** Set when the maker marks the project finished. */
+  /** Set when the maker marks the Pursuit finished. */
   finishedAt?: number;
 }
 
@@ -118,12 +138,39 @@ const id = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(
 
 export function startProject(input: {
   title: string;
-  hobbySlug: string;
+  hobbySlug?: string;
   subHobby?: string;
+  interest?: string;
+  customSpace?: string;
+  inspiredByPostId?: number;
+  shared?: boolean;
 }): Project {
   const project: Project = { id: id(), startedAt: Date.now(), ...input };
   commit({ ...state, projects: [project, ...state.projects] });
   return project;
+}
+
+/** Sharing is set per Pursuit, on purpose — never a switch that publishes
+ * everything you've ever started. */
+export function setProjectShared(projectId: string, shared: boolean) {
+  commit({
+    ...state,
+    projects: state.projects.map((p) => (p.id === projectId ? { ...p, shared } : p)),
+  });
+}
+
+/** How far along a Pursuit is, and when it last moved — derived from the
+ * posts actually attached to it rather than a separate status field, so
+ * there's nothing to keep in sync by hand. */
+export function projectProgress(
+  entryProject: Record<string, string>,
+  posts: Post[],
+  projectId: string,
+) {
+  const updates = posts
+    .filter((p) => entryProject[String(p.id)] === projectId)
+    .sort((a, b) => b.createdAt - a.createdAt);
+  return { updates, count: updates.length, lastUpdatedAt: updates[0]?.createdAt };
 }
 
 /** Files a logged entry under a project, so it reads as an update rather than a one-off. */

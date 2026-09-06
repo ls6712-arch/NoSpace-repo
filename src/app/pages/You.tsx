@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { BookOpen, Lock, PenLine, Share2, Sprout, Users } from "lucide-react";
+import { Lock, PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
 import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { CirclesJoined } from "../components/CirclesJoined";
 import { ClanList } from "../components/ClanList";
 import { AvatarPicker } from "../components/AvatarPicker";
 import { HandwrittenNote } from "../components/HandwrittenNote";
 import { WorkGrid } from "../components/WorkGrid";
+import { PursuitCard } from "../components/PursuitCard";
+import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
@@ -33,17 +35,22 @@ function timeAgo(ts: number) {
 }
 
 export function You() {
-  const { myPosts } = useContent();
+  const { myPosts, posts } = useContent();
   const journal = useJournal();
   const social = useSocial();
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const { user, profile, isConfigured, signOut } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [circlesVisible, setCirclesVisible] = useState(true);
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  const [pursuitDialog, setPursuitDialog] = useState(false);
 
   const sessions = useSessionsByHobby();
   const totalSessions = sessions.reduce((n, s) => n + s.sessions, 0);
+  // The portfolio's own record — every Pursuit you've ever started, finished
+  // ones included, because a personal archive doesn't erase what's done.
+  const myPursuits = journal.projects;
 
   // Never abbreviate the placeholder: "You" becomes a meaningless "Y".
   const realName = profile?.display_name?.trim();
@@ -135,7 +142,7 @@ export function You() {
           </div>
         )}
 
-        <div className="ns-you-actions mb-9 flex gap-2">
+        <div className="ns-you-actions mb-11 flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => setShareOpen(true)}>
             <Share2 className="size-4" />
             Share your work
@@ -146,154 +153,71 @@ export function You() {
               Create
             </Button>
           </Link>
+          <Button variant="outline" size="icon" title="Settings" aria-label="Settings" onClick={() => setSettingsOpen(true)}>
+            <SettingsIcon className="size-4" />
+          </Button>
         </div>
 
-        <Tabs defaultValue="work">
-          <TabsList className="ns-you-tabs mb-6 flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
-            <TabsTrigger value="work">Your Work</TabsTrigger>
-            <TabsTrigger value="clan">Your Clan</TabsTrigger>
-            <TabsTrigger value="circles">Your Circles</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="work">
-            <div className="mb-4 flex items-center gap-2">
-              <BookOpen className="size-4 text-[var(--forest)]" strokeWidth={1.7} />
-              <p className="text-sm text-muted-foreground">
-                A visual record of what you've made, explored, and loved.
-              </p>
-            </div>
+        {/* Your Moments and Your Pursuits are the portfolio: what you've
+            actually made, and what you're currently bringing to life,
+            standing next to each other rather than buried in tabs. */}
+        <div className="mb-12 grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+          <section>
+            <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Your Moments
+            </h2>
+            <p className="mb-4 mt-1 text-sm text-muted-foreground">
+              A visual record of what you've made, explored, and loved.
+            </p>
             <WorkGrid
               posts={myPosts}
               onOpen={setOpenPost}
               emptyLabel="Nothing logged yet. Create something and it'll show up here."
             />
-          </TabsContent>
+          </section>
 
-          <TabsContent value="clan">
-            <p className="mb-4 text-sm text-muted-foreground">People who make the journey more fun.</p>
-            <ClanList />
-          </TabsContent>
-
-          <TabsContent value="circles">
-            <p className="mb-4 text-sm text-muted-foreground">Communities you're part of.</p>
-            {circlesVisible ? (
-              <CirclesJoined />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Hidden. Only you can see which Circles you've joined.
-              </p>
-            )}
-          </TabsContent>
-
-          <TabsContent value="settings">
-            <div className="space-y-3">
-              <AccountSettings />
-
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <div className="mb-1 text-sm">Who sees your Circles</div>
-                <button
-                  type="button"
-                  onClick={() => setCirclesVisible((v) => !v)}
-                  className="text-xs text-[var(--coral-text)] hover:underline"
-                >
-                  {circlesVisible ? "Visible on your work (hide them)" : "Hidden (show them on your work)"}
-                </button>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <div className="mb-1 flex items-center gap-2 text-sm">
-                  <Users className="size-4 text-muted-foreground" />
-                  Hobbies you're exploring
-                </div>
-                {social.followedHobbies.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    Not exploring anything yet. Attach yourself to a hobby from any Space.
-                  </p>
-                ) : (
-                  <ul className="mt-2 space-y-1.5">
-                    {social.followedHobbies.map((key) => {
-                      const isSpace = key.startsWith("space:");
-                      const isOwn = key.startsWith("interest:");
-                      const slug = isSpace ? key.slice(6) : isOwn ? key.slice(9) : key;
-                      const label = isOwn
-                        ? slug.replace(/\b\w/g, (c: string) => c.toUpperCase())
-                        : isSpace
-                          ? getHobby(slug)?.name ?? slug
-                          : subHobbyLabel(slug) ?? slug;
-                      return (
-                        <li key={key} className="flex items-center justify-between gap-3 text-sm">
-                          <span style={{ fontFamily: "var(--font-serif)" }}>{label}</span>
-                          <button
-                            type="button"
-                            onClick={() => social.toggleHobbyFollow(key, label)}
-                            className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
-                          >
-                            Stop exploring
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm">
-                  <Lock className="size-4 text-muted-foreground" />
-                  Private logs
-                </div>
-                <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-                  Kept here and nowhere else. Private logs never appear in a Space, a feed, or your public shelf.
-                </p>
-                {journal.privateLogs.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Nothing private yet.</p>
-                ) : (
-                  <ul className="space-y-3">
-                    {journal.privateLogs.map((entry) => (
-                      <li key={entry.id} className="rounded-xl border border-[var(--hairline)] p-3">
-                        <div className="mb-2 flex items-center justify-between gap-3">
-                          <span className="text-[11px] text-muted-foreground">
-                            Only you · {timeAgo(entry.createdAt)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => removePrivateLog(entry.id)}
-                            className="text-[11px] text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                        {entry.media && (
-                          <div className="mb-2 overflow-hidden rounded-lg border border-[var(--hairline)]">
-                            {entry.mediaType === "video" ? (
-                              <video src={entry.media} controls className="w-full" />
-                            ) : (
-                              <img src={entry.media} alt="" className="w-full" />
-                            )}
-                          </div>
-                        )}
-                        <p className="whitespace-pre-line text-sm leading-relaxed">{entry.note}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {user && (
-                <button
-                  type="button"
-                  onClick={signOut}
-                  className="w-full rounded-2xl border border-border bg-card p-4 text-left text-sm transition-colors hover:border-[var(--coral-deep)]"
-                >
-                  Log out
-                </button>
-              )}
+          <section>
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+                Your Pursuits
+              </h2>
+              <Button variant="outline" size="sm" onClick={() => setPursuitDialog(true)}>
+                <Sparkles className="size-3.5" />
+                Create Your Pursuit
+              </Button>
             </div>
-          </TabsContent>
-        </Tabs>
+            <p className="mb-4 text-sm text-muted-foreground">The things you're bringing to life.</p>
 
-        <div className="mb-9 mt-2">
+            {myPursuits.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
+                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+                  Nothing yet. Name a thing you're working toward and it lives here.
+                </p>
+                <Button variant="outline" size="sm" className="mt-4" onClick={() => setPursuitDialog(true)}>
+                  Create Your Pursuit
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {myPursuits.map((pursuit) => (
+                  <PursuitCard
+                    key={pursuit.id}
+                    pursuit={pursuit}
+                    owner
+                    className="w-full"
+                    inspirationPost={
+                      pursuit.inspiredByPostId
+                        ? posts.find((p) => p.id === pursuit.inspiredByPostId)
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="mb-9">
           <div className="mb-3 flex items-baseline justify-between gap-4">
             <h2 className="flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-[var(--forest)]" strokeWidth={1.8} />
@@ -334,13 +258,129 @@ export function You() {
               </Link>
             </div>
             <p className="mb-3 text-sm text-muted-foreground">Communities you're part of.</p>
-            <CirclesJoined limit={4} />
+            {circlesVisible ? (
+              <CirclesJoined limit={4} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Hidden. Only you can see which Circles you've joined.</p>
+            )}
           </div>
         </div>
       </div>
 
       <MomentDetail post={openPost} owned onOpenChange={(o) => !o && setOpenPost(null)} />
       <ShareProfileDialog open={shareOpen} onOpenChange={setShareOpen} />
+      <PursuitDialog open={pursuitDialog} onOpenChange={setPursuitDialog} />
+
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
+          <DialogHeader className="text-left">
+            <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <AccountSettings />
+
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <div className="mb-1 text-sm">Who sees your Circles</div>
+              <button
+                type="button"
+                onClick={() => setCirclesVisible((v) => !v)}
+                className="text-xs text-[var(--coral-text)] hover:underline"
+              >
+                {circlesVisible ? "Visible on your work (hide them)" : "Hidden (show them on your work)"}
+              </button>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <div className="mb-1 flex items-center gap-2 text-sm">
+                <Users className="size-4 text-muted-foreground" />
+                Hobbies you're exploring
+              </div>
+              {social.followedHobbies.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Not exploring anything yet. Attach yourself to a hobby from any Space.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-1.5">
+                  {social.followedHobbies.map((key) => {
+                    const isSpace = key.startsWith("space:");
+                    const isOwn = key.startsWith("interest:");
+                    const slug = isSpace ? key.slice(6) : isOwn ? key.slice(9) : key;
+                    const label = isOwn
+                      ? slug.replace(/\b\w/g, (c: string) => c.toUpperCase())
+                      : isSpace
+                        ? getHobby(slug)?.name ?? slug
+                        : subHobbyLabel(slug) ?? slug;
+                    return (
+                      <li key={key} className="flex items-center justify-between gap-3 text-sm">
+                        <span style={{ fontFamily: "var(--font-serif)" }}>{label}</span>
+                        <button
+                          type="button"
+                          onClick={() => social.toggleHobbyFollow(key, label)}
+                          className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
+                        >
+                          Stop exploring
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <div className="mb-2 flex items-center gap-2 text-sm">
+                <Lock className="size-4 text-muted-foreground" />
+                Private logs
+              </div>
+              <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+                Kept here and nowhere else. Private logs never appear in a Space, a feed, or your public shelf.
+              </p>
+              {journal.privateLogs.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Nothing private yet.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {journal.privateLogs.map((entry) => (
+                    <li key={entry.id} className="rounded-xl border border-[var(--hairline)] p-3">
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <span className="text-[11px] text-muted-foreground">
+                          Only you · {timeAgo(entry.createdAt)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removePrivateLog(entry.id)}
+                          className="text-[11px] text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                      {entry.media && (
+                        <div className="mb-2 overflow-hidden rounded-lg border border-[var(--hairline)]">
+                          {entry.mediaType === "video" ? (
+                            <video src={entry.media} controls className="w-full" />
+                          ) : (
+                            <img src={entry.media} alt="" className="w-full" />
+                          )}
+                        </div>
+                      )}
+                      <p className="whitespace-pre-line text-sm leading-relaxed">{entry.note}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {user && (
+              <button
+                type="button"
+                onClick={signOut}
+                className="w-full rounded-2xl border border-border bg-card p-4 text-left text-sm transition-colors hover:border-[var(--coral-deep)]"
+              >
+                Log out
+              </button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

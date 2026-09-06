@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Bookmark, PenLine, Sprout, Users } from "lucide-react";
+import { ArrowRight, Bookmark, PenLine, Sparkles, Sprout, Users } from "lucide-react";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
 import { Post } from "../data/posts";
@@ -8,6 +9,8 @@ import { daysSince, deriveProjects, toggleSaved, useJournal } from "../lib/journ
 import { useSocial } from "../context/SocialContext";
 import { ContentCard } from "../components/ContentCard";
 import { PostMedia } from "../components/PostMedia";
+import { PursuitCard } from "../components/PursuitCard";
+import { PursuitDialog } from "../components/PursuitDialog";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 
@@ -27,7 +30,7 @@ function initials(name: string) {
  * again removes it from Try This; there's no due date or streak anywhere
  * near it.
  */
-function TryThisCard({ post }: { post: Post }) {
+function TryThisCard({ post, onStart }: { post: Post; onStart: (post: Post) => void }) {
   const hobby = getHobby(post.hobbySlug);
 
   return (
@@ -77,12 +80,10 @@ function TryThisCard({ post }: { post: Post }) {
             <span className="truncate text-xs text-muted-foreground">{post.creator}</span>
           </div>
         )}
-        <Link to={`/create?hobby=${post.hobbySlug}`}>
-          <Button variant="coral" size="sm" className="w-full">
-            <PenLine className="size-3.5" />
-            Start now
-          </Button>
-        </Link>
+        <Button variant="coral" size="sm" className="w-full" onClick={() => onStart(post)}>
+          <Sparkles className="size-3.5" />
+          Create Your Pursuit
+        </Button>
       </div>
     </div>
   );
@@ -148,6 +149,10 @@ export function MySpace() {
   const { publicFeed, posts, isCircleJoined } = useContent();
   const journal = useJournal();
   const social = useSocial();
+  const [pursuitDialog, setPursuitDialog] = useState<{ open: boolean; seedPost: Post | null }>({
+    open: false,
+    seedPost: null,
+  });
 
   const exploring = new Set(social.followedHobbies);
   const joinedCircles = circles.filter((c) => isCircleJoined(c.id));
@@ -189,8 +194,8 @@ export function MySpace() {
     .filter((p): p is NonNullable<typeof p> => !!p)
     .slice(0, 10);
 
-  const myProjects = journal.projects.filter((p) => !p.finishedAt);
-  const nudge = [...myProjects].sort((a, b) => a.startedAt - b.startedAt)[0];
+  const myPursuits = journal.projects.filter((p) => !p.finishedAt);
+  const nudge = [...myPursuits].sort((a, b) => a.startedAt - b.startedAt)[0];
   const nudgeDays = nudge ? daysSince(nudge.startedAt) : 0;
 
   // Other people's ongoing work, grouped honestly into projects.
@@ -231,11 +236,59 @@ export function MySpace() {
             ) : (
               <div className="flex gap-4 overflow-x-auto pb-2">
                 {savedWork.map((post) => (
-                  <TryThisCard key={post.id} post={post} />
+                  <TryThisCard
+                    key={post.id}
+                    post={post}
+                    onStart={(p) => setPursuitDialog({ open: true, seedPost: p })}
+                  />
                 ))}
               </div>
             )}
           </div>
+        </div>
+
+        {/* My Pursuits — the things you're bringing to life, right under the
+            ideas that might become one. A Pursuit needs nothing but a name;
+            interest and Space are metadata on the card, never a form you
+            have to fill out to get started. */}
+        <div className="ns-myspace-pursuits mb-12">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              My Pursuits
+            </h2>
+            <Button variant="outline" size="sm" onClick={() => setPursuitDialog({ open: true, seedPost: null })}>
+              <Sparkles className="size-3.5" />
+              Create Your Pursuit
+            </Button>
+          </div>
+          <p className="mb-4 text-sm text-muted-foreground">The things you're bringing to life.</p>
+
+          {myPursuits.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
+              <p className="mx-auto mb-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                Nothing yet. A Pursuit is just a thing you're working toward: learn pottery, learn to
+                DJ, learn bookbinding — name it and it's real.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => setPursuitDialog({ open: true, seedPost: null })}>
+                Create Your Pursuit
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {myPursuits.map((pursuit) => (
+                <PursuitCard
+                  key={pursuit.id}
+                  pursuit={pursuit}
+                  owner
+                  inspirationPost={
+                    pursuit.inspiredByPostId
+                      ? posts.find((p) => p.id === pursuit.inspiredByPostId)
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="ns-myspace-today mb-12">
@@ -268,53 +321,6 @@ export function MySpace() {
             )}
           </div>
         </div>
-
-        {/* Your own unfinished work sits above everyone else's finished work. */}
-        <Section
-          title="Continue where you left off"
-          copy="Your projects, and what they're waiting on."
-          action={{ label: "Create", to: "/create" }}
-        >
-          {myProjects.length === 0 ? (
-            <Empty to="/create" cta="Start a project">
-              You haven't started a project yet. A project is just a thing you
-              come back to: six mugs, a bench, a language.
-            </Empty>
-          ) : (
-            <ul className="ns-myspace-projects grid gap-3 sm:grid-cols-2">
-              {myProjects.slice(0, 4).map((project) => {
-                const hobby = getHobby(project.hobbySlug);
-                const updates = Object.values(journal.entryProject).filter(
-                  (id) => id === project.id,
-                ).length;
-                return (
-                  <li key={project.id}>
-                    <Link
-                      to="/create"
-                      className="flex h-full flex-col rounded-2xl border border-border bg-card p-4 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
-                    >
-                      <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
-                        {project.title}
-                      </span>
-                      <span className="mt-1 text-xs text-muted-foreground">
-                        {hobby?.shortName}
-                        {project.subHobby
-                          ? ` · ${subHobbyLabel(project.subHobby) ?? project.subHobby}`
-                          : ""}
-                      </span>
-                      <span className="mt-3 flex items-center gap-1.5 text-xs text-[var(--coral-text)]">
-                        <PenLine className="size-3.5" />
-                        {updates === 0
-                          ? "No updates yet · add the first"
-                          : `${updates} ${updates === 1 ? "update" : "updates"} · add another`}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Section>
 
         {/* The nudge — one, gentle, and only when it's actually true. */}
         {nudge && nudgeDays >= 7 && (
@@ -438,6 +444,12 @@ export function MySpace() {
           </Link>
         </div>
       </div>
+
+      <PursuitDialog
+        open={pursuitDialog.open}
+        seedPost={pursuitDialog.seedPost}
+        onOpenChange={(open) => setPursuitDialog((s) => ({ ...s, open }))}
+      />
     </div>
   );
 }
