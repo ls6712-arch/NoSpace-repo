@@ -168,26 +168,25 @@ const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
 };
 
 /**
- * The four primary destinations, identical on desktop and mobile so the app
- * has one mental model rather than two. "You" is deliberately absent: it hangs
+ * The primary destinations, identical on desktop and mobile so the app has
+ * one mental model rather than two. "You" is deliberately absent: it hangs
  * off the avatar, because a personal archive is somewhere you go on purpose,
  * not a tab competing with the places you go to make and find things.
- */
-/**
- * Desktop has room for the full set. The phone bar carries five of these and
- * folds Circles and People into Discover, which is where they're defined to
- * live anyway — so the two bars name the same places in the same order rather
- * than describing two different apps.
+ *
+ * People doesn't get its own top-level slot: it lives inside Discover, as
+ * one of Discover's own Spaces/Circles/People tabs (?tab=people) — reached
+ * from here whenever "Discover" is active. The /people route still resolves
+ * on its own for anyone with a direct link; it's just not a separate stop in
+ * primary nav anymore, so the phone bar's five tabs and this list describe
+ * the same places in the same order rather than two different apps.
  */
 const PRIMARY_NAV = [
+  { to: "/discover", label: "Discover", hint: "Spaces, Circles, people and projects",
+    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },
   { to: "/my-space", label: "My Space", hint: "New work from the people, hobbies and Circles you're part of",
     match: (p: string) => p === "/" || p.startsWith("/my-space") },
-  { to: "/discover", label: "Discover", hint: "Hobbies, interests, people, Circles and projects",
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") },
   { to: "/circles", label: "Circles", hint: "Communities you can join",
     match: (p: string) => p.startsWith("/circles") },
-  { to: "/people", label: "People", hint: "Find people by what they make",
-    match: (p: string) => p.startsWith("/people") },
   { to: "/create", label: "Create", hint: "Share a moment, post or project", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
@@ -290,8 +289,8 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               type="search"
-              aria-label="Search people, projects, and spaces"
-              placeholder="Search people, projects, spaces..."
+              aria-label="Search hobbies, people, or spaces"
+              placeholder="Search hobbies, people, or spaces..."
               className="w-full rounded-none border-x-0 border-t-0 border-b-[var(--border)] bg-transparent pl-9 focus-visible:ring-0"
               value={query}
               onChange={(e) => {
@@ -372,8 +371,8 @@ export function Header() {
             <Input
               type="search"
               autoFocus
-              aria-label="Search people, projects, and spaces"
-              placeholder="Search people, projects, spaces..."
+              aria-label="Search hobbies, people, or spaces"
+              placeholder="Search hobbies, people, or spaces..."
               className="w-full rounded-none border-x-0 border-t-0 border-b-[var(--border)] bg-transparent pl-9 focus-visible:ring-0"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

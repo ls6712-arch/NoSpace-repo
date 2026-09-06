@@ -51,6 +51,7 @@ export function Thoughts({
   isOwner = false,
   privateThoughts = false,
   onTogglePrivate,
+  compact = false,
   className = "",
 }: {
   postId: number;
@@ -59,6 +60,9 @@ export function Thoughts({
   isOwner?: boolean;
   privateThoughts?: boolean;
   onTogglePrivate?: (next: boolean) => void;
+  /** A smaller collapsed trigger. Everything it opens into — prompts, the
+   * composer, existing thoughts — is unchanged. */
+  compact?: boolean;
   className?: string;
 }) {
   const social = useSocial();
@@ -111,12 +115,16 @@ export function Thoughts({
         <button
           type="button"
           onClick={() => setOpenComposer(true)}
-          className="mb-3 flex w-full items-center gap-2.5 rounded-full border border-[var(--border)] bg-surface px-3 py-2.5 text-left transition-colors hover:border-[var(--foreground)]/30"
+          className={`mb-3 flex w-full items-center gap-2.5 rounded-full border border-[var(--border)] bg-surface text-left transition-colors hover:border-[var(--foreground)]/30 ${
+            compact ? "px-2.5 py-1.5" : "px-3 py-2.5"
+          }`}
         >
-          <Avatar className="size-6 shrink-0">
+          <Avatar className={compact ? "size-5 shrink-0" : "size-6 shrink-0"}>
             <AvatarFallback className="text-[9px]">{initials(myName)}</AvatarFallback>
           </Avatar>
-          <span className="flex-1 truncate text-sm text-muted-foreground">Add a thought…</span>
+          <span className={`flex-1 truncate text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+            {compact ? "Add a thought" : "Add a thought…"}
+          </span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
         </button>
       ) : (

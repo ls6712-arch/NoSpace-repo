@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { GeneratedArt } from "./GeneratedArt";
 
 /**
@@ -5,6 +6,12 @@ import { GeneratedArt } from "./GeneratedArt";
  * (a real https:// URL from Supabase Storage), and falls back to the
  * generated illustration otherwise — seed content and any post made without
  * a real account attached still get the illustrated look.
+ *
+ * The same fallback also covers a real URL that fails to load — a dead link,
+ * a network that can't reach the host, a removed file. Without this, that
+ * showed as a blank box or a broken-image glyph; now it degrades the same
+ * way "no media at all" already does, so nothing on the page ever shows an
+ * empty tile.
  */
 export function PostMedia({
   media,
@@ -22,7 +29,8 @@ export function PostMedia({
   /** Thumbnail context: no controls, no sound — the tile is a target, not a player. */
   preview?: boolean;
 }) {
-  const isRealMedia = !!media && /^https?:\/\//.test(media);
+  const [failed, setFailed] = useState(false);
+  const isRealMedia = !failed && !!media && /^https?:\/\//.test(media);
 
   if (isRealMedia && type === "video") {
     return (
@@ -32,6 +40,7 @@ export function PostMedia({
         muted={preview}
         playsInline
         preload="metadata"
+        onError={() => setFailed(true)}
         className={`${className ?? ""} object-cover [background-color:var(--forest-ink)]`}
       />
     );
@@ -44,6 +53,7 @@ export function PostMedia({
         alt=""
         className={`${className ?? ""} object-cover`}
         loading="lazy"
+        onError={() => setFailed(true)}
       />
     );
   }

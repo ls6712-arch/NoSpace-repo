@@ -183,12 +183,52 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
   );
 }
 
-export function Circles() {
+/**
+ * The Circles list itself, grouped by Space — no page chrome of its own, so
+ * it can be dropped into a full /circles page or embedded as Discover's
+ * Circles tab without either one duplicating this grouping/rendering logic.
+ */
+export function CirclesBrowser() {
   const bySpace = new Map<string, Circle[]>();
   for (const circle of circles) {
     bySpace.set(circle.hobbySlug, [...(bySpace.get(circle.hobbySlug) ?? []), circle]);
   }
 
+  return (
+    <>
+      {[...bySpace.entries()].map(([hobbySlug, list], groupIndex) => {
+        const hobby = getHobby(hobbySlug);
+        return (
+          <section key={hobbySlug} className="mb-11">
+            <div className="mb-3 flex items-end justify-between gap-4">
+              <h2 className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+                {hobby?.name ?? hobbySlug}
+              </h2>
+              <Link
+                to={`/space/${hobbySlug}`}
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Open space →
+              </Link>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              {list.map((circle, i) => (
+                <CircleCard
+                  key={circle.id}
+                  circle={circle}
+                  tint={TINTS[(groupIndex + i) % TINTS.length]}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </>
+  );
+}
+
+export function Circles() {
   return (
     <div className="min-h-screen bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-4xl px-4">
@@ -199,34 +239,7 @@ export function Circles() {
           Smaller communities built around doing.
         </p>
 
-        {[...bySpace.entries()].map(([hobbySlug, list], groupIndex) => {
-          const hobby = getHobby(hobbySlug);
-          return (
-            <section key={hobbySlug} className="mb-11">
-              <div className="mb-3 flex items-end justify-between gap-4">
-                <h2 className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  {hobby?.name ?? hobbySlug}
-                </h2>
-                <Link
-                  to={`/space/${hobbySlug}`}
-                  className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Open space →
-                </Link>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-2">
-                {list.map((circle, i) => (
-                  <CircleCard
-                    key={circle.id}
-                    circle={circle}
-                    tint={TINTS[(groupIndex + i) % TINTS.length]}
-                  />
-                ))}
-              </div>
-            </section>
-          );
-        })}
+        <CirclesBrowser />
       </div>
     </div>
   );

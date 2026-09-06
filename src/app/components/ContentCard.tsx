@@ -36,7 +36,22 @@ const AUDIENCE: Record<string, { label: string; icon: typeof Users }> = {
 // every card is generated art rather than a photo of a different shape.
 const ASPECTS = ["aspect-square", "aspect-[4/5]", "aspect-[3/4]", "aspect-[5/4]"];
 
-export function ContentCard({ post, label }: { post: Post; label?: string }) {
+export function ContentCard({
+  post,
+  label,
+  compact = false,
+}: {
+  post: Post;
+  label?: string;
+  /**
+   * A tighter, more image-forward presentation of the exact same card —
+   * same media, same caption, same five reactions plus Save, same Thoughts
+   * and PersonActions, same everything — just less padding and a smaller
+   * reaction/action grid, for a denser grid like Discover's All Creations.
+   * Every other call site leaves this off and is pixel-identical to before.
+   */
+  compact?: boolean;
+}) {
   const { findListing } = useContent();
   const social = useSocial();
   const { user } = useAuth();
@@ -80,8 +95,8 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
         )}
       </div>
 
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2">
+      <div className={compact ? "p-3" : "p-4"}>
+        <div className={`flex items-center gap-2 ${compact ? "mb-1.5" : "mb-2"}`}>
           {/* The maker's name is the way to them. Sample posts have no account
               behind them, so those stay plain text rather than a dead link. */}
           {post.userId ? (
@@ -89,14 +104,14 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
               to={`/u/${encodeURIComponent(post.userId)}`}
               className="flex min-w-0 items-center gap-2 transition-colors hover:text-[var(--coral-text)]"
             >
-              <Avatar className="size-7 shrink-0">
+              <Avatar className={compact ? "size-6 shrink-0" : "size-7 shrink-0"}>
                 <AvatarFallback className="text-[10px]">{initials(post.creator)}</AvatarFallback>
               </Avatar>
               <span className="truncate text-sm text-foreground/90">{post.creator}</span>
             </Link>
           ) : (
             <>
-              <Avatar className="size-7">
+              <Avatar className={compact ? "size-6" : "size-7"}>
                 <AvatarFallback className="text-[10px]">{initials(post.creator)}</AvatarFallback>
               </Avatar>
               <span className="text-sm text-foreground/90">{post.creator}</span>
@@ -109,14 +124,14 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
             </span>
           )}
         </div>
-        <p className="text-sm text-muted-foreground mb-3">{post.caption}</p>
+        <p className={`text-sm text-muted-foreground ${compact ? "mb-2 line-clamp-2" : "mb-3"}`}>{post.caption}</p>
 
         {/* What it's about, in the maker's words. A subject, not a hashtag —
             it links to everyone else working on the same thing. */}
         {post.interest && (
           <Link
             to={`/discover?about=${encodeURIComponent(post.interest)}`}
-            className="mb-3 inline-flex rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/30 hover:text-foreground"
+            className={`inline-flex rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/30 hover:text-foreground ${compact ? "mb-2" : "mb-3"}`}
           >
             {post.interest}
           </Link>
@@ -124,7 +139,7 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
 
         {/* When it's a thing happening, say when and where — and let people in. */}
         {isActivity && (
-          <div className="mb-3 rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-3">
+          <div className={`rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-3 ${compact ? "mb-2" : "mb-3"}`}>
             <div className="flex items-center gap-1.5 text-xs">
               <CalendarDays className="size-3.5 shrink-0 text-[var(--forest)]" />
               {new Date(post.startsAt!).toLocaleString(undefined, {
@@ -148,7 +163,7 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
         )}
 
         {/* Every entry carries the same reactions, Save among them. */}
-        <PostReactions postId={post.id} className="mb-3" />
+        <PostReactions postId={post.id} compact={compact} className={compact ? "mb-2" : "mb-3"} />
 
         <Thoughts
           postId={post.id}
@@ -156,7 +171,8 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
           postOwnerName={post.creator}
           isOwner={isOwner}
           privateThoughts={post.thoughtsPrivate}
-          className="mb-3"
+          compact={compact}
+          className={compact ? "mb-2" : "mb-3"}
         />
 
         {!isOwner && (
@@ -164,7 +180,8 @@ export function ContentCard({ post, label }: { post: Post; label?: string }) {
             personName={post.creator}
             personId={post.userId}
             hobbyKeys={[post.subHobby ?? `space:${post.hobbySlug}`]}
-            className="mb-3"
+            compact={compact}
+            className={compact ? "mb-2" : "mb-3"}
           />
         )}
 
