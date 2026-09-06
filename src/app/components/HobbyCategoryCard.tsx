@@ -3,12 +3,8 @@ import { ArrowUpRight } from "lucide-react";
 import { Hobby } from "../data/hobbies";
 
 /**
- * Hover is a single coordinated gesture rather than four unrelated effects:
- * the card lifts, the illustration pushes in behind it, the tagline and the
- * creator chip step up, and the arrow leans toward where it's taking you.
- * Everything lands inside 300ms — long enough to read as intentional, short
- * enough that a fast scan across eight cards never feels sticky. Keyboard
- * focus gets the same treatment via focus-visible on the link.
+ * Hover is a single coordinated gesture: the room lifts, the photograph pushes
+ * in behind it, and the title and arrow lean toward the room it opens.
  */
 export function HobbyCategoryCard({ hobby }: { hobby: Hobby }) {
   return (
