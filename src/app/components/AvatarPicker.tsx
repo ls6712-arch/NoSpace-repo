@@ -48,7 +48,7 @@ export function AvatarPicker({
     // pretending nothing happened.
     if (!supabase || !user) {
       onChange(URL.createObjectURL(file));
-      setError("Not signed in — this picture stays in this browser.");
+      setError("Not signed in. This picture stays in this browser.");
       setBusy(false);
       return;
     }
@@ -65,7 +65,7 @@ export function AvatarPicker({
       .upload(path, file, { contentType: file.type || undefined, upsert: true });
 
     if (uploadError) {
-      setError(`Couldn't upload that — ${uploadError.message}`);
+      setError(`Couldn't upload that: ${uploadError.message}`);
       setBusy(false);
       return;
     }
@@ -76,7 +76,7 @@ export function AvatarPicker({
       .update({ avatar_url: publicUrl })
       .eq("id", user.id);
 
-    if (saveError) setError(`Uploaded, but couldn't save it to your profile — ${saveError.message}`);
+    if (saveError) setError(`Uploaded, but couldn't save it to your profile: ${saveError.message}`);
     else onChange(publicUrl);
     setBusy(false);
   };

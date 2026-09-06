@@ -195,7 +195,7 @@ export function HobbyArchive() {
                 <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
                   {moments.length === 0
                     ? `Nothing logged under ${target.label} yet. A photo, or a sentence about how it went, both count.`
-                    : `No ${filter === "media" ? "photos or videos" : "notes"} here — try All.`}
+                    : `No ${filter === "media" ? "photos or videos" : "notes"} here. Try All.`}
                 </p>
                 <Link to={logTo} className="mt-4 inline-block">
                   <Button variant="outline" size="sm">
@@ -272,7 +272,7 @@ export function HobbyArchive() {
               <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
                 <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
                   No {target.label.toLowerCase()} projects yet. A project is a
-                  thing you come back to — moments group under it as updates.
+                  thing you come back to. Moments group under it as updates.
                 </p>
                 <Link to={logTo} className="mt-4 inline-block">
                   <Button variant="outline" size="sm">
@@ -302,7 +302,7 @@ export function HobbyArchive() {
                         <ul className="mt-3 space-y-1">
                           {updates.slice(0, 3).map((u) => (
                             <li key={u.id} className="truncate text-xs text-muted-foreground">
-                              {dayLabel(u.createdAt)} — {u.caption}
+                              {dayLabel(u.createdAt)}: {u.caption}
                             </li>
                           ))}
                         </ul>
@@ -322,7 +322,7 @@ export function HobbyArchive() {
                 {target.label}
               </h2>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Part of {space.name} — {space.plainLabel.toLowerCase()}.
+                Part of {space.name}: {space.plainLabel.toLowerCase()}.
               </p>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                 {space.description}
@@ -338,7 +338,7 @@ export function HobbyArchive() {
                   <dd>
                     {moments.length > 0
                       ? new Date(moments[moments.length - 1].createdAt).toLocaleDateString()
-                      : "—"}
+                      : "Not yet"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">

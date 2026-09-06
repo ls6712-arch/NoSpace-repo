@@ -198,26 +198,51 @@ function FeaturedCreationTile({ post }: { post: Post }) {
   );
 }
 
-/** One icon tile in the Explore Spaces row. */
+/** One tile in the Explore Spaces row — a round crop of the Space's own art
+ * (the same photo-or-GeneratedArt source every other Space card uses, via
+ * DiscoverSpaceArt) with its category glyph as a small badge, so the row
+ * reads as pictures of the Spaces rather than a generic icon key. */
 function SpaceTile({
   to,
   label,
   icon: Icon,
+  hobbySlug,
 }: {
   to: string;
   label: string;
   icon: typeof LayoutGrid;
+  hobbySlug?: string;
 }) {
   return (
     <Link
       to={to}
-      className="flex w-28 shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card px-3 py-4 text-center transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
+      className="group flex w-32 shrink-0 flex-col items-center gap-2.5 rounded-2xl border border-border bg-card px-3 py-4 text-center transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
     >
-      <span
-        className="flex size-11 items-center justify-center rounded-full"
-        style={{ backgroundColor: "color-mix(in srgb, var(--pastel-sky) 42%, var(--cream))" }}
-      >
-        <Icon className="size-5 text-[var(--forest-ink)]" strokeWidth={1.7} />
+      <span className="relative flex size-16 items-center justify-center">
+        {hobbySlug ? (
+          <span className="block size-16 overflow-hidden rounded-full">
+            <DiscoverSpaceArt
+              hobbySlug={hobbySlug}
+              seed={hobbySlug}
+              className="transition-transform duration-500 ease-out group-hover:scale-110"
+            />
+          </span>
+        ) : (
+          <span
+            className="flex size-16 items-center justify-center rounded-full"
+            style={{ backgroundColor: "color-mix(in srgb, var(--pastel-sky) 42%, var(--cream))" }}
+          >
+            <Icon className="size-6 text-[var(--forest-ink)]" strokeWidth={1.7} />
+          </span>
+        )}
+        {hobbySlug && (
+          <span
+            className="absolute -bottom-0.5 -right-0.5 flex size-6 items-center justify-center rounded-full border-2 border-card transition-transform duration-300 ease-out group-hover:scale-110"
+            style={{ backgroundColor: "var(--coral-deep)" }}
+          >
+            <Icon className="size-3.5 text-white" strokeWidth={2} />
+          </span>
+        )}
       </span>
       <span className="text-xs leading-tight text-foreground">{label}</span>
     </Link>
@@ -271,6 +296,20 @@ export function Discover() {
     [publicFeed, social.followedHobbies],
   );
 
+  const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), []);
+
+  // The search box promises hobbies and spaces, not just post captions, so a
+  // Space's own name and tagline count as a match too.
+  const filteredHobbies = useMemo(() => {
+    if (!q) return hobbies;
+    return hobbies.filter(
+      (h) =>
+        h.shortName.toLowerCase().includes(q) ||
+        h.name.toLowerCase().includes(q) ||
+        h.tagline.toLowerCase().includes(q),
+    );
+  }, [q]);
+
   const feedBase = useMemo(() => {
     if (feedTab === "recent") return [...publicFeed].sort((a, b) => b.createdAt - a.createdAt);
     // "Following" reuses hobby-follows honestly — see the TODO on
@@ -288,16 +327,19 @@ export function Discover() {
     else if (chip === "progress") list = list.filter((p) => inProgressIds.has(p.id));
 
     if (q) {
-      list = list.filter(
-        (p) =>
+      list = list.filter((p) => {
+        const hobby = hobbyBySlug.get(p.hobbySlug);
+        return (
           p.caption.toLowerCase().includes(q) ||
           p.creator.toLowerCase().includes(q) ||
           (p.interest ?? "").toLowerCase().includes(q) ||
-          (p.subHobby ? (subHobbyLabel(p.subHobby) ?? "").toLowerCase().includes(q) : false),
-      );
+          (p.subHobby ? (subHobbyLabel(p.subHobby) ?? "").toLowerCase().includes(q) : false) ||
+          (hobby ? hobby.shortName.toLowerCase().includes(q) || hobby.name.toLowerCase().includes(q) : false)
+        );
+      });
     }
     return list;
-  }, [feedBase, chip, q, inProgressIds]);
+  }, [feedBase, chip, q, inProgressIds, hobbyBySlug]);
 
   const visible = filtered.slice(0, shown);
   const remaining = filtered.length - visible.length;
@@ -321,7 +363,7 @@ export function Discover() {
               Find spaces, circles<br /><em className="text-[var(--coral-deep)]">and people who make things.</em>
             </h1>
             <p className="mb-5 max-w-lg text-lg leading-relaxed text-[var(--forest-ink)]">
-              Browse Spaces, join Circles, and find people making things — all in one place.
+              Browse Spaces, join Circles, and find people making things, all in one place.
             </p>
             {tab === "spaces" && (
               <div className="ns-discover-search relative max-w-xl">
@@ -396,18 +438,34 @@ export function Discover() {
                   <div>
                     <div className="ns-section-kicker mb-2">CHOOSE YOUR NEXT THREAD</div>
                     <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Explore Spaces</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">Browse all hobby spaces.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {q ? `Spaces matching "${query}".` : "Browse all hobby spaces."}
+                    </p>
                   </div>
                 </div>
-                <div className="flex gap-3 overflow-x-auto pb-2">
-                  <SpaceTile to="/discover" label="All Spaces" icon={LayoutGrid} />
-                  {hobbies.map((hobby) => (
-                    <SpaceTile key={hobby.slug} to={`/space/${hobby.slug}`} label={hobby.shortName} icon={categoryIcon(hobby.slug)} />
-                  ))}
-                  <div className="w-28 shrink-0">
-                    <SuggestCategory className="h-full" />
+                {q && filteredHobbies.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+                    No spaces match that yet.
                   </div>
-                </div>
+                ) : (
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {!q && <SpaceTile to="/discover" label="All Spaces" icon={LayoutGrid} />}
+                    {filteredHobbies.map((hobby) => (
+                      <SpaceTile
+                        key={hobby.slug}
+                        to={`/space/${hobby.slug}`}
+                        label={hobby.shortName}
+                        icon={categoryIcon(hobby.slug)}
+                        hobbySlug={hobby.slug}
+                      />
+                    ))}
+                    {!q && (
+                      <div className="w-28 shrink-0">
+                        <SuggestCategory className="h-full" />
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
 
               {/* Featured Creations */}
@@ -491,7 +549,7 @@ export function Discover() {
 
               <p className="mb-6 text-sm text-muted-foreground">
                 {chip === "near"
-                  ? "Location isn't switched on yet — Circles with a city are the closest thing for now."
+                  ? "Location isn't switched on yet. Circles with a city are the closest thing for now."
                   : `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"} of work${q ? ` matching "${query}"` : ""}.`}
               </p>
 
@@ -499,7 +557,7 @@ export function Discover() {
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
                   <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
                     NoSpace doesn't know where you are, and won't until you tell it.
-                    These Circles have a city attached — the closest thing to near you.
+                    These Circles have a city attached, the closest thing to near you.
                   </p>
                   <ul className="mx-auto grid max-w-2xl gap-2 text-left sm:grid-cols-2">
                     {localCircles.map((c) => (
@@ -523,8 +581,8 @@ export function Discover() {
               ) : visible.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
                   {feedTab === "following"
-                    ? "Nothing from hobbies you follow yet — follow a Space from Explore Spaces above to fill this in."
-                    : "Nothing matches that yet — try a broader word or a different filter."}
+                    ? "Nothing from hobbies you follow yet. Follow a Space from Explore Spaces above to fill this in."
+                    : "Nothing matches that yet. Try a broader word or a different filter."}
                 </div>
               ) : (
                 <div className="columns-1 gap-4 sm:columns-2 md:columns-3 xl:columns-4">
@@ -541,7 +599,7 @@ export function Discover() {
                     <>
                       <p className="mb-4 text-sm text-muted-foreground">
                         That's {visible.length} of {filtered.length}. Nothing loads on
-                        its own — keep going only if you want to.
+                        its own. Keep going only if you want to.
                       </p>
                       <Button variant="outline" onClick={() => setShown((n) => n + PAGE_SIZE)}>
                         Show more

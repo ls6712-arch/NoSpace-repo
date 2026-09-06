@@ -132,8 +132,8 @@ export function PostReactions({
             <button
               type="button"
               aria-pressed={pressed}
-              aria-label={`${label} — ${meaning}`}
-              title={`${label} — ${meaning}`}
+              aria-label={`${label}: ${meaning}`}
+              title={`${label}: ${meaning}`}
               onClick={() => toggle(postId, id)}
               className={`flex w-full items-center rounded-full border transition-colors duration-150 ${
                 compact ? "justify-center gap-1 px-2 py-2 text-[13px]" : "gap-2 px-3 py-2 text-[13px]"
@@ -177,8 +177,8 @@ function SaveReaction({ postId, compact = false }: { postId: string | number; co
     <button
       type="button"
       aria-pressed={saved}
-      aria-label={saved ? "Saved — keep it to come back to" : "Save — keep it to come back to"}
-      title="Save — keep it to come back to"
+      aria-label={saved ? "Saved: keep it to come back to" : "Save: keep it to come back to"}
+      title="Save: keep it to come back to"
       onClick={() => toggleSaved(Number(postId))}
       className={`flex w-full items-center rounded-full border border-[var(--border)] bg-surface text-foreground transition-colors duration-150 hover:border-[var(--foreground)]/35 ${
         compact ? "justify-center gap-1 px-2 py-2 text-[13px]" : "gap-2 px-3 py-2 text-[13px]"

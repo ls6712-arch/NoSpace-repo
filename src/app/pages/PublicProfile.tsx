@@ -145,7 +145,7 @@ export function PublicProfile() {
             No shelf here
           </h2>
           <p className="mb-6 text-sm text-muted-foreground">
-            Nobody by that name — the link may be out of date.
+            Nobody by that name. The link may be out of date.
           </p>
           <Link to="/discover">
             <Button variant="outline">Explore hobbies instead</Button>

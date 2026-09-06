@@ -74,7 +74,7 @@ const AUDIENCE: {
   copy: string;
   icon: typeof Globe2;
 }[] = [
-  { value: "private", label: "Only you", copy: "Kept as a private log — nobody else ever sees it", icon: Lock },
+  { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
   { value: "friends", label: "Connections", copy: "Only people you have connected with - both of you agreed", icon: UserRound },
   { value: "circle", label: "A Circle", copy: "Only members of one Circle you pick", icon: Users },
   { value: "public", label: "Everyone", copy: "Anyone browsing this space can find it", icon: Globe2 },
@@ -276,7 +276,7 @@ export function Log() {
       }
 
       const caption =
-        [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(" — ") ||
+        [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
         `A ${tagLabel.toLowerCase()} moment`;
 
       const entry = await addPost({
@@ -306,7 +306,7 @@ export function Log() {
       setSavedAs("shared");
       setScreen("saved");
     } catch {
-      setError("Something went wrong saving that — mind trying again?");
+      setError("Something went wrong saving that. Mind trying again?");
     } finally {
       setSaving(false);
     }
@@ -488,7 +488,7 @@ export function Log() {
           <h2 className="mb-2 text-2xl">Log in to keep your work</h2>
           <p className="mb-6 text-muted-foreground">
             Your moments are tied to your account, so they're still here next
-            time — not just in this browser tab.
+            time, not just in this browser tab.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link to="/login?redirect=/create">
@@ -557,7 +557,7 @@ export function Log() {
               only in this tab, and it will be gone after a reload. */}
           {saveError && (
             <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--cream))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
-              {saveError} Nothing you wrote is lost yet — try again before you
+              {saveError} Nothing you wrote is lost yet. Try again before you
               close this tab.
             </p>
           )}
@@ -702,7 +702,7 @@ export function Log() {
               ) : (
                 <Select value={projectId} onValueChange={setProjectId}>
                   <SelectTrigger className="mt-3">
-                    <SelectValue placeholder="Choose a project — optional" />
+                    <SelectValue placeholder="Choose a project (optional)" />
                   </SelectTrigger>
                   <SelectContent>
                     {openProjects.map((p) => (
@@ -795,7 +795,7 @@ export function Log() {
                 </SelectContent>
               </Select>
               <p className="mt-1.5 text-xs text-muted-foreground">
-                {hobby.plainLabel} — {hobby.tagline.toLowerCase()}
+                {hobby.plainLabel}: {hobby.tagline.toLowerCase()}
               </p>
             </div>
           )}
@@ -817,7 +817,7 @@ export function Log() {
             <span className="text-left">
               <span className="block text-sm">This is something happening</span>
               <span className="block text-xs text-muted-foreground">
-                A walk, a workshop, a meetup, a challenge — people can join in
+                A walk, a workshop, a meetup, a challenge: people can join in
               </span>
             </span>
             <span
@@ -867,7 +867,7 @@ export function Log() {
                   <SelectContent>
                     {LOCATION_PRIVACY.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label} — {o.copy}
+                        {o.label}: {o.copy}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1141,7 +1141,7 @@ export function Log() {
                 </p>
                 <Textarea
                   id="changed"
-                  placeholder="Centred it on the third try — next time, wetter hands"
+                  placeholder="Centred it on the third try, next time, wetter hands"
                   value={changed}
                   onChange={(e) => setChanged(e.target.value)}
                 />
@@ -1156,7 +1156,7 @@ export function Log() {
             </p>
             <Textarea
               id="reflection"
-              placeholder="Never shown to anyone — this part is only ever yours"
+              placeholder="Never shown to anyone, this part is only ever yours"
               value={reflection}
               onChange={(e) => setReflection(e.target.value)}
             />

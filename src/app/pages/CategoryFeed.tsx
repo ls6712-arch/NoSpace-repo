@@ -45,7 +45,7 @@ function PeopleTab({ hobbySlug, hobbyName }: { hobbySlug: string; hobbyName: str
     <div>
       <p className="mb-5 max-w-lg text-sm text-muted-foreground">
         People who share {hobbyName} work here, or who are exploring it. No
-        follower counts — tap through to see what they're making.
+        follower counts. Tap through to see what they're making.
       </p>
       <PeopleRow people={people} />
     </div>
@@ -162,7 +162,7 @@ export function CategoryFeed() {
           subItems: [],
           gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
           coverImage: "",
-          creatorCount: "—",
+          creatorCount: "-",
         }
       : undefined;
   // An old /space/workbench link still lands here; use the current slug for
@@ -296,7 +296,7 @@ export function CategoryFeed() {
               <div className="text-center py-16 text-muted-foreground">
                 {activeSub ? (
                   <>
-                    No {(activeLabel ?? activeSub).toLowerCase()} work yet — be the
+                    No {(activeLabel ?? activeSub).toLowerCase()} work yet. Be the
                     first.
                     <div className="mt-4">
                       <Link to={`/create?hobby=${hobby.slug}&sub=${activeSub}`}>
@@ -308,7 +308,7 @@ export function CategoryFeed() {
                     </div>
                   </>
                 ) : (
-                  "Nobody's logged anything here yet — be the first."
+                  "Nobody's logged anything here yet. Be the first."
                 )}
               </div>
             ) : (

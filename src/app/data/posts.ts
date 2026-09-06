@@ -61,7 +61,7 @@ export const seedPosts: Post[] = [
     media:
       "https://images.unsplash.com/photo-1599789197514-47270cd526b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
     creator: "Priya Nair",
-    caption: "60 seconds of hoop embroidery — this stitch took me a week to learn.",
+    caption: "60 seconds of hoop embroidery. This stitch took me a week to learn.",
     likes: 341,
     createdAt: hoursAgo(30),
     visibility: PUBLIC,
@@ -168,7 +168,7 @@ export const seedPosts: Post[] = [
     media:
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
     creator: "Kayla Byrne",
-    caption: "Post-match recap — we're 3-1 this season.",
+    caption: "Post-match recap: we're 3-1 this season.",
     likes: 156,
     createdAt: hoursAgo(280),
     visibility: PUBLIC,
@@ -278,7 +278,7 @@ export const seedPosts: Post[] = [
     media:
       "https://images.unsplash.com/photo-1671535108665-eeeb723ebebf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
     creator: "Sam Okafor",
-    caption: "Visible mending a thrifted jacket — sashiko stitch walkthrough.",
+    caption: "Visible mending a thrifted jacket: sashiko stitch walkthrough.",
     likes: 233,
     createdAt: hoursAgo(120),
     visibility: PUBLIC,

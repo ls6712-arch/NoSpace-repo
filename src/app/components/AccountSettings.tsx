@@ -45,7 +45,7 @@ export function AccountSettings() {
           Account
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">
-          You're browsing without an account — nothing here is saved beyond this
+          You're browsing without an account. Nothing here is saved beyond this
           browser.
         </p>
       </div>

@@ -73,7 +73,7 @@ export function InterestField({
       />
       {!value.trim() && !focused && (
         <p className="mt-1.5 text-[11px] text-muted-foreground">
-          Anything you like — not listed? Enter your own.
+          Anything you like, not listed? Enter your own.
         </p>
       )}
 
@@ -82,7 +82,7 @@ export function InterestField({
           {exact ? (
             <span className="flex items-center gap-1">
               <Check className="size-3 text-[var(--forest)]" />
-              Others use this too — your post joins theirs.
+              Others use this too. Your post joins theirs.
             </span>
           ) : (
             "New one. It'll show up as a suggestion for everyone after this."
@@ -119,7 +119,7 @@ export function InterestField({
                 onClick={() => setFocused(false)}
                 className="text-left text-xs text-[var(--coral-text)]"
               >
-                Use “{value.trim()}” — your own
+                Use “{value.trim()}” as your own
               </button>
             ) : (
               <span className="text-[11px] text-muted-foreground">

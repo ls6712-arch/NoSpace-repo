@@ -47,13 +47,13 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
 
   const emptyCopy: Record<TabId, string> = {
     updates: joined
-      ? "No updates yet. Yours would be the first — a photo counts."
+      ? "No updates yet. Yours would be the first, a photo counts."
       : "Join to see what members are working on.",
     projects: "No shared projects running right now.",
     questions: "Nobody's asked anything yet. Ask for a second pair of eyes.",
     events: circle.location
       ? `No meetups on the calendar for ${circle.location} yet.`
-      : "No events scheduled — this Circle meets online.",
+      : "No events scheduled. This Circle meets online.",
   };
 
   return (
@@ -151,7 +151,7 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
               {updates.slice(0, 3).map((post) => (
                 <li key={post.id} className="text-xs leading-relaxed">
                   <span className="text-foreground">{post.creator}</span>{" "}
-                  <span className="text-muted-foreground">— {post.caption}</span>
+                  <span className="text-muted-foreground">: {post.caption}</span>
                 </li>
               ))}
             </ul>

@@ -99,9 +99,9 @@ export function MomentDetail({
     try {
       const ok = await updatePost(post.id, { caption, reflection });
       if (ok) setEditing(false);
-      else setSaveError("Couldn't save that change. Your edit is still here — try again.");
+      else setSaveError("Couldn't save that change. Your edit is still here, try again.");
     } catch {
-      setSaveError("Couldn't reach the server. Your edit is still here — try again.");
+      setSaveError("Couldn't reach the server. Your edit is still here, try again.");
     } finally {
       // Always runs, so the button can't stay stuck on "Saving…" and strand
       // an edit the person can no longer submit.
@@ -121,7 +121,7 @@ export function MomentDetail({
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } catch {
-      setSaveError("Couldn't copy the link — your browser blocked clipboard access.");
+      setSaveError("Couldn't copy the link. Your browser blocked clipboard access.");
     }
   };
 
@@ -181,7 +181,7 @@ export function MomentDetail({
             </div>
             <div>
               <label htmlFor="m-reflection" className="mb-1.5 block text-xs text-muted-foreground">
-                Private reflection — only you ever see this
+                Private reflection, only you ever see this
               </label>
               <Textarea
                 id="m-reflection"
@@ -231,7 +231,7 @@ export function MomentDetail({
           <div className="rounded-2xl border border-[var(--hairline)] bg-card px-4 py-3">
             <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Lock className="size-3" />
-              Private reflection — only you
+              Private reflection, only you
             </div>
             <p className="whitespace-pre-line text-sm leading-relaxed">{post.reflection}</p>
           </div>

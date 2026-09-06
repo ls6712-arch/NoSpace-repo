@@ -165,7 +165,7 @@ export function Inbox() {
         </h1>
         <p className="mb-8 mt-2 text-sm text-muted-foreground">
           Everything addressed to you. Messaging opens once a connection is
-          accepted — never before.
+          accepted, never before.
         </p>
 
         <Tabs defaultValue={requestCount > 0 ? "requests" : "messages"}>
@@ -206,7 +206,7 @@ export function Inbox() {
             ) : connections.connectedPeople.length === 0 ? (
               <Empty icon={MessageSquare}>
                 No conversations yet. Messaging opens with people you've
-                connected to — send a request from someone's profile, and once
+                connected to. Send a request from someone's profile, and once
                 they accept you can write to each other.
               </Empty>
             ) : (
@@ -235,7 +235,7 @@ export function Inbox() {
                             {person.displayName}
                           </span>
                           <span className="block truncate text-xs text-muted-foreground">
-                            {last ? last.body : "Connected — say something."}
+                            {last ? last.body : "Connected. Say something."}
                           </span>
                         </span>
                         {last && (

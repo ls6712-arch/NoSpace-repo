@@ -55,7 +55,7 @@ export const badges: Badge[] = [
   {
     id: "hands-on",
     name: "Getting My Hands In",
-    description: "Ten sessions in one hobby — past the beginner wobble.",
+    description: "Ten sessions in one hobby, past the beginner wobble.",
     icon: "Hand",
     tint: "var(--pastel-clay)",
     test: (s) => primaryHobbySessions(s) >= 10,

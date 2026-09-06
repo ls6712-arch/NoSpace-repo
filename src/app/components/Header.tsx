@@ -60,7 +60,7 @@ function AccountMenu() {
   const name = profile?.display_name?.trim();
 
   return (
-    <Link to="/you" aria-label="You — your work, saved ideas, and settings" title="You">
+    <Link to="/you" aria-label="You: your work, saved ideas, and settings" title="You">
       <Avatar className="size-8">
         {profile?.avatar_url && (
           <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />

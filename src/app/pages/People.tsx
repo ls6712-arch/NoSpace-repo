@@ -114,7 +114,7 @@ export function PeopleBrowser() {
           By what they make
         </h2>
         <p className="mb-4 mt-1 text-sm text-muted-foreground">
-          Pick a hobby to see who works in it. This is the intended route —
+          Pick a hobby to see who works in it. This is the intended route:
           you meet someone through the craft, not a ranked list.
         </p>
 
@@ -168,7 +168,7 @@ export function PeopleBrowser() {
 
       <div className="mt-12 rounded-3xl border border-border bg-card px-6 py-9 text-center">
         <p className="mx-auto mb-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-          No follower counts anywhere on NoSpace — not here, not on a
+          No follower counts anywhere on NoSpace, not here, not on a
           profile. People are described by what they work on.
         </p>
         <Link to="/discover">

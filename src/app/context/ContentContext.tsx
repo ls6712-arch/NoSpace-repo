@@ -283,7 +283,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
         if (uploadError) {
           setMediaError(
-            `Your ${input.type === "video" ? "video" : "photo"} didn't upload — ${uploadError.message}. The entry was saved without it.`,
+            `Your ${input.type === "video" ? "video" : "photo"} didn't upload: ${uploadError.message}. The entry was saved without it.`,
           );
         } else {
           mediaUrl = supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl;

@@ -157,7 +157,7 @@ export function BePart({
       });
       if (result?.error === "self") setError("That's you.");
       else if (result?.error === "no-recipient")
-        setError("We can't reach this maker yet — try from their profile.");
+        setError("We can't reach this maker yet. Try from their profile.");
       else setSent(true);
     } catch {
       setError("That didn't send. Check your connection and try again.");
@@ -289,7 +289,7 @@ export function BePart({
               {active.id === "join_in" && postId && !isActivity && (
                 <>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    Nothing scheduled on this one — it's a moment, not an
+                    Nothing scheduled on this one. It's a moment, not an
                     activity. There may be something happening in {hobbyLabel}{" "}
                     you can take part in.
                   </p>

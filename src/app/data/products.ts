@@ -51,7 +51,7 @@ export const products: Product[] = [
     image:
       "https://images.unsplash.com/photo-1590605095243-072811dbe64c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
-      "Smooth, non-toxic air-dry clay with shaping tools and paint. No kiln needed — perfect for home crafting.",
+      "Smooth, non-toxic air-dry clay with shaping tools and paint. No kiln needed, perfect for home crafting.",
     rating: 4.6,
     reviews: 178,
     creator: "NoSpace Makers",
@@ -107,7 +107,7 @@ export const products: Product[] = [
     image:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
-      "6-part video course on coil, slab, and pinch techniques — shot in Mara's home studio. Watch at your own pace.",
+      "6-part video course on coil, slab, and pinch techniques, shot in Mara's home studio. Watch at your own pace.",
     rating: 4.9,
     reviews: 64,
     creator: "Mara Chen",
@@ -282,7 +282,7 @@ export const products: Product[] = [
     image:
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
-      "Dial in your grind, steam microfoam, and pour latte art — filmed step-by-step in a real kitchen, not a café.",
+      "Dial in your grind, steam microfoam, and pour latte art, filmed step-by-step in a real kitchen, not a café.",
     rating: 4.9,
     reviews: 203,
     creator: "Theo Reyes",
@@ -354,7 +354,7 @@ export const products: Product[] = [
     image:
       "https://images.unsplash.com/photo-1688126753535-0ca32e3b5cbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
-      "Made from reclaimed fabric scraps — each bag is one-of-a-kind. Patchwork exterior with a zipper inner pocket.",
+      "Made from reclaimed fabric scraps, each bag is one-of-a-kind. Patchwork exterior with a zipper inner pocket.",
     rating: 4.8,
     reviews: 289,
     creator: "NoSpace Makers",
