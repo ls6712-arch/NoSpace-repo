@@ -87,7 +87,7 @@ export function AchievementStrip({ onShare }: { onShare: () => void }) {
                         Share your profile
                       </Button>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Not unlocked yet — keep going.</p>
+                      <p className="text-xs text-muted-foreground">Not unlocked yet. Keep going.</p>
                     )}
                   </>
                 );

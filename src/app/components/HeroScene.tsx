@@ -22,7 +22,7 @@ export function HeroScene({ className = "" }: { className?: string }) {
       viewBox="0 96 640 444"
       className={className}
       role="img"
-      aria-label="Three people on a green island — one throwing a pot, one holding up a finished piece, one tending a plant"
+      aria-label="Three people on a green island: one throwing a pot, one holding up a finished piece, one tending a plant"
     >
       {/* ── Sky furniture ──────────────────────────────────────────────── */}
       <g transform="translate(0,84)">

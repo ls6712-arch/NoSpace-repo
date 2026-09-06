@@ -216,7 +216,7 @@ function WaitlistForm() {
         <span className="flex size-6 items-center justify-center rounded-full text-white [background-image:var(--gradient-brand)]">
           <Check className="size-3.5" />
         </span>
-        You're on the list — we'll be in touch.
+        You're on the list. We'll be in touch.
       </div>
     );
   }
@@ -441,7 +441,7 @@ export function Home() {
           <div className="ns-paper-panel ns-process-panel space-y-0">
             {[
               { n: "01", label: "Create", desc: "A photo, a note, or a small update" },
-              { n: "02", label: "Reflect", desc: "A private note — only you ever see it" },
+              { n: "02", label: "Reflect", desc: "A private note, only you ever see it" },
               { n: "03", label: "Share", desc: "Only you, your connections, a Circle, or everyone" },
             ].map((step) => (
               <div key={step.n} className="ns-process-step">
@@ -460,8 +460,8 @@ export function Home() {
       <FeatureSection
         reverse
         eyebrow="2 · CIRCLES"
-        title="Find your circle — down to your city."
-        copy="Circles are hobby-first, not region-first: join a global topic circle, or one with a geographic layer for real-world meetups nearby. No separate app per city — geography is just a filter inside a hobby."
+        title="Find your circle, down to your city."
+        copy="Circles are hobby-first, not region-first: join a global topic circle, or one with a geographic layer for real-world meetups nearby. No separate app per city: geography is just a filter inside a hobby."
         visual={
           <div className="ns-paper-panel ns-circle-panel">
             <div className="mb-5 flex items-center justify-between border-b border-[var(--hairline)] pb-3">
@@ -485,7 +485,7 @@ export function Home() {
       <FeatureSection
         eyebrow="3 · PROFILE"
         title="A portfolio, not a scoreboard."
-        copy="One headline stat instead of a stats dashboard. Hobby tags for what you actually engage with. A quiet, non-leaderboard badge strip. Your work, chronological and visual — that's the whole profile."
+        copy="One headline stat instead of a stats dashboard. Hobby tags for what you actually engage with. A quiet, non-leaderboard badge strip. Your work, chronological and visual: that's the whole profile."
         cta="See a profile"
         ctaTo="/profile"
         visual={

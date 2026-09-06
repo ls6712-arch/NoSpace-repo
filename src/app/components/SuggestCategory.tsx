@@ -82,7 +82,7 @@ export function SuggestCategory({ className = "" }: { className?: string }) {
               Suggest a Category
             </DialogTitle>
             <DialogDescription className="leading-relaxed">
-              Spaces are ways in, never a list you have to pick from — you can
+              Spaces are ways in, never a list you have to pick from. You can
               already post about anything. This is for when the list itself is
               missing something.
             </DialogDescription>

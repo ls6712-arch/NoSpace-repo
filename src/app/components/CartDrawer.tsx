@@ -40,7 +40,7 @@ export function CartDrawer() {
               <span className="flex size-14 items-center justify-center rounded-full text-white [background-image:var(--gradient-brand)]">
                 <Check className="size-7" />
               </span>
-              <div className="text-lg">Order placed — thanks for supporting creators.</div>
+              <div className="text-lg">Order placed. Thanks for supporting creators.</div>
               <div className="text-sm text-muted-foreground">
                 Points added to your profile.
               </div>

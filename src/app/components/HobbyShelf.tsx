@@ -139,7 +139,7 @@ function HobbyBook({
   return (
     <Link
       to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`}
-      title={`${item.label} — ${item.sessions} ${item.sessions === 1 ? "moment" : "moments"}, ${updatedLabel(item.lastAt).toLowerCase()}`}
+      title={`${item.label}: ${item.sessions} ${item.sessions === 1 ? "moment" : "moments"}, ${updatedLabel(item.lastAt).toLowerCase()}`}
       className="group relative block origin-top transition-transform duration-300 ease-out hover:z-20 hover:-translate-y-2 hover:rotate-0 focus-visible:z-20 focus-visible:-translate-y-2 focus-visible:rotate-0"
       style={{
         transform: `rotate(${tilt}deg)`,

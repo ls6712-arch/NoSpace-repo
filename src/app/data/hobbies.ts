@@ -72,7 +72,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "sports-fitness",
@@ -90,7 +90,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1571008887538-b36bb32f4571?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "art-creative",
@@ -106,7 +106,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1513364776144-60967b0f800f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "crafts-making",
@@ -124,7 +124,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "books-writing",
@@ -141,7 +141,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1512820790803-83ca734da794?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "nature-outdoors",
@@ -157,7 +157,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1551632811-561732d1e306?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "home-garden",
@@ -174,7 +174,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "gaming-tabletop",
@@ -190,7 +190,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "music",
@@ -206,7 +206,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "photography-film",
@@ -222,7 +222,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "health-wellness",
@@ -238,7 +238,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1506126613408-eca07ce68773?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "fashion-beauty",
@@ -254,7 +254,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "tech-building",
@@ -273,7 +273,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1553406830-ef2513450d76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "collecting-fandom",
@@ -289,7 +289,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
   {
     slug: "travel-adventure",
@@ -305,7 +305,7 @@ export const hobbies: Hobby[] = [
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
       "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    creatorCount: "—",
+    creatorCount: "-",
   },
 ];
 

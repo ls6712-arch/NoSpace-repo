@@ -42,7 +42,7 @@ export function PersonCard({ person, className = "" }: { person: Person; classNa
             ? hobbies.join(" · ")
             : person.postCount > 0
               ? "Sharing work on NoSpace"
-              : "Just joined — nothing shared yet"}
+              : "Just joined, nothing shared yet"}
         </span>
       </span>
     </Link>

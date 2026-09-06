@@ -65,7 +65,7 @@ export function CirclesJoined({ limit }: { limit?: number } = {}) {
     return (
       <div className="rounded-2xl border border-dashed border-border px-5 py-8 text-center">
         <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-          You haven't joined a Circle yet — small groups built around doing a
+          You haven't joined a Circle yet. Small groups built around doing a
           thing together, by skill level, city, or shared project.
         </p>
         <Link

@@ -158,7 +158,7 @@ export function Thoughts({
           />
           {failed && (
             <p className="mt-2 text-[11px] text-[var(--coral-text)]">
-              That didn't send. Your words are still here — try again.
+              That didn't send. Your words are still here, try again.
             </p>
           )}
           <div className="mt-2 flex items-center justify-between gap-3">
@@ -219,7 +219,7 @@ export function Thoughts({
 
       {!social.isShared && thoughts.length > 0 && (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Saved in this browser only — sign in for thoughts other people can see.
+          Saved in this browser only. Sign in for thoughts other people can see.
         </p>
       )}
     </div>

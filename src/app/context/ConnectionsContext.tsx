@@ -376,7 +376,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
         return {
           space: null,
           error: /recursion/i.test(error?.message ?? "")
-            ? "The database is rejecting Space queries — run sql/space-fix.sql in Supabase."
+            ? "The database is rejecting Space queries. Run sql/space-fix.sql in Supabase."
             : (error?.message ?? "Couldn't make that Space."),
         };
       }

@@ -148,7 +148,7 @@ export function MySpace() {
             {today.length === 0 ? (
               <Empty to="/discover" cta="Find makers to follow">
                 Quiet so far. Follow a few makers or join a Circle and their new
-                work turns up here — nothing else gets in.
+                work turns up here. Nothing else gets in.
               </Empty>
             ) : (
               <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2 lg:columns-3">
@@ -169,7 +169,7 @@ export function MySpace() {
           {myProjects.length === 0 ? (
             <Empty to="/create" cta="Start a project">
               You haven't started a project yet. A project is just a thing you
-              come back to — six mugs, a bench, a language.
+              come back to: six mugs, a bench, a language.
             </Empty>
           ) : (
             <ul className="ns-myspace-projects grid gap-3 sm:grid-cols-2">
@@ -196,7 +196,7 @@ export function MySpace() {
                       <span className="mt-3 flex items-center gap-1.5 text-xs text-[var(--coral-text)]">
                         <PenLine className="size-3.5" />
                         {updates === 0
-                          ? "No updates yet — add the first"
+                          ? "No updates yet · add the first"
                           : `${updates} ${updates === 1 ? "update" : "updates"} · add another`}
                       </span>
                     </Link>
@@ -233,7 +233,7 @@ export function MySpace() {
           {joinedCircles.length === 0 ? (
             <Empty to="/circles" cta="Browse Circles">
               You haven't joined a Circle yet. Circles are small groups built
-              around doing a thing together — a skill level, a city, a project.
+              around doing a thing together: a skill level, a city, a project.
             </Empty>
           ) : fromCircles.length === 0 ? (
             <div className="ns-myspace-circle-links grid gap-2 sm:grid-cols-2">
@@ -271,7 +271,7 @@ export function MySpace() {
         >
           {exploringWork.length === 0 ? (
             <Empty to="/discover" cta="Find a hobby">
-              Keep exploring attaches you to a hobby rather than a person — so
+              Keep exploring attaches you to a hobby rather than a person, so
               you see the craft develop, not somebody's posting habits.
             </Empty>
           ) : (
@@ -314,7 +314,7 @@ export function MySpace() {
         <Section title="Saved ideas" copy="Things you kept to come back to." action={{ label: "All saved", to: "/you" }}>
           {savedWork.length === 0 ? (
             <Empty to="/discover" cta="Go to Discover">
-              Nothing saved yet. Saving is for you — the maker never sees a score
+              Nothing saved yet. Saving is for you. The maker never sees a score
               either way.
             </Empty>
           ) : (

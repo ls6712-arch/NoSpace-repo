@@ -99,7 +99,7 @@ export function Login() {
           <h2 className="text-xl mb-2">Accounts aren't set up on this build</h2>
           <p className="text-sm text-muted-foreground">
             This copy of NoSpace isn't connected to a database yet, so there's no real
-            sign-up here — everything still works in local demo mode.
+            sign-up here. Everything still works in local demo mode.
           </p>
         </div>
       </div>
@@ -118,7 +118,7 @@ export function Login() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signup"
-              ? "Real work, saved for real — not just this browser tab."
+              ? "Real work, saved for real, not just this browser tab."
               : "Log in to pick up where you left off."}
           </p>
         </div>

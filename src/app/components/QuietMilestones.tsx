@@ -120,7 +120,7 @@ export function QuietMilestones({
                         Share your profile
                       </Button>
                     ) : unlocked ? null : (
-                      <p className="text-xs text-muted-foreground">Not yet — no rush.</p>
+                      <p className="text-xs text-muted-foreground">Not yet. No rush.</p>
                     )}
                   </>
                 );

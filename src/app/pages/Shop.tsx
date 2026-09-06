@@ -23,7 +23,7 @@ export function Shop() {
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl mb-3">The marketplace</h1>
           <p className="text-muted-foreground text-lg">
-            Physical goods, digital guides, and courses — all made by real creators.
+            Physical goods, digital guides, and courses, all made by real creators.
           </p>
         </div>
 

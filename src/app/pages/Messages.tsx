@@ -67,7 +67,7 @@ export function Messages() {
           </h1>
           <p className="mx-auto mb-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
             Messaging opens when someone accepts a Make together or Explore
-            together request — never before. There's no way to message a
+            together request, never before. There's no way to message a
             stranger here, by design.
           </p>
           <Link to="/discover">
@@ -139,7 +139,7 @@ export function Messages() {
               <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
                 {messages.length === 0 ? (
                   <p className="py-8 text-center text-xs text-muted-foreground">
-                    Nothing yet. You both agreed to “{active.intent}” — this is where
+                    Nothing yet. You both agreed to “{active.intent}”, this is where
                     that happens.
                   </p>
                 ) : (

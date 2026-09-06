@@ -16,7 +16,7 @@ export function MyPostsGrid() {
     return (
       <div className="text-center py-14 rounded-2xl border border-dashed border-border">
         <p className="text-muted-foreground mb-4">
-          Nothing here yet — your work will show up in a grid, just like this.
+          Nothing here yet. Your work will show up in a grid, just like this.
         </p>
         <Link to="/create">
           <Button variant="brand">

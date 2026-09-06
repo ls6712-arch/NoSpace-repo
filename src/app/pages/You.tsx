@@ -79,7 +79,7 @@ export function You() {
     return (
       <SignUpPrompt
         title="Your shelf lives here"
-        body="Make an account and everything you log builds up on a shelf of your own — hobbies, sessions, milestones. You can keep browsing everything else without one."
+        body="Make an account and everything you log builds up on a shelf of your own: hobbies, sessions, milestones. You can keep browsing everything else without one."
         cta="Start my shelf"
       />
     );
@@ -142,7 +142,7 @@ export function You() {
         {isConfigured && !user && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted px-4 py-3">
             <p className="text-xs text-muted-foreground">
-              You're not logged in — sessions here are just local to this browser.
+              You're not logged in. Sessions here are just local to this browser.
             </p>
             <Link to="/login" className="shrink-0">
               <Button variant="outline" size="sm">
@@ -186,7 +186,7 @@ export function You() {
           <TabsContent value="private">
             <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
               Kept here and nowhere else. Private logs never appear in a Space,
-              a feed, or your public shelf — which is why they can look missing
+              a feed, or your public shelf, which is why they can look missing
               if you go looking for them there.
             </p>
             {journal.privateLogs.length === 0 ? (
@@ -194,7 +194,7 @@ export function You() {
                 <Lock className="mx-auto mb-3 size-5 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   Nothing private yet. Anything you save as a private log stays
-                  here — never shown to anyone.
+                  here, never shown to anyone.
                 </p>
                 <Link to="/create" className="mt-4 inline-block">
                   <Button variant="outline" size="sm">Write one</Button>
@@ -260,7 +260,7 @@ export function You() {
                 <UserRound className="mx-auto mb-3 size-5 text-muted-foreground" />
                 <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
                   You're not exploring any hobbies yet. "Keep exploring" attaches
-                  you to a hobby — pottery, film photography, sourdough — rather
+                  you to a hobby (pottery, film photography, sourdough) rather
                   than to a person, and their new work turns up in My Space.
                 </p>
                 <Link to="/discover" className="mt-4 inline-block">
@@ -312,7 +312,7 @@ export function You() {
                   className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
                   onClick={() => setCirclesVisible((v) => !v)}
                 >
-                  {circlesVisible ? "Visible on your work" : "Hidden — only you see this"}
+                  {circlesVisible ? "Visible on your work" : "Hidden, only you see this"}
                 </button>
               )}
             </div>
@@ -336,8 +336,8 @@ export function You() {
                   className="text-xs text-[var(--coral-text)] hover:underline"
                 >
                   {circlesVisible
-                    ? "Visible on your work — hide them"
-                    : "Hidden — show them on your work"}
+                    ? "Visible on your work (hide them)"
+                    : "Hidden (show them on your work)"}
                 </button>
               </div>
               {user && (

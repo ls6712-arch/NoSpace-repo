@@ -146,7 +146,7 @@ export function PersonActions({
       label: "Explore",
       icon: Compass,
       tint: "var(--pastel-sage)",
-      copy: "Follow a hobby they work in — the subject, not the person.",
+      copy: "Follow a hobby they work in, the subject, not the person.",
       show: true,
     },
     {
@@ -247,7 +247,7 @@ export function PersonActions({
                 <>
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     Which hobby do you want to see more of? You'll follow the
-                    hobby itself — {personName ?? "they"} won't be notified, and
+                    hobby itself. {personName ?? "they"} won't be notified, and
                     you aren't following them.
                   </p>
                   <ul className="max-h-52 space-y-1 overflow-y-auto">
@@ -454,7 +454,7 @@ export function PersonActions({
                         <label htmlFor="inv-hobby" className="mb-2 block text-sm">
                           What's it about?{" "}
                           <span className="text-muted-foreground">
-                            (optional — type anything)
+                            (optional, type anything)
                           </span>
                         </label>
                         <Input

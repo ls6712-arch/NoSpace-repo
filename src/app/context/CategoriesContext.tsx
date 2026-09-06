@@ -161,7 +161,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       if (error) {
         return {
           error: /relation .* does not exist/i.test(error.message)
-            ? "Suggestions aren't set up yet — run sql/categories.sql in Supabase."
+            ? "Suggestions aren't set up yet. Run sql/categories.sql in Supabase."
             : error.message,
         };
       }

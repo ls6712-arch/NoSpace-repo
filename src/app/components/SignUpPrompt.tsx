@@ -42,7 +42,7 @@ export function SignUpPrompt({
           </Link>
         </div>
         <p className="mt-5 text-xs text-muted-foreground/70">
-          Browsing stays free — an account is only for keeping what you make.
+          Browsing stays free. An account is only for keeping what you make.
         </p>
       </div>
     </div>
