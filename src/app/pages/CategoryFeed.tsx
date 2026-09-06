@@ -220,10 +220,8 @@ export function CategoryFeed() {
         <div className="ns-space-hero-grid absolute inset-0" aria-hidden="true" />
         <div className="container relative mx-auto flex flex-col items-center gap-10 px-4 py-14 md:flex-row md:gap-14 md:py-20">
           <div className="min-w-0 flex-1">
-            <div className="ns-section-kicker mb-5 text-[var(--coral-text)]">OPEN SPACE · {hobby.plainLabel}</div>
             <h1 className="mb-4 text-[clamp(2.8rem,6vw,5rem)] leading-[.94] tracking-[-.035em]" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h1>
             <p className="mb-3 text-xl text-foreground" style={{ fontFamily: "var(--font-heading)" }}>{hobby.tagline}</p>
-            <p className="max-w-xl text-lg leading-relaxed text-foreground">{hobby.description}</p>
             <HobbyActivity hobbySlug={hobby.slug} className="mt-4 text-foreground" />
             <div className="mt-6"><PersonActions hobbyKeys={[activeSub ?? `space:${hobby.slug}`]} /></div>
           </div>
@@ -240,11 +238,6 @@ export function CategoryFeed() {
           <div>
             <div className="ns-section-kicker mb-3">FOLLOW A THREAD</div>
             <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Find your way into {hobby.shortName}</h2>
-            <p className="text-sm text-muted-foreground">
-              {activeSub
-                ? "Tap it again to see everything."
-                : `${hobby.subItems.length} hobbies live here — tap one to narrow what you see.`}
-            </p>
           </div>
           {activeSub && (
             <button

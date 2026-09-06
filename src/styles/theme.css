@@ -293,54 +293,82 @@
   .ns-hero-art {
     position: relative;
     isolation: isolate;
-    padding: 1rem 0 0;
+    padding: 0.5rem 0 0;
   }
 
-  .ns-hero-hobby-orbit {
+  .ns-hero-photo-collage {
+    position: relative;
+    min-height: clamp(22rem, 48vw, 34rem);
+    isolation: isolate;
+  }
+
+  .ns-hero-photo-card {
+    position: absolute;
+    overflow: hidden;
+    border: 5px solid var(--cream);
+    background: var(--surface-muted);
+    box-shadow: 8px 10px 0 color-mix(in srgb, var(--forest) 24%, transparent);
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+
+  .ns-hero-photo-card::after {
     position: absolute;
     inset: 0;
-    z-index: 0;
+    content: "";
+    background: linear-gradient(160deg, transparent 42%, color-mix(in srgb, var(--forest) 24%, transparent));
     pointer-events: none;
   }
 
-  .ns-hero-hobby {
-    position: absolute;
-    overflow: hidden;
-    border: 2px solid var(--cream);
-    background: var(--surface-muted);
-    box-shadow: 5px 5px 0 color-mix(in srgb, var(--forest) 30%, transparent);
-    opacity: 0.95;
-    transform: rotate(-7deg);
+  .ns-hero-photo-card:hover {
+    z-index: 4;
+    box-shadow: 10px 14px 0 color-mix(in srgb, var(--forest) 30%, transparent);
+  }
+
+  .ns-hero-hobby-one {
+    top: 7%;
+    left: 4%;
+    width: 42%;
+    aspect-ratio: 0.78;
+    transform: rotate(-6deg);
     animation: ns-hobby-float 7s ease-in-out infinite;
   }
 
-  .ns-hero-hobby-one { top: 12%; left: 1%; width: 22%; aspect-ratio: 1; }
-  .ns-hero-hobby-two { top: 2%; right: 7%; width: 21%; aspect-ratio: 1; transform: rotate(7deg); animation-delay: -2.2s; }
-  .ns-hero-hobby-three { right: -2%; bottom: 14%; width: 24%; aspect-ratio: 1; transform: rotate(-4deg); animation-delay: -4.4s; }
+  .ns-hero-hobby-one:hover { transform: rotate(-3deg) translateY(-5px); }
 
-  .ns-hero-art::before {
-    position: absolute;
-    z-index: -1;
-    top: 9%;
-    right: 2%;
-    width: 71%;
-    aspect-ratio: 1;
-    content: "";
-    border: 1px dashed color-mix(in srgb, var(--forest) 55%, transparent);
-    border-radius: 50%;
-    animation: ns-orbit 30s linear infinite;
+  .ns-hero-hobby-two {
+    top: 1%;
+    right: 6%;
+    width: 40%;
+    aspect-ratio: 0.78;
+    transform: rotate(6deg);
+    animation: ns-hobby-float 7s ease-in-out -2.2s infinite;
   }
 
-  .ns-hero-art::after {
+  .ns-hero-hobby-two:hover { transform: rotate(3deg) translateY(-5px); }
+
+  .ns-hero-hobby-three {
+    right: 23%;
+    bottom: 3%;
+    z-index: 3;
+    width: 42%;
+    aspect-ratio: 0.84;
+    transform: rotate(-2deg);
+    animation: ns-hobby-float 7s ease-in-out -4.4s infinite;
+  }
+
+  .ns-hero-hobby-three:hover { transform: rotate(1deg) translateY(-5px); }
+
+  .ns-hero-photo-label {
     position: absolute;
-    z-index: -1;
-    top: 19%;
-    left: 7%;
-    width: 58%;
-    height: 55%;
-    content: "";
-    border: 1px solid color-mix(in srgb, var(--cream) 72%, transparent);
-    transform: rotate(-5deg);
+    right: 0.65rem;
+    bottom: 0.55rem;
+    z-index: 1;
+    color: var(--cream);
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-shadow: 0 1px 5px color-mix(in srgb, var(--forest) 75%, transparent);
   }
 
   .ns-hero-art-label {
@@ -839,6 +867,11 @@
     .ns-discover-open { display: block; margin-top: 0.9rem; }
     .ns-space-hero-art { width: calc(100% - 1rem); margin-right: 0.5rem; }
     .ns-space-hero-caption { right: -0.35rem; }
+    .ns-hero-photo-collage { min-height: 20rem; }
+    .ns-hero-photo-card { border-width: 3px; box-shadow: 5px 7px 0 color-mix(in srgb, var(--forest) 22%, transparent); }
+    .ns-hero-hobby-one { left: 1%; width: 44%; }
+    .ns-hero-hobby-two { right: 1%; width: 43%; }
+    .ns-hero-hobby-three { right: 18%; width: 45%; }
     .ns-you-profile-card { grid-template-columns: 1fr; }
     .ns-you-avatar-panel { border-bottom: 1px solid var(--hairline); }
     .ns-you-identity { border-left: 0; }
@@ -848,7 +881,7 @@
 
   .ns-marquee {
     border-block: 1px solid var(--hairline);
-    background-image: repeating-linear-gradient(0deg, transparent, transparent 28px, color-mix(in srgb, var(--forest) 5%, transparent) 29px);
+    background: var(--surface);
     mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent);
   }
 
@@ -856,15 +889,17 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
-    opacity: 0.26;
+    opacity: 0.18;
     pointer-events: none;
   }
 
   .ns-marquee-hobby {
     position: absolute;
-    width: 8rem;
-    height: 5.2rem;
+    width: 9rem;
+    height: 5.7rem;
     overflow: hidden;
+    border: 3px solid var(--cream);
+    box-shadow: 4px 5px 0 color-mix(in srgb, var(--forest) 14%, transparent);
     mix-blend-mode: multiply;
     animation: ns-marquee-float 8s ease-in-out infinite;
   }
@@ -1132,7 +1167,7 @@ summary:focus-visible,
   .animate-float-slow, .animate-float-slower, .animate-pulse-soft,
   .animate-marquee, .animate-in, .animate-spin,
   .text-gradient-animated, .ns-marquee-mark,
-  .ns-hero-art::before, .ns-hero-hobby, .ns-marquee-hobby {
+  .ns-hero-photo-card, .ns-marquee-hobby {
     animation: none !important;
   }
   .ns-enter {
