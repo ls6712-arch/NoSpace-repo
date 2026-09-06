@@ -9,8 +9,8 @@ import { useAuth } from "../context/AuthContext";
 import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
 import { ContentCard } from "../components/ContentCard";
 import { GeneratedArt } from "../components/GeneratedArt";
+import { HeroScene } from "../components/HeroScene";
 import { PostReactions } from "../components/PostReactions";
-import { hobbyPhoto } from "../data/hobbyPhotos";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 
@@ -69,52 +69,6 @@ function initials(name: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-}
-
-function HobbyPhoto({
-  src,
-  fallbackSrc,
-  hobbySlug,
-  seed,
-  className,
-  alt,
-  objectPosition = "center",
-  loading = "lazy",
-}: {
-  src: string;
-  fallbackSrc?: string;
-  hobbySlug: string;
-  seed: string;
-  className?: string;
-  alt?: string;
-  objectPosition?: string;
-  loading?: "eager" | "lazy";
-}) {
-  const [currentSrc, setCurrentSrc] = useState(src);
-  const [failed, setFailed] = useState(false);
-
-  const handleError = () => {
-    if (fallbackSrc && currentSrc !== fallbackSrc) {
-      setCurrentSrc(fallbackSrc);
-      return;
-    }
-    setFailed(true);
-  };
-
-  if (failed) {
-    return <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />;
-  }
-
-  return (
-    <img
-      src={currentSrc}
-      alt={alt ?? ""}
-      loading={loading}
-      onError={handleError}
-      style={{ objectPosition }}
-      className={`h-full w-full object-cover ${className ?? ""}`}
-    />
-  );
 }
 
 function WaitlistForm() {
@@ -222,64 +176,16 @@ export function Home() {
   ].filter((p): p is (typeof seedPosts)[number] => !!p);
 
   const heroHobbies = [
-    {
-      slug: "home-garden",
-      seed: "hero-gardening",
-      label: "GARDENING",
-      src: "https://cdn.builder.io/api/v1/image/assets%2Fdf47e4f3ae4145b28d37522d3954a52a%2F283dcdfc7dcc4d24a76e525e6cf91d46?format=webp&width=800&height=1200",
-      fallbackSrc: hobbyPhoto("", "home-garden", 900),
-      className: "ns-hero-hobby-one",
-      objectPosition: "center 54%",
-    },
-    {
-      slug: "nature-outdoors",
-      seed: "hero-hiking",
-      label: "HIKING",
-      src: "https://cdn.builder.io/api/v1/image/assets%2Fdf47e4f3ae4145b28d37522d3954a52a%2F68d5c9014e9f49fdb5ef84fa243e2226?format=webp&width=800&height=1200",
-      fallbackSrc: hobbyPhoto("hiking", "nature-outdoors", 900),
-      className: "ns-hero-hobby-two",
-      objectPosition: "center 48%",
-    },
-    {
-      slug: "crafts-making",
-      seed: "hero-pottery",
-      label: "POTTERY",
-      src: hobbyPhoto("pottery", "crafts-making", 900) ?? "",
-      fallbackSrc: hobbyPhoto("", "crafts-making", 900),
-      className: "ns-hero-hobby-three",
-      objectPosition: "center",
-    },
+    { slug: "rooted", seed: "hero-garden", label: "GROW TOGETHER", className: "ns-hero-hobby-one" },
+    { slug: "workbench", seed: "hero-making", label: "MAKE TOGETHER", className: "ns-hero-hobby-two" },
+    { slug: "thestudio", seed: "hero-studio", label: "CREATE TOGETHER", className: "ns-hero-hobby-three" },
   ];
 
   const marqueeHobbies = [
-    {
-      slug: "books-writing",
-      seed: "marquee-writing",
-      src: hobbyPhoto("writing", "books-writing", 700) ?? "",
-      fallbackSrc: hobbyPhoto("", "books-writing", 700),
-      className: "ns-marquee-hobby-one",
-    },
-    {
-      slug: "food-cooking",
-      seed: "marquee-cooking",
-      src: hobbyPhoto("cooking", "food-cooking", 700) ?? "",
-      fallbackSrc: hobbyPhoto("", "food-cooking", 700),
-      className: "ns-marquee-hobby-two",
-    },
-    {
-      slug: "music",
-      seed: "marquee-music",
-      src: hobbyPhoto("music-production", "music", 700) ?? "",
-      fallbackSrc: hobbyPhoto("", "music", 700),
-      className: "ns-marquee-hobby-three",
-    },
-    {
-      slug: "nature-outdoors",
-      seed: "marquee-nature",
-      src: hobbyPhoto("hiking", "nature-outdoors", 700) ?? "",
-      fallbackSrc: hobbyPhoto("", "nature-outdoors", 700),
-      className: "ns-marquee-hobby-four",
-    },
+    { slug: "kitchentable", seed: "marquee-cooking", className: "ns-marquee-hobby-one" },
+    { slug: "makerlab", seed: "marquee-making", className: "ns-marquee-hobby-two" },
+    { slug: "inmotion", seed: "marquee-moving", className: "ns-marquee-hobby-three" },
+    { slug: "rabbithole", seed: "marquee-playing", className: "ns-marquee-hobby-four" },
   ];
 
   return (
@@ -340,18 +246,11 @@ export function Home() {
 
             <div ref={parallaxRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
               <div className="ns-hero-art mx-auto max-w-[640px] lg:max-w-none">
-                <div className="ns-hero-photo-collage" aria-label="People pursuing gardening, hiking, and pottery">
+                <div className="ns-hero-photo-collage" aria-label="A community making, growing, and creating together">
+                  <HeroScene className="absolute inset-0 z-10 h-full w-full" />
                   {heroHobbies.map((hobby) => (
-                    <div key={hobby.seed} className={`ns-hero-photo-card ${hobby.className}`}>
-                      <HobbyPhoto
-                        src={hobby.src}
-                        fallbackSrc={hobby.fallbackSrc}
-                        hobbySlug={hobby.slug}
-                        seed={hobby.seed}
-                        loading="eager"
-                        objectPosition={hobby.objectPosition}
-                        alt={`${hobby.label.toLowerCase()} in progress`}
-                      />
+                    <div key={hobby.seed} className={`ns-hero-photo-card z-20 ${hobby.className}`}>
+                      <GeneratedArt hobbySlug={hobby.slug} seed={hobby.seed} className="h-full w-full" />
                       <span className="ns-hero-photo-label">{hobby.label}</span>
                     </div>
                   ))}
@@ -370,13 +269,7 @@ export function Home() {
         <div className="ns-marquee-art" aria-hidden="true">
           {marqueeHobbies.map((hobby) => (
             <div key={hobby.seed} className={`ns-marquee-hobby ${hobby.className}`}>
-              <HobbyPhoto
-                src={hobby.src}
-                fallbackSrc={hobby.fallbackSrc}
-                hobbySlug={hobby.slug}
-                seed={hobby.seed}
-                objectPosition="center"
-              />
+              <GeneratedArt hobbySlug={hobby.slug} seed={hobby.seed} className="h-full w-full" />
             </div>
           ))}
         </div>
