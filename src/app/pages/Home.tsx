@@ -92,9 +92,12 @@ function CommunityHobbyScene({ className = "" }: { className?: string }) {
       </g>
 
       <path d="M0 334c96-54 181-43 266-18 92 27 151 17 224-12 84-33 157-28 230 15v115H0Z" fill="#2C7A57" />
+      <path d="M0 350c58-75 116-133 175-150 49 47 72 121 119 183 53-35 92-64 151-72 65-9 117 12 163 45v103H0Z" fill="#397B59" opacity=".94" />
       <path d="M0 383c84-44 165-34 242-12 94 27 166 23 246-4 81-27 159-21 232 11v96H0Z" fill="#1B6244" />
+      <path d="M0 413c67-31 125-34 180-14 53 20 94 20 145 2 69-24 126-21 191 5 66 27 132 28 204 6v69H0Z" fill="#245F43" opacity=".88" />
       <ellipse cx="360" cy="455" rx="330" ry="67" fill="#0E4D3A" opacity=".72" />
       <path d="M342 520c-6-54 18-85 56-112 26-18 49-30 78-46" fill="none" stroke="#F5C542" strokeWidth="12" strokeLinecap="round" opacity=".82" />
+      <path d="M360 520c3-39 26-74 59-97 26-18 48-29 71-42" fill="none" stroke="#E6B53F" strokeWidth="4" strokeLinecap="round" opacity=".9" />
 
       <g fill="#0E4D3A">
         <path d="M54 362h9v67h-9zM58 260l34 66H24ZM58 299l39 73H19Z" />
