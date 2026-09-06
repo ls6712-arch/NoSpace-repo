@@ -2,11 +2,91 @@ import { Link } from "react-router";
 import { ArrowRight, Bookmark, PenLine, Sprout, Users } from "lucide-react";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
+import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
-import { daysSince, deriveProjects, useJournal } from "../lib/journal";
+import { daysSince, deriveProjects, toggleSaved, useJournal } from "../lib/journal";
 import { useSocial } from "../context/SocialContext";
 import { ContentCard } from "../components/ContentCard";
+import { PostMedia } from "../components/PostMedia";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+/**
+ * One saved idea, in "Ready When You Are" — the creation itself, not a
+ * hobby tile: its own photo, a Space label as metadata, the maker's own
+ * caption and name, and one clear way to go start it. Tapping the bookmark
+ * again removes it from Try This; there's no due date or streak anywhere
+ * near it.
+ */
+function TryThisCard({ post }: { post: Post }) {
+  const hobby = getHobby(post.hobbySlug);
+
+  return (
+    <div className="w-64 shrink-0 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="relative">
+        <PostMedia
+          media={post.media}
+          type={post.type}
+          hobbySlug={post.hobbySlug}
+          seed={post.id}
+          preview
+          className="aspect-[4/5] w-full"
+        />
+        {hobby && (
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--forest-ink)]/55 px-2.5 py-1 text-[10px] text-white backdrop-blur-md">
+            {hobby.shortName}
+          </span>
+        )}
+        <button
+          type="button"
+          aria-pressed={true}
+          title="Added to your Space (tap to remove)"
+          aria-label="Remove from Try This"
+          onClick={() => toggleSaved(post.id)}
+          className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-md transition-colors hover:bg-[var(--forest-ink)]/75"
+        >
+          <Bookmark className="size-4" strokeWidth={1.9} style={{ color: "white", fill: "white" }} />
+        </button>
+      </div>
+      <div className="p-3">
+        <p className="mb-2 line-clamp-2 text-sm text-foreground/90">{post.caption}</p>
+        {post.userId ? (
+          <Link
+            to={`/u/${encodeURIComponent(post.userId)}`}
+            className="mb-3 flex min-w-0 items-center gap-2 transition-colors hover:text-[var(--coral-text)]"
+          >
+            <Avatar className="size-6 shrink-0">
+              <AvatarFallback className="text-[9px]">{initials(post.creator)}</AvatarFallback>
+            </Avatar>
+            <span className="truncate text-xs text-muted-foreground">{post.creator}</span>
+          </Link>
+        ) : (
+          <div className="mb-3 flex items-center gap-2">
+            <Avatar className="size-6 shrink-0">
+              <AvatarFallback className="text-[9px]">{initials(post.creator)}</AvatarFallback>
+            </Avatar>
+            <span className="truncate text-xs text-muted-foreground">{post.creator}</span>
+          </div>
+        )}
+        <Link to={`/create?hobby=${post.hobbySlug}`}>
+          <Button variant="coral" size="sm" className="w-full">
+            <PenLine className="size-3.5" />
+            Start now
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 /**
  * My Space is continuity, not consumption. It answers "what's happened in my
@@ -107,7 +187,7 @@ export function MySpace() {
   const savedWork = journal.saved
     .map((id) => posts.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => !!p)
-    .slice(0, 4);
+    .slice(0, 10);
 
   const myProjects = journal.projects.filter((p) => !p.finishedAt);
   const nudge = [...myProjects].sort((a, b) => a.startedAt - b.startedAt)[0];
@@ -127,6 +207,35 @@ export function MySpace() {
             </h1>
           </div>
           <div className="ns-myspace-mark hidden sm:block">KEEP MAKING<br /><span>NO. 02</span></div>
+        </div>
+
+        {/* Ready When You Are — the ideas you already said yes to, put where
+            picking one back up is the first thing you see. The saved
+            creation itself is the point, not a hobby tile standing in for
+            it; the Space is just a small label on the card. */}
+        <div className="ns-myspace-tryhis mb-12">
+          <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+            Ready When You Are
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A few ideas worth making time for.
+          </p>
+
+          <div className="mt-4">
+            {savedWork.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
+                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+                  Nothing here yet. When something makes you want to try it, tap Try This.
+                </p>
+              </div>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {savedWork.map((post) => (
+                  <TryThisCard key={post.id} post={post} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="ns-myspace-today mb-12">
@@ -309,21 +418,6 @@ export function MySpace() {
               </li>
             ))}
           </ul>
-        </Section>
-
-        <Section title="Saved ideas" copy="Things you kept to come back to." action={{ label: "All saved", to: "/you" }}>
-          {savedWork.length === 0 ? (
-            <Empty to="/discover" cta="Go to Discover">
-              Nothing saved yet. Saving is for you. The maker never sees a score
-              either way.
-            </Empty>
-          ) : (
-            <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2">
-              {savedWork.map((post) => (
-                <ContentCard key={post.id} post={post} label="Saved" />
-              ))}
-            </div>
-          )}
         </Section>
 
         <div className="flex flex-wrap items-center justify-center gap-3 rounded-3xl border border-border bg-card px-6 py-9 text-center">
