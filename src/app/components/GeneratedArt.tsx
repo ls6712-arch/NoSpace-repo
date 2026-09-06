@@ -913,6 +913,24 @@ const theStudioScenes: Scene[] = [
   },
 ];
 
+const ART_ALIAS: Record<string, string> = {
+  "food-cooking": "kitchentable",
+  "sports-fitness": "inmotion",
+  "art-creative": "thestudio",
+  "crafts-making": "workbench",
+  "books-writing": "rabbithole",
+  "nature-outdoors": "rooted",
+  "home-garden": "rooted",
+  "gaming-tabletop": "rabbithole",
+  music: "thestudio",
+  "photography-film": "thestudio",
+  "health-wellness": "inmotion",
+  "fashion-beauty": "thestudio",
+  "tech-building": "makerlab",
+  "collecting-fandom": "rabbithole",
+  "travel-adventure": "rooted",
+};
+
 const HOBBY_SCENES: Record<string, Scene[]> = {
   // The four categories that map closely to earlier hobby spaces keep their
   // proven, five-scene-deep art (see the "what belongs inside" overlap:
@@ -1009,7 +1027,7 @@ export function GeneratedArt({
   seed: string | number;
   className?: string;
 }) {
-  const scenes = HOBBY_SCENES[hobbySlug] ?? collectingScenes;
+  const scenes = HOBBY_SCENES[ART_ALIAS[hobbySlug] ?? hobbySlug] ?? collectingScenes;
   const rand = mulberry32(hashSeed(`${hobbySlug}:${seed}`));
   const variantIndex = resolveVariant(hobbySlug, seed, scenes.length, rand);
   const Scene = scenes[variantIndex];

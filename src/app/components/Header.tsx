@@ -242,13 +242,12 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[var(--hairline)] [background-color:color-mix(in_srgb,var(--sky)_92%,#FFFFFF)] backdrop-blur-xl">
+    <header className="ns-site-header sticky top-0 z-50 w-full border-b border-[var(--hairline)]">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-        <div className="flex items-center gap-6 min-w-0">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-2xl font-semibold text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>
-              NoSpace
-            </span>
+        <div className="flex min-w-0 items-center gap-6">
+          <Link to="/" className="ns-wordmark flex shrink-0 items-center gap-2.5">
+            <span className="ns-wordmark-mark" aria-hidden="true" />
+            <span className="text-2xl font-semibold text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
           </Link>
           {/* Three destinations, generously spaced. Individual hobby spaces
               are reached through Discover rather than crowding the bar. */}
@@ -263,7 +262,7 @@ export function Header() {
                   aria-current={active ? "page" : undefined}
                   className={
                     item.accent
-                      ? "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm text-white transition-[filter] [background-color:var(--coral-deep)] hover:brightness-110"
+                      ? "flex items-center gap-1.5 border border-[var(--coral-deep)] px-3 py-1.5 text-sm text-white transition-[filter] [background-color:var(--coral-deep)] hover:brightness-110"
                       : `relative py-1 text-sm transition-colors ${
                           active ? "text-foreground" : "text-foreground/80 hover:text-foreground"
                         }`
@@ -293,7 +292,7 @@ export function Header() {
               type="search"
               aria-label="Search people, projects, and spaces"
               placeholder="Search people, projects, spaces..."
-              className="pl-9 w-full rounded-full"
+              className="w-full rounded-none border-x-0 border-t-0 border-b-[var(--border)] bg-transparent pl-9 focus-visible:ring-0"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -375,7 +374,7 @@ export function Header() {
               autoFocus
               aria-label="Search people, projects, and spaces"
               placeholder="Search people, projects, spaces..."
-              className="w-full rounded-full pl-9"
+              className="w-full rounded-none border-x-0 border-t-0 border-b-[var(--border)] bg-transparent pl-9 focus-visible:ring-0"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onSearchKeyDown}

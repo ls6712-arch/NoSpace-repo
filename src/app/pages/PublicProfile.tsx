@@ -200,8 +200,8 @@ export function PublicProfile() {
   const primaryHobby = pickPrimaryHobby(posts);
 
   return (
-    <div className="min-h-screen bg-surface py-8 sm:py-10">
-      <div className="container mx-auto max-w-2xl px-4">
+    <div className="ns-public-profile min-h-screen bg-surface py-8 sm:py-10">
+      <div className="container mx-auto max-w-3xl px-4">
         {/* The wordmark is how someone arriving on a shared profile link gets
             into the rest of the app. It looked like a way out and wasn't one. */}
         <div className="mb-6">
@@ -214,7 +214,7 @@ export function PublicProfile() {
           </Link>
         </div>
 
-        <div className="mb-5 flex items-center gap-5 sm:gap-6">
+        <div className="ns-profile-header mb-7 flex items-center gap-5 sm:gap-6">
           <Avatar className="size-20 shrink-0 sm:size-24">
             {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
             <AvatarFallback className="text-xl">{initials}</AvatarFallback>
@@ -283,7 +283,7 @@ export function PublicProfile() {
           </div>
         )}
 
-        <div className="mb-9">
+        <div className="ns-profile-shelf mb-10">
           {/* Their books stay on their profile. These used to link into your
               own archive, so tapping someone's Workbench showed you your own
               empty Space instead of their work. */}
@@ -325,13 +325,13 @@ export function PublicProfile() {
                 Nothing public here yet.
               </p>
             ) : (
-            <div className="grid grid-cols-3 gap-1.5">
-              {shownPosts.slice(0, 12).map((post) => (
+            <div className="ns-profile-grid grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {shownPosts.slice(0, 12).map((post, index) => (
                 <button
                   key={post.id}
                   type="button"
                   onClick={() => setOpenPost(post)}
-                  className="aspect-square overflow-hidden rounded-md transition-transform duration-200 hover:scale-[1.03]"
+                  className={`ns-profile-tile overflow-hidden transition-transform duration-200 hover:scale-[1.03] ${index % 5 === 0 ? "ns-profile-feature" : ""}`}
                   aria-label={`Open: ${post.caption.slice(0, 60)}`}
                 >
                   <PostMedia
@@ -363,7 +363,7 @@ export function PublicProfile() {
         />
 
         {/* The one place this page asks for anything */}
-        <div className="glass-panel rounded-3xl p-7 text-center">
+        <div className="ns-profile-cta glass-panel p-7 text-center">
           <h2 className="mb-2 text-xl" style={{ fontFamily: "var(--font-serif)" }}>
             Start your own shelf
           </h2>

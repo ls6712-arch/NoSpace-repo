@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Bookmark, PenLine, Search, UserRound, Users, X } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
+import { spacePhoto } from "../data/hobbyPhotos";
 import { circles } from "../data/circles";
 import { usePeopleSearch } from "../lib/people";
 import { PeopleRow } from "../components/PersonCard";
@@ -11,6 +12,7 @@ import { useContent } from "../context/ContentContext";
 import { deriveProjects, useJournal } from "../lib/journal";
 import { ContentCard } from "../components/ContentCard";
 import { HobbyTile } from "../components/HobbyTile";
+import { GeneratedArt } from "../components/GeneratedArt";
 import { Button } from "../components/ui/button";
 
 /**
@@ -34,6 +36,33 @@ const BASE_CHIPS: Chip[] = [
   { id: "near", label: "Near me" },
   { id: "progress", label: "Projects in progress" },
 ];
+
+function DiscoverSpaceArt({
+  hobbySlug,
+  seed,
+  className,
+}: {
+  hobbySlug: string;
+  seed: string;
+  className?: string;
+}) {
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const photo = photoFailed ? undefined : spacePhoto(hobbySlug, 1200);
+
+  if (!photo) {
+    return <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />;
+  }
+
+  return (
+    <img
+      src={photo}
+      alt=""
+      loading="lazy"
+      onError={() => setPhotoFailed(true)}
+      className={`h-full w-full object-cover ${className ?? ""}`}
+    />
+  );
+}
 
 export function Discover() {
   const { publicFeed, posts } = useContent();
@@ -112,93 +141,84 @@ export function Discover() {
 
   return (
     <div className="min-h-screen">
-      <section className="relative overflow-hidden py-12 sm:py-14">
-        <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
-        <div className="container mx-auto max-w-6xl px-4 relative">
-          <h1 className="text-4xl md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
-            Discover
-          </h1>
-          <p className="mb-6 mt-2 max-w-2xl text-lg text-foreground">
-            Hobbies, interests, people, Circles and projects.
-          </p>
-
-          <div className="relative max-w-md">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setShown(PAGE_SIZE);
-                if (searchParams.get("about")) setSearchParams({}, { replace: true });
-              }}
-              placeholder="Search people, projects, hobbies..."
-              className="w-full rounded-full border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label="Clear search"
-              >
-                <X className="size-4" />
-              </button>
-            )}
+      <section className="ns-discover-hero relative overflow-hidden">
+        <div className="ns-discover-hero-art" aria-hidden="true">
+          <div className="ns-discover-hero-ring" />
+          <DiscoverSpaceArt hobbySlug="art-creative" seed="discover-hero" className="h-full w-full" />
+        </div>
+        <div className="container relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-14 sm:py-20 lg:grid-cols-[1fr_0.8fr] lg:gap-14 lg:py-24">
+          <div className="relative z-10 max-w-2xl">
+            <div className="ns-section-kicker mb-5 text-[var(--forest-ink)]">THE FRONT DOOR</div>
+            <h1 className="mb-5 text-[clamp(3rem,7vw,5.5rem)] leading-[.92] tracking-[-.04em] text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>
+              Find the thing<br /><em className="text-[var(--coral-deep)]">that keeps calling.</em>
+            </h1>
+            <p className="mb-8 max-w-lg text-lg leading-relaxed text-[var(--forest-ink)]">
+              Hobbies, people, Circles, and works-in-progress — arranged like a good afternoon, not an endless feed.
+            </p>
+            <div className="ns-discover-search relative max-w-xl">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[var(--forest-ink)]" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setShown(PAGE_SIZE);
+                  if (searchParams.get("about")) setSearchParams({}, { replace: true });
+                }}
+                placeholder="Search people, projects, hobbies..."
+                className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-sm text-[var(--forest-ink)] outline-none placeholder:text-[var(--forest-ink)]/65 focus:ring-0"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--forest-ink)] hover:text-[var(--coral-deep)]" aria-label="Clear search">
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
           </div>
+          <div className="hidden lg:block" />
         </div>
       </section>
 
       <div className="bg-surface pb-24 pt-8">
         <div className="container mx-auto max-w-6xl px-4">
-          {/* Fifteen plain-named ways in, plus the sixteenth that admits the
-              list is incomplete. These are signage over content that already
-              exists — nothing is stored on a post, so the list can change
-              without touching anybody's work. */}
-          <section className="mb-10">
-            <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Spaces
-            </h2>
-            <p className="mb-4 mt-1 text-sm text-muted-foreground">
-              Fifteen Spaces, named so you can tell what's in them. A way in,
-              not a list you have to pick from — you can post about anything.
-            </p>
-            <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-              {categories.map((c) => (
+          <section className="ns-discover-spaces mb-16">
+            <div className="mb-8 flex items-end justify-between gap-5">
+              <div className="max-w-xl">
+                <div className="ns-section-kicker mb-4">CHOOSE YOUR NEXT THREAD</div>
+                <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>Open a space. Stay awhile.</h2>
+                <p className="text-[1.05rem] leading-relaxed text-muted-foreground">Fifteen ways in, named so you can tell what lives there. Nothing to perform for — just a place to begin.</p>
+              </div>
+              <span className="hidden font-hud text-[10px] tracking-[.14em] text-[var(--coral-text)] sm:block">{categories.length} SPACES</span>
+            </div>
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {categories.map((c, index) => (
                 <li key={c.slug}>
-                  <Link
-                    to={`/space/${c.slug}`}
-                    className="flex h-full min-h-[104px] flex-col justify-center gap-1 rounded-2xl border border-border bg-card px-4 py-4 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
-                  >
-                    <span
-                      className="size-9 rounded-full"
-                      style={{
-                        backgroundColor: `color-mix(in srgb, ${c.tint} 52%, var(--cream))`,
-                      }}
-                      aria-hidden="true"
-                    />
-                    <span className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                      {c.name}
-                    </span>
-                    <span className="text-xs leading-relaxed text-muted-foreground">
-                      {c.description}
-                    </span>
+                  <Link to={`/space/${c.slug}`} className="ns-discover-space-card group block">
+                    <div className="ns-discover-space-art">
+                      <DiscoverSpaceArt hobbySlug={c.slug} seed={`discover-${c.slug}`} className="transition-transform duration-500 group-hover:scale-[1.06]" />
+                      <span className="ns-discover-space-number">{String(index + 1).padStart(2, "0")}</span>
+                    </div>
+                    <div className="ns-discover-space-copy">
+                      <div>
+                        <h3 className="mb-1 text-xl" style={{ fontFamily: "var(--font-serif)" }}>{c.name}</h3>
+                        <p className="text-xs leading-relaxed text-muted-foreground">{c.description}</p>
+                      </div>
+                      <span className="ns-discover-open">Open space <span aria-hidden="true">↗</span></span>
+                    </div>
                   </Link>
                 </li>
               ))}
-              <li>
-                <SuggestCategory />
-              </li>
+              <li><SuggestCategory /></li>
             </ul>
           </section>
 
           {/* The other two things Discover is for. On a phone these are the
               only route to them, since the tab bar carries five destinations
               and Discover is defined as the place they live. */}
-          <div className="mb-8 grid gap-2.5 sm:grid-cols-2">
+          <div className="ns-discover-wayfinders mb-10 grid gap-3 sm:grid-cols-2">
             <Link
               to="/people"
-              className="flex items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
+              className="ns-discover-wayfinder flex items-center gap-3.5 border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
             >
               <span
                 className="flex size-10 shrink-0 items-center justify-center rounded-full"
@@ -217,7 +237,7 @@ export function Discover() {
             </Link>
             <Link
               to="/circles"
-              className="flex items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
+              className="ns-discover-wayfinder flex items-center gap-3.5 border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
             >
               <span
                 className="flex size-10 shrink-0 items-center justify-center rounded-full"
@@ -237,7 +257,7 @@ export function Discover() {
           </div>
 
           {/* Filters */}
-          <ul className="mb-9 flex flex-wrap gap-2">
+          <ul className="ns-discover-filters mb-9 flex flex-wrap gap-2">
             {chips.map((c) => {
               const active = chip === c.id;
               return (
@@ -395,11 +415,10 @@ export function Discover() {
           {/* Every hobby, as pictures — the bookshelf view */}
           <section className="mt-14">
             <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Every hobby on NoSpace
+              Hobby Hub
             </h2>
             <p className="mb-5 mt-1 text-sm text-muted-foreground">
-              {hobbies.reduce((n, h) => n + h.subItems.length, 0)} of them. Pick
-              the one you've been meaning to start.
+              Find a thread to follow, then open a space and stay awhile.
             </p>
             <div className="space-y-9">
               {hobbies.map((hobby) => (

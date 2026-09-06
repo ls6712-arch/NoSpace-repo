@@ -86,54 +86,42 @@ export function You() {
   }
 
   return (
-    <div className="min-h-screen bg-surface py-8 sm:py-10">
-      <div className="container mx-auto max-w-4xl px-4">
-        <div className="mb-7">
-          <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
-            You
-          </h1>
-          <p className="mt-1.5 text-muted-foreground">
-            Your work, your saved ideas, your space.
-          </p>
+    <div className="ns-you-page min-h-screen bg-surface py-8 sm:py-12">
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="ns-you-kicker mb-3">YOUR PERSONAL ARCHIVE</div>
+        <div className="mb-8 flex items-end justify-between gap-5">
+          <div>
+            <h1 className="text-[clamp(2.8rem,7vw,5rem)] leading-[.9] tracking-[-.04em]" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+              You
+            </h1>
+            <p className="mt-3 max-w-md text-lg leading-relaxed text-muted-foreground">Your work, your saved ideas, your space to keep becoming.</p>
+          </div>
+          <span className="ns-you-index hidden font-hud text-[10px] tracking-[.15em] text-[var(--coral-text)] sm:block">NO. 01 / KEEPING AT IT</span>
         </div>
 
-        {/* Who you are, and how much you've done */}
-        <div className="mb-5">
-          <AvatarPicker
-            name={displayName}
-            url={avatar ?? profile?.avatar_url}
-            onChange={setAvatar}
-          />
-        </div>
-
-        <div className="mb-5 flex items-center gap-5 sm:gap-6">
-          <div className="min-w-0">
-            <h2
-              className="truncate text-3xl leading-tight sm:text-4xl"
-              style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
-            >
+        <div className="ns-you-profile-card mb-8">
+          <div className="ns-you-avatar-panel">
+            <AvatarPicker
+              name={displayName}
+              url={avatar ?? profile?.avatar_url}
+              onChange={setAvatar}
+            />
+          </div>
+          <div className="ns-you-identity min-w-0">
+            <h2 className="truncate text-3xl leading-tight sm:text-4xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
               {user ? displayName : "You"}
             </h2>
-            <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="text-[var(--pastel-sage)]">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 21c0-6 3-10 8-12-1 7-4 10-8 12Zm0 0c0-5-2.5-8.5-7-10 1 6 3.5 8.5 7 10Z" />
-                </svg>
-              </span>
-              <span>
-                <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
-                {totalSessions === 1 ? "session" : "sessions"}
-              </span>
+            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="ns-you-sprout" aria-hidden="true">✦</span>
+              <span><strong className="text-foreground">{totalSessions}</strong> lifetime {totalSessions === 1 ? "session" : "sessions"}</span>
             </div>
-            <div className="mt-1">
-              <ProfileHeadline variant="quiet" />
-            </div>
+            <div className="mt-2"><ProfileHeadline variant="quiet" /></div>
           </div>
         </div>
 
         {/* Hobby chips — what you actually do */}
         {sessions.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2">
+          <div className="ns-you-tags mb-7 flex flex-wrap gap-2">
             {sessions.slice(0, 6).map((s) => (
               <Link
                 key={s.key}
@@ -164,7 +152,7 @@ export function You() {
           </div>
         )}
 
-        <div className="mb-8 flex gap-2">
+        <div className="ns-you-actions mb-9 flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => setShareOpen(true)}>
             <Share2 className="size-4" />
             Share your work
@@ -178,7 +166,7 @@ export function You() {
         </div>
 
         <Tabs defaultValue="work">
-          <TabsList className="mb-5 flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
+          <TabsList className="ns-you-tabs mb-6 flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
             <TabsTrigger value="work">Your work</TabsTrigger>
             <TabsTrigger value="private">Private logs</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
@@ -365,8 +353,9 @@ export function You() {
           </TabsContent>
         </Tabs>
 
-        {/* Quiet milestones */}
-        <div className="mb-9">
+        <div className="ns-you-lower-grid">
+          {/* Quiet milestones */}
+          <div className="mb-9">
           <div className="mb-3 flex items-baseline justify-between gap-4">
             <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               Quiet Milestones
@@ -382,8 +371,8 @@ export function You() {
           <QuietMilestones onShare={() => setShareOpen(true)} />
         </div>
 
-        {/* Circles joined — a preview here, the full list under Your Circles */}
-        <div className="mb-10">
+          {/* Circles joined — a preview here, the full list under Your Circles */}
+          <div className="mb-10">
           <div className="mb-3 flex items-baseline justify-between gap-4">
             <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               Circles Joined
@@ -396,6 +385,7 @@ export function You() {
             </Link>
           </div>
           <CirclesJoined limit={4} />
+          </div>
         </div>
 
       </div>

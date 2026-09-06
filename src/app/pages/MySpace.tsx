@@ -117,13 +117,19 @@ export function MySpace() {
   const nearbyProjects = deriveProjects(publicFeed, subHobbyLabel).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-surface py-10 sm:py-14">
-      <div className="container mx-auto max-w-4xl px-4">
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
-          My Space
-        </h1>
+    <div className="ns-myspace-page min-h-screen bg-surface py-10 sm:py-14">
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="ns-myspace-masthead mb-10">
+          <div>
+            <div className="ns-section-kicker mb-3">YOUR CORNER OF THE CLUBHOUSE</div>
+            <h1 className="text-[clamp(2.8rem,6vw,5rem)] leading-[.9] tracking-[-.04em]" style={{ fontFamily: "var(--font-serif)" }}>
+              My Space
+            </h1>
+          </div>
+          <div className="ns-myspace-mark hidden sm:block">KEEP MAKING<br /><span>NO. 02</span></div>
+        </div>
 
-        <div className="mb-10 mt-8">
+        <div className="ns-myspace-today mb-12">
           <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
             Today in your space
           </h2>
@@ -145,7 +151,7 @@ export function MySpace() {
                 work turns up here — nothing else gets in.
               </Empty>
             ) : (
-              <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+              <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2 lg:columns-3">
                 {today.map((post) => (
                   <ContentCard key={post.id} post={post} />
                 ))}
@@ -166,7 +172,7 @@ export function MySpace() {
               come back to — six mugs, a bench, a language.
             </Empty>
           ) : (
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul className="ns-myspace-projects grid gap-3 sm:grid-cols-2">
               {myProjects.slice(0, 4).map((project) => {
                 const hobby = getHobby(project.hobbySlug);
                 const updates = Object.values(journal.entryProject).filter(
@@ -230,7 +236,7 @@ export function MySpace() {
               around doing a thing together — a skill level, a city, a project.
             </Empty>
           ) : fromCircles.length === 0 ? (
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="ns-myspace-circle-links grid gap-2 sm:grid-cols-2">
               {joinedCircles.slice(0, 4).map((circle) => (
                 <Link
                   key={circle.id}
@@ -250,7 +256,7 @@ export function MySpace() {
               ))}
             </div>
           ) : (
-            <div className="columns-1 gap-4 sm:columns-2">
+            <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2">
               {fromCircles.map((post) => (
                 <ContentCard key={post.id} post={post} label="Circle" />
               ))}
@@ -269,7 +275,7 @@ export function MySpace() {
               you see the craft develop, not somebody's posting habits.
             </Empty>
           ) : (
-            <div className="columns-1 gap-4 sm:columns-2">
+            <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2">
               {exploringWork.map((post) => (
                 <ContentCard key={post.id} post={post} />
               ))}
@@ -312,7 +318,7 @@ export function MySpace() {
               either way.
             </Empty>
           ) : (
-            <div className="columns-1 gap-4 sm:columns-2">
+            <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2">
               {savedWork.map((post) => (
                 <ContentCard key={post.id} post={post} label="Saved" />
               ))}
