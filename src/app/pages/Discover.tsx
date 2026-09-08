@@ -437,7 +437,7 @@ export function Discover() {
               <section className="mb-14">
                 <div className="mb-5 flex items-end justify-between gap-4">
                   <div>
-                    <div className="ns-section-kicker mb-2">CHOOSE YOUR NEXT THREAD</div>
+                    <div className="ns-section-kicker mb-2">CHOOSE YOUR NEXT CORNER</div>
                     <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Explore Spaces</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {q ? `Spaces matching "${query}".` : "Browse all hobby spaces."}

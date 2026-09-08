@@ -236,7 +236,7 @@ export function CategoryFeed() {
       <section className="container mx-auto px-4 pt-14">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="ns-section-kicker mb-3">FOLLOW A THREAD</div>
+            <div className="ns-section-kicker mb-3">FOLLOW A CORNER</div>
             <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Find your way into {hobby.shortName}</h2>
           </div>
           {activeSub && (
@@ -250,7 +250,7 @@ export function CategoryFeed() {
             </button>
           )}
         </div>
-        <div className="ns-space-thread-grid grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+        <div className="ns-space-corner-grid grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
           {hobby.subItems.map((s) => (
             <HobbyTile
               key={s.slug}

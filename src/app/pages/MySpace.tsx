@@ -206,7 +206,7 @@ export function MySpace() {
       <div className="container mx-auto max-w-5xl px-4">
         <div className="ns-myspace-masthead mb-10">
           <div>
-            <div className="ns-section-kicker mb-3">YOUR CORNER OF THE CLUBHOUSE</div>
+            <div className="ns-section-kicker mb-3">YOUR SPOT IN THE CLUBHOUSE</div>
             <h1 className="text-[clamp(2.8rem,6vw,5rem)] leading-[.9] tracking-[-.04em]" style={{ fontFamily: "var(--font-serif)" }}>
               My Space
             </h1>
