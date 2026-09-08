@@ -1,18 +1,19 @@
 import { Link } from "react-router";
 import { useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Plus } from "lucide-react";
 import { Hobby } from "../data/hobbies";
 import { spacePhoto } from "../data/hobbyPhotos";
 import { GeneratedArt } from "./GeneratedArt";
-import { SuggestCorner } from "./SuggestCorner";
+import { useCorners, isDiscoverable } from "../context/CornersContext";
 
 /**
  * Hover is a single coordinated gesture: the space lifts, the artwork pushes
  * in behind it, and the title and arrow lean toward the space it opens.
  *
  * `showCorners` adds a row of the Space's real Corners as chips below the
- * card, plus a Suggest a Corner action. Off by default: it's a landing-page
- * ask, not something every card everywhere needs to carry.
+ * card, ranked by actual Moment count, plus a Create a Corner action. Off
+ * by default: it's a landing-page ask, not something every card everywhere
+ * needs to carry.
  */
 export function HobbyCategoryCard({
   hobby,
@@ -23,6 +24,10 @@ export function HobbyCategoryCard({
 }) {
   const [photoFailed, setPhotoFailed] = useState(false);
   const photo = photoFailed ? undefined : spacePhoto(hobby.slug, 1200);
+  const { cornersFor } = useCorners();
+  const topCorners = showCorners
+    ? cornersFor(hobby.slug).filter(isDiscoverable).slice(0, 3)
+    : [];
 
   return (
     <div>
@@ -63,16 +68,29 @@ export function HobbyCategoryCard({
 
       {showCorners && (
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          {hobby.subItems.slice(0, 3).map((corner) => (
+          {topCorners.map((corner) => (
             <Link
               key={corner.slug}
               to={`/space/${hobby.slug}?hobby=${corner.slug}`}
               className="rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
             >
-              {corner.label}
+              {corner.name}
+              {corner.momentCount > 0 && (
+                <span className="ml-1 text-[10px] opacity-60">{corner.momentCount}</span>
+              )}
             </Link>
           ))}
-          <SuggestCorner hobbyName={hobby.shortName} />
+          {/* Corners are created by tagging, not suggested for review: this
+              points at the one place that's actually true, logging a Moment,
+              rather than opening a submission form for something that
+              doesn't need approval. */}
+          <Link
+            to={`/create?hobby=${hobby.slug}`}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--hairline)] px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+          >
+            <Plus className="size-3" />
+            Create a Corner
+          </Link>
         </div>
       )}
     </div>
