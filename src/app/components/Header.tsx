@@ -150,7 +150,7 @@ function useSearchResults(query: string): SearchResult[] {
           kind: "creator",
           key: `creator-${post.creator}`,
           label: post.creator,
-          sub: `Posts in ${hobbies.find((h) => h.slug === post.hobbySlug)?.shortName ?? ""}`,
+          sub: `Moments in ${hobbies.find((h) => h.slug === post.hobbySlug)?.shortName ?? ""}`,
           to: `/space/${post.hobbySlug}`,
         });
       }
