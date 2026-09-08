@@ -364,15 +364,29 @@
 
   .ns-hero-photo-label {
     position: absolute;
+    left: 0.65rem;
     right: 0.65rem;
     bottom: 0.55rem;
     z-index: 1;
     color: var(--cream);
     font-family: var(--font-mono);
-    font-size: 0.55rem;
     font-weight: 600;
-    letter-spacing: 0.16em;
     text-shadow: 0 1px 5px color-mix(in srgb, var(--forest) 75%, transparent);
+  }
+
+  .ns-hero-photo-label .title {
+    display: block;
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    margin-bottom: 0.15rem;
+  }
+
+  .ns-hero-photo-label .tag {
+    display: block;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    opacity: 0.85;
   }
 
   .ns-hero-art-label {
@@ -467,6 +481,17 @@
   .ns-circle-row:last-child { border-bottom: 0; padding-bottom: 0; }
 
   .ns-portfolio-panel { padding: 1.5rem; box-shadow: 8px 8px 0 color-mix(in srgb, var(--sky-deep) 28%, transparent); }
+
+  .ns-audience-card {
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    box-shadow: 5px 5px 0 color-mix(in srgb, var(--forest) 12%, transparent);
+  }
+
+  .ns-pursuit-card {
+    border: 1px solid color-mix(in srgb, var(--cream) 28%, transparent);
+    background: color-mix(in srgb, var(--cream) 6%, transparent);
+  }
 
   .ns-space-card {
     background: var(--forest);

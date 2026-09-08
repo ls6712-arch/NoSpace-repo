@@ -7,21 +7,24 @@ import { ContentProvider } from "./context/ContentContext";
 import { SocialProvider } from "./context/SocialContext";
 import { ConnectionsProvider } from "./context/ConnectionsContext";
 import { CategoriesProvider } from "./context/CategoriesContext";
+import { CornersProvider } from "./context/CornersContext";
 
 export default function App() {
   return (
     <AuthProvider>
       <RewardsProvider>
         <ContentProvider>
-          <SocialProvider>
-            <ConnectionsProvider>
-              <CategoriesProvider>
-                <CartProvider>
-                  <RouterProvider router={router} />
-                </CartProvider>
-              </CategoriesProvider>
-            </ConnectionsProvider>
-          </SocialProvider>
+          <CornersProvider>
+            <SocialProvider>
+              <ConnectionsProvider>
+                <CategoriesProvider>
+                  <CartProvider>
+                    <RouterProvider router={router} />
+                  </CartProvider>
+                </CategoriesProvider>
+              </ConnectionsProvider>
+            </SocialProvider>
+          </CornersProvider>
         </ContentProvider>
       </RewardsProvider>
     </AuthProvider>

@@ -42,6 +42,7 @@ import {
 } from "../components/ui/select";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { InterestField } from "../components/InterestField";
+import { CornerTagField } from "../components/CornerTagField";
 
 /**
  * Logging, in the order the act actually happens: capture the thing first,
@@ -1050,24 +1051,12 @@ export function Log() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {hobby.subItems.map((s) => {
-                    const active = subHobby === s.slug;
-                    return (
-                      <button
-                        key={s.slug}
-                        type="button"
-                        onClick={() => setSubHobby(active ? "" : s.slug)}
-                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                          active
-                            ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                            : "border-border text-muted-foreground hover:border-foreground/30"
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    );
-                  })}
+                <div className="mt-3">
+                  <CornerTagField
+                    spaceSlug={hobbySlug}
+                    value={subHobby}
+                    onChange={(slug) => setSubHobby(slug)}
+                  />
                 </div>
               </section>
 

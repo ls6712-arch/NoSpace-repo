@@ -150,7 +150,7 @@ function useSearchResults(query: string): SearchResult[] {
           kind: "creator",
           key: `creator-${post.creator}`,
           label: post.creator,
-          sub: `Posts in ${hobbies.find((h) => h.slug === post.hobbySlug)?.shortName ?? ""}`,
+          sub: `Moments in ${hobbies.find((h) => h.slug === post.hobbySlug)?.shortName ?? ""}`,
           to: `/space/${post.hobbySlug}`,
         });
       }
@@ -187,7 +187,7 @@ const PRIMARY_NAV = [
     match: (p: string) => p === "/" || p.startsWith("/my-space") },
   { to: "/circles", label: "Circles", hint: "Communities you can join",
     match: (p: string) => p.startsWith("/circles") },
-  { to: "/create", label: "Create", hint: "Share a moment, or start a pursuit.", accent: true,
+  { to: "/create", label: "Start your log", hint: "Share a moment, or start a pursuit.", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
 
