@@ -1,5 +1,6 @@
 import { CalendarDays, MapPin, Play, ShoppingBag, Users, UserRound } from "lucide-react";
 import { PostReactions } from "./PostReactions";
+import { PostBookmark } from "./PostBookmark";
 import { Thoughts } from "./Thoughts";
 import { PersonActions } from "./PersonActions";
 import { displayLocation } from "../data/participation";
@@ -45,7 +46,7 @@ export function ContentCard({
   label?: string;
   /**
    * A tighter, more image-forward presentation of the exact same card —
-   * same media, same caption, same five reactions plus Save, same Thoughts
+   * same media, same caption, same three reactions plus the Bookmark badge, same Thoughts
    * and PersonActions, same everything — just less padding and a smaller
    * reaction/action grid, for a denser grid like Discover's All Moments.
    * Every other call site leaves this off and is pixel-identical to before.
@@ -93,6 +94,7 @@ export function ContentCard({
             For sale
           </Badge>
         )}
+        <PostBookmark postId={post.id} />
       </div>
 
       <div className={compact ? "p-3" : "p-4"}>
@@ -162,7 +164,7 @@ export function ContentCard({
           </div>
         )}
 
-        {/* Every entry carries the same reactions, Save among them. */}
+        {/* Every moment carries the same three reactions. Save lives on the photo now, as PostBookmark. */}
         <PostReactions postId={post.id} compact={compact} className={compact ? "mb-2" : "mb-3"} />
 
         <Thoughts

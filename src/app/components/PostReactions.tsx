@@ -1,23 +1,18 @@
-import { useCallback, useState, useSyncExternalStore } from "react";
-import { Heart, Hand, Sparkles, Bookmark, Lightbulb, ArrowUp } from "lucide-react";
-import { toggleSaved, useJournalSlice } from "../lib/journal";
+import { useCallback, useSyncExternalStore } from "react";
+import { Heart, Hand, ArrowUp } from "lucide-react";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 
 /**
- * The five NoSpace reactions, plus Try This as a sixth cell in the same grid.
- * Deliberately not Like / Love / Nice work — each one means something
- * different about what the viewer intends, which is the whole point: a
- * reaction here tells the maker something useful rather than incrementing a
- * number. Try This is the odd one out — it's for the viewer, and the maker
- * never sees it — but it belongs in the grid rather than floating on the
- * photo. It's a nudge to go make the thing yourself, not a task: no due
- * date, no streak, nothing tracking whether you followed through.
+ * The three NoSpace reactions. Deliberately not Like / Love / Nice work —
+ * each one means something different about what the viewer intends, which
+ * is the whole point: a reaction here tells the maker something useful
+ * rather than incrementing a number. Try This lives separately now, as
+ * PostBookmark — it's for the viewer, not a signal to the maker, so it
+ * never belonged in the row the maker actually sees.
  */
 export const REACTIONS = [
   { id: "love", label: "Love this", icon: Heart, meaning: "appreciation" },
   { id: "in", label: "I'm in", icon: Hand, meaning: "intent to try or participate" },
-  { id: "obsessed", label: "Obsessed", icon: Sparkles, meaning: "strong enthusiasm" },
-  { id: "needed", label: "Needed it", icon: Lightbulb, meaning: "usefulness or relevance" },
   { id: "keepgoing", label: "Keep going", icon: ArrowUp, meaning: "encouragement" },
 ] as const;
 
@@ -25,10 +20,7 @@ export const REACTIONS = [
 const TINT: Record<string, string> = {
   love: "var(--coral-deep)",
   in: "var(--forest)",
-  obsessed: "var(--coral-deep)",
-  needed: "var(--forest)",
   keepgoing: "var(--coral-deep)",
-  save: "var(--forest)",
 };
 
 export type ReactionId = (typeof REACTIONS)[number]["id"];
@@ -93,7 +85,7 @@ function toggle(postId: string | number, reaction: ReactionId) {
 }
 
 /**
- * The reusable row. Drop it under any post — creation, community, hobby
+ * The reusable row. Drop it under any post — moment, community, hobby
  * content — and it works, with no wiring at the call site beyond the post id.
  *
  * Compact by design: these are lightweight controls, not social-media
@@ -108,8 +100,8 @@ export function PostReactions({
   postId: string | number;
   /** Optional seed counts. Kept subordinate — never the dominant signal. */
   baseCounts?: Partial<Record<ReactionId, number>>;
-  /** Same six controls, smaller and in three columns instead of two, for a
-   * denser grid of cards. Nothing about what they do changes. */
+  /** Smaller and tighter, for a denser grid of cards. Still three across
+   * either way — nothing about what they do changes. */
   compact?: boolean;
   className?: string;
 }) {
@@ -119,13 +111,8 @@ export function PostReactions({
     () => NONE,
   );
 
-  // Compact still has all six controls and all six meanings — "Obsessed",
-  // "Needed it" and "Keep going" just don't fit as text at a third of a
-  // card's width without truncating into nonsense. Icon + tooltip + an
-  // sr-only label keeps the meaning (hover, or a screen reader) without
-  // guessing at a truncated word.
   return (
-    <ul className={`grid ${compact ? "grid-cols-3 gap-1.5" : "grid-cols-2 gap-2"} ${className}`}>
+    <ul className={`grid grid-cols-3 ${compact ? "gap-1.5" : "gap-2"} ${className}`}>
       {REACTIONS.map(({ id, label, icon: Icon, meaning }) => {
         const pressed = mine.includes(id);
         const count = (baseCounts?.[id] ?? 0) + (pressed ? 1 : 0);
@@ -164,66 +151,6 @@ export function PostReactions({
           </li>
         );
       })}
-
-      {/* Try This is one of the six, not a separate control floating on the photo. */}
-      <li>
-        <TryThisAction postId={postId} compact={compact} />
-      </li>
     </ul>
-  );
-}
-
-/**
- * Try This saves the creation to the viewer's own Space (the same journal
- * "saved" list that already backed the old Save button — see lib/journal.ts)
- * so it turns up under "Ready When You Are" on My Space. It's an invitation
- * to go make the thing, not a task: clicking it never creates a deadline,
- * streak, or to-do — just a brief, dismissing-itself confirmation.
- */
-function TryThisAction({ postId, compact = false }: { postId: string | number; compact?: boolean }) {
-  const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
-  const [justAdded, setJustAdded] = useState(false);
-
-  function handleClick() {
-    const wasSaved = saved;
-    toggleSaved(Number(postId));
-    if (!wasSaved) {
-      setJustAdded(true);
-      window.setTimeout(() => setJustAdded(false), 2200);
-    }
-  }
-
-  return (
-    <div className="relative">
-      {justAdded && (
-        <span
-          role="status"
-          className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-[var(--forest-ink)] px-2.5 py-1 text-[11px] text-white shadow-md animate-in fade-in slide-in-from-bottom-1"
-        >
-          Added to your Space
-        </span>
-      )}
-      <button
-        type="button"
-        aria-pressed={saved}
-        aria-label={saved ? "Added to your Space. Try This again to remove it" : "Try This: save it to come back to"}
-        title={saved ? "Added to your Space" : "Try This"}
-        onClick={handleClick}
-        className={`flex w-full items-center rounded-full border border-[var(--border)] bg-surface text-foreground transition-colors duration-150 hover:border-[var(--foreground)]/35 ${
-          compact ? "justify-center gap-1 px-2 py-2 text-[13px]" : "gap-2 px-3 py-2 text-[13px]"
-        }`}
-      >
-        <Bookmark
-          className="size-4 shrink-0"
-          strokeWidth={1.9}
-          style={{
-            color: saved ? TINT.save : "var(--foreground-muted)",
-            fill: saved ? TINT.save : "none",
-          }}
-          aria-hidden="true"
-        />
-        {saved ? "Added" : "Try This"}
-      </button>
-    </div>
   );
 }
