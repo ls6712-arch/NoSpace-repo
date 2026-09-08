@@ -47,7 +47,7 @@ export function ContentCard({
    * A tighter, more image-forward presentation of the exact same card —
    * same media, same caption, same five reactions plus Save, same Thoughts
    * and PersonActions, same everything — just less padding and a smaller
-   * reaction/action grid, for a denser grid like Discover's All Creations.
+   * reaction/action grid, for a denser grid like Discover's All Moments.
    * Every other call site leaves this off and is pixel-identical to before.
    */
   compact?: boolean;

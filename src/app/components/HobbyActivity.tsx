@@ -64,7 +64,7 @@ export function HobbyActivity({
       ? `${stats.upcoming} upcoming ${stats.upcoming === 1 ? "activity" : "activities"}`
       : null,
     stats.openProjects > 0
-      ? `${stats.openProjects} ${stats.openProjects === 1 ? "project" : "projects"} still moving`
+      ? `${stats.openProjects} ${stats.openProjects === 1 ? "pursuit" : "pursuits"} still moving`
       : null,
   ].filter(Boolean) as string[];
 

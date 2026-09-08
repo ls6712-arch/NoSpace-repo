@@ -49,7 +49,7 @@ export function HobbyArchive() {
   const { user, isConfigured } = useAuth();
   const journal = useJournal();
 
-  const [tab, setTab] = useState<"moments" | "projects" | "about">("moments");
+  const [tab, setTab] = useState<"moments" | "pursuits" | "about">("moments");
   const [filter, setFilter] = useState<FilterId>("all");
   const [open, setOpen] = useState<Post | null>(null);
 
@@ -136,7 +136,7 @@ export function HobbyArchive() {
         <p className="mt-1 text-muted-foreground">{space.name}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           {moments.length} {moments.length === 1 ? "moment" : "moments"} · {projects.length}{" "}
-          {projects.length === 1 ? "project" : "projects"}
+          {projects.length === 1 ? "pursuit" : "pursuits"}
           {moments.length > 0 ? ` · ${updatedLabel(moments[0].createdAt).toLowerCase()}` : ""}
         </p>
 
@@ -151,7 +151,7 @@ export function HobbyArchive() {
 
         {/* Sections */}
         <div role="tablist" aria-label="Archive sections" className="mt-8 flex gap-1 border-b border-[var(--hairline)]">
-          {(["moments", "projects", "about"] as const).map((id) => (
+          {(["moments", "pursuits", "about"] as const).map((id) => (
             <button
               key={id}
               role="tab"
@@ -266,17 +266,17 @@ export function HobbyArchive() {
           </>
         )}
 
-        {tab === "projects" && (
+        {tab === "pursuits" && (
           <div className="mt-6">
             {projects.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
                 <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  No {target.label.toLowerCase()} projects yet. A project is a
+                  No {target.label.toLowerCase()} pursuits yet. A Pursuit is a
                   thing you come back to. Moments group under it as updates.
                 </p>
                 <Link to={logTo} className="mt-4 inline-block">
                   <Button variant="outline" size="sm">
-                    Start a project
+                    Start a Pursuit
                   </Button>
                 </Link>
               </div>

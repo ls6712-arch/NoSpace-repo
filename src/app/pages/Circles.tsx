@@ -25,7 +25,7 @@ const TINTS = [
 
 const TABS = [
   { id: "updates", label: "Updates", icon: PenLine },
-  { id: "projects", label: "Projects", icon: Users },
+  { id: "projects", label: "Pursuits", icon: Users },
   { id: "questions", label: "Questions", icon: HelpCircle },
   { id: "events", label: "Events", icon: CalendarDays },
 ] as const;
@@ -49,7 +49,7 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
     updates: joined
       ? "No updates yet. Yours would be the first, a photo counts."
       : "Join to see what members are working on.",
-    projects: "No shared projects running right now.",
+    projects: "No shared pursuits running right now.",
     questions: "Nobody's asked anything yet. Ask for a second pair of eyes.",
     events: circle.location
       ? `No meetups on the calendar for ${circle.location} yet.`

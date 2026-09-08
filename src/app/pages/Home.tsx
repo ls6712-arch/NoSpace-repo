@@ -436,7 +436,7 @@ export function Home() {
       <FeatureSection
         eyebrow="1 · THE LOOP"
         title="Create it. Reflect for a second. Then choose who sees it."
-        copy="Every entry follows the same loop: log what you made, jot a private reflection that's never shown to anyone, then choose who sees it. You never have to share something in order to keep a record of it."
+        copy="Every Moment follows the same loop: log what you made, jot a private reflection that's never shown to anyone, then choose who sees it. You never have to share something in order to keep a record of it."
         visual={
           <div className="ns-paper-panel ns-process-panel space-y-0">
             {[
@@ -612,7 +612,7 @@ export function Home() {
             <h2 className="mb-5 text-4xl leading-[1.02] md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
               You don&apos;t just consume.<br />You make things, too.
             </h2>
-            <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">Start a project, add a small update, or make a note for yourself. None of it has to be public.</p>
+            <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">Start a Pursuit, add a small update, or make a note for yourself. None of it has to be public.</p>
             <Link to="/create"><Button variant="brand" size="lg"><Sparkles className="size-4" /> Make a start</Button></Link>
           </div>
         </div>

@@ -68,7 +68,7 @@ export function SuggestCategory({ className = "" }: { className?: string }) {
           <Plus className="size-4 text-muted-foreground" />
         </span>
         <span className="text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-          Suggest a Category
+          Suggest a Space
         </span>
         <span className="text-xs leading-relaxed text-muted-foreground">
           Yours isn't here? Tell us what's missing.
@@ -79,7 +79,7 @@ export function SuggestCategory({ className = "" }: { className?: string }) {
         <DialogContent className="max-w-md">
           <DialogHeader className="gap-1 text-left">
             <DialogTitle className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Suggest a Category
+              Suggest a Space
             </DialogTitle>
             <DialogDescription className="leading-relaxed">
               Spaces are ways in, never a list you have to pick from. You can

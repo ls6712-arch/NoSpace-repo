@@ -419,7 +419,7 @@ export function PublicProfile() {
 
           <div>
             <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              People They Make With
+              This Corner
             </h2>
             <PeopleWhoAlsoMake hobbySlug={hobbySlug} excludePersonId={personId} firstName={firstName} />
           </div>

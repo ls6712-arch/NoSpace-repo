@@ -792,7 +792,7 @@
     transform: rotate(-4deg);
   }
 
-  .ns-space-thread-grid > * {
+  .ns-space-corner-grid > * {
     min-width: 0;
   }
 
