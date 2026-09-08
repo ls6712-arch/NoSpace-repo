@@ -6,7 +6,8 @@ import { useConnections } from "../context/ConnectionsContext";
  * Phone and tablet navigation: five labelled destinations, matching the
  * desktop top nav's Discover / My Space / Circles / Create in the same
  * order (plus Profile, which hangs off the avatar on desktop) — one mental
- * model, not two.
+ * model, not two. The desktop button reads "Start your log"; this tab stays
+ * the shorter "Create" since a 10px, single-line tab has no room for it.
  *
  * Create sits in the middle because it's the thing you came to do, and it
  * keeps its word rather than becoming an anonymous "+".
