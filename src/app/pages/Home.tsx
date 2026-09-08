@@ -7,7 +7,7 @@ import { deriveProjects } from "../lib/journal";
 import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { ContentCard } from "../components/ContentCard";
-import { PostMedia } from "../components/PostMedia";
+import { GeneratedArt } from "../components/GeneratedArt";
 import { Button } from "../components/ui/button";
 
 /**
@@ -62,7 +62,7 @@ const AUDIENCE_CARDS = [
   {
     icon: Lock,
     label: "Just Me",
-    copy: "Private. Not shown to anyone, including your Clan.",
+    copy: "A private reflection. Never leaves your Shelf.",
   },
   {
     icon: UserRound,
@@ -81,19 +81,23 @@ const AUDIENCE_CARDS = [
   },
 ];
 
+// Illustrative examples, not live data: each one exists to demonstrate a
+// distinct audience choice (Corner-share, Just Me, Clan) side by side, which
+// no single real Moment could honestly do at once.
+const HERO_MOMENTS = [
+  { hobbySlug: "crafts-making", seed: "hero-pottery", title: "Threw a shallow bowl", tag: "Shared to Corner · Pottery" },
+  { hobbySlug: "sports-fitness", seed: "hero-climb", title: "Sent the 5.10 crack", tag: "Just Me" },
+  { hobbySlug: "music", seed: "hero-guitar", title: "New fingerpicking pattern", tag: "Shared with Clan" },
+];
+
 const LOOP_STEPS = [
-  { n: "01", label: "Create", desc: "A photo, a note, or a small update." },
-  { n: "02", label: "Reflect", desc: "A private note. Only you ever see it." },
-  { n: "03", label: "Share", desc: "Just you, your Clan, a Circle, or everyone." },
+  { n: "01", label: "Create", desc: "Log a Moment right when it happens. A photo, a note, a small update." },
+  { n: "02", label: "Reflect", desc: "Add a private note only you can see. Never shown, never scored." },
+  { n: "03", label: "Share", desc: "Just you, your Clan, a Circle, or everyone. Chosen right when you write it." },
 ];
 
 export function Home() {
   const heroRef = useHeroParallax();
-
-  // Real seed Moments, used as-is: no fabricated captions or people.
-  const heroMoments = [101, 402, 304]
-    .map((id) => seedPosts.find((p) => p.id === id))
-    .filter((p): p is (typeof seedPosts)[number] => !!p);
 
   const cornerMoments = seedPosts.filter((p) => p.subHobby === "pickleball").slice(0, 4);
 
@@ -106,6 +110,11 @@ export function Home() {
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-10 pt-12 sm:px-8 sm:pt-16 lg:px-12 lg:pb-16 lg:pt-24 xl:px-16">
           <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,.94fr)_minmax(0,1.06fr)] lg:gap-14 xl:gap-20">
             <div className="text-center lg:text-left">
+              <div className="ns-hero-eyebrow ns-enter ns-enter-1 mb-7 lg:mb-8">
+                <span className="animate-pulse-soft size-1.5 bg-[var(--coral-deep)]" />
+                Log it. Track it.
+              </div>
+
               <h1
                 className="ns-enter ns-enter-1 mb-5 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-[var(--forest)]"
                 style={{ fontFamily: "var(--font-serif)" }}
@@ -130,50 +139,21 @@ export function Home() {
                 </Link>
                 <a href="#loop" className="ns-hero-secondary-link">See how it works</a>
               </div>
+              <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">Free to join. No credit card.</p>
             </div>
 
             <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
               <div className="ns-hero-art mx-auto max-w-[560px] lg:max-w-none">
                 <div className="ns-hero-photo-collage">
-                  {heroMoments[0] && (
-                    <div className="ns-hero-photo-card ns-hero-hobby-one">
-                      <PostMedia
-                        media={heroMoments[0].media}
-                        hobbySlug={heroMoments[0].hobbySlug}
-                        seed={heroMoments[0].id}
-                        className="h-full w-full"
-                      />
+                  {HERO_MOMENTS.map((m, i) => (
+                    <div key={m.seed} className={`ns-hero-photo-card ns-hero-hobby-${["one", "two", "three"][i]}`}>
+                      <GeneratedArt hobbySlug={m.hobbySlug} seed={m.seed} className="h-full w-full" />
                       <div className="ns-hero-photo-label">
-                        {heroMoments[0].creator.toUpperCase()} · {getHobby(heroMoments[0].hobbySlug)?.shortName.toUpperCase()}
+                        <span className="title">{m.title}</span>
+                        <span className="tag">{m.tag.toUpperCase()}</span>
                       </div>
                     </div>
-                  )}
-                  {heroMoments[1] && (
-                    <div className="ns-hero-photo-card ns-hero-hobby-two">
-                      <PostMedia
-                        media={heroMoments[1].media}
-                        hobbySlug={heroMoments[1].hobbySlug}
-                        seed={heroMoments[1].id}
-                        className="h-full w-full"
-                      />
-                      <div className="ns-hero-photo-label">
-                        {heroMoments[1].creator.toUpperCase()} · {getHobby(heroMoments[1].hobbySlug)?.shortName.toUpperCase()}
-                      </div>
-                    </div>
-                  )}
-                  {heroMoments[2] && (
-                    <div className="ns-hero-photo-card ns-hero-hobby-three">
-                      <PostMedia
-                        media={heroMoments[2].media}
-                        hobbySlug={heroMoments[2].hobbySlug}
-                        seed={heroMoments[2].id}
-                        className="h-full w-full"
-                      />
-                      <div className="ns-hero-photo-label">
-                        {heroMoments[2].creator.toUpperCase()} · {getHobby(heroMoments[2].hobbySlug)?.shortName.toUpperCase()}
-                      </div>
-                    </div>
-                  )}
+                  ))}
                   <div className="ns-hero-art-label">
                     LOGGED,
                     <br />
@@ -195,10 +175,10 @@ export function Home() {
         <section className="py-16 [background-color:var(--forest)] lg:py-20">
           <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
             <p className="text-xl leading-relaxed text-[var(--on-forest)] lg:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-              What you make matters more than how many people saw it. NoSpace
-              exists because everything you're building, learning, and getting
-              curious about deserves somewhere real to live, not scattered
-              across five different apps.
+              Most apps want you to perform for an audience. NoSpace doesn't.
+              Log what you actually did. Keep it to yourself, or share it with
+              people who'd actually care. No streaks to keep up. No algorithm
+              deciding who sees you.
             </p>
           </div>
         </section>
@@ -210,13 +190,12 @@ export function Home() {
               <div className="mx-auto max-w-lg lg:mx-0">
                 <div className="ns-section-kicker mb-4">THE LOOP</div>
                 <h2 className="mb-5 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  Create it. Reflect for a second. Then choose who sees it.
+                  Ten seconds to log. A lifetime to look back on.
                 </h2>
                 <p className="max-w-md text-[1.05rem] leading-relaxed text-muted-foreground">
-                  Every Moment follows the same loop: log what you made, jot a
-                  private reflection that's never shown to anyone, then choose
-                  who sees it. You never have to share something to keep a
-                  record of it.
+                  Take a photo, write a quick note, or add a reflection nobody
+                  else will ever see. Every Moment adds to your Shelf, the
+                  full record of what you've actually done.
                 </p>
               </div>
               <div className="ns-paper-panel ns-process-panel">
@@ -240,7 +219,7 @@ export function Home() {
             <div className="mb-10 max-w-xl lg:mb-12">
               <div className="ns-section-kicker mb-4">EVERY MOMENT, ITS OWN AUDIENCE</div>
               <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-                Visibility isn't a setting. It's a choice you make each time.
+                Every Moment picks its own audience.
               </h2>
               <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
                 Pick who sees a Moment when you log it, not once for your
@@ -268,24 +247,40 @@ export function Home() {
               <div className="mx-auto mb-12 max-w-xl text-center">
                 <div className="mb-4 font-hud text-[10px] tracking-[.18em] text-[var(--yellow)]">PURSUITS</div>
                 <h2 className="mb-3 text-3xl text-[var(--on-forest)] lg:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  Your pursuits, always visible to you.
+                  A profile that gets richer over time.
                 </h2>
-                <p className="text-[var(--on-forest-muted)]">Every Pursuit grows the same way. One Moment at a time.</p>
+                <p className="text-[var(--on-forest-muted)]">
+                  Your Pursuits aren't a flat list of achievements. They're a
+                  running record of what you've actually been curious about.
+                </p>
               </div>
               <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3">
                 {pursuits.map((pursuit) => (
-                  <div key={pursuit.key} className="ns-pursuit-card rounded-2xl p-5">
-                    <div className="mb-1 text-lg text-[var(--on-forest)]" style={{ fontFamily: "var(--font-serif)" }}>
-                      {pursuit.title}
+                  <Link
+                    key={pursuit.key}
+                    to={`/space/${pursuit.hobbySlug}${pursuit.subHobby ? `?hobby=${pursuit.subHobby}` : ""}`}
+                    className="ns-pursuit-card group block overflow-hidden rounded-2xl"
+                  >
+                    <div className="relative aspect-square overflow-hidden [background-color:#1a4438]">
+                      <GeneratedArt
+                        hobbySlug={pursuit.hobbySlug}
+                        seed={pursuit.updates[0]?.id ?? pursuit.key}
+                        className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <span className="absolute left-2.5 top-2.5 rounded-sm border border-[var(--on-forest)]/30 bg-[var(--forest-ink)]/85 px-2 py-1 font-hud text-[10px] tracking-[.05em] text-[var(--on-forest)]">
+                        {pursuit.updates.length} Moment{pursuit.updates.length === 1 ? "" : "s"}
+                      </span>
                     </div>
-                    <div className="mb-3 text-xs text-[var(--on-forest-muted)]">
-                      {pursuit.creator} · {pursuit.updates.length} Moments logged
+                    <div className="p-4">
+                      <div className="mb-1 text-lg text-[var(--on-forest)]" style={{ fontFamily: "var(--font-serif)" }}>
+                        {pursuit.title}
+                      </div>
+                      <div className="mb-2 text-xs text-[var(--on-forest-muted)]">
+                        {pursuit.creator} · {getHobby(pursuit.hobbySlug)?.shortName}
+                      </div>
+                      <span className="font-hud text-[10px] uppercase tracking-[.06em] text-[var(--yellow)]">View Pursuit →</span>
                     </div>
-                    <div className="inline-flex items-center gap-1.5 text-[11px] text-[var(--on-forest-muted)]">
-                      <Users className="size-3.5" />
-                      {getHobby(pursuit.hobbySlug)?.shortName}
-                    </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
               <p className="mt-12 text-center text-lg text-[var(--on-forest)]" style={{ fontFamily: "var(--font-serif)" }}>
@@ -326,11 +321,13 @@ export function Home() {
               <div className="max-w-xl">
                 <div className="ns-section-kicker mb-4">DISCOVER</div>
                 <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  Fifteen Spaces. More Corners than we can list.
+                  One place for everything you do.
                 </h2>
                 <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
-                  Each Space holds many Corners, the specific things people
-                  actually do. Don't see yours? Suggest it.
+                  Fifteen Spaces today, and growing. Anyone can suggest one.
+                  Inside each Space, Corners are as specific as you need them:
+                  tag a Moment "Pasta Making" instead of just "Cooking," and
+                  the Corner exists. No approval queue.
                 </p>
               </div>
               <Link to="/discover" className="ns-text-link hidden shrink-0 sm:inline-flex">
@@ -354,8 +351,8 @@ export function Home() {
           <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
             <Quote className="mx-auto mb-5 size-6 text-[var(--forest-ink)]" />
             <p className="text-2xl leading-snug text-[var(--forest-ink)] md:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-              No algorithm decides what you see. No score keeps you scrolling.
-              Just Moments, in the order people actually made them.
+              No feed algorithm. No streaks. No performing for an audience.
+              Just your own log, kept the way you want it.
             </p>
           </div>
         </section>
@@ -370,7 +367,8 @@ export function Home() {
                 You don't just consume.<br />You make things, too.
               </h2>
               <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
-                Free to use. Private by default.
+                Free to join. Private by default. Share only the Moments you
+                choose, with exactly the people you choose.
               </p>
               <Link to="/create">
                 <Button variant="brand" size="lg">
