@@ -612,7 +612,7 @@ export function Home() {
             <h2 className="mb-5 text-4xl leading-[1.02] md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
               You don&apos;t just consume.<br />You make things, too.
             </h2>
-            <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">Start a project, add a small update, or make a note for yourself. None of it has to be public.</p>
+            <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">Start a Pursuit, add a small update, or make a note for yourself. None of it has to be public.</p>
             <Link to="/create"><Button variant="brand" size="lg"><Sparkles className="size-4" /> Make a start</Button></Link>
           </div>
         </div>

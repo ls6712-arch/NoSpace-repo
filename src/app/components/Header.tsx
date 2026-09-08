@@ -181,7 +181,7 @@ const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
  * the same places in the same order rather than two different apps.
  */
 const PRIMARY_NAV = [
-  { to: "/discover", label: "Discover", hint: "Spaces, Circles, people and projects",
+  { to: "/discover", label: "Discover", hint: "Spaces, Circles, people and pursuits",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },
   { to: "/my-space", label: "My Space", hint: "New work from the people, hobbies and Circles you're part of",
     match: (p: string) => p === "/" || p.startsWith("/my-space") },

@@ -61,8 +61,8 @@ type Screen = "capture" | "moment" | "share" | "saved" | "ways" | "detail";
 type Mode = "project" | "update" | "moment" | "private";
 
 const MODES: { id: Mode; title: string; copy: string; icon: typeof Plus }[] = [
-  { id: "project", title: "Start a project", copy: "Give a new thing a home", icon: Plus },
-  { id: "update", title: "Add an update", copy: "Keep an existing project moving", icon: PenLine },
+  { id: "project", title: "Start a Pursuit", copy: "Give a new thing a home", icon: Plus },
+  { id: "update", title: "Add an update", copy: "Keep an existing Pursuit moving", icon: PenLine },
   { id: "moment", title: "Quick moment", copy: "A photo, win, question, or small discovery", icon: Sparkle },
   { id: "private", title: "Reflect privately", copy: "Keep a note just for you", icon: Lock },
 ];
@@ -467,7 +467,7 @@ export function Log() {
                     {title}
                   </span>
                   <span className="text-xs leading-relaxed text-muted-foreground">
-                    {disabled ? "Start a project first, then updates go here" : copy}
+                    {disabled ? "Start a Pursuit first, then updates go here" : copy}
                   </span>
                 </button>
               </li>
@@ -683,7 +683,7 @@ export function Log() {
               <div className="flex items-center gap-3">
                 <FolderPlus className="size-4 shrink-0 text-[var(--forest)]" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm">Add to a project</span>
+                  <span className="block text-sm">Add to a Pursuit</span>
                   <span className="block text-xs text-muted-foreground">
                     Keep an ongoing thing together.
                   </span>
@@ -697,12 +697,12 @@ export function Log() {
                     setProjectTitle(e.target.value);
                     setMode(e.target.value.trim() ? "project" : null);
                   }}
-                  placeholder="Name a new project, e.g. Six matching mugs"
+                  placeholder="Name a new Pursuit, e.g. Six matching mugs"
                 />
               ) : (
                 <Select value={projectId} onValueChange={setProjectId}>
                   <SelectTrigger className="mt-3">
-                    <SelectValue placeholder="Choose a project (optional)" />
+                    <SelectValue placeholder="Choose a Pursuit (optional)" />
                   </SelectTrigger>
                   <SelectContent>
                     {openProjects.map((p) => (
@@ -983,7 +983,7 @@ export function Log() {
                 <h2 className="mb-1 text-sm">What are you working on?</h2>
                 <p className="mb-3 text-xs text-muted-foreground">
                   {mode === "update"
-                    ? "Choose the project this belongs to."
+                    ? "Choose the Pursuit this belongs to."
                     : mode === "project"
                       ? "Give it a name you'll recognise in six months."
                       : "Where does this sit?"}
@@ -992,7 +992,7 @@ export function Log() {
                 {mode === "update" ? (
                   <Select value={projectId} onValueChange={setProjectId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose a project" />
+                      <SelectValue placeholder="Choose a Pursuit" />
                     </SelectTrigger>
                     <SelectContent>
                       {openProjects.map((p) => (

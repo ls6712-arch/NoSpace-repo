@@ -399,7 +399,7 @@ export function MySpace() {
         </Section>
 
         <Section
-          title="Projects still moving"
+          title="Pursuits still moving"
           copy="Ongoing work across NoSpace you could be part of."
           action={{ label: "Discover", to: "/discover" }}
         >

@@ -221,8 +221,8 @@ export function MomentDetail({
             </dd>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <dt className="text-muted-foreground">Project</dt>
-            <dd>{attached ? attached.title : "Not part of a project"}</dd>
+            <dt className="text-muted-foreground">Pursuit</dt>
+            <dd>{attached ? attached.title : "Not part of a Pursuit"}</dd>
           </div>
         </dl>
 
@@ -248,7 +248,7 @@ export function MomentDetail({
             </Button>
             <Button variant="outline" size="sm" onClick={() => setAddingTo((v) => !v)}>
               <FolderPlus className="size-3.5" />
-              {attached ? "Move to another project" : "Add to project"}
+              {attached ? "Move to another Pursuit" : "Add to Pursuit"}
             </Button>
             <Button variant="outline" size="sm" onClick={share}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -262,7 +262,7 @@ export function MomentDetail({
             {openProjects.length === 0 ? (
               <>
                 <p className="text-xs text-muted-foreground">
-                  You don't have a project yet. Starting one from here files this
+                  You don't have a Pursuit yet. Starting one from here files this
                   moment as its first update.
                 </p>
                 <Button
@@ -270,7 +270,7 @@ export function MomentDetail({
                   size="sm"
                   onClick={() => {
                     const project = startProject({
-                      title: hobbyLabel ?? space?.shortName ?? "New project",
+                      title: hobbyLabel ?? space?.shortName ?? "New Pursuit",
                       hobbySlug: post.hobbySlug,
                       subHobby: post.subHobby,
                     });
@@ -278,7 +278,7 @@ export function MomentDetail({
                     setAddingTo(false);
                   }}
                 >
-                  Start "{hobbyLabel ?? space?.shortName}" as a project
+                  Start "{hobbyLabel ?? space?.shortName}" as a Pursuit
                 </Button>
               </>
             ) : (
@@ -290,7 +290,7 @@ export function MomentDetail({
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a project" />
+                  <SelectValue placeholder="Choose a Pursuit" />
                 </SelectTrigger>
                 <SelectContent>
                   {openProjects.map((p) => (

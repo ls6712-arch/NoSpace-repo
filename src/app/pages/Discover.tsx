@@ -47,7 +47,7 @@ const BASE_CHIPS: Chip[] = [
   { id: "all", label: "All" },
   { id: "new", label: "New today" },
   { id: "near", label: "Near me" },
-  { id: "progress", label: "Projects in progress" },
+  { id: "progress", label: "Pursuits in progress" },
 ];
 
 /** Spaces / Circles / People — Discover's own front door, kept in ?tab= so

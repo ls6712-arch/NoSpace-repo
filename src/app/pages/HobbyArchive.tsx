@@ -136,7 +136,7 @@ export function HobbyArchive() {
         <p className="mt-1 text-muted-foreground">{space.name}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           {moments.length} {moments.length === 1 ? "moment" : "moments"} · {projects.length}{" "}
-          {projects.length === 1 ? "project" : "projects"}
+          {projects.length === 1 ? "pursuit" : "pursuits"}
           {moments.length > 0 ? ` · ${updatedLabel(moments[0].createdAt).toLowerCase()}` : ""}
         </p>
 
@@ -271,12 +271,12 @@ export function HobbyArchive() {
             {projects.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
                 <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  No {target.label.toLowerCase()} projects yet. A project is a
+                  No {target.label.toLowerCase()} pursuits yet. A Pursuit is a
                   thing you come back to. Moments group under it as updates.
                 </p>
                 <Link to={logTo} className="mt-4 inline-block">
                   <Button variant="outline" size="sm">
-                    Start a project
+                    Start a Pursuit
                   </Button>
                 </Link>
               </div>
