@@ -468,6 +468,17 @@
 
   .ns-portfolio-panel { padding: 1.5rem; box-shadow: 8px 8px 0 color-mix(in srgb, var(--sky-deep) 28%, transparent); }
 
+  .ns-audience-card {
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    box-shadow: 5px 5px 0 color-mix(in srgb, var(--forest) 12%, transparent);
+  }
+
+  .ns-pursuit-card {
+    border: 1px solid color-mix(in srgb, var(--cream) 28%, transparent);
+    background: color-mix(in srgb, var(--cream) 6%, transparent);
+  }
+
   .ns-space-card {
     background: var(--forest);
     transition: transform 300ms ease, box-shadow 300ms ease;
