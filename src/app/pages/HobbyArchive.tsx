@@ -49,7 +49,7 @@ export function HobbyArchive() {
   const { user, isConfigured } = useAuth();
   const journal = useJournal();
 
-  const [tab, setTab] = useState<"moments" | "projects" | "about">("moments");
+  const [tab, setTab] = useState<"moments" | "pursuits" | "about">("moments");
   const [filter, setFilter] = useState<FilterId>("all");
   const [open, setOpen] = useState<Post | null>(null);
 
@@ -151,7 +151,7 @@ export function HobbyArchive() {
 
         {/* Sections */}
         <div role="tablist" aria-label="Archive sections" className="mt-8 flex gap-1 border-b border-[var(--hairline)]">
-          {(["moments", "projects", "about"] as const).map((id) => (
+          {(["moments", "pursuits", "about"] as const).map((id) => (
             <button
               key={id}
               role="tab"
@@ -266,7 +266,7 @@ export function HobbyArchive() {
           </>
         )}
 
-        {tab === "projects" && (
+        {tab === "pursuits" && (
           <div className="mt-6">
             {projects.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
