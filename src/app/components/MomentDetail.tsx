@@ -14,6 +14,7 @@ import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { getCircle } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { PostReactions } from "./PostReactions";
+import { PostBookmark } from "./PostBookmark";
 import { Thoughts } from "./Thoughts";
 import { attachEntry, startProject, useJournal } from "../lib/journal";
 import { PostMedia } from "./PostMedia";
@@ -143,7 +144,7 @@ export function MomentDetail({
             <p className="whitespace-pre-line text-sm leading-relaxed">{post.caption}</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border">
+          <div className="relative overflow-hidden rounded-2xl border border-border">
             <PostMedia
               media={post.media}
               type={post.type}
@@ -151,6 +152,7 @@ export function MomentDetail({
               seed={post.id}
               className="w-full"
             />
+            <PostBookmark postId={post.id} />
           </div>
         )}
 
