@@ -187,7 +187,7 @@ const PRIMARY_NAV = [
     match: (p: string) => p === "/" || p.startsWith("/my-space") },
   { to: "/circles", label: "Circles", hint: "Communities you can join",
     match: (p: string) => p.startsWith("/circles") },
-  { to: "/create", label: "Create", hint: "Share a moment, post or project", accent: true,
+  { to: "/create", label: "Create", hint: "Share a moment, or start a pursuit.", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
 

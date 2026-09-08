@@ -82,7 +82,7 @@ export function InterestField({
           {exact ? (
             <span className="flex items-center gap-1">
               <Check className="size-3 text-[var(--forest)]" />
-              Others use this too. Your post joins theirs.
+              Others use this too. Your Moment joins theirs.
             </span>
           ) : (
             "New one. It'll show up as a suggestion for everyone after this."

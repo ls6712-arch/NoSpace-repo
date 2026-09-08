@@ -436,7 +436,7 @@ export function Home() {
       <FeatureSection
         eyebrow="1 · THE LOOP"
         title="Create it. Reflect for a second. Then choose who sees it."
-        copy="Every entry follows the same loop: log what you made, jot a private reflection that's never shown to anyone, then choose who sees it. You never have to share something in order to keep a record of it."
+        copy="Every Moment follows the same loop: log what you made, jot a private reflection that's never shown to anyone, then choose who sees it. You never have to share something in order to keep a record of it."
         visual={
           <div className="ns-paper-panel ns-process-panel space-y-0">
             {[
