@@ -103,7 +103,7 @@ function DiscoverSpaceArt({
 }
 
 /**
- * Featured Creations selection.
+ * Featured Moments selection.
  *
  * NoSpace doesn't keep aggregate reaction, comment, or save counts today —
  * only a single legacy `likes` number per post (the same one ContentContext's
@@ -142,10 +142,10 @@ function rankFeatured(posts: Post[], followedHobbies: string[], take: number): P
   return picked;
 }
 
-/** A light tile for the Featured Creations row — image, caption, creator,
+/** A light tile for the Featured Moments row — image, caption, creator,
  * and Try This. Deliberately not a full ContentCard: no reaction grid, no
  * counts, nothing that reads as a leaderboard entry. */
-function FeaturedCreationTile({ post }: { post: Post }) {
+function FeaturedMomentTile({ post }: { post: Post }) {
   const saved = useJournalSlice((s) => s.saved.includes(post.id));
 
   return (
@@ -469,31 +469,31 @@ export function Discover() {
                 )}
               </section>
 
-              {/* Featured Creations */}
+              {/* Featured Moments */}
               {featured.length > 0 && (
                 <section className="mb-14">
                   <div className="mb-5 flex items-end justify-between gap-4">
                     <div>
-                      <div className="ns-section-kicker mb-2">POPULAR CREATIONS FROM ACROSS NOSPACE</div>
-                      <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Featured Creations</h2>
+                      <div className="ns-section-kicker mb-2">POPULAR MOMENTS FROM ACROSS NOSPACE</div>
+                      <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Featured Moments</h2>
                     </div>
-                    <a href="#all-creations" className="shrink-0 text-xs text-[var(--coral-text)] hover:underline">
+                    <a href="#all-moments" className="shrink-0 text-xs text-[var(--coral-text)] hover:underline">
                       See all →
                     </a>
                   </div>
                   <div className="flex gap-4 overflow-x-auto pb-2">
                     {featured.map((post) => (
-                      <FeaturedCreationTile key={post.id} post={post} />
+                      <FeaturedMomentTile key={post.id} post={post} />
                     ))}
                   </div>
                 </section>
               )}
 
-              {/* All Creations */}
-              <div id="all-creations" className="mb-4 flex flex-wrap items-end justify-between gap-4">
+              {/* All Moments */}
+              <div id="all-moments" className="mb-4 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <div className="ns-section-kicker mb-2">A FEED OF CREATIONS FROM ALL SPACES, CIRCLES AND PEOPLE</div>
-                  <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>All Creations</h2>
+                  <div className="ns-section-kicker mb-2">A FEED OF MOMENTS FROM ALL SPACES, CIRCLES AND PEOPLE</div>
+                  <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>All Moments</h2>
                 </div>
                 <ul role="tablist" aria-label="Feed" className="flex gap-1 rounded-full border border-border bg-card p-1">
                   {FEED_TABS.map(({ id, label }) => {
