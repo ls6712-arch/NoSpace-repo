@@ -469,7 +469,7 @@ function Printer3D({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
     </g>
   );
 }
-function LaptopCode({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+export function LaptopCode({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
       <path d="M -34 -30 L 34 -30 L 34 16 L -34 16 Z" fill={INK} />
@@ -495,7 +495,7 @@ export function PottedPlant({ x, y, s = 1 }: { x: number; y: number; s?: number 
     </g>
   );
 }
-function WateringCan({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+export function WateringCan({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
       <path d="M -20 -6 L -18 24 Q -18 30 -12 30 L 16 30 Q 22 30 22 24 L 20 -6 Z" fill={DENIM} />
