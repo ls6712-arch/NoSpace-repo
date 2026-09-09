@@ -60,10 +60,11 @@ export function PursuitCard({
   owner?: boolean;
   className?: string;
 }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { posts } = useContent();
   const entryProject = useJournalSlice((s) => s.entryProject);
   const [goalOpen, setGoalOpen] = useState(false);
+  const [justCopied, setJustCopied] = useState(false);
   // Only the owner's own card is ever backed by a full Project (with a
   // `shared` flag and edit actions) — a friend's view only ever gets the
   // read-only PursuitLike shape, so this cast is safe exactly when owner is.
@@ -79,11 +80,29 @@ export function PursuitCard({
   const status = pursuit.finishedAt ? "Completed" : count > 0 ? "In progress" : "Just started";
   const moved = pursuit.finishedAt ?? lastUpdatedAt ?? pursuit.startedAt;
 
-  const toggleShare = () => {
+  const toggleShare = async () => {
     if (!asProject) return;
     const next = !shared;
     setProjectShared(pursuit.id, next);
     if (user) void mirrorPursuit(user.id, { ...asProject, shared: next });
+
+    // Turning sharing on is the moment someone actually wants a link to
+    // hand to someone — do that copy right here instead of leaving them to
+    // hunt for a separate "share" action afterward, which is what made this
+    // button feel like it didn't do anything.
+    if (next) {
+      const url = profile?.username
+        ? `${window.location.origin}${window.location.pathname}#/u/${profile.username}`
+        : window.location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        setJustCopied(true);
+        setTimeout(() => setJustCopied(false), 2000);
+      } catch {
+        // Clipboard can be unavailable (permissions, non-secure context) —
+        // the Pursuit is still shared either way, just without the copy.
+      }
+    }
   };
 
   const markDone = () => {
@@ -138,11 +157,19 @@ export function PursuitCard({
           <button
             type="button"
             onClick={toggleShare}
-            title={shared ? "Shared on your profile (tap to make private)" : "Private (tap to share on your profile)"}
+            title={
+              justCopied
+                ? "Link copied"
+                : shared
+                  ? "Shared on your profile (tap to make private)"
+                  : "Private (tap to share and copy a link)"
+            }
             aria-pressed={shared}
-            className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-md transition-colors hover:bg-[var(--forest-ink)]/75"
+            className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-full bg-[var(--forest-ink)]/55 px-2.5 backdrop-blur-md transition-colors hover:bg-[var(--forest-ink)]/75"
           >
-            {shared ? (
+            {justCopied ? (
+              <span className="text-[10px] font-medium text-white">Copied!</span>
+            ) : shared ? (
               <Share2 className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
             ) : (
               <Lock className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
@@ -168,23 +195,25 @@ export function PursuitCard({
           <button
             type="button"
             onClick={() => setGoalOpen(true)}
-            className="mt-2 flex items-center gap-1.5 text-left text-xs text-[var(--forest-ink)] transition-colors hover:text-[var(--coral-text)]"
+            className={`mt-2.5 flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+              goal
+                ? goal.reachedAt
+                  ? "border-border bg-surface-muted text-muted-foreground"
+                  : "border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--cream))] text-[var(--forest-ink)] hover:border-[var(--coral-deep)]"
+                : "border-dashed border-border text-muted-foreground hover:border-[var(--forest)] hover:text-[var(--forest)]"
+            }`}
           >
-            <Target className="size-3.5 shrink-0" strokeWidth={1.8} />
-            {goal ? (
-              <span className={goal.reachedAt ? "line-through decoration-1 text-muted-foreground" : ""}>
-                {goal.reachedAt ? `Reached it — ${goalText}` : goalText}
-              </span>
-            ) : (
-              <span className="text-muted-foreground">Set a goal</span>
-            )}
+            <Target className="size-4 shrink-0" strokeWidth={1.8} />
+            <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`}>
+              {goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}
+            </span>
           </button>
         )}
 
         {owner && (
           <div className="mt-3 flex items-center gap-2">
             <Link
-              to="/create"
+              to={`/create?pursuit=${pursuit.id}`}
               className="flex-1 rounded-full border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
             >
               Add progress
