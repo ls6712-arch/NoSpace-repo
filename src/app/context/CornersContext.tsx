@@ -34,6 +34,10 @@ export interface Corner {
    * the same way they already do today. See isDiscoverable for how this
    * interacts with brand-new, tagged Corners. */
   isCurated: boolean;
+  /** Short, optional — only ever set by whoever created the Corner
+   * deliberately (via "Create a Corner" on the Space page), never by
+   * tagging-into-existence, which only ever has a name to go on. */
+  description?: string;
 }
 
 /**
@@ -63,8 +67,13 @@ interface CornersContextType {
   /** Resolves a typed name to a Corner slug, creating the row if it's
    * genuinely new. Best-effort and local-first: a signed-out visitor or an
    * unmigrated table still gets a usable slug back, so tagging a Moment
-   * never depends on this succeeding. */
-  getOrCreateCorner: (spaceSlug: string, name: string) => Promise<{ slug: string; name: string }>;
+   * never depends on this succeeding. An explicit "Create a Corner" can
+   * pass a short description; tagging-into-existence never has one to give. */
+  getOrCreateCorner: (
+    spaceSlug: string,
+    name: string,
+    description?: string,
+  ) => Promise<{ slug: string; name: string }>;
   refresh: () => Promise<void>;
 }
 
@@ -83,17 +92,53 @@ const BASELINE: Corner[] = hobbies.flatMap((h) =>
   h.subItems.map((s) => ({ spaceSlug: h.slug, slug: s.slug, name: s.label, momentCount: 0, isCurated: true })),
 );
 
+interface LocalCorner {
+  spaceSlug: string;
+  slug: string;
+  name: string;
+  description?: string;
+}
+
+const LOCAL_KEY = "nospace.corners.local.v1";
+
+/**
+ * Corners created via "Create a Corner" while signed out, or while Supabase
+ * isn't configured, have nowhere else to live — getOrCreateCorner's remote
+ * insert only ever runs with `supabase && user`, and the local/demo
+ * derivation below only surfaces Corners that already have a tagged post.
+ * Without this, a brand-new Corner with zero Moments would disappear the
+ * instant the dialog closed. Kept local-first, same spirit as journal.ts.
+ */
+function loadLocalCorners(): LocalCorner[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_KEY);
+    return raw ? (JSON.parse(raw) as LocalCorner[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalCorners(corners: LocalCorner[]) {
+  try {
+    window.localStorage.setItem(LOCAL_KEY, JSON.stringify(corners));
+  } catch {
+    // best effort
+  }
+}
+
 export function CornersProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { publicFeed } = useContent();
   const [remote, setRemote] = useState<Corner[]>([]);
+  const [local, setLocal] = useState<LocalCorner[]>(loadLocalCorners);
 
   const refresh = useCallback(async () => {
     if (!supabase) return;
     try {
       const { data } = await supabase
         .from("corners")
-        .select("space_slug, slug, name, moment_count");
+        .select("space_slug, slug, name, moment_count, description");
       setRemote(
         ((data ?? []) as any[]).map((r) => ({
           spaceSlug: r.space_slug,
@@ -101,6 +146,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
           name: r.name,
           momentCount: r.moment_count ?? 0,
           isCurated: false,
+          description: r.description ?? undefined,
         })),
       );
     } catch {
@@ -138,18 +184,35 @@ export function CornersProvider({ children }: { children: ReactNode }) {
     (spaceSlug: string) => {
       const merged = new Map<string, Corner>();
       for (const c of BASELINE) if (c.spaceSlug === spaceSlug) merged.set(c.slug, c);
+      // Locally-created corners go in before derived/remote activity so a
+      // brand-new, zero-Moment Corner still shows up immediately, and any
+      // momentCount that shows up later for the same slug still wins.
+      for (const c of local) if (c.spaceSlug === spaceSlug) {
+        const existing = merged.get(c.slug);
+        merged.set(
+          c.slug,
+          existing
+            ? { ...existing, description: c.description ?? existing.description }
+            : { spaceSlug, slug: c.slug, name: c.name, momentCount: 0, isCurated: false, description: c.description },
+        );
+      }
       for (const c of derived) if (c.spaceSlug === spaceSlug) {
         const existing = merged.get(c.slug);
         merged.set(c.slug, existing ? { ...existing, momentCount: c.momentCount } : c);
       }
       for (const c of remote) if (c.spaceSlug === spaceSlug) {
         const existing = merged.get(c.slug);
-        merged.set(c.slug, existing ? { ...existing, momentCount: c.momentCount } : c);
+        merged.set(
+          c.slug,
+          existing
+            ? { ...existing, momentCount: c.momentCount, description: c.description ?? existing.description }
+            : c,
+        );
       }
       return [...merged.values()].sort((a, b) => b.momentCount - a.momentCount);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [remote, publicFeed],
+    [remote, local, publicFeed],
   );
 
   const matchesFor = useCallback(
@@ -170,13 +233,28 @@ export function CornersProvider({ children }: { children: ReactNode }) {
     [cornersFor],
   );
 
-  const getOrCreateCorner: CornersContextType["getOrCreateCorner"] = async (spaceSlug, rawName) => {
+  const getOrCreateCorner: CornersContextType["getOrCreateCorner"] = async (spaceSlug, rawName, description) => {
     const name = rawName.trim().slice(0, 60);
     const slug = slugifyCorner(name);
+    const trimmedDescription = description?.trim().slice(0, 140) || undefined;
+
+    // Local-first, same as mirrorPursuit/profileLinks: the Corner is real
+    // the instant it's created, whether or not a remote write ever lands.
+    setLocal((prev) => {
+      if (prev.some((c) => c.spaceSlug === spaceSlug && c.slug === slug)) return prev;
+      const next = [...prev, { spaceSlug, slug, name, description: trimmedDescription }];
+      saveLocalCorners(next);
+      return next;
+    });
 
     if (supabase && user) {
       try {
-        await supabase.from("corners").insert({ space_slug: spaceSlug, slug, name });
+        await supabase.from("corners").insert({
+          space_slug: spaceSlug,
+          slug,
+          name,
+          description: trimmedDescription || null,
+        });
       } catch {
         // Best effort, same as mirrorPursuit: an unmigrated table or a
         // network hiccup still lets the Moment itself get tagged below.

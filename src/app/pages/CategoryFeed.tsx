@@ -4,7 +4,9 @@ import { Plus, Users, X } from "lucide-react";
 import { getHobby, currentSpaceSlug, subHobbyLabel } from "../data/hobbies";
 import { postInCategory } from "../data/categories";
 import { useCategories } from "../context/CategoriesContext";
+import { useCorners } from "../context/CornersContext";
 import { HobbyTile } from "../components/HobbyTile";
+import { CreateCornerDialog } from "../components/CreateCornerDialog";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useRewards } from "../context/RewardsContext";
@@ -135,6 +137,8 @@ export function CategoryFeed() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { categories } = useCategories();
   const { publicFeed } = useContent();
+  const { cornersFor } = useCorners();
+  const [createCornerOpen, setCreateCornerOpen] = useState(false);
 
   const builtIn = getHobby(slug);
 
@@ -204,7 +208,11 @@ export function CategoryFeed() {
 
   const countFor = (subSlug: string) =>
     allPosts.filter((p) => p.subHobby === subSlug).length;
-  const activeLabel = hobby.subItems.find((s) => s.slug === activeSub)?.label;
+  // The curated baseline plus anything tagged or deliberately created — not
+  // just hobby.subItems, or a Corner made just now (or tagged into
+  // existence by an earlier Moment) would never actually show up here.
+  const corners = builtIn ? cornersFor(spaceSlug) : [];
+  const activeLabel = corners.find((c) => c.slug === activeSub)?.name;
 
   const setSub = (subSlug: string) => {
     const next = new URLSearchParams(searchParams);
@@ -249,21 +257,40 @@ export function CategoryFeed() {
               Clear filter
             </button>
           )}
+          {builtIn && (
+            <button
+              type="button"
+              onClick={() => setCreateCornerOpen(true)}
+              className="flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            >
+              <Plus className="size-3" />
+              Create a Corner
+            </button>
+          )}
         </div>
         <div className="ns-space-corner-grid grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-          {hobby.subItems.map((s) => (
+          {corners.map((c) => (
             <HobbyTile
-              key={s.slug}
+              key={c.slug}
               hobbySlug={hobby.slug}
-              subSlug={s.slug}
-              label={s.label}
-              active={activeSub === s.slug}
-              count={countFor(s.slug)}
-              onClick={() => setSub(activeSub === s.slug ? "" : s.slug)}
+              subSlug={c.slug}
+              label={c.name}
+              active={activeSub === c.slug}
+              count={countFor(c.slug)}
+              onClick={() => setSub(activeSub === c.slug ? "" : c.slug)}
             />
           ))}
         </div>
       </section>
+
+      {builtIn && (
+        <CreateCornerDialog
+          open={createCornerOpen}
+          onOpenChange={setCreateCornerOpen}
+          spaceSlug={spaceSlug}
+          onCreated={(slug) => setSub(slug)}
+        />
+      )}
 
       <section className="container mx-auto px-4 pt-12 pb-24">
         <Tabs defaultValue="feed">
