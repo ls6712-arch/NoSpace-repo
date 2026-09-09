@@ -30,6 +30,20 @@ create table if not exists public.pursuits (
   shared boolean not null default false,
   started_at timestamptz not null default now(),
   finished_at timestamptz,
+  -- Goal columns mirror lib/journal.ts's Goal type. Nullable and additive:
+  -- a Pursuit with no goal set just leaves all of these null. Only the
+  -- active goal is mirrored here — archived (`pastGoals`) goals stay
+  -- local-only, since nothing outside the owner's own browser needs them
+  -- yet. Goal visibility currently follows the Pursuit's own `shared` flag,
+  -- same as every other column here — see the open question in the Set
+  -- Goals flow spec about whether a Goal needs its own, narrower audience.
+  goal_shape text check (goal_shape in ('number', 'date', 'feeling')),
+  goal_label text,
+  goal_target_number numeric,
+  goal_unit text,
+  goal_current numeric,
+  goal_target_date timestamptz,
+  goal_reached_at timestamptz,
   updated_at timestamptz not null default now()
 );
 

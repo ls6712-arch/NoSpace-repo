@@ -30,6 +30,33 @@ const KEY = "nospace.journal.v1";
  * forces it into NoSpace's taxonomy. `customSpace` holds a made-up Space
  * name when neither existing Space fits ("Other").
  */
+/**
+ * A Goal — one optional, narrower thing attached to a Pursuit. Deliberately
+ * not scorekeeping: no percentages are derived anywhere from this, and the
+ * "feeling" shape exists so a Pursuit never has to be quantified to have a
+ * goal. Only one goal is ever active on a Pursuit at a time; setting a new
+ * one archives whatever was there before rather than deleting it.
+ */
+export type GoalShape = "number" | "date" | "feeling";
+
+export interface Goal {
+  id: string;
+  shape: GoalShape;
+  /** What shows on the Pursuit card, e.g. "Finish 10 pieces" — editable,
+   * pre-filled from the other fields but never regenerated after that. */
+  label: string;
+  /** shape: "number" */
+  targetNumber?: number;
+  unit?: string;
+  current?: number;
+  /** shape: "date" */
+  targetDate?: number;
+  createdAt: number;
+  /** Set when the maker marks the goal reached — "Reached it," not
+   * "completed," and never turned into a pass/fail state. */
+  reachedAt?: number;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -47,6 +74,10 @@ export interface Project {
   startedAt: number;
   /** Set when the maker marks the Pursuit finished. */
   finishedAt?: number;
+  /** The one active goal, if the maker set one. */
+  goal?: Goal;
+  /** Replaced goals, kept rather than deleted — see setProjectGoal. */
+  pastGoals?: Goal[];
 }
 
 export interface PrivateLog {
@@ -179,6 +210,72 @@ export function attachEntry(postId: number | string, projectId: string) {
     ...state,
     entryProject: { ...state.entryProject, [String(postId)]: projectId },
   });
+}
+
+/**
+ * Sets (or replaces) a Pursuit's active goal. A goal that's being replaced
+ * moves to `pastGoals` instead of vanishing — declaring something and then
+ * losing it silently is the same trust problem as a dropped draft elsewhere
+ * in the app.
+ */
+export function setProjectGoal(projectId: string, goal: Omit<Goal, "id" | "createdAt">) {
+  commit({
+    ...state,
+    projects: state.projects.map((p) => {
+      if (p.id !== projectId) return p;
+      const archived = p.goal ? [p.goal, ...(p.pastGoals ?? [])] : (p.pastGoals ?? []);
+      return {
+        ...p,
+        goal: { ...goal, id: id(), createdAt: Date.now() },
+        pastGoals: archived,
+      };
+    }),
+  });
+}
+
+/** Removes the active goal with no confirmation required — goals are
+ * low-stakes, and archiving already protects against real loss. */
+export function removeProjectGoal(projectId: string) {
+  commit({
+    ...state,
+    projects: state.projects.map((p) => {
+      if (p.id !== projectId || !p.goal) return p;
+      return { ...p, goal: undefined, pastGoals: [p.goal, ...(p.pastGoals ?? [])] };
+    }),
+  });
+}
+
+/** "Reached it" — the one completion verb, no pass/fail framing. */
+export function markGoalReached(projectId: string) {
+  commit({
+    ...state,
+    projects: state.projects.map((p) =>
+      p.id === projectId && p.goal ? { ...p, goal: { ...p.goal, reachedAt: Date.now() } } : p,
+    ),
+  });
+}
+
+/** Bumps a numeric goal's progress by a fixed amount (used by "+1" on the
+ * Pursuit card). Never exceeds the target in the stored value's display,
+ * though the raw count is kept as-is rather than clamped, so a maker who
+ * overshoots still sees their real number. */
+export function bumpGoalProgress(projectId: string, delta: number) {
+  commit({
+    ...state,
+    projects: state.projects.map((p) =>
+      p.id === projectId && p.goal
+        ? { ...p, goal: { ...p.goal, current: Math.max(0, (p.goal.current ?? 0) + delta) } }
+        : p,
+    ),
+  });
+}
+
+/** Plain-language progress for a numeric goal — "3 of 10 pieces," never a
+ * percentage, which reads as scorekeeping the brand explicitly avoids. */
+export function goalProgressText(goal: Goal): string | undefined {
+  if (goal.shape !== "number" || goal.targetNumber == null) return undefined;
+  const current = goal.current ?? 0;
+  return `${current} of ${goal.targetNumber}${goal.unit ? ` ${goal.unit}` : ""}`;
 }
 
 export function finishProject(projectId: string) {

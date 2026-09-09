@@ -32,6 +32,13 @@ export async function mirrorPursuit(userId: string, project: Project) {
       shared: !!project.shared,
       started_at: new Date(project.startedAt).toISOString(),
       finished_at: project.finishedAt ? new Date(project.finishedAt).toISOString() : null,
+      goal_shape: project.goal?.shape ?? null,
+      goal_label: project.goal?.label ?? null,
+      goal_target_number: project.goal?.targetNumber ?? null,
+      goal_unit: project.goal?.unit ?? null,
+      goal_current: project.goal?.current ?? null,
+      goal_target_date: project.goal?.targetDate ? new Date(project.goal.targetDate).toISOString() : null,
+      goal_reached_at: project.goal?.reachedAt ? new Date(project.goal.reachedAt).toISOString() : null,
       updated_at: new Date().toISOString(),
     });
   } catch {

@@ -1,13 +1,23 @@
+import { useState } from "react";
 import { Link } from "react-router";
-import { Check, Lock, Share2, Sparkles } from "lucide-react";
+import { Check, Lock, Share2, Sparkles, Target } from "lucide-react";
 import { getHobby } from "../data/hobbies";
 import { Post } from "../data/posts";
-import { Project, setProjectShared, finishProject, projectProgress, useJournalSlice } from "../lib/journal";
+import {
+  Project,
+  setProjectShared,
+  finishProject,
+  projectProgress,
+  useJournalSlice,
+  markGoalReached,
+  goalProgressText,
+} from "../lib/journal";
 import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { GeneratedArt } from "./GeneratedArt";
 import { PostMedia } from "./PostMedia";
+import { GoalDialog } from "./GoalDialog";
 
 function timeAgo(ts: number) {
   const days = Math.floor((Date.now() - ts) / 86_400_000);
@@ -53,6 +63,7 @@ export function PursuitCard({
   const { user } = useAuth();
   const { posts } = useContent();
   const entryProject = useJournalSlice((s) => s.entryProject);
+  const [goalOpen, setGoalOpen] = useState(false);
   // Only the owner's own card is ever backed by a full Project (with a
   // `shared` flag and edit actions) — a friend's view only ever gets the
   // read-only PursuitLike shape, so this cast is safe exactly when owner is.
@@ -79,6 +90,20 @@ export function PursuitCard({
     if (!asProject) return;
     finishProject(pursuit.id);
     if (user) void mirrorPursuit(user.id, { ...asProject, finishedAt: Date.now() });
+  };
+
+  const goal = asProject?.goal;
+  const goalText = goal
+    ? goal.shape === "number"
+      ? goalProgressText(goal)
+      : goal.shape === "date"
+        ? goal.label
+        : goal.label
+    : undefined;
+
+  const reachIt = () => {
+    if (!asProject) return;
+    markGoalReached(pursuit.id);
   };
 
   return (
@@ -140,6 +165,23 @@ export function PursuitCard({
         </p>
 
         {owner && (
+          <button
+            type="button"
+            onClick={() => setGoalOpen(true)}
+            className="mt-2 flex items-center gap-1.5 text-left text-xs text-[var(--forest-ink)] transition-colors hover:text-[var(--coral-text)]"
+          >
+            <Target className="size-3.5 shrink-0" strokeWidth={1.8} />
+            {goal ? (
+              <span className={goal.reachedAt ? "line-through decoration-1 text-muted-foreground" : ""}>
+                {goal.reachedAt ? `Reached it — ${goalText}` : goalText}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Set a goal</span>
+            )}
+          </button>
+        )}
+
+        {owner && (
           <div className="mt-3 flex items-center gap-2">
             <Link
               to="/create"
@@ -147,6 +189,16 @@ export function PursuitCard({
             >
               Add progress
             </Link>
+            {goal && !goal.reachedAt && (
+              <button
+                type="button"
+                onClick={reachIt}
+                title="Reached it"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--forest)] hover:text-[var(--forest)]"
+              >
+                <Target className="size-3.5" strokeWidth={2} />
+              </button>
+            )}
             {!pursuit.finishedAt && (
               <button
                 type="button"
@@ -160,6 +212,10 @@ export function PursuitCard({
           </div>
         )}
       </div>
+
+      {owner && asProject && (
+        <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={asProject} />
+      )}
     </div>
   );
 }
