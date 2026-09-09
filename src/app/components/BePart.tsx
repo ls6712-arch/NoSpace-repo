@@ -89,6 +89,7 @@ export function BePart({
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
 
   // You can't ask yourself, and you can't ask someone the app can't identify.
   const isSelf = !!user && !!personId && personId === user.id;
@@ -158,6 +159,8 @@ export function BePart({
       if (result?.error === "self") setError("That's you.");
       else if (result?.error === "no-recipient")
         setError("We can't reach this maker yet. Try from their profile.");
+      else if (result?.error === "failed")
+        setError("That didn't send — you may have already asked. Check your Inbox.");
       else setSent(true);
     } catch {
       setError("That didn't send. Check your connection and try again.");
@@ -334,9 +337,27 @@ export function BePart({
                   ) : (
                     <Button
                       className="w-full text-white [background-color:var(--forest)]"
-                      onClick={() => social.joinIn(postId, activityTitle ?? hobbyLabel, personId)}
+                      disabled={joining}
+                      onClick={async () => {
+                        // isGoing() (which gates joinIn itself) reads
+                        // participation state that only updates after
+                        // refresh() resolves — a second tap before that
+                        // network round-trip lands saw the same
+                        // not-yet-joined state and inserted a second
+                        // join_in row, inflating the attendance count. This
+                        // button-level guard is the only thing preventing
+                        // that, since join_in has no database constraint
+                        // against duplicates (see sql/fixes.sql).
+                        if (joining) return;
+                        setJoining(true);
+                        try {
+                          await social.joinIn(postId, activityTitle ?? hobbyLabel, personId);
+                        } finally {
+                          setJoining(false);
+                        }
+                      }}
                     >
-                      Join this
+                      {joining ? "Joining…" : "Join this"}
                     </Button>
                   )}
                 </>
