@@ -353,3 +353,16 @@ export function getSubHobby(hobbySlug: string, subSlug: string) {
 export function subHobbyLabel(subSlug: string) {
   return allSubHobbies.find((s) => s.slug === subSlug)?.label;
 }
+
+/**
+ * Resolves a typed interest ("Pottery") to the Space it actually lives in,
+ * so the Create Moment tag field can merge "what's this about" and "which
+ * Space" into one search instead of asking twice. Exact label match only —
+ * a fuzzy match here would silently move someone's Moment into a Space they
+ * didn't mean, which is worse than just leaving the Space on its default.
+ */
+export function findSpaceForInterest(interest: string) {
+  const q = interest.trim().toLowerCase();
+  if (!q) return undefined;
+  return allSubHobbies.find((s) => s.label.toLowerCase() === q);
+}

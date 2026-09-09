@@ -7,6 +7,7 @@ import {
   Camera,
   Check,
   ChevronRight,
+  ChevronDown,
   FolderPlus,
   Globe2,
   Images,
@@ -21,7 +22,7 @@ import {
   Video,
   X,
 } from "lucide-react";
-import { hobbies, subHobbyLabel } from "../data/hobbies";
+import { hobbies, subHobbyLabel, findSpaceForInterest } from "../data/hobbies";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility } from "../data/posts";
 import { circlesByHobby } from "../data/circles";
@@ -56,7 +57,7 @@ import { CornerTagField } from "../components/CornerTagField";
  * project, add an update, quick moment, reflect privately — for when you know
  * what you're doing before you start. Both roads lead to the same record.
  */
-type Screen = "capture" | "moment" | "share" | "saved" | "ways" | "detail";
+type Screen = "capture" | "moment" | "saved" | "ways" | "detail";
 
 /** The considered path: four kinds of record, chosen up front. */
 type Mode = "project" | "update" | "moment" | "private";
@@ -152,11 +153,16 @@ export function Log() {
 
   const initialHobby = searchParams.get("hobby") ?? hobbies[0].slug;
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
+  // Whether hobbySlug reflects something the person actually chose or typed,
+  // versus just the untouched default (hobbies[0], or a ?hobby= link). A
+  // private "Save this moment" never shows any Space UI at all, so filing it
+  // under an unseen default Space silently mistagged private logs — this
+  // flag lets that path save untagged instead when nothing was ever set.
+  const [spaceSet, setSpaceSet] = useState(!!searchParams.get("hobby"));
   const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? "");
   const [projectId, setProjectId] = useState<string>("");
   const [projectTitle, setProjectTitle] = useState("");
   const [type, setType] = useState<"photo" | "video">("photo");
-  const [creator, setCreator] = useState("You");
   const [interest, setInterest] = useState("");
   // A Space is a place to put something, not a gate in front of making it.
   const [spaceOpen, setSpaceOpen] = useState(false);
@@ -165,6 +171,7 @@ export function Log() {
   const [changed, setChanged] = useState("");
   const [reflection, setReflection] = useState("");
   const [audience, setAudience] = useState<Visibility | "private">("friends");
+  const [shareOpen, setShareOpen] = useState(false);
   const [circleId, setCircleId] = useState<number | undefined>(undefined);
   const [forSale, setForSale] = useState(false);
   const [saleTitle, setSaleTitle] = useState("");
@@ -185,13 +192,8 @@ export function Log() {
   const libraryRef = useRef<HTMLInputElement>(null);
   const detailFileRef = useRef<HTMLInputElement>(null);
 
-  // Fill the name in from the profile, but never overwrite what someone has
-  // already typed — on a slow connection the profile used to arrive mid-edit
-  // and silently replace their input.
-  const creatorTouched = useRef(false);
-  useEffect(() => {
-    if (profile?.display_name && !creatorTouched.current) setCreator(profile.display_name);
-  }, [profile?.display_name]);
+  // Who posted this always follows the account's display name now — no
+  // separate "Posting as" field to fill in or forget to update.
 
   useEffect(() => {
     if (!file) {
@@ -236,8 +238,8 @@ export function Log() {
     if (!linkTo && projectTitle.trim()) {
       linkTo = startProject({
         title: projectTitle.trim(),
-        hobbySlug,
-        subHobby: subHobby || undefined,
+        hobbySlug: spaceSet ? hobbySlug : undefined,
+        subHobby: spaceSet ? subHobby || undefined : undefined,
       }).id;
     }
     addPrivateLog(
@@ -250,7 +252,13 @@ export function Log() {
         ? {
             url: filePreviewUrl,
             type: type === "video" ? "video" : "image",
-            hobbySlug,
+            // Only tag it with a Space the person actually saw and chose (or
+            // typed their way into via the interest field) — "Save this
+            // moment" from the Your moment screen never shows any Space UI,
+            // so filing it under whatever Space happens to be first in the
+            // list silently mistagged private logs. Untagged is honest;
+            // "Food & Cooking" when nobody chose that is not.
+            hobbySlug: spaceSet ? hobbySlug : undefined,
           }
         : undefined,
     );
@@ -267,15 +275,6 @@ export function Log() {
     setSaving(true);
     setError(null);
     try {
-      let linkTo = projectId;
-      if (mode === "project" && projectTitle.trim()) {
-        linkTo = startProject({
-          title: projectTitle.trim(),
-          hobbySlug,
-          subHobby: subHobby || undefined,
-        }).id;
-      }
-
       const caption =
         [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
         `A ${tagLabel.toLowerCase()} moment`;
@@ -286,7 +285,7 @@ export function Log() {
         interest: interest.trim() || undefined,
         type,
         file: file ?? undefined,
-        creator: creator.trim() || "You",
+        creator: profile?.display_name?.trim() || "You",
         caption,
         reflection: reflection.trim() || undefined,
         visibility: audience,
@@ -302,6 +301,21 @@ export function Log() {
             }
           : undefined,
       });
+
+      // Create (or attach to) the Pursuit only after the post exists, so a
+      // brand-new Pursuit can use this Moment's own photo as its cover —
+      // starting the Pursuit first meant it never learned which photo to
+      // show, and every new Pursuit fell back to the generic illustration
+      // even when a real picture had just been uploaded alongside it.
+      let linkTo = projectId;
+      if (mode === "project" && projectTitle.trim()) {
+        linkTo = startProject({
+          title: projectTitle.trim(),
+          hobbySlug,
+          subHobby: subHobby || undefined,
+          inspiredByPostId: entry.id,
+        }).id;
+      }
 
       if (linkTo) attachEntry(entry.id, linkTo);
       setSavedAs("shared");
@@ -666,8 +680,11 @@ export function Log() {
             <button
               type="button"
               disabled={!hasSomething}
-              onClick={() => setScreen("share")}
-              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left transition-colors hover:border-[var(--coral-deep)] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:border-border"
+              onClick={() => setShareOpen((v) => !v)}
+              aria-expanded={shareOpen}
+              className={`flex w-full items-center gap-3 rounded-2xl border bg-card px-4 py-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:border-border ${
+                shareOpen ? "border-[var(--coral-deep)]" : "border-border hover:border-[var(--coral-deep)]"
+              }`}
             >
               <Send className="size-4 shrink-0 text-[var(--forest)]" />
               <span className="min-w-0 flex-1">
@@ -676,8 +693,313 @@ export function Log() {
                   Add a hobby tag and choose who sees it.
                 </span>
               </span>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              {shareOpen ? (
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              )}
             </button>
+
+            {shareOpen && (
+              <div className="mt-2.5 space-y-6 rounded-2xl border border-border bg-card p-4">
+                {/* One merged field: typing a known hobby ("Pottery") tags
+                    the Moment AND sets its Space in one step, instead of
+                    asking "what's this about" and "which Space" separately.
+                    Picking something that isn't a recognized hobby just
+                    leaves the Space on its default — nothing here blocks
+                    posting. */}
+                <div>
+                  <h2 className="mb-2 text-sm">
+                    <label htmlFor="interest">What is it about?</label>
+                  </h2>
+                  <InterestField
+                    value={interest}
+                    onChange={(next) => {
+                      setInterest(next);
+                      const match = findSpaceForInterest(next);
+                      if (match) {
+                        setHobbySlug(match.hobbySlug);
+                        setSubHobby(match.slug);
+                        setSpaceSet(true);
+                      }
+                    }}
+                    placeholder="Search or type a hobby or interest..."
+                  />
+                  {!spaceOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => setSpaceOpen(true)}
+                      className="mt-1.5 text-[11px] text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
+                    >
+                      In {hobby.name} · change
+                    </button>
+                  ) : (
+                    <div className="mt-2.5 rounded-2xl border border-border bg-surface px-4 py-3.5">
+                      <div className="mb-2.5 flex items-center justify-between gap-3">
+                        <span className="text-sm">Choose a Space</span>
+                        <button
+                          type="button"
+                          onClick={() => setSpaceOpen(false)}
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          Done
+                        </button>
+                      </div>
+                      <Select
+                        value={hobbySlug}
+                        onValueChange={(v) => {
+                          setHobbySlug(v);
+                          setSubHobby("");
+                          setCircleId(undefined);
+                          setSpaceSet(true);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a Space…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hobbies.map((h) => (
+                            <SelectItem key={h.slug} value={h.slug}>
+                              {h.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {hobby.plainLabel}: {hobby.tagline.toLowerCase()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Only a thing that happens at a time needs a time. */}
+                <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsActivity((v) => !v)}
+                    aria-pressed={isActivity}
+                    className="flex w-full items-center justify-between gap-3"
+                  >
+                    <span className="text-left">
+                      <span className="block text-sm">This is something happening</span>
+                      <span className="block text-xs text-muted-foreground">
+                        A walk, a workshop, a meetup, a challenge: people can join in
+                      </span>
+                    </span>
+                    <span
+                      className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
+                        isActivity
+                          ? "justify-end [background-color:var(--forest)]"
+                          : "justify-start bg-surface-muted"
+                      }`}
+                    >
+                      <span className="size-5 rounded-full bg-white" />
+                    </span>
+                  </button>
+
+                  {isActivity && (
+                    <div className="mt-4 space-y-3">
+                      <div>
+                        <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
+                          When
+                        </Label>
+                        <Input
+                          id="startsAt"
+                          type="datetime-local"
+                          value={startsAt}
+                          onChange={(e) => setStartsAt(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="place" className="mb-1.5 block text-xs">
+                          Where
+                        </Label>
+                        <Input
+                          id="place"
+                          value={locationName}
+                          onChange={(e) => setLocationName(e.target.value)}
+                          placeholder="e.g. Prospect Park, Brooklyn"
+                        />
+                      </div>
+                      <div>
+                        <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
+                        <Select
+                          value={locationPrivacy}
+                          onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LOCATION_PRIVACY.map((o) => (
+                              <SelectItem key={o.value} value={o.value}>
+                                {o.label}: {o.copy}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="mt-1.5 text-xs text-muted-foreground">
+                          Neighborhood by default. Exact is never assumed.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h2 className="mb-2 text-sm">Choose who sees this</h2>
+                  <ul className="space-y-2">
+                    {AUDIENCE.map((opt) => {
+                      const active = audience === opt.value;
+                      return (
+                        <li key={opt.value}>
+                          <button
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => {
+                              setAudience(opt.value);
+                              if (opt.value !== "circle") setCircleId(undefined);
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
+                              active
+                                ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--cream))]"
+                                : "border-border bg-surface hover:border-[var(--foreground)]/30"
+                            }`}
+                          >
+                            <opt.icon className="size-4 shrink-0 text-[var(--forest)]" />
+                            <span className="min-w-0 flex-1 text-sm">{opt.label}</span>
+                            {active && <Check className="size-4 shrink-0 text-[var(--coral-deep)]" />}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {audience === "circle" && (
+                    <div className="mt-3">
+                      {hobbyCircles.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          No Circles exist for this space yet.
+                        </p>
+                      ) : (
+                        <Select
+                          value={circleId ? String(circleId) : undefined}
+                          onValueChange={(v) => setCircleId(Number(v))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pick a Circle" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hobbyCircles.map((c) => (
+                              <SelectItem key={c.id} value={String(c.id)}>
+                                {c.name}
+                                {c.location ? ` · ${c.location}` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Only a public Moment can become a listing — Connections
+                      and Circle audiences can't be sold to, so this only
+                      shows once Everyone is picked, same rule as the
+                      considered flow's "Offer this for sale." */}
+                  {audience === "public" && (
+                    <div className="mt-3 rounded-2xl border border-border bg-surface p-4">
+                      <button
+                        type="button"
+                        onClick={() => setForSale((v) => !v)}
+                        className="flex w-full items-center justify-between"
+                        aria-pressed={forSale}
+                      >
+                        <span className="text-left">
+                          <span className="block text-sm">Offer this for sale</span>
+                          <span className="block text-xs text-muted-foreground">
+                            The physical piece, a digital download, or a course
+                          </span>
+                        </span>
+                        <span
+                          className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
+                            forSale
+                              ? "justify-end [background-color:var(--forest)]"
+                              : "justify-start bg-surface-muted"
+                          }`}
+                        >
+                          <span className="size-5 rounded-full bg-white" />
+                        </span>
+                      </button>
+
+                      {forSale && (
+                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                          <div className="sm:col-span-2">
+                            <Label htmlFor="saleTitle" className="mb-2 block text-xs">
+                              Listing title
+                            </Label>
+                            <Input
+                              id="saleTitle"
+                              placeholder="e.g. Hand-thrown mug, glazed"
+                              value={saleTitle}
+                              onChange={(e) => setSaleTitle(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="salePrice" className="mb-2 block text-xs">
+                              Price (USD)
+                            </Label>
+                            <Input
+                              id="salePrice"
+                              type="number"
+                              min={0}
+                              value={salePrice}
+                              onChange={(e) => setSalePrice(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label className="mb-2 block text-xs">Type</Label>
+                            <Select value={saleType} onValueChange={(v) => setSaleType(v as typeof saleType)}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="physical">Physical item</SelectItem>
+                                <SelectItem value="digital">Digital download</SelectItem>
+                                <SelectItem value="course">Course</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
+                    {audience === "private"
+                      ? "This stays a private log. Nobody else will see it."
+                      : `This will appear in ${
+                          audience === "public"
+                            ? `${hobby.name}`
+                            : audience === "circle"
+                              ? "that Circle"
+                              : "My Space for people you've connected with"
+                        }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
+                  </p>
+                </div>
+
+                {error && <p className="text-center text-xs text-[var(--coral-text)]">{error}</p>}
+
+                <Button
+                  variant="coral"
+                  size="lg"
+                  className="w-full"
+                  disabled={saving || (audience === "circle" && !circleId)}
+                  onClick={publish}
+                >
+                  {saving ? "Saving…" : audience === "private" ? "Keep it private" : "Share it"}
+                </Button>
+              </div>
+            )}
           </li>
           <li>
             <div className="rounded-2xl border border-border bg-card px-4 py-3.5">
@@ -727,241 +1049,6 @@ export function Log() {
     );
   }
 
-  // ── 3 · Tag, then audience ──────────────────────────────────────────────
-  if (screen === "share") {
-    return (
-      <Shell>
-        <Back to="moment" />
-        <h1 className="mb-6 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Share this moment
-        </h1>
-
-        {/* One question that matters, asked first and given the whole width.
-            Three separate ideas, kept separate on purpose:
-              interest — what this is about
-              Space    — where it lives, optional
-              audience — who can see it, its own step below */}
-        <h2 className="mb-2 text-sm">
-          <label htmlFor="interest">What is it about?</label>
-        </h2>
-        <InterestField
-          value={interest}
-          onChange={setInterest}
-          placeholder="Search or type a hobby or interest..."
-        />
-
-        {/* Secondary, and genuinely optional — nothing here blocks posting. */}
-        <div className="mb-7 mt-5">
-          {!spaceOpen ? (
-            <button
-              type="button"
-              onClick={() => setSpaceOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 py-2 text-xs text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
-            >
-              <Plus className="size-3.5" />
-              Add to a Space
-            </button>
-          ) : (
-            <div className="rounded-2xl border border-border bg-card px-4 py-3.5">
-              <div className="mb-2.5 flex items-center justify-between gap-3">
-                <span className="text-sm">Add to a Space</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSpaceOpen(false);
-                    setHobbySlug(initialHobby);
-                  }}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Skip
-                </button>
-              </div>
-              <Select
-                value={hobbySlug}
-                onValueChange={(v) => {
-                  setHobbySlug(v);
-                  setSubHobby("");
-                  setCircleId(undefined);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a Space…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {hobbies.map((h) => (
-                    <SelectItem key={h.slug} value={h.slug}>
-                      {h.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                {hobby.plainLabel}: {hobby.tagline.toLowerCase()}
-              </p>
-            </div>
-          )}
-          {!spaceOpen && (
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
-              Optional. Without one it still shows up under whatever it's about.
-            </p>
-          )}
-        </div>
-
-        {/* Only a thing that happens at a time needs a time. */}
-        <div className="mb-7 rounded-2xl border border-border bg-card px-4 py-3.5">
-          <button
-            type="button"
-            onClick={() => setIsActivity((v) => !v)}
-            aria-pressed={isActivity}
-            className="flex w-full items-center justify-between gap-3"
-          >
-            <span className="text-left">
-              <span className="block text-sm">This is something happening</span>
-              <span className="block text-xs text-muted-foreground">
-                A walk, a workshop, a meetup, a challenge: people can join in
-              </span>
-            </span>
-            <span
-              className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
-                isActivity
-                  ? "justify-end [background-color:var(--forest)]"
-                  : "justify-start bg-surface-muted"
-              }`}
-            >
-              <span className="size-5 rounded-full bg-white" />
-            </span>
-          </button>
-
-          {isActivity && (
-            <div className="mt-4 space-y-3">
-              <div>
-                <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
-                  When
-                </Label>
-                <Input
-                  id="startsAt"
-                  type="datetime-local"
-                  value={startsAt}
-                  onChange={(e) => setStartsAt(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="place" className="mb-1.5 block text-xs">
-                  Where
-                </Label>
-                <Input
-                  id="place"
-                  value={locationName}
-                  onChange={(e) => setLocationName(e.target.value)}
-                  placeholder="e.g. Prospect Park, Brooklyn"
-                />
-              </div>
-              <div>
-                <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
-                <Select
-                  value={locationPrivacy}
-                  onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOCATION_PRIVACY.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}: {o.copy}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Neighborhood by default. Exact is never assumed.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <h2 className="mb-2 text-sm">Choose who sees this</h2>
-        <ul className="space-y-2">
-          {AUDIENCE.map((opt) => {
-            const active = audience === opt.value;
-            return (
-              <li key={opt.value}>
-                <button
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => {
-                    setAudience(opt.value);
-                    if (opt.value !== "circle") setCircleId(undefined);
-                  }}
-                  className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
-                    active
-                      ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--cream))]"
-                      : "border-border bg-card hover:border-[var(--foreground)]/30"
-                  }`}
-                >
-                  <opt.icon className="size-4 shrink-0 text-[var(--forest)]" />
-                  <span className="min-w-0 flex-1 text-sm">{opt.label}</span>
-                  {active && <Check className="size-4 shrink-0 text-[var(--coral-deep)]" />}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-
-        {audience === "circle" && (
-          <div className="mt-3">
-            {hobbyCircles.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                No Circles exist for this space yet.
-              </p>
-            ) : (
-              <Select
-                value={circleId ? String(circleId) : undefined}
-                onValueChange={(v) => setCircleId(Number(v))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pick a Circle" />
-                </SelectTrigger>
-                <SelectContent>
-                  {hobbyCircles.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                      {c.location ? ` · ${c.location}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-        )}
-
-        <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
-          {audience === "private"
-            ? "This stays a private log. Nobody else will see it."
-            : `This will appear in ${
-                audience === "public"
-                  ? `${hobby.name}`
-                  : audience === "circle"
-                    ? "that Circle"
-                    : "My Space for people you've connected with"
-              }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
-        </p>
-
-        {error && <p className="mt-3 text-center text-xs text-[var(--coral-text)]">{error}</p>}
-
-        <Button
-          variant="coral"
-          size="lg"
-          className="mt-4 w-full"
-          disabled={saving || (audience === "circle" && !circleId)}
-          onClick={publish}
-        >
-          {saving ? "Saving…" : audience === "private" ? "Keep it private" : "Share it"}
-        </Button>
-      </Shell>
-    );
-  }
 
   // ── The considered form, reached from "More ways to create" or "Add details" ─
   const activeMode = MODES.find((m) => m.id === mode) ?? MODES[2];
@@ -1013,42 +1100,27 @@ export function Log() {
                   )
                 )}
 
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <Label className="mb-2 block text-xs">Space</Label>
-                    <Select
-                      value={hobbySlug}
-                      onValueChange={(v) => {
-                        setHobbySlug(v);
-                        setCircleId(undefined);
-                        setSubHobby("");
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {hobbies.map((h) => (
-                          <SelectItem key={h.slug} value={h.slug}>
-                            {h.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="creator" className="mb-2 block text-xs">
-                      Posting as
-                    </Label>
-                    <Input
-                      id="creator"
-                      value={creator}
-                      onChange={(e) => {
-                        creatorTouched.current = true;
-                        setCreator(e.target.value);
-                      }}
-                    />
-                  </div>
+                <div className="mt-3">
+                  <Label className="mb-2 block text-xs">Space</Label>
+                  <Select
+                    value={hobbySlug}
+                    onValueChange={(v) => {
+                      setHobbySlug(v);
+                      setCircleId(undefined);
+                      setSubHobby("");
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hobbies.map((h) => (
+                        <SelectItem key={h.slug} value={h.slug}>
+                          {h.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="mt-3">
