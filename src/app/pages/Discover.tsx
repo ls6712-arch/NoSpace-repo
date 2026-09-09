@@ -477,7 +477,18 @@ export function Discover() {
                       <div className="ns-section-kicker mb-2">POPULAR MOMENTS FROM ACROSS NOSPACE</div>
                       <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Featured Moments</h2>
                     </div>
-                    <a href="#all-moments" className="shrink-0 text-xs text-[var(--coral-text)] hover:underline">
+                    <a
+                      href="#all-moments"
+                      className="shrink-0 text-xs text-[var(--coral-text)] hover:underline"
+                      onClick={(e) => {
+                        // A plain href would set location.hash, which the
+                        // HashRouter reads as a navigation to path
+                        // "/all-moments" — a route that doesn't exist, so it
+                        // lands on the 404 page instead of scrolling.
+                        e.preventDefault();
+                        document.getElementById("all-moments")?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                    >
                       See all →
                     </a>
                   </div>

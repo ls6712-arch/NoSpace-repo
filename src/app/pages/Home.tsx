@@ -137,7 +137,20 @@ export function Home() {
                     <ArrowRight className="size-4" />
                   </Button>
                 </Link>
-                <a href="#loop" className="ns-hero-secondary-link">See how it works</a>
+                <a
+                  href="#loop"
+                  className="ns-hero-secondary-link"
+                  onClick={(e) => {
+                    // A plain href="#loop" would set location.hash, which the
+                    // HashRouter reads as a navigation to path "/loop" — a
+                    // route that doesn't exist, so it lands on the 404 page
+                    // instead of scrolling. Scroll manually and skip that.
+                    e.preventDefault();
+                    document.getElementById("loop")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  See how it works
+                </a>
               </div>
               <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">Free to join. No credit card.</p>
             </div>
