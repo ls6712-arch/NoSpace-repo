@@ -7,6 +7,7 @@ import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
 import { hobbyPhoto } from "../data/hobbyPhotos";
 import { hobbyIconName } from "../data/hobbyIcons";
 import { SubHobbyArt } from "./SubHobbyArt";
+import { PostMedia } from "./PostMedia";
 
 export interface HobbySession {
   /** Sub-hobby slug where tagged, else `space:<slug>` for untagged entries. */
@@ -18,6 +19,14 @@ export interface HobbySession {
   sessions: number;
   firstAt: number;
   lastAt: number;
+  /** The most recently uploaded real photo/video in this hobby, if any —
+   * this is what the shelf book cover should show. Falls back to the
+   * curated stock photo only when nothing real has been uploaded yet. */
+  lastMediaUrl?: string;
+  lastMediaType?: "photo" | "video";
+  lastMediaId?: number;
+  /** Internal — timestamp used to pick the newest real upload above. */
+  lastMediaAt?: number;
 }
 
 /** URL-safe id for a hobby book, used as the Hobby Archive route param. */
@@ -40,6 +49,11 @@ export function parseArchiveKey(param: string) {
   return null;
 }
 
+/** True only for a real, loadable upload — not a generated-art placeholder. */
+function hasRealMedia(post: Post) {
+  return !!post.media && /^https?:\/\//.test(post.media);
+}
+
 /** Turns a set of logged moments into per-hobby books, most-logged first. */
 export function sessionsFromPosts(posts: Post[]): HobbySession[] {
   const tally = new Map<string, HobbySession>();
@@ -50,6 +64,14 @@ export function sessionsFromPosts(posts: Post[]): HobbySession[] {
       existing.sessions += 1;
       existing.firstAt = Math.min(existing.firstAt, post.createdAt);
       existing.lastAt = Math.max(existing.lastAt, post.createdAt);
+      // The cover should be whichever real upload is newest, independent of
+      // whether the very latest moment happened to be a text-only note.
+      if (hasRealMedia(post) && post.createdAt >= (existing.lastMediaAt ?? 0)) {
+        existing.lastMediaUrl = post.media;
+        existing.lastMediaType = post.type;
+        existing.lastMediaId = post.id;
+        existing.lastMediaAt = post.createdAt;
+      }
       continue;
     }
     tally.set(key, {
@@ -62,6 +84,10 @@ export function sessionsFromPosts(posts: Post[]): HobbySession[] {
       sessions: 1,
       firstAt: post.createdAt,
       lastAt: post.createdAt,
+      lastMediaUrl: hasRealMedia(post) ? post.media : undefined,
+      lastMediaType: hasRealMedia(post) ? post.type : undefined,
+      lastMediaId: hasRealMedia(post) ? post.id : undefined,
+      lastMediaAt: hasRealMedia(post) ? post.createdAt : undefined,
     });
   }
   return [...tally.values()].sort((a, b) => b.sessions - a.sessions || a.firstAt - b.firstAt);
@@ -160,9 +186,22 @@ function HobbyBook({
         />
 
         <span className="min-w-0 flex-1">
-          {/* The cover */}
+          {/* The cover — your own most recent upload for this hobby when you
+              have one, so ten pottery photos actually show your tenth
+              pottery photo rather than the same stock image every time.
+              Falls back to the curated photo, then the illustration, for a
+              hobby you haven't uploaded real media into yet. */}
           <span className="block aspect-[16/9] overflow-hidden bg-surface-muted">
-            {photo ? (
+            {item.lastMediaUrl ? (
+              <PostMedia
+                media={item.lastMediaUrl}
+                type={item.lastMediaType}
+                hobbySlug={item.hobbySlug}
+                seed={item.lastMediaId ?? item.key}
+                preview
+                className="h-full w-full transition-transform duration-500 group-hover:scale-[1.04]"
+              />
+            ) : photo ? (
               <img
                 src={photo}
                 alt=""
