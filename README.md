@@ -1,148 +1,195 @@
 # NoSpace
 
-"Create, Don't Just Consume." A hobby-based content + marketplace app built from the
-NoSpace Figma Make file, extended with the creator/rewards concept described in chat.
+**Create, don't just consume.** A hobby app built around logging what you
+actually make — a photo, a note, a small win — rather than a feed to scroll.
+Real accounts, a real Postgres database (Supabase), and row-level security
+enforced in the database itself, not just in the UI.
 
-## What's here
+This README replaces the old one, which described an early, backend-less
+prototype (5 hobby spaces, a dark "instrument panel" theme, no accounts).
+None of that reflects the app as it exists now — everything below does.
 
-- **Home** — hero with the tagline, the 5 hobby spaces (Crafting, Mysticism, Sports,
-  Recreation, Collecting), a "how it works" section, a discovery feed ("Fresh across
-  NoSpace"), and an "Explore next" section suggesting spaces you haven't engaged with.
-- **Space feed** (`/space/:slug`) — three tabs per hobby: **For you** (public posts,
-  algorithmically ranked), **Circles** (join/leave hobby circles — global topic circles
-  and geographic sub-circles — and view a circle's own feed), and **Marketplace**
-  (for-sale items and courses for that hobby).
-- **Creator Studio** (`/create`) — follows a **Log → Reflect → Share → Earn** flow: log
-  what you made, jot an optional private reflection (never shown publicly — only you
-  see it, in your own Portfolio), then choose who sees the post (**Friends** is the
-  default / **Circle** — picking it prompts you to pick one of that hobby's circles /
-  **Public** is opt-in, not default), and optionally toggle "list this for sale" to
-  turn it into a marketplace listing in the same step.
-- **Profile** (`/profile`) — a single headline stat ("N things created," not a stat
-  dashboard), hobby tags for the spaces you actually engage with, a quiet
-  (non-leaderboard) achievements strip, a circles-joined list you can hide, a
-  creator-vs-consumer balance, and a chronological visual portfolio.
-- **Marketplace** (`/shop` + `/product/:id`) — all listings across every space, filterable
-  by hobby, with a cart and checkout flow.
+## Core concepts
 
-## Social sharing: three tiers, not more
+The app has its own vocabulary. User-facing copy uses these words
+consistently, and the code mostly does too (a few internal names — `Project`
+for what the UI calls a **Pursuit**, `Post` for what it calls a **Moment** —
+are historical and kept only to avoid a mechanical rename across every call
+site).
 
-Every post picks one audience in Creator Studio, chosen per-post (not a global account
-setting):
+| Term | What it means |
+| --- | --- |
+| **Moment** | One logged entry — a photo, a note, a small update. The unit everything else is built from. |
+| **Pursuit** | An ongoing body of work you come back to ("Learning the trumpet," "Restoring a 1974 bike"). Optionally tagged to a Space/Corner. Can be private or explicitly shared to your public profile. |
+| **Goal** | One optional, non-scoring attribute on a Pursuit — a number, a date, or "a feeling, not a number." Never turned into a percentage or a streak. |
+| **Space** | One of 15 fixed, curated hobby categories (`src/app/data/hobbies.ts`) — Food & Cooking, Sports & Fitness, Art & Creative, Crafts & Making, Books & Writing, Nature & Outdoors, Home & Garden, Gaming & Tabletop, Music, Photography & Film, Health & Wellness, Fashion & Beauty, Tech & Building, Collecting & Fandom, Travel & Adventure. This is the app's main taxonomy — see the naming-collision note below. |
+| **Corner** | A specific craft or topic inside a Space (e.g. "Pottery" inside Crafts & Making). Some are curated (`hobbies.ts`'s `subItems`); anyone can also bring one into existence by tagging a Moment with a name that doesn't exist yet, or deliberately via "Create a Corner" on a Space page. |
+| **Circle** | A joinable, topic- or location-scoped group under one hobby (`src/app/data/circles.ts`), separate from Corners and from user-made Spaces (see below). Seed data, and join/leave is local-only (`localStorage`, not mirrored to Supabase) — same local-first pattern as Pursuits, just with no remote mirror yet. |
+| **Connection** | A mutual, opt-in relationship between two people — the only thing that unlocks direct messaging. Requesting doesn't grant anything; only the recipient accepting does. |
+| **Participation** | The four ways to be part of something: following a hobby, joining a posted activity, or asking to "make together" / "explore together" (both require the other person to accept). |
 
-- **Friends** — visible only to people who follow you back. This is the default, since
-  the goal is to keep the moment of posting low-friction.
-- **Circle** — visible only inside one hobby circle you pick (joining that circle
-  automatically, if you hadn't already).
-- **Public** — visible in that space's main feed to anyone. Opt-in, never the default.
+### A naming collision worth knowing about
 
-There's no real multi-user backend here (see "What's intentionally mocked" below), so
-Friends-only posts are stored with that visibility tag but there's no second account to
-verify the restriction against — treat it as the data model and UI for the feature, not
-an enforced privacy boundary yet.
+"Space" means two different things in this codebase, and it's confusing on
+purpose only inasmuch as the product didn't invent two words for it yet:
 
-## Circles: hyperlocal, hobby-first
+- The **15 curated hobby Spaces** above — the app's primary browsable
+  taxonomy, what `/space/:slug` (`CategoryFeed.tsx`) renders.
+- **User-made Spaces** (`createSpace` in `ConnectionsContext.tsx`,
+  `public.spaces` in `sql/connections.sql`) — private, invite-only or open
+  groups a person creates and invites others into. Unrelated to the 15
+  curated ones other than optionally citing one (`hobby_slug`) as context.
 
-Circles are scoped to a hobby, not to a region — there's no separate "app" or space per
-city. Each hobby has one or more circles; some are global/topic-based (e.g. "Crafting
-Beginners"), and some carry an optional `location` field as a geographic sub-layer
-within that same hobby (e.g. "NYC Pottery Beginners"). See `src/app/data/circles.ts`.
-Joining/leaving is local state, persisted to `localStorage`.
+If you're extending either feature, check which "Space" a given file means
+before assuming.
 
-## The two algorithms
+## Tech stack
 
-- **Discovery feed** (`scorePost` in `ContentContext.tsx`) — ranks public posts by
-  recency (decaying to zero over ~10 days) plus a relevance bonus if the post's hobby is
-  one you're actively engaged in (posted in, or joined a circle for), with raw like
-  count capped and given only a minor weight. This deliberately keeps the feed from
-  collapsing into an engagement-maximizing sort.
-- **"Explore next"** (on Home) — a simple gap check: any hobby you haven't posted in and
-  haven't joined a circle for gets suggested. No engagement-time optimization; the
-  implicit goal is "did you go create or join something," not "did you stay longer."
+- **React 18** + **TypeScript** + **Vite 6**
+- **Tailwind CSS v4**
+- **React Router v7**, using `createHashRouter` (not `BrowserRouter`) — the
+  app ships as a static bundle that sometimes gets opened straight from
+  `file://` or a plain static host, and hash routing works identically there
+  (see the comment at the top of `src/app/routes.ts`)
+- **Supabase** (Postgres + Auth + Storage) for everything that has to work
+  across devices or between two different people's browsers
 
-## Look and feel
+### The local-first / Supabase-backed split
 
-A dark, futuristic palette that's been tuned down from an earlier, more neon version —
-indigo, sky blue, and dusty magenta on near-black rather than pure electric colors, so
-it reads as "instrument panel" without being visually harsh. Sharper corners than a
-typical soft SaaS UI, and a monospace type treatment on stat readouts (points, level,
-the profile headline stat). See `src/styles/theme.css` for the full token set.
+A lot of state in this app follows the same shape: **local-first, with a
+best-effort Supabase mirror.** Pursuits, private logs, saved posts, and
+profile links all live in `localStorage` first (via `useSyncExternalStore`
+in `src/app/lib/journal.ts` and similar), so every feature works instantly
+with no account and no network — then, when signed in, a remote copy gets
+written through so it's visible from another device or to other people
+where the feature calls for that (e.g. a Pursuit marked shared).
 
-The landing page (`Home.tsx`) is structured like a Fable-style app site: a hero, a
-big continuously-scrolling "HOBBYMAXXING" marquee banner (pure CSS, no video), then
-alternating feature sections (the Log → Reflect → Share loop, Circles, Profile) each
-paired with a small illustrative panel, real quotes pulled from seed posts, then the
-live trending feed.
+Anything inherently *between two people* — connections, messages,
+notifications, participations — has no local-only equivalent, since the
+other person is, by definition, on a different device.
 
-### Images: generated, not fetched
+If `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` aren't set, the whole app
+still runs in a fully local/demo mode: no accounts, nothing persists past
+the tab, but every screen is reachable and functional.
 
-Every cover image in the app — hobby cards, post thumbnails, product photos, cart
-items — is **procedurally generated** by `src/app/components/GeneratedArt.tsx` rather
-than loaded from a photo URL. It draws a gradient background in that hobby's colors,
-two soft blurred "blobs," and a centered icon, all from a seed (the post/product id),
-so the same item always renders the same art and nothing ever depends on an external
-image loading. This was a deliberate substitution: real stock-photo URLs (e.g.
-Unsplash) can't reliably load in every environment this prototype might be viewed in,
-so generated art guarantees every hobby and post always has a real, consistent-looking
-cover with zero network dependency. If you deploy this somewhere with normal internet
-access, you can swap `GeneratedArt` back out for `ImageWithFallback src={...}` (still
-in `src/app/components/ImageWithFallback.tsx`) and point `media`/`image` fields at real
-photo URLs.
-
-## Rewards, as implemented
-
-- Post content: **+50 pts**
-- Like a post: **+2 pts** (toggle off to remove)
-- Visit a new space for the first time: **+5 pts**
-- Checkout an item: **+10 pts per item**
-- Badges unlock automatically off these stats (see `src/app/data/badges.ts`) — first
-  post, 5 posts, 25 likes given, 3 purchases, all 5 spaces visited, 500 pts, 2000 pts.
-- Badges are shown as a quiet, unranked "highlights" strip on your profile — never a
-  leaderboard — and there's no streak mechanic anywhere, on purpose: rewards are tied to
-  things you made or did, not to showing up on consecutive days.
-- The profile intentionally shows one headline stat, not a stats dashboard, plus your
-  hobby tags and portfolio — the visible "artifact" is the body of things you made, not
-  a points counter.
-
-Points, posts you create, listings you list, and circles you join are saved to
-`localStorage`, so they survive a page refresh. There's no backend — this is a
-front-end prototype.
-
-## What's intentionally mocked
-
-- **Video posts** show a static thumbnail with a play-button overlay — there's no real
-  video player wired up, since no video assets were provided. Swap `Post.media` for a
-  real video URL and add a `<video>`/player in `ContentCard.tsx` to make it real.
-- **"Selling" is one-directional** — when you list something for sale in Creator Studio,
-  it appears in that space's Marketplace immediately (no review step), and anyone
-  (including you) can "buy" it, which awards the buyer points. There's no real payment
-  processing, no way to actually pay out a creator, and no auth — every visitor is
-  treated as the same anonymous "You".
-- **Friends-only visibility has no second user to test against** — see "Social sharing"
-  above.
-- **No backend / accounts** — all state lives in the browser. To make this real, you'd
-  add auth, a database for posts/listings/points/circles, and a payments provider (e.g.
-  Stripe Connect, since creators need to receive money, not just charge it).
-
-## Running it
+## Getting started
 
 ```bash
 npm install
-npm run dev      # starts a local dev server
-npm run build    # production build to dist/
+npm run dev       # local dev server
+npm run build     # production build to dist/
+npm run preview   # serve the production build locally
 ```
 
 Requires Node 18+.
 
+Copy your own Supabase project's URL and anon/publishable key into `.env`:
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-or-publishable-key
+```
+
+This key is meant to be public — it identifies the project, not a secret —
+row-level security policies (below) are what actually protect the data.
+
+## Database setup
+
+Every table, policy, and trigger lives in `sql/*.sql`, meant to be run by
+hand in the Supabase SQL Editor (Supabase → SQL Editor → New query → paste →
+Run). Each file is idempotent (`create table if not exists`,
+`drop policy if exists` before every `create policy`), so re-running one is
+always safe. Run them in this order the first time:
+
+1. `sql/social.sql` — participations, thoughts, notifications, messages, hobby follows
+2. `sql/people.sql` — makes profiles publicly findable/searchable
+3. `sql/fixes.sql` — correctness fixes on top of social.sql
+4. `sql/connections.sql` — connections, user-made Spaces + invitations, rewrites messaging to require a connection or shared Space
+5. `sql/space-fix.sql` — fixes an RLS infinite-recursion bug in connections.sql's Space policies
+6. `sql/corners.sql` — Corners, tag-created with a trigger-maintained moment count
+7. `sql/categories.sql` — category suggestions + admin review
+8. `sql/pursuits.sql` — the write-through mirror for shared Pursuits
+9. `sql/profile-links.sql` — GitHub/portfolio/Substack links on a profile
+10. **`sql/security-hardening.sql`** — run this last, and don't skip it
+
+`security-hardening.sql` closes three privilege-escalation bugs that existed
+in the policies above (a self-grantable admin flag, a Space invitation
+bypass, and a connection-identity forgery on accept), locks down a couple of
+under-restricted writes (notifications, Corner creation, the storage
+bucket), and adds rate limiting on every spam-prone write via a
+`SECURITY DEFINER`-gated ledger table. See the comments in that file for the
+concrete scenario each fix closes — they're written to be read, not just run.
+
+To make yourself an admin (needed for `/admin/categories`, reviewing
+category suggestions), after running `categories.sql`:
+
+```sql
+update public.profiles set is_admin = true
+where id = (select id from auth.users where email = 'you@example.com');
+```
+
+That has to be run as the SQL Editor's own role — `security-hardening.sql`
+deliberately revokes the ability to set `is_admin` any other way.
+
 ## Project structure
 
 ```
-src/app/
-  components/       shared UI (Header, ContentCard, ProductCard, cart, badges toast...)
-  components/ui/     shadcn-style primitives (button, card, dialog, select, ...)
-  context/           CartContext, RewardsContext, ContentContext
-  data/               hobbies.ts, posts.ts (seed feed), products.ts (seed marketplace),
-                      badges.ts, circles.ts (seed hobby circles)
-  pages/              Home, CategoryFeed, CreatorStudio, Profile, Shop, ProductDetail, Root, NotFound
-src/styles/           theme.css (the dark/neon palette), fonts.css, tailwind entry
+src/
+  app/
+    routes.ts            createHashRouter route table
+    pages/
+      Home.tsx              landing page
+      Discover.tsx          browse feed across all Spaces
+      MySpace.tsx           personal dashboard: Pursuits, saved, nearby work
+      CategoryFeed.tsx       one Space's page — Corners, feed, "Create a Corner"
+      HobbyArchive.tsx        one hobby's archived work
+      You.tsx                 your own profile/moments/Pursuits
+      PublicProfile.tsx        someone else's public shelf (/u/:username)
+      Log.tsx                  the create flow: Moments, Pursuits, sharing, Goals
+      Inbox.tsx                notifications + participation requests
+      Circles.tsx              browse/join Circles
+      People.tsx               find people
+      AdminCategories.tsx      review category suggestions (is_admin only)
+      Shop.tsx / ProductDetail.tsx   marketplace listings
+      Login.tsx
+    components/            shared UI — cards, dialogs, PursuitCard, GoalDialog,
+                            HobbyShelf, CreateCornerDialog, MomentDetail, ...
+    components/ui/         shadcn-style primitives (button, dialog, select, ...)
+    context/               ContentContext (posts/feed), AuthContext, RewardsContext,
+                            ConnectionsContext (connections/Spaces/messaging),
+                            SocialContext (participations/thoughts/notifications),
+                            CornersContext, CategoriesContext, CartContext
+    lib/
+      journal.ts             local-first Pursuits/Goals/private-logs store
+      profileLinks.ts / profileLinksRemote.ts
+      pursuitsRemote.ts       write-through mirror for shared Pursuits
+      people.ts / localData.ts
+    data/                   hobbies.ts (the 15 Spaces), circles.ts, badges.ts,
+                            categories.ts, posts.ts/products.ts (seed content)
+  lib/supabase.ts          Supabase client + isSupabaseConfigured
+  styles/                  Tailwind entry, fonts, theme tokens
+sql/                       every migration — see "Database setup" above
 ```
+
+## Rewards
+
+Points and badges are local-only (`RewardsContext`, `localStorage`), not
+mirrored to Supabase: +50 for posting, +2 for a like, +5 for visiting a new
+Space, +10 per item checked out. Badges (`src/app/data/badges.ts`) unlock
+automatically off those stats and show as a quiet, unranked strip on your
+profile — never a leaderboard, and no streak mechanic.
+
+## What's still mocked
+
+- **Marketplace checkout** has no real payment processing — "buying"
+  something awards the buyer points and nothing else.
+- **Video posts** play for real (a native `<video>` element,
+  `PostMedia.tsx`) once there's an actual uploaded file behind them; the
+  seed/demo video posts that ship with the app have no real file to play, so
+  those still show a static thumbnail with a play-button overlay
+  (`ContentCard.tsx`).
+- **Cover art** for anything without a real photo is procedurally generated
+  (`src/app/components/GeneratedArt.tsx`) from a seed — a gradient, two soft
+  blobs, and an icon — so nothing ever depends on an external image
+  loading. Swap in `ImageWithFallback` + real URLs if that's no longer a
+  constraint for where this is deployed.
