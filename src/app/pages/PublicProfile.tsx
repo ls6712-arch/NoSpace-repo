@@ -20,6 +20,9 @@ import { GeneratedArt } from "../components/GeneratedArt";
 import { MomentDetail } from "../components/MomentDetail";
 import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
 import { fetchSharedPursuits, SharedPursuit } from "../lib/pursuitsRemote";
+import { fetchProfileLinks } from "../lib/profileLinksRemote";
+import { ProfileLink } from "../lib/profileLinks";
+import { ProfileLinksRow } from "../components/ProfileLinks";
 
 /** Whichever Space shows up most in their posts — used to pick a Circles
  * suggestion and the closing banner's illustration, not to claim membership
@@ -63,6 +66,7 @@ export function PublicProfile() {
   // Pursuits, which this query can't even see (sql/pursuits.sql's row
   // security only returns shared=true rows to anyone but the owner).
   const [sharedPursuits, setSharedPursuits] = useState<SharedPursuit[]>([]);
+  const [profileLinks, setProfileLinks] = useState<ProfileLink[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -157,6 +161,17 @@ export function PublicProfile() {
     let cancelled = false;
     fetchSharedPursuits(state.personId).then((rows) => {
       if (!cancelled) setSharedPursuits(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.status === "ready" ? state.personId : null]);
+
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    let cancelled = false;
+    fetchProfileLinks(state.personId).then((rows) => {
+      if (!cancelled) setProfileLinks(rows);
     });
     return () => {
       cancelled = true;
@@ -273,6 +288,7 @@ export function PublicProfile() {
                   {milestoneText(primaryHobby.label, primaryHobby.firstActivityAt)} · Keep going.
                 </p>
               )}
+              {profileLinks.length > 0 && <ProfileLinksRow links={profileLinks} className="mt-3" />}
               <div className="mt-4 flex flex-wrap gap-2">
                 {/* Not a Follow button. You attach to the hobby, or ask to do a
                     specific thing together — never to the person as a person.
