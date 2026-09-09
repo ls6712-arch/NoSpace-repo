@@ -69,6 +69,16 @@ export function PublicProfile() {
   const [profileLinks, setProfileLinks] = useState<ProfileLink[]>([]);
 
   useEffect(() => {
+    // React Router reuses this component instance across two profiles under
+    // the same /u/:username route — without resetting here, navigating from
+    // one person's shelf to another kept showing the first person's name,
+    // avatar, moments, Pursuits and links (and any open moment dialog) under
+    // the new URL until the new fetch happened to resolve.
+    setState({ status: "loading" });
+    setSharedPursuits([]);
+    setProfileLinks([]);
+    setOpenPost(null);
+
     let cancelled = false;
 
     // A profile that can't be reached shows "no shelf here" rather than

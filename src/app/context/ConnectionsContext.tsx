@@ -317,13 +317,24 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     // too, but failing here gives a clearer result than a rejected write.
     if (!target || target.addressee !== user.id) return;
 
-    await supabase
+    const { data: updated, error } = await supabase
       .from("connections")
       .update({
         status: accept ? "accepted" : "declined",
         responded_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      .select();
+
+    // The update's result used to be discarded, so a failed write (RLS
+    // hiccup, a stale id, a dropped connection) still sent the requester an
+    // "you can message each other now" notification for a connection that
+    // was, in fact, still pending — with no way for them to tell why
+    // messaging wasn't actually available.
+    if (error || !updated || updated.length === 0) {
+      await refresh();
+      return;
+    }
 
     if (accept) {
       const me = await supabase

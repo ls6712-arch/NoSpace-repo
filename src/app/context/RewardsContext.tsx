@@ -104,8 +104,15 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const checkNewBadges = (nextStats: RewardStats) => {
-    const before = new Set(badges.filter((b) => b.test(stats)).map((b) => b.id));
+  // Takes both the previous and next stats explicitly, rather than reading
+  // the outer `stats` (last-render's value) as "before" — every call site
+  // runs inside a setState updater, so when two reward-earning actions land
+  // in the same batch (e.g. two rapid likes before a re-render), the second
+  // call's `stats` closure is still the pre-*either*-update value. Using it
+  // as "before" could re-detect a badge the first call already reported as
+  // newly unlocked, popping the "badge unlocked" toast twice for one burst.
+  const checkNewBadges = (prevStats: RewardStats, nextStats: RewardStats) => {
+    const before = new Set(badges.filter((b) => b.test(prevStats)).map((b) => b.id));
     const after = badges.filter((b) => b.test(nextStats)).map((b) => b.id);
     const newly = after.find((id) => !before.has(id));
     if (newly) setLastUnlockedBadgeId(newly);
@@ -126,12 +133,7 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
         postsCreated: prev.postsCreated + 1,
         hobbiesPosted,
       };
-      checkNewBadges({
-        ...stats,
-        points: next.points,
-        postsCreated: next.postsCreated,
-        hobbiesPosted,
-      });
+      checkNewBadges(prev, next);
       return next;
     });
     logActivity("Posted new content", 50);
@@ -144,7 +146,7 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
         points: prev.points + 10 * count,
         purchases: prev.purchases + count,
       };
-      checkNewBadges({ ...stats, points: next.points, purchases: next.purchases });
+      checkNewBadges(prev, next);
       return next;
     });
     logActivity(count > 1 ? `Checked out ${count} items` : "Checked out", 10 * count);
@@ -158,7 +160,7 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
         points: prev.points + 5,
         hobbiesVisited: [...prev.hobbiesVisited, slug],
       };
-      checkNewBadges({ ...stats, points: next.points, hobbiesVisited: next.hobbiesVisited });
+      checkNewBadges(prev, next);
       return next;
     });
   };
@@ -176,7 +178,7 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
       const likesGiven = already ? Math.max(0, prev.likesGiven - 1) : prev.likesGiven + 1;
       const points = already ? Math.max(0, prev.points - 2) : prev.points + 2;
       const next = { ...prev, likedPostIds, likesGiven, points };
-      if (!already) checkNewBadges({ ...stats, points: next.points, likesGiven: next.likesGiven });
+      if (!already) checkNewBadges(prev, next);
       return next;
     });
     return nowLiked;

@@ -95,7 +95,7 @@ interface SocialContextType {
     postId?: number;
     intent: string;
     note?: string;
-  }) => Promise<{ error: "self" | "no-recipient" | null }>;
+  }) => Promise<{ error: "self" | "no-recipient" | "failed" | null }>;
   respond: (id: number | string, accept: boolean) => Promise<void>;
   /** The accepted request between you and this person, if any. */
   /** Keyed by user id — display names are not unique. */
@@ -407,7 +407,14 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     if (user && input.toUser === user.id) return { error: "self" as const };
 
     if (supabase && user) {
-      await supabase.from("participations").insert({
+      // sql/fixes.sql's participations_one_pending_ask unique index rejects
+      // a second pending ask to the same person while the first is still
+      // unanswered — the insert's error was previously discarded, so a
+      // repeat tap (e.g. before the first request's own refresh() had
+      // updated local state to reflect it) still sent a duplicate
+      // notification and told the sender it worked, for a row that was
+      // never actually created.
+      const { error } = await supabase.from("participations").insert({
         kind: input.kind,
         from_user: user.id,
         to_user: input.toUser,
@@ -417,6 +424,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         note: input.note ?? null,
         status: "pending",
       });
+      if (error) return { error: "failed" as const };
       await notify(
         input.toUser,
         input.kind,
