@@ -133,6 +133,10 @@ const ContentContext = createContext<ContentContextType | undefined>(undefined);
 export function ContentProvider({ children }: { children: ReactNode }) {
   const rewards = useRewards();
   const { user, profile } = useAuth();
+  // Same convention as SocialContext's `myId`: a stand-in identity for
+  // local-only mode (no account, or an account whose write just failed),
+  // so "your" posts can still be told apart from the seeded sample content.
+  const myId = user?.id ?? "local-user";
 
   // Real posts, fetched from Supabase — this is the layer that actually
   // persists across devices and sessions once accounts are wired up.
@@ -195,7 +199,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // Real posts belonging to the signed-in user, mixed with the app's sample
   // content everywhere else — the seed data keeps every space feeling
   // populated while real posts layer in on top of it.
-  const myRealPosts = user ? realPosts.filter((p) => p.userId === user.id) : [];
+  const myRealPosts = realPosts.filter((p) => p.userId === myId);
   const myPosts: Post[] = applyLikeDeltas(myRealPosts);
   const posts: Post[] = applyLikeDeltas([...realPosts, ...seedPosts]);
 
@@ -336,6 +340,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     // or nobody's logged in. Doesn't persist beyond this browser tab.
     const newPost: Post = {
       id: Date.now() + 1,
+      userId: myId,
       hobbySlug: input.hobbySlug,
       subHobby: input.subHobby,
       interest: input.interest?.trim() || undefined,
