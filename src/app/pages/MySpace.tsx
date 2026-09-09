@@ -5,7 +5,7 @@ import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
-import { daysSince, deriveProjects, toggleSaved, useJournal } from "../lib/journal";
+import { daysSince, deriveProjects, projectProgress, toggleSaved, useJournal } from "../lib/journal";
 import { useSocial } from "../context/SocialContext";
 import { ContentCard } from "../components/ContentCard";
 import { PostMedia } from "../components/PostMedia";
@@ -195,8 +195,15 @@ export function MySpace() {
     .slice(0, 10);
 
   const myPursuits = journal.projects.filter((p) => !p.finishedAt);
-  const nudge = [...myPursuits].sort((a, b) => a.startedAt - b.startedAt)[0];
-  const nudgeDays = nudge ? daysSince(nudge.startedAt) : 0;
+  // "Hasn't moved" means since its last actual update, not since it started —
+  // daysSince's own doc comment says as much ("drives the gentle nudge on My
+  // Space"), but this used to sort/measure by startedAt, so a Pursuit updated
+  // daily could get nudged (oldest startedAt) while a genuinely neglected,
+  // more-recently-started one never did.
+  const lastMoved = (p: (typeof myPursuits)[number]) =>
+    projectProgress(journal.entryProject, posts, p.id).lastUpdatedAt ?? p.startedAt;
+  const nudge = [...myPursuits].sort((a, b) => lastMoved(a) - lastMoved(b))[0];
+  const nudgeDays = nudge ? daysSince(lastMoved(nudge)) : 0;
 
   // Other people's ongoing work, grouped honestly into projects.
   const nearbyProjects = deriveProjects(publicFeed, subHobbyLabel).slice(0, 3);
