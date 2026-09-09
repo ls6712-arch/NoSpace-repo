@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Globe2, Lock, Quote, Sparkles, UserRound, Users } from "lucide-react";
+import { ArrowRight, Camera, Compass, Globe2, Lock, NotebookPen, Quote, Sparkles, UserRound, Users } from "lucide-react";
 import { hobbies, getHobby, subHobbyLabel } from "../data/hobbies";
 import { seedPosts } from "../data/posts";
 import { deriveProjects } from "../lib/journal";
@@ -8,7 +8,9 @@ import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { ContentCard } from "../components/ContentCard";
 import { GeneratedArt } from "../components/GeneratedArt";
+import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
+import { useScrollReveal } from "../lib/useScrollReveal";
 
 /**
  * Desktop-only parallax on the hero collage: it drifts up a little more
@@ -29,7 +31,12 @@ function useHeroParallax() {
 
     const apply = () => {
       frame = 0;
-      el.style.transform = `translate3d(0, ${Math.min(window.scrollY, 700) * -0.055}px, 0)`;
+      const y = Math.min(window.scrollY, 700);
+      // A gentle scale alongside the drift — barely perceptible (maxes out
+      // 1.5% larger), just enough that the collage reads as sitting forward
+      // of the page rather than pasted flat onto it.
+      const scale = 1 + Math.min(y, 500) * 0.00003;
+      el.style.transform = `translate3d(0, ${y * -0.055}px, 0) scale(${scale})`;
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(apply);
@@ -62,22 +69,40 @@ const AUDIENCE_CARDS = [
   {
     icon: Lock,
     label: "Just Me",
-    copy: "A private reflection. Never leaves your Shelf.",
+    copy: "For the moments you want to keep for yourself.",
   },
   {
     icon: UserRound,
     label: "Clan",
-    copy: "Your closest connections. Mutual only, both sides agreed.",
+    copy: "Share with the people closest to you.",
   },
   {
     icon: Users,
     label: "Circle",
-    copy: "One community you're part of, built around a Space.",
+    copy: "Share with a community built around what you're into.",
   },
   {
     icon: Globe2,
     label: "Everyone",
-    copy: "Anyone browsing NoSpace can find it.",
+    copy: "Make it visible to anyone exploring NoSpace.",
+  },
+];
+
+const VALUE_CARDS = [
+  {
+    icon: Camera,
+    title: "Create moments",
+    copy: "Turn the things you do, make, learn, and experience into moments worth remembering.",
+  },
+  {
+    icon: NotebookPen,
+    title: "Document what makes you more you",
+    copy: "Photos, notes, first attempts, small wins, and all the little changes that become part of your story.",
+  },
+  {
+    icon: Compass,
+    title: "Explore what sparks next",
+    copy: "Follow where your curiosity takes you and discover the next thing you want to try, learn, make, or experience.",
   },
 ];
 
@@ -99,6 +124,19 @@ const LOOP_STEPS = [
 export function Home() {
   const heroRef = useHeroParallax();
 
+  // One below the hero, in the order they appear — the entire page reads as
+  // one continuous unfolding story rather than five separately-loaded
+  // sections (see useScrollReveal.ts).
+  const valueCardsRef = useScrollReveal<HTMLDivElement>();
+  const manifestoRef = useScrollReveal<HTMLElement>();
+  const loopRef = useScrollReveal<HTMLElement>();
+  const audienceRef = useScrollReveal<HTMLElement>();
+  const pursuitsRef = useScrollReveal<HTMLElement>();
+  const cornerRef = useScrollReveal<HTMLElement>();
+  const discoverRef = useScrollReveal<HTMLElement>();
+  const quoteRef = useScrollReveal<HTMLElement>();
+  const finalCtaRef = useScrollReveal<HTMLElement>();
+
   const cornerMoments = seedPosts.filter((p) => p.subHobby === "pickleball").slice(0, 4);
 
   const pursuits = deriveProjects(seedPosts, subHobbyLabel).slice(0, 3);
@@ -112,28 +150,27 @@ export function Home() {
             <div className="text-center lg:text-left">
               <div className="ns-hero-eyebrow ns-enter ns-enter-1 mb-7 lg:mb-8">
                 <span className="animate-pulse-soft size-1.5 bg-[var(--coral-deep)]" />
-                Log it. Track it.
+                A SPACE FOR MORE OF YOU
               </div>
 
               <h1
                 className="ns-enter ns-enter-1 mb-5 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-[var(--forest)]"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
-                Live more.
+                Your interests are
                 <br />
-                Log it as you go.
+                part of your story.
               </h1>
 
               <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg lg:mx-0 lg:max-w-lg">
-                Track your runs, your reading, your recipes, your pursuits,
-                whatever you keep coming back to. Log it as you go, then
-                decide who gets to see it.
+                Create moments. Document what makes you more you. Explore
+                what sparks next.
               </p>
 
               <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
                 <Link to="/create">
                   <Button variant="coral" size="lg">
-                    Start your log
+                    Begin your story
                     <ArrowRight className="size-4" />
                   </Button>
                 </Link>
@@ -184,8 +221,25 @@ export function Home() {
       </section>
 
       <div className="bg-surface">
+        {/* Three value cards — what you actually come here to do. */}
+        <section className="pb-4 pt-16 lg:pb-8 lg:pt-20">
+          <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
+            <div ref={valueCardsRef} className="ns-reveal grid gap-4 sm:grid-cols-3">
+              {VALUE_CARDS.map(({ icon: Icon, title, copy }) => (
+                <div key={title} className="ns-value-card rounded-2xl p-6">
+                  <span className="ns-value-card-icon mb-5 flex size-11 items-center justify-center rounded-full bg-surface-muted">
+                    <Icon className="size-5 text-[var(--forest-ink)]" strokeWidth={1.7} />
+                  </span>
+                  <div className="mb-2 text-xl" style={{ fontFamily: "var(--font-serif)" }}>{title}</div>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{copy}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Manifesto */}
-        <section className="py-16 [background-color:var(--forest)] lg:py-20">
+        <section ref={manifestoRef} className="ns-reveal py-16 [background-color:var(--forest)] lg:py-20">
           <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
             <p className="text-xl leading-relaxed text-[var(--on-forest)] lg:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
               Most apps want you to perform for an audience. NoSpace doesn't.
@@ -197,7 +251,7 @@ export function Home() {
         </section>
 
         {/* The Loop */}
-        <section id="loop" className="py-20 lg:py-28">
+        <section id="loop" ref={loopRef} className="ns-reveal py-20 lg:py-28">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="grid items-center gap-10 md:grid-cols-2 md:gap-20">
               <div className="mx-auto max-w-lg lg:mx-0">
@@ -227,7 +281,7 @@ export function Home() {
         </section>
 
         {/* Audience */}
-        <section className="py-20 lg:py-28">
+        <section ref={audienceRef} className="ns-reveal py-20 lg:py-28">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="mb-10 max-w-xl lg:mb-12">
               <div className="ns-section-kicker mb-4">EVERY MOMENT, ITS OWN AUDIENCE</div>
@@ -235,8 +289,8 @@ export function Home() {
                 Every Moment picks its own audience.
               </h2>
               <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
-                Pick who sees a Moment when you log it, not once for your
-                whole account.
+                Choose who gets to see each Moment. Your whole life does not
+                have to be public.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -255,16 +309,16 @@ export function Home() {
 
         {/* Pursuits */}
         {pursuits.length > 0 && (
-          <section className="py-20 [background-color:var(--forest)] lg:py-28">
+          <section ref={pursuitsRef} className="ns-reveal py-20 [background-color:var(--forest)] lg:py-28">
             <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
               <div className="mx-auto mb-12 max-w-xl text-center">
                 <div className="mb-4 font-hud text-[10px] tracking-[.18em] text-[var(--yellow)]">PURSUITS</div>
                 <h2 className="mb-3 text-3xl text-[var(--on-forest)] lg:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  A profile that gets richer over time.
+                  A story that gets richer over time.
                 </h2>
                 <p className="text-[var(--on-forest-muted)]">
-                  Your Pursuits aren't a flat list of achievements. They're a
-                  running record of what you've actually been curious about.
+                  Your Pursuits aren't a list of achievements. They're a
+                  record of what you've been curious enough to explore.
                 </p>
               </div>
               <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3">
@@ -303,9 +357,12 @@ export function Home() {
           </section>
         )}
 
+        {/* Whatever pulls you in */}
+        <WorldsSection />
+
         {/* This Corner */}
         {cornerMoments.length > 0 && (
-          <section className="py-20 lg:py-28">
+          <section ref={cornerRef} className="ns-reveal py-20 lg:py-28">
             <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
               <div className="mb-10 max-w-xl lg:mb-12">
                 <div className="ns-section-kicker mb-4">THIS CORNER, RIGHT NOW</div>
@@ -328,7 +385,7 @@ export function Home() {
         )}
 
         {/* Discover / Spaces grid */}
-        <section className="border-t border-[var(--hairline)] py-20 lg:py-28">
+        <section ref={discoverRef} className="ns-reveal border-t border-[var(--hairline)] py-20 lg:py-28">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="mb-10 flex items-end justify-between gap-5 lg:mb-12">
               <div className="max-w-xl">
@@ -360,7 +417,7 @@ export function Home() {
         </section>
 
         {/* Quote / proof */}
-        <section className="py-20 [background-color:var(--sky)] lg:py-28">
+        <section ref={quoteRef} className="ns-reveal py-20 [background-color:var(--sky)] lg:py-28">
           <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
             <Quote className="mx-auto mb-5 size-6 text-[var(--forest-ink)]" />
             <p className="text-2xl leading-snug text-[var(--forest-ink)] md:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
@@ -371,13 +428,13 @@ export function Home() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-20 lg:py-28">
+        <section ref={finalCtaRef} className="ns-reveal py-20 lg:py-28">
           <div className="mx-auto w-full max-w-[900px] px-5 sm:px-8">
             <div className="ns-invitation text-center">
               <div className="ns-invitation-spark" aria-hidden="true">✦</div>
               <div className="ns-section-kicker mb-5">START WHERE YOU ARE</div>
               <h2 className="mb-5 text-4xl leading-[1.02] md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
-                You don't just consume.<br />You make things, too.
+                Whatever you're curious about,<br />it's worth keeping.
               </h2>
               <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
                 Free to join. Private by default. Share only the Moments you
@@ -385,7 +442,7 @@ export function Home() {
               </p>
               <Link to="/create">
                 <Button variant="brand" size="lg">
-                  <Sparkles className="size-4" /> Start your log
+                  <Sparkles className="size-4" /> Begin your story
                 </Button>
               </Link>
             </div>

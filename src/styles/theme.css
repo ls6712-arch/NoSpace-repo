@@ -57,6 +57,14 @@
   /* Kept as an alias: milestone tints and chart-4 already reference it. */
   --mustard: var(--yellow);
   --cream: #F8F4EB;
+  /* Added for the landing page's editorial refresh — a quiet second display
+     colour alongside forest, and a warmer, softer accent than coral for
+     places that want warmth without coral's urgency (glows, small chips,
+     one of the World cards' accents). Both are used sparingly, as accents,
+     never as a base surface. */
+  --plum: #5B3454;
+  --plum-deep: #40243C;
+  --peach: #F4B892;
 
   /* ── Semantic UI tokens ───────────────────────────────────────────────────
      Everything in the interface reads these, never a raw hue. Swapping the
@@ -155,6 +163,9 @@
   --color-mustard: var(--mustard);
   --color-cream: var(--cream);
   --color-yellow: var(--yellow);
+  --color-plum: var(--plum);
+  --color-plum-deep: var(--plum-deep);
+  --color-peach: var(--peach);
   --color-forest-ink: var(--forest-ink);
   --color-on-forest: var(--on-forest);
   --color-chart-1: var(--chart-1);
@@ -297,12 +308,15 @@
   .ns-hero-art {
     position: relative;
     isolation: isolate;
-    padding: 0.5rem 0 0;
+    /* A little more air around the collage than a tight crop — this is
+       meant to read as a small window onto a few different worlds, not a
+       banner filling its box edge to edge. */
+    padding: clamp(1rem, 3vw, 2.25rem) clamp(0.25rem, 2vw, 1.5rem);
   }
 
   .ns-hero-photo-collage {
     position: relative;
-    min-height: clamp(22rem, 48vw, 34rem);
+    min-height: clamp(23rem, 50vw, 36rem);
     isolation: isolate;
   }
 
@@ -491,6 +505,156 @@
   .ns-pursuit-card {
     border: 1px solid color-mix(in srgb, var(--cream) 28%, transparent);
     background: color-mix(in srgb, var(--cream) 6%, transparent);
+    transition: transform 320ms cubic-bezier(.22,.61,.36,1), box-shadow 320ms ease;
+  }
+
+  .ns-pursuit-card:hover,
+  .ns-pursuit-card:focus-visible {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 34px -20px color-mix(in srgb, var(--forest-ink) 70%, transparent);
+  }
+
+  /* ── Value cards — "Create moments / Document / Explore," right below the
+     hero. Same sticker-shadow language as ns-audience-card, with a hover
+     lift restrained enough to still read as premium rather than playful. ── */
+  .ns-value-card {
+    position: relative;
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    box-shadow: 5px 5px 0 color-mix(in srgb, var(--forest) 10%, transparent);
+    transition: transform 280ms cubic-bezier(.22,.61,.36,1), box-shadow 280ms ease;
+  }
+
+  .ns-value-card:hover,
+  .ns-value-card:focus-within {
+    transform: translate(-2px, -4px);
+    box-shadow: 8px 12px 0 color-mix(in srgb, var(--coral) 32%, transparent);
+  }
+
+  .ns-value-card-icon {
+    transition: transform 280ms cubic-bezier(.22,.61,.36,1);
+  }
+
+  .ns-value-card:hover .ns-value-card-icon,
+  .ns-value-card:focus-within .ns-value-card-icon {
+    transform: translateY(-3px) rotate(-4deg);
+  }
+
+  /* ── Whatever pulls you in — the Worlds section ─────────────────────────
+     A row of small illustrated worlds. `data-driven` is set by JS
+     (useWorldsScroll in WorldsSection.tsx) once it's confirmed both a wide
+     viewport AND no prefers-reduced-motion — the same two-part guard
+     useHeroParallax already uses — so everything below keys off that one
+     attribute rather than a duplicate width media query. When it's false
+     (narrow viewport, or reduced motion at any width), this collapses to a
+     plain native horizontal scroller: shorter, snap-scrolled, no sticky
+     math, exactly the "simplify" the section calls for either way. */
+  .ns-worlds-section {
+    position: relative;
+  }
+
+  .ns-worlds-section[data-driven="true"] {
+    height: 260vh;
+  }
+
+  .ns-worlds-sticky {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ns-worlds-section[data-driven="true"] .ns-worlds-sticky {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100vh;
+    align-items: center;
+    /* Stays hidden (inherited from the base rule above) — this is the
+       viewport-width "window" the track's translateX moves the cards
+       through. It has to actually clip, both so the track's un-translated
+       content can't create a horizontal page scrollbar, and so its own
+       clientWidth (what the scroll math treats as "visible width") means
+       something — with overflow: visible here (an earlier draft), the
+       track could render at its full natural width with nothing
+       constraining it, so scrollWidth - clientWidth came out to ~0 and the
+       whole translateX computation had nowhere to go. */
+  }
+
+  .ns-worlds-track {
+    display: flex;
+    gap: clamp(1.25rem, 3vw, 2.25rem);
+    padding-inline: 5vw;
+    will-change: transform;
+  }
+
+  .ns-worlds-section:not([data-driven="true"]) .ns-worlds-track {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-block: 0.5rem;
+  }
+
+  .ns-worlds-section:not([data-driven="true"]) .ns-worlds-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ns-worlds-section:not([data-driven="true"]) .ns-world-card {
+    scroll-snap-align: center;
+  }
+
+  .ns-worlds-path {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .ns-worlds-path path {
+    fill: none;
+    stroke: color-mix(in srgb, var(--coral) 55%, var(--yellow) 45%);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1 15;
+    opacity: 0.5;
+    animation: ns-flow 26s linear infinite;
+  }
+
+  .ns-world-card {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    width: clamp(14.5rem, 19vw, 18.5rem);
+    scroll-margin-inline: 5vw;
+    border-radius: 1.75rem;
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    box-shadow: 6px 10px 0 color-mix(in srgb, var(--forest) 14%, transparent);
+    transition: transform 340ms cubic-bezier(.22,.61,.36,1), box-shadow 340ms ease;
+  }
+
+  .ns-world-card:hover,
+  .ns-world-card:focus-within {
+    transform: translateY(-10px) scale(1.015);
+    box-shadow: 10px 18px 0 color-mix(in srgb, var(--world-accent, var(--coral)) 48%, transparent);
+  }
+
+  .ns-world-card:hover .ns-world-card-life,
+  .ns-world-card:focus-within .ns-world-card-life {
+    animation-duration: 1.6s;
+  }
+
+  .ns-world-card-label {
+    padding: 1rem 1.15rem 1.25rem;
+  }
+
+  .ns-world-card-dot {
+    display: inline-block;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--world-accent, var(--coral));
   }
 
   .ns-space-card {
@@ -1040,6 +1204,22 @@
   .ns-enter-3 { animation-delay: .27s; }
   .ns-enter-4 { animation-delay: .38s; }
 
+  /* Scroll-triggered reveal for everything below the hero (see
+     useScrollReveal.ts) — the same rise as ns-enter, but fired by an
+     IntersectionObserver instead of on a fixed delay, so the page reads as
+     one continuous unfolding story rather than five separately-loaded
+     sections. Starts from its resting state so a section already in view
+     on load (a short page, a tall viewport) never gets stuck invisible. */
+  .ns-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+  }
+  .ns-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   .generated-art-sparkle {
     animation: generated-art-twinkle 2.4s ease-in-out infinite;
     transform-origin: center;
@@ -1082,6 +1262,11 @@
 @keyframes ns-rise {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+/* The soft dashed line drawn behind the Worlds section — a sense of travel
+   between the little worlds, not a network diagram. */
+@keyframes ns-flow {
+  to { stroke-dashoffset: -420; }
 }
 
 @keyframes gradient-shift {
@@ -1211,6 +1396,13 @@ summary:focus-visible,
   }
   .ns-parallax { transform: none !important; }
   .ns-maker-note { transform: none !important; }
+  .ns-worlds-path path { animation: none !important; }
+  .ns-worlds-track { transform: none !important; }
+  .ns-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
   *, *::before, *::after {
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
