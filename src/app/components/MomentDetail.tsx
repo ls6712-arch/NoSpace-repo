@@ -222,10 +222,21 @@ export function MomentDetail({
                 : ""}
             </dd>
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-muted-foreground">Pursuit</dt>
-            <dd>{attached ? attached.title : "Not part of a Pursuit"}</dd>
-          </div>
+          {/* entryProject is local, per-browser data (see lib/journal.ts) —
+              it can only ever answer for the signed-in viewer's own
+              Pursuits, never for whoever actually posted this Moment. On
+              someone else's Moment this always read "Not part of a
+              Pursuit," even when it demonstrably was one, which
+              contradicted the Pursuit info this page already shows
+              correctly elsewhere (PublicProfile's own shared-Pursuits
+              fetch). Owner-only, like everything else this lookup could
+              get right. */}
+          {owned && (
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-muted-foreground">Pursuit</dt>
+              <dd>{attached ? attached.title : "Not part of a Pursuit"}</dd>
+            </div>
+          )}
         </dl>
 
         {/* Owner-only: the note they wrote for themselves */}
