@@ -17,9 +17,12 @@ import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
-import { useSessionsByHobby } from "../components/HobbyShelf";
+import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { removePrivateLog, useJournal } from "../lib/journal";
+import { useProfileLinks } from "../lib/profileLinks";
+import { mirrorProfileLinks } from "../lib/profileLinksRemote";
+import { ProfileLinksEditor } from "../components/ProfileLinks";
 import { AccountSettings } from "../components/AccountSettings";
 import { useSocial } from "../context/SocialContext";
 import { subHobbyLabel, getHobby } from "../data/hobbies";
@@ -40,6 +43,7 @@ export function You() {
   const social = useSocial();
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const { user, profile, isConfigured, signOut } = useAuth();
+  const profileLinks = useProfileLinks();
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [circlesVisible, setCirclesVisible] = useState(true);
@@ -48,6 +52,7 @@ export function You() {
 
   const sessions = useSessionsByHobby();
   const totalSessions = sessions.reduce((n, s) => n + s.sessions, 0);
+  const [momentsView, setMomentsView] = useState<"shelf" | "grid">("shelf");
   // The portfolio's own record — every Pursuit you've ever started, finished
   // ones included, because a personal archive doesn't erase what's done.
   const myPursuits = journal.projects;
@@ -109,6 +114,24 @@ export function You() {
           </div>
         </div>
 
+        {/* Your links — GitHub, a design studio, a Substack, whatever
+            people should be able to find and click through to. Public the
+            moment it's added, same as the rest of your public profile. */}
+        <div className="mb-8 rounded-3xl border border-border bg-card p-5">
+          <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            Your links
+          </h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Point people somewhere — your GitHub, your studio, your Substack.
+          </p>
+          <ProfileLinksEditor
+            links={profileLinks}
+            onChange={(next) => {
+              if (user) void mirrorProfileLinks(user.id, next);
+            }}
+          />
+        </div>
+
         {/* Hobby chips — what you actually do */}
         <div className="ns-you-tags mb-7 flex flex-wrap gap-2">
           {sessions.slice(0, 6).map((s) => (
@@ -163,17 +186,53 @@ export function You() {
             standing next to each other rather than buried in tabs. */}
         <div className="mb-12 grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
           <section>
-            <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Your Moments
-            </h2>
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+                Your Moments
+              </h2>
+              {/* By hobby is the default: your ten pottery photos read as
+                  "10 moments" on one book, cover set to the newest of them,
+                  rather than as ten separate tiles with no grouping. All
+                  moments stays available for the flat visual-journal view. */}
+              <div className="flex gap-1 rounded-full border border-border bg-surface p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setMomentsView("shelf")}
+                  className={`rounded-full px-3 py-1 transition-colors ${
+                    momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                  }`}
+                >
+                  By hobby
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMomentsView("grid")}
+                  className={`rounded-full px-3 py-1 transition-colors ${
+                    momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                  }`}
+                >
+                  All moments
+                </button>
+              </div>
+            </div>
             <p className="mb-4 mt-1 text-sm text-muted-foreground">
-              A visual record of what you've made, explored, and loved.
+              {momentsView === "shelf"
+                ? "Grouped by hobby — open one to see every moment inside it."
+                : "A visual record of what you've made, explored, and loved."}
             </p>
-            <WorkGrid
-              posts={myPosts}
-              onOpen={setOpenPost}
-              emptyLabel="Nothing logged yet. Create something and it'll show up here."
-            />
+            {momentsView === "shelf" ? (
+              <HobbyShelf
+                items={sessions}
+                emptyCta={false}
+                emptyCopy="Nothing logged yet. Create something and it'll show up here."
+              />
+            ) : (
+              <WorkGrid
+                posts={myPosts}
+                onOpen={setOpenPost}
+                emptyLabel="Nothing logged yet. Create something and it'll show up here."
+              />
+            )}
           </section>
 
           <section>
