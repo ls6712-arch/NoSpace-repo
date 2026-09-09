@@ -29,6 +29,7 @@ import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { addPrivateLog, attachEntry, startProject, useJournal } from "../lib/journal";
+import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { archiveKey } from "../components/HobbyShelf";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -151,19 +152,28 @@ export function Log() {
   const [screen, setScreen] = useState<Screen>("capture");
   const [mode, setMode] = useState<Mode | null>(null);
 
-  const initialHobby = searchParams.get("hobby") ?? hobbies[0].slug;
+  // "Add progress" on a Pursuit links here with ?pursuit=<id> — resolve it
+  // once, up front, so the Space, Corner, and Pursuit picker all arrive
+  // already pointed at the right thing instead of landing on the same
+  // blank flow as starting something new.
+  const initialPursuitId = searchParams.get("pursuit") ?? "";
+  const initialPursuit = initialPursuitId
+    ? journal.projects.find((p) => p.id === initialPursuitId)
+    : undefined;
+
+  const initialHobby = searchParams.get("hobby") ?? initialPursuit?.hobbySlug ?? hobbies[0].slug;
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
   // Whether hobbySlug reflects something the person actually chose or typed,
   // versus just the untouched default (hobbies[0], or a ?hobby= link). A
   // private "Save this moment" never shows any Space UI at all, so filing it
   // under an unseen default Space silently mistagged private logs — this
   // flag lets that path save untagged instead when nothing was ever set.
-  const [spaceSet, setSpaceSet] = useState(!!searchParams.get("hobby"));
-  const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? "");
-  const [projectId, setProjectId] = useState<string>("");
+  const [spaceSet, setSpaceSet] = useState(!!searchParams.get("hobby") || !!initialPursuit?.hobbySlug);
+  const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
+  const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
   const [type, setType] = useState<"photo" | "video">("photo");
-  const [interest, setInterest] = useState("");
+  const [interest, setInterest] = useState(initialPursuit?.interest ?? "");
   // A Space is a place to put something, not a gate in front of making it.
   const [spaceOpen, setSpaceOpen] = useState(false);
   const [thought, setThought] = useState("");
@@ -212,7 +222,13 @@ export function Log() {
 
   const hobby = hobbies.find((h) => h.slug === hobbySlug)!;
   const hobbyCircles = circlesByHobby(hobbySlug);
-  const openProjects = journal.projects.filter((p) => !p.finishedAt);
+  // Normally only open Pursuits are offered here — but if we arrived via
+  // "Add progress" on a finished one, it needs to still appear as the
+  // selected option (attaching an Update to it reopens it; see
+  // attachEntry in lib/journal.ts) rather than showing a blank picker.
+  const openProjects = journal.projects.filter(
+    (p) => !p.finishedAt || p.id === initialPursuitId,
+  );
   // What the post is about, in the person's own words where they gave them.
   const tagLabel =
     interest.trim() ||
@@ -317,7 +333,13 @@ export function Log() {
         }).id;
       }
 
-      if (linkTo) attachEntry(entry.id, linkTo);
+      if (linkTo) {
+        const targetProject = journal.projects.find((p) => p.id === linkTo);
+        attachEntry(entry.id, linkTo);
+        if (targetProject?.finishedAt && user) {
+          void mirrorPursuit(user.id, { ...targetProject, finishedAt: undefined });
+        }
+      }
       setSavedAs("shared");
       setScreen("saved");
     } catch {

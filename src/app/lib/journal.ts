@@ -209,6 +209,12 @@ export function attachEntry(postId: number | string, projectId: string) {
   commit({
     ...state,
     entryProject: { ...state.entryProject, [String(postId)]: projectId },
+    // Logging a new Update against a Pursuit that was marked finished means
+    // you're back at it — reopen it automatically rather than silently
+    // filing the Update against something that still reads as done.
+    projects: state.projects.map((p) =>
+      p.id === projectId && p.finishedAt ? { ...p, finishedAt: undefined } : p,
+    ),
   });
 }
 

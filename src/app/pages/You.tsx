@@ -52,7 +52,7 @@ export function You() {
 
   const sessions = useSessionsByHobby();
   const totalSessions = sessions.reduce((n, s) => n + s.sessions, 0);
-  const [momentsView, setMomentsView] = useState<"shelf" | "grid">("shelf");
+  const [momentsView, setMomentsView] = useState<"shelf" | "grid">("grid");
   // The portfolio's own record — every Pursuit you've ever started, finished
   // ones included, because a personal archive doesn't erase what's done.
   const myPursuits = journal.projects;
@@ -190,20 +190,11 @@ export function You() {
               <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
                 Your Moments
               </h2>
-              {/* By hobby is the default: your ten pottery photos read as
-                  "10 moments" on one book, cover set to the newest of them,
-                  rather than as ten separate tiles with no grouping. All
-                  moments stays available for the flat visual-journal view. */}
+              {/* All moments (plain chronological) is the default now — By
+                  Space stays available for anyone who wants the grouped
+                  view. "Space" is the app's actual term for this, so the
+                  toggle shouldn't say "hobby" anywhere. */}
               <div className="flex gap-1 rounded-full border border-border bg-surface p-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setMomentsView("shelf")}
-                  className={`rounded-full px-3 py-1 transition-colors ${
-                    momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                  }`}
-                >
-                  By hobby
-                </button>
                 <button
                   type="button"
                   onClick={() => setMomentsView("grid")}
@@ -213,12 +204,21 @@ export function You() {
                 >
                   All moments
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setMomentsView("shelf")}
+                  className={`rounded-full px-3 py-1 transition-colors ${
+                    momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                  }`}
+                >
+                  By Space
+                </button>
               </div>
             </div>
             <p className="mb-4 mt-1 text-sm text-muted-foreground">
               {momentsView === "shelf"
-                ? "Grouped by hobby — open one to see every moment inside it."
-                : "A visual record of what you've made, explored, and loved."}
+                ? "Grouped by Space — open one to see every moment inside it."
+                : "A visual record of what you've made, explored, and loved, newest first."}
             </p>
             {momentsView === "shelf" ? (
               <HobbyShelf

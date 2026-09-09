@@ -22,6 +22,10 @@ create table if not exists public.corners (
    * match onto this via the app's own autocomplete rather than creating a
    * near-duplicate, so this rarely needs to change by hand. */
   name text not null,
+  /** Short, optional. Only ever set by someone deliberately using "Create a
+   * Corner" on the Space page — tagging a Corner into existence while
+   * logging a Moment never has one to give, so this is null for most rows. */
+  description text,
   /** Public Moments only — see the trigger below for why. Maintained by the
    * trigger, not written directly by the app, so it can't drift the way a
    * client-incremented counter would as Moments are edited or deleted. */
@@ -30,6 +34,7 @@ create table if not exists public.corners (
   unique (space_slug, slug)
 );
 alter table public.corners enable row level security;
+alter table public.corners add column if not exists description text;
 
 drop policy if exists "corners are public" on public.corners;
 create policy "corners are public"

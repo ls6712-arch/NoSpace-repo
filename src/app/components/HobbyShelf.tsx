@@ -159,8 +159,9 @@ function HobbyBook({
 
   const spine = SPINES[index % SPINES.length];
   const tilt = TILT[index % TILT.length];
-  // Later books sit lower and further right, so the stack fans out.
-  const offset = index * 16;
+  // Later books sit lower and further right, so the stack fans out. Kept
+  // small enough that a stack of 3-4 doesn't run out of a narrow column.
+  const offset = index * 10;
 
   return (
     <Link
@@ -304,7 +305,13 @@ export function HobbyShelf({
 
   return (
     <div className="rounded-3xl bg-[var(--cream)] px-4 py-8 sm:px-6">
-      <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
+      {/* auto-fit/minmax responds to the space this shelf actually has,
+          not the viewport — sm:/lg: breakpoints kept forcing 3 columns even
+          when this sits in a narrow half-width column next to Your
+          Pursuits, which squeezed every book down to unreadable fragments
+          ("C...", "1..."). This shrinks to fewer columns automatically
+          whenever the container itself is narrow. */}
+      <div className="grid gap-x-6 gap-y-10 [grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))]">
         {groups.map(({ space, books }) => (
           <section key={space.slug}>
             <h3
@@ -315,7 +322,7 @@ export function HobbyShelf({
             </h3>
 
             {/* The stack. Extra right padding leaves room for the fan-out. */}
-            <div className="relative pr-8">
+            <div className="relative pr-6">
               {books.map((item, i) => (
                 <HobbyBook key={item.key} item={item} index={i} count={books.length} linkTo={linkTo} />
               ))}
