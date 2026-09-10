@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Figure,
   Sparkles,
@@ -23,16 +24,41 @@ import {
   BLUSH,
   CREAM,
 } from "./GeneratedArt";
+import { hobbyPhoto } from "../data/hobbyPhotos";
 import type { WorldSpace } from "../data/worldSpaces";
 
 /**
+ * Each World's real photo, borrowed from the same warm/muted Unsplash set
+ * Discover's own Space cards draw from (data/hobbyPhotos.ts) — this is what
+ * keeps a World card and the real Space it links to (HobbyCategoryCard,
+ * DiscoverSpaceArt) looking like the same picture language rather than two
+ * unrelated visual systems on the same page. Most illustration keys are
+ * already photo sub-slugs verbatim; "music" isn't (there's no single "music"
+ * photo, only its instruments/singing/DJing etc.), so it borrows "instrument"
+ * — the same substitute Discover's own Music Space cover already uses.
+ */
+const WORLD_PHOTO_SLUG: Record<WorldSpace["illustration"], string> = {
+  music: "instrument",
+  painting: "painting",
+  sculpture: "sculpture",
+  gardening: "gardening",
+  reading: "reading",
+  baking: "baking",
+  coding: "coding",
+  photography: "photography",
+  pottery: "pottery",
+};
+
+/**
  * Nine bespoke little worlds for the landing page's "Whatever pulls you in"
- * section — same flat, warm, rounded illustration language as GeneratedArt
- * (same Figure, same palette, same shape primitives), just never fed through
- * its hobby/product-driven variant picker, since every card here is a fixed,
- * named thing rather than an arbitrary post. New props defined below (Guitar,
- * Camera, Cake, BookStack, SculptureForm, PotteryWheel) follow the same
- * "small self-contained SVG group, positioned by x/y, scaled by s" shape
+ * section. Each card tries its real photo first (see WORLD_PHOTO_SLUG above)
+ * and falls back to a flat, warm, rounded illustration in GeneratedArt's own
+ * language (same Figure, same palette, same shape primitives) if that photo
+ * can't load — same photo-then-generated-art resilience pattern Discover's
+ * own Space cards already use, so a network hiccup degrades gracefully
+ * instead of leaving a hole. New props defined below (Guitar, Camera, Cake,
+ * BookStack, SculptureForm, PotteryWheel) follow the same "small
+ * self-contained SVG group, positioned by x/y, scaled by s" shape
  * GeneratedArt's own props already use, so they read as one family.
  */
 
@@ -221,6 +247,23 @@ export function WorldIllustration({
    * idle class don't all breathe/sway in lockstep. */
   idleDelay?: number;
 }) {
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const photo = photoFailed ? undefined : hobbyPhoto(WORLD_PHOTO_SLUG[illustration]);
+
+  if (photo) {
+    return (
+      <div className={`relative overflow-hidden ${className ?? ""}`} style={{ backgroundColor: PAPER }}>
+        <img
+          src={photo}
+          alt=""
+          loading="lazy"
+          onError={() => setPhotoFailed(true)}
+          className="h-full w-full object-cover transition-transform duration-[700ms] ease-out"
+        />
+      </div>
+    );
+  }
+
   const rand = mulberry32(hashSeed(`world:${seed}`));
   const skin = skinFor(rand);
   const hair = hairFor(rand);

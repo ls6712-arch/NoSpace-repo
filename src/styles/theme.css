@@ -513,6 +513,13 @@
     animation-duration: 1.6s;
   }
 
+  /* Real photo cards get the same gentle push-in HobbyCategoryCard's Space
+     photos use, instead of the illustrated fallback's idle breathe/sway. */
+  .ns-world-card:hover img,
+  .ns-world-card:focus-within img {
+    transform: scale(1.06);
+  }
+
   .ns-world-card-label {
     padding: 1rem 1.15rem 1.25rem;
   }
