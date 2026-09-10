@@ -681,7 +681,7 @@ export function Discover() {
               ) : (
                 <div className="columns-1 gap-4 sm:columns-2 md:columns-3 xl:columns-4">
                   {visible.map((post) => (
-                    <ContentCard key={post.id} post={post} compact />
+                    <ContentCard key={post.id} post={post} compact showExploreCorner />
                   ))}
                 </div>
               )}

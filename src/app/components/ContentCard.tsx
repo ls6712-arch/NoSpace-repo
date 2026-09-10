@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Play, ShoppingBag, Users, UserRound } from "lucide-react";
+import { CalendarDays, Compass, MapPin, Play, ShoppingBag, Users, UserRound } from "lucide-react";
 import { PostReactions } from "./PostReactions";
 import { PostBookmark } from "./PostBookmark";
 import { Thoughts } from "./Thoughts";
@@ -41,6 +41,7 @@ export function ContentCard({
   post,
   label,
   compact = false,
+  showExploreCorner = false,
 }: {
   post: Post;
   label?: string;
@@ -52,6 +53,16 @@ export function ContentCard({
    * Every other call site leaves this off and is pixel-identical to before.
    */
   compact?: boolean;
+  /**
+   * Turns the "what it's about" chip into a real "Explore this Corner"
+   * browse link (straight to that Corner's own filtered Space feed) instead
+   * of the plain /discover?about= search shortcut every other card still
+   * uses. Discover's own feed is the one place a card can come from any
+   * Corner or Space at once, so it's the only place this browse action
+   * belongs — My Space and a Space's own feed already show one Corner's
+   * (or one person's) work, so it would be redundant there.
+   */
+  showExploreCorner?: boolean;
 }) {
   const { findListing } = useContent();
   const social = useSocial();
@@ -128,16 +139,32 @@ export function ContentCard({
         </div>
         <p className={`text-sm text-muted-foreground ${compact ? "mb-2 line-clamp-2" : "mb-3"}`}>{post.caption}</p>
 
-        {/* What it's about, in the maker's words. A subject, not a hashtag —
-            it links to everyone else working on the same thing. */}
-        {post.interest && (
-          <Link
-            to={`/discover?about=${encodeURIComponent(post.interest)}`}
-            className={`inline-flex rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/30 hover:text-foreground ${compact ? "mb-2" : "mb-3"}`}
-          >
-            {post.interest}
-          </Link>
-        )}
+        {/* What it's about, in the maker's words. A subject, not a hashtag.
+            On Discover, where one feed mixes every Corner and Space, this
+            becomes a real browse action straight to that Corner's own
+            filtered feed; everywhere else it stays the plain word-search
+            shortcut it always was. Only a post with a real subHobby has an
+            actual Corner feed to send someone to — free-text-only interest
+            keeps the search fallback rather than fabricating a route. */}
+        {post.interest &&
+          (showExploreCorner && post.subHobby ? (
+            <Link
+              to={`/space/${post.hobbySlug}?hobby=${encodeURIComponent(post.subHobby)}`}
+              title={`Explore this Corner: ${post.interest}`}
+              aria-label={`Explore this Corner: ${post.interest}`}
+              className={`inline-flex items-center gap-1 rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/30 hover:text-foreground ${compact ? "mb-2" : "mb-3"}`}
+            >
+              <Compass className="size-3 shrink-0" strokeWidth={1.9} />
+              {post.interest}
+            </Link>
+          ) : (
+            <Link
+              to={`/discover?about=${encodeURIComponent(post.interest)}`}
+              className={`inline-flex rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/30 hover:text-foreground ${compact ? "mb-2" : "mb-3"}`}
+            >
+              {post.interest}
+            </Link>
+          ))}
 
         {/* When it's a thing happening, say when and where — and let people in. */}
         {isActivity && (
@@ -178,10 +205,16 @@ export function ContentCard({
         />
 
         {!isOwner && (
+          // Explore off: repeating "follow this hobby" on every card of a
+          // feed already scoped to a hobby was redundant, and confusable
+          // with the Space-hero's own "Explore" a few inches above the
+          // whole feed. It's still offered from the Space hero and from a
+          // person's own profile — this is only the per-post row.
           <PersonActions
             personName={post.creator}
             personId={post.userId}
             hobbyKeys={[post.subHobby ?? `space:${post.hobbySlug}`]}
+            showExplore={false}
             compact={compact}
             className={compact ? "mb-2" : "mb-3"}
           />

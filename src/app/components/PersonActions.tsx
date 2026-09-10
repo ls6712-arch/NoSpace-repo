@@ -27,12 +27,21 @@ export function PersonActions({
   personId,
   /** Hobbies this person works in, so Explore has something concrete to offer. */
   hobbyKeys = [],
+  /**
+   * Explore stays on by default (the Space hero and a profile's own action
+   * row both still use it) — only a Moment card's own per-post row turns it
+   * off. Repeating "follow this hobby" on every card of a feed you're
+   * already browsing was redundant, and it overloaded "Explore" with a
+   * second meaning the Space-hero button already has.
+   */
+  showExplore = true,
   compact = false,
   className = "",
 }: {
   personName?: string;
   personId?: string;
   hobbyKeys?: string[];
+  showExplore?: boolean;
   /** Smaller buttons for a denser card. Opens the exact same dialogs. */
   compact?: boolean;
   className?: string;
@@ -147,7 +156,7 @@ export function PersonActions({
       icon: Compass,
       tint: "var(--pastel-sage)",
       copy: "Follow a hobby they work in, the subject, not the person.",
-      show: true,
+      show: showExplore,
     },
     {
       id: "connect" as const,
@@ -172,14 +181,22 @@ export function PersonActions({
     },
   ].filter((o) => o.show);
 
-  const active = OPTIONS.find((o) => o.id === pane);
+  // Nothing to ask, and Explore turned off for this row (a Moment card) —
+  // there is genuinely nothing to render, rather than an empty bordered box.
+  if (OPTIONS.length === 0) return null;
 
-  // The three actions are named on the surface rather than hidden behind one
-  // vague button. Explore is always available — it asks nothing of anyone.
-  // Connect and Invite only appear when there's an actual person to ask.
+  const active = OPTIONS.find((o) => o.id === pane);
+  // A literal class per count, not a template string — Tailwind's build only
+  // picks up class names it can see written out, so "grid-cols-" + n would
+  // silently produce no columns at all in the production build.
+  const gridColsClass =
+    OPTIONS.length === 1 ? "grid-cols-1" : OPTIONS.length === 2 ? "grid-cols-2" : "grid-cols-3";
+
+  // Connect and Invite only appear when there's an actual person to ask;
+  // Explore, where it's still shown, asks nothing of anyone.
   return (
     <>
-      <div className={`grid gap-2 ${OPTIONS.length === 1 ? "grid-cols-1" : "grid-cols-3"} ${className}`}>
+      <div className={`grid gap-2 ${gridColsClass} ${className}`}>
         {OPTIONS.map((o) => {
           const isConnect = o.id === "connect";
           const primary = isConnect && status === "none";
@@ -210,7 +227,14 @@ export function PersonActions({
               ) : (
                 <o.icon className="size-3.5 shrink-0" strokeWidth={1.9} />
               )}
-              <span className="truncate">
+              {/* Never ellipsis: a clipped "Conn…" or "Inv…" reads as broken,
+                  not abbreviated. Two buttons at full labels comfortably fit
+                  even the narrowest supported card column; whitespace-nowrap
+                  keeps a two-word label ("Invite to Space" doesn't appear
+                  here — see the shorter labels below — but "Connected" or
+                  "Invite" could still wrap awkwardly without it) on one
+                  line rather than breaking mid-word. */}
+              <span className="whitespace-nowrap">
                 {isConnect && status === "pending_out"
                   ? "Sent"
                   : o.id === "invite"
