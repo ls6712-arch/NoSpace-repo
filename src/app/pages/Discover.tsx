@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   PenLine,
   Search,
+  ShoppingBag,
   UserRound,
   Users,
   X,
@@ -14,12 +15,14 @@ import { spacePhoto } from "../data/hobbyPhotos";
 import { categoryIcon } from "../data/categoryIcons";
 import { circles } from "../data/circles";
 import { Post } from "../data/posts";
+import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { useCorners, isDiscoverable } from "../context/CornersContext";
 import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
 import { hobbyMatchesQuery } from "../lib/search";
 import { ContentCard } from "../components/ContentCard";
+import { ProductCard } from "../components/ProductCard";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { DiscoverHeroArt } from "../components/DiscoverHeroArt";
@@ -58,6 +61,7 @@ const DISCOVER_TABS = [
   { id: "spaces", label: "Spaces", icon: LayoutGrid },
   { id: "circles", label: "Circles", icon: Users },
   { id: "people", label: "People", icon: UserRound },
+  { id: "marketplace", label: "Marketplace", icon: ShoppingBag },
 ] as const;
 type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
 
@@ -252,6 +256,67 @@ function SpaceTile({
   );
 }
 
+/**
+ * Discover's own Marketplace tab — the one place, alongside a Space's own
+ * Marketplace tab, where product listings are actually browsable rather
+ * than reachable only by an accidental search hit. Grouped by Space, same
+ * shape as CirclesBrowser above, with each group linking on to that
+ * Space's full listing set on /shop rather than duplicating pagination here.
+ */
+function MarketplaceTab({ query }: { query: string }) {
+  const { listings } = useContent();
+  const q = query.trim().toLowerCase();
+  const matching = q
+    ? listings.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.creator.toLowerCase().includes(q),
+      )
+    : listings;
+
+  const bySpace = new Map<string, Product[]>();
+  for (const product of matching) {
+    bySpace.set(product.hobbySlug, [...(bySpace.get(product.hobbySlug) ?? []), product]);
+  }
+
+  if (matching.length === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+        {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
+      </p>
+    );
+  }
+
+  return (
+    <>
+      {[...bySpace.entries()].map(([hobbySlug, list]) => {
+        const hobby = hobbies.find((h) => h.slug === hobbySlug);
+        return (
+          <section key={hobbySlug} className="mb-11">
+            <div className="mb-3 flex items-end justify-between gap-4">
+              <h2 className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+                {hobby?.name ?? hobbySlug}
+              </h2>
+              <Link
+                to={`/shop?hobby=${hobbySlug}`}
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                See all in {hobby?.shortName ?? hobbySlug} →
+              </Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {list.slice(0, 4).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </>
+  );
+}
+
 export function Discover() {
   const { publicFeed } = useContent();
   const social = useSocial();
@@ -440,6 +505,7 @@ export function Discover() {
 
           {tab === "circles" && <CirclesBrowser query={query} />}
           {tab === "people" && <PeopleBrowser query={query} />}
+          {tab === "marketplace" && <MarketplaceTab query={query} />}
 
           {tab === "spaces" && (
             <>
