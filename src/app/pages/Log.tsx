@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useBlocker, useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft,
   Camera,
@@ -28,6 +28,15 @@ import { useRewards } from "../context/RewardsContext";
 import { addPrivateLog, startProject, useJournal } from "../lib/journal";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { extractFirstUrl } from "../lib/linkPreview";
+import {
+  draftHasContent,
+  MomentDraftFields,
+  loadLocalDraft,
+  saveLocalDraft,
+  clearLocalDraft,
+} from "../lib/draftStore";
+import { saveDraftMedia, loadDraftMedia, clearDraftMedia } from "../lib/draftMedia";
+import { mirrorDraft, fetchRemoteDraft, clearRemoteDraft } from "../lib/draftRemote";
 import { archiveKey } from "../components/HobbyShelf";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -40,6 +49,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { InterestField } from "../components/InterestField";
 import { CornerTagField } from "../components/CornerTagField";
@@ -244,6 +254,18 @@ export function Log() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // A saved draft found on entry, offered before anything else happens —
+  // never auto-loaded, since silently dropping someone into an old draft
+  // when they meant to start something new would be its own kind of data
+  // loss. Resolved (resumed or discarded) before the camera screen's own
+  // autosave effects below are allowed to touch storage.
+  const [draftPrompt, setDraftPrompt] = useState<MomentDraftFields | null>(null);
+  const [draftPromptMedia, setDraftPromptMedia] = useState<{ file: File; type: "photo" | "video" } | null>(
+    null,
+  );
+  const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
+  const draftReadyRef = useRef(false);
+
   const detailFileRef = useRef<HTMLInputElement>(null);
 
   // Who posted this always follows the account's display name now — no
@@ -280,6 +302,205 @@ export function Log() {
   useEffect(() => {
     if (mode === "private") setAudience("private");
   }, [mode]);
+
+  // ── Draft recovery: checked once, on entry, before anything else touches
+  // storage. Never applies to a Pursuit-scoped visit — that flow's own
+  // "Add progress" menu is a different, already-scoped thing. ─────────────
+  useEffect(() => {
+    if (pursuitScoped) {
+      draftReadyRef.current = true;
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const local = loadLocalDraft();
+      const remote = user ? await fetchRemoteDraft(user.id) : null;
+      if (cancelled) return;
+      const winner =
+        !local ? remote : !remote ? local : remote.updatedAt > local.updatedAt ? remote : local;
+      if (winner && draftHasContent(winner)) {
+        const media = await loadDraftMedia();
+        if (cancelled) return;
+        setDraftPrompt(winner);
+        setDraftPromptMedia(media);
+      }
+      draftReadyRef.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Checked once on mount — a later sign-in shouldn't retrigger this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const clearDraft = () => {
+    clearLocalDraft();
+    void clearDraftMedia();
+    if (user) void clearRemoteDraft(user.id);
+  };
+
+  const resumeDraft = () => {
+    if (!draftPrompt) return;
+    setThought(draftPrompt.thought);
+    setHobbySlug(draftPrompt.hobbySlug || hobbies[0].slug);
+    setSubHobby(draftPrompt.subHobby);
+    setInterest(draftPrompt.interest);
+    setSpaceSet(draftPrompt.spaceSet);
+    setAudience(draftPrompt.audience as Visibility | "private");
+    setCircleId(draftPrompt.circleId);
+    setIsActivity(draftPrompt.isActivity);
+    setStartsAt(draftPrompt.startsAt);
+    setLocationName(draftPrompt.locationName);
+    setLocationPrivacy(draftPrompt.locationPrivacy as LocationPrivacy);
+    setProjectId(draftPrompt.projectId);
+    setProjectTitle(draftPrompt.projectTitle);
+    if (draftPromptMedia) {
+      setFile(draftPromptMedia.file);
+      setType(draftPromptMedia.type);
+    }
+    setDraftPrompt(null);
+    setDraftPromptMedia(null);
+    setScreen("caption");
+  };
+
+  const discardDraftPrompt = () => {
+    clearDraft();
+    setDraftPrompt(null);
+    setDraftPromptMedia(null);
+  };
+
+  // Debounced autosave: caption, audience, Corner/Pursuit, and event fields,
+  // a few seconds after the person stops changing them — not on every
+  // keystroke. Attached media is saved separately, immediately, below.
+  useEffect(() => {
+    if (screen !== "caption") return;
+    const fields: MomentDraftFields = {
+      thought,
+      hobbySlug,
+      subHobby,
+      interest,
+      spaceSet,
+      audience,
+      circleId,
+      isActivity,
+      startsAt,
+      locationName,
+      locationPrivacy,
+      projectId,
+      projectTitle,
+      mediaType: file ? type : null,
+      updatedAt: Date.now(),
+    };
+    if (!draftHasContent(fields)) return;
+    const timer = setTimeout(() => {
+      saveLocalDraft(fields);
+      if (user) void mirrorDraft(user.id, fields);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [
+    screen,
+    thought,
+    hobbySlug,
+    subHobby,
+    interest,
+    spaceSet,
+    audience,
+    circleId,
+    isActivity,
+    startsAt,
+    locationName,
+    locationPrivacy,
+    projectId,
+    projectTitle,
+    file,
+    type,
+    user,
+  ]);
+
+  // A capture is already a deliberate, discrete action — no need to debounce
+  // saving it the way typed text is. Removing the attached file clears the
+  // saved copy too, so an emptied composer doesn't quietly keep an orphaned
+  // photo around. Held off until the draft-recovery check above has
+  // resolved, so this can't wipe a saved draft's media before it's even
+  // been offered.
+  useEffect(() => {
+    if (!draftReadyRef.current) return;
+    if (file) void saveDraftMedia(file, type);
+    else void clearDraftMedia();
+  }, [file, type]);
+
+  // Exit confirmation: only while the caption screen actually holds
+  // something that would be lost — an unused, blank composer never prompts.
+  const hasUnsavedChanges =
+    screen === "caption" &&
+    (thought.trim().length > 0 ||
+      !!file ||
+      audience !== "private" ||
+      interest.trim().length > 0 ||
+      isActivity ||
+      !!projectId ||
+      projectTitle.trim().length > 0);
+
+  const blocker = useBlocker(hasUnsavedChanges);
+
+  useEffect(() => {
+    if (blocker.state === "blocked") setDiscardPromptOpen(true);
+  }, [blocker.state]);
+
+  // Covers what useBlocker can't: an actual tab close or hard reload. The
+  // browser shows its own un-customizable prompt here, and if the person
+  // goes through with leaving there's no chance to run cleanup code — which
+  // is exactly why autosave already ran continuously above, rather than
+  // only at the moment of leaving.
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasUnsavedChanges]);
+
+  const stayInComposer = () => {
+    setDiscardPromptOpen(false);
+    if (blocker.state === "blocked") blocker.reset();
+  };
+
+  const discardAndLeave = () => {
+    clearDraft();
+    setDiscardPromptOpen(false);
+    if (blocker.state === "blocked") blocker.proceed();
+  };
+
+  // Rendered from more than one early-return branch below (the caption
+  // screen itself, and the "log in to keep this" screen a non-private
+  // audience can land on without ever leaving screen === "caption") — a
+  // shared element rather than a component, since neither branch needs it
+  // to keep any identity across renders. A fast, in-the-moment safety net
+  // against an accidental misclick; autosave above is the durable backstop
+  // for what this can't catch (an actual tab close, or a crash), where a
+  // leftover draft is exactly what makes those recoverable next time. This
+  // dialog's own "Discard" is a deliberate choice, so it clears the draft
+  // rather than leaving one behind.
+  const discardDialog = (
+    <Dialog open={discardPromptOpen} onOpenChange={(o) => !o && stayInComposer()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Discard this moment?</DialogTitle>
+          <DialogDescription>Leaving now won't keep what you've added.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={stayInComposer}>
+            Keep writing
+          </Button>
+          <Button variant="destructive" onClick={discardAndLeave}>
+            Discard
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 
   const hobby = hobbies.find((h) => h.slug === hobbySlug)!;
   const hobbyCircles = circlesByHobby(hobbySlug);
@@ -345,6 +566,11 @@ export function Log() {
     // own). Without this, "Private by default" meant most real logging
     // silently never counted toward a milestone at all.
     rewards.recordPostCreated(spaceSet ? subHobby || `space:${hobbySlug}` : undefined);
+    // A committed Moment isn't "in progress" anymore — only the top-level
+    // camera-first draft this feature tracks, never the Pursuit-scoped
+    // "Add progress" flow's own private reflection, which was never this
+    // draft to begin with.
+    if (!pursuitScoped) clearDraft();
     setSavedAs("private");
     setScreen("saved");
   };
@@ -411,6 +637,7 @@ export function Log() {
           void mirrorPursuit(user.id, { ...targetProject, finishedAt: undefined });
         }
       }
+      if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
       setScreen("saved");
     } catch {
@@ -482,6 +709,46 @@ export function Log() {
           openProjects={openProjects}
         />
         <PursuitDialog open={pursuitDialogOpen} onOpenChange={setPursuitDialogOpen} />
+
+        {/* Never dismissed by clicking outside or Escape — resuming or
+            discarding has to be an actual choice, not an accidental
+            dismissal that quietly leaves an old draft sitting around. */}
+        <Dialog open={!!draftPrompt}>
+          <DialogContent
+            showCloseButton={false}
+            onInteractOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+          >
+            <DialogHeader>
+              <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Resume your last draft?</DialogTitle>
+              <DialogDescription>
+                You started a Moment you didn't finish.
+              </DialogDescription>
+            </DialogHeader>
+            {draftPrompt && (
+              <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5 text-sm text-muted-foreground">
+                {draftPrompt.thought.trim() ? (
+                  <p className="line-clamp-3 text-foreground">"{draftPrompt.thought.trim()}"</p>
+                ) : (
+                  <p>No caption yet.</p>
+                )}
+                {draftPrompt.mediaType && !draftPromptMedia && (
+                  <p className="mt-2 text-xs">
+                    A {draftPrompt.mediaType} was attached on another device — not available here.
+                  </p>
+                )}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={discardDraftPrompt}>
+                Discard
+              </Button>
+              <Button variant="coral" onClick={resumeDraft}>
+                Resume draft
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Shell>
     );
   }
@@ -576,6 +843,7 @@ export function Log() {
             </Button>
           </div>
         </div>
+        {discardDialog}
       </div>
     );
   }
@@ -992,6 +1260,8 @@ export function Log() {
             Add a photo, video, or a line of text to continue.
           </p>
         )}
+
+        {discardDialog}
       </Shell>
     );
   }
