@@ -180,7 +180,10 @@ export function Log() {
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
   const [reflection, setReflection] = useState("");
-  const [audience, setAudience] = useState<Visibility | "private">("friends");
+  // Private by default — matches the product's "Private by default"
+  // positioning: hitting Share without ever touching this selector must
+  // actually save privately, not just show "Only you" pre-highlighted.
+  const [audience, setAudience] = useState<Visibility | "private">("private");
   const [shareOpen, setShareOpen] = useState(false);
   const [circleId, setCircleId] = useState<number | undefined>(undefined);
   const [forSale, setForSale] = useState(false);
@@ -215,9 +218,16 @@ export function Log() {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  // Picking the dedicated "Reflect privately" mode still forces the
+  // audience to private (so a person who'd already changed it can't end up
+  // on that screen sharing by accident). It used to also do the reverse —
+  // bounce audience back to "friends" the moment any other mode was picked
+  // — which made sense back when "friends" was the initial default, but
+  // now silently overwrote the new private default the instant a mode was
+  // chosen. Audience should only ever change here, or by the person's own
+  // click on the selector below.
   useEffect(() => {
     if (mode === "private") setAudience("private");
-    else if (mode) setAudience((a) => (a === "private" ? "friends" : a));
   }, [mode]);
 
   const hobby = hobbies.find((h) => h.slug === hobbySlug)!;
