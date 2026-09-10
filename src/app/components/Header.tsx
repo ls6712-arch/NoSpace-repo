@@ -184,7 +184,7 @@ const PRIMARY_NAV = [
   { to: "/discover", label: "Discover", hint: "Spaces, Circles, people and pursuits",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },
   { to: "/my-space", label: "My Space", hint: "New work from the people, hobbies and Circles you're part of",
-    match: (p: string) => p === "/" || p.startsWith("/my-space") },
+    match: (p: string) => p.startsWith("/my-space") },
   { to: "/circles", label: "Circles", hint: "Communities you can join",
     match: (p: string) => p.startsWith("/circles") },
   { to: "/create", label: "Start your log", hint: "Share a moment, or start a pursuit.", accent: true,
@@ -244,9 +244,24 @@ export function Header() {
     <header className="ns-site-header sticky top-0 z-50 w-full border-b border-[var(--hairline)]">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex min-w-0 items-center gap-6">
-          <Link to="/" className="ns-wordmark flex shrink-0 items-center gap-2.5">
+          {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries
+              below — it's this wordmark — so it carries the same active
+              underline itself rather than leaving no primary item active
+              (or, as before, leaving My Space wrongly claiming it). */}
+          <Link
+            to="/"
+            className="ns-wordmark relative flex shrink-0 items-center gap-2.5"
+            aria-current={pathname === "/" ? "page" : undefined}
+          >
             <span className="ns-wordmark-mark" aria-hidden="true" />
             <span className="text-2xl font-semibold text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
+            {pathname === "/" && (
+              <span
+                className="absolute -bottom-0.5 left-0 right-0 h-px"
+                style={{ backgroundColor: "var(--coral)" }}
+                aria-hidden="true"
+              />
+            )}
           </Link>
           {/* Three destinations, generously spaced. Individual hobby spaces
               are reached through Discover rather than crowding the bar. */}
