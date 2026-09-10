@@ -132,7 +132,7 @@ export function NotificationsMenu() {
                 const Icon = ICON[n.kind] ?? Bell;
                 const body = (
                   <span className="flex items-start gap-3 px-4 py-2.5">
-                    <Icon className="mt-0.5 size-4 shrink-0 text-[var(--forest)]" />
+                    <Icon className="mt-0.5 size-4 shrink-0 text-[var(--violet-electric-bright)]" />
                     <span className="min-w-0">
                       <span className="block text-sm leading-snug">{n.body}</span>
                       <span className="block text-[11px] text-muted-foreground">

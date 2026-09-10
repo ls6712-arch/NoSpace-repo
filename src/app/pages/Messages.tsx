@@ -59,7 +59,7 @@ export function Messages() {
     return (
       <div className="min-h-screen bg-surface py-14">
         <div className="container mx-auto max-w-lg px-4 text-center">
-          <span className="mx-auto mb-5 flex size-14 items-center justify-center rounded-full bg-surface-muted text-[var(--forest)]">
+          <span className="mx-auto mb-5 flex size-14 items-center justify-center rounded-full bg-surface-muted text-foreground">
             <MessagesSquare className="size-6" />
           </span>
           <h1 className="mb-2 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>

@@ -47,14 +47,14 @@ export function QuietMilestones({
                 style={
                   unlocked
                     ? {
-                        backgroundColor: `color-mix(in srgb, ${badge.tint} 46%, var(--cream))`,
+                        backgroundColor: `color-mix(in srgb, ${badge.tint} 46%, var(--surface-elevated))`,
                         border: `1px solid color-mix(in srgb, ${badge.tint} 62%, transparent)`,
-                        color: "var(--forest-ink)",
+                        color: "var(--offwhite)",
                       }
                     : {
                         backgroundColor: "var(--surface-muted)",
                         border: "1px dashed var(--border)",
-                        color: "color-mix(in srgb, var(--forest-ink) 32%, transparent)",
+                        color: "var(--lavender-faint)",
                       }
                 }
               >
@@ -90,14 +90,14 @@ export function QuietMilestones({
                       style={
                         unlocked
                           ? {
-                              backgroundColor: `color-mix(in srgb, ${selected.tint} 46%, var(--cream))`,
+                              backgroundColor: `color-mix(in srgb, ${selected.tint} 46%, var(--surface-elevated))`,
                               border: `1px solid color-mix(in srgb, ${selected.tint} 62%, transparent)`,
-                              color: "var(--forest-ink)",
+                              color: "var(--offwhite)",
                             }
                           : {
                               backgroundColor: "var(--surface-muted)",
                               border: "1px dashed var(--border)",
-                              color: "color-mix(in srgb, var(--forest-ink) 32%, transparent)",
+                              color: "var(--lavender-faint)",
                             }
                       }
                     >

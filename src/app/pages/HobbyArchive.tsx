@@ -231,7 +231,7 @@ export function HobbyArchive() {
                                 />
                                 {post.type === "video" && (
                                   <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                    <span className="flex size-9 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-sm">
+                                    <span className="flex size-9 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-sm">
                                       <Play className="size-4 fill-white text-white" />
                                     </span>
                                   </span>
@@ -248,11 +248,11 @@ export function HobbyArchive() {
                               </div>
                             )}
 
-                            <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[var(--forest-ink)]/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+                            <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[var(--void)]/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
                               <audience.icon className="size-2.5" />
                               {audience.label}
                             </span>
-                            <span className="absolute bottom-2 right-2 rounded-full bg-[var(--forest-ink)]/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+                            <span className="absolute bottom-2 right-2 rounded-full bg-[var(--void)]/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
                               {dayLabel(post.createdAt)}
                             </span>
                           </button>

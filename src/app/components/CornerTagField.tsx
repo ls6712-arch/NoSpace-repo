@@ -115,7 +115,7 @@ export function CornerTagField({
             {exact && (
               <li className="border-t border-[var(--hairline)] px-4 py-2 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Check className="size-3 text-[var(--forest)]" />
+                  <Check className="size-3 text-foreground" />
                   Already a Corner here. Pick it above to use it.
                 </span>
               </li>

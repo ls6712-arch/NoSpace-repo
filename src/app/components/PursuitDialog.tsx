@@ -71,9 +71,9 @@ export function PursuitDialog({
           <DialogTitle className="flex items-center gap-2.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
             <span
               className="flex size-8 shrink-0 items-center justify-center rounded-full"
-              style={{ backgroundColor: "color-mix(in srgb, var(--pastel-clay) 42%, var(--cream))" }}
+              style={{ backgroundColor: "color-mix(in srgb, var(--pastel-clay) 42%, var(--surface-elevated))" }}
             >
-              <Sparkles className="size-4 text-[var(--forest-ink)]" strokeWidth={1.7} />
+              <Sparkles className="size-4 text-foreground" strokeWidth={1.7} />
             </span>
             Add to Your Pursuits
           </DialogTitle>

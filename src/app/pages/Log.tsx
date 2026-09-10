@@ -497,7 +497,7 @@ export function Log() {
                   }}
                   className="group flex h-full w-full flex-col items-start gap-2 rounded-2xl border border-border bg-card p-5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-[0_14px_28px_-18px_rgba(11,62,46,0.5)] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:border-border disabled:hover:shadow-none"
                 >
-                  <span className="flex size-9 items-center justify-center rounded-full bg-surface-muted text-[var(--forest)] transition-colors group-hover:bg-[var(--coral-deep)] group-hover:text-white group-disabled:bg-surface-muted group-disabled:text-[var(--forest)]">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-surface-muted text-foreground transition-colors group-hover:bg-[var(--coral-deep)] group-hover:text-white group-disabled:bg-surface-muted group-disabled:text-foreground">
                     <Icon className="size-4" />
                   </span>
                   <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
@@ -568,7 +568,7 @@ export function Log() {
             </svg>
             <span
               className="flex size-12 items-center justify-center rounded-full border-2"
-              style={{ borderColor: "var(--yellow)", color: "var(--forest)" }}
+              style={{ borderColor: "var(--yellow)", color: "var(--success)" }}
             >
               {savedAs === "private" ? <Lock className="size-5" /> : <Check className="size-6" />}
             </span>
@@ -593,14 +593,14 @@ export function Log() {
           {/* An honest failure beats a cheerful lie: the post is on screen but
               only in this tab, and it will be gone after a reload. */}
           {saveError && (
-            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--cream))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
               {saveError} Nothing you wrote is lost yet. Try again before you
               close this tab.
             </p>
           )}
 
           {mediaError && (
-            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--cream))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
               {mediaError}
             </p>
           )}
@@ -656,7 +656,7 @@ export function Log() {
             <button
               type="button"
               onClick={() => setFile(null)}
-              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-[var(--forest-ink)]/65 text-white"
+              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/65 text-white"
               aria-label="Remove this photo"
             >
               <X className="size-3.5" />
@@ -689,7 +689,7 @@ export function Log() {
               onClick={saveAsPrivateLog}
               className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left transition-colors hover:border-[var(--coral-deep)] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:border-border"
             >
-              <Bookmark className="size-4 shrink-0 text-[var(--forest)]" />
+              <Bookmark className="size-4 shrink-0 text-foreground" />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm">Save this moment</span>
                 <span className="block text-xs text-muted-foreground">
@@ -708,7 +708,7 @@ export function Log() {
                 shareOpen ? "border-[var(--coral-deep)]" : "border-border hover:border-[var(--coral-deep)]"
               }`}
             >
-              <Send className="size-4 shrink-0 text-[var(--forest)]" />
+              <Send className="size-4 shrink-0 text-foreground" />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm">Share this moment</span>
                 <span className="block text-xs text-muted-foreground">
@@ -811,7 +811,7 @@ export function Log() {
                     <span
                       className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
                         isActivity
-                          ? "justify-end [background-color:var(--forest)]"
+                          ? "justify-end [background-color:var(--violet-electric)]"
                           : "justify-start bg-surface-muted"
                       }`}
                     >
@@ -884,11 +884,11 @@ export function Log() {
                             }}
                             className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
                               active
-                                ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--cream))]"
+                                ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface-elevated))]"
                                 : "border-border bg-surface hover:border-[var(--foreground)]/30"
                             }`}
                           >
-                            <opt.icon className="size-4 shrink-0 text-[var(--forest)]" />
+                            <opt.icon className="size-4 shrink-0 text-foreground" />
                             <span className="min-w-0 flex-1 text-sm">{opt.label}</span>
                             {active && <Check className="size-4 shrink-0 text-[var(--coral-deep)]" />}
                           </button>
@@ -945,7 +945,7 @@ export function Log() {
                         <span
                           className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
                             forSale
-                              ? "justify-end [background-color:var(--forest)]"
+                              ? "justify-end [background-color:var(--violet-electric)]"
                               : "justify-start bg-surface-muted"
                           }`}
                         >
@@ -1026,7 +1026,7 @@ export function Log() {
           <li>
             <div className="rounded-2xl border border-border bg-card px-4 py-3.5">
               <div className="flex items-center gap-3">
-                <FolderPlus className="size-4 shrink-0 text-[var(--forest)]" />
+                <FolderPlus className="size-4 shrink-0 text-foreground" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm">Add to a Pursuit</span>
                   <span className="block text-xs text-muted-foreground">
@@ -1167,7 +1167,7 @@ export function Log() {
                       <button
                         type="button"
                         onClick={() => setFile(null)}
-                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--forest-ink)]/70 text-white"
+                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/70 text-white"
                         aria-label="Remove file"
                       >
                         <X className="size-3" />
@@ -1319,7 +1319,7 @@ export function Log() {
                 <span
                   className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
                     forSale
-                      ? "justify-end [background-color:var(--forest)]"
+                      ? "justify-end [background-color:var(--violet-electric)]"
                       : "justify-start bg-surface-muted"
                   }`}
                 >

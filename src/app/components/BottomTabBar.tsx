@@ -81,9 +81,9 @@ export function BottomTabBar() {
             const Icon = tab.icon;
             const active = tab.match(pathname);
             const tint = tab.accent
-              ? "var(--coral-deep)"
+              ? "var(--violet-electric-bright)"
               : active
-                ? "var(--foreground)"
+                ? "var(--violet-electric-bright)"
                 : undefined;
 
             return (
@@ -98,7 +98,7 @@ export function BottomTabBar() {
                   color: tint,
                   backgroundColor:
                     tab.accent && active
-                      ? "color-mix(in srgb, var(--coral-deep) 12%, transparent)"
+                      ? "color-mix(in srgb, var(--violet-electric) 16%, transparent)"
                       : undefined,
                 }}
               >

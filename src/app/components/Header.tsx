@@ -254,11 +254,11 @@ export function Header() {
             aria-current={pathname === "/" ? "page" : undefined}
           >
             <span className="ns-wordmark-mark" aria-hidden="true" />
-            <span className="text-2xl font-semibold text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
+            <span className="text-2xl font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
             {pathname === "/" && (
               <span
                 className="absolute -bottom-0.5 left-0 right-0 h-px"
-                style={{ backgroundColor: "var(--coral)" }}
+                style={{ backgroundColor: "var(--violet-electric)" }}
                 aria-hidden="true"
               />
             )}
@@ -276,9 +276,9 @@ export function Header() {
                   aria-current={active ? "page" : undefined}
                   className={
                     item.accent
-                      ? "flex items-center gap-1.5 border border-[var(--coral-deep)] px-3 py-1.5 text-sm text-white transition-[filter] [background-color:var(--coral-deep)] hover:brightness-110"
+                      ? "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm [background-image:var(--gradient-brand)] text-white shadow-[0_0_0_1px_rgba(166,108,255,0.3),0_8px_20px_-8px_rgba(166,108,255,0.55)] transition-[filter] hover:brightness-110"
                       : `relative py-1 text-sm transition-colors ${
-                          active ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+                          active ? "text-[var(--violet-electric-bright)]" : "text-foreground/75 hover:text-foreground"
                         }`
                   }
                 >
@@ -288,7 +288,7 @@ export function Header() {
                   {active && !item.accent && (
                     <span
                       className="absolute -bottom-0.5 left-0 right-0 h-px"
-                      style={{ backgroundColor: "var(--coral)" }}
+                      style={{ backgroundColor: "var(--violet-electric)" }}
                       aria-hidden="true"
                     />
                   )}

@@ -9,21 +9,30 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // The restrained-glow primary action: ink-on-violet text (white only
+        // clears 3.38:1 on --violet-electric, short of AA; ink-on-violet
+        // clears 5.89:1), a hairline violet ring, and a soft glow that only
+        // shows up on hover/focus — "restrained," not every button glowing.
+        default:
+          "bg-primary text-primary-foreground shadow-[0_0_0_1px_rgba(166,108,255,0.35)] transition-shadow hover:shadow-[0_0_0_1px_rgba(166,108,255,0.5),0_0_24px_-4px_rgba(166,108,255,0.55)] active:brightness-95",
         brand:
-          "text-white shadow-lg hover:brightness-110 hover:scale-[1.02] active:scale-[0.99] [background-image:var(--gradient-brand)]",
-        // The primary NoSpace action. Uses --coral-deep rather than raw coral
-        // so the white label clears WCAG AA (5.15:1 vs 2.82:1).
+          "text-white shadow-[0_0_0_1px_rgba(166,108,255,0.3),0_10px_28px_-10px_rgba(166,108,255,0.6)] hover:brightness-110 hover:scale-[1.02] active:scale-[0.99] [background-image:var(--gradient-brand)]",
+        // The warm action, kept for places that want NoSpace's human warmth
+        // rather than the violet system's own accent (--coral-deep clears
+        // 5.15:1 with white).
         coral:
           "text-white shadow-sm [background-color:var(--coral-deep)] hover:brightness-110 active:brightness-95",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20",
+        // Secondary action: near-transparent dark surface with a subtle
+        // violet-tinted border, brightening slightly on hover — never a
+        // flat white/light surface.
         outline:
-          "border border-input bg-transparent text-foreground hover:bg-accent/10 hover:border-accent/50",
+          "border border-input bg-[color-mix(in_srgb,var(--void)_35%,transparent)] text-foreground hover:bg-accent/10 hover:border-accent/50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-surface-muted hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        ghost: "hover:bg-surface-muted hover:text-foreground",
+        link: "text-[var(--violet-electric-bright)] underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

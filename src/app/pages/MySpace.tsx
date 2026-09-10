@@ -45,7 +45,7 @@ function TryThisCard({ post, onStart }: { post: Post; onStart: (post: Post) => v
           className="aspect-[4/5] w-full"
         />
         {hobby && (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--forest-ink)]/55 px-2.5 py-1 text-[10px] text-white backdrop-blur-md">
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--void)]/55 px-2.5 py-1 text-[10px] text-white backdrop-blur-md">
             {hobby.shortName}
           </span>
         )}
@@ -55,7 +55,7 @@ function TryThisCard({ post, onStart }: { post: Post; onStart: (post: Post) => v
           title="Added to your Space (tap to remove)"
           aria-label="Remove from Try This"
           onClick={() => toggleSaved(post.id)}
-          className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-md transition-colors hover:bg-[var(--forest-ink)]/75"
+          className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
         >
           <Bookmark className="size-4" strokeWidth={1.9} style={{ color: "white", fill: "white" }} />
         </button>
@@ -332,7 +332,7 @@ export function MySpace() {
         {/* The nudge — one, gentle, and only when it's actually true. */}
         {nudge && nudgeDays >= 7 && (
           <div className="mb-11 flex items-center gap-4 rounded-2xl border border-border bg-[color-mix(in_srgb,var(--yellow)_14%,var(--surface))] px-5 py-4">
-            <Sprout className="size-5 shrink-0 text-[var(--forest)]" />
+            <Sprout className="size-5 shrink-0 text-foreground" />
             <p className="text-sm">
               <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                 {nudge.title}

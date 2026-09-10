@@ -13,7 +13,7 @@ export function HandwrittenNote({
   return (
     <div className={`hidden -rotate-2 text-right sm:block ${className}`} aria-hidden="true">
       <p
-        className="text-2xl leading-tight text-[var(--forest)]"
+        className="text-2xl leading-tight text-foreground"
         style={{ fontFamily: "var(--font-hand)" }}
       >
         {children}

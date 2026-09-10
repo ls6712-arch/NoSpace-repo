@@ -96,7 +96,7 @@ export function SuggestCategory({ className = "" }: { className?: string }) {
             <>
               <div className="rounded-2xl bg-surface-muted px-4 py-4">
                 <p className="mb-1 flex items-center gap-2 text-sm">
-                  <Check className="size-4 text-[var(--forest)]" />
+                  <Check className="size-4 text-foreground" />
                   Sent for review.
                 </p>
                 <p className="text-xs leading-relaxed text-muted-foreground">
@@ -158,7 +158,7 @@ export function SuggestCategory({ className = "" }: { className?: string }) {
               )}
 
               <Button
-                className="w-full text-white [background-color:var(--forest)]"
+                className="w-full text-white [background-image:var(--gradient-brand)]"
                 disabled={!name.trim() || busy}
                 onClick={submit}
               >

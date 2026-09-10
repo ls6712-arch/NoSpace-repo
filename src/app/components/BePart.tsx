@@ -180,8 +180,8 @@ export function BePart({
         aria-haspopup="dialog"
         className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors ${
           state
-            ? "text-[var(--forest)] [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--cream))]"
-            : "text-white [background-color:var(--forest)]"
+            ? "text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]"
+            : "text-white [background-image:var(--gradient-brand)]"
         } ${className}`}
       >
         {state ? (
@@ -219,10 +219,10 @@ export function BePart({
                       <span
                         className="flex size-11 shrink-0 items-center justify-center rounded-full"
                         style={{
-                          backgroundColor: `color-mix(in srgb, ${o.tint} 42%, var(--cream))`,
+                          backgroundColor: `color-mix(in srgb, ${o.tint} 42%, var(--surface-elevated))`,
                         }}
                       >
-                        <o.icon className="size-5 text-[var(--forest-ink)]" strokeWidth={1.7} />
+                        <o.icon className="size-5 text-foreground" strokeWidth={1.7} />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm">{o.label}</span>
@@ -246,9 +246,9 @@ export function BePart({
                 <DialogTitle className="flex items-center gap-2.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
                   <span
                     className="flex size-8 shrink-0 items-center justify-center rounded-full"
-                    style={{ backgroundColor: `color-mix(in srgb, ${active.tint} 42%, var(--cream))` }}
+                    style={{ backgroundColor: `color-mix(in srgb, ${active.tint} 42%, var(--surface-elevated))` }}
                   >
-                    <active.icon className="size-4 text-[var(--forest-ink)]" strokeWidth={1.7} />
+                    <active.icon className="size-4 text-foreground" strokeWidth={1.7} />
                   </span>
                   {active.label}
                 </DialogTitle>
@@ -263,7 +263,7 @@ export function BePart({
                   </p>
                   {exploring ? (
                     <>
-                      <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-[var(--forest)] [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--cream))]">
+                      <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]">
                         <Check className="size-4" />
                         Exploring {hobbyLabel}
                       </div>
@@ -279,7 +279,7 @@ export function BePart({
                     </>
                   ) : (
                     <Button
-                      className="w-full text-white [background-color:var(--forest)]"
+                      className="w-full text-white [background-image:var(--gradient-brand)]"
                       onClick={() => social.toggleHobbyFollow(hobbyKey, hobbyLabel)}
                     >
                       Start exploring
@@ -323,7 +323,7 @@ export function BePart({
 
                   {going ? (
                     <>
-                      <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-[var(--forest)] [background-color:color-mix(in_srgb,var(--pastel-stone)_38%,var(--cream))]">
+                      <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-stone)_38%,var(--surface-elevated))]">
                         <Check className="size-4" />
                         You're joining
                       </div>
@@ -336,7 +336,7 @@ export function BePart({
                     </>
                   ) : (
                     <Button
-                      className="w-full text-white [background-color:var(--forest)]"
+                      className="w-full text-white [background-image:var(--gradient-brand)]"
                       disabled={joining}
                       onClick={async () => {
                         // isGoing() (which gates joinIn itself) reads
@@ -369,7 +369,7 @@ export function BePart({
                   {sent ? (
                     <div className="rounded-2xl bg-surface-muted px-4 py-4">
                       <p className="mb-1 flex items-center gap-2 text-sm">
-                        <Check className="size-4 text-[var(--forest)]" />
+                        <Check className="size-4 text-foreground" />
                         Sent to {personName}.
                       </p>
                       <p className="text-xs leading-relaxed text-muted-foreground">
@@ -410,7 +410,7 @@ export function BePart({
                         </p>
                       )}
                       <Button
-                        className="w-full text-white [background-color:var(--forest)]"
+                        className="w-full text-white [background-image:var(--gradient-brand)]"
                         disabled={!text.trim() || sending}
                         onClick={() => send(active.id as "make_together" | "explore_together")}
                       >

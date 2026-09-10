@@ -19,7 +19,7 @@ export const REACTIONS = [
 /** The tint each one carries when chosen — coral for warmth, forest for intent. */
 const TINT: Record<string, string> = {
   love: "var(--coral-deep)",
-  in: "var(--forest)",
+  in: "var(--sky)",
   keepgoing: "var(--coral-deep)",
 };
 

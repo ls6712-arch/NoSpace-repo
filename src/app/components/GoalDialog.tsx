@@ -131,7 +131,7 @@ export function GoalDialog({
                     active ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
                   }`}
                 >
-                  <Icon className="mt-0.5 size-4 shrink-0 text-[var(--forest-ink)]" strokeWidth={1.7} />
+                  <Icon className="mt-0.5 size-4 shrink-0 text-foreground" strokeWidth={1.7} />
                   <span>
                     <span className="block text-sm">{s.title}</span>
                     <span className="block text-xs text-muted-foreground">{s.example}</span>

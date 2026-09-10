@@ -81,7 +81,7 @@ export function InterestField({
         <p className="mt-1.5 text-[11px] text-muted-foreground">
           {exact ? (
             <span className="flex items-center gap-1">
-              <Check className="size-3 text-[var(--forest)]" />
+              <Check className="size-3 text-foreground" />
               Others use this too. Your Moment joins theirs.
             </span>
           ) : (

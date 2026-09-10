@@ -176,7 +176,7 @@ function HobbyBook({
       }}
     >
       <div
-        className="flex overflow-hidden rounded-r-lg rounded-l-sm bg-[var(--cream)]"
+        className="flex overflow-hidden rounded-r-lg rounded-l-sm bg-[var(--surface-elevated)]"
         style={{ boxShadow: "0 14px 26px -14px rgba(11,62,46,0.45), 0 2px 4px rgba(11,62,46,0.12)" }}
       >
         {/* The spine */}
@@ -228,7 +228,7 @@ function HobbyBook({
             />
             <span className="min-w-0 flex-1">
               <span
-                className="block truncate text-[15px] leading-tight text-[var(--forest-ink)]"
+                className="block truncate text-[15px] leading-tight text-foreground"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 {item.label}
@@ -304,7 +304,7 @@ export function HobbyShelf({
     .map((h) => ({ space: h, books: bySpace.get(h.slug)! }));
 
   return (
-    <div className="rounded-3xl bg-[var(--cream)] px-4 py-8 sm:px-6">
+    <div className="rounded-3xl bg-[var(--surface-elevated)] px-4 py-8 sm:px-6">
       {/* auto-fit/minmax responds to the space this shelf actually has,
           not the viewport — sm:/lg: breakpoints kept forcing 3 columns even
           when this sits in a narrow half-width column next to Your
@@ -315,7 +315,7 @@ export function HobbyShelf({
         {groups.map(({ space, books }) => (
           <section key={space.slug}>
             <h3
-              className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.14em] text-[var(--forest)]"
+              className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.14em] text-foreground"
               style={{ fontFamily: "var(--font-body)" }}
             >
               {space.name}
