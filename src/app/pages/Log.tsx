@@ -29,6 +29,7 @@ import { Visibility } from "../data/posts";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
+import { useRewards } from "../context/RewardsContext";
 import { addPrivateLog, startProject, useJournal } from "../lib/journal";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { archiveKey } from "../components/HobbyShelf";
@@ -197,6 +198,7 @@ export function Log() {
   const [searchParams] = useSearchParams();
   const { addPost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
+  const rewards = useRewards();
   const journal = useJournal();
 
   // "Add progress" on a Pursuit links here with ?pursuit=<id> — resolve it
@@ -342,6 +344,12 @@ export function Log() {
           }
         : undefined,
     );
+    // Quiet Milestones count every real Moment, private ones included — this
+    // is the only recording call a private log ever reaches, since it never
+    // touches ContentContext.addPost (which records shared Moments on its
+    // own). Without this, "Private by default" meant most real logging
+    // silently never counted toward a milestone at all.
+    rewards.recordPostCreated(spaceSet ? subHobby || `space:${hobbySlug}` : undefined);
     setSavedAs("private");
     setScreen("saved");
   };
