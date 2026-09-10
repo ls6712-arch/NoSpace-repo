@@ -23,6 +23,7 @@ import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
 import { hobbyMatchesQuery } from "../lib/search";
 import { ContentCard } from "../components/ContentCard";
 import { ProductCard } from "../components/ProductCard";
+import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { DiscoverHeroArt } from "../components/DiscoverHeroArt";
@@ -282,14 +283,18 @@ function MarketplaceTab({ query }: { query: string }) {
 
   if (matching.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
-        {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
-      </p>
+      <>
+        <ComingSoonBanner />
+        <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+          {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
+        </p>
+      </>
     );
   }
 
   return (
     <>
+      <ComingSoonBanner />
       {[...bySpace.entries()].map(([hobbySlug, list]) => {
         const hobby = hobbies.find((h) => h.slug === hobbySlug);
         return (

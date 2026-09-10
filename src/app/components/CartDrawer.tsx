@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Minus, Plus, Trash2, Check } from "lucide-react";
+import { Clock, Minus, Plus, Trash2, Check } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useRewards } from "../context/RewardsContext";
 import { Button } from "./ui/button";
@@ -114,9 +114,19 @@ export function CartDrawer() {
               <span>Total</span>
               <span className="text-[var(--coral-text)]">${cartTotal.toFixed(2)}</span>
             </div>
-            <Button variant="brand" size="lg" className="w-full" onClick={handleCheckout}>
-              Checkout · +{cartCount * 10} pts
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full cursor-not-allowed opacity-70"
+              disabled
+              title="Checkout isn't live yet — the marketplace is coming soon."
+            >
+              <Clock className="size-4" />
+              Checkout — coming soon
             </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Buying isn't live yet — the marketplace is coming soon.
+            </p>
           </div>
         )}
       </SheetContent>

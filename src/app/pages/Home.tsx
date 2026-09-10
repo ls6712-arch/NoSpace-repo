@@ -120,7 +120,6 @@ export function Home() {
   // one continuous unfolding story rather than five separately-loaded
   // sections (see useScrollReveal.ts).
   const valueCardsRef = useScrollReveal<HTMLDivElement>();
-  const manifestoRef = useScrollReveal<HTMLElement>();
   const loopRef = useScrollReveal<HTMLElement>();
   const audienceRef = useScrollReveal<HTMLElement>();
   const pursuitsRef = useScrollReveal<HTMLElement>();
@@ -212,18 +211,6 @@ export function Home() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Manifesto */}
-        <section ref={manifestoRef} className="ns-reveal py-16 [background-color:var(--forest)] lg:py-20">
-          <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
-            <p className="text-xl leading-relaxed text-[var(--on-forest)] lg:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Most apps want you to perform for an audience. NoSpace doesn't.
-              Log what you actually did. Keep it to yourself, or share it with
-              people who'd actually care. No streaks to keep up. No algorithm
-              deciding who sees you.
-            </p>
           </div>
         </section>
 

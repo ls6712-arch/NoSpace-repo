@@ -8,6 +8,7 @@ import {
   Check,
   ChevronRight,
   ChevronDown,
+  Clock,
   FolderPlus,
   Globe2,
   Images,
@@ -141,6 +142,54 @@ function Preview({
     <video src={url} className={`${className} object-cover`} muted playsInline />
   ) : (
     <img src={url} alt="" className={`${className} object-cover`} />
+  );
+}
+
+// Copy TBD by product — this placeholder is deliberately easy to find and swap.
+const SALE_COMING_SOON_COPY = "Marketplace is coming soon.";
+
+/**
+ * "Offer this for sale" used to open a live price/title form with no real
+ * commerce behind it (no payments, fees, tax, refunds, or seller identity) —
+ * so a published listing looked real but wasn't. Disabled at the point of
+ * entry rather than removed: still visible, so it reads as planned rather
+ * than gone, but no longer reachable. The underlying forSale state, price
+ * field, and addPost plumbing are all untouched below — this only stops the
+ * UI from ever setting forSale to true.
+ */
+function ForSaleComingSoon({ className = "" }: { className?: string }) {
+  const [showNotice, setShowNotice] = useState(false);
+  return (
+    <div className={`rounded-2xl border border-dashed border-border bg-surface p-4 opacity-60 ${className}`}>
+      {/* Not aria-disabled: the control still responds to a tap — it just
+          answers with a coming-soon notice instead of the old toggle
+          behavior, so it needs to stay a normal, focusable, clickable
+          button rather than one assistive tech and automation would both
+          treat as truly inert. "Disabled" here is conveyed visually (muted
+          colors, a static badge instead of a switch), not by blocking
+          interaction outright. */}
+      <button
+        type="button"
+        aria-label="Offer this for sale — coming soon"
+        title={SALE_COMING_SOON_COPY}
+        onClick={() => setShowNotice((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <span>
+          <span className="block text-sm">Offer this for sale</span>
+          <span className="block text-xs text-muted-foreground">
+            The physical piece, a digital download, or a course
+          </span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline)] bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+          <Clock className="size-3" />
+          Coming soon
+        </span>
+      </button>
+      {showNotice && (
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{SALE_COMING_SOON_COPY}</p>
+      )}
+    </div>
   );
 }
 
@@ -1012,77 +1061,11 @@ export function Log() {
                     </div>
                   )}
 
-                  {/* Only a public Moment can become a listing — Connections
-                      and Circle audiences can't be sold to, so this only
-                      shows once Everyone is picked, same rule as the
-                      considered flow's "Offer this for sale." */}
-                  {audience === "public" && (
-                    <div className="mt-3 rounded-2xl border border-border bg-surface p-4">
-                      <button
-                        type="button"
-                        onClick={() => setForSale((v) => !v)}
-                        className="flex w-full items-center justify-between"
-                        aria-pressed={forSale}
-                      >
-                        <span className="text-left">
-                          <span className="block text-sm">Offer this for sale</span>
-                          <span className="block text-xs text-muted-foreground">
-                            The physical piece, a digital download, or a course
-                          </span>
-                        </span>
-                        <span
-                          className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
-                            forSale
-                              ? "justify-end [background-color:var(--violet-electric)]"
-                              : "justify-start bg-surface-muted"
-                          }`}
-                        >
-                          <span className="size-5 rounded-full bg-white" />
-                        </span>
-                      </button>
-
-                      {forSale && (
-                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                          <div className="sm:col-span-2">
-                            <Label htmlFor="saleTitle" className="mb-2 block text-xs">
-                              Listing title
-                            </Label>
-                            <Input
-                              id="saleTitle"
-                              placeholder="e.g. Hand-thrown mug, glazed"
-                              value={saleTitle}
-                              onChange={(e) => setSaleTitle(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="salePrice" className="mb-2 block text-xs">
-                              Price (USD)
-                            </Label>
-                            <Input
-                              id="salePrice"
-                              type="number"
-                              min={0}
-                              value={salePrice}
-                              onChange={(e) => setSalePrice(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label className="mb-2 block text-xs">Type</Label>
-                            <Select value={saleType} onValueChange={(v) => setSaleType(v as typeof saleType)}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="physical">Physical item</SelectItem>
-                                <SelectItem value="digital">Digital download</SelectItem>
-                                <SelectItem value="course">Course</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Only a public Moment could become a listing —
+                      Connections and Circle audiences couldn't be sold to
+                      anyway, same rule the considered flow's own version
+                      of this control uses. */}
+                  {audience === "public" && <ForSaleComingSoon className="mt-3" />}
 
                   <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
                     {audience === "private"
@@ -1395,73 +1378,7 @@ export function Log() {
             </section>
           )}
 
-          {!isPrivateOnly && audience === "public" && (
-            <div className="rounded-2xl border border-border p-4">
-              <button
-                type="button"
-                onClick={() => setForSale((v) => !v)}
-                className="flex w-full items-center justify-between"
-                aria-pressed={forSale}
-              >
-                <span className="text-left">
-                  <span className="block text-sm">Offer this for sale</span>
-                  <span className="block text-xs text-muted-foreground">
-                    The physical piece, a digital download, or a course
-                  </span>
-                </span>
-                <span
-                  className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
-                    forSale
-                      ? "justify-end [background-color:var(--violet-electric)]"
-                      : "justify-start bg-surface-muted"
-                  }`}
-                >
-                  <span className="size-5 rounded-full bg-white" />
-                </span>
-              </button>
-
-              {forSale && (
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="saleTitle" className="mb-2 block">
-                      Listing title
-                    </Label>
-                    <Input
-                      id="saleTitle"
-                      placeholder="e.g. Hand-thrown mug, glazed"
-                      value={saleTitle}
-                      onChange={(e) => setSaleTitle(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="salePrice" className="mb-2 block">
-                      Price (USD)
-                    </Label>
-                    <Input
-                      id="salePrice"
-                      type="number"
-                      min={0}
-                      value={salePrice}
-                      onChange={(e) => setSalePrice(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label className="mb-2 block">Type</Label>
-                    <Select value={saleType} onValueChange={(v) => setSaleType(v as typeof saleType)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="physical">Physical item</SelectItem>
-                        <SelectItem value="digital">Digital download</SelectItem>
-                        <SelectItem value="course">Course</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {!isPrivateOnly && audience === "public" && <ForSaleComingSoon />}
 
           {error && <p className="text-xs text-[var(--coral-text)]">{error}</p>}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
