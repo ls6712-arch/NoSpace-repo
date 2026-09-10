@@ -36,7 +36,7 @@ export const TABS = [
     to: "/my-space",
     label: "My Space",
     icon: Library,
-    match: (p: string) => p === "/" || p.startsWith("/my-space"),
+    match: (p: string) => p.startsWith("/my-space"),
   },
   {
     to: "/create",
