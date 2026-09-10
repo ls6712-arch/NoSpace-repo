@@ -118,7 +118,9 @@ function PotteryWheel({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   );
 }
 
-const WORLD_SCENES: Record<WorldSpace["illustration"], (rand: () => number, skin: string, hair: string) => JSX.Element> = {
+/** Exported so HeroWorldsArt.tsx can composite the same scenes at a larger
+ * scale onto one big illustration, rather than re-describing each one. */
+export const WORLD_SCENES: Record<WorldSpace["illustration"], (rand: () => number, skin: string, hair: string) => JSX.Element> = {
   music: (rand, skin, hair) => (
     <>
       <ellipse cx={100} cy={168} rx={56} ry={9} fill={PAPER_DARK} />

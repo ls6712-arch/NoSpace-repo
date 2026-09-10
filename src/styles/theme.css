@@ -305,6 +305,17 @@
 
   .ns-hero-secondary-link:hover { border-color: var(--coral-deep); transform: translateY(-1px); }
 
+  /* The hero's single large composite illustration (HeroWorldsArt.tsx) — a
+     big, generously rounded window, not a banner filling edge to edge. */
+  .ns-hero-worlds-art {
+    border-radius: 1.75rem;
+    box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--forest-ink) 45%, transparent);
+  }
+
+  .ns-hero-trail-flow {
+    animation: ns-flow 22s linear infinite;
+  }
+
   .ns-hero-art {
     position: relative;
     isolation: isolate;
@@ -1397,6 +1408,7 @@ summary:focus-visible,
   .ns-parallax { transform: none !important; }
   .ns-maker-note { transform: none !important; }
   .ns-worlds-path path { animation: none !important; }
+  .ns-hero-trail-flow { animation: none !important; }
   .ns-worlds-track { transform: none !important; }
   .ns-reveal {
     opacity: 1 !important;

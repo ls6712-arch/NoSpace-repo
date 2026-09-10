@@ -8,6 +8,7 @@ import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { ContentCard } from "../components/ContentCard";
 import { GeneratedArt } from "../components/GeneratedArt";
+import { HeroWorldsArt } from "../components/HeroWorldsArt";
 import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
@@ -106,15 +107,6 @@ const VALUE_CARDS = [
   },
 ];
 
-// Illustrative examples, not live data: each one exists to demonstrate a
-// distinct audience choice (Corner-share, Just Me, Clan) side by side, which
-// no single real Moment could honestly do at once.
-const HERO_MOMENTS = [
-  { hobbySlug: "crafts-making", seed: "hero-pottery", title: "Threw a shallow bowl", tag: "Shared to Corner · Pottery" },
-  { hobbySlug: "sports-fitness", seed: "hero-climb", title: "Sent the 5.10 crack", tag: "Just Me" },
-  { hobbySlug: "music", seed: "hero-guitar", title: "New fingerpicking pattern", tag: "Shared with Clan" },
-];
-
 const LOOP_STEPS = [
   { n: "01", label: "Create", desc: "Log a Moment right when it happens. A photo, a note, a small update." },
   { n: "02", label: "Reflect", desc: "Add a private note only you can see. Never shown, never scored." },
@@ -145,73 +137,54 @@ export function Home() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="ns-home-hero relative isolate overflow-hidden">
-        <div className="mx-auto w-full max-w-[1440px] px-5 pb-10 pt-12 sm:px-8 sm:pt-16 lg:px-12 lg:pb-16 lg:pt-24 xl:px-16">
-          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,.94fr)_minmax(0,1.06fr)] lg:gap-14 xl:gap-20">
-            <div className="text-center lg:text-left">
-              <div className="ns-hero-eyebrow ns-enter ns-enter-1 mb-7 lg:mb-8">
-                <span className="animate-pulse-soft size-1.5 bg-[var(--coral-deep)]" />
-                A SPACE FOR MORE OF YOU
-              </div>
+        <div className="mx-auto w-full max-w-[1200px] px-5 pb-12 pt-12 text-center sm:px-8 sm:pt-16 lg:pb-16 lg:pt-20">
+          <div className="ns-hero-eyebrow ns-enter ns-enter-1 mx-auto mb-7 lg:mb-8">
+            <span className="animate-pulse-soft size-1.5 bg-[var(--coral-deep)]" />
+            A SPACE FOR MORE OF YOU
+          </div>
 
-              <h1
-                className="ns-enter ns-enter-1 mb-5 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-[var(--forest)]"
-                style={{ fontFamily: "var(--font-serif)" }}
-              >
-                Your interests are
-                <br />
-                part of your story.
-              </h1>
+          <h1
+            className="ns-enter ns-enter-1 mb-5 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-[var(--forest)]"
+            style={{ fontFamily: "var(--font-serif)" }}
+          >
+            Your interests are
+            <br />
+            part of your story.
+          </h1>
 
-              <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg lg:mx-0 lg:max-w-lg">
-                Create moments. Document what makes you more you. Explore
-                what sparks next.
-              </p>
+          <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg">
+            Create moments. Document what makes you more you. Explore
+            what sparks next.
+          </p>
 
-              <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
-                <Link to="/create">
-                  <Button variant="coral" size="lg">
-                    Begin your story
-                    <ArrowRight className="size-4" />
-                  </Button>
-                </Link>
-                <a
-                  href="#loop"
-                  className="ns-hero-secondary-link"
-                  onClick={(e) => {
-                    // A plain href="#loop" would set location.hash, which the
-                    // HashRouter reads as a navigation to path "/loop" — a
-                    // route that doesn't exist, so it lands on the 404 page
-                    // instead of scrolling. Scroll manually and skip that.
-                    e.preventDefault();
-                    document.getElementById("loop")?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                >
-                  See how it works
-                </a>
-              </div>
-              <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">Free to join. No credit card.</p>
-            </div>
+          <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-2.5">
+            <Link to="/create">
+              <Button variant="coral" size="lg">
+                Begin your story
+                <ArrowRight className="size-4" />
+              </Button>
+            </Link>
+            <a
+              href="#loop"
+              className="ns-hero-secondary-link"
+              onClick={(e) => {
+                // A plain href="#loop" would set location.hash, which the
+                // HashRouter reads as a navigation to path "/loop" — a
+                // route that doesn't exist, so it lands on the 404 page
+                // instead of scrolling. Scroll manually and skip that.
+                e.preventDefault();
+                document.getElementById("loop")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              See how it works
+            </a>
+          </div>
+          <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">Free to join. No credit card.</p>
+        </div>
 
-            <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
-              <div className="ns-hero-art mx-auto max-w-[560px] lg:max-w-none">
-                <div className="ns-hero-photo-collage">
-                  {HERO_MOMENTS.map((m, i) => (
-                    <div key={m.seed} className={`ns-hero-photo-card ns-hero-hobby-${["one", "two", "three"][i]}`}>
-                      <GeneratedArt hobbySlug={m.hobbySlug} seed={m.seed} className="h-full w-full" />
-                      <div className="ns-hero-photo-label">
-                        <span className="title">{m.title}</span>
-                        <span className="tag">{m.tag.toUpperCase()}</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="ns-hero-art-label">
-                    LOGGED,
-                    <br />
-                    NOT PERFORMED
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="mx-auto w-full max-w-[1440px] px-5 pb-12 sm:px-8 lg:px-12 lg:pb-20 xl:px-16">
+          <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
+            <HeroWorldsArt className="ns-hero-worlds-art aspect-[16/9] w-full sm:aspect-[16/8]" />
           </div>
         </div>
 
