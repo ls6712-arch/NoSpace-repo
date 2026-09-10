@@ -4,6 +4,7 @@ import { Circle, getCircle } from "../data/circles";
 import { getHobby } from "../data/hobbies";
 import { hobbyIconName } from "../data/hobbyIcons";
 import { useContent } from "../context/ContentContext";
+import { useConnections } from "../context/ConnectionsContext";
 
 /**
  * The Circles you've joined, as soft tinted cards — a name, its icon, and how
@@ -21,8 +22,14 @@ const TINTS = [
 ];
 
 function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
+  const { circleMemberCounts, isCircleJoined } = useContent();
+  const { myCircleIds } = useConnections();
   const space = getHobby(circle.hobbySlug);
   const Icon = (Icons as any)[hobbyIconName(undefined, circle.hobbySlug)] ?? Icons.Users;
+  const displayedMemberCount =
+    circle.memberCount +
+    (circleMemberCounts[circle.id] ?? 0) +
+    (isCircleJoined(circle.id) && !myCircleIds.includes(circle.id) ? 1 : 0);
 
   return (
     <Link
@@ -57,9 +64,11 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
 
 export function CirclesJoined({ limit }: { limit?: number } = {}) {
   const { joinedCircleIds } = useContent();
-  const joined = joinedCircleIds
-    .map((id) => getCircle(id))
-    .filter((c): c is Circle => !!c);
+  const { myCircleIds } = useConnections();
+  // Local direct joins and real accepted invitations are both genuinely
+  // "joined" — a Circle you got into via someone's invite belongs here too.
+  const allJoinedIds = [...new Set([...joinedCircleIds, ...myCircleIds])];
+  const joined = allJoinedIds.map((id) => getCircle(id)).filter((c): c is Circle => !!c);
 
   if (joined.length === 0) {
     return (

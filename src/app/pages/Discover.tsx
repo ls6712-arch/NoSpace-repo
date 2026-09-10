@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   Bookmark,
   LayoutGrid,
   PenLine,
   Search,
+  ShoppingBag,
   UserRound,
   Users,
   X,
@@ -14,10 +15,14 @@ import { spacePhoto } from "../data/hobbyPhotos";
 import { categoryIcon } from "../data/categoryIcons";
 import { circles } from "../data/circles";
 import { Post } from "../data/posts";
+import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
+import { useCorners, isDiscoverable } from "../context/CornersContext";
 import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
+import { hobbyMatchesQuery } from "../lib/search";
 import { ContentCard } from "../components/ContentCard";
+import { ProductCard } from "../components/ProductCard";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { DiscoverHeroArt } from "../components/DiscoverHeroArt";
@@ -56,6 +61,7 @@ const DISCOVER_TABS = [
   { id: "spaces", label: "Spaces", icon: LayoutGrid },
   { id: "circles", label: "Circles", icon: Users },
   { id: "people", label: "People", icon: UserRound },
+  { id: "marketplace", label: "Marketplace", icon: ShoppingBag },
 ] as const;
 type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
 
@@ -250,9 +256,72 @@ function SpaceTile({
   );
 }
 
+/**
+ * Discover's own Marketplace tab — the one place, alongside a Space's own
+ * Marketplace tab, where product listings are actually browsable rather
+ * than reachable only by an accidental search hit. Grouped by Space, same
+ * shape as CirclesBrowser above, with each group linking on to that
+ * Space's full listing set on /shop rather than duplicating pagination here.
+ */
+function MarketplaceTab({ query }: { query: string }) {
+  const { listings } = useContent();
+  const q = query.trim().toLowerCase();
+  const matching = q
+    ? listings.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.creator.toLowerCase().includes(q),
+      )
+    : listings;
+
+  const bySpace = new Map<string, Product[]>();
+  for (const product of matching) {
+    bySpace.set(product.hobbySlug, [...(bySpace.get(product.hobbySlug) ?? []), product]);
+  }
+
+  if (matching.length === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+        {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
+      </p>
+    );
+  }
+
+  return (
+    <>
+      {[...bySpace.entries()].map(([hobbySlug, list]) => {
+        const hobby = hobbies.find((h) => h.slug === hobbySlug);
+        return (
+          <section key={hobbySlug} className="mb-11">
+            <div className="mb-3 flex items-end justify-between gap-4">
+              <h2 className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+                {hobby?.name ?? hobbySlug}
+              </h2>
+              <Link
+                to={`/shop?hobby=${hobbySlug}`}
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                See all in {hobby?.shortName ?? hobbySlug} →
+              </Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {list.slice(0, 4).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </>
+  );
+}
+
 export function Discover() {
   const { publicFeed } = useContent();
   const social = useSocial();
+  const { cornersFor } = useCorners();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("about") ?? "");
 
@@ -300,16 +369,19 @@ export function Discover() {
   const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), []);
 
   // The search box promises hobbies and spaces, not just post captions, so a
-  // Space's own name and tagline count as a match too.
+  // Space's own name and tagline count as a match too — and so does any of
+  // its Corners (curated or tagged-into-existence): "pottery" is a Corner
+  // inside Crafts & Making, not a Space name on its own, and searching it
+  // used to turn up nothing here at all.
   const filteredHobbies = useMemo(() => {
     if (!q) return hobbies;
-    return hobbies.filter(
-      (h) =>
-        h.shortName.toLowerCase().includes(q) ||
-        h.name.toLowerCase().includes(q) ||
-        h.tagline.toLowerCase().includes(q),
-    );
-  }, [q]);
+    return hobbies.filter((h) => {
+      const cornerNames = cornersFor(h.slug)
+        .filter(isDiscoverable)
+        .map((c) => c.name);
+      return hobbyMatchesQuery(h, cornerNames, q);
+    });
+  }, [q, cornersFor]);
 
   const feedBase = useMemo(() => {
     if (feedTab === "recent") return [...publicFeed].sort((a, b) => b.createdAt - a.createdAt);
@@ -366,31 +438,40 @@ export function Discover() {
             <p className="mb-5 max-w-lg text-lg leading-relaxed text-foreground">
               Browse Spaces, join Circles, and find people making things, all in one place.
             </p>
-            {tab === "spaces" && (
-              <div className="ns-discover-search relative max-w-xl">
-                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setShown(PAGE_SIZE);
-                    if (searchParams.get("about")) {
-                      const params = new URLSearchParams(searchParams);
-                      params.delete("about");
-                      setSearchParams(params, { replace: true });
-                    }
-                  }}
-                  placeholder="Search hobbies, people, or spaces..."
-                  className="w-full border-0 bg-transparent py-3 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
-                />
-                {query && (
-                  <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
-                    <X className="size-4" />
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Used to only render on the Spaces tab, so switching to
+                Circles or People made the box (and the query it held)
+                disappear — not just visually: neither tab's content ever
+                read `query` at all, so there was nothing to reapply even if
+                it had stayed visible. Now always present, and Circles/People
+                below both take `query` as a prop. */}
+            <div className="ns-discover-search relative max-w-xl">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setShown(PAGE_SIZE);
+                  if (searchParams.get("about")) {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete("about");
+                    setSearchParams(params, { replace: true });
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && query.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+                  }
+                }}
+                placeholder="Search hobbies, people, or spaces..."
+                className="w-full border-0 bg-transparent py-3 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
           </div>
           <div className="hidden lg:block" />
         </div>
@@ -422,8 +503,9 @@ export function Discover() {
             })}
           </div>
 
-          {tab === "circles" && <CirclesBrowser />}
-          {tab === "people" && <PeopleBrowser />}
+          {tab === "circles" && <CirclesBrowser query={query} />}
+          {tab === "people" && <PeopleBrowser query={query} />}
+          {tab === "marketplace" && <MarketplaceTab query={query} />}
 
           {tab === "spaces" && (
             <>
@@ -599,7 +681,7 @@ export function Discover() {
               ) : (
                 <div className="columns-1 gap-4 sm:columns-2 md:columns-3 xl:columns-4">
                   {visible.map((post) => (
-                    <ContentCard key={post.id} post={post} compact />
+                    <ContentCard key={post.id} post={post} compact showExploreCorner />
                   ))}
                 </div>
               )}

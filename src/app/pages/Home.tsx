@@ -302,7 +302,7 @@ export function Home() {
                 {pursuits.map((pursuit) => (
                   <Link
                     key={pursuit.key}
-                    to={`/space/${pursuit.hobbySlug}${pursuit.subHobby ? `?hobby=${pursuit.subHobby}` : ""}`}
+                    to={`/pursuit/${encodeURIComponent(pursuit.key)}`}
                     className="ns-pursuit-card group block overflow-hidden rounded-2xl"
                   >
                     <div className="relative aspect-square overflow-hidden [background-color:var(--forest-ink)]">

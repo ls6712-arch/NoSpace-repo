@@ -4,6 +4,7 @@ import { Eye, HelpCircle, MapPin, PenLine, CalendarDays, Shield, Users } from "l
 import { Circle, circles } from "../data/circles";
 import { getHobby } from "../data/hobbies";
 import { useContent } from "../context/ContentContext";
+import { useConnections } from "../context/ConnectionsContext";
 import { Button } from "../components/ui/button";
 
 /**
@@ -39,9 +40,24 @@ const ACTIVITY_DOT: Record<Circle["activity"], string> = {
 };
 
 function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
-  const { isCircleJoined, joinCircle, leaveCircle, circleFeed } = useContent();
+  const { isCircleJoined, joinCircle, leaveCircle, circleFeed, circleMemberCounts, refetchCircleMemberCounts } =
+    useContent();
+  const connections = useConnections();
   const [tab, setTab] = useState<TabId>("updates");
-  const joined = isCircleJoined(circle.id);
+  // Two ways in: the local-only direct Join button (this browser, no
+  // account needed), or a real invitation accepted from another account
+  // (ConnectionsContext's circle_invites) — either counts as "joined" here.
+  const locallyJoined = isCircleJoined(circle.id);
+  const reallyJoined = connections.myCircleIds.includes(circle.id);
+  const joined = locallyJoined || reallyJoined;
+  // The static baseline plus real accepted invites (visible to everyone,
+  // joined or not) plus this browser's own local join — but only if that
+  // local join isn't the same membership already counted for real above,
+  // or a real invite-accept would double the bump.
+  const displayedMemberCount =
+    circle.memberCount +
+    (circleMemberCounts[circle.id] ?? 0) +
+    (locallyJoined && !reallyJoined ? 1 : 0);
   const hobby = getHobby(circle.hobbySlug);
   const updates = circleFeed(circle.id);
 
@@ -75,7 +91,19 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
           variant={joined ? "outline" : "coral"}
           size="sm"
           className="shrink-0"
-          onClick={() => (joined ? leaveCircle(circle.id) : joinCircle(circle.id))}
+          onClick={() => {
+            if (joined) {
+              // A real accepted invitation needs its own row updated, not
+              // just the local flag — otherwise leaving would silently do
+              // nothing for someone who joined that way.
+              if (reallyJoined) {
+                connections.leaveCircleInvite(circle.id).then(refetchCircleMemberCounts);
+              }
+              if (locallyJoined) leaveCircle(circle.id);
+            } else {
+              joinCircle(circle.id);
+            }
+          }}
         >
           {joined ? "Joined" : "Join"}
         </Button>
@@ -85,7 +113,7 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
       <ul className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
         <li className="flex items-center gap-1.5">
           <Users className="size-3" strokeWidth={1.8} />
-          {circle.memberCount.toLocaleString()} members
+          {displayedMemberCount.toLocaleString()} members
         </li>
         <li className="flex items-center gap-1.5">
           <span
@@ -187,11 +215,34 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
  * The Circles list itself, grouped by Space — no page chrome of its own, so
  * it can be dropped into a full /circles page or embedded as Discover's
  * Circles tab without either one duplicating this grouping/rendering logic.
+ *
+ * `query`, when set, filters by name/description/purpose/location — this is
+ * what lets Discover's search box keep working after switching from the
+ * Spaces tab to this one, instead of the query silently going nowhere.
  */
-export function CirclesBrowser() {
+export function CirclesBrowser({ query = "" }: { query?: string }) {
+  const q = query.trim().toLowerCase();
+  const matching = q
+    ? circles.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.description.toLowerCase().includes(q) ||
+          c.purpose.toLowerCase().includes(q) ||
+          (c.location ?? "").toLowerCase().includes(q),
+      )
+    : circles;
+
   const bySpace = new Map<string, Circle[]>();
-  for (const circle of circles) {
+  for (const circle of matching) {
     bySpace.set(circle.hobbySlug, [...(bySpace.get(circle.hobbySlug) ?? []), circle]);
+  }
+
+  if (q && bySpace.size === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+        No Circles match "{query}" yet.
+      </p>
+    );
   }
 
   return (

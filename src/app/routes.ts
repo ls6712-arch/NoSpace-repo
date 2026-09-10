@@ -9,6 +9,7 @@ import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CategoryFeed } from "./pages/CategoryFeed";
 import { Discover } from "./pages/Discover";
+import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
 import { Circles } from "./pages/Circles";
 import { Log } from "./pages/Log";
@@ -19,6 +20,7 @@ import { People } from "./pages/People";
 import { AdminCategories } from "./pages/AdminCategories";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
+import { Pursuit } from "./pages/Pursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
@@ -37,6 +39,7 @@ export const router = createHashRouter([
       { path: "welcome", loader: () => redirect("/") },
       { path: "my-space", Component: MySpace },
       { path: "discover", Component: Discover },
+      { path: "search", Component: SearchResults },
 
       { path: "circles", Component: Circles },
       { path: "create", Component: Log },
@@ -52,6 +55,7 @@ export const router = createHashRouter([
       { path: "messages", loader: () => redirect("/inbox") },
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
       { path: "space/:slug", Component: CategoryFeed },
+      { path: "pursuit/:id", Component: Pursuit },
       { path: "u/:username", Component: PublicProfile },
       { path: "login", Component: Login },
       { path: "shop", Component: Shop },

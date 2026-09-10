@@ -130,29 +130,31 @@ export function PursuitCard({
       className={`group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] ${className}`}
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden">
-        {inspirationPost ? (
-          <PostMedia
-            media={inspirationPost.media}
-            type={inspirationPost.type}
-            hobbySlug={inspirationPost.hobbySlug}
-            seed={inspirationPost.id}
-            preview
-            className="h-full w-full transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <GeneratedArt
-            hobbySlug={pursuit.hobbySlug ?? "crafts-making"}
-            seed={pursuit.id}
-            className="h-full w-full transition-transform duration-500 group-hover:scale-105"
-          />
-        )}
-        <span
-          className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-md ${
-            pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-[var(--void)]/55"
-          }`}
-        >
-          {status}
-        </span>
+        <Link to={`/pursuit/${pursuit.id}`} className="absolute inset-0 block" aria-label={`Open ${pursuit.title}`}>
+          {inspirationPost ? (
+            <PostMedia
+              media={inspirationPost.media}
+              type={inspirationPost.type}
+              hobbySlug={inspirationPost.hobbySlug}
+              seed={inspirationPost.id}
+              preview
+              className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <GeneratedArt
+              hobbySlug={pursuit.hobbySlug ?? "crafts-making"}
+              seed={pursuit.id}
+              className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+            />
+          )}
+          <span
+            className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-md ${
+              pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-[var(--void)]/55"
+            }`}
+          >
+            {status}
+          </span>
+        </Link>
         {owner && (
           <button
             type="button"
@@ -179,17 +181,19 @@ export function PursuitCard({
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <p className="text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
-          {pursuit.title}
-        </p>
-        {(pursuit.interest || spaceLabel) && (
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
+        <Link to={`/pursuit/${pursuit.id}`} className="block">
+          <p className="text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+            {pursuit.title}
           </p>
-        )}
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          {pursuit.finishedAt ? `Finished ${timeAgo(moved)}` : `Updated ${timeAgo(moved)}`}
-        </p>
+          {(pursuit.interest || spaceLabel) && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {pursuit.finishedAt ? `Finished ${timeAgo(moved)}` : `Updated ${timeAgo(moved)}`}
+          </p>
+        </Link>
 
         {owner && (
           <button

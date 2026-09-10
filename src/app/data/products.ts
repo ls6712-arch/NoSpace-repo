@@ -1,3 +1,12 @@
+// The Space taxonomy was renamed after this list was written (see
+// LEGACY_SPACES in data/hobbies.ts) — posts.ts was updated to the new slugs
+// at the same time, but these hobbySlug values were not, so a Space's own
+// Marketplace tab (which filters listings by current hobbySlug) never
+// matched any of them even though a Moment's "For sale" badge still did
+// (ContentCard looks a listing up by productId directly, bypassing hobbySlug
+// entirely). Kept current here instead of translated at read time, since
+// this is static seed data, not live user records that could still carry an
+// old value from years ago the way real posts can.
 export interface Product {
   id: number;
   name: string;
@@ -19,7 +28,7 @@ export const products: Product[] = [
     id: 1,
     name: "Pottery Starter Kit",
     price: 64.0,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     image:
       "https://images.unsplash.com/photo-1595351298020-038700609878?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -33,7 +42,7 @@ export const products: Product[] = [
     id: 2,
     name: "Embroidery Hoop Set",
     price: 32.0,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     image:
       "https://images.unsplash.com/photo-1599589915468-b4c71ed62543?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -47,7 +56,7 @@ export const products: Product[] = [
     id: 3,
     name: "Air-Dry Clay Kit",
     price: 28.0,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     image:
       "https://images.unsplash.com/photo-1590605095243-072811dbe64c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -61,7 +70,7 @@ export const products: Product[] = [
     id: 4,
     name: "Crochet Starter Kit",
     price: 38.0,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     image:
       "https://images.unsplash.com/photo-1584992236310-6edddc08acff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -75,7 +84,7 @@ export const products: Product[] = [
     id: 5,
     name: "Candle-Making Kit",
     price: 44.0,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     image:
       "https://images.unsplash.com/photo-1624479163091-3c000402218d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -89,7 +98,7 @@ export const products: Product[] = [
     id: 6,
     name: "Watercolor Sketchbook Set",
     price: 36.0,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     image:
       "https://images.unsplash.com/photo-1577941796491-999f99ba658f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -103,7 +112,7 @@ export const products: Product[] = [
     id: 7,
     name: "Hand-Building Pottery: Video Course",
     price: 39.0,
-    hobbySlug: "workbench",
+    hobbySlug: "crafts-making",
     image:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -119,7 +128,7 @@ export const products: Product[] = [
     id: 14,
     name: "Pickleball Paddle Set",
     price: 79.0,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     image:
       "https://images.unsplash.com/photo-1659318006095-4d44845f3a1b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -133,7 +142,7 @@ export const products: Product[] = [
     id: 15,
     name: "Padel Racket",
     price: 119.0,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     image:
       "https://images.unsplash.com/photo-1658723826297-fe4d1b1e6600?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -147,7 +156,7 @@ export const products: Product[] = [
     id: 16,
     name: "Portable Sport Net",
     price: 54.0,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     image:
       "https://images.unsplash.com/photo-1618551763300-dc7eb8ce3560?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -161,7 +170,7 @@ export const products: Product[] = [
     id: 17,
     name: "Court Shoes",
     price: 88.0,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     image:
       "https://images.unsplash.com/photo-1663573690125-d326a87a2535?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -176,7 +185,7 @@ export const products: Product[] = [
     id: 18,
     name: "Sport Water Bottle",
     price: 28.0,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     image:
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -191,7 +200,7 @@ export const products: Product[] = [
     id: 19,
     name: "Pickleball Fundamentals: 5-Lesson Course",
     price: 29.0,
-    hobbySlug: "inmotion",
+    hobbySlug: "sports-fitness",
     image:
       "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -207,7 +216,7 @@ export const products: Product[] = [
     id: 20,
     name: "Mini Espresso Machine",
     price: 149.0,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     image:
       "https://images.unsplash.com/photo-1596018589855-e9a2a91f687f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -221,7 +230,7 @@ export const products: Product[] = [
     id: 21,
     name: "Latte Syrup Set",
     price: 36.0,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     image:
       "https://images.unsplash.com/photo-1514066558159-fc8c737ef259?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -235,7 +244,7 @@ export const products: Product[] = [
     id: 22,
     name: "Coffee Station Tray",
     price: 48.0,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     image:
       "https://images.unsplash.com/photo-1702234683996-9271b4d8231f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -249,7 +258,7 @@ export const products: Product[] = [
     id: 23,
     name: "Milk Frother",
     price: 32.0,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     image:
       "https://images.unsplash.com/photo-1577590835286-1cdd24c08fd7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -263,7 +272,7 @@ export const products: Product[] = [
     id: 24,
     name: "Cozy Throw Blanket",
     price: 68.0,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     image:
       "https://images.unsplash.com/photo-1674475760738-8c7af859f821?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -278,7 +287,7 @@ export const products: Product[] = [
     id: 25,
     name: "Home Barista Masterclass",
     price: 42.0,
-    hobbySlug: "kitchentable",
+    hobbySlug: "food-cooking",
     image:
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -294,7 +303,7 @@ export const products: Product[] = [
     id: 26,
     name: "Trinket Display Shelf",
     price: 74.0,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     image:
       "https://images.unsplash.com/photo-1767338718786-92f7934e925e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -308,7 +317,7 @@ export const products: Product[] = [
     id: 27,
     name: "Trading Card Binder",
     price: 24.0,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     image:
       "https://images.unsplash.com/photo-1699898016940-ac6892b79171?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -322,7 +331,7 @@ export const products: Product[] = [
     id: 28,
     name: "Sashiko Mending Kit",
     price: 38.0,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     image:
       "https://images.unsplash.com/photo-1671535108665-eeeb723ebebf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -336,7 +345,7 @@ export const products: Product[] = [
     id: 29,
     name: "Keepsake Display Case",
     price: 52.0,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     image:
       "https://images.unsplash.com/photo-1620228389798-c685290a453a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -350,7 +359,7 @@ export const products: Product[] = [
     id: 30,
     name: "Upcycled Tote Bag",
     price: 46.0,
-    hobbySlug: "rabbithole",
+    hobbySlug: "gaming-tabletop",
     image:
       "https://images.unsplash.com/photo-1688126753535-0ca32e3b5cbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
@@ -364,7 +373,11 @@ export const products: Product[] = [
     id: 31,
     name: "Visible Mending 101: Digital Guide",
     price: 18.0,
-    hobbySlug: "rabbithole",
+    // The Rabbit Hole space split into several new ones; this listing's own
+    // referencing Moment (post id 501, productId 31) lives in Books &
+    // Writing specifically, not the Gaming & Tabletop default every other
+    // ex-Rabbit Hole product in this file maps to.
+    hobbySlug: "books-writing",
     image:
       "https://images.unsplash.com/photo-1606213988003-f2f74c4aa22d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:

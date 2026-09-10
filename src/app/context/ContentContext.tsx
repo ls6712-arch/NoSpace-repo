@@ -57,6 +57,12 @@ export interface NewPostInput {
   startsAt?: number;
   locationName?: string;
   locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
+  /** Set when this post is already known to belong to a specific Pursuit at
+   * creation time (e.g. arriving via that Pursuit's own "Add progress").
+   * Attaching to a brand-new Pursuit created from this same post (the
+   * inline "Start a Pursuit" flow) still happens after the fact, since the
+   * Pursuit doesn't exist until the post does — see attachPostToPursuit. */
+  pursuitId?: string;
 }
 
 function loadFromStorage<T>(key: string): T[] {
@@ -91,6 +97,7 @@ function rowToPost(row: any, creatorName: string): Post {
     locationName: row.location_name ?? undefined,
     locationPrivacy: row.location_privacy ?? undefined,
     thoughtsPrivate: row.thoughts_private ?? false,
+    pursuitId: row.pursuit_id ?? undefined,
   };
 }
 
@@ -125,6 +132,12 @@ interface ContentContextType {
   isCircleJoined: (circleId: number) => boolean;
   joinCircle: (circleId: number) => void;
   leaveCircle: (circleId: number) => void;
+  /** Real, cross-account joins per Circle id (accepted invitations), on top
+   * of that Circle's own static baseline count in data/circles.ts. Does not
+   * include this browser's own local-only join — combine with
+   * isCircleJoined at the render site for the full displayed count. */
+  circleMemberCounts: Record<number, number>;
+  refetchCircleMemberCounts: () => Promise<void>;
   activeHobbySlugs: string[];
 }
 
@@ -152,6 +165,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [mediaError, setMediaError] = useState<string | null>(null);
   /** Set when a post couldn't reach the database, so the flow can say so. */
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Real, cross-account Circle joins (an accepted invitation — see
+  // ConnectionsContext's circle_invites), counted per Circle. Public data —
+  // fetched regardless of login, same as a Circle's own static baseline
+  // count, via a SECURITY DEFINER aggregate (sql/circle-invites.sql) that
+  // exposes counts without exposing who's actually in each row.
+  const [circleMemberCounts, setCircleMemberCounts] = useState<Record<number, number>>({});
 
   const refetchRealPosts = async () => {
     if (!supabase) return;
@@ -170,8 +189,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setRealPosts(data.map((row: any) => rowToPost(row, nameById.get(row.user_id) ?? "Someone")));
   };
 
+  const refetchCircleMemberCounts = async () => {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("circle_member_counts");
+    if (error || !data) return;
+    const counts: Record<number, number> = {};
+    for (const row of data as any[]) counts[row.circle_id] = Number(row.member_count) || 0;
+    setCircleMemberCounts(counts);
+  };
+
   useEffect(() => {
     refetchRealPosts();
+    refetchCircleMemberCounts();
     // Re-fetch when the logged-in user changes, so switching accounts (or
     // logging in) picks up posts visible to that session.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -310,6 +339,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           starts_at: input.startsAt ? new Date(input.startsAt).toISOString() : null,
           location_name: input.locationName ?? null,
           location_privacy: input.locationPrivacy ?? "neighborhood",
+          pursuit_id: input.pursuitId ?? null,
         })
         .select()
         .single();
@@ -442,6 +472,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         isCircleJoined,
         joinCircle,
         leaveCircle,
+        circleMemberCounts,
+        refetchCircleMemberCounts,
         activeHobbySlugs,
       }}
     >

@@ -121,11 +121,11 @@ export function PostReactions({
             <button
               type="button"
               aria-pressed={pressed}
-              aria-label={`${label}: ${meaning}`}
+              aria-label={`${label}: ${meaning}${count > 0 ? ` (${count})` : ""}`}
               title={`${label}: ${meaning}`}
               onClick={() => toggle(postId, id)}
-              className={`flex w-full items-center rounded-full border transition-colors duration-150 ${
-                compact ? "justify-center gap-1 px-2 py-2 text-[13px]" : "gap-2 px-3 py-2 text-[13px]"
+              className={`relative flex w-full items-center justify-center whitespace-nowrap rounded-full border transition-colors duration-150 ${
+                compact ? "gap-1 px-2 py-2 text-[13px]" : "gap-1.5 px-3 py-2 text-[13px]"
               } ${
                 pressed
                   ? "border-[var(--border)] bg-surface text-foreground"
@@ -133,7 +133,7 @@ export function PostReactions({
               }`}
             >
               <Icon
-                className={compact ? "size-4 shrink-0" : "size-4 shrink-0"}
+                className="size-4 shrink-0"
                 strokeWidth={1.9}
                 style={{
                   color: pressed ? TINT[id] : "var(--foreground-muted)",
@@ -141,9 +141,24 @@ export function PostReactions({
                 }}
                 aria-hidden="true"
               />
-              <span className={compact ? "sr-only" : ""}>{label}</span>
-              {count > 0 && (
-                <span className={compact ? "text-[10px] text-muted-foreground" : "ml-auto text-[11px] text-muted-foreground"}>
+              <span className={compact ? "sr-only" : "whitespace-nowrap"}>{label}</span>
+              {/* A corner badge, not an inline number: a label like "Keep
+                  going" already uses most of a narrow desktop column's
+                  width, and giving the count its own flex space was what
+                  pushed the label onto a second line the button's
+                  rounded-full shape was never built to hold. A badge floats
+                  outside that layout entirely, so the count never competes
+                  with the label for room, at any column width. */}
+              {count > 0 && !compact && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-border bg-surface-elevated px-1 text-[9px] font-medium text-muted-foreground"
+                >
+                  {count}
+                </span>
+              )}
+              {count > 0 && compact && (
+                <span aria-hidden="true" className="text-[10px] text-muted-foreground">
                   {count}
                 </span>
               )}

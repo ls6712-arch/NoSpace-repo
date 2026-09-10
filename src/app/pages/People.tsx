@@ -17,11 +17,20 @@ import { Button } from "../components/ui/button";
  *
  * No page chrome of its own, so /people and Discover's People tab share
  * exactly this logic rather than each reimplementing it.
+ *
+ * `query`, when passed, puts this in controlled mode: Discover's own search
+ * box drives it instead of the internal one below (which would otherwise
+ * duplicate it), and switching to this tab mid-search re-filters against
+ * whatever was already typed rather than silently dropping it. Standalone
+ * /people keeps its own box and ?q= sync exactly as before.
  */
-export function PeopleBrowser() {
+export function PeopleBrowser({ query: externalQuery }: { query?: string } = {}) {
   const { publicFeed } = useContent();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const controlled = externalQuery !== undefined;
+  const [internalQuery, setInternalQuery] = useState(searchParams.get("q") ?? "");
+  const query = controlled ? externalQuery : internalQuery;
+  const setQuery = setInternalQuery;
   const [hobby, setHobby] = useState(searchParams.get("hobby") ?? "");
   const [inHobby, setInHobby] = useState<Person[]>([]);
   const [loadingHobby, setLoadingHobby] = useState(false);
@@ -72,26 +81,28 @@ export function PeopleBrowser() {
 
   return (
     <div>
-      <div className="relative mb-8 max-w-md">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search people by name…"
-          className="w-full rounded-full border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label="Clear search"
-          >
-            <X className="size-4" />
-          </button>
-        )}
-      </div>
+      {!controlled && (
+        <div className="relative mb-8 max-w-md">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search people by name…"
+            className="w-full rounded-full border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+      )}
 
       {searching2 ? (
         <section className="mb-10">

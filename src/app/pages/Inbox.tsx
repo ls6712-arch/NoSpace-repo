@@ -3,7 +3,9 @@ import { Link } from "react-router";
 import { Bell, Check, Inbox as InboxIcon, MessageSquare, Send, UserPlus, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useConnections, type Person } from "../context/ConnectionsContext";
+import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
+import { getCircle } from "../data/circles";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
@@ -13,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
  * Inbox: everything addressed to you, in one place.
  *
  *   Messages   only with people you've accepted, or Spaces you've joined
- *   Requests   connection requests and Space invitations, waiting on you
+ *   Requests   connection requests and Space or Circle invitations, waiting on you
  *   Activity   everything else that happened — thoughts, accepts, invites
  *
  * There is no way to start a conversation from here with someone you aren't
@@ -127,6 +129,7 @@ function Thread({ person }: { person: Person }) {
 export function Inbox() {
   const { user, isConfigured } = useAuth();
   const connections = useConnections();
+  const content = useContent();
   const social = useSocial();
   const [openWith, setOpenWith] = useState<Person | null>(null);
 
@@ -137,7 +140,8 @@ export function Inbox() {
     (c) => c.status === "pending" && c.requester === user?.id,
   );
   const invitations = connections.spaceInvitations;
-  const requestCount = incomingConnections.length + invitations.length;
+  const circleInvitations = connections.circleInvitations;
+  const requestCount = incomingConnections.length + invitations.length + circleInvitations.length;
 
   if (isConfigured && !user) {
     return (
@@ -255,9 +259,9 @@ export function Inbox() {
           <TabsContent value="requests">
             {requestCount === 0 && outgoingConnections.length === 0 ? (
               <Empty icon={UserPlus}>
-                Nothing waiting on you. Connection requests and Space
-                invitations arrive here, and neither takes effect until you
-                answer.
+                Nothing waiting on you. Connection requests and Space or
+                Circle invitations arrive here, and none of them take effect
+                until you answer.
               </Empty>
             ) : (
               <div className="space-y-6">
@@ -361,6 +365,64 @@ export function Inbox() {
                           </div>
                         </li>
                       ))}
+                    </ul>
+                  </section>
+                )}
+
+                {circleInvitations.length > 0 && (
+                  <section>
+                    <h2 className="mb-3 text-sm text-muted-foreground">Circle invitations</h2>
+                    <ul className="space-y-2">
+                      {circleInvitations.map((c) => {
+                        const circle = getCircle(c.circleId);
+                        return (
+                          <li
+                            key={c.id}
+                            className="rounded-2xl border border-border bg-card px-4 py-3.5"
+                          >
+                            <p className="text-sm">
+                              <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+                                {c.invitedByName ?? "Someone"}
+                              </strong>{" "}
+                              invited you to{" "}
+                              <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+                                {circle?.name ?? "a Circle"}
+                              </strong>
+                              .
+                            </p>
+                            {c.note && (
+                              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                "{c.note}"
+                              </p>
+                            )}
+                            <div className="mt-3 flex gap-2">
+                              <Button
+                                size="sm"
+                                className="flex-1 text-white [background-image:var(--gradient-brand)]"
+                                onClick={async () => {
+                                  await connections.respondToCircleInvitation(c.circleId, true);
+                                  // The count is a public aggregate fetched
+                                  // separately (ContentContext) — accepting
+                                  // here doesn't refresh it on its own.
+                                  await content.refetchCircleMemberCounts();
+                                }}
+                              >
+                                <Check className="size-3.5" />
+                                Join
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => connections.respondToCircleInvitation(c.circleId, false)}
+                              >
+                                <X className="size-3.5" />
+                                Decline
+                              </Button>
+                            </div>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </section>
                 )}

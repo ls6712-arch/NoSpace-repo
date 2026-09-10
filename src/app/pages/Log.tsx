@@ -28,8 +28,8 @@ import { Visibility } from "../data/posts";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
-import { addPrivateLog, attachEntry, startProject, useJournal } from "../lib/journal";
-import { mirrorPursuit } from "../lib/pursuitsRemote";
+import { addPrivateLog, startProject, useJournal } from "../lib/journal";
+import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { archiveKey } from "../components/HobbyShelf";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -45,6 +45,7 @@ import {
 import { GeneratedArt } from "../components/GeneratedArt";
 import { InterestField } from "../components/InterestField";
 import { CornerTagField } from "../components/CornerTagField";
+import { PursuitField } from "../components/PursuitField";
 
 /**
  * Logging, in the order the act actually happens: capture the thing first,
@@ -58,7 +59,7 @@ import { CornerTagField } from "../components/CornerTagField";
  * project, add an update, quick moment, reflect privately — for when you know
  * what you're doing before you start. Both roads lead to the same record.
  */
-type Screen = "capture" | "moment" | "saved" | "ways" | "detail";
+type Screen = "capture" | "moment" | "saved" | "ways" | "detail" | "pursuit-menu";
 
 /** The considered path: four kinds of record, chosen up front. */
 type Mode = "project" | "update" | "moment" | "private";
@@ -149,17 +150,21 @@ export function Log() {
   const { user, profile, isConfigured } = useAuth();
   const journal = useJournal();
 
-  const [screen, setScreen] = useState<Screen>("capture");
-  const [mode, setMode] = useState<Mode | null>(null);
-
   // "Add progress" on a Pursuit links here with ?pursuit=<id> — resolve it
-  // once, up front, so the Space, Corner, and Pursuit picker all arrive
-  // already pointed at the right thing instead of landing on the same
-  // blank flow as starting something new.
+  // before any state so the very first screen can skip the generic capture
+  // and "more ways to create" choosers entirely for this entry path, going
+  // straight to a Pursuit-scoped menu instead.
   const initialPursuitId = searchParams.get("pursuit") ?? "";
   const initialPursuit = initialPursuitId
     ? journal.projects.find((p) => p.id === initialPursuitId)
     : undefined;
+  // True only when this visit came from a specific Pursuit's own "Add
+  // progress" button — the Space, Corner, and Pursuit are already known,
+  // so the detail form's own picker for all three stays hidden too.
+  const pursuitScoped = !!initialPursuit;
+
+  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "pursuit-menu" : "capture");
+  const [mode, setMode] = useState<Mode | null>(null);
 
   const initialHobby = searchParams.get("hobby") ?? initialPursuit?.hobbySlug ?? hobbies[0].slug;
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
@@ -180,7 +185,10 @@ export function Log() {
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
   const [reflection, setReflection] = useState("");
-  const [audience, setAudience] = useState<Visibility | "private">("friends");
+  // Private by default — matches the product's "Private by default"
+  // positioning: hitting Share without ever touching this selector must
+  // actually save privately, not just show "Only you" pre-highlighted.
+  const [audience, setAudience] = useState<Visibility | "private">("private");
   const [shareOpen, setShareOpen] = useState(false);
   const [circleId, setCircleId] = useState<number | undefined>(undefined);
   const [forSale, setForSale] = useState(false);
@@ -215,9 +223,16 @@ export function Log() {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  // Picking the dedicated "Reflect privately" mode still forces the
+  // audience to private (so a person who'd already changed it can't end up
+  // on that screen sharing by accident). It used to also do the reverse —
+  // bounce audience back to "friends" the moment any other mode was picked
+  // — which made sense back when "friends" was the initial default, but
+  // now silently overwrote the new private default the instant a mode was
+  // chosen. Audience should only ever change here, or by the person's own
+  // click on the selector below.
   useEffect(() => {
     if (mode === "private") setAudience("private");
-    else if (mode) setAudience((a) => (a === "private" ? "friends" : a));
   }, [mode]);
 
   const hobby = hobbies.find((h) => h.slug === hobbySlug)!;
@@ -323,8 +338,12 @@ export function Log() {
       // starting the Pursuit first meant it never learned which photo to
       // show, and every new Pursuit fell back to the generic illustration
       // even when a real picture had just been uploaded alongside it.
+      // A new Pursuit's name can come from the "Start a Pursuit" mode's own
+      // title field or from typing "Create new" in the Pursuit autocomplete
+      // elsewhere on this screen — either way, no existing Pursuit was
+      // already chosen (linkTo empty) and there's a title to give it.
       let linkTo = projectId;
-      if (mode === "project" && projectTitle.trim()) {
+      if (!linkTo && projectTitle.trim()) {
         linkTo = startProject({
           title: projectTitle.trim(),
           hobbySlug,
@@ -335,7 +354,7 @@ export function Log() {
 
       if (linkTo) {
         const targetProject = journal.projects.find((p) => p.id === linkTo);
-        attachEntry(entry.id, linkTo);
+        void attachPostToPursuit(entry.id, linkTo);
         if (targetProject?.finishedAt && user) {
           void mirrorPursuit(user.id, { ...targetProject, finishedAt: undefined });
         }
@@ -510,6 +529,75 @@ export function Log() {
               </li>
             );
           })}
+        </ul>
+      </Shell>
+    );
+  }
+
+  // ── Pursuit-scoped menu: reached only via a Pursuit's own "Add progress"
+  // button, entirely bypassing Capture and "More ways to create" — the
+  // Pursuit is already known, so the only real choice left is whether this
+  // is visible or private. ─────────────────────────────────────────────────
+  if (screen === "pursuit-menu" && initialPursuit) {
+    return (
+      <Shell>
+        <Link
+          to={`/pursuit/${initialPursuit.id}`}
+          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Back
+        </Link>
+        <h1 className="text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+          Add progress
+        </h1>
+        <p className="mt-1.5 text-muted-foreground">{initialPursuit.title}</p>
+
+        <ul className="mt-8 space-y-3">
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("update");
+                setScreen("detail");
+              }}
+              className="group flex w-full items-start gap-3 rounded-2xl border border-border bg-card p-5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-[0_14px_28px_-18px_rgba(11,62,46,0.5)]"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-foreground transition-colors group-hover:bg-[var(--coral-deep)] group-hover:text-white">
+                <PenLine className="size-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-base" style={{ fontFamily: "var(--font-serif)" }}>
+                  Add an update
+                </span>
+                <span className="block text-xs leading-relaxed text-muted-foreground">
+                  A photo, video, or note — shown per whatever audience you pick.
+                </span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("private");
+                setScreen("detail");
+              }}
+              className="group flex w-full items-start gap-3 rounded-2xl border border-border bg-card p-5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-[0_14px_28px_-18px_rgba(11,62,46,0.5)]"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-foreground transition-colors group-hover:bg-[var(--coral-deep)] group-hover:text-white">
+                <Lock className="size-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-base" style={{ fontFamily: "var(--font-serif)" }}>
+                  Reflect privately
+                </span>
+                <span className="block text-xs leading-relaxed text-muted-foreground">
+                  Only you will ever see this note, not shown to anyone else viewing this Pursuit.
+                </span>
+              </span>
+            </button>
+          </li>
         </ul>
       </Shell>
     );
@@ -1034,30 +1122,25 @@ export function Log() {
                   </span>
                 </span>
               </div>
-              {openProjects.length === 0 ? (
-                <Input
-                  className="mt-3"
-                  value={projectTitle}
-                  onChange={(e) => {
-                    setProjectTitle(e.target.value);
-                    setMode(e.target.value.trim() ? "project" : null);
+              <div className="mt-3">
+                <PursuitField
+                  projects={openProjects}
+                  projectId={projectId}
+                  projectTitle={projectTitle}
+                  onSelectExisting={(id) => {
+                    setProjectId(id);
+                    setProjectTitle("");
                   }}
-                  placeholder="Name a new Pursuit, e.g. Six matching mugs"
+                  onCreateNew={(title) => {
+                    setProjectTitle(title);
+                    setProjectId("");
+                  }}
+                  onClear={() => {
+                    setProjectId("");
+                    setProjectTitle("");
+                  }}
                 />
-              ) : (
-                <Select value={projectId} onValueChange={setProjectId}>
-                  <SelectTrigger className="mt-3">
-                    <SelectValue placeholder="Choose a Pursuit (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {openProjects.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              </div>
             </div>
           </li>
         </ul>
@@ -1079,80 +1162,90 @@ export function Log() {
   return (
     <div className="min-h-screen bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-2xl px-4">
-        <Back to="ways" />
+        <Back to={pursuitScoped ? "pursuit-menu" : "ways"} />
 
         <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
           {activeMode.title}
         </h1>
-        <p className="mb-9 text-muted-foreground">{activeMode.copy}</p>
+        <p className="mb-9 text-muted-foreground">
+          {pursuitScoped ? initialPursuit!.title : activeMode.copy}
+        </p>
 
         <div className="space-y-7 rounded-3xl border border-border bg-card p-6 md:p-8">
           {!isPrivateOnly && (
             <>
-              <section>
-                <h2 className="mb-1 text-sm">What are you working on?</h2>
-                <p className="mb-3 text-xs text-muted-foreground">
-                  {mode === "update"
-                    ? "Choose the Pursuit this belongs to."
-                    : mode === "project"
-                      ? "Give it a name you'll recognise in six months."
-                      : "Where does this sit?"}
-                </p>
+              {!pursuitScoped && (
+                <section>
+                  <h2 className="mb-1 text-sm">What are you working on?</h2>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    {mode === "update"
+                      ? "Choose the Pursuit this belongs to."
+                      : mode === "project"
+                        ? "Give it a name you'll recognise in six months."
+                        : "Where does this sit?"}
+                  </p>
 
-                {mode === "update" ? (
-                  <Select value={projectId} onValueChange={setProjectId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a Pursuit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {openProjects.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  mode === "project" && (
-                    <Input
-                      value={projectTitle}
-                      onChange={(e) => setProjectTitle(e.target.value)}
-                      placeholder="e.g. Six matching mugs"
+                  {mode === "update" ? (
+                    <PursuitField
+                      projects={openProjects}
+                      projectId={projectId}
+                      projectTitle={projectTitle}
+                      onSelectExisting={(id) => {
+                        setProjectId(id);
+                        setProjectTitle("");
+                      }}
+                      onCreateNew={(title) => {
+                        setProjectTitle(title);
+                        setProjectId("");
+                      }}
+                      onClear={() => {
+                        setProjectId("");
+                        setProjectTitle("");
+                      }}
+                      placeholder="Choose a Pursuit"
                     />
-                  )
-                )}
+                  ) : (
+                    mode === "project" && (
+                      <Input
+                        value={projectTitle}
+                        onChange={(e) => setProjectTitle(e.target.value)}
+                        placeholder="e.g. Six matching mugs"
+                      />
+                    )
+                  )}
 
-                <div className="mt-3">
-                  <Label className="mb-2 block text-xs">Space</Label>
-                  <Select
-                    value={hobbySlug}
-                    onValueChange={(v) => {
-                      setHobbySlug(v);
-                      setCircleId(undefined);
-                      setSubHobby("");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {hobbies.map((h) => (
-                        <SelectItem key={h.slug} value={h.slug}>
-                          {h.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="mt-3">
+                    <Label className="mb-2 block text-xs">Space</Label>
+                    <Select
+                      value={hobbySlug}
+                      onValueChange={(v) => {
+                        setHobbySlug(v);
+                        setCircleId(undefined);
+                        setSubHobby("");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {hobbies.map((h) => (
+                          <SelectItem key={h.slug} value={h.slug}>
+                            {h.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="mt-3">
-                  <CornerTagField
-                    spaceSlug={hobbySlug}
-                    value={subHobby}
-                    onChange={(slug) => setSubHobby(slug)}
-                  />
-                </div>
-              </section>
+                  <div className="mt-3">
+                    <CornerTagField
+                      spaceSlug={hobbySlug}
+                      value={subHobby}
+                      onChange={(slug) => setSubHobby(slug)}
+                    />
+                  </div>
+                </section>
+              )}
 
               <section>
                 <h2 className="mb-1 text-sm">Show your progress</h2>
