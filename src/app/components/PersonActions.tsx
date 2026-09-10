@@ -4,6 +4,8 @@ import { hobbies, subHobbyLabel, getHobby } from "../data/hobbies";
 import { useSocial } from "../context/SocialContext";
 import { useConnections } from "../context/ConnectionsContext";
 import { useAuth } from "../context/AuthContext";
+import { bestMatch, MatchResult } from "../lib/tagMatching";
+import { useKnownInterests } from "./useKnownInterests";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -84,6 +86,12 @@ export function PersonActions({
   const [chosenSpace, setChosenSpace] = useState<string>("");
   const [newSpaceName, setNewSpaceName] = useState("");
   const [ownInterest, setOwnInterest] = useState("");
+  // A close-but-not-exact match on the "enter your own" field, offered
+  // as a suggestion — never followed automatically. See InterestField's
+  // identical pattern, sharing the same known-interests vocabulary and the
+  // same underlying match check so "espresso" resolves the same way here.
+  const [ownInterestMatch, setOwnInterestMatch] = useState<MatchResult | null>(null);
+  const knownInterests = useKnownInterests();
   // "context" invites straight to the Corner or Circle this row is scoped
   // to; "space" is the escape hatch back to the original, unscoped picker.
   // Only ever means anything when a Corner or Circle was actually passed in.
@@ -99,6 +107,7 @@ export function PersonActions({
       setChosenSpace("");
       setNewSpaceName("");
       setOwnInterest("");
+      setOwnInterestMatch(null);
       setPane(null);
       setInviteScope("context");
     }
@@ -142,6 +151,26 @@ export function PersonActions({
         ? `Stopped exploring ${hobbyLabel.toLowerCase()}.`
         : `Exploring ${hobbyLabel.toLowerCase()}.`,
     );
+  };
+
+  const exploreOwnLabel = (label: string) => {
+    startExplore(`interest:${label.toLowerCase()}`, label);
+    setOwnInterest("");
+    setOwnInterestMatch(null);
+  };
+
+  /** A close-but-not-exact hit pauses for a confirm; an exact one (same
+   * tag, different casing/punctuation) just proceeds under the tag's
+   * existing canonical label. */
+  const submitOwnInterest = () => {
+    const label = ownInterest.trim();
+    if (!label) return;
+    const match = bestMatch(label, knownInterests);
+    if (match && match.kind !== "exact") {
+      setOwnInterestMatch(match);
+      return;
+    }
+    exploreOwnLabel(match ? match.label : label);
   };
 
   const sendConnect = async () => {
@@ -390,21 +419,40 @@ export function PersonActions({
                         id="explore-own"
                         value={ownInterest}
                         maxLength={40}
-                        onChange={(e) => setOwnInterest(e.target.value)}
-                        placeholder="Pottery, bouldering, sourdough…"
-                      />
-                      <Button
-                        variant="outline"
-                        disabled={!ownInterest.trim()}
-                        onClick={() => {
-                          const label = ownInterest.trim();
-                          startExplore(`interest:${label.toLowerCase()}`, label);
-                          setOwnInterest("");
+                        onChange={(e) => {
+                          setOwnInterest(e.target.value);
+                          setOwnInterestMatch(null);
                         }}
-                      >
+                        placeholder="Pottery, bouldering, sourdough…"
+                        onKeyDown={(e) => e.key === "Enter" && submitOwnInterest()}
+                      />
+                      <Button variant="outline" disabled={!ownInterest.trim()} onClick={submitOwnInterest}>
                         Explore
                       </Button>
                     </div>
+                    {/* A suggestion, never a redirect — exploring what was
+                        actually typed is always one more click away. */}
+                    {ownInterestMatch && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Close to “{ownInterestMatch.label}” —{" "}
+                        <button
+                          type="button"
+                          onClick={() => exploreOwnLabel(ownInterestMatch.label)}
+                          className="text-[var(--coral-text)] underline decoration-dotted underline-offset-2"
+                        >
+                          explore that instead
+                        </button>
+                        , or{" "}
+                        <button
+                          type="button"
+                          onClick={() => exploreOwnLabel(ownInterest.trim())}
+                          className="text-[var(--coral-text)] underline decoration-dotted underline-offset-2"
+                        >
+                          keep “{ownInterest.trim()}”
+                        </button>
+                        .
+                      </p>
+                    )}
                   </div>
                   {done && <p className="text-center text-xs text-muted-foreground">{done}</p>}
                 </>

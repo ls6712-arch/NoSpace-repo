@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCategories } from "../context/CategoriesContext";
+import { bestMatch } from "../lib/tagMatching";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -19,9 +20,23 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
  */
 export function SuggestCategory({ className = "" }: { className?: string }) {
   const { user } = useAuth();
-  const { suggest, suggestions } = useCategories();
+  const { suggest, suggestions, categories } = useCategories();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  // Same duplicate check every other free-text tag entry point uses
+  // (lib/tagMatching.ts) — a heads-up, not a block: nothing here stops a
+  // real duplicate from being sent, since a human reviews every suggestion
+  // anyway, but it's cheap to say so before someone re-suggests "Beekeeping"
+  // a third time.
+  const pendingNames = useMemo(
+    () => suggestions.filter((s) => s.status === "pending").map((s) => s.name),
+    [suggestions],
+  );
+  const known = useMemo(
+    () => [...categories.map((c) => c.name), ...pendingNames],
+    [categories, pendingNames],
+  );
+  const match = useMemo(() => bestMatch(name, known), [name, known]);
   const [description, setDescription] = useState("");
   const [examples, setExamples] = useState("");
   const [busy, setBusy] = useState(false);
@@ -122,6 +137,17 @@ export function SuggestCategory({ className = "" }: { className?: string }) {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Beekeeping"
                 />
+                {match && (
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    {match.kind === "exact" ? "“" : "Close to “"}
+                    {match.label}
+                    {match.kind === "exact" ? "” " : "” — "}
+                    {categories.some((c) => c.name === match.label)
+                      ? "already exists."
+                      : "already has a pending suggestion."}{" "}
+                    Still worth sending if you mean something different.
+                  </p>
+                )}
               </div>
 
               <div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getHobby } from "../data/hobbies";
 import { useCorners, slugifyCorner } from "../context/CornersContext";
+import { bestMatch, MatchResult } from "../lib/tagMatching";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -34,12 +35,19 @@ export function CreateCornerDialog({
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A close-but-not-slug-identical hit ("Pasta Makin" vs "Pasta Making") —
+  // same underlying check every other free-text tag entry point uses
+  // (lib/tagMatching.ts), sitting alongside the exact-slug check below
+  // rather than replacing it, since that one's still the harder guarantee.
+  // Confirmed once, then submit() proceeds past it.
+  const [pendingConfirm, setPendingConfirm] = useState<MatchResult | null>(null);
 
   const reset = () => {
     setName("");
     setDescription("");
     setError(null);
     setSaving(false);
+    setPendingConfirm(null);
   };
 
   const close = (next: boolean) => {
@@ -53,11 +61,19 @@ export function CreateCornerDialog({
       setError("Give it a name first.");
       return;
     }
+    const corners = cornersFor(spaceSlug);
     const slug = slugifyCorner(trimmed);
-    const already = cornersFor(spaceSlug).find((c) => c.slug === slug);
+    const already = corners.find((c) => c.slug === slug);
     if (already) {
       setError(`${already.name} already exists in ${space?.shortName ?? "this Space"}.`);
       return;
+    }
+    if (!pendingConfirm) {
+      const match = bestMatch(trimmed, corners.map((c) => c.name));
+      if (match) {
+        setPendingConfirm(match);
+        return;
+      }
     }
     setSaving(true);
     setError(null);
@@ -67,6 +83,15 @@ export function CreateCornerDialog({
       close(false);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const useExistingInstead = () => {
+    if (!pendingConfirm) return;
+    const existing = cornersFor(spaceSlug).find((c) => c.name === pendingConfirm.label);
+    if (existing) {
+      onCreated?.(existing.slug);
+      close(false);
     }
   };
 
@@ -107,11 +132,36 @@ export function CreateCornerDialog({
               onChange={(e) => {
                 setName(e.target.value);
                 setError(null);
+                setPendingConfirm(null);
               }}
               placeholder="e.g. Pasta Making"
               onKeyDown={(e) => e.key === "Enter" && submit()}
             />
           </div>
+
+          {pendingConfirm && (
+            <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5">
+              <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
+                Close to “{pendingConfirm.label}”, already in{" "}
+                {space?.shortName ?? "this Space"}. Something different, or the
+                same Corner?
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  disabled={saving}
+                  onClick={useExistingInstead}
+                >
+                  Use “{pendingConfirm.label}”
+                </Button>
+                <Button variant="coral" size="sm" className="flex-1" disabled={saving} onClick={submit}>
+                  {saving ? "Creating…" : "Create anyway"}
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div>
             <Label htmlFor="corner-description" className="mb-1.5 block text-xs">
@@ -129,9 +179,11 @@ export function CreateCornerDialog({
 
           {error && <p className="text-xs text-[var(--coral-text)]">{error}</p>}
 
-          <Button variant="coral" className="w-full" disabled={saving} onClick={submit}>
-            {saving ? "Creating…" : "Create Corner"}
-          </Button>
+          {!pendingConfirm && (
+            <Button variant="coral" className="w-full" disabled={saving} onClick={submit}>
+              {saving ? "Creating…" : "Create Corner"}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
