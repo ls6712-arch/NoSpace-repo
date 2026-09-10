@@ -29,19 +29,19 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
       to="/circles"
       className="flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-transform duration-200 hover:-translate-y-0.5"
       style={{
-        backgroundColor: `color-mix(in srgb, ${tint} 30%, var(--cream))`,
+        backgroundColor: `color-mix(in srgb, ${tint} 30%, var(--surface-elevated))`,
         border: `1px solid color-mix(in srgb, ${tint} 45%, transparent)`,
       }}
     >
       <span
         className="flex size-9 shrink-0 items-center justify-center rounded-full"
-        style={{ backgroundColor: `color-mix(in srgb, ${tint} 55%, var(--cream))` }}
+        style={{ backgroundColor: `color-mix(in srgb, ${tint} 55%, var(--surface-elevated))` }}
       >
-        <Icon className="size-4 text-[var(--forest-ink)]" strokeWidth={1.6} aria-hidden="true" />
+        <Icon className="size-4 text-foreground" strokeWidth={1.6} aria-hidden="true" />
       </span>
       <span className="min-w-0">
         <span
-          className="block truncate text-sm leading-tight text-[var(--forest-ink)]"
+          className="block truncate text-sm leading-tight text-foreground"
           style={{ fontFamily: "var(--font-serif)" }}
         >
           {circle.name}

@@ -52,7 +52,7 @@ export function HobbyCategoryCard({
             />
           )}
           <div className={`absolute inset-0 bg-gradient-to-t ${hobby.gradient} opacity-20 mix-blend-multiply`} />
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--forest-ink)] via-[var(--forest-ink)]/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--void)] via-[var(--void)]/20 to-transparent" />
           <div className="ns-space-card-index">OPEN SPACE</div>
           <div className="absolute inset-x-0 bottom-0 p-5">
             <div className="flex items-end justify-between gap-2">

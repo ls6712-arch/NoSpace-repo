@@ -85,7 +85,7 @@ export function AdminCategories() {
         </p>
 
         {error && (
-          <p className="mb-5 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--cream))] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
             {error}
           </p>
         )}
@@ -137,7 +137,7 @@ export function AdminCategories() {
                       <div className="flex flex-wrap gap-2">
                         <Button
                           size="sm"
-                          className="text-white [background-color:var(--forest)]"
+                          className="text-white [background-image:var(--gradient-brand)]"
                           disabled={busy === s.id}
                           onClick={() => decide(s.id, "approved")}
                         >

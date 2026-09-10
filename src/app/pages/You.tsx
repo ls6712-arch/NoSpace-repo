@@ -108,7 +108,7 @@ export function You() {
             </div>
           </div>
           <div className="hidden shrink-0 rounded-2xl bg-[color-mix(in_srgb,var(--pastel-sage)_28%,var(--surface))] px-5 py-4 text-center sm:block">
-            <p className="text-sm italic text-[var(--forest-ink)]" style={{ fontFamily: "var(--font-serif)" }}>
+            <p className="text-sm italic text-foreground" style={{ fontFamily: "var(--font-serif)" }}>
               "Same person, more hobbies."
             </p>
           </div>
@@ -279,7 +279,7 @@ export function You() {
         <div className="mb-9">
           <div className="mb-3 flex items-baseline justify-between gap-4">
             <h2 className="flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              <Sprout className="size-4 text-[var(--forest)]" strokeWidth={1.8} />
+              <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
               Quiet Milestones
             </h2>
             <button
@@ -298,7 +298,7 @@ export function You() {
           <div>
             <div className="mb-3 flex items-baseline justify-between gap-4">
               <h2 className="flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-                <Users className="size-4 text-[var(--forest)]" strokeWidth={1.8} />
+                <Users className="size-4 text-foreground" strokeWidth={1.8} />
                 Your Clan
               </h2>
             </div>
@@ -309,7 +309,7 @@ export function You() {
           <div>
             <div className="mb-3 flex items-baseline justify-between gap-4">
               <h2 className="flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-                <Users className="size-4 text-[var(--forest)]" strokeWidth={1.8} />
+                <Users className="size-4 text-foreground" strokeWidth={1.8} />
                 Your Circles
               </h2>
               <Link to="/circles" className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground">

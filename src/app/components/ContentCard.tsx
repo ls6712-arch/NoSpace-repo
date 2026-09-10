@@ -78,8 +78,8 @@ export function ContentCard({
           className={`w-full ${aspect} transition-transform duration-500 group-hover:scale-105`}
         />
         {post.type === "video" && !/^https?:\/\//.test(post.media) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[var(--forest-ink)]/25">
-            <span className="flex size-12 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-md">
+          <div className="absolute inset-0 flex items-center justify-center bg-[var(--void)]/25">
+            <span className="flex size-12 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-md">
               <Play className="size-5 text-white fill-white" />
             </span>
           </div>
@@ -143,7 +143,7 @@ export function ContentCard({
         {isActivity && (
           <div className={`rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-3 ${compact ? "mb-2" : "mb-3"}`}>
             <div className="flex items-center gap-1.5 text-xs">
-              <CalendarDays className="size-3.5 shrink-0 text-[var(--forest)]" />
+              <CalendarDays className="size-3.5 shrink-0 text-foreground" />
               {new Date(post.startsAt!).toLocaleString(undefined, {
                 weekday: "long",
                 month: "short",

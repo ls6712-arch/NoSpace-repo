@@ -86,7 +86,7 @@ function Thread({ person }: { person: Person }) {
                 <span
                   className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
                     mine
-                      ? "text-white [background-color:var(--forest)]"
+                      ? "text-white [background-image:var(--gradient-brand)]"
                       : "border border-border bg-surface"
                   }`}
                 >
@@ -294,7 +294,7 @@ export function Inbox() {
                           <div className="mt-3 flex gap-2">
                             <Button
                               size="sm"
-                              className="flex-1 text-white [background-color:var(--forest)]"
+                              className="flex-1 text-white [background-image:var(--gradient-brand)]"
                               onClick={() => connections.respondToConnection(c.id, true)}
                             >
                               <Check className="size-3.5" />
@@ -343,7 +343,7 @@ export function Inbox() {
                           <div className="mt-3 flex gap-2">
                             <Button
                               size="sm"
-                              className="flex-1 text-white [background-color:var(--forest)]"
+                              className="flex-1 text-white [background-image:var(--gradient-brand)]"
                               onClick={() => connections.respondToInvitation(s.id, true)}
                             >
                               <Check className="size-3.5" />

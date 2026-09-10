@@ -139,12 +139,12 @@ export function Home() {
       <section className="ns-home-hero relative isolate overflow-hidden">
         <div className="mx-auto w-full max-w-[1200px] px-5 pb-12 pt-12 text-center sm:px-8 sm:pt-16 lg:pb-16 lg:pt-20">
           <div className="ns-hero-eyebrow ns-enter ns-enter-1 mx-auto mb-7 lg:mb-8">
-            <span className="animate-pulse-soft size-1.5 bg-[var(--coral-deep)]" />
+            <span className="animate-pulse-soft size-1.5 bg-[var(--violet-electric)]" />
             A SPACE FOR MORE OF YOU
           </div>
 
           <h1
-            className="ns-enter ns-enter-1 mb-5 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-[var(--forest)]"
+            className="ns-enter ns-enter-1 mb-5 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-foreground"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             Your interests are
@@ -193,7 +193,7 @@ export function Home() {
         </div>
 
         <svg className="-mb-px block w-full" viewBox="0 0 1440 96" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0 96V52c214-32 430-44 648-34 106 5 210 17 312 26 168 15 328 12 480-10v62Z" fill="var(--cream)" />
+          <path d="M0 96V52c214-32 430-44 648-34 106 5 210 17 312 26 168 15 328 12 480-10v62Z" fill="var(--surface)" />
         </svg>
       </section>
 
@@ -205,7 +205,7 @@ export function Home() {
               {VALUE_CARDS.map(({ icon: Icon, title, copy }) => (
                 <div key={title} className="ns-value-card rounded-2xl p-6">
                   <span className="ns-value-card-icon mb-5 flex size-11 items-center justify-center rounded-full bg-surface-muted">
-                    <Icon className="size-5 text-[var(--forest-ink)]" strokeWidth={1.7} />
+                    <Icon className="size-5 text-foreground" strokeWidth={1.7} />
                   </span>
                   <div className="mb-2 text-xl" style={{ fontFamily: "var(--font-serif)" }}>{title}</div>
                   <p className="text-sm leading-relaxed text-muted-foreground">{copy}</p>
@@ -245,7 +245,7 @@ export function Home() {
               <div className="ns-paper-panel ns-process-panel">
                 {LOOP_STEPS.map((step) => (
                   <div key={step.n} className="ns-process-step">
-                    <span className="font-hud text-xs text-[var(--coral-text)]">{step.n}</span>
+                    <span className="font-hud text-xs text-[var(--violet-electric-bright)]">{step.n}</span>
                     <div>
                       <div className="mb-0.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>{step.label}</div>
                       <div className="text-xs leading-relaxed text-muted-foreground">{step.desc}</div>
@@ -274,7 +274,7 @@ export function Home() {
               {AUDIENCE_CARDS.map(({ icon: Icon, label, copy }) => (
                 <div key={label} className="ns-audience-card rounded-2xl p-5">
                   <span className="mb-4 flex size-10 items-center justify-center rounded-full bg-surface-muted">
-                    <Icon className="size-4.5 text-[var(--forest-ink)]" strokeWidth={1.7} />
+                    <Icon className="size-4.5 text-foreground" strokeWidth={1.7} />
                   </span>
                   <div className="mb-1.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>{label}</div>
                   <p className="text-xs leading-relaxed text-muted-foreground">{copy}</p>
@@ -305,13 +305,13 @@ export function Home() {
                     to={`/space/${pursuit.hobbySlug}${pursuit.subHobby ? `?hobby=${pursuit.subHobby}` : ""}`}
                     className="ns-pursuit-card group block overflow-hidden rounded-2xl"
                   >
-                    <div className="relative aspect-square overflow-hidden [background-color:#1a4438]">
+                    <div className="relative aspect-square overflow-hidden [background-color:var(--forest-ink)]">
                       <GeneratedArt
                         hobbySlug={pursuit.hobbySlug}
                         seed={pursuit.updates[0]?.id ?? pursuit.key}
                         className="h-full w-full transition-transform duration-500 group-hover:scale-105"
                       />
-                      <span className="absolute left-2.5 top-2.5 rounded-sm border border-[var(--on-forest)]/30 bg-[var(--forest-ink)]/85 px-2 py-1 font-hud text-[10px] tracking-[.05em] text-[var(--on-forest)]">
+                      <span className="absolute left-2.5 top-2.5 rounded-sm border border-[var(--on-forest)]/30 bg-[var(--void)]/85 px-2 py-1 font-hud text-[10px] tracking-[.05em] text-[var(--on-forest)]">
                         {pursuit.updates.length} Moment{pursuit.updates.length === 1 ? "" : "s"}
                       </span>
                     </div>
@@ -394,10 +394,10 @@ export function Home() {
         </section>
 
         {/* Quote / proof */}
-        <section ref={quoteRef} className="ns-reveal py-20 [background-color:var(--sky)] lg:py-28">
+        <section ref={quoteRef} className="ns-reveal py-20 [background:var(--atmo-wine)] lg:py-28">
           <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
-            <Quote className="mx-auto mb-5 size-6 text-[var(--forest-ink)]" />
-            <p className="text-2xl leading-snug text-[var(--forest-ink)] md:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <Quote className="mx-auto mb-5 size-6 text-[var(--violet-electric-bright)]" />
+            <p className="text-2xl leading-snug text-foreground md:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
               No feed algorithm. No streaks. No performing for an audience.
               Just your own log, kept the way you want it.
             </p>
@@ -430,7 +430,7 @@ export function Home() {
       <footer className="border-t border-[var(--hairline)] py-12">
         <div className="container mx-auto flex flex-col items-center gap-6 px-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="text-center sm:text-left">
-            <span className="text-lg text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
+            <span className="text-lg text-foreground" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
             <p className="mt-1 max-w-xs text-sm text-muted-foreground">
               One place for everything you're living, doing, and making.
             </p>

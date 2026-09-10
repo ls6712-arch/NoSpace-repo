@@ -197,9 +197,9 @@ export function PersonActions({
                 compact ? "min-h-8 px-2 py-1.5 text-[11px]" : "min-h-11 px-3 py-2.5 text-[13px]"
               } ${
                 primary
-                  ? "text-white [background-color:var(--forest)]"
+                  ? "text-white [background-image:var(--gradient-brand)]"
                   : settled
-                    ? "text-[var(--forest)] [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--cream))]"
+                    ? "text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]"
                     : "border border-border bg-surface text-foreground hover:border-[var(--foreground)]/35"
               }`}
             >
@@ -233,9 +233,9 @@ export function PersonActions({
                 >
                   <span
                     className="flex size-8 shrink-0 items-center justify-center rounded-full"
-                    style={{ backgroundColor: `color-mix(in srgb, ${active.tint} 42%, var(--cream))` }}
+                    style={{ backgroundColor: `color-mix(in srgb, ${active.tint} 42%, var(--surface-elevated))` }}
                   >
-                    <active.icon className="size-4 text-[var(--forest-ink)]" strokeWidth={1.7} />
+                    <active.icon className="size-4 text-foreground" strokeWidth={1.7} />
                   </span>
                   {active.label}
                 </DialogTitle>
@@ -262,7 +262,7 @@ export function PersonActions({
                           >
                             {o.label}
                             {following ? (
-                              <span className="flex shrink-0 items-center gap-1 text-xs text-[var(--forest)]">
+                              <span className="flex shrink-0 items-center gap-1 text-xs text-foreground">
                                 <Sprout className="size-3.5" />
                                 Exploring
                               </span>
@@ -317,7 +317,7 @@ export function PersonActions({
                     <>
                       <div className="rounded-2xl bg-surface-muted px-4 py-4">
                         <p className="mb-1 flex items-center gap-2 text-sm">
-                          <Clock className="size-4 text-[var(--forest)]" />
+                          <Clock className="size-4 text-foreground" />
                           Request sent.
                         </p>
                         <p className="text-xs leading-relaxed text-muted-foreground">
@@ -341,7 +341,7 @@ export function PersonActions({
                       </p>
                       <div className="flex gap-2">
                         <Button
-                          className="flex-1 text-white [background-color:var(--forest)]"
+                          className="flex-1 text-white [background-image:var(--gradient-brand)]"
                           onClick={() => connections.respondToConnection(existing.id, true)}
                         >
                           Accept
@@ -379,7 +379,7 @@ export function PersonActions({
                         </p>
                       )}
                       <Button
-                        className="w-full text-white [background-color:var(--forest)]"
+                        className="w-full text-white [background-image:var(--gradient-brand)]"
                         disabled={busy}
                         onClick={sendConnect}
                       >
@@ -400,7 +400,7 @@ export function PersonActions({
                   {done ? (
                     <div className="rounded-2xl bg-surface-muted px-4 py-4">
                       <p className="mb-1 flex items-center gap-2 text-sm">
-                        <Check className="size-4 text-[var(--forest)]" />
+                        <Check className="size-4 text-foreground" />
                         {done}
                       </p>
                       <p className="text-xs leading-relaxed text-muted-foreground">
@@ -480,7 +480,7 @@ export function PersonActions({
                         </p>
                       )}
                       <Button
-                        className="w-full text-white [background-color:var(--forest)]"
+                        className="w-full text-white [background-image:var(--gradient-brand)]"
                         disabled={busy || (!chosenSpace && !newSpaceName.trim())}
                         onClick={sendInvite}
                       >

@@ -78,7 +78,7 @@ export function WorkGrid({
                 preview
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--forest-ink)]/85 via-[var(--forest-ink)]/5 to-transparent opacity-90" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--void)]/85 via-[var(--void)]/5 to-transparent opacity-90" />
               <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
                 {hobby && (
                   <span className="text-[9px] font-medium uppercase tracking-wide text-white/75 sm:text-[10px]">

@@ -165,7 +165,7 @@ function FeaturedMomentTile({ post }: { post: Post }) {
           title={saved ? "Added to your Space" : "Try This"}
           aria-label={saved ? "Added to your Space" : "Try This"}
           onClick={() => toggleSaved(post.id)}
-          className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-md transition-colors hover:bg-[var(--forest-ink)]/75"
+          className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
         >
           <Bookmark
             className="size-4"
@@ -231,9 +231,9 @@ function SpaceTile({
         ) : (
           <span
             className="flex size-16 items-center justify-center rounded-full"
-            style={{ backgroundColor: "color-mix(in srgb, var(--pastel-sky) 42%, var(--cream))" }}
+            style={{ backgroundColor: "color-mix(in srgb, var(--pastel-sky) 42%, var(--surface-elevated))" }}
           >
-            <Icon className="size-6 text-[var(--forest-ink)]" strokeWidth={1.7} />
+            <Icon className="size-6 text-foreground" strokeWidth={1.7} />
           </span>
         )}
         {hobbySlug && (
@@ -359,16 +359,16 @@ export function Discover() {
         </div>
         <div className="container relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:py-10 lg:grid-cols-[1fr_0.8fr] lg:gap-14 lg:py-12">
           <div className="relative z-10 max-w-2xl">
-            <div className="ns-section-kicker mb-3 text-[var(--forest-ink)]">THE FRONT DOOR</div>
-            <h1 className="mb-4 text-[clamp(3rem,7vw,5.5rem)] leading-[.92] tracking-[-.04em] text-[var(--forest)]" style={{ fontFamily: "var(--font-serif)" }}>
+            <div className="ns-section-kicker mb-3 text-foreground">THE FRONT DOOR</div>
+            <h1 className="mb-4 text-[clamp(3rem,7vw,5.5rem)] leading-[.92] tracking-[-.04em] text-foreground" style={{ fontFamily: "var(--font-serif)" }}>
               Find spaces, circles<br /><em className="text-[var(--coral-deep)]">and people who make things.</em>
             </h1>
-            <p className="mb-5 max-w-lg text-lg leading-relaxed text-[var(--forest-ink)]">
+            <p className="mb-5 max-w-lg text-lg leading-relaxed text-foreground">
               Browse Spaces, join Circles, and find people making things, all in one place.
             </p>
             {tab === "spaces" && (
               <div className="ns-discover-search relative max-w-xl">
-                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[var(--forest-ink)]" />
+                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
                 <input
                   type="text"
                   value={query}
@@ -382,10 +382,10 @@ export function Discover() {
                     }
                   }}
                   placeholder="Search hobbies, people, or spaces..."
-                  className="w-full border-0 bg-transparent py-3 pl-11 pr-11 text-sm text-[var(--forest-ink)] outline-none placeholder:text-[var(--forest-ink)]/65 focus:ring-0"
+                  className="w-full border-0 bg-transparent py-3 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
                 />
                 {query && (
-                  <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--forest-ink)] hover:text-[var(--coral-deep)]" aria-label="Clear search">
+                  <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
                     <X className="size-4" />
                   </button>
                 )}
@@ -521,7 +521,7 @@ export function Discover() {
                           }}
                           className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
                             active
-                              ? "text-white [background-color:var(--forest)]"
+                              ? "text-white [background-image:var(--gradient-brand)]"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >

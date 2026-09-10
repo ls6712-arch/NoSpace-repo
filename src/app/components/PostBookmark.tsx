@@ -40,7 +40,7 @@ export function PostBookmark({
       {justAdded && (
         <span
           role="status"
-          className="pointer-events-none absolute -top-9 right-0 z-10 whitespace-nowrap rounded-full bg-[var(--forest-ink)] px-2.5 py-1 text-[11px] text-[var(--cream)] shadow-md animate-in fade-in slide-in-from-bottom-1"
+          className="pointer-events-none absolute -top-9 right-0 z-10 whitespace-nowrap rounded-full bg-[var(--void)] px-2.5 py-1 text-[11px] text-[var(--offwhite)] shadow-md animate-in fade-in slide-in-from-bottom-1"
         >
           Added to your Space
         </span>
@@ -51,12 +51,12 @@ export function PostBookmark({
         aria-label={saved ? "Added to your Space. Try This again to remove it" : "Try This: save it to come back to"}
         title={saved ? "Added to your Space" : "Try This"}
         onClick={handleClick}
-        className="flex size-9 items-center justify-center rounded-full bg-[var(--forest-ink)]/55 backdrop-blur-md transition-colors hover:bg-[var(--forest-ink)]/75"
+        className="flex size-9 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
       >
         <Bookmark
           className="size-4"
           strokeWidth={1.9}
-          style={{ color: "var(--cream)", fill: saved ? "var(--cream)" : "none" }}
+          style={{ color: "var(--offwhite)", fill: saved ? "var(--offwhite)" : "none" }}
           aria-hidden="true"
         />
       </button>

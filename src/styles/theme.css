@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --font-size: 16px;
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -28,60 +28,89 @@
   --wood: #6B4E35;
   --wood-light: #8A6A49;
 
-  /* ── NoSpace palette ──────────────────────────────────────────────────────
-     Sky blue world, forest brand, coral action, cream surfaces, yellow accent.
+  /* ── NoSpace palette — the dark-purple environment ───────────────────────
+     NoSpace is meant to feel like a place someone enters, not a dashboard —
+     so the base of the app is an atmosphere (near-black through deep purple
+     through dark plum), not a UI chrome color. Warm hues (coral, yellow,
+     the old forest green, sky blue) stay in the palette below: they're what
+     the illustrated Spaces and their photos are made of, and they're meant
+     to glow against this dark ground rather than disappear into it.
 
-     Measured, not guessed. The saturated blue is a real constraint: forest
-     #0E4D3A on it is 3.76:1 — fine for the headline (large text needs 3:1)
-     but short of the 4.5:1 body text needs. So --forest stays the brand
-     colour for display type and dark sections, and --forest-ink (one notch
-     deeper) carries anything at body size. It reads as the same green.
+     Contrast, measured the same way the palette this replaces was:
+       off-white  on void          17.14 ✓✓      off-white on plum-night   14.65 ✓✓
+       lavender   on void           8.78 ✓✓      lavender  on plum-night    7.51 ✓✓
+       ink-on-violet on electric    5.89 ✓        white on electric          3.38 ✗ (large-text only)
+     White text on the electric-violet button fails normal-size AA, so
+     filled violet buttons use --ink-on-violet instead of white — a deep
+     near-black-plum ink, not pure black, so it still reads as part of the
+     same world rather than a generic dark-mode swap. */
+  --void: #0B0714;
+  --void-deep: #060309;
+  --night-purple: #150C2B;
+  --night-purple-2: #1B1036;
+  --plum-night: #241535;
+  --plum-night-2: #2E1B42;
+  --night-green: #0F1D19;
+  --night-wine: #1C0F22;
 
-       forest    on sky   3.76  large only      forest-ink on sky    4.62 ✓
-       forest    on cream 8.93 ✓                forest-ink on cream 10.98 ✓
-       white     on coral 2.82 ✗                white on coral-deep  5.15 ✓
-       coral-text on cream 4.94 ✓               coral-text on sky     1.85 ✗
+  --violet-soft: #8B7BB8;
+  --violet-electric: #A66CFF;
+  --violet-electric-bright: #C89CFF;
+  --violet-electric-mid: #8A55E0;
+  --violet-electric-deep: #7C4FD0;
+  --ink-on-violet: #170B2C;
 
-     Two hard rules that fall out of this: never put coral, white or cream
-     TEXT on the sky (all fail badly — coral belongs there as a filled button,
-     where white sits on the coral instead), and never put muted metadata on
-     the sky either (2.64). Metadata lives on cream. */
+  --offwhite: #F3ECE3;
+  --lavender-muted: #B4A7CE;
+  --lavender-faint: #7C7096;
+
+  /* Warm hues, kept for the illustrations and as selective accents against
+     the dark ground — no longer the app's own surface colors. */
   --sky: #5DA8D8;
   --sky-deep: #2F76A8;
   --forest: #0E4D3A;
   --forest-ink: #0B3E2E;
   --coral: #FF6B4A;
   --coral-deep: #C43F22;
-  --coral-text: #BC3F21;
+  --coral-text: #FF8B6E;
   --yellow: #F5C542;
   /* Kept as an alias: milestone tints and chart-4 already reference it. */
   --mustard: var(--yellow);
   --cream: #F8F4EB;
-  /* Added for the landing page's editorial refresh — a quiet second display
-     colour alongside forest, and a warmer, softer accent than coral for
-     places that want warmth without coral's urgency (glows, small chips,
-     one of the World cards' accents). Both are used sparingly, as accents,
-     never as a base surface. */
   --plum: #5B3454;
   --plum-deep: #40243C;
   --peach: #F4B892;
+  /* --error is the bright form, for text/icons on a dark surface (6.40:1 on
+     void); --error-deep is what sits under white button/badge text instead
+     (--error itself only clears 3.11:1 with white, short of AA). */
+  --error: #FF5470;
+  --error-deep: #C22F4F;
+  --success: #4ADE80;
+  --warning: var(--yellow);
 
   /* ── Semantic UI tokens ───────────────────────────────────────────────────
      Everything in the interface reads these, never a raw hue. Swapping the
      palette again means editing this block only. */
-  --background: var(--sky);
-  --surface: var(--cream);
-  --surface-muted: #EFE8D8;
-  --foreground: var(--forest-ink);
-  --foreground-muted: #456055;
-  --border: rgba(14, 77, 58, 0.20);
-  --hairline: rgba(14, 77, 58, 0.12);
-  --primary: var(--coral-deep);
-  --primary-foreground: #FFFFFF;
+  --background: var(--void);
+  --surface: var(--plum-night);
+  --surface-elevated: var(--plum-night-2);
+  --surface-muted: var(--night-purple-2);
+  --foreground: var(--offwhite);
+  --foreground-muted: var(--lavender-muted);
+  --border: color-mix(in srgb, var(--violet-electric) 20%, transparent);
+  --hairline: color-mix(in srgb, var(--violet-soft) 22%, transparent);
+  --primary: var(--violet-electric);
+  --primary-foreground: var(--ink-on-violet);
 
-  /* Forest also serves as a large dark surface for banded sections. */
-  --on-forest: var(--cream);
-  --on-forest-muted: rgba(248, 244, 235, 0.74);
+  /* Dark sections still exist (this is now most of the app — --forest is
+     kept as one of the "different worlds" backgrounds, since it's already a
+     genuine dark green). "on-forest" text tokens land on the same warm
+     off-white as everywhere else, but the muted variant is a touch brighter
+     than --lavender-muted specifically here: forest (#0E4D3A) is lighter
+     than the near-black/plum surfaces lavender-muted was tuned against, and
+     only clears 4.37:1 there — short of AA at body size. */
+  --on-forest: var(--offwhite);
+  --on-forest-muted: #C2B6DC;
 
   /* ── shadcn/ui mappings ───────────────────────────────────────────────────
      The ui/ primitives consume these names, so pointing them at the semantic
@@ -89,28 +118,28 @@
      without touching those files. */
   --card: var(--surface);
   --card-foreground: var(--foreground);
-  --popover: var(--surface);
+  --popover: var(--surface-elevated);
   --popover-foreground: var(--foreground);
   --primary-fg: var(--primary-foreground);
   --secondary: var(--surface-muted);
   --secondary-foreground: var(--foreground);
   --muted: var(--surface-muted);
   --muted-foreground: var(--foreground-muted);
-  --accent: var(--coral);
-  --accent-foreground: #FFFFFF;
-  --destructive: #B3261E;
+  --accent: var(--violet-electric);
+  --accent-foreground: var(--ink-on-violet);
+  --destructive: var(--error-deep);
   --destructive-foreground: #FFFFFF;
   --input: var(--border);
   --input-background: var(--surface);
-  --switch-background: rgba(27, 67, 50, 0.20);
+  --switch-background: color-mix(in srgb, var(--lavender-muted) 22%, transparent);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: var(--coral-deep);
-  --chart-1: var(--coral);
-  --chart-2: var(--sky-deep);
-  --chart-3: var(--forest);
+  --ring: var(--violet-electric);
+  --chart-1: var(--violet-electric);
+  --chart-2: var(--coral);
+  --chart-3: var(--sky-deep);
   --chart-4: var(--mustard);
-  --chart-5: #6B9E78;
+  --chart-5: var(--forest);
   --radius: 0.875rem;
   --sidebar: var(--surface);
   --sidebar-foreground: var(--foreground);
@@ -121,11 +150,41 @@
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
 
-  /* Used for filled CTAs, where white sits on top — both stops clear AA. */
-  --gradient-brand: linear-gradient(120deg, var(--coral-deep) 0%, #A83318 100%);
-  --gradient-brand-soft: linear-gradient(120deg, rgba(255,107,74,0.14) 0%, rgba(244,185,66,0.12) 55%, rgba(74,159,216,0.12) 100%);
-  /* For gradient *text*, which needs to stay legible on light ground. */
-  --gradient-ink: linear-gradient(105deg, var(--coral-text) 0%, var(--forest) 72%);
+  /* Used for filled CTAs, where white text sits on top. Deliberately a
+     narrow band of the violet range (deep → mid, not all the way to
+     electric) — white only clears AA up to ~8A55E0; past that the button
+     would need ink-on-violet instead, like the plain primary button does. */
+  --gradient-brand: linear-gradient(120deg, var(--violet-electric-deep) 0%, var(--violet-electric-mid) 100%);
+  --gradient-brand-soft: linear-gradient(120deg, rgba(166,108,255,0.16) 0%, rgba(255,107,74,0.10) 55%, rgba(74,159,216,0.10) 100%);
+  /* For gradient *text*, which needs to stay legible on the dark ground. */
+  --gradient-ink: linear-gradient(105deg, var(--violet-electric-bright) 0%, var(--offwhite) 72%);
+
+  /* Atmospheric backgrounds — layered radial glows rather than flat fills,
+     so a dark section reads as an environment. Each is a distinct "world"
+     within the same system: purple, near-black, plum, and (sparingly) a
+     very dark green, per the brand brief's "moves through different
+     worlds" instruction. Sized/positioned to feel like light falling into
+     a room, not a spotlight aimed at the viewer. */
+  --atmo-purple:
+    radial-gradient(ellipse 70% 55% at 18% -10%, color-mix(in srgb, var(--violet-electric) 22%, transparent), transparent),
+    radial-gradient(ellipse 60% 50% at 92% 100%, color-mix(in srgb, var(--violet-electric-deep) 26%, transparent), transparent),
+    var(--night-purple);
+  --atmo-void:
+    radial-gradient(ellipse 55% 45% at 85% 0%, color-mix(in srgb, var(--violet-electric) 14%, transparent), transparent),
+    radial-gradient(ellipse 50% 40% at 8% 100%, color-mix(in srgb, var(--coral) 8%, transparent), transparent),
+    var(--void);
+  --atmo-plum:
+    radial-gradient(ellipse 65% 55% at 12% 0%, color-mix(in srgb, var(--violet-electric-bright) 16%, transparent), transparent),
+    radial-gradient(ellipse 55% 45% at 95% 100%, color-mix(in srgb, var(--plum) 55%, transparent), transparent),
+    var(--plum-night);
+  --atmo-green:
+    radial-gradient(ellipse 60% 50% at 15% 0%, color-mix(in srgb, var(--success) 10%, transparent), transparent),
+    radial-gradient(ellipse 55% 45% at 90% 100%, color-mix(in srgb, var(--violet-electric) 14%, transparent), transparent),
+    var(--night-green);
+  --atmo-wine:
+    radial-gradient(ellipse 65% 55% at 85% -5%, color-mix(in srgb, var(--coral) 10%, transparent), transparent),
+    radial-gradient(ellipse 55% 45% at 10% 100%, color-mix(in srgb, var(--violet-electric) 16%, transparent), transparent),
+    var(--night-wine);
 }
 
 @theme inline {
@@ -151,6 +210,7 @@
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
   --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
   --color-surface-muted: var(--surface-muted);
   --color-foreground-muted: var(--foreground-muted);
   --color-hairline: var(--hairline);
@@ -168,6 +228,24 @@
   --color-peach: var(--peach);
   --color-forest-ink: var(--forest-ink);
   --color-on-forest: var(--on-forest);
+  --color-on-forest-muted: var(--on-forest-muted);
+  --color-void: var(--void);
+  --color-void-deep: var(--void-deep);
+  --color-night-purple: var(--night-purple);
+  --color-night-green: var(--night-green);
+  --color-night-wine: var(--night-wine);
+  --color-violet-soft: var(--violet-soft);
+  --color-violet-electric: var(--violet-electric);
+  --color-violet-electric-bright: var(--violet-electric-bright);
+  --color-violet-electric-deep: var(--violet-electric-deep);
+  --color-ink-on-violet: var(--ink-on-violet);
+  --color-offwhite: var(--offwhite);
+  --color-lavender-muted: var(--lavender-muted);
+  --color-lavender-faint: var(--lavender-faint);
+  --color-error: var(--error);
+  --color-error-deep: var(--error-deep);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -199,10 +277,13 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    /* The near-black base with two quiet violet blooms — the app's own
+       atmosphere showing through anywhere a page doesn't paint its own
+       section background over it. */
     background-image:
-      radial-gradient(ellipse 95% 55% at 18% -10%, rgba(255, 255, 255, 0.34), transparent),
-      radial-gradient(ellipse 55% 38% at 96% 2%, rgba(245, 197, 66, 0.16), transparent);
-    background-size: auto, auto, auto;
+      radial-gradient(ellipse 90% 50% at 15% -10%, color-mix(in srgb, var(--violet-electric) 12%, transparent), transparent),
+      radial-gradient(ellipse 55% 38% at 96% 2%, color-mix(in srgb, var(--violet-electric-deep) 14%, transparent), transparent);
+    background-size: auto, auto;
     background-attachment: fixed;
   }
 
@@ -253,7 +334,7 @@
   }
 
   .ns-home-hero {
-    background: var(--sky);
+    background: var(--atmo-purple);
   }
 
   .ns-hero-eyebrow,
@@ -271,7 +352,7 @@
     gap: 0.65rem;
     border-block: 1px solid var(--hairline);
     padding-block: 0.55rem;
-    color: var(--forest-ink);
+    color: var(--lavender-muted);
   }
 
   .ns-hero-claims {
@@ -284,35 +365,42 @@
     margin: 0.2rem 0.2rem 0.2rem 0;
     border: 1px solid var(--hairline);
     border-radius: 999px;
-    background: color-mix(in srgb, var(--cream) 75%, transparent);
+    background: color-mix(in srgb, var(--violet-electric) 12%, transparent);
     padding: 0.35rem 0.65rem;
-    color: var(--forest-ink);
+    color: var(--offwhite);
     font-size: 0.72rem;
   }
 
+  /* Secondary action: dark/transparent with a quiet border, brightening on
+     hover rather than filling in — the primary action is the only one that
+     gets a violet fill and glow. */
   .ns-hero-secondary-link {
     display: inline-flex;
     height: 2.75rem;
     align-items: center;
     border: 1px solid var(--hairline);
     border-radius: 999px;
-    background: var(--cream);
+    background: color-mix(in srgb, var(--void) 45%, transparent);
     padding: 0 1rem;
-    color: var(--forest-ink);
+    color: var(--offwhite);
     font-size: 0.75rem;
     transition: border-color 180ms ease, transform 180ms ease;
   }
 
-  .ns-hero-secondary-link:hover { border-color: var(--coral-deep); transform: translateY(-1px); }
+  .ns-hero-secondary-link:hover { border-color: var(--violet-electric); transform: translateY(-1px); }
 
   /* The hero's single large illustration — a real image now
      (src/assets/hero-worlds.png), a big generously-rounded window rather
      than a banner filling edge to edge. Replaced an earlier 3-photo-card
      collage and, before that, an SVG approximation of the same composition
-     (both now removed along with their now-dead CSS below this rule). */
+     (both now removed along with their now-dead CSS below this rule). A
+     soft violet glow rather than a dark drop-shadow, so it reads as lit
+     from within the purple environment rather than sitting on top of it. */
   .ns-hero-worlds-art {
     border-radius: 1.75rem;
-    box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--forest-ink) 45%, transparent);
+    box-shadow:
+      0 30px 70px -25px color-mix(in srgb, var(--violet-electric) 40%, transparent),
+      0 45px 90px -35px rgba(0, 0, 0, 0.55);
   }
 
   .ns-text-link {
@@ -321,20 +409,20 @@
     gap: 0.4rem;
     border-bottom: 1px solid currentColor;
     padding-bottom: 0.16rem;
-    color: var(--forest-ink);
+    color: var(--violet-electric-bright);
     font-size: 0.875rem;
     font-weight: 500;
     transition: color 180ms ease, gap 180ms ease;
   }
 
-  .ns-text-link:hover { gap: 0.65rem; color: var(--coral-text); }
+  .ns-text-link:hover { gap: 0.65rem; color: var(--offwhite); }
 
   .ns-paper-panel {
     position: relative;
     border: 1px solid var(--border);
-    background-color: var(--surface-muted);
-    background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, color-mix(in srgb, var(--forest) 7%, transparent) 28px);
-    box-shadow: 8px 8px 0 color-mix(in srgb, var(--yellow) 62%, transparent);
+    background-color: var(--surface-elevated);
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, color-mix(in srgb, var(--violet-electric) 5%, transparent) 28px);
+    box-shadow: 0 20px 40px -24px color-mix(in srgb, var(--violet-electric) 30%, transparent);
   }
 
   .ns-process-panel { padding: 0.45rem 1.5rem; }
@@ -349,7 +437,7 @@
 
   .ns-process-step:last-child { border-bottom: 0; }
 
-  .ns-circle-panel { padding: 1.5rem; box-shadow: -8px 8px 0 color-mix(in srgb, var(--coral) 35%, transparent); }
+  .ns-circle-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 35%, transparent); }
 
   .ns-circle-row {
     display: flex;
@@ -362,41 +450,44 @@
 
   .ns-circle-row:last-child { border-bottom: 0; padding-bottom: 0; }
 
-  .ns-portfolio-panel { padding: 1.5rem; box-shadow: 8px 8px 0 color-mix(in srgb, var(--sky-deep) 28%, transparent); }
+  .ns-portfolio-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 26%, transparent); }
 
   .ns-audience-card {
     border: 1px solid var(--hairline);
-    background: var(--surface);
-    box-shadow: 5px 5px 0 color-mix(in srgb, var(--forest) 12%, transparent);
+    background: var(--surface-elevated);
+    box-shadow: 0 16px 32px -20px rgba(0, 0, 0, 0.55);
   }
 
   .ns-pursuit-card {
-    border: 1px solid color-mix(in srgb, var(--cream) 28%, transparent);
-    background: color-mix(in srgb, var(--cream) 6%, transparent);
-    transition: transform 320ms cubic-bezier(.22,.61,.36,1), box-shadow 320ms ease;
+    border: 1px solid color-mix(in srgb, var(--violet-electric) 16%, transparent);
+    background: color-mix(in srgb, var(--violet-electric) 5%, var(--surface-elevated));
+    transition: transform 320ms cubic-bezier(.22,.61,.36,1), box-shadow 320ms ease, border-color 320ms ease;
   }
 
   .ns-pursuit-card:hover,
   .ns-pursuit-card:focus-visible {
     transform: translateY(-5px);
-    box-shadow: 0 20px 34px -20px color-mix(in srgb, var(--forest-ink) 70%, transparent);
+    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
+    box-shadow: 0 24px 40px -20px color-mix(in srgb, var(--violet-electric) 30%, transparent);
   }
 
   /* ── Value cards — "Create moments / Document / Explore," right below the
-     hero. Same sticker-shadow language as ns-audience-card, with a hover
-     lift restrained enough to still read as premium rather than playful. ── */
+     hero. Dark-plum elevated surfaces with a soft violet-tinted shadow, and
+     a hover lift restrained enough to still read as premium rather than
+     playful. ── */
   .ns-value-card {
     position: relative;
     border: 1px solid var(--hairline);
-    background: var(--surface);
-    box-shadow: 5px 5px 0 color-mix(in srgb, var(--forest) 10%, transparent);
-    transition: transform 280ms cubic-bezier(.22,.61,.36,1), box-shadow 280ms ease;
+    background: var(--surface-elevated);
+    box-shadow: 0 16px 32px -22px rgba(0, 0, 0, 0.6);
+    transition: transform 280ms cubic-bezier(.22,.61,.36,1), box-shadow 280ms ease, border-color 280ms ease;
   }
 
   .ns-value-card:hover,
   .ns-value-card:focus-within {
-    transform: translate(-2px, -4px);
-    box-shadow: 8px 12px 0 color-mix(in srgb, var(--coral) 32%, transparent);
+    transform: translate(0, -4px);
+    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
+    box-shadow: 0 22px 40px -18px color-mix(in srgb, var(--violet-electric) 35%, transparent);
   }
 
   .ns-value-card-icon {
@@ -497,8 +588,8 @@
     border-radius: 1.75rem;
     overflow: hidden;
     border: 1px solid var(--hairline);
-    background: var(--surface);
-    box-shadow: 6px 10px 0 color-mix(in srgb, var(--forest) 14%, transparent);
+    background: var(--surface-elevated);
+    box-shadow: 0 16px 30px -18px rgba(0, 0, 0, 0.55);
     transition: transform 340ms cubic-bezier(.22,.61,.36,1), box-shadow 340ms ease;
   }
 
@@ -533,13 +624,13 @@
   }
 
   .ns-space-card {
-    background: var(--forest);
+    background: var(--surface-elevated);
     transition: transform 300ms ease, box-shadow 300ms ease;
   }
 
   .group:hover .ns-space-card,
   .group:focus-visible .ns-space-card {
-    box-shadow: 7px 7px 0 color-mix(in srgb, var(--coral) 58%, transparent);
+    box-shadow: 0 18px 34px -16px color-mix(in srgb, var(--violet-electric) 55%, transparent);
     transform: translate(-3px, -3px);
   }
 
@@ -547,10 +638,10 @@
     position: absolute;
     top: 1rem;
     left: 1rem;
-    border: 1px solid var(--cream);
-    background: color-mix(in srgb, var(--forest-ink) 78%, transparent);
+    border: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--void) 78%, transparent);
     padding: 0.28rem 0.4rem;
-    color: var(--cream);
+    color: var(--offwhite);
     font-family: var(--font-mono);
     font-size: 0.55rem;
     font-weight: 600;
@@ -575,21 +666,21 @@
   }
 
   .ns-maker-note {
-    border: 1px solid color-mix(in srgb, var(--cream) 34%, transparent);
-    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--violet-electric) 20%, transparent);
+    background: var(--surface-elevated);
     padding: 1.5rem;
-    box-shadow: 5px 5px 0 color-mix(in srgb, var(--yellow) 45%, transparent);
+    box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--violet-electric) 35%, transparent);
   }
 
   .ns-maker-note:nth-child(even) { transform: rotate(0.45deg); }
   .ns-maker-note:nth-child(odd) { transform: rotate(-0.25deg); }
 
-  .ns-principle { background: color-mix(in srgb, var(--cream) 84%, transparent); }
-  .ns-principle:nth-child(2) { background: color-mix(in srgb, var(--cream) 74%, transparent); }
+  .ns-principle { background: color-mix(in srgb, var(--surface-elevated) 84%, transparent); }
+  .ns-principle:nth-child(2) { background: color-mix(in srgb, var(--surface-elevated) 60%, transparent); }
 
   .ns-invitation {
     position: relative;
-    border-block: 1px solid var(--forest-ink);
+    border-block: 1px solid var(--hairline);
     padding: clamp(3.5rem, 8vw, 6.5rem) 1rem;
   }
 
@@ -601,17 +692,21 @@
     width: 2.2rem;
     height: 2.2rem;
     place-items: center;
-    background: var(--cream);
-    color: var(--coral-deep);
+    background: var(--surface-elevated);
+    color: var(--violet-electric-bright);
     font-size: 1.6rem;
     transform: translateX(-50%);
+    box-shadow: 0 0 0 1px var(--hairline), 0 8px 20px -8px color-mix(in srgb, var(--violet-electric) 45%, transparent);
   }
 
   .ns-myspace-page {
     background-image:
-      radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--sky) 20%, transparent) 0 1px, transparent 1.5px),
-      linear-gradient(90deg, transparent 0 8%, color-mix(in srgb, var(--forest) 4%, transparent) 8.1% 8.2%, transparent 8.3% 100%);
-    background-size: 26px 26px, 100% 100%;
+      radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px),
+      linear-gradient(90deg, transparent 0 8%, color-mix(in srgb, var(--violet-electric) 5%, transparent) 8.1% 8.2%, transparent 8.3% 100%),
+      radial-gradient(ellipse 60% 45% at 90% 0%, color-mix(in srgb, var(--violet-electric-bright) 14%, transparent), transparent),
+      radial-gradient(ellipse 55% 40% at 5% 100%, color-mix(in srgb, var(--plum) 45%, transparent), transparent);
+    background-size: 26px 26px, 100% 100%, auto, auto;
+    background-color: var(--plum-night);
   }
 
   .ns-myspace-masthead {
@@ -624,9 +719,9 @@
   }
 
   .ns-myspace-mark {
-    border-left: 1px solid var(--coral-deep);
+    border-left: 1px solid var(--violet-electric);
     padding-left: 0.7rem;
-    color: var(--forest-ink);
+    color: var(--lavender-muted);
     font-family: var(--font-mono);
     font-size: 0.6rem;
     letter-spacing: 0.14em;
@@ -634,18 +729,18 @@
     text-align: right;
   }
 
-  .ns-myspace-mark span { color: var(--coral-text); }
+  .ns-myspace-mark span { color: var(--violet-electric-bright); }
 
   .ns-myspace-today {
     border: 1px solid var(--border);
-    background: color-mix(in srgb, var(--cream) 72%, transparent);
+    background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
     padding: clamp(1rem, 3vw, 1.5rem);
   }
 
   .ns-myspace-feed > .group {
     border-color: var(--hairline);
     border-radius: 0.25rem;
-    box-shadow: 4px 4px 0 color-mix(in srgb, var(--sky-deep) 18%, transparent);
+    box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 30%, transparent);
   }
 
   .ns-myspace-projects a,
@@ -653,12 +748,13 @@
     border-radius: 0;
     border-color: var(--border);
     background: color-mix(in srgb, var(--surface) 82%, transparent);
-    box-shadow: 3px 3px 0 color-mix(in srgb, var(--yellow) 22%, transparent);
+    box-shadow: 0 12px 22px -14px color-mix(in srgb, var(--violet-electric) 26%, transparent);
   }
 
   .ns-public-profile {
-    background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--yellow) 25%, transparent) 0 1px, transparent 1.5px);
+    background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px);
     background-size: 24px 24px;
+    background-color: var(--void);
   }
 
   .ns-profile-header {
@@ -686,14 +782,14 @@
   .ns-profile-cta {
     border-color: var(--border);
     background: var(--surface-muted);
-    box-shadow: 6px 6px 0 color-mix(in srgb, var(--coral) 24%, transparent);
+    box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--violet-electric) 32%, transparent);
   }
 
   .ns-discover-hero {
     /* ~32% shorter than the original 31rem, so Spaces/Circles/People lands
        much closer to the fold without losing the headline or the art. */
     min-height: 21rem;
-    background: var(--sky);
+    background: var(--atmo-void);
     isolation: isolate;
   }
 
@@ -701,7 +797,7 @@
     position: absolute;
     inset: 0;
     content: "";
-    background-image: radial-gradient(circle, color-mix(in srgb, var(--cream) 52%, transparent) 0 1px, transparent 1.5px);
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--violet-electric) 30%, transparent) 0 1px, transparent 1.5px);
     background-size: 22px 22px;
     opacity: 0.42;
     pointer-events: none;
@@ -721,7 +817,7 @@
     position: absolute;
     inset: 13% 10% 12% 13%;
     content: "";
-    border: 1px solid color-mix(in srgb, var(--forest) 32%, transparent);
+    border: 1px solid color-mix(in srgb, var(--violet-electric) 30%, transparent);
     border-radius: 50%;
     transform: rotate(11deg);
   }
@@ -732,27 +828,28 @@
     right: 12%;
     width: 70%;
     aspect-ratio: 1;
-    border: 1px dashed color-mix(in srgb, var(--forest) 52%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--violet-electric) 45%, transparent);
     border-radius: 50%;
     animation: ns-orbit 34s linear infinite;
   }
 
   .ns-discover-search {
-    border-bottom: 2px solid var(--forest-ink);
-    background: color-mix(in srgb, var(--cream) 75%, transparent);
+    border-bottom: 2px solid var(--violet-electric);
+    background: color-mix(in srgb, var(--void) 45%, transparent);
   }
 
   .ns-discover-space-card {
     overflow: hidden;
     border: 1px solid var(--border);
-    background: var(--surface);
-    box-shadow: 5px 5px 0 color-mix(in srgb, var(--yellow) 34%, transparent);
-    transition: transform 260ms ease, box-shadow 260ms ease;
+    background: var(--surface-elevated);
+    box-shadow: 0 16px 30px -20px rgba(0, 0, 0, 0.55);
+    transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
   }
 
   .ns-discover-space-card:hover,
   .ns-discover-space-card:focus-visible {
-    box-shadow: 8px 8px 0 color-mix(in srgb, var(--coral) 48%, transparent);
+    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
+    box-shadow: 0 22px 40px -18px color-mix(in srgb, var(--violet-electric) 38%, transparent);
     transform: translate(-3px, -3px);
   }
 
@@ -767,10 +864,10 @@
     position: absolute;
     top: 0.8rem;
     left: 0.8rem;
-    border: 1px solid var(--forest-ink);
-    background: var(--cream);
+    border: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--void) 70%, transparent);
     padding: 0.25rem 0.38rem;
-    color: var(--forest-ink);
+    color: var(--offwhite);
     font-family: var(--font-mono);
     font-size: 0.6rem;
   }
@@ -786,7 +883,7 @@
 
   .ns-discover-open {
     flex-shrink: 0;
-    color: var(--coral-text);
+    color: var(--violet-electric-bright);
     font-family: var(--font-mono);
     font-size: 0.62rem;
     letter-spacing: 0.08em;
@@ -797,7 +894,7 @@
   .ns-discover-space-card:hover .ns-discover-open { transform: translate(2px, -2px); }
 
   .ns-discover-wayfinder {
-    box-shadow: 3px 3px 0 color-mix(in srgb, var(--sky-deep) 20%, transparent);
+    box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 28%, transparent);
   }
 
   .ns-discover-filters button {
@@ -806,20 +903,24 @@
     background: transparent;
   }
 
+  /* The one active/selected-filter indicator on Discover — violet, not
+     coral, so there's a single unambiguous "this is selected/active" color
+     across the whole app (see also Header's nav underline). */
   .ns-discover-filters button[aria-pressed="true"] {
-    border-color: var(--coral-deep);
-    background: var(--coral-deep);
+    border-color: var(--violet-electric);
+    background: var(--violet-electric);
+    color: var(--ink-on-violet);
   }
 
   .ns-space-hero {
-    background: var(--cream);
+    background: var(--atmo-green);
     isolation: isolate;
   }
 
   .ns-space-hero-grid {
     background-image:
-      linear-gradient(color-mix(in srgb, var(--forest) 8%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--forest) 8%, transparent) 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--violet-electric) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--violet-electric) 8%, transparent) 1px, transparent 1px);
     background-size: 42px 42px;
     mask-image: linear-gradient(90deg, black, transparent 85%);
     opacity: 0.55;
@@ -828,16 +929,16 @@
 
   .ns-space-hero-art {
     position: relative;
-    border: 1px solid var(--forest-ink);
+    border: 1px solid var(--hairline);
     background: var(--surface-muted);
-    box-shadow: 10px 10px 0 color-mix(in srgb, var(--yellow) 58%, transparent);
+    box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--violet-electric) 35%, transparent);
     transform: rotate(2deg);
   }
 
   .ns-space-hero-art::before {
     position: absolute;
     inset: 0.8rem;
-    border: 1px dashed color-mix(in srgb, var(--forest) 38%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--violet-electric) 32%, transparent);
     content: "";
     pointer-events: none;
   }
@@ -846,10 +947,10 @@
     position: absolute;
     right: -0.7rem;
     bottom: -1.1rem;
-    border: 1px solid var(--forest-ink);
-    background: var(--cream);
+    border: 1px solid var(--hairline);
+    background: var(--surface-elevated);
     padding: 0.45rem 0.6rem;
-    color: var(--forest-ink);
+    color: var(--offwhite);
     font-family: var(--font-mono);
     font-size: 0.56rem;
     line-height: 1.35;
@@ -862,13 +963,14 @@
 
   .ns-you-page {
     background-image:
-      radial-gradient(circle at 92% 3%, color-mix(in srgb, var(--yellow) 26%, transparent) 0 1px, transparent 1.5px),
-      linear-gradient(90deg, transparent 0 7%, color-mix(in srgb, var(--forest) 4%, transparent) 7.1% 7.2%, transparent 7.3% 100%);
+      radial-gradient(circle at 92% 3%, color-mix(in srgb, var(--violet-electric) 26%, transparent) 0 1px, transparent 1.5px),
+      linear-gradient(90deg, transparent 0 7%, color-mix(in srgb, var(--violet-electric) 5%, transparent) 7.1% 7.2%, transparent 7.3% 100%);
     background-size: 24px 24px, 100% 100%;
+    background-color: var(--night-wine);
   }
 
   .ns-you-kicker {
-    color: var(--coral-text);
+    color: var(--violet-electric-bright);
     font-family: var(--font-mono);
     font-size: 0.65rem;
     font-weight: 600;
@@ -879,8 +981,8 @@
     display: grid;
     overflow: hidden;
     border: 1px solid var(--border);
-    background: var(--surface);
-    box-shadow: 8px 8px 0 color-mix(in srgb, var(--yellow) 42%, transparent);
+    background: var(--surface-elevated);
+    box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.55);
     grid-template-columns: minmax(0, 1.15fr) minmax(12rem, 0.85fr);
   }
 
@@ -895,13 +997,13 @@
     padding: 1.5rem;
   }
 
-  .ns-you-sprout { color: var(--coral-deep); font-size: 0.85rem; }
+  .ns-you-sprout { color: var(--violet-electric-bright); font-size: 0.85rem; }
 
   .ns-you-tags a {
     border-radius: 0;
-    border-color: var(--forest-ink);
+    border-color: var(--hairline);
     background: transparent;
-    color: var(--forest-ink);
+    color: var(--foreground);
   }
 
   .ns-you-tabs [data-slot="tabs-trigger"] {
@@ -912,9 +1014,9 @@
   }
 
   .ns-you-tabs [data-slot="tabs-trigger"][data-state="active"] {
-    border-bottom-color: var(--coral-deep);
+    border-bottom-color: var(--violet-electric);
     background: transparent;
-    color: var(--forest-ink);
+    color: var(--foreground);
   }
 
   .ns-you-lower-grid {
@@ -966,9 +1068,9 @@
     width: 9rem;
     height: 5.7rem;
     overflow: hidden;
-    border: 3px solid var(--cream);
-    box-shadow: 4px 5px 0 color-mix(in srgb, var(--forest) 14%, transparent);
-    mix-blend-mode: multiply;
+    border: 3px solid var(--surface-elevated);
+    box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--violet-electric) 30%, transparent);
+    mix-blend-mode: normal;
     animation: ns-marquee-float 8s ease-in-out infinite;
   }
 
@@ -984,14 +1086,16 @@
 
   .ns-marquee-mark {
     display: inline-block;
-    color: var(--coral-deep);
+    color: var(--violet-electric-bright);
     animation: ns-twinkle 3.4s ease-in-out infinite;
-    text-shadow: 0 0 0 var(--coral-deep), 0 0 15px color-mix(in srgb, var(--coral) 40%, transparent);
+    text-shadow: 0 0 0 var(--violet-electric-bright), 0 0 15px color-mix(in srgb, var(--violet-electric) 55%, transparent);
   }
 
   .ns-site-header {
-    background-color: color-mix(in srgb, var(--sky) 93%, var(--cream));
-    background-image: repeating-linear-gradient(90deg, transparent, transparent 37px, color-mix(in srgb, var(--forest) 8%, transparent) 38px);
+    background-color: color-mix(in srgb, var(--void) 86%, transparent);
+    background-image: linear-gradient(180deg, color-mix(in srgb, var(--violet-electric) 7%, transparent), transparent 70%);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 
   .ns-wordmark-mark {
@@ -1240,7 +1344,7 @@ select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--coral-deep) !important;
+  outline: 2px solid var(--violet-electric) !important;
   outline-offset: 2px !important;
 }
 

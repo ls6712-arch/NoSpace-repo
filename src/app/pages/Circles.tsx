@@ -135,7 +135,7 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
               onClick={() => setTab(id)}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] transition-colors ${
                 tab === id
-                  ? "text-white [background-color:var(--forest)]"
+                  ? "text-white [background-image:var(--gradient-brand)]"
                   : "bg-surface text-muted-foreground hover:text-foreground"
               }`}
             >

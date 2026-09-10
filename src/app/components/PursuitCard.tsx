@@ -148,7 +148,7 @@ export function PursuitCard({
         )}
         <span
           className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-md ${
-            pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-[var(--forest-ink)]/55"
+            pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-[var(--void)]/55"
           }`}
         >
           {status}
@@ -165,7 +165,7 @@ export function PursuitCard({
                   : "Private (tap to share and copy a link)"
             }
             aria-pressed={shared}
-            className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-full bg-[var(--forest-ink)]/55 px-2.5 backdrop-blur-md transition-colors hover:bg-[var(--forest-ink)]/75"
+            className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-full bg-[var(--void)]/55 px-2.5 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
           >
             {justCopied ? (
               <span className="text-[10px] font-medium text-white">Copied!</span>
@@ -199,8 +199,8 @@ export function PursuitCard({
               goal
                 ? goal.reachedAt
                   ? "border-border bg-surface-muted text-muted-foreground"
-                  : "border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--cream))] text-[var(--forest-ink)] hover:border-[var(--coral-deep)]"
-                : "border-dashed border-border text-muted-foreground hover:border-[var(--forest)] hover:text-[var(--forest)]"
+                  : "border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] text-foreground hover:border-[var(--coral-deep)]"
+                : "border-dashed border-border text-muted-foreground hover:border-[var(--violet-electric)] hover:text-foreground"
             }`}
           >
             <Target className="size-4 shrink-0" strokeWidth={1.8} />
@@ -223,7 +223,7 @@ export function PursuitCard({
                 type="button"
                 onClick={reachIt}
                 title="Reached it"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--forest)] hover:text-[var(--forest)]"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--violet-electric)] hover:text-foreground"
               >
                 <Target className="size-3.5" strokeWidth={2} />
               </button>
@@ -233,7 +233,7 @@ export function PursuitCard({
                 type="button"
                 onClick={markDone}
                 title="Mark complete"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--forest)] hover:text-[var(--forest)]"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--violet-electric)] hover:text-foreground"
               >
                 <Check className="size-3.5" strokeWidth={2} />
               </button>
