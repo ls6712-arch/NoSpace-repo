@@ -305,158 +305,15 @@
 
   .ns-hero-secondary-link:hover { border-color: var(--coral-deep); transform: translateY(-1px); }
 
-  /* The hero's single large composite illustration (HeroWorldsArt.tsx) — a
-     big, generously rounded window, not a banner filling edge to edge. */
+  /* The hero's single large illustration — a real image now
+     (src/assets/hero-worlds.png), a big generously-rounded window rather
+     than a banner filling edge to edge. Replaced an earlier 3-photo-card
+     collage and, before that, an SVG approximation of the same composition
+     (both now removed along with their now-dead CSS below this rule). */
   .ns-hero-worlds-art {
     border-radius: 1.75rem;
     box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--forest-ink) 45%, transparent);
   }
-
-  .ns-hero-trail-flow {
-    animation: ns-flow 22s linear infinite;
-  }
-
-  .ns-hero-art {
-    position: relative;
-    isolation: isolate;
-    /* A little more air around the collage than a tight crop — this is
-       meant to read as a small window onto a few different worlds, not a
-       banner filling its box edge to edge. */
-    padding: clamp(1rem, 3vw, 2.25rem) clamp(0.25rem, 2vw, 1.5rem);
-  }
-
-  .ns-hero-photo-collage {
-    position: relative;
-    min-height: clamp(23rem, 50vw, 36rem);
-    isolation: isolate;
-  }
-
-  .ns-hero-photo-card {
-    position: absolute;
-    overflow: hidden;
-    border: 5px solid var(--cream);
-    background: var(--surface-muted);
-    box-shadow: 8px 10px 0 color-mix(in srgb, var(--forest) 24%, transparent);
-    transition: transform 240ms ease, box-shadow 240ms ease;
-  }
-
-  .ns-hero-photo-card::after {
-    position: absolute;
-    inset: 0;
-    content: "";
-    background: linear-gradient(160deg, transparent 42%, color-mix(in srgb, var(--forest) 24%, transparent));
-    pointer-events: none;
-  }
-
-  .ns-hero-photo-card:hover {
-    z-index: 4;
-    box-shadow: 10px 14px 0 color-mix(in srgb, var(--forest) 30%, transparent);
-  }
-
-  .ns-hero-hobby-one {
-    top: 7%;
-    left: 4%;
-    width: 42%;
-    aspect-ratio: 0.78;
-    transform: rotate(-6deg);
-    animation: ns-hobby-float 7s ease-in-out infinite;
-  }
-
-  .ns-hero-hobby-one:hover { transform: rotate(-3deg) translateY(-5px); }
-
-  .ns-hero-hobby-two {
-    top: 1%;
-    right: 6%;
-    width: 40%;
-    aspect-ratio: 0.78;
-    transform: rotate(6deg);
-    animation: ns-hobby-float 7s ease-in-out -2.2s infinite;
-  }
-
-  .ns-hero-hobby-two:hover { transform: rotate(3deg) translateY(-5px); }
-
-  .ns-hero-hobby-three {
-    right: 23%;
-    bottom: 3%;
-    z-index: 3;
-    width: 42%;
-    aspect-ratio: 0.84;
-    transform: rotate(-2deg);
-    animation: ns-hobby-float 7s ease-in-out -4.4s infinite;
-  }
-
-  .ns-hero-hobby-three:hover { transform: rotate(1deg) translateY(-5px); }
-
-  .ns-hero-photo-label {
-    position: absolute;
-    left: 0.65rem;
-    right: 0.65rem;
-    bottom: 0.55rem;
-    z-index: 1;
-    color: var(--cream);
-    font-family: var(--font-mono);
-    font-weight: 600;
-    text-shadow: 0 1px 5px color-mix(in srgb, var(--forest) 75%, transparent);
-  }
-
-  .ns-hero-photo-label .title {
-    display: block;
-    font-size: 0.62rem;
-    letter-spacing: 0.02em;
-    text-transform: none;
-    margin-bottom: 0.15rem;
-  }
-
-  .ns-hero-photo-label .tag {
-    display: block;
-    font-size: 0.55rem;
-    letter-spacing: 0.1em;
-    opacity: 0.85;
-  }
-
-  .ns-hero-art-label {
-    position: absolute;
-    z-index: 20;
-    top: 13%;
-    right: 4%;
-    border: 1px solid var(--forest-ink);
-    background: var(--cream);
-    padding: 0.55rem 0.7rem;
-    color: var(--forest-ink);
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    line-height: 1.45;
-    transform: rotate(4deg);
-  }
-
-  .ns-hero-marginalia {
-    position: absolute;
-    z-index: 20;
-    bottom: 7%;
-    left: -1%;
-    width: clamp(8rem, 24%, 11rem);
-  }
-
-  .ns-hero-caption {
-    position: absolute;
-    z-index: 20;
-    right: 5%;
-    bottom: 4%;
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    border-top: 1px solid var(--forest-ink);
-    padding-top: 0.4rem;
-    color: var(--forest-ink);
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .ns-hero-caption span { color: var(--coral-text); }
 
   .ns-text-link {
     display: inline-flex;
@@ -1076,11 +933,6 @@
     .ns-discover-open { display: block; margin-top: 0.9rem; }
     .ns-space-hero-art { width: calc(100% - 1rem); margin-right: 0.5rem; }
     .ns-space-hero-caption { right: -0.35rem; }
-    .ns-hero-photo-collage { min-height: 20rem; }
-    .ns-hero-photo-card { border-width: 3px; box-shadow: 5px 7px 0 color-mix(in srgb, var(--forest) 22%, transparent); }
-    .ns-hero-hobby-one { left: 1%; width: 44%; }
-    .ns-hero-hobby-two { right: 1%; width: 43%; }
-    .ns-hero-hobby-three { right: 18%; width: 45%; }
     .ns-you-profile-card { grid-template-columns: 1fr; }
     .ns-you-avatar-panel { border-bottom: 1px solid var(--hairline); }
     .ns-you-identity { border-left: 0; }
@@ -1242,10 +1094,6 @@
    breathe, plants sway, clouds drift, sparkles pulse — each on a different
    period so the scene never falls into lockstep. All of it is switched off
    wholesale under prefers-reduced-motion at the bottom of this file. */
-@keyframes ns-hobby-float {
-  0%, 100% { margin-top: 0; }
-  50% { margin-top: -7px; }
-}
 @keyframes ns-marquee-float {
   0%, 100% { transform: translateY(0) rotate(-4deg); }
   50% { transform: translateY(7px) rotate(4deg); }
@@ -1397,7 +1245,7 @@ summary:focus-visible,
   .animate-float-slow, .animate-float-slower, .animate-pulse-soft,
   .animate-marquee, .animate-in, .animate-spin,
   .text-gradient-animated, .ns-marquee-mark,
-  .ns-hero-photo-card, .ns-marquee-hobby {
+  .ns-marquee-hobby {
     animation: none !important;
   }
   .ns-enter {
@@ -1408,7 +1256,6 @@ summary:focus-visible,
   .ns-parallax { transform: none !important; }
   .ns-maker-note { transform: none !important; }
   .ns-worlds-path path { animation: none !important; }
-  .ns-hero-trail-flow { animation: none !important; }
   .ns-worlds-track { transform: none !important; }
   .ns-reveal {
     opacity: 1 !important;

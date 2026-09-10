@@ -8,10 +8,10 @@ import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { ContentCard } from "../components/ContentCard";
 import { GeneratedArt } from "../components/GeneratedArt";
-import { HeroWorldsArt } from "../components/HeroWorldsArt";
 import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
+import heroWorldsImg from "../../assets/hero-worlds.png";
 
 /**
  * Desktop-only parallax on the hero collage: it drifts up a little more
@@ -184,7 +184,11 @@ export function Home() {
 
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-12 sm:px-8 lg:px-12 lg:pb-20 xl:px-16">
           <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
-            <HeroWorldsArt className="ns-hero-worlds-art aspect-[16/9] w-full sm:aspect-[16/8]" />
+            <img
+              src={heroWorldsImg}
+              alt="Small illustrated worlds of people playing music, painting, sculpting, gardening, reading, and coding, connected by soft glowing paths."
+              className="ns-hero-worlds-art aspect-[1376/768] w-full object-cover"
+            />
           </div>
         </div>
 
