@@ -187,11 +187,34 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
  * The Circles list itself, grouped by Space — no page chrome of its own, so
  * it can be dropped into a full /circles page or embedded as Discover's
  * Circles tab without either one duplicating this grouping/rendering logic.
+ *
+ * `query`, when set, filters by name/description/purpose/location — this is
+ * what lets Discover's search box keep working after switching from the
+ * Spaces tab to this one, instead of the query silently going nowhere.
  */
-export function CirclesBrowser() {
+export function CirclesBrowser({ query = "" }: { query?: string }) {
+  const q = query.trim().toLowerCase();
+  const matching = q
+    ? circles.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.description.toLowerCase().includes(q) ||
+          c.purpose.toLowerCase().includes(q) ||
+          (c.location ?? "").toLowerCase().includes(q),
+      )
+    : circles;
+
   const bySpace = new Map<string, Circle[]>();
-  for (const circle of circles) {
+  for (const circle of matching) {
     bySpace.set(circle.hobbySlug, [...(bySpace.get(circle.hobbySlug) ?? []), circle]);
+  }
+
+  if (q && bySpace.size === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+        No Circles match "{query}" yet.
+      </p>
+    );
   }
 
   return (

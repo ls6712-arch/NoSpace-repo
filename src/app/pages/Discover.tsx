@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   Bookmark,
   LayoutGrid,
@@ -16,7 +16,9 @@ import { circles } from "../data/circles";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
+import { useCorners, isDiscoverable } from "../context/CornersContext";
 import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
+import { hobbyMatchesQuery } from "../lib/search";
 import { ContentCard } from "../components/ContentCard";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { GeneratedArt } from "../components/GeneratedArt";
@@ -253,6 +255,8 @@ function SpaceTile({
 export function Discover() {
   const { publicFeed } = useContent();
   const social = useSocial();
+  const { cornersFor } = useCorners();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("about") ?? "");
 
@@ -300,16 +304,19 @@ export function Discover() {
   const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), []);
 
   // The search box promises hobbies and spaces, not just post captions, so a
-  // Space's own name and tagline count as a match too.
+  // Space's own name and tagline count as a match too — and so does any of
+  // its Corners (curated or tagged-into-existence): "pottery" is a Corner
+  // inside Crafts & Making, not a Space name on its own, and searching it
+  // used to turn up nothing here at all.
   const filteredHobbies = useMemo(() => {
     if (!q) return hobbies;
-    return hobbies.filter(
-      (h) =>
-        h.shortName.toLowerCase().includes(q) ||
-        h.name.toLowerCase().includes(q) ||
-        h.tagline.toLowerCase().includes(q),
-    );
-  }, [q]);
+    return hobbies.filter((h) => {
+      const cornerNames = cornersFor(h.slug)
+        .filter(isDiscoverable)
+        .map((c) => c.name);
+      return hobbyMatchesQuery(h, cornerNames, q);
+    });
+  }, [q, cornersFor]);
 
   const feedBase = useMemo(() => {
     if (feedTab === "recent") return [...publicFeed].sort((a, b) => b.createdAt - a.createdAt);
@@ -366,31 +373,40 @@ export function Discover() {
             <p className="mb-5 max-w-lg text-lg leading-relaxed text-foreground">
               Browse Spaces, join Circles, and find people making things, all in one place.
             </p>
-            {tab === "spaces" && (
-              <div className="ns-discover-search relative max-w-xl">
-                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setShown(PAGE_SIZE);
-                    if (searchParams.get("about")) {
-                      const params = new URLSearchParams(searchParams);
-                      params.delete("about");
-                      setSearchParams(params, { replace: true });
-                    }
-                  }}
-                  placeholder="Search hobbies, people, or spaces..."
-                  className="w-full border-0 bg-transparent py-3 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
-                />
-                {query && (
-                  <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
-                    <X className="size-4" />
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Used to only render on the Spaces tab, so switching to
+                Circles or People made the box (and the query it held)
+                disappear — not just visually: neither tab's content ever
+                read `query` at all, so there was nothing to reapply even if
+                it had stayed visible. Now always present, and Circles/People
+                below both take `query` as a prop. */}
+            <div className="ns-discover-search relative max-w-xl">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setShown(PAGE_SIZE);
+                  if (searchParams.get("about")) {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete("about");
+                    setSearchParams(params, { replace: true });
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && query.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+                  }
+                }}
+                placeholder="Search hobbies, people, or spaces..."
+                className="w-full border-0 bg-transparent py-3 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
           </div>
           <div className="hidden lg:block" />
         </div>
@@ -422,8 +438,8 @@ export function Discover() {
             })}
           </div>
 
-          {tab === "circles" && <CirclesBrowser />}
-          {tab === "people" && <PeopleBrowser />}
+          {tab === "circles" && <CirclesBrowser query={query} />}
+          {tab === "people" && <PeopleBrowser query={query} />}
 
           {tab === "spaces" && (
             <>

@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { MessagesSquare, Package, Plus, Search, ShoppingBag, Sparkle, User, UserRound, X } from "lucide-react";
+import { MessagesSquare, Package, Plus, Search, ShoppingBag, Sparkle, UserRound, Users, PenLine, Compass, X, type LucideIcon } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { hobbies } from "../data/hobbies";
-import { seedPosts } from "../data/posts";
-import { products } from "../data/products";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useSocial } from "../context/SocialContext";
-import { usePeopleSearch, profilePath } from "../lib/people";
+import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { NotificationsMenu } from "./NotificationsMenu";
 
 function initials(name: string) {
@@ -73,98 +70,17 @@ function AccountMenu() {
   );
 }
 
-type SearchResult = {
-  kind: "hobby" | "product" | "creator" | "person";
-  key: string;
-  label: string;
-  sub: string;
-  to: string;
-  avatarUrl?: string;
-};
-
-/**
- * Real accounts, searched live. The rest of this box searches the app's
- * sample content, which is fine for hobbies and products but meant that a
- * person who had actually signed up could never be found here.
- */
-function usePersonResults(query: string): SearchResult[] {
-  const { people } = usePeopleSearch(query);
-  return useMemo(
-    () =>
-      people.map((person) => ({
-        kind: "person" as const,
-        key: `person-${person.id}`,
-        label: person.displayName,
-        sub:
-          person.hobbyKeys
-            .map((k) => hobbies.find((h) => h.slug === k)?.shortName)
-            .filter(Boolean)
-            .slice(0, 2)
-            .join(" · ") || "On NoSpace",
-        to: profilePath(person),
-        avatarUrl: person.avatarUrl,
-      })),
-    [people],
-  );
-}
-
-function useSearchResults(query: string): SearchResult[] {
-  return useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    const results: SearchResult[] = [];
-
-    for (const hobby of hobbies) {
-      if (
-        hobby.shortName.toLowerCase().includes(q) ||
-        hobby.name.toLowerCase().includes(q) ||
-        hobby.tagline.toLowerCase().includes(q)
-      ) {
-        results.push({
-          kind: "hobby",
-          key: `hobby-${hobby.slug}`,
-          label: hobby.shortName,
-          sub: hobby.tagline,
-          to: `/space/${hobby.slug}`,
-        });
-      }
-    }
-
-    for (const product of products) {
-      if (product.name.toLowerCase().includes(q)) {
-        results.push({
-          kind: "product",
-          key: `product-${product.id}`,
-          label: product.name,
-          sub: `$${product.price.toFixed(0)} · ${hobbies.find((h) => h.slug === product.hobbySlug)?.shortName ?? ""}`,
-          to: `/product/${product.id}`,
-        });
-      }
-    }
-
-    const seenCreators = new Set<string>();
-    for (const post of seedPosts) {
-      if (post.creator.toLowerCase().includes(q) && !seenCreators.has(post.creator)) {
-        seenCreators.add(post.creator);
-        results.push({
-          kind: "creator",
-          key: `creator-${post.creator}`,
-          label: post.creator,
-          sub: `Moments in ${hobbies.find((h) => h.slug === post.hobbySlug)?.shortName ?? ""}`,
-          to: `/space/${post.hobbySlug}`,
-        });
-      }
-    }
-
-    return results.slice(0, 8);
-  }, [query]);
-}
-
-const RESULT_ICON: Record<SearchResult["kind"], typeof Sparkle> = {
-  hobby: Sparkle,
+/** Same grouping/order/coverage the dedicated /search results page uses
+ * (lib/search.ts) — this box is a live preview onto the same index, not a
+ * separate, narrower search of its own. */
+const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
+  space: Compass,
+  corner: Sparkle,
+  circle: Users,
+  person: UserRound,
+  pursuit: PenLine,
+  moment: MessagesSquare,
   product: Package,
-  creator: User,
-  person: User,
 };
 
 /**
@@ -199,20 +115,7 @@ export function Header() {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const sampleResults = useSearchResults(query);
-  const personResults = usePersonResults(query);
-  // Real people first — someone typing a name is looking for the person.
-  const results = useMemo(() => {
-    // A real account always wins over a sample creator of the same name, so
-    // the same person never appears twice in one list.
-    const realNames = new Set(personResults.map((r) => r.label.toLowerCase()));
-    return [
-      ...personResults,
-      ...sampleResults.filter(
-        (r) => !(r.kind === "creator" && realNames.has(r.label.toLowerCase())),
-      ),
-    ];
-  }, [personResults, sampleResults]);
+  const { all: results } = useUnifiedSearch(query);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -224,10 +127,17 @@ export function Header() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  function goToResult(result: SearchResult) {
+  function goToResult(result: SearchHit) {
     navigate(result.to);
     setQuery("");
     setSearchOpen(false);
+  }
+
+  function goToResults(q: string) {
+    navigate(`/search?q=${encodeURIComponent(q)}`);
+    setQuery("");
+    setSearchOpen(false);
+    setMobileSearchOpen(false);
   }
 
   function onSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -235,8 +145,13 @@ export function Header() {
       setQuery("");
       setSearchOpen(false);
       (e.target as HTMLInputElement).blur();
-    } else if (e.key === "Enter" && results.length > 0) {
-      goToResult(results[0]);
+    } else if (e.key === "Enter" && query.trim()) {
+      // Submitting used to jump straight into whatever happened to be
+      // first in the preview list — often an unrelated product, since the
+      // old search barely covered anything but Space names and products.
+      // Enter now always goes to the full grouped results page; picking
+      // one specific item from the dropdown is still just a click away.
+      goToResults(query.trim());
     }
   }
 
@@ -324,7 +239,7 @@ export function Header() {
                 ) : (
                   <ul className="max-h-80 overflow-y-auto py-1">
                     {results.map((result) => {
-                      const Icon = RESULT_ICON[result.kind];
+                      const Icon = RESULT_ICON[result.group];
                       return (
                         <li key={result.key}>
                           <button
@@ -332,7 +247,7 @@ export function Header() {
                             onClick={() => goToResult(result)}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-muted transition-colors"
                           >
-                            {result.kind === "person" ? (
+                            {result.group === "person" ? (
                               <Avatar className="size-8 shrink-0">
                                 {result.avatarUrl && <AvatarImage src={result.avatarUrl} alt="" className="object-cover" />}
                                 <AvatarFallback className="text-[10px]">{initials(result.label)}</AvatarFallback>

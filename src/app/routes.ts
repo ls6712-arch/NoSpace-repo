@@ -9,6 +9,7 @@ import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CategoryFeed } from "./pages/CategoryFeed";
 import { Discover } from "./pages/Discover";
+import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
 import { Circles } from "./pages/Circles";
 import { Log } from "./pages/Log";
@@ -37,6 +38,7 @@ export const router = createHashRouter([
       { path: "welcome", loader: () => redirect("/") },
       { path: "my-space", Component: MySpace },
       { path: "discover", Component: Discover },
+      { path: "search", Component: SearchResults },
 
       { path: "circles", Component: Circles },
       { path: "create", Component: Log },
