@@ -12,6 +12,7 @@ import { useContent } from "../context/ContentContext";
 import { useRewards } from "../context/RewardsContext";
 import { ContentCard } from "../components/ContentCard";
 import { ProductCard } from "../components/ProductCard";
+import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { HobbyActivity } from "../components/HobbyActivity";
 import { usePeopleInHobby } from "../lib/people";
@@ -356,6 +357,7 @@ export function CategoryFeed() {
           </TabsContent>
 
           <TabsContent value="marketplace">
+            <ComingSoonBanner />
             {listings.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
                 No listings in this space yet.

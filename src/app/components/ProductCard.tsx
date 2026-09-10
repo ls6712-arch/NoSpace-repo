@@ -14,12 +14,7 @@ const typeMeta: Record<Product["type"], { label: string; icon: typeof ShoppingCa
 };
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addToCart, toggleWishlist, isInWishlist } = useCart();
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    addToCart(product);
-  };
+  const { toggleWishlist, isInWishlist } = useCart();
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,8 +39,9 @@ export function ProductCard({ product }: { product: Product }) {
           </Badge>
           <Button
             size="icon"
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-full bg-white/90 text-black hover:bg-white"
-            onClick={handleAddToCart}
+            disabled
+            title="Selling is coming soon"
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-full bg-white/70 text-black/40 cursor-not-allowed"
           >
             <ShoppingCart className="size-4" />
           </Button>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { ArrowLeft, Heart, ShoppingCart, Star } from "lucide-react";
+import { ArrowLeft, Clock, Heart, Star } from "lucide-react";
 import { useContent } from "../context/ContentContext";
 import { useCart } from "../context/CartContext";
 import { getHobby } from "../data/hobbies";
@@ -11,7 +11,7 @@ export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { findListing, listingsByHobby } = useContent();
-  const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const { toggleWishlist, isInWishlist } = useCart();
   const product = findListing(Number(id));
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -133,10 +133,19 @@ export function ProductDetail() {
               </div>
             )}
 
-            <Button variant="brand" size="lg" className="w-full mb-2" onClick={() => addToCart(product)}>
-              <ShoppingCart className="size-4" />
-              Add to cart · +10 pts on checkout
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full mb-2 cursor-not-allowed opacity-70"
+              disabled
+              title="Buying isn't live yet — the marketplace is coming soon."
+            >
+              <Clock className="size-4" />
+              Coming soon
             </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Buying isn't live yet — the marketplace is coming soon.
+            </p>
           </div>
         </div>
 
