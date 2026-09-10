@@ -15,7 +15,7 @@ export function ShareProfileDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { points, level, stats, unlockedBadgeIds } = useRewards();
+  const { stats, unlockedBadgeIds } = useRewards();
   const { slug: hobbySlug, label: hobbyLabel } = usePrimaryHobbyKey();
   const { profile } = useAuth();
   // The link has to be one anyone can actually open — the page you are
@@ -26,12 +26,8 @@ export function ShareProfileDialog({
   const [copied, setCopied] = useState(false);
 
   const unlocked = badges.filter((b) => unlockedBadgeIds.includes(b.id));
-  const creatorPoints = stats.postsCreated * 50;
-  const creatorShare = Math.round(
-    (creatorPoints / Math.max(creatorPoints + Math.max(points - creatorPoints, 0), 1)) * 100
-  );
 
-  const summary = `${stats.postsCreated} ${stats.postsCreated === 1 ? "session" : "sessions"} logged on NoSpace, ${unlocked.length} quiet ${unlocked.length === 1 ? "milestone" : "milestones"} reached. Create, don't just consume: ${publicUrl}`;
+  const summary = `${stats.postsCreated} ${stats.postsCreated === 1 ? "thing" : "things"} created on NoSpace, ${unlocked.length} quiet ${unlocked.length === 1 ? "milestone" : "milestones"} reached. Create, don't just consume: ${publicUrl}`;
 
   const handleCopy = async () => {
     try {
@@ -52,12 +48,8 @@ export function ShareProfileDialog({
             <Avatar className="size-16 mx-auto mb-4">
               <AvatarFallback className="text-lg">YOU</AvatarFallback>
             </Avatar>
-            <div className="text-sm text-muted-foreground mb-1 font-hud">Level {level}</div>
-            <div className="font-hud text-4xl mb-1 text-gradient-brand">
+            <div className="font-hud text-4xl mb-6 text-gradient-brand">
               {stats.postsCreated} {stats.postsCreated === 1 ? "thing" : "things"} created
-            </div>
-            <div className="text-xs text-muted-foreground mb-6">
-              {creatorShare}% creator on NoSpace
             </div>
 
             {unlocked.length > 0 && (

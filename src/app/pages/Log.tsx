@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useBlocker, useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft,
-  ArrowRight,
-  Bookmark,
   Camera,
   Check,
-  ChevronRight,
-  ChevronDown,
   Clock,
   FolderPlus,
   Globe2,
@@ -16,7 +12,6 @@ import {
   NotebookPen,
   PenLine,
   Plus,
-  Send,
   Sparkle,
   Users,
   UserRound,
@@ -29,8 +24,19 @@ import { Visibility } from "../data/posts";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
+import { useRewards } from "../context/RewardsContext";
 import { addPrivateLog, startProject, useJournal } from "../lib/journal";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
+import { extractFirstUrl } from "../lib/linkPreview";
+import {
+  draftHasContent,
+  MomentDraftFields,
+  loadLocalDraft,
+  saveLocalDraft,
+  clearLocalDraft,
+} from "../lib/draftStore";
+import { saveDraftMedia, loadDraftMedia, clearDraftMedia } from "../lib/draftMedia";
+import { mirrorDraft, fetchRemoteDraft, clearRemoteDraft } from "../lib/draftRemote";
 import { archiveKey } from "../components/HobbyShelf";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -43,24 +49,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { InterestField } from "../components/InterestField";
 import { CornerTagField } from "../components/CornerTagField";
 import { PursuitField } from "../components/PursuitField";
+import { CameraCapture } from "../components/CameraCapture";
+import { PursuitDialog } from "../components/PursuitDialog";
+import { LinkPreviewCard } from "../components/LinkPreviewCard";
 
 /**
- * Logging, in the order the act actually happens: capture the thing first,
- * decide what it is second. The old version asked you to classify before you
- * had anything to classify, which is backwards for someone standing at a wheel
- * with clay on their hands.
+ * Logging, camera-first, matching what every other camera-first app already
+ * trained people to expect: a live viewfinder is the front door, not a menu.
  *
- *   capture → moment → (save | share → saved)
+ *   camera → caption → saved
  *
- * "More ways to create" opens the deliberate four-option chooser — start a
- * project, add an update, quick moment, reflect privately — for when you know
- * what you're doing before you start. Both roads lead to the same record.
+ * "Save this moment" and "Share this moment" used to be two competing paths
+ * to the same private outcome — the caption screen is one screen now, with
+ * one submit button whose label follows the audience picked on it. Starting
+ * a Pursuit or adding an update are deliberate, non-quick-capture actions,
+ * so they're their own one-tap entry points from the camera screen instead
+ * of hiding behind a "more ways to create" menu — Start a Pursuit opens the
+ * existing PursuitDialog, and Add an update routes into the existing
+ * Pursuit-scoped menu below (?pursuit=<id>), both untouched by this redesign.
  */
-type Screen = "capture" | "moment" | "saved" | "ways" | "detail" | "pursuit-menu";
+type Screen = "camera" | "caption" | "saved" | "detail" | "pursuit-menu";
 
 /** The considered path: four kinds of record, chosen up front. */
 type Mode = "project" | "update" | "moment" | "private";
@@ -86,22 +99,6 @@ const AUDIENCE: {
 ];
 
 const THOUGHT_LIMIT = 300;
-
-/** The small growing thing on the capture screen. Nothing here is a mascot. */
-function Sprout() {
-  return (
-    <svg width="60" height="46" viewBox="0 0 60 46" aria-hidden="true" className="mx-auto">
-      <path d="M30 44V24" stroke="var(--forest)" strokeWidth="2.6" strokeLinecap="round" />
-      <path
-        d="M30 27c-2-9-9-13-19-12 0 10 9 15 19 12ZM30 22c2-9 9-13 19-12 0 10-9 15-19 12Z"
-        fill="var(--forest)"
-        opacity=".85"
-      />
-      <ellipse cx="30" cy="44" rx="13" ry="2.4" fill="var(--forest)" opacity=".18" />
-      <path d="M46 8l1.6 4.4L52 14l-4.4 1.6L46 20l-1.6-4.4L40 14l4.4-1.6z" fill="var(--yellow)" />
-    </svg>
-  );
-}
 
 function BackLink({ onClick }: { onClick: () => void }) {
   return (
@@ -197,6 +194,7 @@ export function Log() {
   const [searchParams] = useSearchParams();
   const { addPost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
+  const rewards = useRewards();
   const journal = useJournal();
 
   // "Add progress" on a Pursuit links here with ?pursuit=<id> — resolve it
@@ -212,8 +210,10 @@ export function Log() {
   // so the detail form's own picker for all three stays hidden too.
   const pursuitScoped = !!initialPursuit;
 
-  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "pursuit-menu" : "capture");
+  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "pursuit-menu" : "camera");
   const [mode, setMode] = useState<Mode | null>(null);
+  const [pursuitDialogOpen, setPursuitDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   const initialHobby = searchParams.get("hobby") ?? initialPursuit?.hobbySlug ?? hobbies[0].slug;
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
@@ -238,7 +238,6 @@ export function Log() {
   // positioning: hitting Share without ever touching this selector must
   // actually save privately, not just show "Only you" pre-highlighted.
   const [audience, setAudience] = useState<Visibility | "private">("private");
-  const [shareOpen, setShareOpen] = useState(false);
   const [circleId, setCircleId] = useState<number | undefined>(undefined);
   const [forSale, setForSale] = useState(false);
   const [saleTitle, setSaleTitle] = useState("");
@@ -255,8 +254,18 @@ export function Log() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const cameraRef = useRef<HTMLInputElement>(null);
-  const libraryRef = useRef<HTMLInputElement>(null);
+  // A saved draft found on entry, offered before anything else happens —
+  // never auto-loaded, since silently dropping someone into an old draft
+  // when they meant to start something new would be its own kind of data
+  // loss. Resolved (resumed or discarded) before the camera screen's own
+  // autosave effects below are allowed to touch storage.
+  const [draftPrompt, setDraftPrompt] = useState<MomentDraftFields | null>(null);
+  const [draftPromptMedia, setDraftPromptMedia] = useState<{ file: File; type: "photo" | "video" } | null>(
+    null,
+  );
+  const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
+  const draftReadyRef = useRef(false);
+
   const detailFileRef = useRef<HTMLInputElement>(null);
 
   // Who posted this always follows the account's display name now — no
@@ -272,6 +281,16 @@ export function Log() {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  // "Add an update" on the camera screen picks a Pursuit and jumps straight
+  // into its existing scoped menu below — same URL shape as arriving from
+  // that Pursuit's own "Add progress" button, just reached from here
+  // instead. React Router doesn't remount this component for a search-param
+  // change on the same route, so the initial-screen choice above needs this
+  // to actually follow along.
+  useEffect(() => {
+    if (pursuitScoped) setScreen("pursuit-menu");
+  }, [initialPursuitId]);
+
   // Picking the dedicated "Reflect privately" mode still forces the
   // audience to private (so a person who'd already changed it can't end up
   // on that screen sharing by accident). It used to also do the reverse —
@@ -283,6 +302,205 @@ export function Log() {
   useEffect(() => {
     if (mode === "private") setAudience("private");
   }, [mode]);
+
+  // ── Draft recovery: checked once, on entry, before anything else touches
+  // storage. Never applies to a Pursuit-scoped visit — that flow's own
+  // "Add progress" menu is a different, already-scoped thing. ─────────────
+  useEffect(() => {
+    if (pursuitScoped) {
+      draftReadyRef.current = true;
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const local = loadLocalDraft();
+      const remote = user ? await fetchRemoteDraft(user.id) : null;
+      if (cancelled) return;
+      const winner =
+        !local ? remote : !remote ? local : remote.updatedAt > local.updatedAt ? remote : local;
+      if (winner && draftHasContent(winner)) {
+        const media = await loadDraftMedia();
+        if (cancelled) return;
+        setDraftPrompt(winner);
+        setDraftPromptMedia(media);
+      }
+      draftReadyRef.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Checked once on mount — a later sign-in shouldn't retrigger this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const clearDraft = () => {
+    clearLocalDraft();
+    void clearDraftMedia();
+    if (user) void clearRemoteDraft(user.id);
+  };
+
+  const resumeDraft = () => {
+    if (!draftPrompt) return;
+    setThought(draftPrompt.thought);
+    setHobbySlug(draftPrompt.hobbySlug || hobbies[0].slug);
+    setSubHobby(draftPrompt.subHobby);
+    setInterest(draftPrompt.interest);
+    setSpaceSet(draftPrompt.spaceSet);
+    setAudience(draftPrompt.audience as Visibility | "private");
+    setCircleId(draftPrompt.circleId);
+    setIsActivity(draftPrompt.isActivity);
+    setStartsAt(draftPrompt.startsAt);
+    setLocationName(draftPrompt.locationName);
+    setLocationPrivacy(draftPrompt.locationPrivacy as LocationPrivacy);
+    setProjectId(draftPrompt.projectId);
+    setProjectTitle(draftPrompt.projectTitle);
+    if (draftPromptMedia) {
+      setFile(draftPromptMedia.file);
+      setType(draftPromptMedia.type);
+    }
+    setDraftPrompt(null);
+    setDraftPromptMedia(null);
+    setScreen("caption");
+  };
+
+  const discardDraftPrompt = () => {
+    clearDraft();
+    setDraftPrompt(null);
+    setDraftPromptMedia(null);
+  };
+
+  // Debounced autosave: caption, audience, Corner/Pursuit, and event fields,
+  // a few seconds after the person stops changing them — not on every
+  // keystroke. Attached media is saved separately, immediately, below.
+  useEffect(() => {
+    if (screen !== "caption") return;
+    const fields: MomentDraftFields = {
+      thought,
+      hobbySlug,
+      subHobby,
+      interest,
+      spaceSet,
+      audience,
+      circleId,
+      isActivity,
+      startsAt,
+      locationName,
+      locationPrivacy,
+      projectId,
+      projectTitle,
+      mediaType: file ? type : null,
+      updatedAt: Date.now(),
+    };
+    if (!draftHasContent(fields)) return;
+    const timer = setTimeout(() => {
+      saveLocalDraft(fields);
+      if (user) void mirrorDraft(user.id, fields);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [
+    screen,
+    thought,
+    hobbySlug,
+    subHobby,
+    interest,
+    spaceSet,
+    audience,
+    circleId,
+    isActivity,
+    startsAt,
+    locationName,
+    locationPrivacy,
+    projectId,
+    projectTitle,
+    file,
+    type,
+    user,
+  ]);
+
+  // A capture is already a deliberate, discrete action — no need to debounce
+  // saving it the way typed text is. Removing the attached file clears the
+  // saved copy too, so an emptied composer doesn't quietly keep an orphaned
+  // photo around. Held off until the draft-recovery check above has
+  // resolved, so this can't wipe a saved draft's media before it's even
+  // been offered.
+  useEffect(() => {
+    if (!draftReadyRef.current) return;
+    if (file) void saveDraftMedia(file, type);
+    else void clearDraftMedia();
+  }, [file, type]);
+
+  // Exit confirmation: only while the caption screen actually holds
+  // something that would be lost — an unused, blank composer never prompts.
+  const hasUnsavedChanges =
+    screen === "caption" &&
+    (thought.trim().length > 0 ||
+      !!file ||
+      audience !== "private" ||
+      interest.trim().length > 0 ||
+      isActivity ||
+      !!projectId ||
+      projectTitle.trim().length > 0);
+
+  const blocker = useBlocker(hasUnsavedChanges);
+
+  useEffect(() => {
+    if (blocker.state === "blocked") setDiscardPromptOpen(true);
+  }, [blocker.state]);
+
+  // Covers what useBlocker can't: an actual tab close or hard reload. The
+  // browser shows its own un-customizable prompt here, and if the person
+  // goes through with leaving there's no chance to run cleanup code — which
+  // is exactly why autosave already ran continuously above, rather than
+  // only at the moment of leaving.
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasUnsavedChanges]);
+
+  const stayInComposer = () => {
+    setDiscardPromptOpen(false);
+    if (blocker.state === "blocked") blocker.reset();
+  };
+
+  const discardAndLeave = () => {
+    clearDraft();
+    setDiscardPromptOpen(false);
+    if (blocker.state === "blocked") blocker.proceed();
+  };
+
+  // Rendered from more than one early-return branch below (the caption
+  // screen itself, and the "log in to keep this" screen a non-private
+  // audience can land on without ever leaving screen === "caption") — a
+  // shared element rather than a component, since neither branch needs it
+  // to keep any identity across renders. A fast, in-the-moment safety net
+  // against an accidental misclick; autosave above is the durable backstop
+  // for what this can't catch (an actual tab close, or a crash), where a
+  // leftover draft is exactly what makes those recoverable next time. This
+  // dialog's own "Discard" is a deliberate choice, so it clears the draft
+  // rather than leaving one behind.
+  const discardDialog = (
+    <Dialog open={discardPromptOpen} onOpenChange={(o) => !o && stayInComposer()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Discard this moment?</DialogTitle>
+          <DialogDescription>Leaving now won't keep what you've added.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={stayInComposer}>
+            Keep writing
+          </Button>
+          <Button variant="destructive" onClick={discardAndLeave}>
+            Discard
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 
   const hobby = hobbies.find((h) => h.slug === hobbySlug)!;
   const hobbyCircles = circlesByHobby(hobbySlug);
@@ -298,12 +516,12 @@ export function Log() {
     interest.trim() ||
     (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : hobby.shortName);
 
-  const pickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = e.target.files?.[0];
-    if (!picked) return;
+  /** Whatever the camera screen produced — a live capture, a recent pick, or
+   * a fresh library file — always lands here the same way. */
+  const handleCaptured = (picked: File, capturedType: "photo" | "video") => {
     setFile(picked);
-    setType(picked.type.startsWith("video") ? "video" : "photo");
-    setScreen("moment");
+    setType(capturedType);
+    setScreen("caption");
   };
 
   /** Keeps the record without publishing any of it. */
@@ -342,6 +560,17 @@ export function Log() {
           }
         : undefined,
     );
+    // Quiet Milestones count every real Moment, private ones included — this
+    // is the only recording call a private log ever reaches, since it never
+    // touches ContentContext.addPost (which records shared Moments on its
+    // own). Without this, "Private by default" meant most real logging
+    // silently never counted toward a milestone at all.
+    rewards.recordPostCreated(spaceSet ? subHobby || `space:${hobbySlug}` : undefined);
+    // A committed Moment isn't "in progress" anymore — only the top-level
+    // camera-first draft this feature tracks, never the Pursuit-scoped
+    // "Add progress" flow's own private reflection, which was never this
+    // draft to begin with.
+    if (!pursuitScoped) clearDraft();
     setSavedAs("private");
     setScreen("saved");
   };
@@ -408,6 +637,7 @@ export function Log() {
           void mirrorPursuit(user.id, { ...targetProject, finishedAt: undefined });
         }
       }
+      if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
       setScreen("saved");
     } catch {
@@ -435,11 +665,11 @@ export function Log() {
     setError(null);
     setSavedAs(null);
     setMode(null);
-    setScreen("capture");
+    setScreen("camera");
   };
 
   const requiresLogin =
-    isConfigured && !user && screen !== "capture" && audience !== "private" && mode !== "private";
+    isConfigured && !user && screen !== "camera" && audience !== "private" && mode !== "private";
 
   // Both of these are declared inside Log(), so they get a new component
   // identity on every render and React remounts their subtree. For Back that
@@ -464,121 +694,61 @@ export function Log() {
     [filePreviewUrl, type, hobbySlug, seed],
   );
 
-  // ── 1 · Capture ─────────────────────────────────────────────────────────
-  if (screen === "capture") {
+  // ── 1 · Camera ──────────────────────────────────────────────────────────
+  if (screen === "camera") {
     return (
       <Shell>
-        <h1 className="text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Create something
-        </h1>
-        <p className="mt-1.5 text-muted-foreground">A little progress counts.</p>
-
-        <div className="my-9">
-          <Sprout />
-        </div>
-
-        <input
-          ref={cameraRef}
-          type="file"
-          accept="image/*,video/*"
-          capture="environment"
-          className="hidden"
-          onChange={pickFile}
+        <CameraCapture
+          onCaptured={handleCaptured}
+          onTextOnly={() => {
+            setFile(null);
+            setScreen("caption");
+          }}
+          onStartPursuit={() => setPursuitDialogOpen(true)}
+          onAddUpdate={(id) => navigate(`/create?pursuit=${id}`)}
+          openProjects={openProjects}
         />
-        <input
-          ref={libraryRef}
-          type="file"
-          accept="image/*,video/*"
-          className="hidden"
-          onChange={pickFile}
-        />
+        <PursuitDialog open={pursuitDialogOpen} onOpenChange={setPursuitDialogOpen} />
 
-        <div className="space-y-3">
-          <Button
-            variant="coral"
-            size="lg"
-            className="w-full"
-            onClick={() => cameraRef.current?.click()}
+        {/* Never dismissed by clicking outside or Escape — resuming or
+            discarding has to be an actual choice, not an accidental
+            dismissal that quietly leaves an old draft sitting around. */}
+        <Dialog open={!!draftPrompt}>
+          <DialogContent
+            showCloseButton={false}
+            onInteractOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
           >
-            <Camera className="size-4" />
-            Take a photo
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={() => libraryRef.current?.click()}
-          >
-            <Images className="size-4" />
-            Choose from library
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={() => {
-              setFile(null);
-              setScreen("moment");
-            }}
-          >
-            <PenLine className="size-4" />
-            Write a quick note
-          </Button>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setScreen("ways")}
-          className="mx-auto mt-7 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          More ways to create
-          <ArrowRight className="size-3.5" />
-        </button>
-      </Shell>
-    );
-  }
-
-  // ── More ways: the deliberate four-option chooser ───────────────────────
-  if (screen === "ways") {
-    return (
-      <Shell>
-        <Back to="capture" />
-        <h1 className="text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Create something
-        </h1>
-        <p className="mt-1.5 text-muted-foreground">
-          A photo, a note, or a small update counts.
-        </p>
-
-        <h2 className="mb-4 mt-8 text-sm text-muted-foreground">What are you logging?</h2>
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {MODES.map(({ id, title, copy, icon: Icon }) => {
-            const disabled = id === "update" && openProjects.length === 0;
-            return (
-              <li key={id}>
-                <button
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => {
-                    setMode(id);
-                    setScreen("detail");
-                  }}
-                  className="group flex h-full w-full flex-col items-start gap-2 rounded-2xl border border-border bg-card p-5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-[0_14px_28px_-18px_rgba(11,62,46,0.5)] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:border-border disabled:hover:shadow-none"
-                >
-                  <span className="flex size-9 items-center justify-center rounded-full bg-surface-muted text-foreground transition-colors group-hover:bg-[var(--coral-deep)] group-hover:text-white group-disabled:bg-surface-muted group-disabled:text-foreground">
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
-                    {title}
-                  </span>
-                  <span className="text-xs leading-relaxed text-muted-foreground">
-                    {disabled ? "Start a Pursuit first, then updates go here" : copy}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+            <DialogHeader>
+              <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Resume your last draft?</DialogTitle>
+              <DialogDescription>
+                You started a Moment you didn't finish.
+              </DialogDescription>
+            </DialogHeader>
+            {draftPrompt && (
+              <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5 text-sm text-muted-foreground">
+                {draftPrompt.thought.trim() ? (
+                  <p className="line-clamp-3 text-foreground">"{draftPrompt.thought.trim()}"</p>
+                ) : (
+                  <p>No caption yet.</p>
+                )}
+                {draftPrompt.mediaType && !draftPromptMedia && (
+                  <p className="mt-2 text-xs">
+                    A {draftPrompt.mediaType} was attached on another device — not available here.
+                  </p>
+                )}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={discardDraftPrompt}>
+                Discard
+              </Button>
+              <Button variant="coral" onClick={resumeDraft}>
+                Resume draft
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Shell>
     );
   }
@@ -673,6 +843,7 @@ export function Log() {
             </Button>
           </div>
         </div>
+        {discardDialog}
       </div>
     );
   }
@@ -756,16 +927,6 @@ export function Log() {
             </Link>
             <button
               type="button"
-              onClick={() => {
-                setMode("moment");
-                setScreen("detail");
-              }}
-              className="w-full py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Add details
-            </button>
-            <button
-              type="button"
               onClick={reset}
               className="w-full py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -777,12 +938,13 @@ export function Log() {
     );
   }
 
-  // ── 2 · Your moment ─────────────────────────────────────────────────────
-  if (screen === "moment") {
+  // ── 2 · Caption + audience — one screen, whatever the capture was ────────
+  if (screen === "caption") {
     const hasSomething = !!file || thought.trim().length > 0;
+    const detectedUrl = extractFirstUrl(thought);
     return (
       <Shell>
-        <Back to="capture" />
+        <Back to="camera" />
         <h1 className="mb-6 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
           Your moment
         </h1>
@@ -815,324 +977,291 @@ export function Log() {
           <div className="mt-1 text-right text-[11px] text-muted-foreground">
             {thought.length}/{THOUGHT_LIMIT}
           </div>
+          {/* Passive detection: no "add a link" field to fill out on
+              purpose. Typing or pasting a URL is enough. */}
+          {detectedUrl && (
+            <div className="mt-2">
+              <LinkPreviewCard url={detectedUrl} />
+            </div>
+          )}
         </div>
 
-        {/* What to do with it. Keeping it is the first option, on purpose. */}
-        <ul className="space-y-2.5">
-          <li>
-            <button
-              type="button"
-              disabled={!hasSomething}
-              onClick={saveAsPrivateLog}
-              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left transition-colors hover:border-[var(--coral-deep)] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:border-border"
-            >
-              <Bookmark className="size-4 shrink-0 text-foreground" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm">Save this moment</span>
-                <span className="block text-xs text-muted-foreground">
-                  Keep it in your space. Only you can see it.
-                </span>
-              </span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              disabled={!hasSomething}
-              onClick={() => setShareOpen((v) => !v)}
-              aria-expanded={shareOpen}
-              className={`flex w-full items-center gap-3 rounded-2xl border bg-card px-4 py-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:border-border ${
-                shareOpen ? "border-[var(--coral-deep)]" : "border-border hover:border-[var(--coral-deep)]"
-              }`}
-            >
-              <Send className="size-4 shrink-0 text-foreground" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm">Share this moment</span>
-                <span className="block text-xs text-muted-foreground">
-                  Add a hobby tag and choose who sees it.
-                </span>
-              </span>
-              {shareOpen ? (
-                <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-              ) : (
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              )}
-            </button>
-
-            {shareOpen && (
-              <div className="mt-2.5 space-y-6 rounded-2xl border border-border bg-card p-4">
-                {/* One merged field: typing a known hobby ("Pottery") tags
-                    the Moment AND sets its Space in one step, instead of
-                    asking "what's this about" and "which Space" separately.
-                    Picking something that isn't a recognized hobby just
-                    leaves the Space on its default — nothing here blocks
-                    posting. */}
-                <div>
-                  <h2 className="mb-2 text-sm">
-                    <label htmlFor="interest">What is it about?</label>
-                  </h2>
-                  <InterestField
-                    value={interest}
-                    onChange={(next) => {
-                      setInterest(next);
-                      const match = findSpaceForInterest(next);
-                      if (match) {
-                        setHobbySlug(match.hobbySlug);
-                        setSubHobby(match.slug);
-                        setSpaceSet(true);
-                      }
-                    }}
-                    placeholder="Search or type a hobby or interest..."
-                  />
-                  {!spaceOpen ? (
-                    <button
-                      type="button"
-                      onClick={() => setSpaceOpen(true)}
-                      className="mt-1.5 text-[11px] text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
-                    >
-                      In {hobby.name} · change
-                    </button>
-                  ) : (
-                    <div className="mt-2.5 rounded-2xl border border-border bg-surface px-4 py-3.5">
-                      <div className="mb-2.5 flex items-center justify-between gap-3">
-                        <span className="text-sm">Choose a Space</span>
-                        <button
-                          type="button"
-                          onClick={() => setSpaceOpen(false)}
-                          className="text-xs text-muted-foreground hover:text-foreground"
-                        >
-                          Done
-                        </button>
-                      </div>
-                      <Select
-                        value={hobbySlug}
-                        onValueChange={(v) => {
-                          setHobbySlug(v);
-                          setSubHobby("");
-                          setCircleId(undefined);
-                          setSpaceSet(true);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a Space…" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {hobbies.map((h) => (
-                            <SelectItem key={h.slug} value={h.slug}>
-                              {h.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="mt-1.5 text-xs text-muted-foreground">
-                        {hobby.plainLabel}: {hobby.tagline.toLowerCase()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Only a thing that happens at a time needs a time. */}
-                <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+        {/* Everything below used to live inside a collapsed "Share this
+            moment" accordion behind its own "Save this moment" alternative
+            — one screen now, always expanded, one outcome decided by the
+            audience picked below rather than by which button was tapped. */}
+        <div className="mb-6 space-y-6">
+          {/* One merged field: typing a known hobby ("Pottery") tags the
+              Moment AND sets its Space in one step, instead of asking
+              "what's this about" and "which Space" separately. Picking
+              something that isn't a recognized hobby just leaves the Space
+              on its default — nothing here blocks posting. */}
+          <div>
+            <h2 className="mb-2 text-sm">
+              <label htmlFor="interest">What is it about?</label>
+            </h2>
+            <InterestField
+              value={interest}
+              onChange={(next) => {
+                setInterest(next);
+                const match = findSpaceForInterest(next);
+                if (match) {
+                  setHobbySlug(match.hobbySlug);
+                  setSubHobby(match.slug);
+                  setSpaceSet(true);
+                }
+              }}
+              placeholder="Search or type a hobby or interest..."
+            />
+            {!spaceOpen ? (
+              <button
+                type="button"
+                onClick={() => setSpaceOpen(true)}
+                className="mt-1.5 text-[11px] text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
+              >
+                In {hobby.name} · change
+              </button>
+            ) : (
+              <div className="mt-2.5 rounded-2xl border border-border bg-surface px-4 py-3.5">
+                <div className="mb-2.5 flex items-center justify-between gap-3">
+                  <span className="text-sm">Choose a Space</span>
                   <button
                     type="button"
-                    onClick={() => setIsActivity((v) => !v)}
-                    aria-pressed={isActivity}
-                    className="flex w-full items-center justify-between gap-3"
+                    onClick={() => setSpaceOpen(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
                   >
-                    <span className="text-left">
-                      <span className="block text-sm">This is something happening</span>
-                      <span className="block text-xs text-muted-foreground">
-                        A walk, a workshop, a meetup, a challenge: people can join in
-                      </span>
-                    </span>
-                    <span
-                      className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
-                        isActivity
-                          ? "justify-end [background-color:var(--violet-electric)]"
-                          : "justify-start bg-surface-muted"
-                      }`}
-                    >
-                      <span className="size-5 rounded-full bg-white" />
-                    </span>
+                    Done
                   </button>
-
-                  {isActivity && (
-                    <div className="mt-4 space-y-3">
-                      <div>
-                        <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
-                          When
-                        </Label>
-                        <Input
-                          id="startsAt"
-                          type="datetime-local"
-                          value={startsAt}
-                          onChange={(e) => setStartsAt(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="place" className="mb-1.5 block text-xs">
-                          Where
-                        </Label>
-                        <Input
-                          id="place"
-                          value={locationName}
-                          onChange={(e) => setLocationName(e.target.value)}
-                          placeholder="e.g. Prospect Park, Brooklyn"
-                        />
-                      </div>
-                      <div>
-                        <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
-                        <Select
-                          value={locationPrivacy}
-                          onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {LOCATION_PRIVACY.map((o) => (
-                              <SelectItem key={o.value} value={o.value}>
-                                {o.label}: {o.copy}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="mt-1.5 text-xs text-muted-foreground">
-                          Neighborhood by default. Exact is never assumed.
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
-
-                <div>
-                  <h2 className="mb-2 text-sm">Choose who sees this</h2>
-                  <ul className="space-y-2">
-                    {AUDIENCE.map((opt) => {
-                      const active = audience === opt.value;
-                      return (
-                        <li key={opt.value}>
-                          <button
-                            type="button"
-                            aria-pressed={active}
-                            onClick={() => {
-                              setAudience(opt.value);
-                              if (opt.value !== "circle") setCircleId(undefined);
-                            }}
-                            className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
-                              active
-                                ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface-elevated))]"
-                                : "border-border bg-surface hover:border-[var(--foreground)]/30"
-                            }`}
-                          >
-                            <opt.icon className="size-4 shrink-0 text-foreground" />
-                            <span className="min-w-0 flex-1 text-sm">{opt.label}</span>
-                            {active && <Check className="size-4 shrink-0 text-[var(--coral-deep)]" />}
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  {audience === "circle" && (
-                    <div className="mt-3">
-                      {hobbyCircles.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">
-                          No Circles exist for this space yet.
-                        </p>
-                      ) : (
-                        <Select
-                          value={circleId ? String(circleId) : undefined}
-                          onValueChange={(v) => setCircleId(Number(v))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pick a Circle" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {hobbyCircles.map((c) => (
-                              <SelectItem key={c.id} value={String(c.id)}>
-                                {c.name}
-                                {c.location ? ` · ${c.location}` : ""}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Only a public Moment could become a listing —
-                      Connections and Circle audiences couldn't be sold to
-                      anyway, same rule the considered flow's own version
-                      of this control uses. */}
-                  {audience === "public" && <ForSaleComingSoon className="mt-3" />}
-
-                  <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
-                    {audience === "private"
-                      ? "This stays a private log. Nobody else will see it."
-                      : `This will appear in ${
-                          audience === "public"
-                            ? `${hobby.name}`
-                            : audience === "circle"
-                              ? "that Circle"
-                              : "My Space for people you've connected with"
-                        }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
-                  </p>
-                </div>
-
-                {error && <p className="text-center text-xs text-[var(--coral-text)]">{error}</p>}
-
-                <Button
-                  variant="coral"
-                  size="lg"
-                  className="w-full"
-                  disabled={saving || (audience === "circle" && !circleId)}
-                  onClick={publish}
+                <Select
+                  value={hobbySlug}
+                  onValueChange={(v) => {
+                    setHobbySlug(v);
+                    setSubHobby("");
+                    setCircleId(undefined);
+                    setSpaceSet(true);
+                  }}
                 >
-                  {saving ? "Saving…" : audience === "private" ? "Keep it private" : "Share it"}
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a Space…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hobbies.map((h) => (
+                      <SelectItem key={h.slug} value={h.slug}>
+                        {h.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {hobby.plainLabel}: {hobby.tagline.toLowerCase()}
+                </p>
               </div>
             )}
-          </li>
-          <li>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3.5">
-              <div className="flex items-center gap-3">
-                <FolderPlus className="size-4 shrink-0 text-foreground" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm">Add to a Pursuit</span>
-                  <span className="block text-xs text-muted-foreground">
-                    Keep an ongoing thing together.
-                  </span>
+          </div>
+
+          {/* Only a thing that happens at a time needs a time. */}
+          <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+            <button
+              type="button"
+              onClick={() => setIsActivity((v) => !v)}
+              aria-pressed={isActivity}
+              className="flex w-full items-center justify-between gap-3"
+            >
+              <span className="text-left">
+                <span className="block text-sm">This is something happening</span>
+                <span className="block text-xs text-muted-foreground">
+                  A walk, a workshop, a meetup, a challenge: people can join in
                 </span>
+              </span>
+              <span
+                className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
+                  isActivity
+                    ? "justify-end [background-color:var(--violet-electric)]"
+                    : "justify-start bg-surface-muted"
+                }`}
+              >
+                <span className="size-5 rounded-full bg-white" />
+              </span>
+            </button>
+
+            {isActivity && (
+              <div className="mt-4 space-y-3">
+                <div>
+                  <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
+                    When
+                  </Label>
+                  <Input
+                    id="startsAt"
+                    type="datetime-local"
+                    value={startsAt}
+                    onChange={(e) => setStartsAt(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="place" className="mb-1.5 block text-xs">
+                    Where
+                  </Label>
+                  <Input
+                    id="place"
+                    value={locationName}
+                    onChange={(e) => setLocationName(e.target.value)}
+                    placeholder="e.g. Prospect Park, Brooklyn"
+                  />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
+                  <Select
+                    value={locationPrivacy}
+                    onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LOCATION_PRIVACY.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}: {o.copy}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Neighborhood by default. Exact is never assumed.
+                  </p>
+                </div>
               </div>
+            )}
+          </div>
+
+          <div>
+            <h2 className="mb-2 text-sm">Choose who sees this</h2>
+            <ul className="space-y-2">
+              {AUDIENCE.map((opt) => {
+                const active = audience === opt.value;
+                return (
+                  <li key={opt.value}>
+                    <button
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => {
+                        setAudience(opt.value);
+                        if (opt.value !== "circle") setCircleId(undefined);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
+                        active
+                          ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface-elevated))]"
+                          : "border-border bg-surface hover:border-[var(--foreground)]/30"
+                      }`}
+                    >
+                      <opt.icon className="size-4 shrink-0 text-foreground" />
+                      <span className="min-w-0 flex-1 text-sm">{opt.label}</span>
+                      {active && <Check className="size-4 shrink-0 text-[var(--coral-deep)]" />}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {audience === "circle" && (
               <div className="mt-3">
-                <PursuitField
-                  projects={openProjects}
-                  projectId={projectId}
-                  projectTitle={projectTitle}
-                  onSelectExisting={(id) => {
-                    setProjectId(id);
-                    setProjectTitle("");
-                  }}
-                  onCreateNew={(title) => {
-                    setProjectTitle(title);
-                    setProjectId("");
-                  }}
-                  onClear={() => {
-                    setProjectId("");
-                    setProjectTitle("");
-                  }}
-                />
+                {hobbyCircles.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No Circles exist for this space yet.
+                  </p>
+                ) : (
+                  <Select
+                    value={circleId ? String(circleId) : undefined}
+                    onValueChange={(v) => setCircleId(Number(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pick a Circle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hobbyCircles.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                          {c.location ? ` · ${c.location}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
+            )}
+
+            {/* Only a public Moment could become a listing — Connections and
+                Circle audiences couldn't be sold to anyway, same rule the
+                Pursuit-scoped flow's own version of this control uses. */}
+            {audience === "public" && <ForSaleComingSoon className="mt-3" />}
+
+            <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
+              {audience === "private"
+                ? "This stays a private log. Nobody else will see it."
+                : `This will appear in ${
+                    audience === "public"
+                      ? `${hobby.name}`
+                      : audience === "circle"
+                        ? "that Circle"
+                        : "My Space for people you've connected with"
+                  }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <FolderPlus className="size-4 shrink-0 text-foreground" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm">Add to a Pursuit</span>
+                <span className="block text-xs text-muted-foreground">
+                  Keep an ongoing thing together.
+                </span>
+              </span>
             </div>
-          </li>
-        </ul>
+            <div className="mt-3">
+              <PursuitField
+                projects={openProjects}
+                projectId={projectId}
+                projectTitle={projectTitle}
+                onSelectExisting={(id) => {
+                  setProjectId(id);
+                  setProjectTitle("");
+                }}
+                onCreateNew={(title) => {
+                  setProjectTitle(title);
+                  setProjectId("");
+                }}
+                onClear={() => {
+                  setProjectId("");
+                  setProjectTitle("");
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {error && <p className="mb-3 text-center text-xs text-[var(--coral-text)]">{error}</p>}
+
+        {/* One button, one outcome, decided by the audience above — not a
+            separate "Save this moment" that produced the same private
+            result as "Share this moment → Only you". */}
+        <Button
+          variant="coral"
+          size="lg"
+          className="w-full"
+          disabled={!hasSomething || saving || (audience === "circle" && !circleId)}
+          onClick={publish}
+        >
+          {saving ? "Saving…" : audience === "private" ? "Keep it private" : "Share"}
+        </Button>
 
         {!hasSomething && (
-          <p className="mt-4 text-xs text-muted-foreground">
-            Add a photo or a line of text and these open up.
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Add a photo, video, or a line of text to continue.
           </p>
         )}
+
+        {discardDialog}
       </Shell>
     );
   }
@@ -1145,7 +1274,7 @@ export function Log() {
   return (
     <div className="min-h-screen bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-2xl px-4">
-        <Back to={pursuitScoped ? "pursuit-menu" : "ways"} />
+        <Back to={pursuitScoped ? "pursuit-menu" : "camera"} />
 
         <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
           {activeMode.title}

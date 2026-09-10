@@ -23,25 +23,22 @@ export interface Badge {
   test: (stats: RewardStats) => boolean;
 }
 
-/** How many sessions you've logged in whichever hobby you log most. */
-export function primaryHobbySessions(stats: RewardStats): number {
-  if (stats.hobbiesPosted.length === 0) return 0;
-  const counts = new Map<string, number>();
-  for (const key of stats.hobbiesPosted) {
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return Math.max(...counts.values());
-}
-
 /**
  * Quiet milestones. Named for what the time felt like, not for what rank it
  * earns — "Clay in My Hands", not "Level 4". Nothing here ranks you against
  * anyone else, and nothing counts followers or likes: every one of these is
  * about showing up and making something.
  *
+ * Every test reads `postsCreated` — the user's real, global count of logged
+ * Moments (private logs included, not just ones they chose to share) —
+ * rather than sessions in any one hobby. Per-hobby progress is a separate,
+ * narrower feature (see the Pursuit goal-tracking work); a quiet milestone is
+ * about the whole of what you've made, regardless of which hobby or Corner
+ * it landed in.
+ *
  * Two of them take on the wording of whatever craft you're deepest in (see
- * CRAFT_NAMES). Badge *ids* stay global and stable so unlock state survives a
- * change of primary hobby — only the wording follows the craft.
+ * CRAFT_NAMES) — that's cosmetic only. Badge *ids* stay global and stable so
+ * unlock state survives a change of primary hobby.
  */
 export const badges: Badge[] = [
   {
@@ -55,23 +52,23 @@ export const badges: Badge[] = [
   {
     id: "hands-on",
     name: "Getting My Hands In",
-    description: "Ten sessions in one hobby, past the beginner wobble.",
+    description: "Ten Moments logged. Past the beginner wobble.",
     icon: "Hand",
     tint: "var(--pastel-clay)",
-    test: (s) => primaryHobbySessions(s) >= 10,
+    test: (s) => s.postsCreated >= 10,
   },
   {
     id: "made-something",
     name: "Made Something",
-    description: "Fifteen sessions in one hobby. Long enough to finish a real thing.",
+    description: "Fifteen Moments logged. Long enough to finish a real thing.",
     icon: "Package",
     tint: "var(--pastel-wheat)",
-    test: (s) => primaryHobbySessions(s) >= 15,
+    test: (s) => s.postsCreated >= 15,
   },
   {
     id: "curious-hands",
     name: "Curious Hands",
-    description: "Sessions logged across three different hobbies.",
+    description: "Moments logged across three different hobbies.",
     icon: "Compass",
     tint: "var(--pastel-stone)",
     test: (s) => new Set(s.hobbiesPosted).size >= 3,
@@ -79,7 +76,7 @@ export const badges: Badge[] = [
   {
     id: "consistency-club",
     name: "Consistency Club",
-    description: "Fifty sessions. You keep coming back.",
+    description: "Fifty Moments. You keep coming back.",
     icon: "Coffee",
     tint: "var(--pastel-sky)",
     test: (s) => s.postsCreated >= 50,
@@ -87,7 +84,7 @@ export const badges: Badge[] = [
   {
     id: "still-going",
     name: "Still Going",
-    description: "A hundred sessions in. Quietly remarkable.",
+    description: "A hundred Moments in. Quietly remarkable.",
     icon: "Mountain",
     tint: "var(--pastel-rose)",
     test: (s) => s.postsCreated >= 100,
@@ -95,10 +92,10 @@ export const badges: Badge[] = [
   {
     id: "second-nature",
     name: "Second Nature",
-    description: "A hundred and fifty sessions in one hobby. It's part of you now.",
+    description: "A hundred and fifty Moments in. It's part of you now.",
     icon: "Feather",
     tint: "var(--pastel-sage)",
-    test: (s) => primaryHobbySessions(s) >= 150,
+    test: (s) => s.postsCreated >= 150,
   },
 ];
 
@@ -178,11 +175,3 @@ export function badgeName(badge: Badge, hobbySlug?: string, _hobbyLabel?: string
   return badge.id === "second-nature" ? named[1] : named[0];
 }
 
-export function levelForPoints(points: number) {
-  return Math.floor(points / 200) + 1;
-}
-
-export function levelProgress(points: number) {
-  const into = points % 200;
-  return Math.round((into / 200) * 100);
-}

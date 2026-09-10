@@ -51,7 +51,6 @@ export function You() {
   const [pursuitDialog, setPursuitDialog] = useState(false);
 
   const sessions = useSessionsByHobby();
-  const totalSessions = sessions.reduce((n, s) => n + s.sessions, 0);
   const [momentsView, setMomentsView] = useState<"shelf" | "grid">("grid");
   // The portfolio's own record — every Pursuit you've ever started, finished
   // ones included, because a personal archive doesn't erase what's done.
@@ -96,14 +95,6 @@ export function You() {
               <h2 className="truncate text-3xl leading-tight sm:text-4xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                 {user ? displayName : "You"}
               </h2>
-              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="text-[var(--coral-deep)]" aria-hidden="true">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21c0-6 3-10 8-12-1 7-4 10-8 12Zm0 0c0-5-2.5-8.5-7-10 1 6 3.5 8.5 7 10Z" />
-                  </svg>
-                </span>
-                <span><strong className="text-foreground">{totalSessions}</strong> lifetime {totalSessions === 1 ? "session" : "sessions"}</span>
-              </div>
               <div className="mt-1"><ProfileHeadline variant="quiet" /></div>
             </div>
           </div>
@@ -282,16 +273,11 @@ export function You() {
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
               Quiet Milestones
             </h2>
-            <button
-              type="button"
-              onClick={() => setShareOpen(true)}
-              className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Share these →
-            </button>
           </div>
-          <p className="mb-3 text-sm text-muted-foreground">Non-metric growth that feels good.</p>
-          <QuietMilestones onShare={() => setShareOpen(true)} />
+          <p className="mb-3 text-sm text-muted-foreground">
+            Non-metric growth that feels good. Private by default — share one at a time, only if you want to.
+          </p>
+          <QuietMilestones />
         </div>
 
         <div className="ns-you-lower-grid grid gap-6 sm:grid-cols-2">

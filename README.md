@@ -110,7 +110,9 @@ always safe. Run them in this order the first time:
 7. `sql/categories.sql` — category suggestions + admin review
 8. `sql/pursuits.sql` — the write-through mirror for shared Pursuits
 9. `sql/profile-links.sql` — GitHub/portfolio/Substack links on a profile
-10. **`sql/security-hardening.sql`** — run this last, and don't skip it
+10. `sql/milestones.sql` — which Quiet Milestones someone has explicitly shared to their public profile
+11. `sql/drafts.sql` — cross-device mirror of the one in-progress composer draft
+12. **`sql/security-hardening.sql`** — run this last, and don't skip it
 
 `security-hardening.sql` closes three privilege-escalation bugs that existed
 in the policies above (a self-grantable admin flag, a Space invitation

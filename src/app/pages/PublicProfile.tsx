@@ -4,7 +4,6 @@ import { ArrowRight, Plus, Share2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
-import { badges, RewardStats } from "../data/badges";
 import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
 import { circlesByHobby } from "../data/circles";
 import { usePeopleInHobby } from "../lib/people";
@@ -15,12 +14,13 @@ import { PersonActions } from "../components/PersonActions";
 import { HandwrittenNote } from "../components/HandwrittenNote";
 import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCard } from "../components/PursuitCard";
-import { QuietMilestones } from "../components/QuietMilestones";
+import { QuietMilestones, SharedMilestones } from "../components/QuietMilestones";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { MomentDetail } from "../components/MomentDetail";
 import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
 import { fetchSharedPursuits, SharedPursuit } from "../lib/pursuitsRemote";
 import { fetchProfileLinks } from "../lib/profileLinksRemote";
+import { fetchSharedMilestoneIds } from "../lib/milestonesRemote";
 import { ProfileLink } from "../lib/profileLinks";
 import { ProfileLinksRow } from "../components/ProfileLinks";
 
@@ -45,9 +45,13 @@ function primaryHobbySlug(posts: Post[]): string | undefined {
  * People shown here are honestly labelled as built around their craft, not
  * claimed as their actual memberships or connections.
  *
- * Milestones here are derived from their public posts rather than from a
- * rewards ledger, since that ledger lives in the owner's browser and can't be
- * read from anywhere else.
+ * Quiet Milestones are private by default: this page shows none of them
+ * unless the owner explicitly shared one or more from their own shelf, and
+ * even then, only the specific ones they shared — never the full set, and
+ * never whether any locked ones exist. Sharing is read from
+ * sql/milestones.sql, the one place that fact can be seen from outside the
+ * owner's own browser; the owner's own visit to their own public link (isMe)
+ * still gets the full owner view instead, locked milestones included.
  */
 export function PublicProfile() {
   const { username = "" } = useParams();
@@ -67,6 +71,9 @@ export function PublicProfile() {
   // security only returns shared=true rows to anyone but the owner).
   const [sharedPursuits, setSharedPursuits] = useState<SharedPursuit[]>([]);
   const [profileLinks, setProfileLinks] = useState<ProfileLink[]>([]);
+  // Only the specific milestones this person chose to share — never their
+  // locked ones, and never anything inferred from their public post count.
+  const [sharedMilestoneIds, setSharedMilestoneIds] = useState<string[]>([]);
 
   useEffect(() => {
     // React Router reuses this component instance across two profiles under
@@ -77,6 +84,7 @@ export function PublicProfile() {
     setState({ status: "loading" });
     setSharedPursuits([]);
     setProfileLinks([]);
+    setSharedMilestoneIds([]);
     setOpenPost(null);
 
     let cancelled = false;
@@ -188,6 +196,17 @@ export function PublicProfile() {
     };
   }, [state.status === "ready" ? state.personId : null]);
 
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    let cancelled = false;
+    fetchSharedMilestoneIds(state.personId).then((ids) => {
+      if (!cancelled) setSharedMilestoneIds(ids);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.status === "ready" ? state.personId : null]);
+
   if (state.status === "loading") {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
@@ -233,7 +252,6 @@ export function PublicProfile() {
   const shownPosts = focusKey
     ? posts.filter((p) => (p.subHobby ?? `space:${p.hobbySlug}`) === focusKey)
     : posts;
-  const totalSessions = posts.length;
   const initials = displayName
     .split(" ")
     .map((p) => p[0])
@@ -241,16 +259,6 @@ export function PublicProfile() {
     .slice(0, 2)
     .toUpperCase();
 
-  // Milestones, worked out from what's publicly visible.
-  const derivedStats: RewardStats = {
-    points: 0,
-    postsCreated: posts.length,
-    likesGiven: 0,
-    purchases: 0,
-    hobbiesVisited: [],
-    hobbiesPosted: posts.map((p) => p.subHobby ?? `space:${p.hobbySlug}`),
-  };
-  const unlockedIds = badges.filter((b) => b.test(derivedStats)).map((b) => b.id);
   const top = sessions[0];
   const primary = top?.subSlug
     ? { slug: top.subSlug, label: subHobbyLabel(top.subSlug) ?? top.label }
@@ -282,17 +290,6 @@ export function PublicProfile() {
                   {sessions.slice(0, 5).map((s) => s.label).join(", ")}.
                 </p>
               )}
-              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="text-[var(--coral-deep)]" aria-hidden="true">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21c0-6 3-10 8-12-1 7-4 10-8 12Zm0 0c0-5-2.5-8.5-7-10 1 6 3.5 8.5 7 10Z" />
-                  </svg>
-                </span>
-                <span>
-                  <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
-                  {totalSessions === 1 ? "session" : "sessions"}
-                </span>
-              </div>
               {primaryHobby && (
                 <p className="mt-1 text-sm text-muted-foreground">
                   {milestoneText(primaryHobby.label, primaryHobby.firstActivityAt)} · Keep going.
@@ -397,13 +394,25 @@ export function PublicProfile() {
           )}
         </div>
 
-        <div className="mb-10">
-          <h2 className="mb-1 flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-            Quiet Milestones
-          </h2>
-          <p className="mb-3 text-sm text-muted-foreground">Their non-metric growth, just for them.</p>
-          <QuietMilestones unlockedIds={unlockedIds} primary={primary} />
-        </div>
+        {/* Private by default, one milestone at a time: this section simply
+            doesn't exist for a non-owner until there's something explicitly
+            shared to show. Visiting your own public link still gets the full
+            owner view, locked milestones included — same as /you. */}
+        {(isMe || sharedMilestoneIds.length > 0) && (
+          <div className="mb-10">
+            <h2 className="mb-1 flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              Quiet Milestones
+            </h2>
+            <p className="mb-3 text-sm text-muted-foreground">
+              {isMe ? "Non-metric growth that feels good." : `What ${firstName} chose to share.`}
+            </p>
+            {isMe ? (
+              <QuietMilestones />
+            ) : (
+              <SharedMilestones badgeIds={sharedMilestoneIds} primary={primary} />
+            )}
+          </div>
+        )}
 
         <div className="mb-10 grid gap-6 sm:grid-cols-2">
           <div>

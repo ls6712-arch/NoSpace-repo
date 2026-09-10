@@ -17,6 +17,7 @@ export const LOCAL_KEYS = [
   "nospace.reactions.v1", // which reactions you left
   "nospace.rewards.v1", // milestone progress
   "nospace.social.v1", // participations, thoughts, notifications when signed out
+  "nospace.draft.v1", // the in-progress composer draft
 ] as const;
 
 /** Notifies the in-memory stores that their backing storage was emptied. */
@@ -36,5 +37,11 @@ export function clearLocalData() {
       // A private window may refuse; there's nothing stored to leak in that case.
     }
   }
+  // The draft's attached photo/video lives in IndexedDB, not localStorage
+  // (see lib/draftMedia.ts) — it would otherwise survive a sign-out on a
+  // shared computer and leak into the next account, same problem this
+  // whole function exists to prevent for everything else. Dynamically
+  // imported so a page that never touches the composer doesn't pay for it.
+  import("./draftMedia").then(({ clearDraftMedia }) => clearDraftMedia());
   window.dispatchEvent(new Event(LOCAL_CLEARED_EVENT));
 }

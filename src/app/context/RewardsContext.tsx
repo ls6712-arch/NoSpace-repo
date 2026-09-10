@@ -6,7 +6,9 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { badges, levelForPoints, levelProgress, RewardStats } from "../data/badges";
+import { badges, RewardStats } from "../data/badges";
+import { useAuth } from "./AuthContext";
+import { shareMilestone, unshareMilestone } from "../lib/milestonesRemote";
 
 const STORAGE_KEY = "nospace.rewards.v1";
 
@@ -19,6 +21,14 @@ interface StoredState {
   /** One entry per logged session, holding that session's hobby. */
   hobbiesPosted: string[];
   likedPostIds: number[];
+  /**
+   * Which unlocked badges the owner has explicitly shared to their public
+   * profile — everything else here stays visible only to them. Mirrored,
+   * best-effort, to the `shared_milestones` table (lib/milestonesRemote.ts)
+   * so a stranger's browser can see it; this local copy is what the owner's
+   * own view always reads first.
+   */
+  sharedBadgeIds: string[];
 }
 
 interface ActivityEntry {
@@ -36,6 +46,7 @@ const defaultState: StoredState = {
   hobbiesVisited: [],
   hobbiesPosted: [],
   likedPostIds: [],
+  sharedBadgeIds: [],
 };
 
 function loadState(): StoredState {
@@ -52,8 +63,6 @@ function loadState(): StoredState {
 
 interface RewardsContextType {
   points: number;
-  level: number;
-  progress: number;
   stats: RewardStats;
   unlockedBadgeIds: string[];
   activity: ActivityEntry[];
@@ -64,11 +73,17 @@ interface RewardsContextType {
   visitHobby: (slug: string) => void;
   toggleLikePost: (postId: number) => boolean;
   isPostLiked: (postId: number) => boolean;
+  /** Whether this unlocked milestone is currently visible on the public profile. */
+  isBadgeShared: (badgeId: string) => boolean;
+  /** No-ops on a locked badge — sharing is never possible before it's earned. */
+  shareBadge: (badgeId: string) => void;
+  unshareBadge: (badgeId: string) => void;
 }
 
 const RewardsContext = createContext<RewardsContextType | undefined>(undefined);
 
 export function RewardsProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [state, setState] = useState<StoredState>(loadState);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [lastUnlockedBadgeId, setLastUnlockedBadgeId] = useState<string | null>(null);
@@ -186,12 +201,33 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
 
   const dismissLastBadge = () => setLastUnlockedBadgeId(null);
 
+  const isBadgeShared = (badgeId: string) => state.sharedBadgeIds.includes(badgeId);
+
+  // A locked milestone is never shareable, no matter what calls this — the
+  // UI already hides the affordance, but the guard lives here too rather
+  // than trusting every call site to check first.
+  const shareBadge = (badgeId: string) => {
+    if (!unlockedBadgeIds.includes(badgeId)) return;
+    setState((prev) =>
+      prev.sharedBadgeIds.includes(badgeId)
+        ? prev
+        : { ...prev, sharedBadgeIds: [...prev.sharedBadgeIds, badgeId] },
+    );
+    if (user) void shareMilestone(user.id, badgeId);
+  };
+
+  const unshareBadge = (badgeId: string) => {
+    setState((prev) => ({
+      ...prev,
+      sharedBadgeIds: prev.sharedBadgeIds.filter((id) => id !== badgeId),
+    }));
+    if (user) void unshareMilestone(user.id, badgeId);
+  };
+
   return (
     <RewardsContext.Provider
       value={{
         points: state.points,
-        level: levelForPoints(state.points),
-        progress: levelProgress(state.points),
         stats,
         unlockedBadgeIds,
         activity,
@@ -202,6 +238,9 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
         visitHobby,
         toggleLikePost,
         isPostLiked,
+        isBadgeShared,
+        shareBadge,
+        unshareBadge,
       }}
     >
       {children}
