@@ -20,6 +20,7 @@ import { People } from "./pages/People";
 import { AdminCategories } from "./pages/AdminCategories";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
+import { Pursuit } from "./pages/Pursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
@@ -54,6 +55,7 @@ export const router = createHashRouter([
       { path: "messages", loader: () => redirect("/inbox") },
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
       { path: "space/:slug", Component: CategoryFeed },
+      { path: "pursuit/:id", Component: Pursuit },
       { path: "u/:username", Component: PublicProfile },
       { path: "login", Component: Login },
       { path: "shop", Component: Shop },

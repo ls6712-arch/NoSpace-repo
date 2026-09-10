@@ -192,14 +192,22 @@ export function setProjectShared(projectId: string, shared: boolean) {
 
 /** How far along a Pursuit is, and when it last moved — derived from the
  * posts actually attached to it rather than a separate status field, so
- * there's nothing to keep in sync by hand. */
+ * there's nothing to keep in sync by hand.
+ *
+ * A post counts as an update on this Pursuit if either signal says so: its
+ * own pursuitId (mirrored to the database — see sql/pursuit-updates.sql and
+ * attachPostToPursuit — so it's visible from any device, or to anyone else
+ * the Pursuit is shared with), or the local entryProject map (instant,
+ * works offline, and still the only record for posts attached before
+ * pursuitId existed). Checking both means neither an older local-only
+ * attachment nor a freshly-synced one gets missed. */
 export function projectProgress(
   entryProject: Record<string, string>,
   posts: Post[],
   projectId: string,
 ) {
   const updates = posts
-    .filter((p) => entryProject[String(p.id)] === projectId)
+    .filter((p) => p.pursuitId === projectId || entryProject[String(p.id)] === projectId)
     .sort((a, b) => b.createdAt - a.createdAt);
   return { updates, count: updates.length, lastUpdatedAt: updates[0]?.createdAt };
 }

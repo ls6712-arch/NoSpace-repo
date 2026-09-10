@@ -57,6 +57,12 @@ export interface NewPostInput {
   startsAt?: number;
   locationName?: string;
   locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
+  /** Set when this post is already known to belong to a specific Pursuit at
+   * creation time (e.g. arriving via that Pursuit's own "Add progress").
+   * Attaching to a brand-new Pursuit created from this same post (the
+   * inline "Start a Pursuit" flow) still happens after the fact, since the
+   * Pursuit doesn't exist until the post does — see attachPostToPursuit. */
+  pursuitId?: string;
 }
 
 function loadFromStorage<T>(key: string): T[] {
@@ -91,6 +97,7 @@ function rowToPost(row: any, creatorName: string): Post {
     locationName: row.location_name ?? undefined,
     locationPrivacy: row.location_privacy ?? undefined,
     thoughtsPrivate: row.thoughts_private ?? false,
+    pursuitId: row.pursuit_id ?? undefined,
   };
 }
 
@@ -310,6 +317,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           starts_at: input.startsAt ? new Date(input.startsAt).toISOString() : null,
           location_name: input.locationName ?? null,
           location_privacy: input.locationPrivacy ?? "neighborhood",
+          pursuit_id: input.pursuitId ?? null,
         })
         .select()
         .single();

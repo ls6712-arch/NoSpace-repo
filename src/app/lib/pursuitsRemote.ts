@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import { Project } from "./journal";
+import { Goal, GoalShape, Project, attachEntry } from "./journal";
 
 /**
  * The local journal (lib/journal.ts) is the source of truth for the owner's
@@ -48,6 +48,7 @@ export async function mirrorPursuit(userId: string, project: Project) {
 
 export interface SharedPursuit {
   id: string;
+  userId: string;
   title: string;
   hobbySlug?: string;
   subHobby?: string;
@@ -55,6 +56,65 @@ export interface SharedPursuit {
   customSpace?: string;
   startedAt: number;
   finishedAt?: number;
+  goal?: Goal;
+}
+
+/**
+ * Files an update under a Pursuit both ways: the local journal (instant,
+ * works offline, what the owner's own browser always reads first) and,
+ * best-effort, the post's own row in the database (sql/pursuit-updates.sql's
+ * pursuit_id) — the only copy of this link anyone else's browser, or the
+ * owner's own on a different device, can ever see. A postId that isn't a
+ * real database row (a local-only fallback post) simply has nothing to
+ * update there; the local attach is what matters for that case anyway.
+ */
+export async function attachPostToPursuit(postId: number | string, pursuitId: string) {
+  attachEntry(postId, pursuitId);
+  if (!supabase) return;
+  try {
+    await supabase.from("posts").update({ pursuit_id: pursuitId }).eq("id", postId);
+  } catch {
+    // Best effort — the local journal's own copy of the link is unaffected.
+  }
+}
+
+/** One Pursuit by id, for its own page — visible per the table's RLS (the
+ * owner always, anyone else only when it's marked shared). Returns null
+ * rather than throwing when it doesn't exist, isn't shared, or Supabase
+ * isn't configured; the page falls back to the local journal or demo data. */
+export async function fetchPursuitById(id: string): Promise<SharedPursuit | null> {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase.from("pursuits").select("*").eq("id", id).maybeSingle();
+    if (error || !data) return null;
+    const goal: Goal | undefined = data.goal_shape
+      ? {
+          id: "",
+          shape: data.goal_shape as GoalShape,
+          label: data.goal_label ?? "",
+          targetNumber: data.goal_target_number ?? undefined,
+          unit: data.goal_unit ?? undefined,
+          current: data.goal_current ?? undefined,
+          targetDate: data.goal_target_date ? new Date(data.goal_target_date).getTime() : undefined,
+          createdAt: 0,
+          reachedAt: data.goal_reached_at ? new Date(data.goal_reached_at).getTime() : undefined,
+        }
+      : undefined;
+    return {
+      id: data.id,
+      userId: data.user_id,
+      title: data.title,
+      hobbySlug: data.hobby_slug ?? undefined,
+      subHobby: data.sub_hobby ?? undefined,
+      interest: data.interest ?? undefined,
+      customSpace: data.custom_space ?? undefined,
+      startedAt: new Date(data.started_at).getTime(),
+      finishedAt: data.finished_at ? new Date(data.finished_at).getTime() : undefined,
+      goal,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /** A stranger's-eye view of one person's shared Pursuits — never their
@@ -73,6 +133,7 @@ export async function fetchSharedPursuits(userId: string): Promise<SharedPursuit
     if (error || !data) return [];
     return data.map((row: any) => ({
       id: row.id,
+      userId: row.user_id,
       title: row.title,
       hobbySlug: row.hobby_slug ?? undefined,
       subHobby: row.sub_hobby ?? undefined,

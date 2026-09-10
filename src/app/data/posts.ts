@@ -28,6 +28,13 @@ export interface Post {
   locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
   /** When on, only the poster and each thought's author can read the thoughts. */
   thoughtsPrivate?: boolean;
+  /** Set when this Moment is an update on a specific Pursuit (sql/pursuits.sql,
+   * sql/pursuit-updates.sql) — what a Pursuit's own page (/pursuit/:id) filters
+   * its feed by. Real posts mirror this to the database so it survives across
+   * devices and is visible to anyone the Pursuit itself is shared with; the
+   * local-only entryProject map in lib/journal.ts remains the fast path for
+   * the owner's own browser and for posts made before this field existed. */
+  pursuitId?: string;
 }
 
 const HOUR = 3600 * 1000;
