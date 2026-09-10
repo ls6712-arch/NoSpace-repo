@@ -4,8 +4,10 @@ import { PostBookmark } from "./PostBookmark";
 import { Thoughts } from "./Thoughts";
 import { PersonActions } from "./PersonActions";
 import { displayLocation } from "../data/participation";
+import { getCircle } from "../data/circles";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
+import { useCorners } from "../context/CornersContext";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
@@ -67,7 +69,17 @@ export function ContentCard({
   const { findListing } = useContent();
   const social = useSocial();
   const { user } = useAuth();
+  const { cornersFor } = useCorners();
   const isOwner = !!user && post.userId === user.id;
+
+  // The narrowest real scope this Moment actually belongs to, if any — so
+  // Invite can default straight to it instead of the whole Space. A Circle
+  // (a deliberate, existing membership) wins over a Corner (a topic tag) if
+  // a Moment somehow carries both; see PersonActions' own narrowContext.
+  const postCircle = post.visibility === "circle" && post.circleId ? getCircle(post.circleId) : undefined;
+  const postCorner = post.subHobby
+    ? cornersFor(post.hobbySlug).find((c) => c.slug === post.subHobby)
+    : undefined;
 
   // An activity is a moment with a time attached — a photo walk, a workshop,
   // a meetup. Everything else is just a moment and gets none of this.
@@ -215,6 +227,10 @@ export function ContentCard({
             personId={post.userId}
             hobbyKeys={[post.subHobby ?? `space:${post.hobbySlug}`]}
             showExplore={false}
+            corner={
+              postCorner ? { spaceSlug: post.hobbySlug, slug: postCorner.slug, name: postCorner.name } : undefined
+            }
+            circle={postCircle ? { id: postCircle.id, hobbySlug: postCircle.hobbySlug, name: postCircle.name } : undefined}
             compact={compact}
             className={compact ? "mb-2" : "mb-3"}
           />

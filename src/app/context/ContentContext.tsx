@@ -132,6 +132,12 @@ interface ContentContextType {
   isCircleJoined: (circleId: number) => boolean;
   joinCircle: (circleId: number) => void;
   leaveCircle: (circleId: number) => void;
+  /** Real, cross-account joins per Circle id (accepted invitations), on top
+   * of that Circle's own static baseline count in data/circles.ts. Does not
+   * include this browser's own local-only join — combine with
+   * isCircleJoined at the render site for the full displayed count. */
+  circleMemberCounts: Record<number, number>;
+  refetchCircleMemberCounts: () => Promise<void>;
   activeHobbySlugs: string[];
 }
 
@@ -159,6 +165,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [mediaError, setMediaError] = useState<string | null>(null);
   /** Set when a post couldn't reach the database, so the flow can say so. */
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Real, cross-account Circle joins (an accepted invitation — see
+  // ConnectionsContext's circle_invites), counted per Circle. Public data —
+  // fetched regardless of login, same as a Circle's own static baseline
+  // count, via a SECURITY DEFINER aggregate (sql/circle-invites.sql) that
+  // exposes counts without exposing who's actually in each row.
+  const [circleMemberCounts, setCircleMemberCounts] = useState<Record<number, number>>({});
 
   const refetchRealPosts = async () => {
     if (!supabase) return;
@@ -177,8 +189,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setRealPosts(data.map((row: any) => rowToPost(row, nameById.get(row.user_id) ?? "Someone")));
   };
 
+  const refetchCircleMemberCounts = async () => {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("circle_member_counts");
+    if (error || !data) return;
+    const counts: Record<number, number> = {};
+    for (const row of data as any[]) counts[row.circle_id] = Number(row.member_count) || 0;
+    setCircleMemberCounts(counts);
+  };
+
   useEffect(() => {
     refetchRealPosts();
+    refetchCircleMemberCounts();
     // Re-fetch when the logged-in user changes, so switching accounts (or
     // logging in) picks up posts visible to that session.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -450,6 +472,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         isCircleJoined,
         joinCircle,
         leaveCircle,
+        circleMemberCounts,
+        refetchCircleMemberCounts,
         activeHobbySlugs,
       }}
     >

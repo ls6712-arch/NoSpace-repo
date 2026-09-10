@@ -15,7 +15,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
  *   Explore          attaches you to a hobby, not to them. No permission
  *                    needed, because nothing about them changes.
  *   Connect          asks them. Nothing private happens until they accept.
- *   Invite to Space  asks them into a group you're in.
+ *   Invite           asks them into the narrowest scope this context
+ *                    actually has — a Corner or Circle a Moment belongs to,
+ *                    falling back to the whole Space only when there's
+ *                    nothing narrower to offer.
  *
  * The distinction that matters: Explore is one-way and about a subject;
  * the other two are requests to a person, and both wait for a yes.
@@ -35,6 +38,24 @@ export function PersonActions({
    * second meaning the Space-hero button already has.
    */
   showExplore = true,
+  /**
+   * The Corner this context actually belongs to, if any — a Moment's own
+   * subHobby tag, resolved to a display name. When set, Invite defaults
+   * straight to this Corner instead of the generic Space picker. Corners
+   * have no membership of their own to invite into, so under the hood this
+   * still uses the same Space invite-and-accept mechanic, aimed at a Space
+   * auto-matched (or made) for this Corner rather than asked about up
+   * front — the person inviting never needs to know that detail.
+   */
+  corner,
+  /**
+   * The Circle this context actually belongs to, if any — a Moment posted
+   * with circle visibility. Takes priority over corner when a Moment
+   * somehow has both, since a Circle is a more deliberate scope than a
+   * topic tag. Circles have real, existing membership (join to see updates)
+   * that Invite must not bypass — see inviteToCircle/circle_invites.
+   */
+  circle,
   compact = false,
   className = "",
 }: {
@@ -42,6 +63,8 @@ export function PersonActions({
   personId?: string;
   hobbyKeys?: string[];
   showExplore?: boolean;
+  corner?: { spaceSlug: string; slug: string; name: string };
+  circle?: { id: number; hobbySlug: string; name: string };
   /** Smaller buttons for a denser card. Opens the exact same dialogs. */
   compact?: boolean;
   className?: string;
@@ -61,6 +84,10 @@ export function PersonActions({
   const [chosenSpace, setChosenSpace] = useState<string>("");
   const [newSpaceName, setNewSpaceName] = useState("");
   const [ownInterest, setOwnInterest] = useState("");
+  // "context" invites straight to the Corner or Circle this row is scoped
+  // to; "space" is the escape hatch back to the original, unscoped picker.
+  // Only ever means anything when a Corner or Circle was actually passed in.
+  const [inviteScope, setInviteScope] = useState<"context" | "space">("context");
 
   useEffect(() => {
     if (!open) {
@@ -69,9 +96,11 @@ export function PersonActions({
       setDone(null);
       setBusy(false);
       setChosenHobby(null);
+      setChosenSpace("");
       setNewSpaceName("");
       setOwnInterest("");
       setPane(null);
+      setInviteScope("context");
     }
   }, [open]);
 
@@ -81,6 +110,18 @@ export function PersonActions({
   const canAsk = !!user && !!personId && !!personName && !isSelf;
   const status = personId ? connections.statusWith(personId) : "none";
   const existing = personId ? connections.connectionWith(personId) : undefined;
+
+  // A Circle is a more deliberate scope than a topic tag, so it wins if a
+  // Moment somehow carries both.
+  const narrowContext = circle
+    ? { kind: "circle" as const, name: circle.name, hobbySlug: circle.hobbySlug }
+    : corner
+      ? { kind: "corner" as const, name: corner.name, hobbySlug: corner.spaceSlug }
+      : null;
+  const parentSpaceLabel = narrowContext
+    ? (getHobby(narrowContext.hobbySlug)?.shortName ?? narrowContext.hobbySlug)
+    : null;
+  const inContextInvite = !!narrowContext && inviteScope === "context";
 
   // What Explore can offer: the hobbies this person actually works in, or the
   // whole list if we don't know yet. Either way you pick the subject.
@@ -123,6 +164,44 @@ export function PersonActions({
     setBusy(true);
     setError(null);
     try {
+      if (inContextInvite && circle) {
+        const res = await connections.inviteToCircle(circle.id, personId, note);
+        if (res.error) setError(res.error);
+        else setDone("Invitation sent.");
+        return;
+      }
+
+      if (inContextInvite && corner) {
+        // Corners have no membership of their own — this reuses the exact
+        // same Space invite-and-accept mechanic as the fallback below, just
+        // aimed automatically at a Space already scoped to this Corner
+        // (reusing one of my own if I already made one) instead of asking
+        // "which Space?" up front. Matched by name, not `interest`, so the
+        // Inbox's own "invited you to X · Y" rendering doesn't show the
+        // same word twice.
+        let target = connections.mySpaces.find(
+          (s) => s.hobbySlug === corner.spaceSlug && s.name.toLowerCase() === corner.name.toLowerCase(),
+        );
+        if (!target) {
+          const created = await connections.createSpace({
+            name: corner.name,
+            hobbySlug: corner.spaceSlug,
+          });
+          if (!created.space) {
+            setError(created.error ?? "Couldn't set that up.");
+            return;
+          }
+          target = created.space;
+        }
+        const res = await connections.inviteToSpace(target.id, personId, note);
+        if (res.error) setError(res.error);
+        else setDone("Invitation sent.");
+        return;
+      }
+
+      // The original, unscoped flow — reached directly when a post has no
+      // narrower context, or via the "invite to the Space instead" escape
+      // hatch when it does.
       let spaceId = chosenSpace;
       if (!spaceId && newSpaceName.trim()) {
         const created = await connections.createSpace({
@@ -173,10 +252,12 @@ export function PersonActions({
     },
     {
       id: "invite" as const,
-      label: "Invite to Space",
+      label: inContextInvite ? `Invite to ${narrowContext!.name}` : "Invite to Space",
       icon: Send,
       tint: "var(--pastel-sky)",
-      copy: "Ask them into a Space you're part of.",
+      copy: narrowContext
+        ? `Ask them to join ${narrowContext.name}.`
+        : "Ask them into a Space you're part of.",
       show: canAsk,
     },
   ].filter((o) => o.show);
@@ -418,7 +499,15 @@ export function PersonActions({
                 </>
               )}
 
-              {/* ── Invite to Space ────────────────────────────────────── */}
+              {/* ── Invite ───────────────────────────────────────────────
+                  Context-aware: a Corner or Circle this row is actually
+                  scoped to is the default target, no picker shown — asking
+                  someone into the whole Space is a bigger ask than the
+                  context they're actually looking at calls for. "or invite
+                  to the Space instead" is the one-tap way out for when the
+                  broader ask really is what's wanted. No narrower context
+                  at all (the common case, most Moments) skips straight to
+                  the original, unscoped picker below, unchanged. */}
               {active.id === "invite" && (
                 <>
                   {done ? (
@@ -431,8 +520,62 @@ export function PersonActions({
                         {personName} can accept or decline from their Inbox.
                       </p>
                     </div>
+                  ) : inContextInvite ? (
+                    <>
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {circle
+                          ? `They'll need to accept before they're a member — same as joining any other Circle.`
+                          : `They'll need to accept before anything happens.`}
+                      </p>
+
+                      <Textarea
+                        value={note}
+                        maxLength={200}
+                        onChange={(e) => setNote(e.target.value)}
+                        placeholder="Add a note (optional)"
+                        className="min-h-16"
+                      />
+
+                      {error && (
+                        <p className="rounded-xl bg-surface-muted px-4 py-2.5 text-xs text-[var(--coral-text)]">
+                          {error}
+                        </p>
+                      )}
+                      <Button
+                        className="w-full text-white [background-image:var(--gradient-brand)]"
+                        disabled={busy}
+                        onClick={sendInvite}
+                      >
+                        {busy ? "Sending…" : "Send invitation"}
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // A courtesy pre-fill, not a requirement — freely
+                          // editable, matching whatever narrower scope they
+                          // were just looking at instead of a blank Space.
+                          const label = narrowContext?.name ?? "";
+                          setNewSpaceName((v) => v || label);
+                          setChosenHobby((v) => v ?? label);
+                          setInviteScope("space");
+                        }}
+                        className="mx-auto block text-center text-xs text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
+                      >
+                        or invite to {parentSpaceLabel} instead
+                      </button>
+                    </>
                   ) : (
                     <>
+                      {narrowContext && (
+                        <button
+                          type="button"
+                          onClick={() => setInviteScope("context")}
+                          className="-mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          ← Back to {narrowContext.name}
+                        </button>
+                      )}
+
                       <div>
                         <label htmlFor="inv-space" className="mb-2 block text-sm">
                           Which Space?

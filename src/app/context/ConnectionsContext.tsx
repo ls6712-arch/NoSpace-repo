@@ -8,6 +8,7 @@ import {
 } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
+import { getCircle } from "../data/circles";
 
 /**
  * Connections, Spaces people make, and the messages both of them unlock.
@@ -51,6 +52,25 @@ export interface Space {
   invitedByName?: string;
   note?: string;
   memberCount?: number;
+}
+
+/**
+ * A real, cross-account membership row for a Circle (data/circles.ts) —
+ * distinct from the purely local, per-browser isCircleJoined/joinCircle in
+ * ContentContext.tsx, which has no way to notify a specific other person
+ * or to be seen from their own account. This is only ever written for the
+ * two genuinely cross-account cases: someone invites a specific person, and
+ * that person accepts or declines. See sql/circle-invites.sql.
+ */
+export interface CircleMembership {
+  id: number | string;
+  circleId: number;
+  userId: string;
+  status: "invited" | "joined" | "declined";
+  invitedBy?: string;
+  invitedByName?: string;
+  note?: string;
+  createdAt: number;
 }
 
 export interface DirectMessage {
@@ -103,6 +123,21 @@ interface ConnectionsContextType {
   ) => Promise<{ error: string | null }>;
   respondToInvitation: (spaceId: number | string, accept: boolean) => Promise<void>;
 
+  /** Circle ids you've really joined — via an invitation you accepted, not
+   * the local-only direct Join button (ContentContext's isCircleJoined). */
+  myCircleIds: number[];
+  circleInvitations: CircleMembership[];
+  inviteToCircle: (
+    circleId: number,
+    personId: string,
+    note?: string,
+  ) => Promise<{ error: string | null }>;
+  respondToCircleInvitation: (circleId: number, accept: boolean) => Promise<void>;
+  /** Leaves a Circle you joined via a real, accepted invitation. The
+   * purely local direct-join path has its own leaveCircle in ContentContext
+   * and never touches this table, so there's nothing to reconcile here. */
+  leaveCircleInvite: (circleId: number) => Promise<void>;
+
   messages: DirectMessage[];
   messagesWith: (personId: string) => DirectMessage[];
   canMessage: (personId: string) => boolean;
@@ -120,6 +155,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [spaces, setSpaces] = useState<Space[]>([]);
+  const [circleMembers, setCircleMembers] = useState<CircleMembership[]>([]);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [people, setPeople] = useState<Record<string, Person>>({});
 
@@ -129,19 +165,23 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     if (!supabase || !user) {
       setConnections([]);
       setSpaces([]);
+      setCircleMembers([]);
       setMessages([]);
       setReady(true);
       return;
     }
 
     try {
-      const [conns, memberships, msgs] = await Promise.all([
+      const [conns, memberships, circleRows, msgs] = await Promise.all([
         supabase
           .from("connections")
           .select("*")
           .or(`requester.eq.${user.id},addressee.eq.${user.id}`)
           .order("created_at", { ascending: false }),
         supabase.from("space_members").select("*").eq("user_id", user.id),
+        // RLS already scopes this to rows where I'm the invitee or the
+        // inviter — no need to filter client-side too.
+        supabase.from("circle_invites").select("*"),
         supabase
           .from("messages")
           .select("*")
@@ -151,6 +191,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
 
       const connRows = (conns.data ?? []) as any[];
       const memberRows = (memberships.data ?? []) as any[];
+      const circleMemberRows = (circleRows.data ?? []) as any[];
 
       // Names and faces for everyone involved, in one query.
       const ids = new Set<string>();
@@ -159,6 +200,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
         ids.add(c.addressee);
       }
       for (const m of memberRows) if (m.invited_by) ids.add(m.invited_by);
+      for (const c of circleMemberRows) if (c.invited_by) ids.add(c.invited_by);
       for (const m of (msgs.data ?? []) as any[]) {
         ids.add(m.from_user);
         if (m.to_user) ids.add(m.to_user);
@@ -193,6 +235,19 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
           addresseeAvatar: byId[c.addressee]?.avatarUrl,
           note: c.note ?? undefined,
           status: c.status,
+          createdAt: new Date(c.created_at).getTime(),
+        })),
+      );
+
+      setCircleMembers(
+        circleMemberRows.map((c) => ({
+          id: c.id,
+          circleId: c.circle_id,
+          userId: c.user_id,
+          status: c.status,
+          invitedBy: c.invited_by ?? undefined,
+          invitedByName: c.invited_by ? byId[c.invited_by]?.displayName : undefined,
+          note: c.note ?? undefined,
           createdAt: new Date(c.created_at).getTime(),
         })),
       );
@@ -469,6 +524,77 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     await refresh();
   };
 
+  /* ── Circles ────────────────────────────────────────────────────────── */
+  //
+  // Circles (data/circles.ts) are static seed data with no owner and no
+  // creation flow of their own — unlike a Space, there's nothing here to
+  // "make." Only invite-and-accept membership lives in this context; the
+  // Circle's own name, purpose, and static baseline member count still come
+  // straight from that file wherever they're rendered.
+
+  const myCircleIds = circleMembers
+    .filter((c) => c.userId === user?.id && c.status === "joined")
+    .map((c) => c.circleId);
+  const circleInvitations = circleMembers.filter(
+    (c) => c.userId === user?.id && c.status === "invited",
+  );
+
+  const inviteToCircle = async (circleId: number, personId: string, note?: string) => {
+    if (!supabase || !user) return { error: "Sign in to invite people." };
+    if (personId === user.id) return { error: "You're already in it." };
+
+    const { error } = await supabase.from("circle_invites").insert({
+      circle_id: circleId,
+      user_id: personId,
+      status: "invited",
+      invited_by: user.id,
+      note: note?.trim() ? note.trim().slice(0, 200) : null,
+    });
+    if (error) {
+      return {
+        error: /duplicate|unique/i.test(error.message)
+          ? "They've already been invited."
+          : error.message,
+      };
+    }
+
+    const circle = getCircle(circleId);
+    const me = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    await supabase.from("notifications").insert({
+      user_id: personId,
+      kind: "circle_invite",
+      actor_name: (me.data as any)?.display_name?.trim() || "Someone",
+      body: `invited you to ${circle?.name ?? "a Circle"}.`,
+      href: "/inbox",
+    });
+    await refresh();
+    return { error: null };
+  };
+
+  const respondToCircleInvitation = async (circleId: number, accept: boolean) => {
+    if (!supabase || !user) return;
+    await supabase
+      .from("circle_invites")
+      .update({ status: accept ? "joined" : "declined" })
+      .eq("circle_id", circleId)
+      .eq("user_id", user.id);
+    await refresh();
+  };
+
+  const leaveCircleInvite = async (circleId: number) => {
+    if (!supabase || !user) return;
+    await supabase
+      .from("circle_invites")
+      .delete()
+      .eq("circle_id", circleId)
+      .eq("user_id", user.id);
+    await refresh();
+  };
+
   /* ── Messages ───────────────────────────────────────────────────────── */
 
   // The gate, stated once: you can write to someone you're connected to.
@@ -517,6 +643,11 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
         createSpace,
         inviteToSpace,
         respondToInvitation,
+        myCircleIds,
+        circleInvitations,
+        inviteToCircle,
+        respondToCircleInvitation,
+        leaveCircleInvite,
         messages,
         messagesWith,
         canMessage,
