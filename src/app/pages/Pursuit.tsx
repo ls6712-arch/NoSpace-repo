@@ -341,9 +341,27 @@ export function Pursuit() {
                 Reached it
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={toggleShare}>
-              {justCopied ? "Link copied!" : view.shared ? <Share2 className="size-3.5" /> : <Lock className="size-3.5" />}
-              {justCopied ? "" : view.shared ? "Shared" : "Private"}
+            {/* Every button on this row is an imperative ("Add progress",
+                "Change goal") — a bare "Private" label read the same way and
+                promised the opposite of what a click actually did (it shared
+                the Pursuit). The label now always names the action a click
+                will take, never the current state, matching the tooltip
+                PursuitCard already uses for its icon-only version of this
+                same toggle. */}
+            <Button variant="outline" size="sm" onClick={toggleShare} aria-pressed={view.shared}>
+              {justCopied ? (
+                "Link copied!"
+              ) : view.shared ? (
+                <>
+                  <Lock className="size-3.5" />
+                  Make private
+                </>
+              ) : (
+                <>
+                  <Share2 className="size-3.5" />
+                  Share
+                </>
+              )}
             </Button>
             {!view.finishedAt && (
               <Button variant="outline" size="sm" onClick={markDone}>
