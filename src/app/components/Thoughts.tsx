@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { MediaAttachPicker } from "./MediaAttachPicker";
 
 /**
  * Thoughts, not comments — short, standalone reflections on a piece of work
@@ -43,6 +44,11 @@ export function Thoughts({
   onTogglePrivate,
   compact = false,
   className = "",
+  /** Lets a reply carry its own photo or video — on for a Circle thread's
+   * replies (they're genuine discussion, not a Moment's ordinary
+   * thoughts), off everywhere else so ContentCard and a non-Circle
+   * MomentDetail render exactly as they did before this existed. */
+  allowMedia = false,
 }: {
   postId: number;
   postOwnerId?: string;
@@ -54,12 +60,14 @@ export function Thoughts({
    * existing thoughts — is unchanged. */
   compact?: boolean;
   className?: string;
+  allowMedia?: boolean;
 }) {
   const social = useSocial();
   const { user, profile } = useAuth();
   const myName = profile?.display_name || "You";
   const [openComposer, setOpenComposer] = useState(false);
   const [body, setBody] = useState("");
+  const [media, setMedia] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   const thoughts = social.thoughtsFor(postId);
@@ -72,8 +80,9 @@ export function Thoughts({
     setSaving(true);
     setFailed(false);
     try {
-      await social.addThought(postId, body, undefined, postOwnerId, postOwnerName);
+      await social.addThought(postId, body, undefined, postOwnerId, postOwnerName, allowMedia ? media ?? undefined : undefined);
       setBody("");
+      setMedia(null);
       setOpenComposer(false);
     } catch {
       // Keep what they wrote on screen — losing a thought to a dropped
@@ -126,6 +135,11 @@ export function Thoughts({
             placeholder="What did this make you think?"
             className="min-h-20"
           />
+          {allowMedia && (
+            <div className="mt-2">
+              <MediaAttachPicker file={media} onChange={setMedia} label="Add a photo" />
+            </div>
+          )}
           {failed && (
             <p className="mt-2 text-[11px] text-[var(--coral-text)]">
               That didn't send. Your words are still here, try again.
@@ -138,7 +152,14 @@ export function Thoughts({
                 : "Visible to anyone who can see this moment."}
             </span>
             <span className="flex shrink-0 gap-2">
-              <Button variant="outline" size="sm" onClick={() => setOpenComposer(false)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setOpenComposer(false);
+                  setMedia(null);
+                }}
+              >
                 Cancel
               </Button>
               <Button variant="coral" size="sm" disabled={!body.trim() || saving} onClick={submit}>
@@ -163,6 +184,15 @@ export function Thoughts({
                 </div>
               )}
               <p className="text-sm leading-relaxed">{t.body}</p>
+              {t.media && (
+                <div className="mt-2 overflow-hidden rounded-xl border border-[var(--hairline)]">
+                  {/^https?:\/\/.*\.(mp4|webm|mov)$/i.test(t.media) ? (
+                    <video src={t.media} controls className="w-full" />
+                  ) : (
+                    <img src={t.media} alt="" className="w-full" />
+                  )}
+                </div>
+              )}
               <div className="mt-2 flex items-center gap-2">
                 <Avatar className="size-5">
                   {t.authorAvatar && <AvatarImage src={t.authorAvatar} alt="" />}

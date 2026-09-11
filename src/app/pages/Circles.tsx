@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Link } from "react-router";
-import { Eye, HelpCircle, MapPin, PenLine, CalendarDays, Shield, Users } from "lucide-react";
-import { Circle, circles } from "../data/circles";
+import { Link, useNavigate } from "react-router";
+import { Eye, HelpCircle, MapPin, PenLine, CalendarDays, Plus, Shield, Users } from "lucide-react";
+import { Circle } from "../data/circles";
 import { getHobby } from "../data/hobbies";
 import { useContent } from "../context/ContentContext";
 import { useConnections } from "../context/ConnectionsContext";
+import { useCircles } from "../context/CirclesContext";
 import { Button } from "../components/ui/button";
+import { CreateCircleDialog } from "../components/CreateCircleDialog";
 
 /**
  * Circles are for doing, not for chatting. Each one leads with who it's for and
@@ -43,23 +45,45 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
   const { isCircleJoined, joinCircle, leaveCircle, circleFeed, circleMemberCounts, refetchCircleMemberCounts } =
     useContent();
   const connections = useConnections();
+  const { isRealCircle, isMemberOfReal, joinRealCircle, leaveRealCircle } = useCircles();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<TabId>("updates");
+  const real = isRealCircle(circle.id);
   // Two ways in: the local-only direct Join button (this browser, no
   // account needed), or a real invitation accepted from another account
   // (ConnectionsContext's circle_invites) — either counts as "joined" here.
+  // A real (Supabase-backed) Circle has its own, actual membership instead
+  // of either of those.
   const locallyJoined = isCircleJoined(circle.id);
   const reallyJoined = connections.myCircleIds.includes(circle.id);
-  const joined = locallyJoined || reallyJoined;
+  const joined = real ? isMemberOfReal(circle.id) : locallyJoined || reallyJoined;
   // The static baseline plus real accepted invites (visible to everyone,
   // joined or not) plus this browser's own local join — but only if that
   // local join isn't the same membership already counted for real above,
-  // or a real invite-accept would double the bump.
-  const displayedMemberCount =
-    circle.memberCount +
-    (circleMemberCounts[circle.id] ?? 0) +
-    (locallyJoined && !reallyJoined ? 1 : 0);
+  // or a real invite-accept would double the bump. A real Circle's own
+  // memberCount (CirclesContext) is already the live, accurate count.
+  const displayedMemberCount = real
+    ? circle.memberCount
+    : circle.memberCount + (circleMemberCounts[circle.id] ?? 0) + (locallyJoined && !reallyJoined ? 1 : 0);
   const hobby = getHobby(circle.hobbySlug);
   const updates = circleFeed(circle.id);
+
+  const toggleJoin = async () => {
+    if (real) {
+      if (joined) await leaveRealCircle(circle.id);
+      else await joinRealCircle(circle.id);
+      return;
+    }
+    if (joined) {
+      // A real accepted invitation needs its own row updated, not
+      // just the local flag — otherwise leaving would silently do
+      // nothing for someone who joined that way.
+      if (reallyJoined) connections.leaveCircleInvite(circle.id).then(refetchCircleMemberCounts);
+      if (locallyJoined) leaveCircle(circle.id);
+    } else {
+      joinCircle(circle.id);
+    }
+  };
 
   const emptyCopy: Record<TabId, string> = {
     updates: joined
@@ -72,13 +96,26 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
       : "No events scheduled. This Circle meets online.",
   };
 
+  // A card only becomes a link to the full board once there's somewhere
+  // meaningful for it to lead — someone who hasn't joined yet still only
+  // has the Join button here, same as before this page existed.
   return (
     <article
-      className="rounded-2xl p-5"
+      className={`rounded-2xl p-5 ${joined ? "cursor-pointer transition-transform duration-200 hover:-translate-y-0.5" : ""}`}
       style={{
         backgroundColor: `color-mix(in srgb, ${tint} 12%, var(--surface))`,
         border: `1px solid color-mix(in srgb, ${tint} 28%, transparent)`,
       }}
+      onClick={joined ? () => navigate(`/circles/${circle.id}`) : undefined}
+      role={joined ? "link" : undefined}
+      tabIndex={joined ? 0 : undefined}
+      onKeyDown={
+        joined
+          ? (e) => {
+              if (e.key === "Enter") navigate(`/circles/${circle.id}`);
+            }
+          : undefined
+      }
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -91,18 +128,9 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
           variant={joined ? "outline" : "coral"}
           size="sm"
           className="shrink-0"
-          onClick={() => {
-            if (joined) {
-              // A real accepted invitation needs its own row updated, not
-              // just the local flag — otherwise leaving would silently do
-              // nothing for someone who joined that way.
-              if (reallyJoined) {
-                connections.leaveCircleInvite(circle.id).then(refetchCircleMemberCounts);
-              }
-              if (locallyJoined) leaveCircle(circle.id);
-            } else {
-              joinCircle(circle.id);
-            }
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleJoin();
           }}
         >
           {joined ? "Joined" : "Join"}
@@ -143,7 +171,11 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
         <p className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
           {circle.prompt}
         </p>
-        <Link to={`/create?hobby=${circle.hobbySlug}`} className="mt-2 inline-block">
+        <Link
+          to={`/create?hobby=${circle.hobbySlug}`}
+          className="mt-2 inline-block"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Button variant="coral" size="sm">
             <PenLine className="size-3.5" />
             Add an update
@@ -160,7 +192,10 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
               role="tab"
               type="button"
               aria-selected={tab === id}
-              onClick={() => setTab(id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setTab(id);
+              }}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] transition-colors ${
                 tab === id
                   ? "text-white [background-image:var(--gradient-brand)]"
@@ -190,7 +225,7 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
       </div>
 
       {/* House rules and who keeps them */}
-      <details className="mt-3 group">
+      <details className="mt-3 group" onClick={(e) => e.stopPropagation()}>
         <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
           <Shield className="size-3" strokeWidth={1.8} />
           Rules and moderators
@@ -221,6 +256,7 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
  * Spaces tab to this one, instead of the query silently going nowhere.
  */
 export function CirclesBrowser({ query = "" }: { query?: string }) {
+  const { circles } = useCircles();
   const q = query.trim().toLowerCase();
   const matching = q
     ? circles.filter(
@@ -280,18 +316,28 @@ export function CirclesBrowser({ query = "" }: { query?: string }) {
 }
 
 export function Circles() {
+  const [createOpen, setCreateOpen] = useState(false);
   return (
     <div className="min-h-screen bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-4xl px-4">
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Circles
-        </h1>
-        <p className="mb-10 mt-2 max-w-xl text-lg text-muted-foreground">
-          Smaller communities built around doing.
-        </p>
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Circles
+            </h1>
+            <p className="mt-2 max-w-xl text-lg text-muted-foreground">
+              Smaller communities built around doing.
+            </p>
+          </div>
+          <Button variant="coral" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Start a Circle
+          </Button>
+        </div>
 
         <CirclesBrowser />
       </div>
+      <CreateCircleDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

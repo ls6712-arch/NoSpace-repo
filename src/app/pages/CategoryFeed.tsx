@@ -7,8 +7,8 @@ import { useCategories } from "../context/CategoriesContext";
 import { useCorners } from "../context/CornersContext";
 import { HobbyTile } from "../components/HobbyTile";
 import { CreateCornerDialog } from "../components/CreateCornerDialog";
-import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
+import { useCircles } from "../context/CirclesContext";
 import { useRewards } from "../context/RewardsContext";
 import { ContentCard } from "../components/ContentCard";
 import { ProductCard } from "../components/ProductCard";
@@ -61,6 +61,7 @@ function CirclesTab({
   hobbySlug: string;
 }) {
   const { circleFeed, isCircleJoined, joinCircle, leaveCircle } = useContent();
+  const { circlesByHobby, isRealCircle, isMemberOfReal, joinRealCircle, leaveRealCircle } = useCircles();
   const circles = circlesByHobby(hobbySlug);
   const [expanded, setExpanded] = useState<number | null>(null);
 
@@ -75,14 +76,17 @@ function CirclesTab({
   return (
     <div className="space-y-3 max-w-2xl">
       {circles.map((circle) => {
-        const joined = isCircleJoined(circle.id);
+        const real = isRealCircle(circle.id);
+        const joined = real ? isMemberOfReal(circle.id) : isCircleJoined(circle.id);
         const feed = expanded === circle.id ? circleFeed(circle.id) : [];
         return (
           <div key={circle.id} className="rounded-2xl border border-border p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">{circle.name}</span>
+                  <Link to={`/circles/${circle.id}`} className="text-sm hover:underline">
+                    {circle.name}
+                  </Link>
                   {circle.location && (
                     <span className="text-xs text-muted-foreground">· {circle.location}</span>
                   )}
@@ -96,7 +100,15 @@ function CirclesTab({
               <Button
                 variant={joined ? "outline" : "brand"}
                 size="sm"
-                onClick={() => (joined ? leaveCircle(circle.id) : joinCircle(circle.id))}
+                onClick={() =>
+                  real
+                    ? joined
+                      ? leaveRealCircle(circle.id)
+                      : joinRealCircle(circle.id)
+                    : joined
+                      ? leaveCircle(circle.id)
+                      : joinCircle(circle.id)
+                }
               >
                 {joined ? "Joined" : "Join"}
               </Button>
@@ -179,6 +191,7 @@ export function CategoryFeed() {
   const activeSub = searchParams.get("hobby") ?? "";
   const { publicFeedByHobby, listingsByHobby, circleFeed, isCircleJoined, joinCircle, leaveCircle } =
     useContent();
+  const { circlesByHobby } = useCircles();
   const { visitHobby } = useRewards();
 
   useEffect(() => {

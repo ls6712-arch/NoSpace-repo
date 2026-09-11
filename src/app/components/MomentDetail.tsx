@@ -182,6 +182,7 @@ export function MomentDetail({
               postOwnerName={post.creator}
               isOwner={owned}
               privateThoughts={post.thoughtsPrivate}
+              allowMedia={post.visibility === "circle"}
             />
           </>
         )}
