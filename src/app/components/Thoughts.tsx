@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 /**
  * Thoughts, not comments.
@@ -76,6 +77,7 @@ export function Thoughts({
   const thoughts = social.thoughtsFor(postId);
 
   const [failed, setFailed] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | string | null>(null);
 
   const submit = async () => {
     if (!body.trim() || saving) return;
@@ -204,7 +206,7 @@ export function Thoughts({
                 {user?.id === t.userId && (
                   <button
                     type="button"
-                    onClick={() => social.removeThought(t.id)}
+                    onClick={() => setConfirmDeleteId(t.id)}
                     className="ml-auto text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
                     aria-label="Delete this thought"
                   >
@@ -222,6 +224,17 @@ export function Thoughts({
           Saved in this browser only. Sign in for thoughts other people can see.
         </p>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(o) => !o && setConfirmDeleteId(null)}
+        title="Delete this thought?"
+        description="This can't be undone — it's gone for whoever else could see it too."
+        onConfirm={async () => {
+          if (confirmDeleteId !== null) await social.removeThought(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }

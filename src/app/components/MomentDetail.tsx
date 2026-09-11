@@ -6,6 +6,7 @@ import {
   Globe2,
   Lock,
   Pencil,
+  Trash2,
   Users,
   UserRound,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import { useContent } from "../context/ContentContext";
 import { PostReactions } from "./PostReactions";
 import { PostBookmark } from "./PostBookmark";
 import { Thoughts } from "./Thoughts";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { attachEntry, startProject, useJournal } from "../lib/journal";
 import { PostMedia } from "./PostMedia";
 import { Button } from "./ui/button";
@@ -62,7 +64,7 @@ export function MomentDetail({
   owned: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { updatePost } = useContent();
+  const { updatePost, deletePost } = useContent();
   const journal = useJournal();
 
   const [editing, setEditing] = useState(false);
@@ -72,6 +74,8 @@ export function MomentDetail({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [addingTo, setAddingTo] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!post) return;
@@ -81,6 +85,8 @@ export function MomentDetail({
     setSaveError(null);
     setCopied(false);
     setAddingTo(false);
+    setConfirmDeleteOpen(false);
+    setDeleteError(null);
   }, [post?.id]);
 
   if (!post) return null;
@@ -108,6 +114,17 @@ export function MomentDetail({
       // an edit the person can no longer submit.
       setSaving(false);
     }
+  };
+
+  const handleDelete = async () => {
+    setDeleteError(null);
+    const ok = await deletePost(post.id);
+    if (!ok) {
+      setDeleteError("Couldn't delete that. Try again in a moment.");
+      return;
+    }
+    setConfirmDeleteOpen(false);
+    onOpenChange(false);
   };
 
   const share = async () => {
@@ -251,6 +268,7 @@ export function MomentDetail({
         )}
 
         {saveError && <p className="text-xs text-[var(--coral-text)]">{saveError}</p>}
+        {deleteError && <p className="text-xs text-[var(--coral-text)]">{deleteError}</p>}
 
         {/* Actions */}
         {owned && !editing && (
@@ -266,6 +284,10 @@ export function MomentDetail({
             <Button variant="outline" size="sm" onClick={share}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               {copied ? "Link copied" : "Share this moment"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setConfirmDeleteOpen(true)}>
+              <Trash2 className="size-3.5" />
+              Delete
             </Button>
           </div>
         )}
@@ -317,6 +339,14 @@ export function MomentDetail({
           </div>
         )}
       </DialogContent>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Delete this Moment?"
+        description="This can't be undone — the photo, caption, and any thoughts on it are gone for good."
+        onConfirm={handleDelete}
+      />
     </Dialog>
   );
 }
