@@ -8,23 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 /**
- * Thoughts, not comments.
- *
- * A blank comment box invites reaction; a prompt invites reflection. Every
- * thought starts from one of these, which is also why they read as short cards
- * rather than a thread — nobody is replying to anybody, they're each answering
- * the same question about the same piece of work.
+ * Thoughts, not comments — short, standalone reflections on a piece of work
+ * rather than a threaded conversation; nobody is replying to anybody.
  *
  * No relationship is needed to leave one. The poster can switch a moment to
  * private thoughts, after which only they and the writer can see each one.
  */
-const PROMPTS = [
-  "What did this make you curious about?",
-  "What would you try differently?",
-  "Ask about their process",
-  "What did you learn?",
-  "Share your experience",
-];
 
 function initials(name: string) {
   return name
@@ -61,15 +50,14 @@ export function Thoughts({
   isOwner?: boolean;
   privateThoughts?: boolean;
   onTogglePrivate?: (next: boolean) => void;
-  /** A smaller collapsed trigger. Everything it opens into — prompts, the
-   * composer, existing thoughts — is unchanged. */
+  /** A smaller collapsed trigger. Everything it opens into — the composer,
+   * existing thoughts — is unchanged. */
   compact?: boolean;
   className?: string;
 }) {
   const social = useSocial();
   const { user, profile } = useAuth();
   const myName = profile?.display_name || "You";
-  const [prompt, setPrompt] = useState<string | null>(null);
   const [openComposer, setOpenComposer] = useState(false);
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
@@ -84,9 +72,8 @@ export function Thoughts({
     setSaving(true);
     setFailed(false);
     try {
-      await social.addThought(postId, body, prompt ?? undefined, postOwnerId, postOwnerName);
+      await social.addThought(postId, body, undefined, postOwnerId, postOwnerName);
       setBody("");
-      setPrompt(null);
       setOpenComposer(false);
     } catch {
       // Keep what they wrote on screen — losing a thought to a dropped
@@ -131,31 +118,12 @@ export function Thoughts({
         </button>
       ) : (
         <div className="mb-3">
-          <ul className="mb-2 flex flex-wrap gap-1.5">
-            {PROMPTS.map((p) => (
-              <li key={p}>
-                <button
-                  type="button"
-                  aria-pressed={prompt === p}
-                  onClick={() => setPrompt(prompt === p ? null : p)}
-                  className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
-                    prompt === p
-                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                      : "border-[var(--border)] bg-surface text-foreground hover:border-[var(--foreground)]/35"
-                  }`}
-                >
-                  {p}
-                </button>
-              </li>
-            ))}
-          </ul>
-
           <Textarea
             autoFocus
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={400}
-            placeholder={prompt ?? "What did this make you think?"}
+            placeholder="What did this make you think?"
             className="min-h-20"
           />
           {failed && (
