@@ -39,6 +39,10 @@ export interface Thought {
   authorAvatar?: string;
   prompt?: string;
   body: string;
+  /** A photo or video riding along with the reply — opt-in per call site
+   * via Thoughts' allowMedia prop (a circle thread reply, not a Moment's
+   * ordinary thoughts). */
+  media?: string;
   createdAt: number;
 }
 
@@ -103,7 +107,14 @@ interface SocialContextType {
   canMessage: (personId: string) => boolean;
 
   thoughtsFor: (postId: number) => Thought[];
-  addThought: (postId: number, body: string, prompt: string | undefined, postOwnerId?: string, postOwnerName?: string) => Promise<void>;
+  addThought: (
+    postId: number,
+    body: string,
+    prompt: string | undefined,
+    postOwnerId?: string,
+    postOwnerName?: string,
+    media?: File,
+  ) => Promise<void>;
   removeThought: (id: number | string) => Promise<void>;
 
   notifications: Notification[];
@@ -266,6 +277,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         authorAvatar: byId.get(t.user_id)?.avatar_url ?? undefined,
         prompt: t.prompt ?? undefined,
         body: t.body,
+        media: t.media_url ?? undefined,
         createdAt: new Date(t.created_at).getTime(),
       })),
       notifications: (notes.data ?? []).map((n: any) => ({
@@ -516,12 +528,36 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     prompt,
     postOwnerId,
     postOwnerName,
+    media,
   ) => {
     if (!body.trim()) return;
     if (supabase && user) {
-      await supabase
-        .from("thoughts")
-        .insert({ post_id: postId, user_id: user.id, prompt: prompt ?? null, body: body.trim() });
+      // Same bucket and per-user-folder convention as ContentContext's own
+      // post photos — reuses the storage policies that already exist for
+      // it (sql/security-hardening.sql section 8) rather than needing new
+      // ones for a second bucket.
+      let mediaUrl: string | undefined;
+      if (media) {
+        const dot = media.name.lastIndexOf(".");
+        const ext = (dot > -1 ? media.name.slice(dot + 1) : "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? `.${ext}` : ""}`;
+        const { error: uploadError } = await supabase.storage
+          .from("post-media")
+          .upload(path, media, { contentType: media.type || undefined, upsert: false });
+        if (uploadError) {
+          console.error("[SocialContext] thought media upload failed:", uploadError);
+        } else {
+          mediaUrl = supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl;
+        }
+      }
+
+      await supabase.from("thoughts").insert({
+        post_id: postId,
+        user_id: user.id,
+        prompt: prompt ?? null,
+        body: body.trim(),
+        media_url: mediaUrl ?? null,
+      });
       if (postOwnerId && postOwnerId !== user.id) {
         await notify(postOwnerId, "thought", `${myName} left a thought on your moment.`, "/you");
       }
@@ -538,6 +574,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
           authorName: myName,
           prompt,
           body: body.trim(),
+          media: media ? URL.createObjectURL(media) : undefined,
           createdAt: Date.now(),
         },
         ...state.thoughts,

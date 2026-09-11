@@ -17,7 +17,14 @@ export interface Circle {
   moderators: string[];
   /** Whether non-members can read it, stated up front rather than discovered. */
   visibility: "Open to read" | "Members only";
+  /** Set only for a real, Supabase-backed Circle (see CirclesContext.tsx) —
+   * a seed Circle above has no account behind it to own. */
+  ownerId?: string;
 }
+
+/** The board's four ways to take part — same ids CategoryFeed's own tab
+ * list and CircleBoard's thread filter both key off of. */
+export type CircleTabId = "updates" | "pursuits" | "questions" | "events";
 
 export const circles: Circle[] = [
   // Workbench

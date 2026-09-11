@@ -6,6 +6,7 @@ import {
   ReactNode,
 } from "react";
 import { Post, seedPosts, Visibility } from "../data/posts";
+import { CircleTabId } from "../data/circles";
 import { currentSpaceSlug } from "../data/hobbies";
 import { Product, products as seedProducts } from "../data/products";
 import { circles as allCircles } from "../data/circles";
@@ -52,6 +53,12 @@ export interface NewPostInput {
   reflection?: string;
   visibility: Visibility;
   circleId?: number;
+  /** Set when visibility === "circle" — which of the board's sections this
+   * thread belongs to. */
+  circleTab?: CircleTabId;
+  /** True unless the Circle composer's "Also save to Moments" box was
+   * checked. See Post.hiddenFromMoments. */
+  hiddenFromMoments?: boolean;
   forSale?: ForSaleInput;
   /** Set when this moment is a thing happening at a time. */
   startsAt?: number;
@@ -98,6 +105,10 @@ function rowToPost(row: any, creatorName: string): Post {
     locationPrivacy: row.location_privacy ?? undefined,
     thoughtsPrivate: row.thoughts_private ?? false,
     pursuitId: row.pursuit_id ?? undefined,
+    circleId: row.circle_id ?? undefined,
+    circleTab: row.circle_tab ?? undefined,
+    answered: row.answered ?? false,
+    hiddenFromMoments: row.hidden_from_moments ?? false,
   };
 }
 
@@ -106,7 +117,7 @@ interface ContentContextType {
   myPosts: Post[];
   publicFeed: Post[];
   publicFeedByHobby: (slug: string) => Post[];
-  circleFeed: (circleId: number) => Post[];
+  circleFeed: (circleId: number, tab?: CircleTabId) => Post[];
   listings: Product[];
   listingsByHobby: (slug: string) => Product[];
   myListings: Product[];
@@ -131,6 +142,10 @@ interface ContentContextType {
    * post stays in the list rather than vanishing from a screen that no
    * longer matches what's actually in the database. */
   deletePost: (postId: number) => Promise<boolean>;
+  /** Marks a Circle "questions" thread answered — allowed for the thread's
+   * own author or the Circle's owner (sql/circle-threads.sql's
+   * set_thread_answered RPC checks which). Returns false if neither. */
+  setThreadAnswered: (postId: number, answered: boolean) => Promise<boolean>;
   toggleLike: (postId: number) => void;
   joinedCircleIds: number[];
   isCircleJoined: (circleId: number) => boolean;
@@ -233,7 +248,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // content everywhere else — the seed data keeps every space feeling
   // populated while real posts layer in on top of it.
   const myRealPosts = realPosts.filter((p) => p.userId === myId);
-  const myPosts: Post[] = applyLikeDeltas(myRealPosts);
+  // A Circle contribution defaults to hidden here unless its own composer's
+  // "Also save to Moments" box was checked — see Post.hiddenFromMoments.
+  // Before this filter existed, every Circle thread doubled as a personal
+  // Moment with no way to opt out.
+  const myPosts: Post[] = applyLikeDeltas(myRealPosts.filter((p) => !p.hiddenFromMoments));
   const posts: Post[] = applyLikeDeltas([...realPosts, ...seedPosts]);
 
   const myListings: Product[] = userListings;
@@ -256,9 +275,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const publicFeed = rankPublic(posts);
   const publicFeedByHobby = (slug: string) => rankPublic(posts.filter((p) => p.hobbySlug === slug));
-  const circleFeed = (circleId: number) =>
+  const circleFeed = (circleId: number, tab?: CircleTabId) =>
     posts
-      .filter((p) => p.visibility === "circle" && p.circleId === circleId)
+      .filter(
+        (p) =>
+          p.visibility === "circle" &&
+          p.circleId === circleId &&
+          (tab === undefined || p.circleTab === tab),
+      )
       .sort((a, b) => b.createdAt - a.createdAt);
 
   const listingsByHobby = (slug: string) => listings.filter((p) => p.hobbySlug === slug);
@@ -344,6 +368,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           location_name: input.locationName ?? null,
           location_privacy: input.locationPrivacy ?? "neighborhood",
           pursuit_id: input.pursuitId ?? null,
+          circle_id: input.visibility === "circle" ? (input.circleId ?? null) : null,
+          circle_tab: input.visibility === "circle" ? (input.circleTab ?? null) : null,
+          hidden_from_moments: input.hiddenFromMoments ?? false,
         })
         .select()
         .single();
@@ -391,6 +418,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       createdAt: Date.now(),
       visibility: input.visibility,
       circleId: input.visibility === "circle" ? input.circleId : undefined,
+      circleTab: input.visibility === "circle" ? input.circleTab : undefined,
+      hiddenFromMoments: input.hiddenFromMoments ?? false,
       productId,
       startsAt: input.startsAt,
       locationName: input.locationName,
@@ -464,6 +493,25 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  /**
+   * Marks a Circle "questions" thread answered or not. Goes through a
+   * SECURITY DEFINER RPC (set_thread_answered, sql/circle-threads.sql)
+   * rather than a plain update — the two people allowed to do this are the
+   * thread's own author and the Circle's owner, and a broad posts UPDATE
+   * policy covering "the Circle owner" would also let them rewrite a
+   * member's caption or photo, not just this one flag.
+   */
+  const setThreadAnswered = async (postId: number, answered: boolean): Promise<boolean> => {
+    if (!supabase || !user) return false;
+    const { data, error } = await supabase.rpc("set_thread_answered", {
+      p_post_id: postId,
+      p_answered: answered,
+    });
+    if (error || !data) return false;
+    setRealPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, answered } : p)));
+    return true;
+  };
+
   const toggleLike = (postId: number) => {
     const nowLiked = rewards.toggleLikePost(postId);
     setLikeDeltas((prev) => ({
@@ -487,6 +535,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         addPost,
         updatePost,
         deletePost,
+        setThreadAnswered,
         mediaError,
         clearMediaError: () => setMediaError(null),
         saveError,

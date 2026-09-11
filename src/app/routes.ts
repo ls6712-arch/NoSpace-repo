@@ -12,6 +12,7 @@ import { Discover } from "./pages/Discover";
 import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
 import { Circles } from "./pages/Circles";
+import { CircleBoard } from "./pages/CircleBoard";
 import { Log } from "./pages/Log";
 import { You } from "./pages/You";
 import { Messages } from "./pages/Messages";
@@ -42,6 +43,7 @@ export const router = createHashRouter([
       { path: "search", Component: SearchResults },
 
       { path: "circles", Component: Circles },
+      { path: "circles/:id", Component: CircleBoard },
       { path: "create", Component: Log },
       { path: "people", Component: People },
       // Spaces are the categories now, so there is one page and one URL.

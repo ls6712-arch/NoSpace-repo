@@ -1,10 +1,11 @@
 import { Link } from "react-router";
 import * as Icons from "lucide-react";
-import { Circle, getCircle } from "../data/circles";
+import { Circle } from "../data/circles";
 import { getHobby } from "../data/hobbies";
 import { hobbyIconName } from "../data/hobbyIcons";
 import { useContent } from "../context/ContentContext";
 import { useConnections } from "../context/ConnectionsContext";
+import { useCircles } from "../context/CirclesContext";
 
 /**
  * The Circles you've joined, as soft tinted cards — a name, its icon, and how
@@ -24,16 +25,20 @@ const TINTS = [
 function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
   const { circleMemberCounts, isCircleJoined } = useContent();
   const { myCircleIds } = useConnections();
+  const { isRealCircle } = useCircles();
   const space = getHobby(circle.hobbySlug);
   const Icon = (Icons as any)[hobbyIconName(undefined, circle.hobbySlug)] ?? Icons.Users;
-  const displayedMemberCount =
-    circle.memberCount +
-    (circleMemberCounts[circle.id] ?? 0) +
-    (isCircleJoined(circle.id) && !myCircleIds.includes(circle.id) ? 1 : 0);
+  // A real Circle's own memberCount (CirclesContext) is already the live,
+  // accurate count — the seed-circle compound math below doesn't apply to it.
+  const displayedMemberCount = isRealCircle(circle.id)
+    ? circle.memberCount
+    : circle.memberCount +
+      (circleMemberCounts[circle.id] ?? 0) +
+      (isCircleJoined(circle.id) && !myCircleIds.includes(circle.id) ? 1 : 0);
 
   return (
     <Link
-      to="/circles"
+      to={`/circles/${circle.id}`}
       className="flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-transform duration-200 hover:-translate-y-0.5"
       style={{
         backgroundColor: `color-mix(in srgb, ${tint} 30%, var(--surface-elevated))`,
@@ -65,9 +70,11 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
 export function CirclesJoined({ limit }: { limit?: number } = {}) {
   const { joinedCircleIds } = useContent();
   const { myCircleIds } = useConnections();
-  // Local direct joins and real accepted invitations are both genuinely
-  // "joined" — a Circle you got into via someone's invite belongs here too.
-  const allJoinedIds = [...new Set([...joinedCircleIds, ...myCircleIds])];
+  const { getCircle, myRealCircleIds } = useCircles();
+  // Local direct joins, real accepted invitations, and a real Circle's own
+  // membership are all genuinely "joined" — a Circle you got into any of
+  // these ways belongs here too.
+  const allJoinedIds = [...new Set([...joinedCircleIds, ...myCircleIds, ...myRealCircleIds])];
   const joined = allJoinedIds.map((id) => getCircle(id)).filter((c): c is Circle => !!c);
 
   if (joined.length === 0) {

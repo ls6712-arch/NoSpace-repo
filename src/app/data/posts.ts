@@ -1,3 +1,5 @@
+import { CircleTabId } from "./circles";
+
 export type Visibility = "public" | "circle" | "friends";
 
 export interface Post {
@@ -35,6 +37,17 @@ export interface Post {
    * local-only entryProject map in lib/journal.ts remains the fast path for
    * the owner's own browser and for posts made before this field existed. */
   pursuitId?: string;
+  /** Set when visibility === "circle" — which of the board's four sections
+   * this thread was filed under. See sql/circle-threads.sql. */
+  circleTab?: CircleTabId;
+  /** A "questions" thread the asker or the Circle's owner has marked
+   * resolved. Meaningless outside the questions tab, but harmless there. */
+  answered?: boolean;
+  /** True unless the Circle composer's own "Also save to Moments" box was
+   * checked — a Circle contribution used to always leak into the poster's
+   * own public Moments shelf with no way to opt out. See
+   * ContentContext.tsx's myPosts and CircleComposer.tsx. */
+  hiddenFromMoments?: boolean;
 }
 
 const HOUR = 3600 * 1000;
