@@ -15,6 +15,7 @@ import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCard } from "../components/PursuitCard";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
@@ -42,6 +43,7 @@ export function You() {
   const { myPosts, posts } = useContent();
   const journal = useJournal();
   const { logs: privateLogs, remove: removePrivateLog } = usePrivateLogs();
+  const [confirmDeleteLogId, setConfirmDeleteLogId] = useState<number | null>(null);
   const social = useSocial();
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const { user, profile, isConfigured, signOut } = useAuth();
@@ -317,6 +319,16 @@ export function You() {
       <MomentDetail post={openPost} owned onOpenChange={(o) => !o && setOpenPost(null)} />
       <ShareProfileDialog open={shareOpen} onOpenChange={setShareOpen} />
       <PursuitDialog open={pursuitDialog} onOpenChange={setPursuitDialog} />
+      <ConfirmDialog
+        open={confirmDeleteLogId !== null}
+        onOpenChange={(o) => !o && setConfirmDeleteLogId(null)}
+        title="Delete this private log?"
+        description="This can't be undone — nobody else ever saw it, and once it's gone there's no copy left anywhere."
+        onConfirm={async () => {
+          if (confirmDeleteLogId !== null) await removePrivateLog(confirmDeleteLogId);
+          setConfirmDeleteLogId(null);
+        }}
+      />
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
@@ -394,7 +406,7 @@ export function You() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => removePrivateLog(entry.id)}
+                          onClick={() => setConfirmDeleteLogId(entry.id)}
                           className="text-[11px] text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
                         >
                           Delete

@@ -127,6 +127,10 @@ interface ContentContextType {
     postId: number,
     patch: { caption?: string; reflection?: string },
   ) => Promise<boolean>;
+  /** Deletes a moment you own. Returns false if it couldn't be deleted — the
+   * post stays in the list rather than vanishing from a screen that no
+   * longer matches what's actually in the database. */
+  deletePost: (postId: number) => Promise<boolean>;
   toggleLike: (postId: number) => void;
   joinedCircleIds: number[];
   isCircleJoined: (circleId: number) => boolean;
@@ -441,6 +445,25 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  /**
+   * Deletes a moment you own. Requires a DELETE policy on public.posts, same
+   * caveat as updatePost — checked here via the row's own userId rather than
+   * trusted from the caller, since the confirm dialog only ever offers this
+   * to the owner but the request itself shouldn't rely on that.
+   */
+  const deletePost = async (postId: number): Promise<boolean> => {
+    const target = realPosts.find((p) => p.id === postId);
+    if (!target) return false;
+
+    if (supabase && user && target.userId === user.id) {
+      const { error } = await supabase.from("posts").delete().eq("id", postId);
+      if (error) return false;
+    }
+
+    setRealPosts((prev) => prev.filter((p) => p.id !== postId));
+    return true;
+  };
+
   const toggleLike = (postId: number) => {
     const nowLiked = rewards.toggleLikePost(postId);
     setLikeDeltas((prev) => ({
@@ -463,6 +486,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         findListing,
         addPost,
         updatePost,
+        deletePost,
         mediaError,
         clearMediaError: () => setMediaError(null),
         saveError,
