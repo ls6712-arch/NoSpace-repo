@@ -6,6 +6,7 @@ import { GoalShape, setProjectGoal, startProject } from "../lib/journal";
 import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { useAuth } from "../context/AuthContext";
 import { useCorners, isDiscoverable } from "../context/CornersContext";
+import { bestMatch } from "../lib/tagMatching";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -35,6 +36,11 @@ function CornerField({
   const { cornersFor } = useCorners();
   const [focused, setFocused] = useState(false);
 
+  // A Corner-scoped vocabulary, not the composer's interest one
+  // (useKnownInterests) — a Pursuit's Corner describes which real Corner it
+  // sits nearest to, so the pool to check against is real Corners
+  // (that Space's own if one's chosen, otherwise every discoverable Corner
+  // across all Spaces), not the broader interest/hobby/category blend.
   const known = useMemo(() => {
     const slugs = spaceSlug && spaceSlug !== OTHER ? [spaceSlug] : hobbies.map((h) => h.slug);
     const seen = new Map<string, string>();
@@ -55,6 +61,15 @@ function CornerField({
     return pool.slice(0, 8);
   }, [known, query]);
 
+  // Same "does this already exist?" check every other free-text tag entry
+  // point uses (lib/tagMatching.ts). A close-but-not-exact hit is only ever
+  // a suggestion here — naming a Pursuit's Corner never creates or
+  // validates anything, so there's nothing to block.
+  const closeMatch = useMemo(() => {
+    const match = bestMatch(value, known);
+    return match && match.kind !== "exact" ? match : null;
+  }, [value, known]);
+
   return (
     <div className="relative">
       <Input
@@ -70,6 +85,20 @@ function CornerField({
       {!value.trim() && (
         <p className="mt-1.5 text-[11px] text-muted-foreground">
           Anything you like, not listed? Enter your own.
+        </p>
+      )}
+      {closeMatch && (
+        <p className="mt-1.5 text-[11px] text-muted-foreground">
+          Close to “{closeMatch.label}” —{" "}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onChange(closeMatch.label)}
+            className="text-[var(--coral-text)] underline decoration-dotted underline-offset-2"
+          >
+            use that instead
+          </button>
+          , or keep typing your own.
         </p>
       )}
       {focused && suggestions.length > 0 && (

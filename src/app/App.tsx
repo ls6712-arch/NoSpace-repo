@@ -8,6 +8,7 @@ import { SocialProvider } from "./context/SocialContext";
 import { ConnectionsProvider } from "./context/ConnectionsContext";
 import { CategoriesProvider } from "./context/CategoriesContext";
 import { CornersProvider } from "./context/CornersContext";
+import { PrivateLogsProvider } from "./context/PrivateLogsContext";
 
 export default function App() {
   return (
@@ -15,15 +16,17 @@ export default function App() {
       <RewardsProvider>
         <ContentProvider>
           <CornersProvider>
-            <SocialProvider>
-              <ConnectionsProvider>
-                <CategoriesProvider>
-                  <CartProvider>
-                    <RouterProvider router={router} />
-                  </CartProvider>
-                </CategoriesProvider>
-              </ConnectionsProvider>
-            </SocialProvider>
+            <PrivateLogsProvider>
+              <SocialProvider>
+                <ConnectionsProvider>
+                  <CategoriesProvider>
+                    <CartProvider>
+                      <RouterProvider router={router} />
+                    </CartProvider>
+                  </CategoriesProvider>
+                </ConnectionsProvider>
+              </SocialProvider>
+            </PrivateLogsProvider>
           </CornersProvider>
         </ContentProvider>
       </RewardsProvider>

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { useCorners } from "../context/CornersContext";
+import { bestMatch, MatchResult } from "../lib/tagMatching";
 import { Input } from "./ui/input";
 
 /**
@@ -28,24 +29,48 @@ export function CornerTagField({
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [creating, setCreating] = useState(false);
+  // A close-but-not-identical hit on the about-to-create name — same
+  // pattern as CreateCornerDialog.tsx, since this field can mint a Corner
+  // too. Confirmed once (via createNew's own guard below), then a second
+  // "Create anyway" proceeds.
+  const [pendingConfirm, setPendingConfirm] = useState<MatchResult | null>(null);
 
   const topCorners = cornersFor(spaceSlug).slice(0, 8);
   const q = query.trim();
   const matches = q ? matchesFor(spaceSlug, q) : [];
-  const exact = matches.find((m) => m.name.toLowerCase() === q.toLowerCase());
+  const cornerNames = useMemo(() => cornersFor(spaceSlug).map((c) => c.name), [cornersFor, spaceSlug]);
+  // Same "does this already exist?" check every other free-text tag entry
+  // point uses (lib/tagMatching.ts) — case, accents, and punctuation all
+  // fold together here, a stricter bar than the plain case-fold this used
+  // to do, and the same bar CreateCornerDialog's slug check applies.
+  const tagMatch = q ? bestMatch(q, cornerNames) : null;
+  const exact = tagMatch?.kind === "exact";
 
   function pick(slug: string, name: string) {
     onChange(slug, name);
     setQuery("");
+    setPendingConfirm(null);
     setFocused(false);
   }
 
   async function createNew() {
     if (!q || creating) return;
+    if (!pendingConfirm && tagMatch && tagMatch.kind !== "exact") {
+      setPendingConfirm(tagMatch);
+      return;
+    }
     setCreating(true);
     const { slug, name } = await getOrCreateCorner(spaceSlug, q);
     setCreating(false);
+    setPendingConfirm(null);
     pick(slug, name);
+  }
+
+  function useExistingInstead() {
+    if (!pendingConfirm) return;
+    const existing = cornersFor(spaceSlug).find((c) => c.name === pendingConfirm.label);
+    if (existing) pick(existing.slug, existing.name);
+    setPendingConfirm(null);
   }
 
   return (
@@ -75,7 +100,10 @@ export function CornerTagField({
           value={query}
           maxLength={60}
           autoComplete="off"
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setPendingConfirm(null);
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 150)}
           placeholder="Type a Corner, e.g. Pasta Making"
@@ -98,7 +126,7 @@ export function CornerTagField({
                 </button>
               </li>
             ))}
-            {!exact && (
+            {!exact && !pendingConfirm && (
               <li className="border-t border-[var(--hairline)] px-4 py-2.5">
                 <button
                   type="button"
@@ -110,6 +138,37 @@ export function CornerTagField({
                   <Plus className="size-3" />
                   {creating ? "Creating…" : `Create "${q}" as a new Corner`}
                 </button>
+              </li>
+            )}
+            {/* A fuzzy, not-exact hit — hard-blocking (like the exact case
+                below) would be too aggressive for a real typo/near-miss, but
+                creating silently would fragment "Pasta Making" and "Pasta
+                Makign" into two dead-end Corners. Pause once, then either
+                choice proceeds. */}
+            {!exact && pendingConfirm && (
+              <li className="border-t border-[var(--hairline)] px-4 py-2.5">
+                <p className="mb-2 text-[11px] text-muted-foreground">
+                  Close to “{pendingConfirm.label}” — the same Corner, or something different?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={useExistingInstead}
+                    className="rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-foreground/30"
+                  >
+                    Use “{pendingConfirm.label}”
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={createNew}
+                    disabled={creating}
+                    className="rounded-full border border-transparent bg-[var(--coral-deep)] px-2.5 py-1 text-[11px] text-white"
+                  >
+                    {creating ? "Creating…" : "Create anyway"}
+                  </button>
+                </div>
               </li>
             )}
             {exact && (

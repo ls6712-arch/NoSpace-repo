@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { Check } from "lucide-react";
-import { hobbies } from "../data/hobbies";
-import { CATEGORIES } from "../data/categories";
-import { useContent } from "../context/ContentContext";
+import { bestMatch } from "../lib/tagMatching";
+import { useKnownInterests } from "./useKnownInterests";
 import { Input } from "./ui/input";
 
 /**
@@ -27,26 +26,8 @@ export function InterestField({
   id?: string;
   placeholder?: string;
 }) {
-  const { posts } = useContent();
+  const known = useKnownInterests();
   const [focused, setFocused] = useState(false);
-
-  // Everything anyone has used, plus the app's own sub-hobby names as a
-  // starting vocabulary so the field isn't empty on day one.
-  const known = useMemo(() => {
-    const seen = new Map<string, string>();
-    const add = (raw?: string) => {
-      const label = raw?.trim();
-      if (!label) return;
-      const key = label.toLowerCase();
-      if (!seen.has(key)) seen.set(key, label);
-    };
-    for (const post of posts) add(post.interest);
-    for (const hobby of hobbies) for (const sub of hobby.subItems) add(sub.label);
-    // The category examples too, so the words people see while browsing are
-    // the words offered when they write — without ever being required.
-    for (const c of CATEGORIES) for (const e of c.examples) add(e);
-    return [...seen.values()];
-  }, [posts]);
 
   const query = value.trim().toLowerCase();
   const suggestions = useMemo(() => {
@@ -56,7 +37,15 @@ export function InterestField({
     return pool.slice(0, 8);
   }, [known, query]);
 
-  const exact = known.find((k) => k.toLowerCase() === query);
+  // The single source of truth for "does this already exist?" — exact,
+  // typo, and truncation matches all come from the same check every other
+  // free-text tag entry point uses (lib/tagMatching.ts), so "espresso"
+  // resolves the same way here as it does everywhere else.
+  const match = useMemo(() => bestMatch(value, known), [value, known]);
+  const exact = match?.kind === "exact" ? match.label : undefined;
+  // A close-but-not-exact match is a suggestion, never a redirect — typing
+  // stays exactly what was typed unless the person clicks it themselves.
+  const closeMatch = match && match.kind !== "exact" ? match : null;
 
   return (
     <div className="relative">
@@ -83,6 +72,19 @@ export function InterestField({
             <span className="flex items-center gap-1">
               <Check className="size-3 text-foreground" />
               Others use this too. Your Moment joins theirs.
+            </span>
+          ) : closeMatch ? (
+            <span>
+              Close to “{closeMatch.label}” —{" "}
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => onChange(closeMatch.label)}
+                className="text-[var(--coral-text)] underline decoration-dotted underline-offset-2"
+              >
+                use that instead
+              </button>
+              , or keep typing your own.
             </span>
           ) : (
             "New one. It'll show up as a suggestion for everyone after this."

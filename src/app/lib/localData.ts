@@ -11,13 +11,20 @@
  * the next thing that leaks between accounts.
  */
 export const LOCAL_KEYS = [
-  "nospace.journal.v1", // private logs, saved posts, projects, entries
+  // Private logs used to live in here (`privateLogs`), for every account —
+  // that field is unused now that a signed-in owner's Private Logs are
+  // Supabase-backed (context/PrivateLogsContext.tsx). Still cleared on
+  // sign-out below since old, already-saved private logs may still be
+  // sitting in this key for someone who hasn't migrated — see that
+  // context's own note on why they're left alone rather than migrated.
+  "nospace.journal.v1", // saved posts, projects, entries (privateLogs field now unused)
   "nospace.listings.v1", // things you listed for sale
   "nospace.circles.joined.v1", // Circles you joined
   "nospace.reactions.v1", // which reactions you left
   "nospace.rewards.v1", // milestone progress
   "nospace.social.v1", // participations, thoughts, notifications when signed out
   "nospace.draft.v1", // the in-progress composer draft
+  "nospace.privateLogs.local.v1", // private logs when signed out (no account to key a real row off)
 ] as const;
 
 /** Notifies the in-memory stores that their backing storage was emptied. */
