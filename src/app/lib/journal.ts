@@ -9,12 +9,20 @@ import { LOCAL_CLEARED_EVENT } from "./localData";
  *   Project      a durable body of work you come back to
  *   Update       a new entry on an existing project
  *   Quick moment a short standalone entry that isn't part of a project
- *   Private log  an entry only you ever see
  *   Saved        something you kept to come back to, not a public applause metric
  *
  * This lives in localStorage for now, alongside circle joins and reactions.
  * A `projects` table is the obvious next step; until then everything here is
  * per-browser, and the UI never claims otherwise.
+ *
+ * Private logs used to be a fourth concept here ("an entry only you ever
+ * see") but have since moved to their own Supabase-backed table and
+ * context — see lib/privateLogsRemote.ts and context/PrivateLogsContext.tsx
+ * — because "only you ever see" is a promise localStorage can't actually
+ * keep across accounts on a shared device. This file no longer touches
+ * them; an old `privateLogs` array may still exist under this module's
+ * localStorage key from before that move, left alone pending a separate
+ * migration decision.
  */
 
 const KEY = "nospace.journal.v1";
@@ -80,26 +88,10 @@ export interface Project {
   pastGoals?: Goal[];
 }
 
-export interface PrivateLog {
-  id: string;
-  projectId?: string;
-  note: string;
-  /**
-   * A private log can be a photo with no words. The capture flow always
-   * offered that, but the picture used to be dropped on save and replaced
-   * with a generated placeholder, which read as the app losing your moment.
-   */
-  media?: string;
-  mediaType?: "image" | "video";
-  hobbySlug?: string;
-  createdAt: number;
-}
-
 interface JournalState {
   projects: Project[];
   /** postId → projectId, so an update knows which project it belongs to. */
   entryProject: Record<string, string>;
-  privateLogs: PrivateLog[];
   /** Post ids kept for later. */
   saved: number[];
 }
@@ -107,7 +99,6 @@ interface JournalState {
 const EMPTY: JournalState = {
   projects: [],
   entryProject: {},
-  privateLogs: [],
   saved: [],
 };
 
@@ -299,28 +290,6 @@ export function finishProject(projectId: string) {
       p.id === projectId ? { ...p, finishedAt: Date.now() } : p,
     ),
   });
-}
-
-export function addPrivateLog(
-  note: string,
-  projectId?: string,
-  media?: { url: string; type: "image" | "video"; hobbySlug?: string },
-): PrivateLog {
-  const entry: PrivateLog = {
-    id: id(),
-    note,
-    projectId,
-    media: media?.url,
-    mediaType: media?.type,
-    hobbySlug: media?.hobbySlug,
-    createdAt: Date.now(),
-  };
-  commit({ ...state, privateLogs: [entry, ...state.privateLogs] });
-  return entry;
-}
-
-export function removePrivateLog(logId: string) {
-  commit({ ...state, privateLogs: state.privateLogs.filter((l) => l.id !== logId) });
 }
 
 export function toggleSaved(postId: number) {

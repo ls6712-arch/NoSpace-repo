@@ -25,7 +25,8 @@ import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { useRewards } from "../context/RewardsContext";
-import { addPrivateLog, startProject, useJournal } from "../lib/journal";
+import { startProject, useJournal } from "../lib/journal";
+import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { extractFirstUrl } from "../lib/linkPreview";
 import {
@@ -195,6 +196,7 @@ export function Log() {
   const { addPost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const rewards = useRewards();
+  const { add: addPrivateLog } = usePrivateLogs();
   const journal = useJournal();
 
   // "Add progress" on a Pursuit links here with ?pursuit=<id> — resolve it
@@ -525,7 +527,7 @@ export function Log() {
   };
 
   /** Keeps the record without publishing any of it. */
-  const saveAsPrivateLog = () => {
+  const saveAsPrivateLog = async () => {
     const note = [thought.trim(), progress.trim(), changed.trim(), reflection.trim()]
       .filter(Boolean)
       .join("\n\n");
@@ -540,13 +542,13 @@ export function Log() {
         subHobby: spaceSet ? subHobby || undefined : undefined,
       }).id;
     }
-    addPrivateLog(
-      note || `A ${tagLabel.toLowerCase()} moment`,
-      linkTo || undefined,
+    await addPrivateLog({
+      note: note || `A ${tagLabel.toLowerCase()} moment`,
+      projectId: linkTo || undefined,
       // The picture is the point of a wordless capture. It used to be dropped
       // here and replaced with a generated placeholder, which read as the app
       // losing the moment you'd just taken.
-      filePreviewUrl
+      media: filePreviewUrl
         ? {
             url: filePreviewUrl,
             type: type === "video" ? "video" : "image",
@@ -559,7 +561,7 @@ export function Log() {
             hobbySlug: spaceSet ? hobbySlug : undefined,
           }
         : undefined,
-    );
+    });
     // Quiet Milestones count every real Moment, private ones included — this
     // is the only recording call a private log ever reaches, since it never
     // touches ContentContext.addPost (which records shared Moments on its
@@ -578,7 +580,7 @@ export function Log() {
   const publish = async () => {
     if (saving) return;
     if (audience === "private") {
-      saveAsPrivateLog();
+      await saveAsPrivateLog();
       return;
     }
     setSaving(true);

@@ -16,6 +16,7 @@ import {
   useJournalSlice,
 } from "../lib/journal";
 import { fetchPursuitById, mirrorPursuit, SharedPursuit } from "../lib/pursuitsRemote";
+import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { ContentCard } from "../components/ContentCard";
@@ -80,7 +81,7 @@ export function Pursuit() {
   const { posts } = useContent();
   const entryProject = useJournalSlice((s) => s.entryProject);
   const projects = useJournalSlice((s) => s.projects);
-  const privateLogs = useJournalSlice((s) => s.privateLogs);
+  const { logs: privateLogs } = usePrivateLogs();
   const [goalOpen, setGoalOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [remote, setRemote] = useState<

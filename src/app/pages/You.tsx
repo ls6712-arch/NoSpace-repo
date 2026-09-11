@@ -19,7 +19,8 @@ import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
-import { removePrivateLog, useJournal } from "../lib/journal";
+import { useJournal } from "../lib/journal";
+import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useProfileLinks } from "../lib/profileLinks";
 import { mirrorProfileLinks } from "../lib/profileLinksRemote";
 import { ProfileLinksEditor } from "../components/ProfileLinks";
@@ -40,6 +41,7 @@ function timeAgo(ts: number) {
 export function You() {
   const { myPosts, posts } = useContent();
   const journal = useJournal();
+  const { logs: privateLogs, remove: removePrivateLog } = usePrivateLogs();
   const social = useSocial();
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const { user, profile, isConfigured, signOut } = useAuth();
@@ -380,11 +382,11 @@ export function You() {
               <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
                 Kept here and nowhere else. Private logs never appear in a Space, a feed, or your public shelf.
               </p>
-              {journal.privateLogs.length === 0 ? (
+              {privateLogs.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Nothing private yet.</p>
               ) : (
                 <ul className="space-y-3">
-                  {journal.privateLogs.map((entry) => (
+                  {privateLogs.map((entry) => (
                     <li key={entry.id} className="rounded-xl border border-[var(--hairline)] p-3">
                       <div className="mb-2 flex items-center justify-between gap-3">
                         <span className="text-[11px] text-muted-foreground">
