@@ -37,6 +37,14 @@ export function AccountSettings() {
     if (!touched && profile?.display_name) setName(profile.display_name);
   }, [profile?.display_name, touched]);
 
+  // Live, not on blur/submit: emptiness has no "still typing, might become
+  // valid" middle ground the way an email or password format does — the
+  // instant the field is empty it's already in its final invalid shape, and
+  // the Save button is already disabled that same instant (see below). A
+  // message that only showed up later would leave a gap where the button
+  // is visibly disabled with no explanation why.
+  const nameEmpty = touched && name.trim() === "";
+
   if (!user) {
     return (
       <div className="rounded-2xl border border-border bg-card p-4">
@@ -106,6 +114,12 @@ export function AccountSettings() {
             id="acct-name"
             value={name}
             maxLength={60}
+            aria-invalid={nameEmpty}
+            className={
+              nameEmpty
+                ? "border-[var(--coral-deep)] focus-visible:border-[var(--coral-deep)] focus-visible:ring-[var(--coral-deep)]/50"
+                : ""
+            }
             onChange={(e) => {
               setTouched(true);
               setName(e.target.value);
@@ -121,6 +135,9 @@ export function AccountSettings() {
             {savingName ? "Saving…" : nameDone ? <Check className="size-4" /> : "Save"}
           </Button>
         </div>
+        {nameEmpty && (
+          <p className="mt-1.5 text-[11px] text-[var(--coral-text)]">Your name can't be empty.</p>
+        )}
         <p className="mt-1.5 text-[11px] text-muted-foreground">
           This is what people see on your work. {user.email}
         </p>
