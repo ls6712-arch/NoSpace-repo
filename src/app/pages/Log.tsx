@@ -255,6 +255,10 @@ export function Log() {
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set only when a Private Log's write to Supabase actually failed — the
+  // saved screen below needs to tell "it saved" apart from "it didn't,"
+  // rather than showing success just because the call finished.
+  const [privateSaveError, setPrivateSaveError] = useState<string | null>(null);
 
   // A saved draft found on entry, offered before anything else happens —
   // never auto-loaded, since silently dropping someone into an old draft
@@ -542,7 +546,7 @@ export function Log() {
         subHobby: spaceSet ? subHobby || undefined : undefined,
       }).id;
     }
-    await addPrivateLog({
+    const result = await addPrivateLog({
       note: note || `A ${tagLabel.toLowerCase()} moment`,
       projectId: linkTo || undefined,
       // The picture is the point of a wordless capture. It used to be dropped
@@ -562,6 +566,21 @@ export function Log() {
           }
         : undefined,
     });
+
+    // An honest failure here matters more than almost anywhere else in this
+    // app: a private log has no public copy anywhere to fall back on, so if
+    // this didn't actually land, "Saved." would be a straightforward lie
+    // about the one thing this feature promises. Still moves to the saved
+    // screen either way — same shape as the public-post path below, which
+    // shows "Not saved." there rather than staying put.
+    if (!result.data) {
+      setPrivateSaveError(result.error || "This didn't save.");
+      setSavedAs("private");
+      setScreen("saved");
+      return;
+    }
+    setPrivateSaveError(null);
+
     // Quiet Milestones count every real Moment, private ones included — this
     // is the only recording call a private log ever reaches, since it never
     // touches ContentContext.addPost (which records shared Moments on its
@@ -652,6 +671,7 @@ export function Log() {
   const reset = () => {
     clearMediaError();
     clearSaveError();
+    setPrivateSaveError(null);
     setThought("");
     setProgress("");
     setChanged("");
@@ -852,6 +872,11 @@ export function Log() {
 
   // ── 4 · Saved ───────────────────────────────────────────────────────────
   if (screen === "saved") {
+    // Two independent write paths land here — the public post path
+    // (ContentContext's saveError) and the Private Log path (this
+    // component's own privateSaveError) — either one failing means this
+    // screen has to say so, not just whichever one happened to be checked.
+    const anySaveError = saveError || privateSaveError;
     return (
       <Shell>
         <div className="rounded-3xl border border-border bg-card px-6 py-10 text-center">
@@ -885,12 +910,12 @@ export function Log() {
           </span>
 
           <h1 className="text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-            {saveError ? "Not saved." : "Saved."}
+            {anySaveError ? "Not saved." : "Saved."}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {interest.trim() ? `${tagLabel} · ${hobby.name}` : hobby.name}
           </p>
-          {!saveError && (
+          {!anySaveError && (
             <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-sm">
               {savedAs === "private" ? "Kept just for you." : "Another one made."}
             </p>
@@ -902,9 +927,9 @@ export function Log() {
 
           {/* An honest failure beats a cheerful lie: the post is on screen but
               only in this tab, and it will be gone after a reload. */}
-          {saveError && (
+          {anySaveError && (
             <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
-              {saveError} Nothing you wrote is lost yet. Try again before you
+              {anySaveError} Nothing you wrote is lost yet. Try again before you
               close this tab.
             </p>
           )}

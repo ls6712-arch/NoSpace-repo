@@ -36,15 +36,27 @@ function fromRow(row: any): PrivateLog {
   };
 }
 
-export async function fetchPrivateLogs(userId: string): Promise<PrivateLog[]> {
-  if (!supabase) return [];
+/** Every function below returns its failure reason rather than discarding
+ * it — a caller that only checked for `null`/`false` couldn't tell "there's
+ * nothing here" apart from "the write actually failed," which is how a
+ * failed save once still showed a success screen. */
+export interface RemoteResult<T> {
+  data: T | null;
+  error: string | null;
+}
+
+export async function fetchPrivateLogs(userId: string): Promise<RemoteResult<PrivateLog[]>> {
+  if (!supabase) return { data: [], error: null };
   const { data, error } = await supabase
     .from("private_logs")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
-  if (error || !data) return [];
-  return data.map(fromRow);
+  if (error) {
+    console.error("[privateLogsRemote] fetchPrivateLogs failed:", error);
+    return { data: null, error: error.message };
+  }
+  return { data: (data ?? []).map(fromRow), error: null };
 }
 
 export async function createPrivateLog(
@@ -54,8 +66,8 @@ export async function createPrivateLog(
     media?: { url: string; type: "image" | "video"; hobbySlug?: string };
     projectId?: string;
   },
-): Promise<PrivateLog | null> {
-  if (!supabase) return null;
+): Promise<RemoteResult<PrivateLog>> {
+  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
   const { data, error } = await supabase
     .from("private_logs")
     .insert({
@@ -68,12 +80,23 @@ export async function createPrivateLog(
     })
     .select()
     .single();
-  if (error || !data) return null;
-  return fromRow(data);
+  if (error) {
+    console.error("[privateLogsRemote] createPrivateLog failed:", error);
+    return { data: null, error: error.message };
+  }
+  if (!data) {
+    console.error("[privateLogsRemote] createPrivateLog: insert returned no row and no error");
+    return { data: null, error: "The save didn't come back with a result." };
+  }
+  return { data: fromRow(data), error: null };
 }
 
-export async function deletePrivateLog(logId: number): Promise<boolean> {
-  if (!supabase) return false;
+export async function deletePrivateLog(logId: number): Promise<RemoteResult<true>> {
+  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
   const { error } = await supabase.from("private_logs").delete().eq("id", logId);
-  return !error;
+  if (error) {
+    console.error("[privateLogsRemote] deletePrivateLog failed:", error);
+    return { data: null, error: error.message };
+  }
+  return { data: true, error: null };
 }
