@@ -217,14 +217,15 @@ export function Log() {
   const [pursuitDialogOpen, setPursuitDialogOpen] = useState(false);
   const navigate = useNavigate();
 
-  const initialHobby = searchParams.get("hobby") ?? initialPursuit?.hobbySlug ?? hobbies[0].slug;
+  const hobbyParam = searchParams.get("hobby");
+  const initialHobby = hobbyParam ?? initialPursuit?.hobbySlug ?? hobbies[0].slug;
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
   // Whether hobbySlug reflects something the person actually chose or typed,
   // versus just the untouched default (hobbies[0], or a ?hobby= link). A
   // private "Save this moment" never shows any Space UI at all, so filing it
   // under an unseen default Space silently mistagged private logs — this
   // flag lets that path save untagged instead when nothing was ever set.
-  const [spaceSet, setSpaceSet] = useState(!!searchParams.get("hobby") || !!initialPursuit?.hobbySlug);
+  const [spaceSet, setSpaceSet] = useState(!!hobbyParam || !!initialPursuit?.hobbySlug);
   const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
@@ -296,6 +297,20 @@ export function Log() {
   useEffect(() => {
     if (pursuitScoped) setScreen("pursuit-menu");
   }, [initialPursuitId]);
+
+  // Same reason as the resync above: React Router doesn't remount this
+  // component for a search-param change on the same route, so a later
+  // navigation to a different ?hobby= link (or a different Pursuit's "Add
+  // progress") was silently ignored — hobbySlug stayed frozen at whatever
+  // this component last mounted with. Re-reads the exact same priority
+  // order the initial value used. spaceSet resets alongside it: a hobby
+  // that only arrived because of a stale earlier visit's URL was never
+  // actually chosen just now, so a leftover "this was chosen" flag can't
+  // survive next to the corrected value.
+  useEffect(() => {
+    setHobbySlug(hobbyParam ?? initialPursuit?.hobbySlug ?? hobbies[0].slug);
+    setSpaceSet(!!hobbyParam || !!initialPursuit?.hobbySlug);
+  }, [hobbyParam, initialPursuit?.hobbySlug]);
 
   // Picking the dedicated "Reflect privately" mode still forces the
   // audience to private (so a person who'd already changed it can't end up
