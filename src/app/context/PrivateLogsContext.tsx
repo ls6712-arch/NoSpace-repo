@@ -1,8 +1,17 @@
-import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  ReactNode,
+} from "react";
 import { useAuth } from "./AuthContext";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import {
   PrivateLog,
+  RemoteResult,
   fetchPrivateLogs,
   createPrivateLog,
   deletePrivateLog,
@@ -20,6 +29,16 @@ import {
  * fresh key rather than the old `nospace.journal.v1`. That old key's
  * privateLogs are intentionally left alone here (not read, not migrated,
  * not deleted) pending a separate decision on what to do with them.
+ *
+ * `add`/`remove` never decide shared-vs-local off `user` directly — early
+ * on, `AuthContext.loading` can still be true with `user` not yet
+ * populated even for someone who really is signed in (the initial
+ * `getSession()` call hasn't resolved), and deciding off that
+ * not-yet-trustworthy `user` was exactly how a signed-in owner's log
+ * could land in this local fallback instead of the real table. Both wait
+ * for `loading` to clear first, then read `userRef` — never the `user`
+ * value closed over when the callback was created, which could still be
+ * stale by the time the wait resolves.
  */
 
 const LOCAL_KEY = "nospace.privateLogs.local.v1";
@@ -58,18 +77,42 @@ interface PrivateLogsContextType {
     note: string;
     media?: { url: string; type: "image" | "video"; hobbySlug?: string };
     projectId?: string;
-  }) => Promise<PrivateLog | null>;
-  remove: (id: number) => Promise<void>;
+  }) => Promise<RemoteResult<PrivateLog>>;
+  remove: (id: number) => Promise<RemoteResult<true>>;
 }
 
 const PrivateLogsContext = createContext<PrivateLogsContextType | undefined>(undefined);
 
 export function PrivateLogsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const shared = !!user;
 
   const [local, setLocal] = useState<LocalState>(loadLocal);
   const [remoteLogs, setRemoteLogs] = useState<PrivateLog[]>([]);
+
+  // Always the latest `user`, readable after an await without the
+  // stale-closure risk a plain `user` reference from the callback's
+  // creation-time render would carry.
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  // Resolves once — the moment the initial auth check finishes — and stays
+  // resolved for the rest of the session, since `loading` never goes back
+  // to `true` after that. Awaiting this before touching `userRef` is what
+  // keeps add()/remove() from treating "not loaded yet" as "signed out."
+  const authReadyRef = useRef<{ promise: Promise<void>; resolve: () => void } | null>(null);
+  if (!authReadyRef.current) {
+    let resolve!: () => void;
+    const promise = new Promise<void>((r) => {
+      resolve = r;
+    });
+    authReadyRef.current = { promise, resolve };
+  }
+  useEffect(() => {
+    if (!loading) authReadyRef.current!.resolve();
+  }, [loading]);
 
   useEffect(() => {
     const onCleared = () => setLocal(EMPTY);
@@ -83,51 +126,58 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
       return;
     }
     let cancelled = false;
-    fetchPrivateLogs(user.id).then((rows) => {
-      if (!cancelled) setRemoteLogs(rows);
+    fetchPrivateLogs(user.id).then(({ data }) => {
+      if (!cancelled && data) setRemoteLogs(data);
     });
     return () => {
       cancelled = true;
     };
   }, [user]);
 
-  const add = useCallback<PrivateLogsContextType["add"]>(
-    async (input) => {
-      if (shared && user) {
-        const created = await createPrivateLog(user.id, input);
-        if (created) setRemoteLogs((prev) => [created, ...prev]);
-        return created;
-      }
-      const entry: PrivateLog = {
-        id: localId(),
-        note: input.note,
-        media: input.media?.url,
-        mediaType: input.media?.type,
-        hobbySlug: input.media?.hobbySlug,
-        projectId: input.projectId,
-        createdAt: Date.now(),
-      };
-      const next = { logs: [entry, ...local.logs] };
-      setLocal(next);
-      saveLocal(next);
-      return entry;
-    },
-    [shared, user, local],
-  );
+  const add = useCallback<PrivateLogsContextType["add"]>(async (input) => {
+    await authReadyRef.current!.promise;
+    const currentUser = userRef.current;
 
-  const remove = useCallback(
-    async (id: number) => {
-      if (shared && user) {
-        const ok = await deletePrivateLog(id);
-        if (ok) setRemoteLogs((prev) => prev.filter((l) => l.id !== id));
-        return;
-      }
-      const next = { logs: local.logs.filter((l) => l.id !== id) };
-      setLocal(next);
+    if (currentUser) {
+      const result = await createPrivateLog(currentUser.id, input);
+      if (result.data) setRemoteLogs((prev) => [result.data!, ...prev]);
+      return result;
+    }
+
+    const entry: PrivateLog = {
+      id: localId(),
+      note: input.note,
+      media: input.media?.url,
+      mediaType: input.media?.type,
+      hobbySlug: input.media?.hobbySlug,
+      projectId: input.projectId,
+      createdAt: Date.now(),
+    };
+    setLocal((prev) => {
+      const next = { logs: [entry, ...prev.logs] };
       saveLocal(next);
-    },
-    [shared, user, local],
-  );
+      return next;
+    });
+    return { data: entry, error: null };
+  }, []);
+
+  const remove = useCallback<PrivateLogsContextType["remove"]>(async (id) => {
+    await authReadyRef.current!.promise;
+    const currentUser = userRef.current;
+
+    if (currentUser) {
+      const result = await deletePrivateLog(id);
+      if (result.data) setRemoteLogs((prev) => prev.filter((l) => l.id !== id));
+      return result;
+    }
+
+    setLocal((prev) => {
+      const next = { logs: prev.logs.filter((l) => l.id !== id) };
+      saveLocal(next);
+      return next;
+    });
+    return { data: true, error: null };
+  }, []);
 
   const logs = shared ? remoteLogs : local.logs;
 
