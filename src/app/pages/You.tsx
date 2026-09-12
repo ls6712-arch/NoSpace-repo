@@ -273,12 +273,13 @@ export function You() {
               Your Moments
             </h2>
             {/* All moments (plain chronological) is the default now — By
-                Corner stays available for anyone who wants the grouped
-                view. The grouping itself (sessionsFromPosts in
-                HobbyShelf.tsx) already keys off each Moment's own Corner
-                tag (subHobby) where one exists, falling back to its parent
-                Space only when it doesn't — this toggle's label just
-                needed to catch up to what it's actually grouping by. */}
+                Space stays available for anyone who wants the grouped
+                view. Correction from an earlier pass: the shelf's outer,
+                user-visible grouping is Space (HobbyShelf.tsx renders one
+                section per Space, with each Space's individual Corners
+                stacked inside it) — the per-Corner tally that stacking is
+                built from is an internal detail, not what this toggle
+                should be named after. */}
             <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
               <button
                 type="button"
@@ -296,13 +297,13 @@ export function You() {
                   momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
                 }`}
               >
-                By Corner
+                By space
               </button>
             </div>
           </div>
           <p className="mb-5 mt-1 text-sm text-muted-foreground">
             {momentsView === "shelf"
-              ? "Grouped by Corner — open one to see every moment inside it."
+              ? "Grouped by Space — open one to see every moment inside it."
               : "A visual record of what you've made, explored, and loved, newest first."}
           </p>
           {momentsView === "shelf" ? (
