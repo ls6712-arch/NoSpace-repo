@@ -1,33 +1,33 @@
 import { Link } from "react-router";
-import * as Icons from "lucide-react";
 import { Circle } from "../data/circles";
 import { getHobby } from "../data/hobbies";
-import { hobbyIconName } from "../data/hobbyIcons";
 import { useContent } from "../context/ContentContext";
 import { useConnections } from "../context/ConnectionsContext";
 import { useCircles } from "../context/CirclesContext";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 /**
- * The Circles you've joined, as soft tinted cards — a name, its icon, and how
- * many people are in it. Member count is context, not a score: it tells you
- * whether a Circle is a room or a stadium, which is the one thing you actually
- * want to know before posting in it.
+ * The Circles you've joined — a name, its member count, and a flat
+ * colored-initial mark standing in for a Circle photo, same pattern as a
+ * person's own avatar (ContentCard.tsx) rather than a per-card tinted
+ * background. Member count is context, not a score: it tells you whether a
+ * Circle is a room or a stadium, which is the one thing you actually want
+ * to know before posting in it.
  */
-const TINTS = [
-  "var(--pastel-sage)",
-  "var(--pastel-stone)",
-  "var(--pastel-clay)",
-  "var(--pastel-sky)",
-  "var(--pastel-wheat)",
-  "var(--pastel-rose)",
-];
-
-function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
+function CircleCard({ circle }: { circle: Circle }) {
   const { circleMemberCounts, isCircleJoined } = useContent();
   const { myCircleIds } = useConnections();
   const { isRealCircle } = useCircles();
   const space = getHobby(circle.hobbySlug);
-  const Icon = (Icons as any)[hobbyIconName(undefined, circle.hobbySlug)] ?? Icons.Users;
   // A real Circle's own memberCount (CirclesContext) is already the live,
   // accurate count — the seed-circle compound math below doesn't apply to it.
   const displayedMemberCount = isRealCircle(circle.id)
@@ -39,18 +39,16 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
   return (
     <Link
       to={`/circles/${circle.id}`}
-      className="flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-transform duration-200 hover:-translate-y-0.5"
-      style={{
-        backgroundColor: `color-mix(in srgb, ${tint} 30%, var(--surface-elevated))`,
-        border: `1px solid color-mix(in srgb, ${tint} 45%, transparent)`,
-      }}
+      className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3.5 transition-colors hover:border-[var(--coral-deep)]"
     >
-      <span
-        className="flex size-9 shrink-0 items-center justify-center rounded-full"
-        style={{ backgroundColor: `color-mix(in srgb, ${tint} 55%, var(--surface-elevated))` }}
-      >
-        <Icon className="size-4 text-foreground" strokeWidth={1.6} aria-hidden="true" />
-      </span>
+      <Avatar className="size-9 shrink-0 ring-0">
+        <AvatarFallback
+          className="text-xs"
+          style={{ backgroundImage: "none", backgroundColor: "var(--surface-muted)", color: "var(--foreground)" }}
+        >
+          {initials(circle.name)}
+        </AvatarFallback>
+      </Avatar>
       <span className="min-w-0">
         <span
           className="block truncate text-sm leading-tight text-foreground"
@@ -59,7 +57,7 @@ function CircleCard({ circle, tint }: { circle: Circle; tint: string }) {
           {circle.name}
         </span>
         <span className="mt-0.5 block text-[11px] text-muted-foreground">
-          {circle.memberCount.toLocaleString()} members
+          {displayedMemberCount.toLocaleString()} members
           {space ? ` · ${space.shortName}` : ""}
         </span>
       </span>
@@ -98,8 +96,8 @@ export function CirclesJoined({ limit }: { limit?: number } = {}) {
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {shown.map((circle, i) => (
-        <CircleCard key={circle.id} circle={circle} tint={TINTS[i % TINTS.length]} />
+      {shown.map((circle) => (
+        <CircleCard key={circle.id} circle={circle} />
       ))}
     </div>
   );

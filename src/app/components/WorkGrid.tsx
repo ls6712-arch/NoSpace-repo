@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getHobby } from "../data/hobbies";
+import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { Post } from "../data/posts";
 import { PostMedia } from "./PostMedia";
 import { Button } from "./ui/button";
@@ -11,29 +11,11 @@ function dateLabel(ts: number) {
 }
 
 /**
- * A repeating rhythm of tile shapes, not a uniform grid — a feature moment,
- * tall ones, wide ones, small ones, in a sequence that (with grid-auto-flow:
- * dense) tessellates into an editorial composition rather than rows. Mobile
- * gets its own, simpler rhythm on a 2-column base rather than the desktop
- * shapes just shrinking in place.
- */
-const TILE_SHAPES = [
-  "col-span-2 row-span-2 sm:col-span-2 sm:row-span-2",
-  "row-span-2 sm:row-span-2",
-  "row-span-1",
-  "col-span-2 row-span-1 sm:col-span-1 sm:row-span-1",
-  "row-span-1 sm:col-span-2 sm:row-span-1",
-  "row-span-2 sm:row-span-1",
-  "col-span-2 row-span-1 sm:col-span-1 sm:row-span-2",
-  "row-span-1",
-];
-
-/**
- * Your Moments, as a personal visual journal rather than a feed: a large
- * feature piece, tall ones, wide ones, mixed freely across hobbies — not
- * grouped into rows by category, and never a same-size Instagram grid. Real
- * photos crop to fill their tile; seed content and anything without an
- * upload keeps NoSpace's own illustrated look. No counts anywhere on it.
+ * Your Moments, as a personal visual journal rather than a feed: every tile
+ * the same square shape, so the grid reads as a calm, even record rather
+ * than an editorial collage — real photos crop to fill their tile; seed
+ * content and anything without an upload keeps NoSpace's own illustrated
+ * look. No counts anywhere on it.
  */
 export function WorkGrid({
   posts,
@@ -59,34 +41,40 @@ export function WorkGrid({
 
   return (
     <div>
-      <div className="grid grid-cols-2 [grid-auto-flow:dense] auto-rows-[120px] gap-1.5 sm:grid-cols-4 sm:auto-rows-[150px]">
-        {visible.map((post, i) => {
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {visible.map((post) => {
           const hobby = getHobby(post.hobbySlug);
+          // Corner first — the tile should name the specific thing this
+          // Moment is about, not the broad Space it lives under, whenever
+          // it was actually tagged that specifically. Untagged Moments
+          // fall back to the Space name rather than a fabricated Corner.
+          const cornerLabel = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : hobby?.shortName;
           return (
             <button
               key={post.id}
               type="button"
               onClick={() => onOpen(post)}
-              className={`group relative overflow-hidden rounded-lg border border-[var(--hairline)] text-left ${TILE_SHAPES[i % TILE_SHAPES.length]}`}
+              className="group text-left"
               aria-label={`Open: ${post.caption.slice(0, 60)}`}
             >
-              <PostMedia
-                media={post.media}
-                type={post.type}
-                hobbySlug={post.hobbySlug}
-                seed={post.id}
-                preview
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--void)]/85 via-[var(--void)]/5 to-transparent opacity-90" />
-              <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
-                {hobby && (
-                  <span className="text-[9px] font-medium uppercase tracking-wide text-white/75 sm:text-[10px]">
-                    {hobby.shortName}
+              <div className="aspect-square overflow-hidden rounded-lg border border-[var(--hairline)] transition-colors group-hover:border-[var(--coral-deep)]">
+                <PostMedia
+                  media={post.media}
+                  type={post.type}
+                  hobbySlug={post.hobbySlug}
+                  seed={post.id}
+                  preview
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="mt-2">
+                {cornerLabel && (
+                  <span className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:text-[10px]">
+                    {cornerLabel}
                   </span>
                 )}
-                <p className="line-clamp-2 text-xs text-white sm:text-sm">{post.caption}</p>
-                <span className="mt-0.5 block text-[10px] text-white/65">{dateLabel(post.createdAt)}</span>
+                <p className="line-clamp-2 text-xs text-foreground sm:text-sm">{post.caption}</p>
+                <span className="mt-0.5 block text-[10px] text-muted-foreground">{dateLabel(post.createdAt)}</span>
               </div>
             </button>
           );
