@@ -7,7 +7,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export function Login() {
-  const { user, signIn, signUp, resetPassword, isConfigured } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, resetPassword, isConfigured } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
@@ -30,6 +30,7 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
   // Checked here as well as by the browser, because an account created with
   // a typo'd address can never be recovered — there's nowhere to send the
@@ -62,6 +63,11 @@ export function Login() {
     else setResetSent(true);
   };
 
+  const handleGoogle = async () => {
+    const result = await signInWithGoogle();
+    if (result.error) setError(result.error);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
@@ -79,6 +85,10 @@ export function Login() {
           : await signIn(email, password);
       if (result.error) {
         setError(result.error);
+        return;
+      }
+      if (mode === "signup" && "needsConfirmation" in result && result.needsConfirmation) {
+        setNeedsConfirmation(true);
         return;
       }
       navigate(redirectTo);
@@ -123,93 +133,121 @@ export function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-panel rounded-3xl p-6 space-y-4">
-          {mode === "signup" && (
-            <div>
-              <Label htmlFor="displayName" className="mb-2 block">
-                Name
-              </Label>
-              <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="What should we call you?"
-                required
-              />
-            </div>
-          )}
-          <div>
-            <Label htmlFor="email" className="mb-2 block">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-            />
+        {needsConfirmation ? (
+          <div className="glass-panel rounded-3xl p-6 text-center">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Check <span className="text-foreground">{email}</span> for a confirmation link —
+              you'll be signed in once you click it.
+            </p>
           </div>
-          <div>
-            <Label htmlFor="password" className="mb-2 block">
-              Password
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              minLength={8}
-              required
-            />
-            {mode === "signup" && (
-              <p className="mt-1.5 text-[11px] text-muted-foreground">At least 8 characters.</p>
-            )}
-            {mode === "signin" && (
+        ) : (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full"
+              onClick={handleGoogle}
+            >
+              Continue with Google
+            </Button>
+
+            <div className="flex items-center gap-3 my-5">
+              <div className="h-px flex-1 bg-[var(--hairline)]" />
+              <span className="text-xs text-muted-foreground">or</span>
+              <div className="h-px flex-1 bg-[var(--hairline)]" />
+            </div>
+
+            <form onSubmit={handleSubmit} className="glass-panel rounded-3xl p-6 space-y-4">
+              {mode === "signup" && (
+                <div>
+                  <Label htmlFor="displayName" className="mb-2 block">
+                    Name
+                  </Label>
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="What should we call you?"
+                    required
+                  />
+                </div>
+              )}
+              <div>
+                <Label htmlFor="email" className="mb-2 block">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="password" className="mb-2 block">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  minLength={8}
+                  required
+                />
+                {mode === "signup" && (
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">At least 8 characters.</p>
+                )}
+                {mode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={sendReset}
+                    className="mt-2 text-xs text-[var(--coral-text)] hover:underline"
+                  >
+                    Forgot your password?
+                  </button>
+                )}
+              </div>
+
+              {resetSent && (
+                <p className="rounded-xl border border-[var(--hairline)] bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                  If there's an account for that address, a reset link is on its way.
+                  Check your spam folder if it doesn't arrive.
+                </p>
+              )}
+
+              {error && (
+                <div className="flex items-start gap-2 rounded-xl border border-[var(--coral)]/30 bg-[var(--coral)]/10 px-3 py-2.5 text-xs text-[var(--coral)]">
+                  <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+                  {error}
+                </div>
+              )}
+
+              <Button type="submit" variant="brand" size="lg" className="w-full" disabled={submitting}>
+                {submitting ? "One sec..." : mode === "signup" ? "Sign up" : "Log in"}
+              </Button>
+            </form>
+
+            <p className="text-center text-sm text-muted-foreground mt-5">
+              {mode === "signup" ? "Already have an account? " : "New here? "}
               <button
                 type="button"
-                onClick={sendReset}
-                className="mt-2 text-xs text-[var(--coral-text)] hover:underline"
+                className="text-[var(--coral-text)] hover:underline"
+                onClick={() => {
+                  setError(null);
+                  setNeedsConfirmation(false);
+                  setMode((m) => (m === "signup" ? "signin" : "signup"));
+                }}
               >
-                Forgot your password?
+                {mode === "signup" ? "Log in" : "Sign up"}
               </button>
-            )}
-          </div>
-
-          {resetSent && (
-            <p className="rounded-xl border border-[var(--hairline)] bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-              If there's an account for that address, a reset link is on its way.
-              Check your spam folder if it doesn't arrive.
             </p>
-          )}
-
-          {error && (
-            <div className="flex items-start gap-2 rounded-xl border border-[var(--coral)]/30 bg-[var(--coral)]/10 px-3 py-2.5 text-xs text-[var(--coral)]">
-              <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
-              {error}
-            </div>
-          )}
-
-          <Button type="submit" variant="brand" size="lg" className="w-full" disabled={submitting}>
-            {submitting ? "One sec..." : mode === "signup" ? "Sign up" : "Log in"}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-muted-foreground mt-5">
-          {mode === "signup" ? "Already have an account? " : "New here? "}
-          <button
-            type="button"
-            className="text-[var(--coral-text)] hover:underline"
-            onClick={() => {
-              setError(null);
-              setMode((m) => (m === "signup" ? "signin" : "signup"));
-            }}
-          >
-            {mode === "signup" ? "Log in" : "Sign up"}
-          </button>
-        </p>
+          </>
+        )}
       </div>
     </div>
   );

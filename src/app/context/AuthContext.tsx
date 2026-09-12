@@ -23,8 +23,13 @@ interface AuthContextType {
   profile: Profile | null;
   /** False when Supabase env vars aren't set — accounts are unavailable, not broken. */
   isConfigured: boolean;
-  signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (next: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -103,8 +108,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp: AuthContextType["signUp"] = async (email, password, displayName) => {
     if (!supabase) return { error: "Accounts aren't set up for this build yet." };
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}${window.location.pathname}#/you`,
+      },
+    });
     if (error) return { error: error.message };
+    // Supabase's "Confirm email" setting is on: the account exists but there's
+    // no session yet, and won't be one until they click the link it just
+    // mailed. Nothing to sign them into or upsert a profile name for yet.
+    if (data.user && !data.session) {
+      return { error: null, needsConfirmation: true };
+    }
     // The profile row is created automatically by a database trigger with a
     // default name derived from the email; overwrite it with what they typed.
     if (data.user && displayName.trim()) {
@@ -129,6 +146,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn: AuthContextType["signIn"] = async (email, password) => {
     if (!supabase) return { error: "Accounts aren't set up for this build yet." };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error ? error.message : null };
+  };
+
+  const signInWithGoogle: AuthContextType["signInWithGoogle"] = async () => {
+    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}${window.location.pathname}#/you`,
+      },
+    });
     return { error: error ? error.message : null };
   };
 
@@ -187,6 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isConfigured: isSupabaseConfigured,
         signUp,
         signIn,
+        signInWithGoogle,
         resetPassword,
         updatePassword,
         signOut,
