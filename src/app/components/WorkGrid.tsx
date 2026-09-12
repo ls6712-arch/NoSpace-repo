@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getHobby } from "../data/hobbies";
+import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { Post } from "../data/posts";
 import { PostMedia } from "./PostMedia";
 import { Button } from "./ui/button";
@@ -44,6 +44,11 @@ export function WorkGrid({
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {visible.map((post) => {
           const hobby = getHobby(post.hobbySlug);
+          // Corner first — the tile should name the specific thing this
+          // Moment is about, not the broad Space it lives under, whenever
+          // it was actually tagged that specifically. Untagged Moments
+          // fall back to the Space name rather than a fabricated Corner.
+          const cornerLabel = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : hobby?.shortName;
           return (
             <button
               key={post.id}
@@ -63,9 +68,9 @@ export function WorkGrid({
                 />
               </div>
               <div className="mt-2">
-                {hobby && (
+                {cornerLabel && (
                   <span className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:text-[10px]">
-                    {hobby.shortName}
+                    {cornerLabel}
                   </span>
                 )}
                 <p className="line-clamp-2 text-xs text-foreground sm:text-sm">{post.caption}</p>

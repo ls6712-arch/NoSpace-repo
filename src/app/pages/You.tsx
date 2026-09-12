@@ -12,7 +12,7 @@ import { ClanList } from "../components/ClanList";
 import { AvatarPicker } from "../components/AvatarPicker";
 import { HandwrittenNote } from "../components/HandwrittenNote";
 import { WorkGrid } from "../components/WorkGrid";
-import { PursuitCard } from "../components/PursuitCard";
+import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../components/PursuitCompact";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -20,7 +20,7 @@ import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
-import { useJournal } from "../lib/journal";
+import { useJournal, useJournalSlice } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useProfileLinks } from "../lib/profileLinks";
 import { mirrorProfileLinks } from "../lib/profileLinksRemote";
@@ -53,6 +53,13 @@ export function You() {
   const [circlesVisible, setCirclesVisible] = useState(true);
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [pursuitDialog, setPursuitDialog] = useState(false);
+  // Only one Pursuit expanded at a time. renderedPursuitId lags behind on
+  // collapse (it only ever updates to a new id, never clears to null) so the
+  // panel's content stays put while it animates shut instead of vanishing
+  // out from under the closing transition.
+  const [expandedPursuitId, setExpandedPursuitId] = useState<string | null>(null);
+  const [renderedPursuitId, setRenderedPursuitId] = useState<string | null>(null);
+  const entryProject = useJournalSlice((s) => s.entryProject);
 
   const sessions = useSessionsByHobby();
   const [momentsView, setMomentsView] = useState<"shelf" | "grid">("grid");
@@ -207,21 +214,56 @@ export function You() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {myPursuits.map((pursuit) => (
-                <PursuitCard
-                  key={pursuit.id}
-                  pursuit={pursuit}
-                  owner
-                  className="w-full"
-                  inspirationPost={
-                    pursuit.inspiredByPostId
-                      ? posts.find((p) => p.id === pursuit.inspiredByPostId)
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {myPursuits.map((pursuit) => (
+                  <PursuitCompactCard
+                    key={pursuit.id}
+                    pursuit={pursuit}
+                    entryProject={entryProject}
+                    posts={posts}
+                    expanded={expandedPursuitId === pursuit.id}
+                    onToggle={() => {
+                      setExpandedPursuitId((cur) => {
+                        const next = cur === pursuit.id ? null : pursuit.id;
+                        if (next) setRenderedPursuitId(next);
+                        return next;
+                      });
+                    }}
+                  />
+                ))}
+                <NewPursuitTile onClick={() => setPursuitDialog(true)} />
+              </div>
+
+              {/* grid-template-rows 0fr->1fr is what lets this collapse to
+                  a true zero height (a max-height guess would either clip a
+                  tall panel or leave dead space on a short one). */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateRows: expandedPursuitId ? "1fr" : "0fr",
+                  transition: "grid-template-rows 280ms ease",
+                }}
+              >
+                <div style={{ overflow: "hidden" }}>
+                  <div style={{ opacity: expandedPursuitId ? 1 : 0, transition: "opacity 200ms ease" }}>
+                    {(() => {
+                      const renderedPursuit = myPursuits.find((p) => p.id === renderedPursuitId);
+                      return (
+                        renderedPursuit && (
+                          <PursuitExpandedPanel
+                            pursuit={renderedPursuit}
+                            entryProject={entryProject}
+                            posts={posts}
+                            onOpenPost={setOpenPost}
+                          />
+                        )
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </section>
 
@@ -231,9 +273,12 @@ export function You() {
               Your Moments
             </h2>
             {/* All moments (plain chronological) is the default now — By
-                Space stays available for anyone who wants the grouped
-                view. "Space" is the app's actual term for this, so the
-                toggle shouldn't say "hobby" anywhere. */}
+                Corner stays available for anyone who wants the grouped
+                view. The grouping itself (sessionsFromPosts in
+                HobbyShelf.tsx) already keys off each Moment's own Corner
+                tag (subHobby) where one exists, falling back to its parent
+                Space only when it doesn't — this toggle's label just
+                needed to catch up to what it's actually grouping by. */}
             <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
               <button
                 type="button"
@@ -251,13 +296,13 @@ export function You() {
                   momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
                 }`}
               >
-                By Space
+                By Corner
               </button>
             </div>
           </div>
           <p className="mb-5 mt-1 text-sm text-muted-foreground">
             {momentsView === "shelf"
-              ? "Grouped by Space — open one to see every moment inside it."
+              ? "Grouped by Corner — open one to see every moment inside it."
               : "A visual record of what you've made, explored, and loved, newest first."}
           </p>
           {momentsView === "shelf" ? (
