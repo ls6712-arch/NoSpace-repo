@@ -112,7 +112,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}${window.location.pathname}#/you`,
+        // No #/you hash here: Supabase appends its own auth code/token
+        // fragment onto this URL after the redirect, and a URL can't carry
+        // two independent hash sections layered on top of each other — a
+        // HashRouter path here broke the client's ability to parse the
+        // returned code/tokens at all. Landing on the bare origin (the
+        // app's default route, signed in) is the correct trade-off.
+        emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
       },
     });
     if (error) return { error: error.message };
@@ -154,7 +160,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}${window.location.pathname}#/you`,
+        // Same reasoning as signUp's emailRedirectTo above — no #/you here.
+        redirectTo: `${window.location.origin}${window.location.pathname}`,
       },
     });
     return { error: error ? error.message : null };
