@@ -1,19 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import {
-  Camera as CameraIcon,
-  Images,
-  PenLine,
-  Play,
-  Sparkles,
-  SwitchCamera,
-  Type,
-  X,
-} from "lucide-react";
-import { Project } from "../lib/journal";
+import { Camera as CameraIcon, Images, Play, SwitchCamera, Type, X } from "lucide-react";
 import { addRecentCapture, useRecentCaptures } from "../lib/recentCaptures";
 import { Button } from "./ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 /** Confirmed with product: 60s, matching Instagram-length clips — long enough
  * for a real moment, short enough that this stays a quick-capture tool
@@ -46,26 +35,25 @@ function extFor(mimeType: string | undefined) {
 }
 
 /**
- * The camera-first entry screen: a live viewfinder, not a menu, matching
- * what every other camera-first app (Instagram, TikTok, Snapchat) already
- * trained people to expect. Falls back to a plain "pick a file" screen
- * wherever a live camera genuinely can't work — no camera hardware, denied
- * permission, or an insecure context (getUserMedia requires https or
- * localhost; this app can also be opened straight from file://, which has
- * neither) — rather than showing a broken black box.
+ * The live viewfinder someone actually reaches once they've tapped "Photo
+ * or video" on Log.tsx's "choose" screen — not the very first thing the
+ * composer shows anymore (see that file's own doc comment for why). Falls
+ * back to a plain "pick a file" screen wherever a live camera genuinely
+ * can't work — no camera hardware, denied permission, or an insecure
+ * context (getUserMedia requires https or localhost; this app can also be
+ * opened straight from file://, which has neither) — rather than showing a
+ * broken black box.
+ *
+ * "Start a Pursuit" and "Add an update" used to have their own row here;
+ * both moved onto the "choose" screen as full entry points in their own
+ * right, alongside — not behind — Photo/video and Write a moment.
  */
 export function CameraCapture({
   onCaptured,
   onTextOnly,
-  onStartPursuit,
-  onAddUpdate,
-  openProjects,
 }: {
   onCaptured: (file: File, type: "photo" | "video") => void;
   onTextOnly: () => void;
-  onStartPursuit: () => void;
-  onAddUpdate: (projectId: string) => void;
-  openProjects: Project[];
 }) {
   const navigate = useNavigate();
   const [captureMode, setCaptureMode] = useState<CaptureMode>("photo");
@@ -367,40 +355,6 @@ export function CameraCapture({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Deliberate, non-quick-capture actions — their own entry points
-          rather than another tap behind a menu. Both route straight into
-          already-built, separately-scoped flows. */}
-      <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-2.5">
-        <Button type="button" variant="outline" size="sm" onClick={onStartPursuit}>
-          <Sparkles className="size-3.5" />
-          Start a Pursuit
-        </Button>
-
-        {openProjects.length > 0 ? (
-          <Select onValueChange={onAddUpdate}>
-            <SelectTrigger
-              className="h-8 w-auto gap-1.5 rounded-md border border-input bg-[color-mix(in_srgb,var(--void)_35%,transparent)] px-3 text-sm text-foreground hover:bg-accent/10"
-              aria-label="Add an update to a Pursuit"
-            >
-              <PenLine className="size-3.5" />
-              <SelectValue placeholder="Add an update" />
-            </SelectTrigger>
-            <SelectContent>
-              {openProjects.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <Button type="button" variant="outline" size="sm" disabled title="Start a Pursuit first">
-            <PenLine className="size-3.5" />
-            Add an update
-          </Button>
-        )}
       </div>
     </div>
   );

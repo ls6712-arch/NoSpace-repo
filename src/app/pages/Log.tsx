@@ -60,21 +60,33 @@ import { PursuitDialog } from "../components/PursuitDialog";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
 
 /**
- * Logging, camera-first, matching what every other camera-first app already
- * trained people to expect: a live viewfinder is the front door, not a menu.
+ * Logging, choose-first:
  *
- *   camera → caption → saved
+ *   choose → camera → caption → saved
+ *              └──────────────┘ ("Write a moment" skips camera entirely)
+ *
+ * This used to be camera-first — a live viewfinder as the front door,
+ * matching Instagram/TikTok/Snapchat — which meant the very first thing a
+ * new visit did was request camera (and microphone) access, before anyone
+ * had chosen to make anything at all. The fallback for a denied or
+ * unavailable camera was always fine (a plain "pick a photo or video
+ * instead" screen), but the default was backwards for a product whose own
+ * thesis is documenting an interest — as often a typed sentence after the
+ * fact as a photo taken in the moment. "Choose" now asks the one real
+ * question first (photo/video, write, or start a Pursuit) and only reaches
+ * for the camera once "Photo or video" is actually tapped.
+ *
+ * Starting a Pursuit or adding an update remain their own one-tap entry
+ * points rather than hiding behind a "more ways to create" menu — Start a
+ * Pursuit opens the existing PursuitDialog, and Add an update routes into
+ * the existing Pursuit-scoped menu below (?pursuit=<id>); both moved from
+ * the old camera screen onto "choose" but are otherwise untouched.
  *
  * "Save this moment" and "Share this moment" used to be two competing paths
- * to the same private outcome — the caption screen is one screen now, with
- * one submit button whose label follows the audience picked on it. Starting
- * a Pursuit or adding an update are deliberate, non-quick-capture actions,
- * so they're their own one-tap entry points from the camera screen instead
- * of hiding behind a "more ways to create" menu — Start a Pursuit opens the
- * existing PursuitDialog, and Add an update routes into the existing
- * Pursuit-scoped menu below (?pursuit=<id>), both untouched by this redesign.
+ * to the same private outcome — the caption screen is one screen, with one
+ * submit button whose label follows the audience picked on it.
  */
-type Screen = "camera" | "caption" | "saved" | "detail" | "pursuit-menu";
+type Screen = "choose" | "camera" | "caption" | "saved" | "detail" | "pursuit-menu";
 
 /** The considered path: four kinds of record, chosen up front. */
 type Mode = "project" | "update" | "moment" | "private";
@@ -212,9 +224,15 @@ export function Log() {
   // so the detail form's own picker for all three stays hidden too.
   const pursuitScoped = !!initialPursuit;
 
-  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "pursuit-menu" : "camera");
+  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "pursuit-menu" : "choose");
   const [mode, setMode] = useState<Mode | null>(null);
   const [pursuitDialogOpen, setPursuitDialogOpen] = useState(false);
+  // Where the caption screen's Back link returns to — "camera" when a photo
+  // or video was actually captured/picked there, "choose" when "Write a
+  // moment" skipped the camera entirely. Getting this wrong would mean
+  // Back, from a text-only moment, silently re-requesting camera access —
+  // exactly the thing this redesign exists to stop doing by default.
+  const [captionBackTo, setCaptionBackTo] = useState<"camera" | "choose">("camera");
   const navigate = useNavigate();
 
   const hobbyParam = searchParams.get("hobby");
@@ -542,6 +560,7 @@ export function Log() {
   const handleCaptured = (picked: File, capturedType: "photo" | "video") => {
     setFile(picked);
     setType(capturedType);
+    setCaptionBackTo("camera");
     setScreen("caption");
   };
 
@@ -702,11 +721,16 @@ export function Log() {
     setError(null);
     setSavedAs(null);
     setMode(null);
-    setScreen("camera");
+    setScreen(pursuitScoped ? "pursuit-menu" : "choose");
   };
 
   const requiresLogin =
-    isConfigured && !user && screen !== "camera" && audience !== "private" && mode !== "private";
+    isConfigured &&
+    !user &&
+    screen !== "camera" &&
+    screen !== "choose" &&
+    audience !== "private" &&
+    mode !== "private";
 
   // Both of these are declared inside Log(), so they get a new component
   // identity on every render and React remounts their subtree. For Back that
@@ -731,20 +755,96 @@ export function Log() {
     [filePreviewUrl, type, hobbySlug, seed],
   );
 
-  // ── 1 · Camera ──────────────────────────────────────────────────────────
-  if (screen === "camera") {
+  // ── 0 · Choose ──────────────────────────────────────────────────────────
+  // The actual first screen now — see the module doc comment above for why
+  // this moved ahead of the camera. Photo/video, write, and start-a-pursuit
+  // are the same three entry points that already existed (T · photo · video
+  // on the old camera screen, plus its own "Start a Pursuit" row); nothing
+  // new is being built here, just asked before reaching for the camera.
+  if (screen === "choose") {
     return (
       <Shell>
-        <CameraCapture
-          onCaptured={handleCaptured}
-          onTextOnly={() => {
-            setFile(null);
-            setScreen("caption");
-          }}
-          onStartPursuit={() => setPursuitDialogOpen(true)}
-          onAddUpdate={(id) => navigate(`/create?pursuit=${id}`)}
-          openProjects={openProjects}
-        />
+        <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+          Start your log
+        </h1>
+        <p className="mb-8 text-muted-foreground">Share a moment, or start a pursuit.</p>
+
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setScreen("camera")}
+            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
+              <Camera className="size-5" />
+            </span>
+            <span>
+              <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                Photo or video
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                Opens the camera, or pick one from your library.
+              </span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setCaptionBackTo("choose");
+              setFile(null);
+              setScreen("caption");
+            }}
+            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
+              <PenLine className="size-5" />
+            </span>
+            <span>
+              <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                Write a moment
+              </span>
+              <span className="block text-xs text-muted-foreground">Just a sentence counts.</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPursuitDialogOpen(true)}
+            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
+              <Sparkle className="size-5" />
+            </span>
+            <span>
+              <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                Start a pursuit
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                Something you're bringing to life over time.
+              </span>
+            </span>
+          </button>
+        </div>
+
+        {openProjects.length > 0 && (
+          <div className="mt-3">
+            <Select onValueChange={(id) => navigate(`/create?pursuit=${id}`)}>
+              <SelectTrigger className="w-full" aria-label="Add an update to a Pursuit">
+                <PenLine className="size-3.5" />
+                <SelectValue placeholder="Or add an update to a Pursuit" />
+              </SelectTrigger>
+              <SelectContent>
+                {openProjects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <PursuitDialog open={pursuitDialogOpen} onOpenChange={setPursuitDialogOpen} />
 
         {/* Never dismissed by clicking outside or Escape — resuming or
@@ -786,6 +886,22 @@ export function Log() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </Shell>
+    );
+  }
+
+  // ── 1 · Camera — reached only once "Photo or video" is actually tapped ──
+  if (screen === "camera") {
+    return (
+      <Shell>
+        <CameraCapture
+          onCaptured={handleCaptured}
+          onTextOnly={() => {
+            setCaptionBackTo("camera");
+            setFile(null);
+            setScreen("caption");
+          }}
+        />
       </Shell>
     );
   }
@@ -986,7 +1102,7 @@ export function Log() {
     const detectedUrl = extractFirstUrl(thought);
     return (
       <Shell>
-        <Back to="camera" />
+        <Back to={captionBackTo} />
         <h1 className="mb-6 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
           Your moment
         </h1>
