@@ -961,22 +961,6 @@
     min-width: 0;
   }
 
-  .ns-you-page {
-    background-image:
-      radial-gradient(circle at 92% 3%, color-mix(in srgb, var(--violet-electric) 26%, transparent) 0 1px, transparent 1.5px),
-      linear-gradient(90deg, transparent 0 7%, color-mix(in srgb, var(--violet-electric) 5%, transparent) 7.1% 7.2%, transparent 7.3% 100%);
-    background-size: 24px 24px, 100% 100%;
-    background-color: var(--night-wine);
-  }
-
-  .ns-you-kicker {
-    color: var(--violet-electric-bright);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-  }
-
   .ns-you-profile-card {
     display: grid;
     overflow: hidden;
@@ -1019,12 +1003,6 @@
     color: var(--foreground);
   }
 
-  .ns-you-lower-grid {
-    display: grid;
-    gap: 1.5rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   @media (max-width: 639px) {
     /* No forced min-height on phones: the toggle below the hero should sit
        right under whatever the (now-tightened) headline/copy/search actually
@@ -1046,7 +1024,6 @@
     .ns-you-avatar-panel { border-bottom: 1px solid var(--hairline); }
     .ns-you-identity { border-left: 0; }
     .ns-you-actions { flex-direction: column; }
-    .ns-you-lower-grid { grid-template-columns: 1fr; }
   }
 
   .ns-marquee {

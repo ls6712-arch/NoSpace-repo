@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Check, Lock, Share2, Sparkles, Target } from "lucide-react";
 import { getHobby } from "../data/hobbies";
@@ -26,6 +26,42 @@ function timeAgo(ts: number) {
   if (days < 30) return `${days}d ago`;
   const months = Math.floor(days / 30.44);
   return `${months} ${months === 1 ? "month" : "months"} ago`;
+}
+
+const RING_RADIUS = 15;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+/**
+ * A numeric goal's completion, as a ring — one stroke color everywhere it
+ * appears, since the fill level is what carries the meaning, not a hue
+ * picked per card. Starts empty and fills in once on mount (~400ms
+ * ease-out), the one motion this card keeps.
+ */
+function ProgressRing({ percent }: { percent: number }) {
+  const [filled, setFilled] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setFilled(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const offset = RING_CIRCUMFERENCE * (1 - (filled ? percent : 0));
+
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" className="shrink-0 -rotate-90">
+      <circle cx="18" cy="18" r={RING_RADIUS} fill="none" stroke="var(--border)" strokeWidth="3" />
+      <circle
+        cx="18"
+        cy="18"
+        r={RING_RADIUS}
+        fill="none"
+        stroke="var(--coral)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray={RING_CIRCUMFERENCE}
+        strokeDashoffset={offset}
+        style={{ transition: "stroke-dashoffset 400ms ease-out" }}
+      />
+    </svg>
+  );
 }
 
 /** What a Pursuit card actually needs — either the owner's own live Project
@@ -119,6 +155,13 @@ export function PursuitCard({
         ? goal.label
         : goal.label
     : undefined;
+  // Progress toward a numeric goal, worked out from the actual update count
+  // the same way the Pursuit's own detail page does — not a separately
+  // tracked number that could quietly disagree with it.
+  const ringPercent =
+    owner && goal?.shape === "number" && goal.targetNumber
+      ? Math.min(1, count / goal.targetNumber)
+      : undefined;
 
   const reachIt = () => {
     if (!asProject) return;
@@ -127,7 +170,7 @@ export function PursuitCard({
 
   return (
     <div
-      className={`group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] ${className}`}
+      className={`group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors duration-200 hover:border-[var(--coral-deep)] ${className}`}
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden">
         <Link to={`/pursuit/${pursuit.id}`} className="absolute inset-0 block" aria-label={`Open ${pursuit.title}`}>
@@ -138,13 +181,13 @@ export function PursuitCard({
               hobbySlug={inspirationPost.hobbySlug}
               seed={inspirationPost.id}
               preview
-              className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full"
             />
           ) : (
             <GeneratedArt
               hobbySlug={pursuit.hobbySlug ?? "crafts-making"}
               seed={pursuit.id}
-              className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full"
             />
           )}
           <span
@@ -196,22 +239,25 @@ export function PursuitCard({
         </Link>
 
         {owner && (
-          <button
-            type="button"
-            onClick={() => setGoalOpen(true)}
-            className={`mt-2.5 flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-              goal
-                ? goal.reachedAt
-                  ? "border-border bg-surface-muted text-muted-foreground"
-                  : "border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] text-foreground hover:border-[var(--coral-deep)]"
-                : "border-dashed border-border text-muted-foreground hover:border-[var(--violet-electric)] hover:text-foreground"
-            }`}
-          >
-            <Target className="size-4 shrink-0" strokeWidth={1.8} />
-            <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`}>
-              {goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}
-            </span>
-          </button>
+          <div className="mt-2.5 flex items-center gap-2.5">
+            {ringPercent !== undefined && <ProgressRing percent={ringPercent} />}
+            <button
+              type="button"
+              onClick={() => setGoalOpen(true)}
+              className={`flex w-fit min-w-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                goal
+                  ? goal.reachedAt
+                    ? "border-border bg-surface-muted text-muted-foreground"
+                    : "border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] text-foreground hover:border-[var(--coral-deep)]"
+                  : "border-dashed border-border text-muted-foreground hover:border-[var(--coral-deep)] hover:text-foreground"
+              }`}
+            >
+              <Target className="size-4 shrink-0" strokeWidth={1.8} />
+              <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`}>
+                {goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}
+              </span>
+            </button>
+          </div>
         )}
 
         {owner && (
@@ -227,7 +273,7 @@ export function PursuitCard({
                 type="button"
                 onClick={reachIt}
                 title="Reached it"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--violet-electric)] hover:text-foreground"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Target className="size-3.5" strokeWidth={2} />
               </button>
@@ -237,7 +283,7 @@ export function PursuitCard({
                 type="button"
                 onClick={markDone}
                 title="Mark complete"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--violet-electric)] hover:text-foreground"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Check className="size-3.5" strokeWidth={2} />
               </button>

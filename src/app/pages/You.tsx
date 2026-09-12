@@ -77,9 +77,11 @@ export function You() {
   }
 
   return (
-    <div className="ns-you-page min-h-screen bg-surface py-8 sm:py-12">
+    <div className="min-h-screen bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="ns-you-kicker mb-3">YOUR PERSONAL ARCHIVE</div>
+        <div className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          YOUR PERSONAL ARCHIVE
+        </div>
         <div className="mb-8 flex items-end justify-between gap-5">
           <div>
             <h1 className="text-[clamp(2.8rem,7vw,5rem)] leading-[.9] tracking-[-.04em]" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
@@ -96,13 +98,16 @@ export function You() {
           <div className="flex items-center gap-4">
             <AvatarPicker name={displayName} url={avatar ?? profile?.avatar_url} onChange={setAvatar} />
             <div className="min-w-0">
-              <h2 className="truncate text-3xl leading-tight sm:text-4xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+              {/* The name carries far more visual weight than any section
+                  heading below it now — the two shouldn't compete for the eye
+                  at the same level. */}
+              <h2 className="truncate text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
                 {user ? displayName : "You"}
               </h2>
               <div className="mt-1"><ProfileHeadline variant="quiet" /></div>
             </div>
           </div>
-          <div className="hidden shrink-0 rounded-2xl bg-[color-mix(in_srgb,var(--pastel-sage)_28%,var(--surface))] px-5 py-4 text-center sm:block">
+          <div className="hidden shrink-0 rounded-2xl border border-border px-5 py-4 text-center sm:block">
             <p className="text-sm italic text-foreground" style={{ fontFamily: "var(--font-serif)" }}>
               "Same person, more hobbies."
             </p>
@@ -176,144 +181,141 @@ export function You() {
           </Button>
         </div>
 
-        {/* Your Moments and Your Pursuits are the portfolio: what you've
-            actually made, and what you're currently bringing to life,
-            standing next to each other rather than buried in tabs. */}
-        <div className="mb-12 grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
-          <section>
-            <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                Your Moments
-              </h2>
-              {/* All moments (plain chronological) is the default now — By
-                  Space stays available for anyone who wants the grouped
-                  view. "Space" is the app's actual term for this, so the
-                  toggle shouldn't say "hobby" anywhere. */}
-              <div className="flex gap-1 rounded-full border border-border bg-surface p-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setMomentsView("grid")}
-                  className={`rounded-full px-3 py-1 transition-colors ${
-                    momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                  }`}
-                >
-                  All moments
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMomentsView("shelf")}
-                  className={`rounded-full px-3 py-1 transition-colors ${
-                    momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                  }`}
-                >
-                  By Space
-                </button>
-              </div>
-            </div>
-            <p className="mb-4 mt-1 text-sm text-muted-foreground">
-              {momentsView === "shelf"
-                ? "Grouped by Space — open one to see every moment inside it."
-                : "A visual record of what you've made, explored, and loved, newest first."}
-            </p>
-            {momentsView === "shelf" ? (
-              <HobbyShelf
-                items={sessions}
-                emptyCta={false}
-                emptyCopy="Nothing logged yet. Create something and it'll show up here."
-              />
-            ) : (
-              <WorkGrid
-                posts={myPosts}
-                onOpen={setOpenPost}
-                emptyLabel="Nothing logged yet. Create something and it'll show up here."
-              />
-            )}
-          </section>
+        {/* Five sections, stacked full-width with generous space between
+            them rather than paired side by side — separation comes from
+            whitespace and a hairline rule, not from boxing each one in.
+            Order: Pursuits, Moments, Quiet Milestones, Circles, Clan. */}
+        <section className="mb-14">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Your Pursuits
+            </h2>
+            <Button variant="outline" size="sm" onClick={() => setPursuitDialog(true)}>
+              <Sparkles className="size-3.5" />
+              Create Your Pursuit
+            </Button>
+          </div>
+          <p className="mb-5 text-sm text-muted-foreground">The things you're bringing to life.</p>
 
-          <section>
-            <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                Your Pursuits
-              </h2>
-              <Button variant="outline" size="sm" onClick={() => setPursuitDialog(true)}>
-                <Sparkles className="size-3.5" />
+          {myPursuits.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
+              <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+                Nothing yet. Name a thing you're working toward and it lives here.
+              </p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => setPursuitDialog(true)}>
                 Create Your Pursuit
               </Button>
             </div>
-            <p className="mb-4 text-sm text-muted-foreground">The things you're bringing to life.</p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {myPursuits.map((pursuit) => (
+                <PursuitCard
+                  key={pursuit.id}
+                  pursuit={pursuit}
+                  owner
+                  className="w-full"
+                  inspirationPost={
+                    pursuit.inspiredByPostId
+                      ? posts.find((p) => p.id === pursuit.inspiredByPostId)
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </section>
 
-            {myPursuits.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
-                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  Nothing yet. Name a thing you're working toward and it lives here.
-                </p>
-                <Button variant="outline" size="sm" className="mt-4" onClick={() => setPursuitDialog(true)}>
-                  Create Your Pursuit
-                </Button>
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                {myPursuits.map((pursuit) => (
-                  <PursuitCard
-                    key={pursuit.id}
-                    pursuit={pursuit}
-                    owner
-                    className="w-full"
-                    inspirationPost={
-                      pursuit.inspiredByPostId
-                        ? posts.find((p) => p.id === pursuit.inspiredByPostId)
-                        : undefined
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
+        <section className="mb-14 border-t border-border pt-10">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Your Moments
+            </h2>
+            {/* All moments (plain chronological) is the default now — By
+                Space stays available for anyone who wants the grouped
+                view. "Space" is the app's actual term for this, so the
+                toggle shouldn't say "hobby" anywhere. */}
+            <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setMomentsView("grid")}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                }`}
+              >
+                All moments
+              </button>
+              <button
+                type="button"
+                onClick={() => setMomentsView("shelf")}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                }`}
+              >
+                By Space
+              </button>
+            </div>
+          </div>
+          <p className="mb-5 mt-1 text-sm text-muted-foreground">
+            {momentsView === "shelf"
+              ? "Grouped by Space — open one to see every moment inside it."
+              : "A visual record of what you've made, explored, and loved, newest first."}
+          </p>
+          {momentsView === "shelf" ? (
+            <HobbyShelf
+              items={sessions}
+              emptyCta={false}
+              emptyCopy="Nothing logged yet. Create something and it'll show up here."
+            />
+          ) : (
+            <WorkGrid
+              posts={myPosts}
+              onOpen={setOpenPost}
+              emptyLabel="Nothing logged yet. Create something and it'll show up here."
+            />
+          )}
+        </section>
 
-        <div className="mb-9">
-          <div className="mb-3 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+        <section className="mb-14 border-t border-border pt-10">
+          <div className="mb-1 flex items-baseline justify-between gap-4">
+            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
               Quiet Milestones
             </h2>
           </div>
-          <p className="mb-3 text-sm text-muted-foreground">
+          <p className="mb-5 text-sm text-muted-foreground">
             Non-metric growth that feels good. Private by default — share one at a time, only if you want to.
           </p>
           <QuietMilestones />
-        </div>
+        </section>
 
-        <div className="ns-you-lower-grid grid gap-6 sm:grid-cols-2">
-          <div>
-            <div className="mb-3 flex items-baseline justify-between gap-4">
-              <h2 className="flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-                <Users className="size-4 text-foreground" strokeWidth={1.8} />
-                Your Clan
-              </h2>
-            </div>
-            <p className="mb-3 text-sm text-muted-foreground">People who make the journey more fun.</p>
-            <ClanList limit={5} />
+        <section className="mb-14 border-t border-border pt-10">
+          <div className="mb-1 flex items-baseline justify-between gap-4">
+            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+              <Users className="size-4 text-foreground" strokeWidth={1.8} />
+              Your Circles
+            </h2>
+            <Link to="/circles" className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground">
+              View all →
+            </Link>
           </div>
+          <p className="mb-5 text-sm text-muted-foreground">Communities you're part of.</p>
+          {circlesVisible ? (
+            <CirclesJoined limit={4} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Hidden. Only you can see which Circles you've joined.</p>
+          )}
+        </section>
 
-          <div>
-            <div className="mb-3 flex items-baseline justify-between gap-4">
-              <h2 className="flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-                <Users className="size-4 text-foreground" strokeWidth={1.8} />
-                Your Circles
-              </h2>
-              <Link to="/circles" className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground">
-                View all →
-              </Link>
-            </div>
-            <p className="mb-3 text-sm text-muted-foreground">Communities you're part of.</p>
-            {circlesVisible ? (
-              <CirclesJoined limit={4} />
-            ) : (
-              <p className="text-sm text-muted-foreground">Hidden. Only you can see which Circles you've joined.</p>
-            )}
+        <section className="border-t border-border pt-10">
+          <div className="mb-1 flex items-baseline justify-between gap-4">
+            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+              <Users className="size-4 text-foreground" strokeWidth={1.8} />
+              Your Clan
+            </h2>
           </div>
-        </div>
+          <p className="mb-5 text-sm text-muted-foreground">People who make the journey more fun.</p>
+          <ClanList limit={5} />
+        </section>
       </div>
 
       <MomentDetail post={openPost} owned onOpenChange={(o) => !o && setOpenPost(null)} />

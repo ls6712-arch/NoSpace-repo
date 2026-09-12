@@ -97,9 +97,16 @@ export function AvatarPicker({
 
   return (
     <div className="flex items-center gap-5">
-      <Avatar className={`${size} shrink-0`}>
+      {/* Flat fill, not the shared component's brand-gradient default —
+          this picture is the profile's own identity mark, not a UI accent. */}
+      <Avatar className={`${size} shrink-0 ring-0`}>
         {url && <AvatarImage src={url} alt="" className="object-cover" />}
-        <AvatarFallback className="text-xl">{initials(name)}</AvatarFallback>
+        <AvatarFallback
+          className="text-xl"
+          style={{ backgroundImage: "none", backgroundColor: "var(--surface-muted)", color: "var(--foreground)" }}
+        >
+          {initials(name)}
+        </AvatarFallback>
       </Avatar>
 
       <div className="min-w-0">
