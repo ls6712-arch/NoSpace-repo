@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Lock, PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
@@ -18,6 +18,7 @@ import { MomentDetail } from "../components/MomentDetail";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
+import { ProfileOnboarding } from "../components/ProfileOnboarding";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal, useJournalSlice } from "../lib/journal";
@@ -27,6 +28,7 @@ import { mirrorProfileLinks } from "../lib/profileLinksRemote";
 import { ProfileLinksEditor } from "../components/ProfileLinks";
 import { AccountSettings } from "../components/AccountSettings";
 import { useSocial } from "../context/SocialContext";
+import { localOnboardingDone } from "../lib/onboardingLocal";
 import { subHobbyLabel, getHobby } from "../data/hobbies";
 
 function timeAgo(ts: number) {
@@ -60,6 +62,13 @@ export function You() {
   const [expandedPursuitId, setExpandedPursuitId] = useState<string | null>(null);
   const [renderedPursuitId, setRenderedPursuitId] = useState<string | null>(null);
   const entryProject = useJournalSlice((s) => s.entryProject);
+  // Whether to show the first-run guided setup, decided once and then left
+  // alone — null means "not decided yet". Deciding it live off the current
+  // profile/social state (rather than freezing it) was a real bug: adding
+  // your first interest on step 2 made "no interests yet" false mid-flow,
+  // which kicked the onboarding view out from under itself back to the
+  // normal page before the remaining steps ever ran.
+  const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null);
 
   const sessions = useSessionsByHobby();
   const [momentsView, setMomentsView] = useState<"shelf" | "grid">("grid");
@@ -83,6 +92,36 @@ export function You() {
     );
   }
 
+  // First-run guided setup: only for a signed-in, genuinely-empty profile
+  // that hasn't been through onboarding before. onboarding_completed_at is
+  // authoritative once set — checked first, so this never comes back just
+  // because someone later cleared their name or unfollowed every interest.
+  // localOnboardingDone() covers the same "never again" promise when
+  // there's no account to hang that flag off (Supabase not configured) or
+  // the save on finishing failed to reach it.
+  //
+  // Decided once profile has actually loaded (isConfigured but profile is
+  // still null right after sign-in), not on every render — profile starts
+  // out null for everyone, existing accounts included, so judging "empty"
+  // against that transient null would flash onboarding at every sign-in
+  // until the real row arrives.
+  useEffect(() => {
+    if (needsOnboarding !== null || !user) return;
+    if (isConfigured && !profile) return;
+    setNeedsOnboarding(
+      !profile?.onboarding_completed_at &&
+        !localOnboardingDone() &&
+        !profile?.display_name?.trim() &&
+        !profile?.avatar_url &&
+        social.followedHobbies.length === 0,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, profile, isConfigured]);
+
+  if (needsOnboarding) {
+    return <ProfileOnboarding onDone={() => setNeedsOnboarding(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
@@ -101,23 +140,16 @@ export function You() {
           <HandwrittenNote className="max-w-[220px]">A more curious you lives here.</HandwrittenNote>
         </div>
 
-        <div className="mb-8 flex flex-col gap-4 rounded-3xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <AvatarPicker name={displayName} url={avatar ?? profile?.avatar_url} onChange={setAvatar} />
-            <div className="min-w-0">
-              {/* The name carries far more visual weight than any section
-                  heading below it now — the two shouldn't compete for the eye
-                  at the same level. */}
-              <h2 className="truncate text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
-                {user ? displayName : "You"}
-              </h2>
-              <div className="mt-1"><ProfileHeadline variant="quiet" /></div>
-            </div>
-          </div>
-          <div className="hidden shrink-0 rounded-2xl border border-border px-5 py-4 text-center sm:block">
-            <p className="text-sm italic text-foreground" style={{ fontFamily: "var(--font-serif)" }}>
-              "Same person, more hobbies."
-            </p>
+        <div className="mb-8 flex items-center gap-4 rounded-3xl border border-border bg-card p-5">
+          <AvatarPicker name={displayName} url={avatar ?? profile?.avatar_url} onChange={setAvatar} />
+          <div className="min-w-0">
+            {/* The name carries far more visual weight than any section
+                heading below it now — the two shouldn't compete for the eye
+                at the same level. */}
+            <h2 className="truncate text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
+              {user ? displayName : "You"}
+            </h2>
+            <div className="mt-1"><ProfileHeadline variant="quiet" /></div>
           </div>
         </div>
 

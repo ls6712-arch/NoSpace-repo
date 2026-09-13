@@ -14,6 +14,13 @@ export interface Profile {
   username: string;
   display_name: string;
   avatar_url?: string;
+  /** The short quote shown near your name — optional, set during onboarding
+   * or any time after. */
+  tagline?: string;
+  /** Set once, the first time the first-run guided setup on /you finishes
+   * or is skipped through. Only ever checked for null vs. not-null — never
+   * shown again once it's set, regardless of what ended up filled in. */
+  onboarding_completed_at?: string | null;
 }
 
 interface AuthContextType {
@@ -34,6 +41,13 @@ interface AuthContextType {
   updatePassword: (next: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /** Upserts the given fields onto your own profile row and reloads it.
+   * Used by onboarding (name, tagline, the completed-at flag) and anywhere
+   * else that needs to save more than AvatarPicker's own self-contained
+   * avatar_url writes. */
+  updateProfile: (
+    fields: Partial<Pick<Profile, "display_name" | "tagline" | "onboarding_completed_at">>,
+  ) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     for (let attempt = 0; attempt < 4; attempt++) {
       const { data } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url")
+        .select("id, username, display_name, avatar_url, tagline, onboarding_completed_at")
         .eq("id", userId)
         .maybeSingle();
       const row = data as Profile | null;
@@ -213,6 +227,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session) await loadProfile(session.user.id);
   };
 
+  const updateProfile: AuthContextType["updateProfile"] = async (fields) => {
+    if (!supabase || !session) return { error: "Not signed in." };
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({ id: session.user.id, ...fields }, { onConflict: "id" });
+      if (error) return { error: error.message };
+      await loadProfile(session.user.id);
+      return { error: null };
+    } catch {
+      return { error: "Couldn't save. Try again in a moment." };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -227,6 +255,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updatePassword,
         signOut,
         refreshProfile,
+        updateProfile,
       }}
     >
       {children}

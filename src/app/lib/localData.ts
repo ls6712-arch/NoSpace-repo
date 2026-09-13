@@ -26,6 +26,7 @@ export const LOCAL_KEYS = [
   "nospace.draft.v1", // the in-progress composer draft
   "nospace.privateLogs.local.v1", // private logs when signed out (no account to key a real row off)
   "nospace.cornerNotes.v1", // your own private note per Corner, shown on its Moments tile
+  "nospace.onboarding.completed.v1", // local fallback for "has this browser finished onboarding"
 ] as const;
 
 /** Notifies the in-memory stores that their backing storage was emptied. */
