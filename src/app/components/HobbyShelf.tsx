@@ -1,11 +1,7 @@
-import { useState } from "react";
 import { Link } from "react-router";
-import * as Icons from "lucide-react";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
-import { hobbyPhoto } from "../data/hobbyPhotos";
-import { hobbyIconName } from "../data/hobbyIcons";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
 
@@ -20,8 +16,8 @@ export interface HobbySession {
   firstAt: number;
   lastAt: number;
   /** The most recently uploaded real photo/video in this hobby, if any —
-   * this is what the shelf book cover should show. Falls back to the
-   * curated stock photo only when nothing real has been uploaded yet. */
+   * this is what the Corner tile's cover should show. Falls back to the
+   * illustration when nothing real has been uploaded yet. */
   lastMediaUrl?: string;
   lastMediaType?: "photo" | "video";
   lastMediaId?: number;
@@ -112,148 +108,60 @@ export function updatedLabel(ts: number) {
   return `Updated ${new Date(ts).toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
 }
 
-/** The same fact, short enough to sit on a book spine label without clipping. */
-function compactUpdated(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days <= 0) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
-  return `${Math.floor(days / 365)}y ago`;
-}
-
 /**
- * Book spines, cycled within a Space so a stack of three never repeats a
- * colour. Straight from the brand set — forest, coral, sky, mustard.
+ * One Corner, as a flat tile: a square cover (the most recent real photo
+ * among that Corner's Moments, or the illustration when there isn't one —
+ * no stock-photo tier in between that a hotlinked image could fail out of
+ * invisibly) and the Corner's name underneath, nothing else. Same
+ * aspect-square + hairline-border + coral-hover treatment as every other
+ * flat photo tile in the app — no color, no icon chip, no shadow, no lift.
  */
-const SPINES = ["var(--forest)", "var(--coral)", "var(--sky)", "var(--yellow)"];
-
-/** Each book in a stack sits a little askew, the way real ones do. */
-const TILT = [-2.2, 1.6, -1.1, 2.4];
-
-/**
- * One hobby, as a hardcover book: coloured spine down the left edge, a
- * photograph of the craft as the cover, and a cream label band across the
- * bottom carrying a small line icon and the hobby's name.
- *
- * Books in a stack overlap and tilt slightly. Hovering lifts the book and
- * straightens it, which is also what makes it obvious the whole thing is one
- * target rather than decoration.
- */
-function HobbyBook({
+function CornerTile({
   item,
-  index,
-  count,
   linkTo,
 }: {
   item: HobbySession;
-  index: number;
-  count: number;
-  /** Where this book opens. Defaults to your own archive. */
+  /** Where this tile opens. Defaults to your own archive. */
   linkTo?: (item: HobbySession) => string;
 }) {
-  const [photoFailed, setPhotoFailed] = useState(false);
-  const photo = photoFailed ? undefined : hobbyPhoto(item.subSlug ?? "", item.hobbySlug, 600);
-  const Icon = (Icons as any)[hobbyIconName(item.subSlug, item.hobbySlug)] ?? Icons.Sparkles;
-
-  const spine = SPINES[index % SPINES.length];
-  const tilt = TILT[index % TILT.length];
-  // Later books sit lower and further right, so the stack fans out. Kept
-  // small enough that a stack of 3-4 doesn't run out of a narrow column.
-  const offset = index * 10;
-
   return (
-    <Link
-      to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`}
-      title={`${item.label}: ${item.sessions} ${item.sessions === 1 ? "moment" : "moments"}, ${updatedLabel(item.lastAt).toLowerCase()}`}
-      className="group relative block origin-top transition-transform duration-300 ease-out hover:z-20 hover:-translate-y-2 hover:rotate-0 focus-visible:z-20 focus-visible:-translate-y-2 focus-visible:rotate-0"
-      style={{
-        transform: `rotate(${tilt}deg)`,
-        marginLeft: offset,
-        marginTop: index === 0 ? 0 : -10,
-        zIndex: count - index,
-      }}
-    >
-      <div
-        className="flex overflow-hidden rounded-r-lg rounded-l-sm bg-[var(--surface-elevated)]"
-        style={{ boxShadow: "0 14px 26px -14px rgba(11,62,46,0.45), 0 2px 4px rgba(11,62,46,0.12)" }}
-      >
-        {/* The spine */}
-        <span
-          className="w-2.5 shrink-0 sm:w-3"
-          style={{ backgroundColor: spine }}
-          aria-hidden="true"
-        />
-
-        <span className="min-w-0 flex-1">
-          {/* The cover — your own most recent upload for this hobby when you
-              have one, so ten pottery photos actually show your tenth
-              pottery photo rather than the same stock image every time.
-              Falls back to the curated photo, then the illustration, for a
-              hobby you haven't uploaded real media into yet. */}
-          <span className="block aspect-[16/9] overflow-hidden bg-surface-muted">
-            {item.lastMediaUrl ? (
-              <PostMedia
-                media={item.lastMediaUrl}
-                type={item.lastMediaType}
-                hobbySlug={item.hobbySlug}
-                seed={item.lastMediaId ?? item.key}
-                preview
-                className="h-full w-full transition-transform duration-500 group-hover:scale-[1.04]"
-              />
-            ) : photo ? (
-              <img
-                src={photo}
-                alt=""
-                loading="lazy"
-                onError={() => setPhotoFailed(true)}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              />
-            ) : (
-              <SubHobbyArt
-                hobbySlug={item.hobbySlug}
-                subSlug={item.subSlug ?? ""}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              />
-            )}
-          </span>
-
-          {/* The label band */}
-          <span className="flex items-center gap-2.5 px-3.5 py-2.5">
-            <Icon
-              className="size-4 shrink-0 text-[var(--coral-deep)]"
-              strokeWidth={1.7}
-              aria-hidden="true"
-            />
-            <span className="min-w-0 flex-1">
-              <span
-                className="block truncate text-[15px] leading-tight text-foreground"
-                style={{ fontFamily: "var(--font-serif)" }}
-              >
-                {item.label}
-              </span>
-              {/* The facts stay on the book, just quieter than the name. */}
-              <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                {item.sessions} {item.sessions === 1 ? "moment" : "moments"} ·{" "}
-                {compactUpdated(item.lastAt)}
-              </span>
-            </span>
-          </span>
-        </span>
+    <Link to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`} className="group block">
+      <div className="aspect-square overflow-hidden rounded-lg border border-[var(--hairline)] transition-colors group-hover:border-[var(--coral-deep)]">
+        {item.lastMediaUrl ? (
+          <PostMedia
+            media={item.lastMediaUrl}
+            type={item.lastMediaType}
+            hobbySlug={item.hobbySlug}
+            seed={item.lastMediaId ?? item.key}
+            preview
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <SubHobbyArt
+            hobbySlug={item.hobbySlug}
+            subSlug={item.subSlug ?? ""}
+            className="h-full w-full object-cover"
+          />
+        )}
       </div>
+      <p
+        className="mt-1.5 truncate text-sm leading-tight text-foreground"
+        style={{ fontFamily: "var(--font-serif)" }}
+        title={item.label}
+      >
+        {item.label}
+      </p>
     </Link>
   );
 }
 
 /**
- * Your work, shelved. Hobbies group under the Space they belong to — Pottery
- * under The Studio, Running under In Motion — as a small stack of books per
- * Space, with the Space name above it in caps.
- *
- * No wooden carcass, no plants, no tiny unreadable spines: the shelf feeling
- * comes from the stacking and the label bands, and every book is a link into
- * that hobby's own archive.
+ * Your work, shelved. One flat, gapless-feeling grid of every Corner you
+ * have Moments in, most-recently-updated first — no Space-level grouping
+ * here. Space stays the top-level structure everywhere else in the app
+ * (Discover, the composer, Circles); this view is the one deliberate
+ * exception, since its whole point is to browse by the more specific thing
+ * rather than re-derive the Space hierarchy a click away on every other tab.
  */
 export function HobbyShelf({
   items: override,
@@ -263,9 +171,9 @@ export function HobbyShelf({
 }: {
   items?: HobbySession[];
   /**
-   * Where each book opens. On your own profile that's your archive; on
+   * Where each tile opens. On your own profile that's your archive; on
    * someone else's it has to stay on their profile, or you end up looking at
-   * your own empty Space wondering where their work went.
+   * your own empty Corner wondering where their work went.
    */
   linkTo?: (item: HobbySession) => string;
   emptyCopy?: string;
@@ -279,7 +187,7 @@ export function HobbyShelf({
       <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
         <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
           {emptyCopy ??
-            "Your shelf is empty. Every hobby you log gets its own book here, with everything you've made in it inside."}
+            "Your shelf is empty. Every hobby you log gets its own tile here, with everything you've made in it inside."}
         </p>
         {emptyCta && (
           <Link
@@ -293,41 +201,17 @@ export function HobbyShelf({
     );
   }
 
-  // Group the books by the Space they sit in, keeping Spaces in the app's
-  // canonical order rather than whichever happened to be logged first.
-  const bySpace = new Map<string, HobbySession[]>();
-  for (const item of items) {
-    bySpace.set(item.hobbySlug, [...(bySpace.get(item.hobbySlug) ?? []), item]);
-  }
-  const groups = hobbies
-    .filter((h) => bySpace.has(h.slug))
-    .map((h) => ({ space: h, books: bySpace.get(h.slug)! }));
+  // Most-recently-updated Corner first. A local sort, not a change to
+  // sessionsFromPosts's own order (most-logged first) — that order still
+  // backs the hobby chips near the top of the profile, which this view
+  // shouldn't reach back and affect.
+  const sorted = [...items].sort((a, b) => b.lastAt - a.lastAt);
 
   return (
-    <div className="rounded-3xl bg-[var(--surface-elevated)] px-4 py-8 sm:px-6">
-      {/* auto-fit/minmax responds to the space this shelf actually has,
-          not the viewport — sm:/lg: breakpoints kept forcing 3 columns even
-          when this sits in a narrow half-width column next to Your
-          Pursuits, which squeezed every book down to unreadable fragments
-          ("C...", "1..."). This shrinks to fewer columns automatically
-          whenever the container itself is narrow. */}
-      <div className="grid gap-x-6 gap-y-10 [grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))]">
-        {groups.map(({ space, books }) => (
-          <section key={space.slug}>
-            <h3
-              className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.14em] text-foreground"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              {space.name}
-            </h3>
-
-            {/* The stack. Extra right padding leaves room for the fan-out. */}
-            <div className="relative pr-6">
-              {books.map((item, i) => (
-                <HobbyBook key={item.key} item={item} index={i} count={books.length} linkTo={linkTo} />
-              ))}
-            </div>
-          </section>
+    <div className="rounded-3xl bg-[var(--surface-elevated)] p-1 sm:p-1.5">
+      <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-1.5 lg:grid-cols-6">
+        {sorted.map((item) => (
+          <CornerTile key={item.key} item={item} linkTo={linkTo} />
         ))}
       </div>
     </div>
