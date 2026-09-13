@@ -183,6 +183,27 @@ export async function peopleInHobby(hobbySlug: string, limit = 12): Promise<Pers
     .slice(0, limit);
 }
 
+/**
+ * A default browsable set of people, for landing on /people with nothing
+ * typed and no hobby picked. Ordered by recency (newest profiles first),
+ * never by post count, likes, or any popularity signal — consistent with
+ * "no follower counts anywhere on NoSpace."
+ */
+export async function browsePeople(limit = 24): Promise<Person[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error || !data) return [];
+    return await decorate((data as ProfileRow[]).map(toPerson));
+  } catch {
+    return [];
+  }
+}
+
 /** Debounced people search, safe to call on every keystroke. */
 export function usePeopleSearch(query: string) {
   const [people, setPeople] = useState<Person[]>([]);

@@ -292,6 +292,27 @@ export function finishProject(projectId: string) {
   });
 }
 
+/**
+ * Adds any Pursuits from the database that aren't already in this browser's
+ * local journal — called after sign-in to bring back what a previous
+ * sign-out's clearLocalData() wiped from here. Every Pursuit a signed-in
+ * maker starts is already mirrored to Supabase via mirrorPursuit
+ * (lib/pursuitsRemote.ts) regardless of whether it's shared, so the account
+ * has always had a durable copy; the only thing that was missing was
+ * anything reading it back. This only ever adds — a Pursuit already present
+ * locally is left exactly as it is, since that copy might hold an edit made
+ * in this tab that hasn't been mirrored yet.
+ */
+export function mergeRemoteProjects(remote: Project[]) {
+  const knownIds = new Set(state.projects.map((p) => p.id));
+  const toAdd = remote.filter((p) => !knownIds.has(p.id));
+  if (toAdd.length === 0) return;
+  commit({
+    ...state,
+    projects: [...state.projects, ...toAdd].sort((a, b) => b.startedAt - a.startedAt),
+  });
+}
+
 export function toggleSaved(postId: number) {
   const saved = state.saved.includes(postId)
     ? state.saved.filter((s) => s !== postId)
