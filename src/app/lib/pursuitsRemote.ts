@@ -1,5 +1,40 @@
 import { supabase } from "../../lib/supabase";
-import { Goal, GoalShape, Project, attachEntry } from "./journal";
+import { Goal, GoalShape, Project, attachEntry, mergeRemoteProjects } from "./journal";
+
+/** Shared by every reader of a `pursuits` row — fetchPursuitById,
+ * restoreOwnPursuits — so the goal-column mapping only lives in one place. */
+function rowToGoal(row: any): Goal | undefined {
+  if (!row.goal_shape) return undefined;
+  return {
+    id: "",
+    shape: row.goal_shape as GoalShape,
+    label: row.goal_label ?? "",
+    targetNumber: row.goal_target_number ?? undefined,
+    unit: row.goal_unit ?? undefined,
+    current: row.goal_current ?? undefined,
+    targetDate: row.goal_target_date ? new Date(row.goal_target_date).getTime() : undefined,
+    createdAt: 0,
+    reachedAt: row.goal_reached_at ? new Date(row.goal_reached_at).getTime() : undefined,
+  };
+}
+
+/** A `pursuits` row as the local journal's own `Project` shape, for merging
+ * back into it — see restoreOwnPursuits. */
+function rowToProject(row: any): Project {
+  return {
+    id: row.id,
+    title: row.title,
+    hobbySlug: row.hobby_slug ?? undefined,
+    subHobby: row.sub_hobby ?? undefined,
+    interest: row.interest ?? undefined,
+    customSpace: row.custom_space ?? undefined,
+    inspiredByPostId: row.inspired_by_post_id ?? undefined,
+    shared: !!row.shared,
+    startedAt: new Date(row.started_at).getTime(),
+    finishedAt: row.finished_at ? new Date(row.finished_at).getTime() : undefined,
+    goal: rowToGoal(row),
+  };
+}
 
 /**
  * The local journal (lib/journal.ts) is the source of truth for the owner's
@@ -87,19 +122,7 @@ export async function fetchPursuitById(id: string): Promise<SharedPursuit | null
   try {
     const { data, error } = await supabase.from("pursuits").select("*").eq("id", id).maybeSingle();
     if (error || !data) return null;
-    const goal: Goal | undefined = data.goal_shape
-      ? {
-          id: "",
-          shape: data.goal_shape as GoalShape,
-          label: data.goal_label ?? "",
-          targetNumber: data.goal_target_number ?? undefined,
-          unit: data.goal_unit ?? undefined,
-          current: data.goal_current ?? undefined,
-          targetDate: data.goal_target_date ? new Date(data.goal_target_date).getTime() : undefined,
-          createdAt: 0,
-          reachedAt: data.goal_reached_at ? new Date(data.goal_reached_at).getTime() : undefined,
-        }
-      : undefined;
+    const goal = rowToGoal(data);
     return {
       id: data.id,
       userId: data.user_id,
@@ -114,6 +137,31 @@ export async function fetchPursuitById(id: string): Promise<SharedPursuit | null
     };
   } catch {
     return null;
+  }
+}
+
+/**
+ * Pulls every Pursuit the signed-in maker owns — shared or not, RLS lets the
+ * owner see both — and folds any this browser doesn't already have into the
+ * local journal. Called on sign-in (see AuthContext.tsx) so a Pursuit
+ * started before a logout, then wiped from this browser by
+ * clearLocalData(), comes back instead of looking deleted. Best-effort: an
+ * unconfigured Supabase project, an offline moment, or a table that hasn't
+ * been migrated yet all degrade to "nothing to restore" rather than an
+ * error — signing in should never fail over this.
+ */
+export async function restoreOwnPursuits(userId: string) {
+  if (!supabase) return;
+  try {
+    const { data, error } = await supabase
+      .from("pursuits")
+      .select("*")
+      .eq("user_id", userId)
+      .order("started_at", { ascending: false });
+    if (error || !data) return;
+    mergeRemoteProjects((data as any[]).map(rowToProject));
+  } catch {
+    // Best effort — the local journal is unaffected either way.
   }
 }
 

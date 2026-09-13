@@ -8,6 +8,7 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { clearLocalData } from "../lib/localData";
+import { restoreOwnPursuits } from "../lib/pursuitsRemote";
 
 export interface Profile {
   id: string;
@@ -84,7 +85,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .getSession()
       .then(({ data }) => {
         setSession(data.session);
-        if (data.session) loadProfile(data.session.user.id);
+        if (data.session) {
+          loadProfile(data.session.user.id);
+          // Brings back any Pursuits a previous sign-out wiped from this
+          // browser (see clearLocalData in signOut, below). Fire-and-forget:
+          // the local journal already works with or without this landing.
+          void restoreOwnPursuits(data.session.user.id);
+        }
       })
       .catch(() => {
         // Unreachable auth server — carry on as a guest.
@@ -98,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       if (newSession) {
         loadProfile(newSession.user.id);
+        void restoreOwnPursuits(newSession.user.id);
       } else {
         setProfile(null);
       }
