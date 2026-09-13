@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
-import { Plus, Users, X } from "lucide-react";
+import { Compass, Plus, Sprout, Users, X } from "lucide-react";
 import { getHobby, currentSpaceSlug, subHobbyLabel } from "../data/hobbies";
 import { postInCategory } from "../data/categories";
 import { useCategories } from "../context/CategoriesContext";
 import { useCorners } from "../context/CornersContext";
+import { useSocial } from "../context/SocialContext";
 import { HobbyTile } from "../components/HobbyTile";
 import { CreateCornerDialog } from "../components/CreateCornerDialog";
 import { useContent } from "../context/ContentContext";
@@ -17,7 +18,6 @@ import { GeneratedArt } from "../components/GeneratedArt";
 import { HobbyActivity } from "../components/HobbyActivity";
 import { usePeopleInHobby } from "../lib/people";
 import { PeopleRow } from "../components/PersonCard";
-import { PersonActions } from "../components/PersonActions";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
@@ -193,6 +193,7 @@ export function CategoryFeed() {
     useContent();
   const { circlesByHobby } = useCircles();
   const { visitHobby } = useRewards();
+  const social = useSocial();
 
   useEffect(() => {
     if (hobby) visitHobby(hobby.slug);
@@ -220,6 +221,15 @@ export function CategoryFeed() {
   const listings = listingsByHobby(hobby.slug);
   const circles = circlesByHobby(hobby.slug);
 
+  // Explore, right on the Space hero: a direct follow toggle on the Space
+  // itself, not a dialog with a list to pick from — there's only ever one
+  // thing to explore here, the Space this whole page is about, so the
+  // multi-hobby picker PersonActions otherwise offers (built for a person's
+  // profile, where they may work in several hobbies) had nothing to add.
+  const spaceHobbyKey = `space:${hobby.slug}`;
+  const exploringSpace = social.isFollowingHobby(spaceHobbyKey);
+  const toggleExploreSpace = () => social.toggleHobbyFollow(spaceHobbyKey, hobby.shortName);
+
   const countFor = (subSlug: string) =>
     allPosts.filter((p) => p.subHobby === subSlug).length;
   // The curated baseline plus anything tagged or deliberately created — not
@@ -245,7 +255,26 @@ export function CategoryFeed() {
             <h1 className="mb-4 text-[clamp(2.8rem,6vw,5rem)] leading-[.94] tracking-[-.035em]" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h1>
             <p className="mb-3 text-xl text-foreground" style={{ fontFamily: "var(--font-heading)" }}>{hobby.tagline}</p>
             <HobbyActivity hobbySlug={hobby.slug} className="mt-4 text-foreground" />
-            <div className="mt-6"><PersonActions hobbyKeys={[activeSub ?? `space:${hobby.slug}`]} /></div>
+            <div className="mt-6">
+              <Button
+                variant={exploringSpace ? "outline" : "brand"}
+                size="lg"
+                className="w-full"
+                onClick={toggleExploreSpace}
+              >
+                {exploringSpace ? (
+                  <>
+                    <Sprout className="size-4" />
+                    Exploring
+                  </>
+                ) : (
+                  <>
+                    <Compass className="size-4" />
+                    Explore
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           <div className="ns-space-hero-art w-full max-w-sm shrink-0 md:w-[22rem] md:max-w-none">
             <GeneratedArt hobbySlug={hobby.slug} seed={`${hobby.slug}-space`} className="h-auto w-full" />
