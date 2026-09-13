@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { Search, Users, X } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { useContent } from "../context/ContentContext";
-import { usePeopleSearch, peopleInHobby, type Person } from "../lib/people";
+import { usePeopleSearch, peopleInHobby, browsePeople, type Person } from "../lib/people";
 import { PeopleRow } from "../components/PersonCard";
 import { Button } from "../components/ui/button";
 
@@ -34,8 +34,26 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
   const [hobby, setHobby] = useState(searchParams.get("hobby") ?? "");
   const [inHobby, setInHobby] = useState<Person[]>([]);
   const [loadingHobby, setLoadingHobby] = useState(false);
+  const [browsed, setBrowsed] = useState<Person[]>([]);
+  const [loadingBrowse, setLoadingBrowse] = useState(false);
 
   const { people: found, loading: searching } = usePeopleSearch(query);
+
+  useEffect(() => {
+    if (query.trim() || hobby) return;
+    let cancelled = false;
+    setLoadingBrowse(true);
+    browsePeople(24)
+      .catch(() => [] as Person[])
+      .then((rows) => {
+        if (cancelled) return;
+        setBrowsed(rows);
+        setLoadingBrowse(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // The hobbies people are actually working in, so the filters lead somewhere
   // populated rather than listing every Space whether or not anyone's there.
@@ -125,8 +143,8 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
           By what they make
         </h2>
         <p className="mb-4 mt-1 text-sm text-muted-foreground">
-          Pick a hobby to see who works in it. This is the intended route:
-          you meet someone through the craft, not a ranked list.
+          Browse everyone, or narrow it down by hobby. This is the intended
+          route: you meet someone through the craft, not a ranked list.
         </p>
 
         <ul className="mb-7 flex flex-wrap gap-2">
@@ -152,12 +170,18 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
         </ul>
 
         {!hobby ? (
-          <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-            <Users className="mx-auto mb-3 size-5 text-muted-foreground" />
-            <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Choose a hobby above, or search for someone by name.
-            </p>
-          </div>
+          loadingBrowse ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">Looking…</p>
+          ) : browsed.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+              <Users className="mx-auto mb-3 size-5 text-muted-foreground" />
+              <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+                Nobody's joined yet — pick a hobby above once people are in it.
+              </p>
+            </div>
+          ) : (
+            <PeopleRow people={browsed} />
+          )
         ) : loadingHobby ? (
           <p className="py-12 text-center text-sm text-muted-foreground">Looking…</p>
         ) : inHobby.length === 0 ? (
