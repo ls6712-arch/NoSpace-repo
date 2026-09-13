@@ -215,3 +215,10 @@ drop policy if exists "own posts are editable" on public.posts;
 create policy "own posts are editable"
   on public.posts for update
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 9. Multiple photos per moment — one Moment can carry 1-8 photos now.
+--    media_url keeps mirroring the first photo, for anything that still
+--    reads a single URL; media_urls is the full ordered set.
+-- ─────────────────────────────────────────────────────────────────────────
+alter table public.posts add column if not exists media_urls text[];

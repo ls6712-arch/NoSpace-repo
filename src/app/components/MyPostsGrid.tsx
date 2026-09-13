@@ -6,7 +6,7 @@ import { useContent } from "../context/ContentContext";
 import { getHobby } from "../data/hobbies";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { PostMedia } from "./PostMedia";
+import { PostMediaCarousel } from "./PostMediaCarousel";
 
 export function MyPostsGrid() {
   const { myPosts, findListing } = useContent();
@@ -37,11 +37,12 @@ export function MyPostsGrid() {
             onClick={() => setSelected(post)}
             className="relative aspect-square overflow-hidden rounded-md sm:rounded-xl group"
           >
-            <PostMedia
-              media={post.media}
+            <PostMediaCarousel
+              media={post.mediaUrls?.length ? post.mediaUrls : post.media ? [post.media] : []}
               type={post.type}
               hobbySlug={post.hobbySlug}
               seed={post.id}
+              preview
               className="h-full w-full transition-transform duration-300 group-hover:scale-105"
             />
             {post.type === "video" && (
@@ -63,8 +64,8 @@ export function MyPostsGrid() {
             <>
               <DialogTitle className="sr-only">{selected.caption}</DialogTitle>
               <div className="aspect-square overflow-hidden">
-                <PostMedia
-                  media={selected.media}
+                <PostMediaCarousel
+                  media={selected.mediaUrls?.length ? selected.mediaUrls : selected.media ? [selected.media] : []}
                   type={selected.type}
                   hobbySlug={selected.hobbySlug}
                   seed={selected.id}

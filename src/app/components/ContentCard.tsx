@@ -11,7 +11,7 @@ import { useCorners } from "../context/CornersContext";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
-import { PostMedia } from "./PostMedia";
+import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -89,12 +89,18 @@ export function ContentCard({
   const listing = post.productId ? findListing(post.productId) : undefined;
   const aspect = ASPECTS[Math.abs(post.id) % ASPECTS.length];
   const audience = AUDIENCE[post.visibility];
+  const mediaList = post.mediaUrls?.length ? post.mediaUrls : post.media ? [post.media] : [];
+  // The carousel's own "current/total" counter sits top-right — the same
+  // corner Try This already occupies by default — so it needs to move down
+  // out of the way whenever there's actually more than one real photo to count.
+  const hasCarousel =
+    post.type !== "video" && mediaList.filter((u) => /^https?:\/\//.test(u)).length >= 2;
 
   return (
     <div className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-border bg-card group">
       <div className="relative overflow-hidden">
-        <PostMedia
-          media={post.media}
+        <PostMediaCarousel
+          media={mediaList}
           type={post.type}
           hobbySlug={post.hobbySlug}
           seed={post.id}
@@ -117,7 +123,7 @@ export function ContentCard({
             For sale
           </Badge>
         )}
-        <PostBookmark postId={post.id} />
+        <PostBookmark postId={post.id} className={hasCarousel ? "top-14 right-3" : undefined} />
       </div>
 
       <div className={compact ? "p-3" : "p-4"}>

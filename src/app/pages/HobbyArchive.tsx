@@ -10,7 +10,7 @@ import { useJournal } from "../lib/journal";
 import { setCornerNote, useCornerNote } from "../lib/cornerNotes";
 import { parseArchiveKey, updatedLabel } from "../components/HobbyShelf";
 import { MomentDetail } from "../components/MomentDetail";
-import { PostMedia } from "../components/PostMedia";
+import { PostMediaCarousel } from "../components/PostMediaCarousel";
 import { Button } from "../components/ui/button";
 
 /**
@@ -245,8 +245,8 @@ export function HobbyArchive() {
                           >
                             {media ? (
                               <>
-                                <PostMedia
-                                  media={post.media}
+                                <PostMediaCarousel
+                                  media={post.mediaUrls?.length ? post.mediaUrls : post.media ? [post.media] : []}
                                   type={post.type}
                                   hobbySlug={post.hobbySlug}
                                   seed={post.id}

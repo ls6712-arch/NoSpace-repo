@@ -11,6 +11,10 @@ export interface Post {
   interest?: string;
   type: "photo" | "video";
   media: string;
+  /** The full ordered set of photos when this Moment carries more than one
+   * (1-8; videos stay single-item). media always mirrors mediaUrls[0], for
+   * anywhere that only ever reads one URL. */
+  mediaUrls?: string[];
   creator: string;
   caption: string;
   /** A private reflection captured at post time — "Log, then Reflect" — never shown publicly. */

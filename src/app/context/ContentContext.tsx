@@ -46,8 +46,9 @@ export interface NewPostInput {
   interest?: string;
   type: "photo" | "video";
   media?: string;
-  /** A real picked file, uploaded to storage when a real account is signed in. */
-  file?: File;
+  /** Real picked files (1-8 for a photo Moment, exactly 1 for a video),
+   * uploaded to storage in order when a real account is signed in. */
+  files?: File[];
   creator: string;
   caption: string;
   reflection?: string;
@@ -93,6 +94,7 @@ function rowToPost(row: any, creatorName: string): Post {
     interest: row.interest ?? undefined,
     type: row.type,
     media: row.media_url,
+    mediaUrls: row.media_urls ?? (row.media_url ? [row.media_url] : []),
     creator: creatorName,
     caption: row.caption,
     reflection: row.reflection ?? undefined,
@@ -324,33 +326,55 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
     // Real, persisted post — goes to Supabase when signed in and connected.
     if (supabase && user) {
-      let mediaUrl = input.media ?? "";
-      if (input.file) {
-        // Storage keys reject most punctuation and anything non-ASCII, which a
-        // phone's own filename ("Foto 5 sept. 2026, 10.32.png") routinely has.
-        const dot = input.file.name.lastIndexOf(".");
-        const ext = (dot > -1 ? input.file.name.slice(dot + 1) : "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "")
-          .slice(0, 5);
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? `.${ext}` : ""}`;
+      let mediaUrls: string[] = input.media ? [input.media] : [];
+      const files = input.files ?? [];
 
-        const { error: uploadError } = await supabase.storage
-          .from("post-media")
-          .upload(path, input.file, {
-            contentType: input.file.type || undefined,
-            upsert: false,
-          });
+      if (files.length > 0) {
+        // Uploaded one at a time, in order — not Promise.all. Keeps the
+        // photos in the order they were picked and doesn't hammer storage
+        // with N parallel uploads from a single tap.
+        const uploaded: string[] = [];
+        let failCount = 0;
+        for (const f of files) {
+          // Storage keys reject most punctuation and anything non-ASCII, which
+          // a phone's own filename ("Foto 5 sept. 2026, 10.32.png") routinely has.
+          const dot = f.name.lastIndexOf(".");
+          const ext = (dot > -1 ? f.name.slice(dot + 1) : "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "")
+            .slice(0, 5);
+          const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? `.${ext}` : ""}`;
 
-        if (uploadError) {
+          const { error: uploadError } = await supabase.storage
+            .from("post-media")
+            .upload(path, f, {
+              contentType: f.type || undefined,
+              upsert: false,
+            });
+
+          if (uploadError) {
+            failCount++;
+          } else {
+            uploaded.push(supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl);
+          }
+        }
+
+        const noun = input.type === "video" ? "video" : files.length > 1 ? "photos" : "photo";
+        if (uploaded.length === 0) {
+          setMediaError(`Your ${noun} didn't upload. The Moment was saved without it.`);
+        } else if (failCount > 0) {
+          // Some made it, some didn't — the post still saves with whatever
+          // succeeded rather than losing the whole Moment over one bad file.
           setMediaError(
-            `Your ${input.type === "video" ? "video" : "photo"} didn't upload: ${uploadError.message}. The Moment was saved without it.`,
+            `${failCount} of ${files.length} photos didn't upload. The Moment was saved with the rest.`,
           );
         } else {
-          mediaUrl = supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl;
           setMediaError(null);
         }
+        mediaUrls = uploaded;
       }
+
+      const mediaUrl = mediaUrls[0] ?? "";
 
       const { data, error } = await supabase
         .from("posts")
@@ -361,6 +385,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           interest: input.interest?.trim() ? input.interest.trim() : null,
           type: input.type,
           media_url: mediaUrl,
+          media_urls: mediaUrls.length ? mediaUrls : null,
           caption: input.caption,
           reflection: input.reflection?.trim() ? input.reflection.trim() : null,
           visibility: input.visibility,
@@ -399,6 +424,13 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
     // Local-only fallback — used when accounts aren't set up on this build,
     // or nobody's logged in. Doesn't persist beyond this browser tab.
+    // The signed-out path used to drop the picked file(s) entirely, so a
+    // photo someone had just chosen silently became generated art. This
+    // local post only lives as long as the tab does, and so do the object
+    // URLs — they disappear together, which is at least honest.
+    const localMediaUrls = input.media
+      ? [input.media]
+      : (input.files ?? []).map((f) => URL.createObjectURL(f));
     const newPost: Post = {
       id: Date.now() + 1,
       userId: myId,
@@ -406,11 +438,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       subHobby: input.subHobby,
       interest: input.interest?.trim() || undefined,
       type: input.type,
-      // The signed-out path used to drop the picked file entirely, so the photo
-      // someone had just chosen silently became generated art. This local post
-      // only lives as long as the tab does, and so does the object URL — they
-      // disappear together, which is at least honest.
-      media: input.media ?? (input.file ? URL.createObjectURL(input.file) : ""),
+      media: localMediaUrls[0] ?? "",
+      mediaUrls: localMediaUrls.length ? localMediaUrls : undefined,
       creator: input.creator || "You",
       caption: input.caption,
       reflection: input.reflection?.trim() ? input.reflection.trim() : undefined,
