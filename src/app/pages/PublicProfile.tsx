@@ -60,7 +60,14 @@ export function PublicProfile() {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "missing" }
-    | { status: "ready"; personId: string; displayName: string; avatarUrl?: string; posts: Post[] }
+    | {
+        status: "ready";
+        personId: string;
+        displayName: string;
+        avatarUrl?: string;
+        tagline?: string;
+        posts: Post[];
+      }
   >({ status: "loading" });
   // Opening a piece is how you react to it or leave a thought. Declared up
   // here with the other hooks — anything after the early returns below would
@@ -104,20 +111,26 @@ export function PublicProfile() {
         username,
       );
 
-      type Row = { id: string; username: string | null; display_name: string; avatar_url: string | null };
+      type Row = {
+        id: string;
+        username: string | null;
+        display_name: string;
+        avatar_url: string | null;
+        tagline: string | null;
+      };
       let profileRow: Row | null = null;
 
       if (isUuid) {
         const { data } = await supabase
           .from("profiles")
-          .select("id, username, display_name, avatar_url")
+          .select("id, username, display_name, avatar_url, tagline")
           .eq("id", username)
           .maybeSingle();
         profileRow = (data as Row | null) ?? null;
       } else {
         const { data } = await supabase
           .from("profiles")
-          .select("id, username, display_name, avatar_url")
+          .select("id, username, display_name, avatar_url, tagline")
           .eq("username", username)
           .maybeSingle();
         profileRow = (data as Row | null) ?? null;
@@ -126,7 +139,7 @@ export function PublicProfile() {
         if (!profileRow) {
           const { data: byName } = await supabase
             .from("profiles")
-            .select("id, username, display_name, avatar_url")
+            .select("id, username, display_name, avatar_url, tagline")
             .ilike("display_name", username)
             .limit(1);
           profileRow = (byName?.[0] as Row | undefined) ?? null;
@@ -164,6 +177,7 @@ export function PublicProfile() {
         personId: profileRow.id,
         displayName: profileRow.display_name,
         avatarUrl: profileRow.avatar_url ?? undefined,
+        tagline: profileRow.tagline ?? undefined,
         posts,
       });
     })();
@@ -233,7 +247,7 @@ export function PublicProfile() {
     );
   }
 
-  const { personId, displayName, avatarUrl, posts } = state;
+  const { personId, displayName, avatarUrl, tagline, posts } = state;
   const isMe = !!user && user.id === personId;
   const firstName = displayName.split(" ")[0];
   const sessions = sessionsFromPosts(posts);
@@ -285,6 +299,7 @@ export function PublicProfile() {
               >
                 {displayName}
               </h1>
+              {tagline && <p className="mt-1 text-sm italic text-muted-foreground">{tagline}</p>}
               {sessions.length > 0 && (
                 <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
                   {sessions.slice(0, 5).map((s) => s.label).join(", ")}.

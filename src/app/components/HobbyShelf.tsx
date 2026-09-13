@@ -2,8 +2,10 @@ import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
+import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
+import { INK, tagTint } from "./WorkGrid";
 
 export interface HobbySession {
   /** Sub-hobby slug where tagged, else `space:<slug>` for untagged entries. */
@@ -109,12 +111,16 @@ export function updatedLabel(ts: number) {
 }
 
 /**
- * One Corner, as a flat tile: a square cover (the most recent real photo
+ * One Corner, built to the exact same cream-card treatment as an
+ * All-moments card (WorkGrid.tsx): the cover (the most recent real photo
  * among that Corner's Moments, or the illustration when there isn't one —
  * no stock-photo tier in between that a hotlinked image could fail out of
- * invisibly) and the Corner's name underneath, nothing else. Same
- * aspect-square + hairline-border + coral-hover treatment as every other
- * flat photo tile in the app — no color, no icon chip, no shadow, no lift.
+ * invisibly) with the same colored, per-Space tag pill over its top-left
+ * corner, the Corner's own name in the same serif below, and — if you've
+ * written one, from the Corner's own detail view — your private note under
+ * that in quiet, muted text. INK and tagTint are imported from WorkGrid
+ * rather than redefined here, so a tile's tag always agrees with that same
+ * Space's tag on an All-moments card.
  */
 function CornerTile({
   item,
@@ -124,33 +130,53 @@ function CornerTile({
   /** Where this tile opens. Defaults to your own archive. */
   linkTo?: (item: HobbySession) => string;
 }) {
+  const note = useCornerNote(item.key);
+
   return (
     <Link to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`} className="group block">
-      <div className="aspect-square overflow-hidden rounded-lg border border-[var(--hairline)] transition-colors group-hover:border-[var(--coral-deep)]">
-        {item.lastMediaUrl ? (
-          <PostMedia
-            media={item.lastMediaUrl}
-            type={item.lastMediaType}
-            hobbySlug={item.hobbySlug}
-            seed={item.lastMediaId ?? item.key}
-            preview
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <SubHobbyArt
-            hobbySlug={item.hobbySlug}
-            subSlug={item.subSlug ?? ""}
-            className="h-full w-full object-cover"
-          />
-        )}
-      </div>
-      <p
-        className="mt-1.5 truncate text-sm leading-tight text-foreground"
-        style={{ fontFamily: "var(--font-serif)" }}
-        title={item.label}
+      <div
+        className="overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
+        style={{ color: INK }}
       >
-        {item.label}
-      </p>
+        <div className="relative aspect-[4/3] overflow-hidden">
+          {item.lastMediaUrl ? (
+            <PostMedia
+              media={item.lastMediaUrl}
+              type={item.lastMediaType}
+              hobbySlug={item.hobbySlug}
+              seed={item.lastMediaId ?? item.key}
+              preview
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <SubHobbyArt
+              hobbySlug={item.hobbySlug}
+              subSlug={item.subSlug ?? ""}
+              className="h-full w-full object-cover"
+            />
+          )}
+          <span
+            className="absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
+            style={{ backgroundColor: tagTint(item.hobbySlug) }}
+          >
+            {item.label}
+          </span>
+        </div>
+        <div className="px-3.5 py-3">
+          <p
+            className="truncate text-sm leading-snug sm:text-base"
+            style={{ fontFamily: "var(--font-serif)" }}
+            title={item.label}
+          >
+            {item.label}
+          </p>
+          {note && (
+            <p className="mt-0.5 truncate text-xs opacity-60" title={note}>
+              {note}
+            </p>
+          )}
+        </div>
+      </div>
     </Link>
   );
 }
@@ -207,13 +233,17 @@ export function HobbyShelf({
   // shouldn't reach back and affect.
   const sorted = [...items].sort((a, b) => b.lastAt - a.lastAt);
 
+  // No wrapping card here: each tile is now its own opaque cream card (the
+  // same treatment as WorkGrid's All-moments cards), so a dark frame behind
+  // them would just be a purple-tinted box peeking through the gaps — the
+  // exact "dark-purple atmosphere" problem already fixed once for this grid.
+  // Same column/gap treatment as WorkGrid for the same reason: one visual
+  // system, not two grids that happen to sit near each other.
   return (
-    <div className="rounded-3xl bg-[var(--surface-elevated)] p-1 sm:p-1.5">
-      <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-1.5 lg:grid-cols-6">
-        {sorted.map((item) => (
-          <CornerTile key={item.key} item={item} linkTo={linkTo} />
-        ))}
-      </div>
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {sorted.map((item) => (
+        <CornerTile key={item.key} item={item} linkTo={linkTo} />
+      ))}
     </div>
   );
 }

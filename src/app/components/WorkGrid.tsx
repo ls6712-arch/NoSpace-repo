@@ -15,13 +15,18 @@ function dateLabel(ts: number) {
 /** The card's own dark ink color — the cream card is a deliberate, contained
  * exception to the app's dark surfaces (same pairing the flat illustrations
  * already use), so its text needs to be dark-on-cream, not the page's
- * light-on-dark foreground tokens. */
-const INK = "#3A2A1F";
+ * light-on-dark foreground tokens. Exported so HobbyShelf's Corner tiles,
+ * built to the same cream-card treatment, use the identical color rather
+ * than a close approximation. */
+export const INK = "#3A2A1F";
 
 /** A colored tag per Space, cycling through the brand's warm-hue tokens —
  * same idea as HobbyShelf's book-spine colors. A few Spaces get an explicit
  * color instead of the rotation where one obviously fits (mustard for
- * cooking, green for anything craft-adjacent, plum for travel). */
+ * cooking, green for anything craft-adjacent, plum for travel). Exported so
+ * a Corner tile's tag resolves to the same color as this same Space's tag
+ * on an All-moments card, instead of keeping a second, separately-hashed
+ * mapping that could disagree with this one. */
 const TAG_TINTS = [
   "color-mix(in srgb, var(--yellow) 78%, black)",
   "var(--sky-deep)",
@@ -35,7 +40,7 @@ const TAG_TINT_OVERRIDES: Record<string, string> = {
   "crafts-making": "var(--forest)",
   "travel-adventure": "var(--plum)",
 };
-function tagTint(hobbySlug: string) {
+export function tagTint(hobbySlug: string) {
   if (TAG_TINT_OVERRIDES[hobbySlug]) return TAG_TINT_OVERRIDES[hobbySlug];
   const idx = hobbies.findIndex((h) => h.slug === hobbySlug);
   return TAG_TINTS[(idx < 0 ? 0 : idx) % TAG_TINTS.length];

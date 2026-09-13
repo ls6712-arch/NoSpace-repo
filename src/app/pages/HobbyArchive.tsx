@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { ArrowLeft, FileText, Globe2, PenLine, Play, Users, UserRound } from "lucide-react";
 import { Post } from "../data/posts";
@@ -7,6 +7,7 @@ import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal } from "../lib/journal";
+import { setCornerNote, useCornerNote } from "../lib/cornerNotes";
 import { parseArchiveKey, updatedLabel } from "../components/HobbyShelf";
 import { MomentDetail } from "../components/MomentDetail";
 import { PostMedia } from "../components/PostMedia";
@@ -54,6 +55,15 @@ export function HobbyArchive() {
   const [open, setOpen] = useState<Post | null>(null);
 
   const target = useMemo(() => parseArchiveKey(hobbyKey), [hobbyKey]);
+
+  // Same key format as the Moments tile's tally (HobbyShelf.tsx), so a note
+  // written here shows up on the right tile there. Private to this account —
+  // not CornersContext's Corner.description, which is a Corner's one shared,
+  // public line, set by whoever created it and visible to everyone.
+  const noteKey = target ? target.subSlug ?? `space:${target.hobbySlug}` : "";
+  const savedNote = useCornerNote(noteKey);
+  const [noteDraft, setNoteDraft] = useState(savedNote);
+  useEffect(() => setNoteDraft(savedNote), [noteKey]);
 
   const moments = useMemo(() => {
     if (!target) return [];
@@ -139,6 +149,20 @@ export function HobbyArchive() {
           {projects.length === 1 ? "pursuit" : "pursuits"}
           {moments.length > 0 ? ` · ${updatedLabel(moments[0].createdAt).toLowerCase()}` : ""}
         </p>
+
+        {/* A short, private note about this Corner — only you ever see it,
+            here or on its Moments tile. Saves on blur/Enter rather than
+            needing a separate edit mode; empty just clears it. */}
+        <input
+          value={noteDraft}
+          onChange={(e) => setNoteDraft(e.target.value)}
+          onBlur={() => setCornerNote(noteKey, noteDraft)}
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+          maxLength={140}
+          placeholder="Add a short note about this Corner — only you see it."
+          aria-label={`Your private note about ${target.label}`}
+          className="mt-3 w-full max-w-md border-b border-transparent bg-transparent text-sm text-muted-foreground outline-none transition-colors focus:border-border placeholder:text-muted-foreground/60"
+        />
 
         <div className="mt-5">
           <Link to={logTo}>
