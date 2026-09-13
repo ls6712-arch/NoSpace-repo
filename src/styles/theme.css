@@ -785,54 +785,6 @@
     box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--violet-electric) 32%, transparent);
   }
 
-  .ns-discover-hero {
-    /* ~32% shorter than the original 31rem, so Spaces/Circles/People lands
-       much closer to the fold without losing the headline or the art. */
-    min-height: 21rem;
-    background: var(--atmo-void);
-    isolation: isolate;
-  }
-
-  .ns-discover-hero::before {
-    position: absolute;
-    inset: 0;
-    content: "";
-    background-image: radial-gradient(circle, color-mix(in srgb, var(--violet-electric) 30%, transparent) 0 1px, transparent 1.5px);
-    background-size: 22px 22px;
-    opacity: 0.42;
-    pointer-events: none;
-  }
-
-  .ns-discover-hero-art {
-    position: absolute;
-    top: 0;
-    right: -3%;
-    width: min(52vw, 44rem);
-    height: 100%;
-    opacity: 0.95;
-    pointer-events: none;
-  }
-
-  .ns-discover-hero-art::after {
-    position: absolute;
-    inset: 13% 10% 12% 13%;
-    content: "";
-    border: 1px solid color-mix(in srgb, var(--violet-electric) 30%, transparent);
-    border-radius: 50%;
-    transform: rotate(11deg);
-  }
-
-  .ns-discover-hero-ring {
-    position: absolute;
-    top: 9%;
-    right: 12%;
-    width: 70%;
-    aspect-ratio: 1;
-    border: 1px dashed color-mix(in srgb, var(--violet-electric) 45%, transparent);
-    border-radius: 50%;
-    animation: ns-orbit 34s linear infinite;
-  }
-
   .ns-discover-search {
     border-bottom: 2px solid var(--violet-electric);
     background: color-mix(in srgb, var(--void) 45%, transparent);
@@ -1004,18 +956,6 @@
   }
 
   @media (max-width: 639px) {
-    /* No forced min-height on phones: the toggle below the hero should sit
-       right under whatever the (now-tightened) headline/copy/search actually
-       take up, not under an artificially tall block. */
-    .ns-discover-hero { min-height: 0; }
-    .ns-discover-hero-art {
-      top: auto;
-      right: -18%;
-      bottom: 0;
-      width: 92%;
-      height: 48%;
-      opacity: 0.38;
-    }
     .ns-discover-space-copy { display: block; min-height: 8.5rem; }
     .ns-discover-open { display: block; margin-top: 0.9rem; }
     .ns-space-hero-art { width: calc(100% - 1rem); margin-right: 0.5rem; }

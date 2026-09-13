@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import {
   Bookmark,
   LayoutGrid,
@@ -26,7 +26,6 @@ import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { SuggestCategory } from "../components/SuggestCategory";
 import { GeneratedArt } from "../components/GeneratedArt";
-import { DiscoverHeroArt } from "../components/DiscoverHeroArt";
 import { PostMedia } from "../components/PostMedia";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
@@ -326,7 +325,6 @@ export function Discover() {
   const { publicFeed } = useContent();
   const social = useSocial();
   const { cornersFor } = useCorners();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("about") ?? "");
 
@@ -429,56 +427,27 @@ export function Discover() {
 
   return (
     <div className="min-h-screen">
-      <section className="ns-discover-hero relative overflow-hidden">
-        <div className="ns-discover-hero-art" aria-hidden="true">
-          <div className="ns-discover-hero-ring" />
-          <DiscoverHeroArt className="h-full w-full" />
-        </div>
-        <div className="container relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:py-10 lg:grid-cols-[1fr_0.8fr] lg:gap-14 lg:py-12">
-          <div className="relative z-10 max-w-2xl">
-            <div className="ns-section-kicker mb-3 text-foreground">THE FRONT DOOR</div>
-            <h1 className="mb-4 text-[clamp(3rem,7vw,5.5rem)] leading-[.92] tracking-[-.04em] text-foreground" style={{ fontFamily: "var(--font-serif)" }}>
-              Find spaces, circles<br /><em className="text-[var(--coral-deep)]">and people who make things.</em>
-            </h1>
-            <p className="mb-5 max-w-lg text-lg leading-relaxed text-foreground">
-              Browse Spaces, join Circles, and find people making things, all in one place.
-            </p>
-            {/* Used to only render on the Spaces tab, so switching to
-                Circles or People made the box (and the query it held)
-                disappear — not just visually: neither tab's content ever
-                read `query` at all, so there was nothing to reapply even if
-                it had stayed visible. Now always present, and Circles/People
-                below both take `query` as a prop. */}
-            <div className="ns-discover-search relative max-w-xl">
-              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setShown(PAGE_SIZE);
-                  if (searchParams.get("about")) {
-                    const params = new URLSearchParams(searchParams);
-                    params.delete("about");
-                    setSearchParams(params, { replace: true });
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && query.trim()) {
-                    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-                  }
-                }}
-                placeholder="Search hobbies, people, or spaces..."
-                className="w-full border-0 bg-transparent py-3 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
-              />
-              {query && (
-                <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
+      <section className="relative overflow-hidden py-10 sm:py-12">
+        <div className="container relative mx-auto max-w-3xl px-4">
+          <div className="ns-discover-search relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShown(PAGE_SIZE);
+                if (searchParams.get("about")) setSearchParams({}, { replace: true });
+              }}
+              placeholder="Search people, projects, hobbies..."
+              className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
+                <X className="size-4" />
+              </button>
+            )}
           </div>
-          <div className="hidden lg:block" />
         </div>
       </section>
 
