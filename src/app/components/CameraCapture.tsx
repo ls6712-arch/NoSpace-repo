@@ -50,9 +50,14 @@ function extFor(mimeType: string | undefined) {
  */
 export function CameraCapture({
   onCaptured,
+  onPickedLibrary,
   onTextOnly,
 }: {
   onCaptured: (file: File, type: "photo" | "video") => void;
+  /** A library pick carrying more than one file — routed here instead of
+   * onCaptured, which stays single-file for the shutter, a recorded video,
+   * and a recent-capture tap. */
+  onPickedLibrary: (files: File[]) => void;
   onTextOnly: () => void;
 }) {
   const navigate = useNavigate();
@@ -185,12 +190,16 @@ export function CameraCapture({
   };
 
   const pickFromLibrary = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = e.target.files?.[0];
+    const picked = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!picked) return;
-    const type = picked.type.startsWith("video") ? "video" : "photo";
-    addRecentCapture(picked, type);
-    onCaptured(picked, type);
+    if (picked.length === 0) return;
+    if (picked.length === 1) {
+      const type = picked[0].type.startsWith("video") ? "video" : "photo";
+      addRecentCapture(picked[0], type);
+      onCaptured(picked[0], type);
+      return;
+    }
+    onPickedLibrary(picked);
   };
 
   const timeLabel = `0:${String(elapsed).padStart(2, "0")}`;
@@ -202,6 +211,7 @@ export function CameraCapture({
         ref={libraryInputRef}
         type="file"
         accept="image/*,video/*"
+        multiple
         className="hidden"
         onChange={pickFromLibrary}
       />

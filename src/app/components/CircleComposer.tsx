@@ -43,7 +43,7 @@ export function CircleComposer({ circle, tab }: { circle: Circle; tab: CircleTab
         hobbySlug: circle.hobbySlug,
         interest: circle.name,
         type: media?.type.startsWith("video/") ? "video" : "photo",
-        file: media ?? undefined,
+        files: media ? [media] : undefined,
         creator: profile?.display_name?.trim() || "You",
         caption: body.trim(),
         visibility: "circle",

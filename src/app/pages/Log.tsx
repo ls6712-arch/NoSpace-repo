@@ -112,6 +112,21 @@ const AUDIENCE: {
 ];
 
 const THOUGHT_LIMIT = 300;
+const MAX_PHOTOS = 8;
+
+/**
+ * The one hard rule for a Moment's media, applied everywhere a file gets
+ * added — the camera screen's initial pick and the caption screen's own
+ * "+" add-more tile alike: a video is never mixed with photos, and wins
+ * alone if it's anywhere in the new selection. Otherwise photos accumulate
+ * in the order picked, capped at MAX_PHOTOS.
+ */
+function pickFiles(current: File[], incoming: File[]): { files: File[]; type: "photo" | "video" } {
+  const video = incoming.find((f) => f.type.startsWith("video"));
+  if (video) return { files: [video], type: "video" };
+  const currentPhotos = current.filter((f) => !f.type.startsWith("video"));
+  return { files: [...currentPhotos, ...incoming].slice(0, MAX_PHOTOS), type: "photo" };
+}
 
 function BackLink({ onClick }: { onClick: () => void }) {
   return (
@@ -270,8 +285,10 @@ export function Log() {
   const [locationPrivacy, setLocationPrivacy] = useState<LocationPrivacy>("neighborhood");
   const [savedAs, setSavedAs] = useState<null | "shared" | "private">(null);
   const [seed] = useState(() => Date.now());
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  // 1-8 photos, or exactly 1 video — never mixed. See pickFiles below for
+  // the one rule that keeps that true everywhere a file gets added.
+  const [files, setFiles] = useState<File[]>([]);
+  const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Set only when a Private Log's write to Supabase actually failed — the
@@ -292,19 +309,20 @@ export function Log() {
   const draftReadyRef = useRef(false);
 
   const detailFileRef = useRef<HTMLInputElement>(null);
+  const addMoreInputRef = useRef<HTMLInputElement>(null);
 
   // Who posted this always follows the account's display name now — no
   // separate "Posting as" field to fill in or forget to update.
 
   useEffect(() => {
-    if (!file) {
-      setFilePreviewUrl(null);
+    if (files.length === 0) {
+      setFilePreviewUrls([]);
       return;
     }
-    const url = URL.createObjectURL(file);
-    setFilePreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    const urls = files.map((f) => URL.createObjectURL(f));
+    setFilePreviewUrls(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [files]);
 
   // "Add an update" on the camera screen picks a Pursuit and jumps straight
   // into its existing scoped menu below — same URL shape as arriving from
@@ -394,7 +412,9 @@ export function Log() {
     setProjectId(draftPrompt.projectId);
     setProjectTitle(draftPrompt.projectTitle);
     if (draftPromptMedia) {
-      setFile(draftPromptMedia.file);
+      // A resumed draft only ever recovers its first photo (or its video) —
+      // see saveDraftMedia below, which only ever persists one file.
+      setFiles([draftPromptMedia.file]);
       setType(draftPromptMedia.type);
     }
     setDraftPrompt(null);
@@ -427,7 +447,7 @@ export function Log() {
       locationPrivacy,
       projectId,
       projectTitle,
-      mediaType: file ? type : null,
+      mediaType: files.length > 0 ? type : null,
       updatedAt: Date.now(),
     };
     if (!draftHasContent(fields)) return;
@@ -451,7 +471,7 @@ export function Log() {
     locationPrivacy,
     projectId,
     projectTitle,
-    file,
+    files,
     type,
     user,
   ]);
@@ -464,16 +484,19 @@ export function Log() {
   // been offered.
   useEffect(() => {
     if (!draftReadyRef.current) return;
-    if (file) void saveDraftMedia(file, type);
+    // Only the first file is ever persisted here — draft media recovery
+    // was never more than a single-file safety net, and a resumed draft
+    // reflects that (see resumeDraft above).
+    if (files[0]) void saveDraftMedia(files[0], type);
     else void clearDraftMedia();
-  }, [file, type]);
+  }, [files, type]);
 
   // Exit confirmation: only while the caption screen actually holds
   // something that would be lost — an unused, blank composer never prompts.
   const hasUnsavedChanges =
     screen === "caption" &&
     (thought.trim().length > 0 ||
-      !!file ||
+      files.length > 0 ||
       audience !== "private" ||
       interest.trim().length > 0 ||
       isActivity ||
@@ -556,10 +579,20 @@ export function Log() {
     (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : hobby.shortName);
 
   /** Whatever the camera screen produced — a live capture, a recent pick, or
-   * a fresh library file — always lands here the same way. */
+   * a single fresh library file — always lands here the same way. */
   const handleCaptured = (picked: File, capturedType: "photo" | "video") => {
-    setFile(picked);
+    setFiles([picked]);
     setType(capturedType);
+    setCaptionBackTo("camera");
+    setScreen("caption");
+  };
+
+  /** A library pick with more than one file selected — routed here instead
+   * of handleCaptured, which stays single-file. */
+  const handlePickedLibrary = (picked: File[]) => {
+    const result = pickFiles([], picked);
+    setFiles(result.files);
+    setType(result.type);
     setCaptionBackTo("camera");
     setScreen("caption");
   };
@@ -569,7 +602,7 @@ export function Log() {
     const note = [thought.trim(), progress.trim(), changed.trim(), reflection.trim()]
       .filter(Boolean)
       .join("\n\n");
-    if (!note && !file) return;
+    if (!note && files.length === 0) return;
     // A project named on the moment screen used to be dropped entirely when
     // you kept the moment private — the name was typed, then silently lost.
     let linkTo = projectId;
@@ -585,10 +618,11 @@ export function Log() {
       projectId: linkTo || undefined,
       // The picture is the point of a wordless capture. It used to be dropped
       // here and replaced with a generated placeholder, which read as the app
-      // losing the moment you'd just taken.
-      media: filePreviewUrl
+      // losing the moment you'd just taken. Private logs stay single-image
+      // for now, so only the first photo of a multi-photo selection carries over.
+      media: filePreviewUrls[0]
         ? {
-            url: filePreviewUrl,
+            url: filePreviewUrls[0],
             type: type === "video" ? "video" : "image",
             // Only tag it with a Space the person actually saw and chose (or
             // typed their way into via the interest field) — "Save this
@@ -648,7 +682,7 @@ export function Log() {
         subHobby: subHobby || undefined,
         interest: interest.trim() || undefined,
         type,
-        file: file ?? undefined,
+        files: files.length ? files : undefined,
         creator: profile?.display_name?.trim() || "You",
         caption,
         reflection: reflection.trim() || undefined,
@@ -717,7 +751,7 @@ export function Log() {
     setProjectTitle("");
     setProjectId("");
     setCircleId(undefined);
-    setFile(null);
+    setFiles([]);
     setError(null);
     setSavedAs(null);
     setMode(null);
@@ -745,14 +779,14 @@ export function Log() {
   const MediaPreview = useCallback(
     ({ className = "" }: { className?: string }) => (
       <Preview
-        url={filePreviewUrl}
+        url={filePreviewUrls[0] ?? null}
         type={type}
         hobbySlug={hobbySlug}
         seed={seed}
         className={className}
       />
     ),
-    [filePreviewUrl, type, hobbySlug, seed],
+    [filePreviewUrls, type, hobbySlug, seed],
   );
 
   // ── 0 · Choose ──────────────────────────────────────────────────────────
@@ -792,7 +826,7 @@ export function Log() {
             type="button"
             onClick={() => {
               setCaptionBackTo("choose");
-              setFile(null);
+              setFiles([]);
               setScreen("caption");
             }}
             className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
@@ -896,9 +930,10 @@ export function Log() {
       <Shell>
         <CameraCapture
           onCaptured={handleCaptured}
+          onPickedLibrary={handlePickedLibrary}
           onTextOnly={() => {
             setCaptionBackTo("camera");
-            setFile(null);
+            setFiles([]);
             setScreen("caption");
           }}
         />
@@ -1098,7 +1133,7 @@ export function Log() {
 
   // ── 2 · Caption + audience — one screen, whatever the capture was ────────
   if (screen === "caption") {
-    const hasSomething = !!file || thought.trim().length > 0;
+    const hasSomething = files.length > 0 || thought.trim().length > 0;
     const detectedUrl = extractFirstUrl(thought);
     return (
       <Shell>
@@ -1107,19 +1142,68 @@ export function Log() {
           Your moment
         </h1>
 
-        {file && (
+        {/* A video is always exactly one file — same single preview as
+            before. Photos get a thumbnail strip instead, since there can be
+            up to 8 of them: one square per photo, its own remove button,
+            and a dashed "+" tile to add more. */}
+        {type === "video" && files.length > 0 && (
           <div className="relative mb-4 overflow-hidden rounded-2xl border border-border">
             <MediaPreview className="aspect-[4/3] w-full" />
             <button
               type="button"
-              onClick={() => setFile(null)}
+              onClick={() => setFiles([])}
               className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/65 text-white"
-              aria-label="Remove this photo"
+              aria-label="Remove this video"
             >
               <X className="size-3.5" />
             </button>
           </div>
         )}
+
+        {type === "photo" && files.length > 0 && (
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+            {filePreviewUrls.map((url, i) => (
+              <div
+                key={i}
+                className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border"
+              >
+                <img src={url} alt="" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                  className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/65 text-white"
+                  aria-label={`Remove photo ${i + 1}`}
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            ))}
+            {files.length < MAX_PHOTOS && (
+              <button
+                type="button"
+                onClick={() => addMoreInputRef.current?.click()}
+                aria-label="Add another photo"
+                className="flex size-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+              >
+                <Plus className="size-5" />
+              </button>
+            )}
+          </div>
+        )}
+        <input
+          ref={addMoreInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const picked = Array.from(e.target.files ?? []);
+            e.target.value = "";
+            if (picked.length === 0) return;
+            const result = pickFiles(files, picked);
+            setFiles(result.files);
+          }}
+        />
 
         <div className="mb-6">
           <Label htmlFor="thought" className="sr-only">
@@ -1130,7 +1214,7 @@ export function Log() {
             value={thought}
             maxLength={THOUGHT_LIMIT}
             onChange={(e) => setThought(e.target.value)}
-            placeholder={file ? "Add a thought…" : "What happened? Even a sentence counts."}
+            placeholder={files.length > 0 ? "Add a thought…" : "What happened? Even a sentence counts."}
           />
           <div className="mt-1 text-right text-[11px] text-muted-foreground">
             {thought.length}/{THOUGHT_LIMIT}
@@ -1526,10 +1610,10 @@ export function Log() {
                 <div className="mb-3 flex items-center gap-4">
                   <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border">
                     <MediaPreview className="h-full w-full" />
-                    {file && (
+                    {files.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => setFile(null)}
+                        onClick={() => setFiles([])}
                         className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/70 text-white"
                         aria-label="Remove file"
                       >
@@ -1538,6 +1622,9 @@ export function Log() {
                     )}
                   </div>
                   <div>
+                    {/* This secondary form stays single-file, on purpose —
+                        the multi-photo picker lives on the main "quick
+                        moment" caption screen above. */}
                     <input
                       ref={detailFileRef}
                       type="file"
@@ -1546,7 +1633,7 @@ export function Log() {
                       onChange={(e) => {
                         const picked = e.target.files?.[0];
                         if (!picked) return;
-                        setFile(picked);
+                        setFiles([picked]);
                         setType(picked.type.startsWith("video") ? "video" : "photo");
                       }}
                     />
@@ -1567,7 +1654,7 @@ export function Log() {
                       onClick={() => detailFileRef.current?.click()}
                     >
                       <Images className="size-3.5" />
-                      {file ? "Choose a different file" : "Add a photo or video"}
+                      {files.length > 0 ? "Choose a different file" : "Add a photo or video"}
                     </Button>
                   </div>
                 </div>
