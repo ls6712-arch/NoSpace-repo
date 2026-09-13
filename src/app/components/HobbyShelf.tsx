@@ -108,25 +108,13 @@ export function updatedLabel(ts: number) {
   return `Updated ${new Date(ts).toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
 }
 
-/** The same fact, short enough to sit on a book spine label without clipping. */
-function compactUpdated(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days <= 0) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
-  return `${Math.floor(days / 365)}y ago`;
-}
-
 /**
  * One Corner, as a flat tile: a square cover (the most recent real photo
  * among that Corner's Moments, or the illustration when there isn't one —
  * no stock-photo tier in between that a hotlinked image could fail out of
- * invisibly), the Corner's name, and its count/last-updated as quiet
- * metadata underneath. Same aspect-square + hairline-border + coral-hover
- * treatment as every other flat photo tile in the app — no color, no icon
- * chip, no shadow, no lift.
+ * invisibly) and the Corner's name underneath, nothing else. Same
+ * aspect-square + hairline-border + coral-hover treatment as every other
+ * flat photo tile in the app — no color, no icon chip, no shadow, no lift.
  */
 function CornerTile({
   item,
@@ -156,31 +144,24 @@ function CornerTile({
           />
         )}
       </div>
-      <div className="mt-2">
-        <p
-          className="truncate text-sm leading-tight text-foreground"
-          style={{ fontFamily: "var(--font-serif)" }}
-          title={item.label}
-        >
-          {item.label}
-        </p>
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-          {item.sessions} {item.sessions === 1 ? "moment" : "moments"} · {compactUpdated(item.lastAt)}
-        </p>
-      </div>
+      <p
+        className="mt-1.5 truncate text-sm leading-tight text-foreground"
+        style={{ fontFamily: "var(--font-serif)" }}
+        title={item.label}
+      >
+        {item.label}
+      </p>
     </Link>
   );
 }
 
 /**
- * Your work, shelved. Hobbies group under the Space they belong to — Pottery
- * under The Studio, Running under In Motion — as a flat grid of Corner tiles
- * per Space, with the Space name above it in caps.
- *
- * A flat, evenly-wrapping grid rather than a fanned/rotated stack: a Space
- * with one Corner and a Space with five both just render that many tiles at
- * the same fixed size, so nothing has to be capped or reserved extra height
- * to keep Spaces the same size next to each other.
+ * Your work, shelved. One flat, gapless-feeling grid of every Corner you
+ * have Moments in, most-recently-updated first — no Space-level grouping
+ * here. Space stays the top-level structure everywhere else in the app
+ * (Discover, the composer, Circles); this view is the one deliberate
+ * exception, since its whole point is to browse by the more specific thing
+ * rather than re-derive the Space hierarchy a click away on every other tab.
  */
 export function HobbyShelf({
   items: override,
@@ -190,9 +171,9 @@ export function HobbyShelf({
 }: {
   items?: HobbySession[];
   /**
-   * Where each book opens. On your own profile that's your archive; on
+   * Where each tile opens. On your own profile that's your archive; on
    * someone else's it has to stay on their profile, or you end up looking at
-   * your own empty Space wondering where their work went.
+   * your own empty Corner wondering where their work went.
    */
   linkTo?: (item: HobbySession) => string;
   emptyCopy?: string;
@@ -206,7 +187,7 @@ export function HobbyShelf({
       <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
         <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
           {emptyCopy ??
-            "Your shelf is empty. Every hobby you log gets its own book here, with everything you've made in it inside."}
+            "Your shelf is empty. Every hobby you log gets its own tile here, with everything you've made in it inside."}
         </p>
         {emptyCta && (
           <Link
@@ -220,35 +201,17 @@ export function HobbyShelf({
     );
   }
 
-  // Group the tiles by the Space they sit in, keeping Spaces in the app's
-  // canonical order rather than whichever happened to be logged first.
-  const bySpace = new Map<string, HobbySession[]>();
-  for (const item of items) {
-    bySpace.set(item.hobbySlug, [...(bySpace.get(item.hobbySlug) ?? []), item]);
-  }
-  const groups = hobbies
-    .filter((h) => bySpace.has(h.slug))
-    .map((h) => ({ space: h, corners: bySpace.get(h.slug)! }));
+  // Most-recently-updated Corner first. A local sort, not a change to
+  // sessionsFromPosts's own order (most-logged first) — that order still
+  // backs the hobby chips near the top of the profile, which this view
+  // shouldn't reach back and affect.
+  const sorted = [...items].sort((a, b) => b.lastAt - a.lastAt);
 
   return (
-    <div className="rounded-3xl bg-[var(--surface-elevated)] px-4 py-8 sm:px-6">
-      <div className="space-y-10">
-        {groups.map(({ space, corners }) => (
-          <section key={space.slug}>
-            <h3
-              className="mb-4 truncate text-xs font-semibold uppercase tracking-[0.14em] text-foreground"
-              style={{ fontFamily: "var(--font-body)" }}
-              title={space.name}
-            >
-              {space.name}
-            </h3>
-
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-              {corners.map((item) => (
-                <CornerTile key={item.key} item={item} linkTo={linkTo} />
-              ))}
-            </div>
-          </section>
+    <div className="rounded-3xl bg-[var(--surface-elevated)] p-1 sm:p-1.5">
+      <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-1.5 lg:grid-cols-6">
+        {sorted.map((item) => (
+          <CornerTile key={item.key} item={item} linkTo={linkTo} />
         ))}
       </div>
     </div>

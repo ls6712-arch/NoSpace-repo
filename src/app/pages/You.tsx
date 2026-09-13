@@ -273,13 +273,14 @@ export function You() {
               Your Moments
             </h2>
             {/* All moments (plain chronological) is the default now — By
-                Space stays available for anyone who wants the grouped
-                view. Correction from an earlier pass: the shelf's outer,
-                user-visible grouping is Space (HobbyShelf.tsx renders one
-                section per Space, with each Space's individual Corners
-                stacked inside it) — the per-Corner tally that stacking is
-                built from is an internal detail, not what this toggle
-                should be named after. */}
+                Corner stays available for anyone who wants the grouped
+                view. HobbyShelf.tsx no longer renders Space-level section
+                headers at all — it's one flat grid of Corners, sorted by
+                whichever was most recently updated — so "By Corner" is
+                what actually describes it now. (An earlier pass called
+                this "By space" when the view still had Space headers with
+                Corners stacked inside each one; that structure is gone,
+                so that label would now be the wrong one.) */}
             <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
               <button
                 type="button"
@@ -297,13 +298,13 @@ export function You() {
                   momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
                 }`}
               >
-                By space
+                By Corner
               </button>
             </div>
           </div>
           <p className="mb-5 mt-1 text-sm text-muted-foreground">
             {momentsView === "shelf"
-              ? "Grouped by Space — open one to see every moment inside it."
+              ? "By Corner, most recently updated first — open one to see every moment inside it."
               : "A visual record of what you've made, explored, and loved, newest first."}
           </p>
           {momentsView === "shelf" ? (
