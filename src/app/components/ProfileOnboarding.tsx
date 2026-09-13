@@ -188,7 +188,7 @@ export function ProfileOnboarding({ onDone }: { onDone: () => void }) {
                 value={tagline}
                 maxLength={80}
                 onChange={(e) => setTagline(e.target.value)}
-                placeholder={`"Same person, more hobbies."`}
+                placeholder={`"Home baker. Occasional hiker."`}
               />
             </>
           )}
