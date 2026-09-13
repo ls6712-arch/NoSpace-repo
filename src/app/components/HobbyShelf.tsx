@@ -2,8 +2,17 @@ import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
+import { useCornerNote } from "../lib/cornerNotes";
+import { hashSeed } from "./GeneratedArt";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
+
+/** One of the five chart colors, deterministic per Corner (same hashed-seed
+ * pattern GeneratedArt uses to pick a stable variant) — a small, consistent
+ * accent rather than a fresh random color on every render. */
+function chartAccent(key: string) {
+  return `var(--chart-${(hashSeed(key) % 5) + 1})`;
+}
 
 export interface HobbySession {
   /** Sub-hobby slug where tagged, else `space:<slug>` for untagged entries. */
@@ -112,9 +121,13 @@ export function updatedLabel(ts: number) {
  * One Corner, as a flat tile: a square cover (the most recent real photo
  * among that Corner's Moments, or the illustration when there isn't one —
  * no stock-photo tier in between that a hotlinked image could fail out of
- * invisibly) and the Corner's name underneath, nothing else. Same
+ * invisibly), the Corner's name, and — if you've written one, from the
+ * Corner's own detail view — your private note about it. A small dot in a
+ * deterministic chart color sits next to the name: a narrow, specific
+ * exception to this page's neutral-plus-coral rule, not a reopening of it —
+ * still no colored badge or tinted background anywhere on the tile. Same
  * aspect-square + hairline-border + coral-hover treatment as every other
- * flat photo tile in the app — no color, no icon chip, no shadow, no lift.
+ * flat photo tile in the app.
  */
 function CornerTile({
   item,
@@ -124,6 +137,9 @@ function CornerTile({
   /** Where this tile opens. Defaults to your own archive. */
   linkTo?: (item: HobbySession) => string;
 }) {
+  const note = useCornerNote(item.key);
+  const accent = chartAccent(item.key);
+
   return (
     <Link to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`} className="group block">
       <div className="aspect-square overflow-hidden rounded-lg border border-[var(--hairline)] transition-colors group-hover:border-[var(--coral-deep)]">
@@ -144,13 +160,25 @@ function CornerTile({
           />
         )}
       </div>
-      <p
-        className="mt-1.5 truncate text-sm leading-tight text-foreground"
-        style={{ fontFamily: "var(--font-serif)" }}
-        title={item.label}
-      >
-        {item.label}
-      </p>
+      <div className="mt-1.5 flex items-center gap-1.5">
+        <span
+          className="size-1.5 shrink-0 rounded-full"
+          style={{ backgroundColor: accent }}
+          aria-hidden="true"
+        />
+        <p
+          className="truncate text-sm leading-tight text-foreground"
+          style={{ fontFamily: "var(--font-serif)" }}
+          title={item.label}
+        >
+          {item.label}
+        </p>
+      </div>
+      {note && (
+        <p className="truncate text-[11px] text-muted-foreground" title={note}>
+          {note}
+        </p>
+      )}
     </Link>
   );
 }
@@ -208,7 +236,13 @@ export function HobbyShelf({
   const sorted = [...items].sort((a, b) => b.lastAt - a.lastAt);
 
   return (
-    <div className="rounded-3xl bg-[var(--surface-elevated)] p-1 sm:p-1.5">
+    // bg-card, not --surface-elevated: that token resolves to --plum-night-2,
+    // a visibly more saturated purple than every other surface on this page
+    // (they resolve to --surface/--card = --plum-night). Using it here was
+    // the same "dark-purple atmosphere" problem the profile reduction pass
+    // already called out once — bg-card keeps this grid's background the
+    // same as every other card on the page instead of a shade off from it.
+    <div className="rounded-3xl bg-card p-1 sm:p-1.5">
       <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-1.5 lg:grid-cols-6">
         {sorted.map((item) => (
           <CornerTile key={item.key} item={item} linkTo={linkTo} />
