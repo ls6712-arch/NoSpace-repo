@@ -94,12 +94,16 @@ interface JournalState {
   entryProject: Record<string, string>;
   /** Post ids kept for later. */
   saved: number[];
+  /** projectId → the amount logged on each tap, in order — what
+   * undoLastProgress pops from to undo a mis-tap without a form. */
+  progressHistory: Record<string, number[]>;
 }
 
 const EMPTY: JournalState = {
   projects: [],
   entryProject: {},
   saved: [],
+  progressHistory: {},
 };
 
 function load(): JournalState {
@@ -260,19 +264,56 @@ export function markGoalReached(projectId: string) {
   });
 }
 
-/** Bumps a numeric goal's progress by a fixed amount (used by "+1" on the
- * Pursuit card). Never exceeds the target in the stored value's display,
- * though the raw count is kept as-is rather than clamped, so a maker who
- * overshoots still sees their real number. */
-export function bumpGoalProgress(projectId: string, delta: number) {
+/**
+ * Logs progress toward a numeric goal — the tap-to-log interaction: one tap
+ * is the log, immediately, no form. Clamped to the target so a burst of
+ * taps (or a held +1) can't overshoot; a small history is kept per project
+ * so a mis-tap can be undone rather than requiring the number to be
+ * corrected by hand. Returns the updated Project (for the caller to mirror
+ * to Supabase — see pursuitsRemote.ts's mirrorPursuit) or undefined if
+ * projectId doesn't match a Pursuit with a number goal.
+ */
+export function logProgress(projectId: string, amount: number): Project | undefined {
+  let updated: Project | undefined;
+  const projects = state.projects.map((p) => {
+    if (p.id !== projectId || p.goal?.shape !== "number") return p;
+    const current = Math.min(p.goal.targetNumber ?? Infinity, (p.goal.current ?? 0) + amount);
+    updated = { ...p, goal: { ...p.goal, current } };
+    return updated;
+  });
+  if (!updated) return undefined;
   commit({
     ...state,
-    projects: state.projects.map((p) =>
-      p.id === projectId && p.goal
-        ? { ...p, goal: { ...p.goal, current: Math.max(0, (p.goal.current ?? 0) + delta) } }
-        : p,
-    ),
+    projects,
+    progressHistory: {
+      ...state.progressHistory,
+      [projectId]: [...(state.progressHistory[projectId] ?? []), amount],
+    },
   });
+  return updated;
+}
+
+/** Undoes the most recently logged tap — not a full history browser, just
+ * the one-step "oops" recovery a tap-to-log interaction needs. */
+export function undoLastProgress(projectId: string): Project | undefined {
+  const history = state.progressHistory[projectId];
+  if (!history?.length) return undefined;
+  const last = history[history.length - 1];
+
+  let updated: Project | undefined;
+  const projects = state.projects.map((p) => {
+    if (p.id !== projectId || p.goal?.shape !== "number") return p;
+    const current = Math.max(0, (p.goal.current ?? 0) - last);
+    updated = { ...p, goal: { ...p.goal, current } };
+    return updated;
+  });
+  if (!updated) return undefined;
+  commit({
+    ...state,
+    projects,
+    progressHistory: { ...state.progressHistory, [projectId]: history.slice(0, -1) },
+  });
+  return updated;
 }
 
 /** Plain-language progress for a numeric goal — "3 of 10 pieces," never a

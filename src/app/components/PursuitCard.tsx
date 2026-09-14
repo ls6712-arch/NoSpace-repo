@@ -18,6 +18,7 @@ import { useContent } from "../context/ContentContext";
 import { GeneratedArt } from "./GeneratedArt";
 import { PostMedia } from "./PostMedia";
 import { GoalDialog } from "./GoalDialog";
+import { GoalProgressTap } from "./GoalProgressTap";
 
 function timeAgo(ts: number) {
   const days = Math.floor((Date.now() - ts) / 86_400_000);
@@ -155,12 +156,14 @@ export function PursuitCard({
         ? goal.label
         : goal.label
     : undefined;
-  // Progress toward a numeric goal, worked out from the actual update count
-  // the same way the Pursuit's own detail page does — not a separately
-  // tracked number that could quietly disagree with it.
+  // Progress toward a numeric goal comes from the goal's own tap-logged
+  // current, not the attached-update count — see GoalProgressTap.tsx and
+  // journal.ts's logProgress. Those are two honest, separate signals
+  // (how many times you tapped +1 vs. how many narrative updates you wrote)
+  // that used to quietly disagree when both were read as "progress."
   const ringPercent =
     owner && goal?.shape === "number" && goal.targetNumber
-      ? Math.min(1, count / goal.targetNumber)
+      ? Math.min(1, (goal.current ?? 0) / goal.targetNumber)
       : undefined;
 
   const reachIt = () => {
@@ -257,6 +260,15 @@ export function PursuitCard({
                 {goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}
               </span>
             </button>
+          </div>
+        )}
+
+        {/* Logging a count and writing a narrative update are two different
+            things someone might or might not both want to do — this sits
+            beside "Add progress" below, not instead of it. */}
+        {owner && asProject && goal?.shape === "number" && !goal.reachedAt && (
+          <div className="mt-2.5">
+            <GoalProgressTap project={asProject} goal={goal} />
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Github, Globe, Palette, Rss, X, Plus } from "lucide-react";
+import { Github, Globe, Link2, Palette, Rss, X, Plus } from "lucide-react";
 import { ProfileLink, addProfileLink, removeProfileLink } from "../lib/profileLinks";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -57,10 +57,15 @@ export function ProfileLinksRow({ links, className = "" }: { links: ProfileLink[
 export function ProfileLinksEditor({
   links,
   onChange,
+  compact = false,
 }: {
   links: ProfileLink[];
   /** Called after every add/remove so the caller can mirror to Supabase. */
   onChange: (links: ProfileLink[]) => void;
+  /** One thin, borderless input row instead of the label+url+button form
+   * and its two lines of helper text — the label is derived from the URL's
+   * hostname, same fallback addProfileLink already had for a blank label. */
+  compact?: boolean;
 }) {
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
@@ -86,6 +91,52 @@ export function ProfileLinksEditor({
     removeProfileLink(id);
     onChange(links.filter((l) => l.id !== id));
   };
+
+  if (compact) {
+    return (
+      <div>
+        {links.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {links.map((link) => {
+              const Icon = iconFor(link.url);
+              return (
+                <span
+                  key={link.id}
+                  className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-foreground"
+                >
+                  <Icon className="size-3.5 shrink-0" strokeWidth={1.8} />
+                  <a href={link.url} target="_blank" rel="noreferrer noopener" className="hover:text-[var(--coral-text)]">
+                    {link.label}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => remove(link.id)}
+                    aria-label={`Remove ${link.label}`}
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        )}
+        <div className="ns-you-links-row">
+          <Link2 aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            placeholder="Add GitHub, Substack, or studio link"
+          />
+          <button type="button" onClick={submit}>
+            + Add link
+          </button>
+        </div>
+        {error && <p className="mt-1.5 text-xs text-[var(--coral-text)]">{error}</p>}
+      </div>
+    );
+  }
 
   return (
     <div>
