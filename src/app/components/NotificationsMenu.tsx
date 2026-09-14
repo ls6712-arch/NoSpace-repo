@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
+import { useConnections } from "../context/ConnectionsContext";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 
@@ -44,6 +45,7 @@ export function NotificationsMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const social = useSocial();
+  const connections = useConnections();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -64,14 +66,25 @@ export function NotificationsMenu() {
       (user ? p.toUser === user.id : false),
   );
 
-  const dot = social.unreadCount > 0 || incoming.length > 0;
+  // A pending connection request lives in ConnectionsContext, not
+  // SocialContext, so it never lit this bell before — the request itself is
+  // answered from /inbox (respondToConnection), this just says one's there.
+  const incomingConnections = connections.connections.filter(
+    (c) => c.status === "pending" && c.addressee === user?.id,
+  );
+
+  const dot = social.unreadCount > 0 || incoming.length > 0 || incomingConnections.length > 0;
 
   return (
     <div className="relative" ref={ref}>
       <Button
         variant="ghost"
         size="icon"
-        aria-label={dot ? `Notifications (${social.unreadCount + incoming.length})` : "Notifications"}
+        aria-label={
+          dot
+            ? `Notifications (${social.unreadCount + incoming.length + incomingConnections.length})`
+            : "Notifications"
+        }
         aria-expanded={open}
         onClick={() => {
           setOpen((v) => !v);

@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useSocial } from "../context/SocialContext";
+import { useConnections } from "../context/ConnectionsContext";
 import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { NotificationsMenu } from "./NotificationsMenu";
 
@@ -19,15 +20,21 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-/** Only appears once an accepted request has actually opened a thread. */
+/** Only appears once an accepted request has actually opened a thread — a
+ * SocialContext "make/explore together" match, or a real ConnectionsContext
+ * connection. Without the latter, an accepted connection request wrote
+ * correctly into ConnectionsContext but never made this icon appear, so the
+ * inbox it unlocked was reachable only by typing /inbox directly. */
 function MessagesLink() {
   const social = useSocial();
-  const open = social.participations.some(
-    (p) => p.status === "accepted" && (p.kind === "make_together" || p.kind === "explore_together"),
-  );
+  const connections = useConnections();
+  const open =
+    social.participations.some(
+      (p) => p.status === "accepted" && (p.kind === "make_together" || p.kind === "explore_together"),
+    ) || connections.connectedPeople.length > 0;
   if (!open) return null;
   return (
-    <Link to="/messages" aria-label="Messages" title="Messages">
+    <Link to="/inbox" aria-label="Messages" title="Messages">
       <Button variant="ghost" size="icon">
         <MessagesSquare className="size-5" />
       </Button>

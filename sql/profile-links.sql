@@ -25,10 +25,14 @@ create table if not exists public.profile_links (
 
 alter table public.profile_links enable row level security;
 
+-- Readable by anyone signed in — the app now requires an account for
+-- everything past the landing page (src/app/pages/Root.tsx), so a
+-- signed-out read has nothing left to serve it anyway.
 drop policy if exists "profile links are public" on public.profile_links;
-create policy "profile links are public"
+drop policy if exists "profile links are readable when signed in" on public.profile_links;
+create policy "profile links are readable when signed in"
   on public.profile_links for select
-  using (true);
+  using (auth.uid() is not null);
 
 drop policy if exists "you create your own links" on public.profile_links;
 create policy "you create your own links"

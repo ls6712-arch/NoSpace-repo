@@ -103,9 +103,13 @@ create table if not exists public.categories (
 );
 alter table public.categories enable row level security;
 
+-- Readable by anyone signed in — the app now requires an account for
+-- everything past the landing page (src/app/pages/Root.tsx), so a
+-- signed-out read has nothing left to serve it anyway.
 drop policy if exists "categories are public" on public.categories;
-create policy "categories are public"
-  on public.categories for select using (true);
+drop policy if exists "categories are readable when signed in" on public.categories;
+create policy "categories are readable when signed in"
+  on public.categories for select using (auth.uid() is not null);
 
 drop policy if exists "reviewers manage categories" on public.categories;
 create policy "reviewers manage categories"

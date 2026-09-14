@@ -78,17 +78,21 @@ as $$
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 3. Circles — readable by everyone, same as the seed data always was
---    (Circles.tsx and CategoryFeed's Circles tab already list every seed
---    Circle regardless of its own `visibility` label). `visibility` gates
---    reading the Circle's own threads (section 5 below), not whether the
---    Circle shows up in a browse list, and not joining (section 4) — there
---    is no request-to-join flow here, on purpose.
+-- 3. Circles — readable by anyone signed in, same as the seed data always
+--    was (Circles.tsx and CategoryFeed's Circles tab already list every
+--    seed Circle regardless of its own `visibility` label). `visibility`
+--    gates reading the Circle's own threads (section 5 below), not whether
+--    the Circle shows up in a browse list, and not joining (section 4) —
+--    there is no request-to-join flow here, on purpose. Requiring an
+--    account at all is new: the app now gates everything past the landing
+--    page (src/app/pages/Root.tsx), so a signed-out read has nothing left
+--    to serve it anyway.
 -- ─────────────────────────────────────────────────────────────────────────
 drop policy if exists "circles are visible to everyone" on public.circles;
-create policy "circles are visible to everyone"
+drop policy if exists "circles are readable when signed in" on public.circles;
+create policy "circles are readable when signed in"
   on public.circles for select
-  using (true);
+  using (auth.uid() is not null);
 
 drop policy if exists "you create your own circle" on public.circles;
 create policy "you create your own circle"

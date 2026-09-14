@@ -1,27 +1,35 @@
-import { Outlet } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
 import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
 import { BottomTabBar } from "../components/BottomTabBar";
 
-export function Root() {
-  const { loading, isConfigured } = useAuth();
+// Only the landing page and the login/signup screen are open to a signed-out
+// visitor. Everything else — Discover, Spaces, People, a profile, all of it
+// — now requires an account, so this is checked before any of it renders.
+const PUBLIC_PATHS = new Set(["/", "/login"]);
 
-  // Everything worth looking at is open: the spaces, every hobby, Discover,
-  // the marketplace, and anyone's public profile. An account is asked for at
-  // the point it's actually needed — logging a session, or opening your own
-  // profile — because a wall at the front door asks people to commit before
-  // they know what they're committing to.
-  //
-  // Still waits for the initial session check, so the header doesn't flash
-  // "Log in" at someone who is in fact already signed in.
+export function Root() {
+  const { user, loading, isConfigured } = useAuth();
+  const location = useLocation();
+
+  // Still waits for the initial session check, so a signed-in visitor isn't
+  // bounced to the landing page for a moment before their session loads.
   if (isConfigured && loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <span className="size-8 rounded-full border-2 border-border border-t-white/70 animate-spin" />
       </div>
     );
+  }
+
+  // Only enforced once accounts are actually available — same rule every
+  // other auth-aware check in this app follows (Header, You.tsx): with no
+  // Supabase project configured there's no way to sign in, so gating
+  // everything behind it would just brick the app.
+  if (isConfigured && !user && !PUBLIC_PATHS.has(location.pathname)) {
+    return <Navigate to="/" replace />;
   }
 
   return (
