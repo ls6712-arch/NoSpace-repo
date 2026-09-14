@@ -11,6 +11,7 @@ import {
   Project,
   deriveProjects,
   finishProject,
+  goalDeadlineText,
   markGoalReached,
   setProjectShared,
   useJournalSlice,
@@ -301,11 +302,18 @@ export function Pursuit() {
               </p>
             ) : (
               <>
-                <p className="mb-2 flex items-center gap-2 text-sm">
-                  <Target className="size-4 shrink-0 text-muted-foreground" />
-                  {goal.shape === "number"
-                    ? `${goalCount} of ${goal.targetNumber}${goal.unit ? ` ${goal.unit}` : ""}`
-                    : goal.label}
+                <p className="mb-2 flex items-center justify-between gap-3 text-sm">
+                  <span className="flex items-center gap-2">
+                    <Target className="size-4 shrink-0 text-muted-foreground" />
+                    {goal.shape === "number"
+                      ? `${goalCount} of ${goal.targetNumber}${goal.unit ? ` ${goal.unit}` : ""}`
+                      : goal.label}
+                  </span>
+                  {/* A number goal's own optional deadline — separate from
+                      its count, shown alongside it rather than instead. */}
+                  {goal.shape === "number" && goalDeadlineText(goal) && (
+                    <span className="shrink-0 text-muted-foreground">{goalDeadlineText(goal)}</span>
+                  )}
                 </p>
                 {goal.shape === "number" && goal.targetNumber ? (
                   <>
@@ -320,7 +328,7 @@ export function Pursuit() {
                         stays the free-text/photo narrative flow. */}
                     {owner && ownProject && (
                       <div className="mt-3">
-                        <GoalProgressTap project={ownProject} goal={goal} />
+                        <GoalProgressTap project={ownProject} goal={goal} fullWidth />
                       </div>
                     )}
                   </>

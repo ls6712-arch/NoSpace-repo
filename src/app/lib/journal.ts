@@ -57,7 +57,12 @@ export interface Goal {
   targetNumber?: number;
   unit?: string;
   current?: number;
-  /** shape: "date" */
+  /** What the tap-to-log button reads, e.g. "Finished one" — a number goal
+   * only; defaults to "Finished one" when unset. */
+  verb?: string;
+  /** An optional deadline. Its own shape ("date") is what makes this the
+   * whole goal and drives `label`; a "number" goal can also carry one as a
+   * secondary "by when," shown alongside its count rather than instead of it. */
   targetDate?: number;
   createdAt: number;
   /** Set when the maker marks the goal reached — "Reached it," not
@@ -322,6 +327,14 @@ export function goalProgressText(goal: Goal): string | undefined {
   if (goal.shape !== "number" || goal.targetNumber == null) return undefined;
   const current = goal.current ?? 0;
   return `${current} of ${goal.targetNumber}${goal.unit ? ` ${goal.unit}` : ""}`;
+}
+
+/** A number goal's own secondary deadline, shown alongside its count (a
+ * date-shaped goal's deadline is already its whole `label` and doesn't use
+ * this). "Sep 23," no year — same short form templateLabel already uses. */
+export function goalDeadlineText(goal: Goal): string | undefined {
+  if (!goal.targetDate) return undefined;
+  return new Date(goal.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export function finishProject(projectId: string) {

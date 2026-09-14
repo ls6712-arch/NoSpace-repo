@@ -15,7 +15,10 @@ const NO_HISTORY: number[] = [];
 
 /**
  * The tap-to-log interaction, in full: one tap logs +1 immediately — no
- * screen, no form, no confirmation. Press-and-hold repeats it. An undo icon
+ * screen, no form, no confirmation. The button reads the goal's own verb
+ * ("Finished one," or whatever was typed in GoalDialog) rather than a bare
+ * "+1," so it reads like the thing you actually did. Press-and-hold repeats
+ * it. An undo icon
  * sits alongside for the one mistake this needs to recover from (a mis-tap
  * or a hold that ran one too many), rather than making someone retype the
  * number by hand.
@@ -26,7 +29,19 @@ const NO_HISTORY: number[] = [];
  * existing free-text/photo "Add progress" flow, which stays a separate,
  * optional action.
  */
-export function GoalProgressTap({ project, goal }: { project: Project; goal: Goal }) {
+export function GoalProgressTap({
+  project,
+  goal,
+  fullWidth = false,
+}: {
+  project: Project;
+  goal: Goal;
+  /** The larger, full-width treatment for a standalone goal card (the
+   * /pursuit/:id page, PursuitCard). Left off for tighter contexts like the
+   * expanded panel's own Goals list row, where a giant button would crowd
+   * everything else in the row. */
+  fullWidth?: boolean;
+}) {
   const { user } = useAuth();
   const history = useJournalSlice((s) => s.progressHistory[project.id] ?? NO_HISTORY);
   const startTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -61,8 +76,10 @@ export function GoalProgressTap({ project, goal }: { project: Project; goal: Goa
     if (updated && user) void mirrorPursuit(user.id, updated);
   };
 
+  const verb = goal.verb?.trim() || "Finished one";
+
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-2 ${fullWidth ? "w-full" : ""}`}>
       <button
         type="button"
         onClick={tap}
@@ -70,11 +87,12 @@ export function GoalProgressTap({ project, goal }: { project: Project; goal: Goa
         onPointerUp={stopHold}
         onPointerLeave={stopHold}
         disabled={atTarget}
-        aria-label={`Log one${goal.unit ? ` ${goal.unit.replace(/s$/, "")}` : ""}`}
-        className="flex items-center gap-1.5 rounded-full border border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-[var(--coral-deep)] disabled:cursor-default disabled:opacity-50"
+        className={`flex items-center justify-center gap-1.5 rounded-full border border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] font-medium text-foreground transition-colors hover:border-[var(--coral-deep)] disabled:cursor-default disabled:opacity-50 ${
+          fullWidth ? "flex-1 py-3.5 text-base" : "px-3.5 py-1.5 text-sm"
+        }`}
       >
-        <Plus className="size-3.5" strokeWidth={2} />
-        +1
+        <Plus className={fullWidth ? "size-4" : "size-3.5"} strokeWidth={2} />
+        {verb}
       </button>
       {history.length > 0 && (
         <button
@@ -82,9 +100,11 @@ export function GoalProgressTap({ project, goal }: { project: Project; goal: Goa
           onClick={undo}
           aria-label="Undo last log"
           title="Undo last log"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+          className={`flex shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground ${
+            fullWidth ? "size-12" : "size-8"
+          }`}
         >
-          <Undo2 className="size-3.5" />
+          <Undo2 className={fullWidth ? "size-4" : "size-3.5"} />
         </button>
       )}
     </div>
