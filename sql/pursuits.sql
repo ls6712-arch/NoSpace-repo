@@ -70,3 +70,8 @@ create policy "you delete your own pursuits"
   using (auth.uid() = user_id);
 
 create index if not exists pursuits_shared_user_idx on public.pursuits (user_id, shared);
+
+-- A number goal's tap-to-log button text, e.g. "Finished one" — defaults to
+-- that phrase client-side when unset, so this column staying null on every
+-- row mirrored before this existed is never a missing-data problem.
+alter table public.pursuits add column if not exists goal_verb text;

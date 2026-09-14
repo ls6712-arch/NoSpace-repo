@@ -25,6 +25,18 @@ function templateLabel(shape: GoalShape, targetNumber: string, unit: string, tar
   return "";
 }
 
+/** The optional quick-entry shortcut for a number goal: "read 10 books"
+ * becomes target 10, unit "books" — both still shown and editable right
+ * below, never regenerated after that. A plain regex is enough here; there's
+ * no need for anything smarter than "the first number, and the word after it." */
+function parseGoal(input: string): { target: number; unit: string } | null {
+  const match = input.match(/(\d+)\s*([a-zA-Z]+)?/);
+  if (!match) return null;
+  const target = Number(match[1]);
+  if (!target) return null;
+  return { target, unit: match[2] ?? "" };
+}
+
 /**
  * Set Goals — an optional, single attribute on a Pursuit, not a new object
  * of its own. One active goal at a time (see journal.ts's setProjectGoal):
@@ -47,9 +59,14 @@ export function GoalDialog({
 }) {
   const { user } = useAuth();
   const [shape, setShape] = useState<GoalShape>("number");
+  const [quickEntry, setQuickEntry] = useState("");
   const [targetNumber, setTargetNumber] = useState("");
   const [unit, setUnit] = useState("");
+  const [verb, setVerb] = useState("");
   const [targetDate, setTargetDate] = useState("");
+  // Only meaningful for shape "number" — a date-shaped goal's own deadline
+  // IS its whole goal (see the shape picker below), no toggle needed there.
+  const [hasDeadline, setHasDeadline] = useState(false);
   const [feeling, setFeeling] = useState("");
   const [label, setLabel] = useState("");
   const [labelTouched, setLabelTouched] = useState(false);
@@ -58,9 +75,12 @@ export function GoalDialog({
     if (!open) return;
     const g = project?.goal;
     setShape(g?.shape ?? "number");
+    setQuickEntry("");
     setTargetNumber(g?.targetNumber != null ? String(g.targetNumber) : "");
     setUnit(g?.unit ?? "");
+    setVerb(g?.verb ?? "");
     setTargetDate(g?.targetDate ? new Date(g.targetDate).toISOString().slice(0, 10) : "");
+    setHasDeadline(g?.shape === "number" && !!g?.targetDate);
     setFeeling(g?.shape === "feeling" ? g.label : "");
     setLabel(g?.label ?? "");
     setLabelTouched(false);
@@ -93,7 +113,15 @@ export function GoalDialog({
       targetNumber: shape === "number" ? Number(targetNumber) || undefined : undefined,
       unit: shape === "number" ? unit.trim() || undefined : undefined,
       current: shape === "number" ? project.goal?.current ?? 0 : undefined,
-      targetDate: shape === "date" && targetDate ? new Date(targetDate).getTime() : undefined,
+      verb: shape === "number" ? verb.trim() || undefined : undefined,
+      targetDate:
+        shape === "date"
+          ? targetDate
+            ? new Date(targetDate).getTime()
+            : undefined
+          : shape === "number" && hasDeadline && targetDate
+            ? new Date(targetDate).getTime()
+            : undefined,
     };
     setProjectGoal(project.id, goal);
     if (user) {
@@ -142,29 +170,97 @@ export function GoalDialog({
           </div>
 
           {shape === "number" && (
-            <div className="grid grid-cols-2 gap-3">
+            <>
               <div>
-                <Label htmlFor="goal-number" className="mb-1.5 block text-xs">Target</Label>
+                <Label htmlFor="goal-quick" className="mb-1.5 block text-xs">
+                  Describe it (optional shortcut)
+                </Label>
                 <Input
-                  id="goal-number"
-                  type="number"
-                  min={1}
-                  value={targetNumber}
-                  onChange={(e) => setTargetNumber(e.target.value)}
-                  placeholder="10"
+                  id="goal-quick"
+                  value={quickEntry}
+                  onChange={(e) => {
+                    setQuickEntry(e.target.value);
+                    const parsed = parseGoal(e.target.value);
+                    if (parsed) {
+                      setTargetNumber(String(parsed.target));
+                      if (parsed.unit) setUnit(parsed.unit);
+                    }
+                  }}
+                  placeholder="read 10 books, run 3 times a week…"
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="goal-number" className="mb-1.5 block text-xs">Target</Label>
+                  <Input
+                    id="goal-number"
+                    type="number"
+                    min={1}
+                    value={targetNumber}
+                    onChange={(e) => setTargetNumber(e.target.value)}
+                    placeholder="10"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="goal-unit" className="mb-1.5 block text-xs">Unit</Label>
+                  <Input
+                    id="goal-unit"
+                    value={unit}
+                    maxLength={30}
+                    onChange={(e) => setUnit(e.target.value)}
+                    placeholder="pieces, sessions…"
+                  />
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="goal-unit" className="mb-1.5 block text-xs">Unit</Label>
+                <Label htmlFor="goal-verb" className="mb-1.5 block text-xs">
+                  What the tap button says
+                </Label>
                 <Input
-                  id="goal-unit"
-                  value={unit}
+                  id="goal-verb"
+                  value={verb}
                   maxLength={30}
-                  onChange={(e) => setUnit(e.target.value)}
-                  placeholder="pieces, sessions…"
+                  onChange={(e) => setVerb(e.target.value)}
+                  placeholder="Finished one"
                 />
               </div>
-            </div>
+
+              <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+                <button
+                  type="button"
+                  onClick={() => setHasDeadline((v) => !v)}
+                  aria-pressed={hasDeadline}
+                  className="flex w-full items-center justify-between gap-3"
+                >
+                  <span className="text-left">
+                    <span className="block text-sm">Also set a deadline</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Shown next to your count, e.g. "Sep 23"
+                    </span>
+                  </span>
+                  <span
+                    className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
+                      hasDeadline
+                        ? "justify-end [background-color:var(--violet-electric)]"
+                        : "justify-start bg-surface-muted"
+                    }`}
+                  >
+                    <span className="size-5 rounded-full bg-white" />
+                  </span>
+                </button>
+                {hasDeadline && (
+                  <Input
+                    id="goal-deadline"
+                    type="date"
+                    value={targetDate}
+                    onChange={(e) => setTargetDate(e.target.value)}
+                    className="mt-3"
+                  />
+                )}
+              </div>
+            </>
           )}
 
           {shape === "date" && (

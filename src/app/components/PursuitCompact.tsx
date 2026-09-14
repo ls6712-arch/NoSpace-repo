@@ -6,6 +6,7 @@ import { Post } from "../data/posts";
 import {
   Project,
   finishProject,
+  goalDeadlineText,
   goalProgressText,
   markGoalReached,
   projectProgress,
@@ -262,8 +263,13 @@ export function PursuitExpandedPanel({
           <ul className="space-y-2">
             {goal && (
               <li className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-3.5 py-2.5 text-sm">
-                <span className={goal.reachedAt ? "line-through decoration-1" : ""}>
-                  {goal.shape === "number" ? goalProgressText(goal) : goal.label}
+                <span className="flex flex-wrap items-baseline gap-x-2">
+                  <span className={goal.reachedAt ? "line-through decoration-1" : ""}>
+                    {goal.shape === "number" ? goalProgressText(goal) : goal.label}
+                  </span>
+                  {goal.shape === "number" && goalDeadlineText(goal) && (
+                    <span className="text-xs text-muted-foreground">{goalDeadlineText(goal)}</span>
+                  )}
                 </span>
                 {/* A number goal not yet reached gets the tap-to-log control
                     in place of the plain "Current" label — logging a count

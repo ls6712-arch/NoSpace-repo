@@ -11,6 +11,7 @@ import {
   useJournalSlice,
   markGoalReached,
   goalProgressText,
+  goalDeadlineText,
 } from "../lib/journal";
 import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { useAuth } from "../context/AuthContext";
@@ -268,7 +269,10 @@ export function PursuitCard({
             beside "Add progress" below, not instead of it. */}
         {owner && asProject && goal?.shape === "number" && !goal.reachedAt && (
           <div className="mt-2.5">
-            <GoalProgressTap project={asProject} goal={goal} />
+            {goalDeadlineText(goal) && (
+              <p className="mb-1.5 text-right text-xs text-muted-foreground">{goalDeadlineText(goal)}</p>
+            )}
+            <GoalProgressTap project={asProject} goal={goal} fullWidth />
           </div>
         )}
 
