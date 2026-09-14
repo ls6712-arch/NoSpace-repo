@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
   Bookmark,
+  Compass,
   LayoutGrid,
   PenLine,
   Search,
@@ -59,8 +60,9 @@ const BASE_CHIPS: Chip[] = [
  * it's shareable and survives a back button, same as any other page state. */
 const DISCOVER_TABS = [
   { id: "spaces", label: "Spaces", icon: LayoutGrid },
-  { id: "circles", label: "Circles", icon: Users },
   { id: "people", label: "People", icon: UserRound },
+  { id: "corners", label: "Corner", icon: Compass },
+  { id: "circles", label: "Circle", icon: Users },
   { id: "marketplace", label: "Marketplace", icon: ShoppingBag },
 ] as const;
 type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
@@ -321,6 +323,59 @@ function MarketplaceTab({ query }: { query: string }) {
   );
 }
 
+/**
+ * Corners tab — every Corner across every Space, flat (not grouped by
+ * Space), photo + name per tile, same discoverability rule Space pages
+ * already use (isDiscoverable: curated corners always show; tagged-into-
+ * existence corners need at least one public Moment).
+ */
+function AllCornersBrowser({ query }: { query: string }) {
+  const { cornersFor } = useCorners();
+  const q = query.trim().toLowerCase();
+
+  const allCorners = hobbies.flatMap((hobby) =>
+    cornersFor(hobby.slug)
+      .filter(isDiscoverable)
+      .map((c) => ({ ...c, spaceSlug: hobby.slug, spaceName: hobby.shortName })),
+  );
+
+  const matching = q
+    ? allCorners.filter((c) => c.name.toLowerCase().includes(q))
+    : allCorners;
+
+  if (matching.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+        No corners match that yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      {matching.map((c) => (
+        <Link
+          key={`${c.spaceSlug}-${c.slug}`}
+          to={`/corner/${c.slug}`}
+          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+        >
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
+            <DiscoverSpaceArt
+              hobbySlug={c.spaceSlug}
+              seed={`${c.spaceSlug}-${c.slug}`}
+              className="transition-transform duration-500 ease-out group-hover:scale-110"
+            />
+          </div>
+          <div className="px-3 py-2.5">
+            <span className="block text-sm leading-tight text-foreground">{c.name}</span>
+            <span className="block text-xs text-muted-foreground">{c.spaceName}</span>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export function Discover() {
   const { publicFeed } = useContent();
   const social = useSocial();
@@ -479,6 +534,7 @@ export function Discover() {
 
           {tab === "circles" && <CirclesBrowser query={query} />}
           {tab === "people" && <PeopleBrowser query={query} />}
+          {tab === "corners" && <AllCornersBrowser query={query} />}
           {tab === "marketplace" && <MarketplaceTab query={query} />}
 
           {tab === "spaces" && (
