@@ -15,6 +15,7 @@ import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { GoalDialog } from "./GoalDialog";
+import { GoalProgressTap } from "./GoalProgressTap";
 import { WorkGrid } from "./WorkGrid";
 
 const SIZE = 44;
@@ -98,7 +99,11 @@ export function PursuitCompactCard({
   // leaving the tile unlabeled when no Corner was set.
   const label = pursuit.interest || spaceLabel;
   const goal = pursuit.goal;
-  const ringPercent = goal?.shape === "number" && goal.targetNumber ? Math.min(1, count / goal.targetNumber) : undefined;
+  // Tap-to-log (GoalProgressTap) is what actually moves a number goal's
+  // current now — count (attached Updates) stays a separate, honest signal
+  // of narrative activity, not a second, silently-disagreeing progress number.
+  const ringPercent =
+    goal?.shape === "number" && goal.targetNumber ? Math.min(1, (goal.current ?? 0) / goal.targetNumber) : undefined;
   const status = pursuit.finishedAt ? "Completed" : count > 0 ? "In progress" : "Just started";
   const progressText = goal?.shape === "number" ? goalProgressText(goal) : goal?.label;
 
@@ -256,13 +261,22 @@ export function PursuitExpandedPanel({
         ) : (
           <ul className="space-y-2">
             {goal && (
-              <li className="flex items-center justify-between gap-3 rounded-xl border border-border px-3.5 py-2.5 text-sm">
+              <li className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-3.5 py-2.5 text-sm">
                 <span className={goal.reachedAt ? "line-through decoration-1" : ""}>
                   {goal.shape === "number" ? goalProgressText(goal) : goal.label}
                 </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {goal.reachedAt ? "Reached" : "Current"}
-                </span>
+                {/* A number goal not yet reached gets the tap-to-log control
+                    in place of the plain "Current" label — logging a count
+                    and writing a narrative update stay two separate actions,
+                    so this sits alongside "Add progress" above, not instead
+                    of it. */}
+                {goal.shape === "number" && !goal.reachedAt ? (
+                  <GoalProgressTap project={pursuit} goal={goal} />
+                ) : (
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {goal.reachedAt ? "Reached" : "Current"}
+                  </span>
+                )}
               </li>
             )}
             {pastGoals.map((g) => (

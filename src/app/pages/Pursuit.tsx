@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { ContentCard } from "../components/ContentCard";
 import { GoalDialog } from "../components/GoalDialog";
+import { GoalProgressTap } from "../components/GoalProgressTap";
 
 function initials(name: string) {
   return name
@@ -222,12 +223,11 @@ export function Pursuit() {
   const spaceLabel = space?.shortName ?? view.customSpace;
   const goal = view.goal;
 
-  // The task's own spec for a count goal: progress is the actual number of
-  // attached updates, not a separately-tracked number someone has to keep
-  // in sync by hand (that manual --/++ number, goal.current, still exists
-  // for PursuitCard's own "+1" button elsewhere — this page just doesn't
-  // use it, so the two numbers can't quietly disagree here).
-  const goalCount = goal?.shape === "number" ? updates.length : undefined;
+  // Progress toward a numeric goal is the goal's own tap-logged current —
+  // see GoalProgressTap.tsx and journal.ts's logProgress — the same number
+  // PursuitCard and PursuitCompactCard's rings read, so this page can't
+  // quietly show a different count than the card someone tapped in from.
+  const goalCount = goal?.shape === "number" ? (goal.current ?? 0) : undefined;
   const goalReached =
     !!goal?.reachedAt || (goal?.shape === "number" && goal.targetNumber != null && goalCount! >= goal.targetNumber);
 
@@ -308,12 +308,22 @@ export function Pursuit() {
                     : goal.label}
                 </p>
                 {goal.shape === "number" && goal.targetNumber ? (
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
-                    <div
-                      className="h-full rounded-full [background-color:var(--violet-electric)]"
-                      style={{ width: `${Math.min(100, (goalCount! / goal.targetNumber) * 100)}%` }}
-                    />
-                  </div>
+                  <>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
+                      <div
+                        className="h-full rounded-full [background-color:var(--violet-electric)]"
+                        style={{ width: `${Math.min(100, (goalCount! / goal.targetNumber) * 100)}%` }}
+                      />
+                    </div>
+                    {/* Tap-to-log: one tap is the log, no form. A separate,
+                        optional action from "Add progress" below, which
+                        stays the free-text/photo narrative flow. */}
+                    {owner && ownProject && (
+                      <div className="mt-3">
+                        <GoalProgressTap project={ownProject} goal={goal} />
+                      </div>
+                    )}
+                  </>
                 ) : goal.shape === "date" && goal.targetDate ? (
                   <p className="text-xs text-muted-foreground">
                     {new Date(goal.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
