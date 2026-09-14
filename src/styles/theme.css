@@ -914,32 +914,102 @@
   }
 
   .ns-you-profile-card {
-    display: grid;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 1.4rem 1.6rem;
     border: 1px solid var(--border);
-    background: var(--surface-elevated);
-    box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.55);
-    grid-template-columns: minmax(0, 1.15fr) minmax(12rem, 0.85fr);
+    border-top: 2px solid var(--yellow);
+    background: var(--surface);
+    /* was: box-shadow: 8px 8px 0 ...; drop the hard-shadow, it's what reads as "loud" */
   }
 
-  .ns-you-avatar-panel {
-    padding: 1.35rem 1.5rem;
-    background: var(--surface-muted);
+  .ns-you-profile-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
   }
 
-  .ns-you-identity {
-    align-self: center;
-    border-left: 1px solid var(--hairline);
-    padding: 1.5rem;
+  .ns-you-profile-identity {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    min-width: 0;
   }
 
-  .ns-you-sprout { color: var(--violet-electric-bright); font-size: 0.85rem; }
+  .ns-you-avatar-compact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
 
-  .ns-you-tags a {
-    border-radius: 0;
+  .ns-you-avatar-icon-row {
+    display: flex;
+    gap: 0.3rem;
+  }
+
+  .ns-you-avatar-icon-row button {
+    display: flex;
+    height: 1.6rem;
+    width: 1.6rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--muted-foreground);
+  }
+
+  .ns-you-avatar-icon-row button:hover {
+    border-color: var(--foreground);
+    color: var(--foreground);
+  }
+
+  .ns-you-sprout { color: var(--coral-deep); font-size: 0.85rem; }
+
+  .ns-you-tags {
+    /* now lives directly under the card, not in its own panel */
+    margin-top: -0.25rem;
+  }
+
+  .ns-you-tags a,
+  .ns-you-tags button {
+    border-radius: 999px;
     border-color: var(--hairline);
     background: transparent;
     color: var(--foreground);
+  }
+
+  .ns-you-links-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid var(--hairline);
+    padding-top: 0.9rem;
+  }
+
+  .ns-you-links-row input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+  }
+
+  .ns-you-links-row input:focus {
+    outline: none;
+  }
+
+  .ns-you-links-row button {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--coral-text);
   }
 
   .ns-you-tabs [data-slot="tabs-trigger"] {
@@ -960,9 +1030,6 @@
     .ns-discover-open { display: block; margin-top: 0.9rem; }
     .ns-space-hero-art { width: calc(100% - 1rem); margin-right: 0.5rem; }
     .ns-space-hero-caption { right: -0.35rem; }
-    .ns-you-profile-card { grid-template-columns: 1fr; }
-    .ns-you-avatar-panel { border-bottom: 1px solid var(--hairline); }
-    .ns-you-identity { border-left: 0; }
     .ns-you-actions { flex-direction: column; }
   }
 

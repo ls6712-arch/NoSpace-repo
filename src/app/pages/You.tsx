@@ -75,6 +75,9 @@ export function You() {
   // The portfolio's own record — every Pursuit you've ever started, finished
   // ones included, because a personal archive doesn't erase what's done.
   const myPursuits = journal.projects;
+  // Every Moment you've ever logged, lifetime — the profile card's own
+  // one-line stat, distinct from ProfileHeadline's "N months into X" line.
+  const totalSessions = myPosts.length;
 
   // Never abbreviate the placeholder: "You" becomes a meaningless "Y".
   const realName = profile?.display_name?.trim();
@@ -140,30 +143,45 @@ export function You() {
           <HandwrittenNote className="max-w-[220px]">A more curious you lives here.</HandwrittenNote>
         </div>
 
-        <div className="mb-8 flex items-center gap-4 rounded-3xl border border-border bg-card p-5">
-          <AvatarPicker name={displayName} url={avatar ?? profile?.avatar_url} onChange={setAvatar} />
-          <div className="min-w-0">
-            {/* The name carries far more visual weight than any section
-                heading below it now — the two shouldn't compete for the eye
-                at the same level. */}
-            <h2 className="truncate text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
-              {user ? displayName : "You"}
-            </h2>
-            <div className="mt-1"><ProfileHeadline variant="quiet" /></div>
-          </div>
-        </div>
+        <div className="ns-you-profile-card mb-8">
+          <div className="ns-you-profile-top">
+            <div className="ns-you-profile-identity">
+              <AvatarPicker
+                compact
+                name={displayName}
+                url={avatar ?? profile?.avatar_url}
+                onChange={setAvatar}
+              />
+              <div className="min-w-0">
+                <h2
+                  className="truncate text-2xl leading-tight sm:text-3xl"
+                  style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+                >
+                  {user ? displayName : "You"}
+                </h2>
+                <div className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <span className="ns-you-sprout" aria-hidden="true">✦</span>
+                  <span>
+                    <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
+                    {totalSessions === 1 ? "session" : "sessions"}
+                  </span>
+                </div>
+                <div className="mt-1">
+                  <ProfileHeadline variant="quiet" />
+                </div>
+              </div>
+            </div>
 
-        {/* Your links — GitHub, a design studio, a Substack, whatever
-            people should be able to find and click through to. Public the
-            moment it's added, same as the rest of your public profile. */}
-        <div className="mb-8 rounded-3xl border border-border bg-card p-5">
-          <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-            Your links
-          </h2>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Point people somewhere — your GitHub, your studio, your Substack.
-          </p>
+            <Button variant="coral" size="sm" onClick={() => setShareOpen(true)}>
+              <Share2 className="size-3.5" />
+              Share
+            </Button>
+          </div>
+
+          {/* One link, inline — no separate panel, no repeated helper copy.
+              Already-added links show as small removable chips above it. */}
           <ProfileLinksEditor
+            compact
             links={profileLinks}
             onChange={(next) => {
               if (user) void mirrorProfileLinks(user.id, next);
@@ -171,27 +189,27 @@ export function You() {
           />
         </div>
 
-        {/* Hobby chips — what you actually do */}
-        <div className="ns-you-tags mb-7 flex flex-wrap gap-2">
-          {sessions.slice(0, 6).map((s) => (
+        {/* Hobby chips float under the card now, not boxed in one of their own */}
+        {sessions.length > 0 && (
+          <div className="ns-you-tags mb-7 flex flex-wrap gap-2">
+            {sessions.slice(0, 6).map((s) => (
+              <Link
+                key={s.key}
+                to={s.subSlug ? `/space/${s.hobbySlug}?hobby=${s.subSlug}` : `/space/${s.hobbySlug}`}
+                className="rounded-full border border-border bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+                style={{ fontFamily: "var(--font-serif)" }}
+              >
+                {s.label}
+              </Link>
+            ))}
             <Link
-              key={s.key}
-              to={s.subSlug ? `/space/${s.hobbySlug}?hobby=${s.subSlug}` : `/space/${s.hobbySlug}`}
-              className="rounded-full border border-border bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-              style={{ fontFamily: "var(--font-serif)" }}
+              to="/discover"
+              className="rounded-full border border-dashed border-border px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
             >
-              {s.label}
+              + Add interest
             </Link>
-          ))}
-          <Link
-            to="/discover"
-            title="Find another hobby"
-            aria-label="Find another hobby"
-            className="flex size-8 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-[var(--coral-text)]"
-          >
-            +
-          </Link>
-        </div>
+          </div>
+        )}
 
         {isConfigured && !user && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted px-4 py-3">
@@ -204,11 +222,9 @@ export function You() {
           </div>
         )}
 
+        {/* Share now lives on the profile card itself, up top — no need to
+            repeat it here too. */}
         <div className="ns-you-actions mb-11 flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => setShareOpen(true)}>
-            <Share2 className="size-4" />
-            Share your work
-          </Button>
           <Link to="/create" className="flex-1">
             <Button variant="coral" className="w-full">
               <PenLine className="size-4" />

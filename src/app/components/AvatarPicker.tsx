@@ -25,11 +25,16 @@ export function AvatarPicker({
   name,
   url,
   onChange,
+  compact = false,
   size = "size-20 sm:size-24",
 }: {
   name: string;
   url?: string;
   onChange: (next: string | undefined) => void;
+  /** Avatar with two small icon buttons underneath (upload / camera)
+   * instead of three full-width labeled buttons — "Use initials" and the
+   * caption line aren't reachable here, only from the full layout below. */
+  compact?: boolean;
   size?: string;
 }) {
   const { user } = useAuth();
@@ -94,6 +99,33 @@ export function AvatarPicker({
     onChange(undefined);
     setBusy(false);
   };
+
+  if (compact) {
+    return (
+      <div className="ns-you-avatar-compact">
+        <Avatar className="size-14 ring-0">
+          {url && <AvatarImage src={url} alt="" className="object-cover" />}
+          <AvatarFallback
+            className="text-base"
+            style={{ backgroundImage: "none", backgroundColor: "var(--surface-muted)", color: "var(--foreground)" }}
+          >
+            {initials(name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="ns-you-avatar-icon-row">
+          <button type="button" disabled={busy} onClick={() => libraryRef.current?.click()} aria-label="Change photo">
+            <ImagePlus className="size-3.5" />
+          </button>
+          <button type="button" disabled={busy} onClick={() => cameraRef.current?.click()} aria-label="Take photo">
+            <Camera className="size-3.5" />
+          </button>
+        </div>
+        <input ref={libraryRef} type="file" accept="image/*" className="hidden" onChange={upload} />
+        <input ref={cameraRef} type="file" accept="image/*" capture="user" className="hidden" onChange={upload} />
+        {error && <p className="text-center text-[10px] text-[var(--coral-text)]">{error}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-5">
