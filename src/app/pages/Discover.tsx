@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
   Bookmark,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
   LayoutGrid,
   PenLine,
   Search,
@@ -59,8 +62,9 @@ const BASE_CHIPS: Chip[] = [
  * it's shareable and survives a back button, same as any other page state. */
 const DISCOVER_TABS = [
   { id: "spaces", label: "Spaces", icon: LayoutGrid },
-  { id: "circles", label: "Circles", icon: Users },
   { id: "people", label: "People", icon: UserRound },
+  { id: "corners", label: "Corner", icon: Compass },
+  { id: "circles", label: "Circle", icon: Users },
   { id: "marketplace", label: "Marketplace", icon: ShoppingBag },
 ] as const;
 type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
@@ -205,10 +209,12 @@ function FeaturedMomentTile({ post }: { post: Post }) {
   );
 }
 
-/** One tile in the Explore Spaces row — a round crop of the Space's own art
- * (the same photo-or-GeneratedArt source every other Space card uses, via
- * DiscoverSpaceArt) with its category glyph as a small badge, so the row
- * reads as pictures of the Spaces rather than a generic icon key. */
+/** One tile in the Explore Spaces row — image-forward, same shape as a
+ * ContentCard Moments tile: a full-width photo on top (the same
+ * photo-or-GeneratedArt source every other Space card uses, via
+ * DiscoverSpaceArt — the same images the landing page's HobbyCategoryCard
+ * shows for this Space) with its category glyph as a badge over the photo's
+ * corner, and the label in a padded strip below. */
 function SpaceTile({
   to,
   label,
@@ -223,36 +229,77 @@ function SpaceTile({
   return (
     <Link
       to={to}
-      className="group flex w-32 shrink-0 flex-col items-center gap-2.5 rounded-2xl border border-border bg-card px-3 py-4 text-center transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+      className="group flex w-40 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
     >
-      <span className="relative flex size-16 items-center justify-center">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
         {hobbySlug ? (
-          <span className="block size-16 overflow-hidden rounded-full">
-            <DiscoverSpaceArt
-              hobbySlug={hobbySlug}
-              seed={hobbySlug}
-              className="transition-transform duration-500 ease-out group-hover:scale-110"
-            />
-          </span>
+          <DiscoverSpaceArt
+            hobbySlug={hobbySlug}
+            seed={hobbySlug}
+            className="transition-transform duration-500 ease-out group-hover:scale-110"
+          />
         ) : (
-          <span
-            className="flex size-16 items-center justify-center rounded-full"
+          <div
+            className="flex h-full w-full items-center justify-center"
             style={{ backgroundColor: "color-mix(in srgb, var(--pastel-sky) 42%, var(--surface-elevated))" }}
           >
-            <Icon className="size-6 text-foreground" strokeWidth={1.7} />
-          </span>
+            <Icon className="size-8 text-foreground" strokeWidth={1.7} />
+          </div>
         )}
         {hobbySlug && (
           <span
-            className="absolute -bottom-0.5 -right-0.5 flex size-6 items-center justify-center rounded-full border-2 border-card transition-transform duration-300 ease-out group-hover:scale-110"
+            className="absolute bottom-2 right-2 flex size-7 items-center justify-center rounded-full border-2 border-card transition-transform duration-300 ease-out group-hover:scale-110"
             style={{ backgroundColor: "var(--coral-deep)" }}
           >
-            <Icon className="size-3.5 text-white" strokeWidth={2} />
+            <Icon className="size-4 text-white" strokeWidth={2} />
           </span>
         )}
-      </span>
-      <span className="text-xs leading-tight text-foreground">{label}</span>
+      </div>
+      <div className="px-3 py-2.5">
+        <span className="block text-sm leading-tight text-foreground">{label}</span>
+      </div>
     </Link>
+  );
+}
+
+/** Wraps the Explore Spaces tiles in a snap-scrolling track with a hidden
+ * scrollbar (same technique PostMediaCarousel.tsx uses for post photos) and
+ * two round paging buttons — desktop/mouse only, since touch already scrolls
+ * fine by drag. */
+function SpacesRow({ children }: { children: React.ReactNode }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const page = (dir: 1 | -1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative">
+      <div
+        ref={trackRef}
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {children}
+      </div>
+      <button
+        type="button"
+        aria-label="Scroll spaces left"
+        onClick={() => page(-1)}
+        className="absolute left-0 top-[calc(50%-1rem)] hidden size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card shadow-md hover:border-[var(--coral-deep)] md:flex"
+      >
+        <ChevronLeft className="size-4" />
+      </button>
+      <button
+        type="button"
+        aria-label="Scroll spaces right"
+        onClick={() => page(1)}
+        className="absolute right-0 top-[calc(50%-1rem)] hidden size-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-border bg-card shadow-md hover:border-[var(--coral-deep)] md:flex"
+      >
+        <ChevronRight className="size-4" />
+      </button>
+    </div>
   );
 }
 
@@ -318,6 +365,59 @@ function MarketplaceTab({ query }: { query: string }) {
         );
       })}
     </>
+  );
+}
+
+/**
+ * Corners tab — every Corner across every Space, flat (not grouped by
+ * Space), photo + name per tile, same discoverability rule Space pages
+ * already use (isDiscoverable: curated corners always show; tagged-into-
+ * existence corners need at least one public Moment).
+ */
+function AllCornersBrowser({ query }: { query: string }) {
+  const { cornersFor } = useCorners();
+  const q = query.trim().toLowerCase();
+
+  const allCorners = hobbies.flatMap((hobby) =>
+    cornersFor(hobby.slug)
+      .filter(isDiscoverable)
+      .map((c) => ({ ...c, spaceSlug: hobby.slug, spaceName: hobby.shortName })),
+  );
+
+  const matching = q
+    ? allCorners.filter((c) => c.name.toLowerCase().includes(q))
+    : allCorners;
+
+  if (matching.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+        No corners match that yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      {matching.map((c) => (
+        <Link
+          key={`${c.spaceSlug}-${c.slug}`}
+          to={`/corner/${c.slug}`}
+          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+        >
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
+            <DiscoverSpaceArt
+              hobbySlug={c.spaceSlug}
+              seed={`${c.spaceSlug}-${c.slug}`}
+              className="transition-transform duration-500 ease-out group-hover:scale-110"
+            />
+          </div>
+          <div className="px-3 py-2.5">
+            <span className="block text-sm leading-tight text-foreground">{c.name}</span>
+            <span className="block text-xs text-muted-foreground">{c.spaceName}</span>
+          </div>
+        </Link>
+      ))}
+    </div>
   );
 }
 
@@ -479,6 +579,7 @@ export function Discover() {
 
           {tab === "circles" && <CirclesBrowser query={query} />}
           {tab === "people" && <PeopleBrowser query={query} />}
+          {tab === "corners" && <AllCornersBrowser query={query} />}
           {tab === "marketplace" && <MarketplaceTab query={query} />}
 
           {tab === "spaces" && (
@@ -505,7 +606,7 @@ export function Discover() {
                     No spaces match that yet.
                   </div>
                 ) : (
-                  <div className="flex gap-3 overflow-x-auto pb-2">
+                  <SpacesRow>
                     {!q && <SpaceTile to="/discover" label="All Spaces" icon={LayoutGrid} />}
                     {filteredHobbies.map((hobby) => (
                       <SpaceTile
@@ -517,11 +618,11 @@ export function Discover() {
                       />
                     ))}
                     {!q && (
-                      <div className="w-28 shrink-0">
+                      <div className="w-40 shrink-0 snap-start">
                         <SuggestCategory className="h-full" />
                       </div>
                     )}
-                  </div>
+                  </SpacesRow>
                 )}
               </section>
 

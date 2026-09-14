@@ -8,6 +8,7 @@ import { createHashRouter, redirect } from "react-router";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CategoryFeed } from "./pages/CategoryFeed";
+import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
 import { Discover } from "./pages/Discover";
 import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
@@ -57,6 +58,7 @@ export const router = createHashRouter([
       { path: "messages", loader: () => redirect("/inbox") },
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
       { path: "space/:slug", Component: CategoryFeed },
+      { path: "corner/:slug", Component: CornerPage },
       { path: "pursuit/:id", Component: Pursuit },
       { path: "u/:username", Component: PublicProfile },
       { path: "login", Component: Login },
