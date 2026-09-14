@@ -15,8 +15,12 @@
 --    chosen to be seen. Nothing private lives on this table: email and
 --    password stay in auth.users, which is not reachable from the browser.
 --
---    Reading is open to everyone, signed in or not, so a shared profile
---    link works for someone who hasn't made an account yet. Writing stays
+--    Reading used to be open to everyone, signed in or not, so a shared
+--    profile link worked for someone who hadn't made an account yet. The
+--    app now requires an account for everything past the landing page
+--    (src/app/pages/Root.tsx), which broke that flow — a shared profile
+--    link now bounces a signed-out visitor to the landing page instead of
+--    showing the profile, same as every other page. Writing stays
 --    restricted to the owner.
 -- ─────────────────────────────────────────────────────────────────────────
 alter table public.profiles enable row level security;
@@ -25,8 +29,9 @@ drop policy if exists "profiles are readable" on public.profiles;
 drop policy if exists "Public profiles are viewable by everyone" on public.profiles;
 drop policy if exists "profiles are viewable by owner" on public.profiles;
 drop policy if exists "Users can view own profile" on public.profiles;
-create policy "profiles are readable"
-  on public.profiles for select using (true);
+drop policy if exists "profiles are readable when signed in" on public.profiles;
+create policy "profiles are readable when signed in"
+  on public.profiles for select using (auth.uid() is not null);
 
 drop policy if exists "you edit your own profile" on public.profiles;
 create policy "you edit your own profile"

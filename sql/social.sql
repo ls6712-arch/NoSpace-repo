@@ -35,9 +35,12 @@ create table if not exists public.hobby_follows (
 );
 alter table public.hobby_follows enable row level security;
 
+-- Readable by anyone signed in — the app now requires an account for
+-- everything past the landing page (src/app/pages/Root.tsx), so a
+-- signed-out read has nothing left to serve it anyway.
 drop policy if exists "hobby follows are readable" on public.hobby_follows;
 create policy "hobby follows are readable"
-  on public.hobby_follows for select using (true);
+  on public.hobby_follows for select using (auth.uid() is not null);
 
 drop policy if exists "you manage your own hobby follows" on public.hobby_follows;
 create policy "you manage your own hobby follows"

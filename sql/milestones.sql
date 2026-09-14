@@ -25,10 +25,14 @@ create table if not exists public.shared_milestones (
 
 alter table public.shared_milestones enable row level security;
 
+-- Readable by anyone signed in — the app now requires an account for
+-- everything past the landing page (src/app/pages/Root.tsx), so a
+-- signed-out read has nothing left to serve it anyway.
 drop policy if exists "shared milestones are public" on public.shared_milestones;
-create policy "shared milestones are public"
+drop policy if exists "shared milestones are readable when signed in" on public.shared_milestones;
+create policy "shared milestones are readable when signed in"
   on public.shared_milestones for select
-  using (true);
+  using (auth.uid() is not null);
 
 drop policy if exists "you share your own milestones" on public.shared_milestones;
 create policy "you share your own milestones"

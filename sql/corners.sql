@@ -36,9 +36,13 @@ create table if not exists public.corners (
 alter table public.corners enable row level security;
 alter table public.corners add column if not exists description text;
 
+-- Readable by anyone signed in — the app now requires an account for
+-- everything past the landing page (src/app/pages/Root.tsx), so a
+-- signed-out read has nothing left to serve it anyway.
 drop policy if exists "corners are public" on public.corners;
-create policy "corners are public"
-  on public.corners for select using (true);
+drop policy if exists "corners are readable when signed in" on public.corners;
+create policy "corners are readable when signed in"
+  on public.corners for select using (auth.uid() is not null);
 
 -- No approval step, by design: anyone signed in can bring a Corner into
 -- existence. There is deliberately no update or delete policy for regular
