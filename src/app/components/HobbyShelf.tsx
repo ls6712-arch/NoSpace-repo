@@ -156,7 +156,7 @@ function CornerTile({
             />
           )}
           <span
-            className="absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
+            className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
             style={{ backgroundColor: tagTint(item.hobbySlug) }}
           >
             {item.label}
@@ -240,7 +240,7 @@ export function HobbyShelf({
   // Same column/gap treatment as WorkGrid for the same reason: one visual
   // system, not two grids that happen to sit near each other.
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div className="grid grid-cols-3 gap-4 sm:grid-cols-4">
       {sorted.map((item) => (
         <CornerTile key={item.key} item={item} linkTo={linkTo} />
       ))}

@@ -77,7 +77,7 @@ export function WorkGrid({
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-4 sm:grid-cols-4">
         {visible.map((post) => {
           const hobby = getHobby(post.hobbySlug);
           // Corner first — the tag should name the specific thing this
@@ -106,20 +106,30 @@ export function WorkGrid({
                     preview
                     className="h-full w-full object-cover"
                   />
-                  {cornerLabel && (
-                    <span
-                      className="absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
-                      style={{ backgroundColor: tagTint(post.hobbySlug) }}
-                    >
-                      {cornerLabel}
+                  {/* A shared flex row (not two independently-absolute spans)
+                      so a long Corner label truncates against the date
+                      instead of running into it — visible once cards get
+                      narrow enough (a 3-up mobile grid, a Pursuit panel's
+                      attached-Moments row) that both badges compete for the
+                      same width. */}
+                  <div className="absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-1.5">
+                    <span className="min-w-0 max-w-[65%]">
+                      {cornerLabel && (
+                        <span
+                          className="inline-block max-w-full truncate rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
+                          style={{ backgroundColor: tagTint(post.hobbySlug) }}
+                        >
+                          {cornerLabel}
+                        </span>
+                      )}
                     </span>
-                  )}
-                  <span
-                    className="absolute right-2.5 top-2.5 text-[11px] font-medium text-white"
-                    style={{ textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}
-                  >
-                    {dateLabel(post.createdAt)}
-                  </span>
+                    <span
+                      className="shrink-0 text-[11px] font-medium text-white"
+                      style={{ textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}
+                    >
+                      {dateLabel(post.createdAt)}
+                    </span>
+                  </div>
                 </div>
                 <div className="px-3.5 py-3">
                   <p
