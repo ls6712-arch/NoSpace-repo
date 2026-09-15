@@ -149,6 +149,11 @@ interface ContentContextType {
    * set_thread_answered RPC checks which). Returns false if neither. */
   setThreadAnswered: (postId: number, answered: boolean) => Promise<boolean>;
   toggleLike: (postId: number) => void;
+  /** Whether the signed-in account has liked this post — backed by
+   * `post_likes`, so it's correct across devices and after logout/login,
+   * not just "did this browser tab toggle it." Always false when signed
+   * out (there's no account to check it against). */
+  isPostLiked: (postId: number) => boolean;
   joinedCircleIds: number[];
   isCircleJoined: (circleId: number) => boolean;
   joinCircle: (circleId: number) => void;
@@ -182,7 +187,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [joinedCircleIds, setJoinedCircleIds] = useState<number[]>(() =>
     loadFromStorage<number>(CIRCLES_KEY)
   );
-  const [likeDeltas, setLikeDeltas] = useState<Record<number, number>>({});
+  // Real, per-account likes (post_likes) — which post ids *this* signed-in
+  // user has liked. Empty when signed out; there's nothing local to fall
+  // back to, since a like that only lived in this browser tab is exactly
+  // the bug this table exists to fix (gone on reload, invisible on another
+  // device for the same account).
+  const [likedPostIds, setLikedPostIds] = useState<Set<number>>(new Set());
   const [mediaError, setMediaError] = useState<string | null>(null);
   /** Set when a post couldn't reach the database, so the flow can say so. */
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -219,11 +229,26 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setCircleMemberCounts(counts);
   };
 
+  const refetchLikedPosts = async () => {
+    if (!supabase || !user) {
+      setLikedPostIds(new Set());
+      return;
+    }
+    const { data, error } = await supabase
+      .from("post_likes")
+      .select("post_id")
+      .eq("user_id", user.id);
+    if (error || !data) return;
+    setLikedPostIds(new Set(data.map((row: any) => row.post_id as number)));
+  };
+
   useEffect(() => {
     refetchRealPosts();
     refetchCircleMemberCounts();
+    refetchLikedPosts();
     // Re-fetch when the logged-in user changes, so switching accounts (or
-    // logging in) picks up posts visible to that session.
+    // logging in) picks up posts visible to that session, and this
+    // account's own likes rather than the previous one's.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -243,19 +268,19 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }
   }, [joinedCircleIds]);
 
-  const applyLikeDeltas = (list: Post[]) =>
-    list.map((p) => ({ ...p, likes: p.likes + (likeDeltas[p.id] ?? 0) }));
-
   // Real posts belonging to the signed-in user, mixed with the app's sample
   // content everywhere else — the seed data keeps every space feeling
-  // populated while real posts layer in on top of it.
+  // populated while real posts layer in on top of it. `realPosts.likes`
+  // already reflects post_likes (kept in sync by a DB trigger, patched
+  // optimistically here on toggle — see toggleLike), so this no longer
+  // needs a separate delta layered on top of it.
   const myRealPosts = realPosts.filter((p) => p.userId === myId);
   // A Circle contribution defaults to hidden here unless its own composer's
   // "Also save to Moments" box was checked — see Post.hiddenFromMoments.
   // Before this filter existed, every Circle thread doubled as a personal
   // Moment with no way to opt out.
-  const myPosts: Post[] = applyLikeDeltas(myRealPosts.filter((p) => !p.hiddenFromMoments));
-  const posts: Post[] = applyLikeDeltas([...realPosts, ...seedPosts]);
+  const myPosts: Post[] = myRealPosts.filter((p) => !p.hiddenFromMoments);
+  const posts: Post[] = [...realPosts, ...seedPosts];
 
   const myListings: Product[] = userListings;
   const listings: Product[] = [...userListings, ...seedProducts];
@@ -290,6 +315,21 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const listingsByHobby = (slug: string) => listings.filter((p) => p.hobbySlug === slug);
   const findListing = (id: number) => listings.find((p) => p.id === id);
 
+  // Deliberately still local-only (localStorage), not written to
+  // `circle_members` — this is the *seed* Circle direct-join (data/circles.ts
+  // ids), which has no corresponding row in the real `circles` table at all.
+  // `circle_members.circle_id` is a real foreign key into that table, so
+  // writing a seed id there would either fail outright (today: `circles`
+  // has zero rows, so it always would) or, once real Circles exist, could
+  // silently attach someone to an unrelated *real* Circle that happens to
+  // reuse the same low id — real Circle ids aren't offset until they leave
+  // CirclesContext (see REAL_CIRCLE_ID_OFFSET there). A genuinely real,
+  // Supabase-backed Circle already persists its join for real: see
+  // CirclesContext.tsx's joinRealCircle/leaveRealCircle/myRealCircleIds,
+  // which read and write `circle_members` directly against the real,
+  // un-offset database id. Cross-account joining of a *seed* Circle already
+  // has its own dedicated mechanism too — circle_invites, invite-and-accept
+  // (sql/circle-invites.sql) — deliberately not this direct-join path.
   const isCircleJoined = (circleId: number) => joinedCircleIds.includes(circleId);
   const joinCircle = (circleId: number) =>
     setJoinedCircleIds((prev) => (prev.includes(circleId) ? prev : [...prev, circleId]));
@@ -541,12 +581,62 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  const isPostLiked = (postId: number) => likedPostIds.has(postId);
+
+  /**
+   * Likes a post you can see, or un-likes one you already liked — a real
+   * row in `post_likes`, not a per-tab delta. Signed-out visitors still see
+   * whatever count `posts.likes` already carries; they just can't toggle
+   * it, same auth-gate shape as everything else here that needs an
+   * account (addPost, updatePost, deletePost).
+   *
+   * Deliberately doesn't call rewards.toggleLikePost anymore: that hook's
+   * own "did I like this" state is a separate, single-browser local copy,
+   * and once likes are the cross-device fact this table makes them, the
+   * two can disagree about which direction a tap even means (liked vs.
+   * un-liked) on a second device for the same account — which used to
+   * silently award or dock gamification points backwards.
+   */
   const toggleLike = (postId: number) => {
-    const nowLiked = rewards.toggleLikePost(postId);
-    setLikeDeltas((prev) => ({
-      ...prev,
-      [postId]: (prev[postId] ?? 0) + (nowLiked ? 1 : -1),
-    }));
+    if (!supabase || !user) return;
+    const alreadyLiked = likedPostIds.has(postId);
+    const bump = alreadyLiked ? -1 : 1;
+
+    // Optimistic: flip the UI immediately, then reconcile if the write
+    // fails rather than making every tap wait on a round trip.
+    setLikedPostIds((prev) => {
+      const next = new Set(prev);
+      if (alreadyLiked) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+    setRealPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, likes: Math.max(0, p.likes + bump) } : p)),
+    );
+
+    const revert = () => {
+      setLikedPostIds((prev) => {
+        const next = new Set(prev);
+        if (alreadyLiked) next.add(postId);
+        else next.delete(postId);
+        return next;
+      });
+      setRealPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, likes: Math.max(0, p.likes - bump) } : p)),
+      );
+    };
+
+    const write = alreadyLiked
+      ? supabase.from("post_likes").delete().eq("user_id", user.id).eq("post_id", postId)
+      : supabase.from("post_likes").insert({ user_id: user.id, post_id: postId });
+
+    void write.then(({ error }) => {
+      // Liking a seed post (not a real row in `posts`) fails its foreign
+      // key the same way any other bad id would — nothing currently offers
+      // that button on seed content, but this stays a quiet revert rather
+      // than an unhandled rejection if it ever does.
+      if (error) revert();
+    });
   };
 
   return (
@@ -570,6 +660,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         saveError,
         clearSaveError: () => setSaveError(null),
         toggleLike,
+        isPostLiked,
         joinedCircleIds,
         isCircleJoined,
         joinCircle,
