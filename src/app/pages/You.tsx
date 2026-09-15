@@ -10,7 +10,6 @@ import { QuietMilestones } from "../components/QuietMilestones";
 import { CirclesJoined } from "../components/CirclesJoined";
 import { ClanList } from "../components/ClanList";
 import { AvatarPicker } from "../components/AvatarPicker";
-import { HandwrittenNote } from "../components/HandwrittenNote";
 import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../components/PursuitCompact";
 import { PursuitDialog } from "../components/PursuitDialog";
@@ -128,22 +127,17 @@ export function You() {
   return (
     <div className="min-h-screen bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
           YOUR PERSONAL ARCHIVE
         </div>
-        <div className="mb-8 flex items-end justify-between gap-5">
-          <div>
-            <h1 className="text-[clamp(2.8rem,7vw,5rem)] leading-[.9] tracking-[-.04em]" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
-              You
-            </h1>
-            <p className="mt-3 max-w-md text-lg leading-relaxed text-muted-foreground">
-              Your work, your ideas, your people, your space to keep becoming.
-            </p>
-          </div>
-          <HandwrittenNote className="max-w-[220px]">A more curious you lives here.</HandwrittenNote>
-        </div>
+        <h1
+          className="mb-5 text-[clamp(2rem,4.5vw,3rem)] leading-[.95] tracking-[-.03em]"
+          style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+        >
+          You
+        </h1>
 
-        <div className="ns-you-profile-card mb-8">
+        <div className="ns-you-profile-card ns-you-profile-card--compact mb-6">
           <div className="ns-you-profile-top">
             <div className="ns-you-profile-identity">
               <AvatarPicker
@@ -154,19 +148,18 @@ export function You() {
               />
               <div className="min-w-0">
                 <h2
-                  className="truncate text-2xl leading-tight sm:text-3xl"
+                  className="truncate text-xl leading-tight sm:text-2xl"
                   style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
                 >
                   {user ? displayName : "You"}
                 </h2>
-                <div className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
                   <span className="ns-you-sprout" aria-hidden="true">✦</span>
                   <span>
                     <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
                     {totalSessions === 1 ? "session" : "sessions"}
                   </span>
-                </div>
-                <div className="mt-1">
+                  <span className="text-muted-foreground/60" aria-hidden="true">·</span>
                   <ProfileHeadline variant="quiet" />
                 </div>
               </div>
@@ -191,21 +184,17 @@ export function You() {
 
         {/* Hobby chips float under the card now, not boxed in one of their own */}
         {sessions.length > 0 && (
-          <div className="ns-you-tags mb-7 flex flex-wrap gap-2">
+          <div className="ns-you-tags ns-you-tags--pills mb-7 flex flex-wrap gap-2">
             {sessions.slice(0, 6).map((s) => (
               <Link
                 key={s.key}
                 to={s.subSlug ? `/space/${s.hobbySlug}?hobby=${s.subSlug}` : `/space/${s.hobbySlug}`}
-                className="rounded-full border border-border bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-                style={{ fontFamily: "var(--font-serif)" }}
+                className="ns-pill"
               >
                 {s.label}
               </Link>
             ))}
-            <Link
-              to="/discover"
-              className="rounded-full border border-dashed border-border px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-            >
+            <Link to="/discover" className="ns-pill ns-pill--ghost">
               + Add interest
             </Link>
           </div>
@@ -239,8 +228,63 @@ export function You() {
         {/* Five sections, stacked full-width with generous space between
             them rather than paired side by side — separation comes from
             whitespace and a hairline rule, not from boxing each one in.
-            Order: Pursuits, Moments, Quiet Milestones, Circles, Clan. */}
+            Order: Moments, Pursuits, Quiet Milestones, Circles, Clan. */}
         <section className="mb-14">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+              Your Moments
+            </h2>
+            {/* All moments (plain chronological) is the default now — By
+                Corner stays available for anyone who wants the grouped
+                view. HobbyShelf.tsx no longer renders Space-level section
+                headers at all — it's one flat grid of Corners, sorted by
+                whichever was most recently updated — so "By Corner" is
+                what actually describes it now. (An earlier pass called
+                this "By space" when the view still had Space headers with
+                Corners stacked inside each one; that structure is gone,
+                so that label would now be the wrong one.) */}
+            <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setMomentsView("grid")}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                }`}
+              >
+                All moments
+              </button>
+              <button
+                type="button"
+                onClick={() => setMomentsView("shelf")}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                }`}
+              >
+                By Corner
+              </button>
+            </div>
+          </div>
+          <p className="mb-5 mt-1 text-sm text-muted-foreground">
+            {momentsView === "shelf"
+              ? "By Corner, most recently updated first — open one to see every moment inside it."
+              : "A visual record of what you've made, explored, and loved, newest first."}
+          </p>
+          {momentsView === "shelf" ? (
+            <HobbyShelf
+              items={sessions}
+              emptyCta={false}
+              emptyCopy="Nothing logged yet. Create something and it'll show up here."
+            />
+          ) : (
+            <WorkGrid
+              posts={myPosts}
+              onOpen={setOpenPost}
+              emptyLabel="Nothing logged yet. Create something and it'll show up here."
+            />
+          )}
+        </section>
+
+        <section className="mb-14 border-t border-border pt-10">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
               Your Pursuits
@@ -312,61 +356,6 @@ export function You() {
                 </div>
               </div>
             </>
-          )}
-        </section>
-
-        <section className="mb-14 border-t border-border pt-10">
-          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Your Moments
-            </h2>
-            {/* All moments (plain chronological) is the default now — By
-                Corner stays available for anyone who wants the grouped
-                view. HobbyShelf.tsx no longer renders Space-level section
-                headers at all — it's one flat grid of Corners, sorted by
-                whichever was most recently updated — so "By Corner" is
-                what actually describes it now. (An earlier pass called
-                this "By space" when the view still had Space headers with
-                Corners stacked inside each one; that structure is gone,
-                so that label would now be the wrong one.) */}
-            <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
-              <button
-                type="button"
-                onClick={() => setMomentsView("grid")}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                }`}
-              >
-                All moments
-              </button>
-              <button
-                type="button"
-                onClick={() => setMomentsView("shelf")}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                }`}
-              >
-                By Corner
-              </button>
-            </div>
-          </div>
-          <p className="mb-5 mt-1 text-sm text-muted-foreground">
-            {momentsView === "shelf"
-              ? "By Corner, most recently updated first — open one to see every moment inside it."
-              : "A visual record of what you've made, explored, and loved, newest first."}
-          </p>
-          {momentsView === "shelf" ? (
-            <HobbyShelf
-              items={sessions}
-              emptyCta={false}
-              emptyCopy="Nothing logged yet. Create something and it'll show up here."
-            />
-          ) : (
-            <WorkGrid
-              posts={myPosts}
-              onOpen={setOpenPost}
-              emptyLabel="Nothing logged yet. Create something and it'll show up here."
-            />
           )}
         </section>
 

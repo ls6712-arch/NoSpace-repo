@@ -924,6 +924,11 @@
     /* was: box-shadow: 8px 8px 0 ...; drop the hard-shadow, it's what reads as "loud" */
   }
 
+  .ns-you-profile-card--compact {
+    gap: 0.75rem;
+    padding: 1rem 1.15rem;
+  }
+
   .ns-you-profile-top {
     display: flex;
     align-items: flex-start;
@@ -983,6 +988,43 @@
     color: var(--foreground);
   }
 
+  /* Colored interest pills — cycles through the palette already used
+     elsewhere, so a followed hobby reads as a small dose of the app's own
+     color rather than another gray chip. Scoped under the modifier class
+     (not a bare .ns-pill) so this beats the plain `.ns-you-tags a` rule
+     above on specificity instead of being silently overridden by it. */
+  .ns-you-tags--pills .ns-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: none;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.78rem;
+    font-family: var(--font-serif);
+    color: var(--forest-ink);
+    transition: transform 150ms ease;
+  }
+
+  .ns-you-tags--pills .ns-pill:hover {
+    transform: translateY(-1px);
+  }
+
+  .ns-you-tags--pills .ns-pill:nth-child(5n + 1) { background: color-mix(in srgb, var(--coral) 24%, var(--cream)); }
+  .ns-you-tags--pills .ns-pill:nth-child(5n + 2) { background: color-mix(in srgb, var(--sky) 55%, var(--cream)); }
+  .ns-you-tags--pills .ns-pill:nth-child(5n + 3) { background: color-mix(in srgb, var(--yellow) 45%, var(--cream)); }
+  .ns-you-tags--pills .ns-pill:nth-child(5n + 4) { background: color-mix(in srgb, var(--forest) 20%, var(--cream)); }
+  .ns-you-tags--pills .ns-pill:nth-child(5n + 5) { background: color-mix(in srgb, var(--sky-deep) 30%, var(--cream)); }
+
+  /* Same specificity as the nth-child rules above (two classes + one
+     pseudo-class each) — defined after them so source order breaks the tie
+     in its favor no matter which position in the cycle "+ Add interest"
+     lands on. */
+  .ns-you-tags--pills .ns-pill.ns-pill--ghost {
+    background: transparent;
+    border: 1px dashed var(--hairline);
+    color: var(--muted-foreground);
+  }
+
   .ns-you-links-row {
     display: flex;
     align-items: center;
@@ -1030,7 +1072,6 @@
     .ns-discover-open { display: block; margin-top: 0.9rem; }
     .ns-space-hero-art { width: calc(100% - 1rem); margin-right: 0.5rem; }
     .ns-space-hero-caption { right: -0.35rem; }
-    .ns-you-actions { flex-direction: column; }
   }
 
   .ns-marquee {
