@@ -127,15 +127,9 @@ export function You() {
   return (
     <div className="min-h-screen bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="mb-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
           YOUR PERSONAL ARCHIVE
         </div>
-        <h1
-          className="mb-5 text-[clamp(2rem,4.5vw,3rem)] leading-[.95] tracking-[-.03em]"
-          style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
-        >
-          You
-        </h1>
 
         <div className="ns-you-profile-card ns-you-profile-card--compact mb-6">
           <div className="ns-you-profile-top">

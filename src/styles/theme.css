@@ -998,8 +998,8 @@
     align-items: center;
     border-radius: 999px;
     border: none;
-    padding: 0.4rem 0.9rem;
-    font-size: 0.78rem;
+    padding: 0.28rem 0.7rem;
+    font-size: 0.7rem;
     font-family: var(--font-serif);
     color: var(--forest-ink);
     transition: transform 150ms ease;
