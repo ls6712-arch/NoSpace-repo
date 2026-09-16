@@ -240,7 +240,7 @@ export function HobbyShelf({
   // Same column/gap treatment as WorkGrid for the same reason: one visual
   // system, not two grids that happen to sit near each other.
   return (
-    <div className="grid grid-cols-3 gap-4 sm:grid-cols-4">
+    <div className="grid grid-cols-3 gap-0 sm:grid-cols-4">
       {sorted.map((item) => (
         <CornerTile key={item.key} item={item} linkTo={linkTo} />
       ))}

@@ -77,7 +77,7 @@ export function WorkGrid({
 
   return (
     <div>
-      <div className="grid grid-cols-3 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-0 sm:grid-cols-4">
         {visible.map((post) => {
           const hobby = getHobby(post.hobbySlug);
           // Corner first — the tag should name the specific thing this
