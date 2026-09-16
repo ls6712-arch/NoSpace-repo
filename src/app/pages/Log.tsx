@@ -1269,7 +1269,7 @@ export function Log() {
                 onClick={() => setSpaceOpen(true)}
                 className="mt-1.5 text-[11px] text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
               >
-                In {hobby.name} · change
+                {spaceSet ? `In ${hobby.name} · change` : "Add a Space (optional)"}
               </button>
             ) : (
               <div className="mt-2.5 rounded-2xl border border-border bg-surface px-4 py-3.5">

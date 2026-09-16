@@ -77,7 +77,7 @@ export function WorkGrid({
 
   return (
     <div>
-      <div className="grid grid-cols-3 gap-0 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-0.5 sm:grid-cols-4">
         {visible.map((post) => {
           const hobby = getHobby(post.hobbySlug);
           // Corner first — the tag should name the specific thing this
@@ -98,10 +98,16 @@ export function WorkGrid({
                   without it, a short caption left the card's own cream
                   background shorter than its neighbors', exposing the dark
                   page background in the gap and making the row look ragged.
-                  Square corners (not rounded) now that cards sit flush at
-                  gap-0 — a rounded corner here would leave a small diamond
-                  of page background showing at every 4-way junction, which
-                  reads as a leftover gap even with zero grid gap. */}
+                  Square corners (not rounded) since cards sit almost flush
+                  at a hairline gap — a rounded corner here would leave a
+                  small diamond of page background showing at every 4-way
+                  junction, which reads as a leftover gap even with a near-
+                  zero grid gap. The gap itself stays a sliver rather than
+                  zero: at true gap-0, two cream cards with no border between
+                  them read as one continuous card, so a short caption on one
+                  post visually ran into its neighbor's — enough of a gap to
+                  read as separate posts, not enough to look like the old
+                  uneven masonry spacing. */}
               <div
                 className="flex h-full w-full flex-col overflow-hidden border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
                 style={{ color: INK }}
