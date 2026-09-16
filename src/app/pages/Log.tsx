@@ -689,8 +689,8 @@ export function Log() {
         visibility: audience,
         circleId: audience === "circle" ? circleId : undefined,
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
-        locationName: isActivity && locationName.trim() ? locationName.trim() : undefined,
-        locationPrivacy: isActivity ? locationPrivacy : undefined,
+        locationName: locationName.trim() ? locationName.trim() : undefined,
+        locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
         forSale: forSale
           ? {
               name: saleTitle.trim() || caption.slice(0, 40),
@@ -755,6 +755,14 @@ export function Log() {
     setError(null);
     setSavedAs(null);
     setMode(null);
+    // Without these, posting an activity with a location and then logging
+    // another (plain) Moment right after silently carried both over onto
+    // the new post — a pre-existing gap that location being always visible
+    // now makes much easier to actually hit.
+    setIsActivity(false);
+    setStartsAt("");
+    setLocationName("");
+    setLocationPrivacy("neighborhood");
     setScreen(pursuitScoped ? "pursuit-menu" : "choose");
   };
 
@@ -1328,50 +1336,57 @@ export function Log() {
             </button>
 
             {isActivity && (
-              <div className="mt-4 space-y-3">
-                <div>
-                  <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
-                    When
-                  </Label>
-                  <Input
-                    id="startsAt"
-                    type="datetime-local"
-                    value={startsAt}
-                    onChange={(e) => setStartsAt(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="place" className="mb-1.5 block text-xs">
-                    Where
-                  </Label>
-                  <Input
-                    id="place"
-                    value={locationName}
-                    onChange={(e) => setLocationName(e.target.value)}
-                    placeholder="e.g. Prospect Park, Brooklyn"
-                  />
-                </div>
-                <div>
-                  <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
-                  <Select
-                    value={locationPrivacy}
-                    onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOCATION_PRIVACY.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}: {o.copy}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Neighborhood by default. Exact is never assumed.
-                  </p>
-                </div>
+              <div className="mt-4">
+                <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
+                  When
+                </Label>
+                <Input
+                  id="startsAt"
+                  type="datetime-local"
+                  value={startsAt}
+                  onChange={(e) => setStartsAt(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Where a Moment happened isn't only meaningful for a scheduled
+              activity — a photo from a trip or a walk deserves the same
+              option. Kept as its own section rather than nested under "This
+              is something happening" so it's never gated behind that toggle. */}
+          <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+            <div>
+              <Label htmlFor="place" className="mb-1.5 block text-xs">
+                Where (optional)
+              </Label>
+              <Input
+                id="place"
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                placeholder="e.g. Prospect Park, Brooklyn"
+              />
+            </div>
+            {locationName.trim() && (
+              <div className="mt-3">
+                <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
+                <Select
+                  value={locationPrivacy}
+                  onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOCATION_PRIVACY.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}: {o.copy}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Neighborhood by default. Exact is never assumed.
+                </p>
               </div>
             )}
           </div>
