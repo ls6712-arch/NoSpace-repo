@@ -97,12 +97,16 @@ export function WorkGrid({
                   height (which CSS Grid already stretches every card to) —
                   without it, a short caption left the card's own cream
                   background shorter than its neighbors', exposing the dark
-                  page background in the gap and making the row look ragged. */}
+                  page background in the gap and making the row look ragged.
+                  Square corners (not rounded) now that cards sit flush at
+                  gap-0 — a rounded corner here would leave a small diamond
+                  of page background showing at every 4-way junction, which
+                  reads as a leftover gap even with zero grid gap. */}
               <div
-                className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
+                className="flex h-full w-full flex-col overflow-hidden border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
                 style={{ color: INK }}
               >
-                <div className="relative aspect-[4/3] overflow-hidden">
+                <div className="relative aspect-square overflow-hidden">
                   <PostMedia
                     media={post.media}
                     type={post.type}
@@ -138,7 +142,7 @@ export function WorkGrid({
                 </div>
                 <div className="flex flex-1 items-start px-3.5 py-3">
                   <p
-                    className="line-clamp-2 text-sm leading-snug sm:text-base"
+                    className="w-full truncate text-sm leading-snug sm:text-base"
                     style={{ fontFamily: "var(--font-serif)" }}
                   >
                     {post.caption}
@@ -152,7 +156,7 @@ export function WorkGrid({
         {remaining === 0 && (
           <Link
             to="/create"
-            className="flex h-full min-h-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            className="flex h-full min-h-32 flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ImagePlus className="size-5" strokeWidth={1.7} />
             <span className="text-sm font-medium">Pin a moment</span>

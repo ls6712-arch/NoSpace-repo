@@ -139,10 +139,10 @@ function CornerTile({
           no note was shorter than one with a note, exposing the dark page
           background below it and making the row look ragged. */}
       <div
-        className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
+        className="flex h-full w-full flex-col overflow-hidden border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
         style={{ color: INK }}
       >
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-square overflow-hidden">
           {item.lastMediaUrl ? (
             <PostMedia
               media={item.lastMediaUrl}
