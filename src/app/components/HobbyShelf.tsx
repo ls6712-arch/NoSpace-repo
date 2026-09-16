@@ -133,9 +133,13 @@ function CornerTile({
   const note = useCornerNote(item.key);
 
   return (
-    <Link to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`} className="group block">
+    <Link to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`} className="group flex h-full">
+      {/* flex-col + h-full so this fills the grid row's height (CSS Grid
+          already stretches every tile to match) — otherwise a Corner with
+          no note was shorter than one with a note, exposing the dark page
+          background below it and making the row look ragged. */}
       <div
-        className="overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
+        className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
         style={{ color: INK }}
       >
         <div className="relative aspect-[4/3] overflow-hidden">
@@ -162,7 +166,7 @@ function CornerTile({
             {item.label}
           </span>
         </div>
-        <div className="px-3.5 py-3">
+        <div className="flex-1 px-3.5 py-3">
           <p
             className="truncate text-sm leading-snug sm:text-base"
             style={{ fontFamily: "var(--font-serif)" }}

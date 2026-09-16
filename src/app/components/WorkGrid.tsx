@@ -90,11 +90,16 @@ export function WorkGrid({
               key={post.id}
               type="button"
               onClick={() => onOpen(post)}
-              className="group text-left"
+              className="group flex h-full text-left"
               aria-label={`Open: ${post.caption.slice(0, 60)}`}
             >
+              {/* flex-col + h-full so this actually fills the grid row's
+                  height (which CSS Grid already stretches every card to) —
+                  without it, a short caption left the card's own cream
+                  background shorter than its neighbors', exposing the dark
+                  page background in the gap and making the row look ragged. */}
               <div
-                className="overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
+                className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
                 style={{ color: INK }}
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
@@ -131,7 +136,7 @@ export function WorkGrid({
                     </span>
                   </div>
                 </div>
-                <div className="px-3.5 py-3">
+                <div className="flex flex-1 items-start px-3.5 py-3">
                   <p
                     className="line-clamp-2 text-sm leading-snug sm:text-base"
                     style={{ fontFamily: "var(--font-serif)" }}
