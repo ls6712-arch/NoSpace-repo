@@ -35,9 +35,10 @@ const AUDIENCE: Record<string, { label: string; icon: typeof Users }> = {
   friends: { label: "Connections", icon: UserRound },
 };
 
-// Varying aspect ratios give the gallery its natural, uneven rhythm even though
-// every card is generated art rather than a photo of a different shape.
-const ASPECTS = ["aspect-square", "aspect-[4/5]", "aspect-[3/4]", "aspect-[5/4]"];
+// One fixed ratio, not a per-post hash — every card the same size, in a real
+// grid rather than a Pinterest-style masonry column, so the feed reads as a
+// uniform shelf instead of a mismatched jumble of aspect ratios.
+const CARD_ASPECT = "aspect-square";
 
 export function ContentCard({
   post,
@@ -87,7 +88,6 @@ export function ContentCard({
   const place = displayLocation(post.locationName, post.locationPrivacy);
   const going = social.goingCount(post.id);
   const listing = post.productId ? findListing(post.productId) : undefined;
-  const aspect = ASPECTS[Math.abs(post.id) % ASPECTS.length];
   const audience = AUDIENCE[post.visibility];
   const mediaList = post.mediaUrls?.length ? post.mediaUrls : post.media ? [post.media] : [];
   // The carousel's own "current/total" counter sits top-right — the same
@@ -97,14 +97,14 @@ export function ContentCard({
     post.type !== "video" && mediaList.filter((u) => /^https?:\/\//.test(u)).length >= 2;
 
   return (
-    <div className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-border bg-card group">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card group">
       <div className="relative overflow-hidden">
         <PostMediaCarousel
           media={mediaList}
           type={post.type}
           hobbySlug={post.hobbySlug}
           seed={post.id}
-          className={`w-full ${aspect} transition-transform duration-500 group-hover:scale-105`}
+          className={`w-full ${CARD_ASPECT} transition-transform duration-500 group-hover:scale-105`}
         />
         {post.type === "video" && !/^https?:\/\//.test(post.media) && (
           <div className="absolute inset-0 flex items-center justify-center bg-[var(--void)]/25">

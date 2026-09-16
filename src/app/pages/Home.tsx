@@ -339,7 +339,7 @@ export function Home() {
                   real Moments from NoSpace's sample content.
                 </p>
               </div>
-              <div className="columns-1 gap-4 sm:columns-2 lg:columns-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {cornerMoments.map((post) => (
                   <ContentCard key={post.id} post={post} compact />
                 ))}

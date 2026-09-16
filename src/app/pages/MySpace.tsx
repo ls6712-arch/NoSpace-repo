@@ -320,7 +320,7 @@ export function MySpace() {
                 work turns up here. Nothing else gets in.
               </Empty>
             ) : (
-              <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2 lg:columns-3">
+              <div className="ns-myspace-feed grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {today.map((post) => (
                   <ContentCard key={post.id} post={post} />
                 ))}
@@ -378,7 +378,7 @@ export function MySpace() {
               ))}
             </div>
           ) : (
-            <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2">
+            <div className="ns-myspace-feed grid grid-cols-1 gap-4 sm:grid-cols-2">
               {fromCircles.map((post) => (
                 <ContentCard key={post.id} post={post} label="Circle" />
               ))}
@@ -397,7 +397,7 @@ export function MySpace() {
               you see the craft develop, not somebody's posting habits.
             </Empty>
           ) : (
-            <div className="ns-myspace-feed columns-1 gap-4 sm:columns-2">
+            <div className="ns-myspace-feed grid grid-cols-1 gap-4 sm:grid-cols-2">
               {exploringWork.map((post) => (
                 <ContentCard key={post.id} post={post} />
               ))}

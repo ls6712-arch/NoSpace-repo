@@ -417,7 +417,7 @@ export function Pursuit() {
             <p className="text-sm text-muted-foreground">Nothing logged yet.</p>
           </div>
         ) : (
-          <div className="columns-1 gap-4 sm:columns-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {updates.map((post) => (
               <ContentCard key={post.id} post={post} compact />
             ))}

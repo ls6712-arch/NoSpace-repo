@@ -754,7 +754,7 @@ export function Discover() {
                     : "Nothing matches that yet. Try a broader word or a different filter."}
                 </div>
               ) : (
-                <div className="columns-1 gap-4 sm:columns-2 md:columns-3 xl:columns-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                   {visible.map((post) => (
                     <ContentCard key={post.id} post={post} compact showExploreCorner />
                   ))}
