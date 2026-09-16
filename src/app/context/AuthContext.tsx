@@ -249,9 +249,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateProfile: AuthContextType["updateProfile"] = async (fields) => {
     if (!supabase || !session) return { error: "Not signed in." };
     try {
+      // A plain update, not an upsert: the row always already exists (the
+      // trigger that creates it fires the moment the account is made), and
+      // an upsert's ON CONFLICT DO UPDATE still validates the *proposed
+      // insert* row against every NOT NULL column first — username and
+      // display_name among them — even though it never actually inserts.
+      // That silently failed every call here that didn't happen to also
+      // pass both of those, onboarding's own finish() included, which then
+      // pressed on as if it had worked and left onboarding_completed still
+      // false in the database.
       const { error } = await supabase
         .from("profiles")
-        .upsert({ id: session.user.id, ...fields }, { onConflict: "id" });
+        .update(fields)
+        .eq("id", session.user.id);
       if (error) return { error: error.message };
       await loadProfile(session.user.id);
       return { error: null };

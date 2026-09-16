@@ -119,8 +119,12 @@ function MomentCard({
     );
   }
 
+  // A photo says enough on its own — the thought is a nice-to-have next to
+  // it, not a second thing required before either can be shared.
+  const canSubmit = (!!body.trim() || !!media) && !posting;
+
   const submit = async () => {
-    if (!body.trim() || posting) return;
+    if (!canSubmit) return;
     setPosting(true);
     try {
       await addPost({
@@ -146,20 +150,20 @@ function MomentCard({
       <Textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        placeholder={`What's something you've made or done in ${hobby.shortName.toLowerCase()}?`}
+        placeholder={`Say something about it, or just add the photo (${hobby.shortName.toLowerCase()})`}
         className="min-h-16"
         maxLength={2000}
         disabled={disabled}
       />
       <div className="mt-3 flex items-center justify-between gap-3">
         <MediaAttachPicker file={media} onChange={setMedia} label="Add a photo" />
-        <Button variant="coral" size="sm" disabled={disabled || !body.trim() || posting} onClick={submit}>
+        <Button variant="coral" size="sm" disabled={disabled || !canSubmit} onClick={submit}>
           {posting ? "Adding…" : "Add Moment"}
         </Button>
       </div>
       {disabled && (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          You've added {MOMENT_CAP} for now — add more anytime from Create.
+          You've added {MOMENT_CAP} for now. Add more anytime from Create.
         </p>
       )}
     </div>
@@ -188,6 +192,7 @@ export function Onboarding() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [addedCount, setAddedCount] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
 
   const toggleSpace = (slug: string) => {
     setSelected((prev) => {
@@ -212,12 +217,29 @@ export function Onboarding() {
   const finish = async () => {
     if (finishing) return;
     setFinishing(true);
-    // Picked up by Root.tsx's guard and everywhere else that reads
-    // activeHobbySlugs (feed relevance) — without this, the follows just
-    // written above wouldn't show up here until the next full sign-in.
-    await refetchActiveHobbies();
-    await updateProfile({ onboarding_completed: true });
-    navigate(redirectTo, { replace: true });
+    setFinishError(null);
+    try {
+      // Picked up by Root.tsx's guard and everywhere else that reads
+      // activeHobbySlugs (feed relevance): without this, the follows just
+      // written above wouldn't show up here until the next full sign-in.
+      await refetchActiveHobbies();
+      // This has to actually succeed before leaving. It used to be fired
+      // and forgotten, so a failed write (silently, every time, until this
+      // was upsert instead of update — see AuthContext's updateProfile) left
+      // onboarding_completed still false in the database; navigating away
+      // anyway just sent you straight into Root's own guard, which sees the
+      // same unfinished profile and bounces you right back to step one.
+      const { error } = await updateProfile({ onboarding_completed: true });
+      if (error) {
+        setFinishError("Couldn't finish setting up. Try again in a moment.");
+        return;
+      }
+      navigate(redirectTo, { replace: true });
+    } catch {
+      setFinishError("Couldn't reach the server. Try again in a moment.");
+    } finally {
+      setFinishing(false);
+    }
   };
 
   const selectedHobbies = hobbies.filter((h) => selected.has(h.slug));
@@ -243,7 +265,7 @@ export function Onboarding() {
               What are you into?
             </h1>
             <p className="mb-6 text-sm text-muted-foreground">
-              Pick a few — {SUGGESTED_SPACE_COUNT} is a good start, but there's no wrong number. This
+              Pick a few. {SUGGESTED_SPACE_COUNT} is a good start, but there's no wrong number. This
               shapes what shows up in My Space.
             </p>
 
@@ -272,8 +294,8 @@ export function Onboarding() {
               Post a first Moment?
             </h1>
             <p className="mb-6 text-sm text-muted-foreground">
-              Totally optional — a photo and a line about it, for any of the Spaces you picked. Skip
-              this if nothing comes to mind yet.
+              Totally optional: a photo, a line about it, or both, for any of the Spaces you picked.
+              Skip this if nothing comes to mind yet.
             </p>
 
             <div className="space-y-3">
@@ -287,7 +309,8 @@ export function Onboarding() {
               ))}
             </div>
 
-            <div className="mt-8 flex justify-end">
+            <div className="mt-8 flex flex-col items-end gap-2">
+              {finishError && <p className="text-xs text-[var(--coral-text)]">{finishError}</p>}
               <Button variant="coral" disabled={finishing} onClick={finish}>
                 {finishing ? "Finishing…" : addedCount > 0 ? "Finish" : "Skip for now"}
               </Button>
