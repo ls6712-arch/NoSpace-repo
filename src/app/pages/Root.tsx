@@ -25,7 +25,7 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   pathname === "/you" || pathname.startsWith("/you/");
 
 export function Root() {
-  const { user, loading, isConfigured } = useAuth();
+  const { user, profile, loading, isConfigured } = useAuth();
   const location = useLocation();
 
   // Still waits for the initial session check, so a signed-in visitor isn't
@@ -49,6 +49,19 @@ export function Root() {
     !HANDLES_SIGNED_OUT_ITSELF(location.pathname)
   ) {
     return <Navigate to="/" replace />;
+  }
+
+  // Post-signup onboarding (sql/onboarding-v2.sql), enforced here so it
+  // can't be dodged by deep-linking straight past it. Only for a signed-in
+  // visitor whose profile has actually loaded and confirms it's not done —
+  // `profile` starts out null right after sign-in while loadProfile's own
+  // retry loop is still running, and treating that transient null as "not
+  // onboarded" would flash the gate at an already-onboarded account on
+  // every login. Every pre-existing account was backfilled to true by that
+  // same migration, so this only ever catches a genuinely brand-new signup.
+  if (user && profile && !profile.onboarding_completed && location.pathname !== "/onboarding") {
+    const next = `${location.pathname}${location.search}`;
+    return <Navigate to={`/onboarding?redirect=${encodeURIComponent(next)}`} replace />;
   }
 
   return (

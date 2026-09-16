@@ -12,10 +12,29 @@ import { Product, products as seedProducts } from "../data/products";
 import { circles as allCircles } from "../data/circles";
 import { useRewards } from "./RewardsContext";
 import { useAuth } from "./AuthContext";
+import { SOCIAL_STORAGE_KEY } from "./SocialContext";
 import { supabase } from "../../lib/supabase";
 
 const LISTINGS_KEY = "nospace.listings.v1";
 const CIRCLES_KEY = "nospace.circles.joined.v1";
+
+/** Whole-Space follows (SocialContext's "space:<slug>" keys) read straight
+ * from that context's own signed-out localStorage shape, since
+ * SocialProvider sits below ContentProvider in App.tsx's tree and useSocial()
+ * isn't reachable from here. Only the shape read here (followedHobbies)
+ * needs to stay in sync with SocialContext's own LocalState — nothing here
+ * writes to this key. */
+function readLocalFollowedSpaceSlugs(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(SOCIAL_STORAGE_KEY);
+    if (!raw) return [];
+    const followed: string[] = JSON.parse(raw)?.followedHobbies ?? [];
+    return followed.filter((k) => k.startsWith("space:")).map((k) => k.slice(6));
+  } catch {
+    return [];
+  }
+}
 
 const HOUR = 3600 * 1000;
 
@@ -165,6 +184,12 @@ interface ContentContextType {
   circleMemberCounts: Record<number, number>;
   refetchCircleMemberCounts: () => Promise<void>;
   activeHobbySlugs: string[];
+  /** Re-reads plain Space follows (SocialContext's "space:<slug>" keys) into
+   * activeHobbySlugs. Onboarding calls this right after following the
+   * Spaces someone picked, so feed relevance reflects them immediately —
+   * without it, this context wouldn't know about a follow written through
+   * SocialContext until the next full sign-in. */
+  refetchActiveHobbies: () => Promise<void>;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -202,6 +227,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // count, via a SECURITY DEFINER aggregate (sql/circle-invites.sql) that
   // exposes counts without exposing who's actually in each row.
   const [circleMemberCounts, setCircleMemberCounts] = useState<Record<number, number>>({});
+  // Plain whole-Space follows (SocialContext's "space:<slug>" keys), read
+  // independently here rather than through useSocial() — see
+  // readLocalFollowedSpaceSlugs's own comment on why.
+  const [followedSpaceSlugs, setFollowedSpaceSlugs] = useState<string[]>(() =>
+    readLocalFollowedSpaceSlugs(),
+  );
 
   const refetchRealPosts = async () => {
     if (!supabase) return;
@@ -242,13 +273,33 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setLikedPostIds(new Set(data.map((row: any) => row.post_id as number)));
   };
 
+  const refetchActiveHobbies = async () => {
+    if (!supabase || !user) {
+      setFollowedSpaceSlugs(readLocalFollowedSpaceSlugs());
+      return;
+    }
+    const { data, error } = await supabase
+      .from("hobby_follows")
+      .select("hobby_key")
+      .eq("user_id", user.id);
+    if (error || !data) return;
+    setFollowedSpaceSlugs(
+      (data as any[])
+        .map((row) => row.hobby_key as string)
+        .filter((k) => k.startsWith("space:"))
+        .map((k) => k.slice(6)),
+    );
+  };
+
   useEffect(() => {
     refetchRealPosts();
     refetchCircleMemberCounts();
     refetchLikedPosts();
+    refetchActiveHobbies();
     // Re-fetch when the logged-in user changes, so switching accounts (or
     // logging in) picks up posts visible to that session, and this
-    // account's own likes rather than the previous one's.
+    // account's own likes and Space follows rather than the previous
+    // one's.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -285,10 +336,13 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const myListings: Product[] = userListings;
   const listings: Product[] = [...userListings, ...seedProducts];
 
-  // Hobbies you actually engage with — posted in, or joined a circle for.
-  // Used both for feed relevance scoring and for "hobby tags" on the profile.
+  // Hobbies you actually engage with — posted in, followed the whole Space
+  // for (onboarding's own picker writes exactly these follows), or joined a
+  // circle for. Used both for feed relevance scoring and for "hobby tags" on
+  // the profile.
   const activeHobbySlugsSet = new Set<string>([
     ...myRealPosts.map((p) => p.hobbySlug),
+    ...followedSpaceSlugs,
     ...joinedCircleIds
       .map((id) => allCircles.find((c) => c.id === id)?.hobbySlug)
       .filter((s): s is string => !!s),
@@ -668,6 +722,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         circleMemberCounts,
         refetchCircleMemberCounts,
         activeHobbySlugs,
+        refetchActiveHobbies,
       }}
     >
       {children}

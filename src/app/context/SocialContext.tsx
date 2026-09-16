@@ -131,7 +131,13 @@ const SocialContext = createContext<SocialContextType | undefined>(undefined);
 
 /* ── Local fallback store ──────────────────────────────────────────────── */
 
-const KEY = "nospace.social.v1";
+// Exported so ContentContext.tsx can read the signed-out fallback's
+// followedHobbies directly (for activeHobbySlugs) without calling useSocial()
+// — SocialProvider sits below ContentProvider in App.tsx's provider tree, so
+// that hook isn't available there. A plain constant import has no such
+// ordering problem.
+export const SOCIAL_STORAGE_KEY = "nospace.social.v1";
+const KEY = SOCIAL_STORAGE_KEY;
 
 interface LocalState {
   followedHobbies: string[];

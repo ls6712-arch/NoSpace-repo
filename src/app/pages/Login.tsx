@@ -91,7 +91,16 @@ export function Login() {
         setNeedsConfirmation(true);
         return;
       }
-      navigate(redirectTo);
+      // A brand-new account goes through /onboarding first — Root.tsx's own
+      // guard would send them there anyway on the very next render even if
+      // this didn't, but going straight there skips that one extra bounce.
+      // The original destination rides along as its own redirect param so
+      // onboarding can continue there once it's done.
+      if (mode === "signup") {
+        navigate(`/onboarding?redirect=${encodeURIComponent(redirectTo)}`);
+      } else {
+        navigate(redirectTo);
+      }
     } catch {
       setError("Couldn't reach the server. Check your connection and try again.");
     } finally {

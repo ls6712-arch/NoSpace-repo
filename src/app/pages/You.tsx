@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import { Lock, PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
@@ -17,7 +17,6 @@ import { MomentDetail } from "../components/MomentDetail";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
-import { ProfileOnboarding } from "../components/ProfileOnboarding";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal, useJournalSlice } from "../lib/journal";
@@ -27,7 +26,6 @@ import { mirrorProfileLinks } from "../lib/profileLinksRemote";
 import { ProfileLinksEditor } from "../components/ProfileLinks";
 import { AccountSettings } from "../components/AccountSettings";
 import { useSocial } from "../context/SocialContext";
-import { localOnboardingDone } from "../lib/onboardingLocal";
 import { subHobbyLabel, getHobby } from "../data/hobbies";
 
 function timeAgo(ts: number) {
@@ -61,13 +59,6 @@ export function You() {
   const [expandedPursuitId, setExpandedPursuitId] = useState<string | null>(null);
   const [renderedPursuitId, setRenderedPursuitId] = useState<string | null>(null);
   const entryProject = useJournalSlice((s) => s.entryProject);
-  // Whether to show the first-run guided setup, decided once and then left
-  // alone — null means "not decided yet". Deciding it live off the current
-  // profile/social state (rather than freezing it) was a real bug: adding
-  // your first interest on step 2 made "no interests yet" false mid-flow,
-  // which kicked the onboarding view out from under itself back to the
-  // normal page before the remaining steps ever ran.
-  const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null);
 
   const sessions = useSessionsByHobby();
   const [momentsView, setMomentsView] = useState<"shelf" | "grid">("grid");
@@ -92,36 +83,6 @@ export function You() {
         cta="Start my shelf"
       />
     );
-  }
-
-  // First-run guided setup: only for a signed-in, genuinely-empty profile
-  // that hasn't been through onboarding before. onboarding_completed_at is
-  // authoritative once set — checked first, so this never comes back just
-  // because someone later cleared their name or unfollowed every interest.
-  // localOnboardingDone() covers the same "never again" promise when
-  // there's no account to hang that flag off (Supabase not configured) or
-  // the save on finishing failed to reach it.
-  //
-  // Decided once profile has actually loaded (isConfigured but profile is
-  // still null right after sign-in), not on every render — profile starts
-  // out null for everyone, existing accounts included, so judging "empty"
-  // against that transient null would flash onboarding at every sign-in
-  // until the real row arrives.
-  useEffect(() => {
-    if (needsOnboarding !== null || !user) return;
-    if (isConfigured && !profile) return;
-    setNeedsOnboarding(
-      !profile?.onboarding_completed_at &&
-        !localOnboardingDone() &&
-        !profile?.display_name?.trim() &&
-        !profile?.avatar_url &&
-        social.followedHobbies.length === 0,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, profile, isConfigured]);
-
-  if (needsOnboarding) {
-    return <ProfileOnboarding onDone={() => setNeedsOnboarding(false)} />;
   }
 
   return (

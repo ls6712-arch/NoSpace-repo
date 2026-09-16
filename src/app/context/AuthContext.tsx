@@ -18,10 +18,17 @@ export interface Profile {
   /** The short quote shown near your name — optional, set during onboarding
    * or any time after. */
   tagline?: string;
-  /** Set once, the first time the first-run guided setup on /you finishes
-   * or is skipped through. Only ever checked for null vs. not-null — never
-   * shown again once it's set, regardless of what ended up filled in. */
+  /** Set once, the first time the old inline /you setup finished or was
+   * skipped through. Superseded by onboarding_completed below (see
+   * sql/onboarding-v2.sql) — kept only because existing rows already have
+   * it; nothing reads it anymore. */
   onboarding_completed_at?: string | null;
+  /** False only for an account created after sql/onboarding-v2.sql ran —
+   * every pre-existing row was backfilled to true in that same migration,
+   * so this never retroactively gates someone who already had an account.
+   * Checked by Root.tsx to route a brand-new signup through /onboarding
+   * before anything else, and set true there on finish or skip. */
+  onboarding_completed: boolean;
 }
 
 interface AuthContextType {
@@ -47,7 +54,9 @@ interface AuthContextType {
    * else that needs to save more than AvatarPicker's own self-contained
    * avatar_url writes. */
   updateProfile: (
-    fields: Partial<Pick<Profile, "display_name" | "tagline" | "onboarding_completed_at">>,
+    fields: Partial<
+      Pick<Profile, "display_name" | "tagline" | "onboarding_completed_at" | "onboarding_completed">
+    >,
   ) => Promise<{ error: string | null }>;
 }
 
@@ -70,7 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     for (let attempt = 0; attempt < 4; attempt++) {
       const { data } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, tagline, onboarding_completed_at")
+        .select(
+          "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed",
+        )
         .eq("id", userId)
         .maybeSingle();
       const row = data as Profile | null;
