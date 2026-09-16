@@ -338,12 +338,17 @@ export function CategoryFeed() {
       <section className="container mx-auto px-4 pt-12 pb-24">
         <Tabs defaultValue="feed">
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-            <TabsList>
-              <TabsTrigger value="feed">Work</TabsTrigger>
-              <TabsTrigger value="people">People</TabsTrigger>
-              <TabsTrigger value="circles">Circles{circles.length ? ` (${circles.length})` : ""}</TabsTrigger>
-              <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
-            </TabsList>
+            {/* Four tabs don't fit a phone-width row as one unbreakable
+                unit (TabsList sizes to its own content, not the viewport) —
+                scrolls horizontally instead of overflowing the page. */}
+            <div className="-mx-4 max-w-full overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
+              <TabsList>
+                <TabsTrigger value="feed">Work</TabsTrigger>
+                <TabsTrigger value="people">People</TabsTrigger>
+                <TabsTrigger value="circles">Circles{circles.length ? ` (${circles.length})` : ""}</TabsTrigger>
+                <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
+              </TabsList>
+            </div>
             <Link to={`/create?hobby=${hobby.slug}`} className="hidden sm:block">
               <Button variant="brand">
                 <Plus className="size-4" />

@@ -553,28 +553,38 @@ export function Discover() {
 
       <div className="bg-surface pb-24 pt-5">
         <div className="container mx-auto max-w-6xl px-4">
-          {/* Spaces / Circles / People — Discover's own front door */}
-          <div role="tablist" aria-label="Discover" className="mb-6 inline-flex rounded-full border border-border bg-card p-1">
-            {DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
-              const active = tab === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setTab(id)}
-                  className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    active
-                      ? "text-white [background-color:var(--coral-deep)]"
-                      : "text-foreground hover:text-[var(--coral-text)]"
-                  }`}
-                >
-                  <Icon className="size-4" strokeWidth={1.8} />
-                  {label}
-                </button>
-              );
-            })}
+          {/* Spaces / Circles / People — Discover's own front door. Five
+              tabs never fit a phone-width pill at once, so this scrolls
+              horizontally (edge-to-edge, bleeding past the container's own
+              padding) instead of overflowing the screen or wrapping into a
+              second, layout-shifting row. */}
+          <div className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
+            <div
+              role="tablist"
+              aria-label="Discover"
+              className="inline-flex w-max rounded-full border border-border bg-card p-1"
+            >
+              {DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
+                const active = tab === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setTab(id)}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                      active
+                        ? "text-white [background-color:var(--coral-deep)]"
+                        : "text-foreground hover:text-[var(--coral-text)]"
+                    }`}
+                  >
+                    <Icon className="size-4" strokeWidth={1.8} />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {tab === "circles" && <CirclesBrowser query={query} />}
