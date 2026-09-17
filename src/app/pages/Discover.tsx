@@ -27,7 +27,6 @@ import { hobbyMatchesQuery } from "../lib/search";
 import { ContentCard } from "../components/ContentCard";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
-import { SuggestCategory } from "../components/SuggestCategory";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { PostMedia } from "../components/PostMedia";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -627,11 +626,6 @@ export function Discover() {
                         hobbySlug={hobby.slug}
                       />
                     ))}
-                    {!q && (
-                      <div className="w-40 shrink-0 snap-start">
-                        <SuggestCategory className="h-full" />
-                      </div>
-                    )}
                   </SpacesRow>
                 )}
               </section>

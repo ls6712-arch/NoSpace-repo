@@ -1025,6 +1025,15 @@
     color: var(--muted-foreground);
   }
 
+  /* The tag currently narrowing Your Moments below — same specificity trick
+     as the ghost rule above (two classes, defined after the nth-child cycle
+     so source order wins the tie) rather than a color from that cycle that
+     might already look "selected" by coincidence. */
+  .ns-you-tags--pills .ns-pill.ns-pill--active {
+    background: var(--coral-deep);
+    color: white;
+  }
+
   .ns-you-links-row {
     display: flex;
     align-items: center;

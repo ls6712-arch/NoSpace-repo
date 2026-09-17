@@ -8,6 +8,7 @@ import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
 import { circlesByHobby } from "../data/circles";
 import { usePeopleInHobby } from "../lib/people";
 import { sessionsFromPosts } from "../components/HobbyShelf";
+import { tagsFromPosts } from "../lib/postTags";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { PersonActions } from "../components/PersonActions";
@@ -66,6 +67,7 @@ export function PublicProfile() {
         displayName: string;
         avatarUrl?: string;
         tagline?: string;
+        bio?: string;
         posts: Post[];
       }
   >({ status: "loading" });
@@ -117,20 +119,21 @@ export function PublicProfile() {
         display_name: string;
         avatar_url: string | null;
         tagline: string | null;
+        bio: string | null;
       };
       let profileRow: Row | null = null;
 
       if (isUuid) {
         const { data } = await supabase
           .from("profiles")
-          .select("id, username, display_name, avatar_url, tagline")
+          .select("id, username, display_name, avatar_url, tagline, bio")
           .eq("id", username)
           .maybeSingle();
         profileRow = (data as Row | null) ?? null;
       } else {
         const { data } = await supabase
           .from("profiles")
-          .select("id, username, display_name, avatar_url, tagline")
+          .select("id, username, display_name, avatar_url, tagline, bio")
           .eq("username", username)
           .maybeSingle();
         profileRow = (data as Row | null) ?? null;
@@ -139,7 +142,7 @@ export function PublicProfile() {
         if (!profileRow) {
           const { data: byName } = await supabase
             .from("profiles")
-            .select("id, username, display_name, avatar_url, tagline")
+            .select("id, username, display_name, avatar_url, tagline, bio")
             .ilike("display_name", username)
             .limit(1);
           profileRow = (byName?.[0] as Row | undefined) ?? null;
@@ -170,6 +173,8 @@ export function PublicProfile() {
         createdAt: new Date(row.created_at).getTime(),
         visibility: "public",
         userId: row.user_id,
+        tags: row.tags ?? [],
+        pinned: row.pinned ?? false,
       }));
 
       setState({
@@ -178,6 +183,7 @@ export function PublicProfile() {
         displayName: profileRow.display_name,
         avatarUrl: profileRow.avatar_url ?? undefined,
         tagline: profileRow.tagline ?? undefined,
+        bio: profileRow.bio ?? undefined,
         posts,
       });
     })();
@@ -247,24 +253,25 @@ export function PublicProfile() {
     );
   }
 
-  const { personId, displayName, avatarUrl, tagline, posts } = state;
+  const { personId, displayName, avatarUrl, tagline, bio, posts } = state;
   const isMe = !!user && user.id === personId;
   const firstName = displayName.split(" ")[0];
   const sessions = sessionsFromPosts(posts);
+  const tags = tagsFromPosts(posts);
 
-  // Focusing a hobby narrows THEIR work on THEIR page. It used to navigate to
+  // Focusing a tag narrows THEIR work on THEIR page. It used to navigate to
   // the global Space, which showed the viewer their own empty version.
-  const focusKey = searchParams.get("hobby");
-  const setFocus = (key: string | null) => {
+  const focusTag = searchParams.get("tag");
+  const setFocus = (tag: string | null) => {
     const next = new URLSearchParams(searchParams);
-    if (key) next.set("hobby", key);
-    else next.delete("hobby");
+    if (tag) next.set("tag", tag);
+    else next.delete("tag");
     setSearchParams(next, { replace: true });
   };
   // A shared link carries ?moment=<id>; open it once the posts have loaded.
   const momentParam = searchParams.get("moment");
-  const shownPosts = focusKey
-    ? posts.filter((p) => (p.subHobby ?? `space:${p.hobbySlug}`) === focusKey)
+  const shownPosts = focusTag
+    ? posts.filter((p) => (p.tags ?? []).some((t) => t.toLowerCase() === focusTag.toLowerCase()))
     : posts;
   const initials = displayName
     .split(" ")
@@ -299,6 +306,7 @@ export function PublicProfile() {
               >
                 {displayName}
               </h1>
+              {bio && <p className="mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">{bio}</p>}
               {tagline && <p className="mt-1 text-sm italic text-muted-foreground">{tagline}</p>}
               {sessions.length > 0 && (
                 <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -333,16 +341,16 @@ export function PublicProfile() {
           </HandwrittenNote>
         </div>
 
-        {sessions.length > 0 && (
+        {tags.length > 0 && (
           <div className="mb-8 flex flex-wrap gap-2">
-            {sessions.slice(0, 6).map((s) => {
-              const on = focusKey === s.key;
+            {tags.slice(0, 6).map(({ tag }) => {
+              const on = focusTag?.toLowerCase() === tag.toLowerCase();
               return (
                 <button
-                  key={s.key}
+                  key={tag}
                   type="button"
                   aria-pressed={on}
-                  onClick={() => setFocus(on ? null : s.key)}
+                  onClick={() => setFocus(on ? null : tag)}
                   className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
                     on
                       ? "border-transparent text-white [background-color:var(--coral-deep)]"
@@ -350,7 +358,7 @@ export function PublicProfile() {
                   }`}
                   style={{ fontFamily: "var(--font-serif)" }}
                 >
-                  {s.label}
+                  {tag}
                 </button>
               );
             })}
@@ -367,15 +375,13 @@ export function PublicProfile() {
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
               <div>
                 <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  {focusKey
-                    ? `What ${firstName} makes in ${sessions.find((s) => s.key === focusKey)?.label.toLowerCase()}`
-                    : `What ${firstName} makes`}
+                  {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   A look into the things they've created, explored, and loved.
                 </p>
               </div>
-              {focusKey && (
+              {focusTag && (
                 <button
                   type="button"
                   onClick={() => setFocus(null)}
@@ -388,6 +394,7 @@ export function PublicProfile() {
             <WorkGrid
               posts={shownPosts}
               onOpen={setOpenPost}
+              editable={isMe}
               emptyLabel={`${firstName} hasn't shared any Moments publicly yet.`}
             />
           </section>

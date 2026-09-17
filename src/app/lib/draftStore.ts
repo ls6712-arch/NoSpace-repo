@@ -18,6 +18,12 @@ export interface MomentDraftFields {
   hobbySlug: string;
   subHobby: string;
   interest: string;
+  /** Open tags (TagsField) — local-only; the cross-device remote mirror
+   * (draftRemote.ts, sql/drafts.sql) still only carries the single legacy
+   * `interest` value above, so a draft recovered on a different device gets
+   * back its first tag rather than the full list. Optional so a draft saved
+   * before this field existed still loads. */
+  tags?: string[];
   spaceSet: boolean;
   audience: string;
   circleId?: number;

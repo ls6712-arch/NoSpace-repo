@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Lock, PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
@@ -27,6 +27,7 @@ import { ProfileLinksEditor } from "../components/ProfileLinks";
 import { AccountSettings } from "../components/AccountSettings";
 import { useSocial } from "../context/SocialContext";
 import { subHobbyLabel, getHobby } from "../data/hobbies";
+import { tagsFromPosts } from "../lib/postTags";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -61,6 +62,8 @@ export function You() {
   const entryProject = useJournalSlice((s) => s.entryProject);
 
   const sessions = useSessionsByHobby();
+  const myTags = useMemo(() => tagsFromPosts(myPosts), [myPosts]);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [momentsView, setMomentsView] = useState<"shelf" | "grid">("grid");
   // The portfolio's own record — every Pursuit you've ever started, finished
   // ones included, because a personal archive doesn't erase what's done.
@@ -108,6 +111,21 @@ export function You() {
                 >
                   {user ? displayName : "You"}
                 </h2>
+                {user && (
+                  profile?.bio?.trim() ? (
+                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                      {profile.bio}
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setSettingsOpen(true)}
+                      className="mt-0.5 rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                    >
+                      Tell your story: what got you into this, and where it's going.
+                    </button>
+                  )
+                )}
                 <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
                   <span className="ns-you-sprout" aria-hidden="true">✦</span>
                   <span>
@@ -137,20 +155,23 @@ export function You() {
           />
         </div>
 
-        {/* Hobby chips float under the card now, not boxed in one of their own */}
-        {sessions.length > 0 && (
+        {/* Open tags now, not the fixed 15-Space list — tap one to narrow
+            Your Moments below to just that tag, tap it again to clear. */}
+        {myTags.length > 0 && (
           <div className="ns-you-tags ns-you-tags--pills mb-7 flex flex-wrap gap-2">
-            {sessions.slice(0, 6).map((s) => (
-              <Link
-                key={s.key}
-                to={s.subSlug ? `/space/${s.hobbySlug}?hobby=${s.subSlug}` : `/space/${s.hobbySlug}`}
-                className="ns-pill"
+            {myTags.slice(0, 6).map(({ tag }) => (
+              <button
+                key={tag}
+                type="button"
+                aria-pressed={tagFilter === tag}
+                onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
+                className={`ns-pill ${tagFilter === tag ? "ns-pill--active" : ""}`}
               >
-                {s.label}
-              </Link>
+                {tag}
+              </button>
             ))}
-            <Link to="/discover" className="ns-pill ns-pill--ghost">
-              + Add interest
+            <Link to="/create" className="ns-pill ns-pill--ghost">
+              + Add a tag
             </Link>
           </div>
         )}
@@ -219,10 +240,21 @@ export function You() {
               </button>
             </div>
           </div>
-          <p className="mb-5 mt-1 text-sm text-muted-foreground">
+          <p className="mb-5 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {momentsView === "shelf"
               ? "By Corner, most recently updated first — open one to see every moment inside it."
-              : "A visual record of what you've made, explored, and loved, newest first."}
+              : tagFilter
+                ? `Tagged “${tagFilter}.”`
+                : "A visual record of what you've made, explored, and loved, newest first."}
+            {momentsView === "grid" && tagFilter && (
+              <button
+                type="button"
+                onClick={() => setTagFilter(null)}
+                className="text-xs text-[var(--coral-text)] hover:underline"
+              >
+                Show everything
+              </button>
+            )}
           </p>
           {momentsView === "shelf" ? (
             <HobbyShelf
@@ -232,8 +264,15 @@ export function You() {
             />
           ) : (
             <WorkGrid
-              posts={myPosts}
+              posts={
+                tagFilter
+                  ? myPosts.filter((p) =>
+                      (p.tags ?? []).some((t) => t.toLowerCase() === tagFilter.toLowerCase()),
+                    )
+                  : myPosts
+              }
               onOpen={setOpenPost}
+              editable
               emptyLabel="Nothing logged yet. Create something and it'll show up here."
             />
           )}

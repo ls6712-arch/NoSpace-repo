@@ -1,4 +1,5 @@
 import { CircleTabId } from "./circles";
+import { getHobby, subHobbyLabel } from "./hobbies";
 
 export type Visibility = "public" | "circle" | "friends";
 
@@ -52,6 +53,18 @@ export interface Post {
    * own public Moments shelf with no way to opt out. See
    * ContentContext.tsx's myPosts and CircleComposer.tsx. */
   hiddenFromMoments?: boolean;
+  /** Open, multiple tags — what a Moment is actually about, replacing the
+   * fixed Space+interest pair as the primary way to describe it (see
+   * sql/open-tags.sql). hobbySlug/subHobby/interest above are kept exactly
+   * as they were and still resolve for anything that reads them (Corners,
+   * badges, Pursuits) — tags is the new, additive field the composer and
+   * the Shelf's tag row actually read from now. Never empty for a real
+   * post; legacyTags() below backfills it for seed content the same way
+   * the SQL migration backfills it for existing database rows. */
+  tags?: string[];
+  /** Set by the owner to feature this Moment first on their Shelf — see
+   * sql/post-pinning.sql. */
+  pinned?: boolean;
 }
 
 const HOUR = 3600 * 1000;
@@ -333,3 +346,23 @@ export const seedPosts: Post[] = [
     visibility: PUBLIC,
   },
 ];
+
+/** The same readable-label conversion sql/open-tags.sql applies to every
+ * real database row, run once here so seed content — which predates the
+ * `tags` field entirely — shows up genuinely tagged too, rather than every
+ * seed Moment looking untagged next to real ones. */
+function legacyTags(post: Post): string[] {
+  const out = new Set<string>();
+  const hobby = getHobby(post.hobbySlug);
+  if (hobby) out.add(hobby.name);
+  if (post.subHobby) {
+    const label = subHobbyLabel(post.subHobby);
+    if (label) out.add(label);
+  }
+  if (post.interest?.trim()) out.add(post.interest.trim());
+  return [...out];
+}
+
+for (const post of seedPosts) {
+  if (!post.tags || post.tags.length === 0) post.tags = legacyTags(post);
+}

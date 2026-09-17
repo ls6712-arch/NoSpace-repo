@@ -29,6 +29,9 @@ export interface Profile {
    * Checked by Root.tsx to route a brand-new signup through /onboarding
    * before anything else, and set true there on finish or skip. */
   onboarding_completed: boolean;
+  /** A short, optional line under the name — what got you into this, and
+   * where it's going. Never required, never blocking. */
+  bio?: string | null;
 }
 
 interface AuthContextType {
@@ -55,7 +58,10 @@ interface AuthContextType {
    * avatar_url writes. */
   updateProfile: (
     fields: Partial<
-      Pick<Profile, "display_name" | "tagline" | "onboarding_completed_at" | "onboarding_completed">
+      Pick<
+        Profile,
+        "display_name" | "tagline" | "onboarding_completed_at" | "onboarding_completed" | "bio"
+      >
     >,
   ) => Promise<{ error: string | null }>;
 }
@@ -80,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed",
+          "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio",
         )
         .eq("id", userId)
         .maybeSingle();

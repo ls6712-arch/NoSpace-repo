@@ -52,7 +52,7 @@ import {
 } from "../components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
 import { GeneratedArt } from "../components/GeneratedArt";
-import { InterestField } from "../components/InterestField";
+import { TagsField } from "../components/TagsField";
 import { CornerTagField } from "../components/CornerTagField";
 import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
@@ -263,9 +263,30 @@ export function Log() {
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
   const [type, setType] = useState<"photo" | "video">("photo");
-  const [interest, setInterest] = useState(initialPursuit?.interest ?? "");
-  // A Space is a place to put something, not a gate in front of making it.
-  const [spaceOpen, setSpaceOpen] = useState(false);
+  // Open, multiple tags — the caption screen's actual "what's this about"
+  // now (TagsField), replacing the old single interest field plus its own
+  // separate Space picker. Arriving from a Space or Corner's own "create"
+  // link (?hobby=/&sub=) still seeds a starting tag the same way it used to
+  // seed a starting Space — just as an editable, removable tag now, not a
+  // silent default nobody sees. hobbySlug/subHobby (declared above, and
+  // still used as-is by the separate "detail" screen's own Space picker for
+  // Pursuits) get set from whichever of these tags happens to match a known
+  // Corner — see the TagsField onChange below.
+  const [tags, setTags] = useState<string[]>(() => {
+    if (initialPursuit?.interest) return [initialPursuit.interest];
+    const subParam = searchParams.get("sub");
+    const subLabel = subParam ? subHobbyLabel(subParam) : undefined;
+    if (subLabel) return [subLabel];
+    if (hobbyParam) {
+      const seeded = hobbies.find((h) => h.slug === hobbyParam);
+      if (seeded) return [seeded.name];
+    }
+    return [];
+  });
+  // Read-only alias so the many existing "what's this about, in one word"
+  // call sites below (the default caption, the Pursuit-attach copy, the
+  // confirmation line) don't each need to know tags is now a list.
+  const interest = tags[0] ?? "";
   const [thought, setThought] = useState("");
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
@@ -401,7 +422,9 @@ export function Log() {
     setThought(draftPrompt.thought);
     setHobbySlug(draftPrompt.hobbySlug || hobbies[0].slug);
     setSubHobby(draftPrompt.subHobby);
-    setInterest(draftPrompt.interest);
+    // A draft saved before tags existed only has the old single interest
+    // field — recovers as one tag rather than losing it.
+    setTags(draftPrompt.tags ?? (draftPrompt.interest ? [draftPrompt.interest] : []));
     setSpaceSet(draftPrompt.spaceSet);
     setAudience(draftPrompt.audience as Visibility | "private");
     setCircleId(draftPrompt.circleId);
@@ -438,6 +461,7 @@ export function Log() {
       hobbySlug,
       subHobby,
       interest,
+      tags,
       spaceSet,
       audience,
       circleId,
@@ -462,6 +486,7 @@ export function Log() {
     hobbySlug,
     subHobby,
     interest,
+    tags,
     spaceSet,
     audience,
     circleId,
@@ -681,6 +706,7 @@ export function Log() {
         hobbySlug,
         subHobby: subHobby || undefined,
         interest: interest.trim() || undefined,
+        tags,
         type,
         files: files.length ? files : undefined,
         creator: profile?.display_name?.trim() || "You",
@@ -746,8 +772,7 @@ export function Log() {
     setReflection("");
     setForSale(false);
     setSaleTitle("");
-    setInterest("");
-    setSpaceOpen(false);
+    setTags([]);
     setProjectTitle("");
     setProjectId("");
     setCircleId(undefined);
@@ -1241,73 +1266,33 @@ export function Log() {
             — one screen now, always expanded, one outcome decided by the
             audience picked below rather than by which button was tapped. */}
         <div className="mb-6 space-y-6">
-          {/* One merged field: typing a known hobby ("Pottery") tags the
-              Moment AND sets its Space in one step, instead of asking
-              "what's this about" and "which Space" separately. Picking
-              something that isn't a recognized hobby just leaves the Space
-              on its default — nothing here blocks posting. */}
+          {/* Open tags, not a Space picked from a fixed list: a Moment can
+              be "food photography" — two tags, not a contradiction between
+              a Space and its interest field underneath it. The first tag
+              that matches a known Corner still quietly sets hobby_slug/
+              sub_hobby for everything that still reads those (Corners,
+              badges, Pursuits) — see the onChange below — but nothing here
+              shows or requires that choice; typing tags that match nothing
+              just leaves those legacy fields on their default. */}
           <div>
             <h2 className="mb-2 text-sm">
-              <label htmlFor="interest">What is it about?</label>
+              <label htmlFor="tags">What is it about?</label>
             </h2>
-            <InterestField
-              value={interest}
+            <TagsField
+              value={tags}
               onChange={(next) => {
-                setInterest(next);
-                const match = findSpaceForInterest(next);
-                if (match) {
-                  setHobbySlug(match.hobbySlug);
-                  setSubHobby(match.slug);
-                  setSpaceSet(true);
+                setTags(next);
+                for (const t of next) {
+                  const match = findSpaceForInterest(t);
+                  if (match) {
+                    setHobbySlug(match.hobbySlug);
+                    setSubHobby(match.slug);
+                    setSpaceSet(true);
+                    break;
+                  }
                 }
               }}
-              placeholder="Search or type a hobby or interest..."
             />
-            {!spaceOpen ? (
-              <button
-                type="button"
-                onClick={() => setSpaceOpen(true)}
-                className="mt-1.5 text-[11px] text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
-              >
-                {spaceSet ? `In ${hobby.name} · change` : "Add a Space (optional)"}
-              </button>
-            ) : (
-              <div className="mt-2.5 rounded-2xl border border-border bg-surface px-4 py-3.5">
-                <div className="mb-2.5 flex items-center justify-between gap-3">
-                  <span className="text-sm">Choose a Space</span>
-                  <button
-                    type="button"
-                    onClick={() => setSpaceOpen(false)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Done
-                  </button>
-                </div>
-                <Select
-                  value={hobbySlug}
-                  onValueChange={(v) => {
-                    setHobbySlug(v);
-                    setSubHobby("");
-                    setCircleId(undefined);
-                    setSpaceSet(true);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a Space…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {hobbies.map((h) => (
-                      <SelectItem key={h.slug} value={h.slug}>
-                        {h.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  {hobby.plainLabel}: {hobby.tagline.toLowerCase()}
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Only a thing that happens at a time needs a time. */}

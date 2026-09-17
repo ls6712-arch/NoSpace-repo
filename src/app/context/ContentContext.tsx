@@ -43,10 +43,14 @@ const HOUR = 3600 * 1000;
  * (posted in, or joined a circle for) dominate; raw like count only nudges the
  * order, so this doesn't collapse into an engagement-maximizing sort.
  */
-function scorePost(post: Post, activeHobbies: Set<string>): number {
+function scorePost(post: Post, activeHobbies: Set<string>, activeTags: Set<string>): number {
   const ageHours = (Date.now() - post.createdAt) / HOUR;
   const recencyScore = Math.max(0, 240 - ageHours); // decays to 0 over ~10 days
-  const relevanceBonus = activeHobbies.has(post.hobbySlug) ? 60 : 0;
+  // A post can be relevant either through the legacy Space it's filed under
+  // or through any open tag it carries — a tagged-but-unfollowed Space still
+  // surfaces for someone who's posted the same tag themselves.
+  const tagOverlap = (post.tags ?? []).some((t) => activeTags.has(t.toLowerCase()));
+  const relevanceBonus = activeHobbies.has(post.hobbySlug) || tagOverlap ? 60 : 0;
   const engagementScore = Math.min(post.likes, 100) * 0.3; // capped, minor influence
   return recencyScore + relevanceBonus + engagementScore;
 }
@@ -63,6 +67,10 @@ export interface NewPostInput {
   subHobby?: string;
   /** What it's about, typed by the person: "Pottery", "Bouldering". */
   interest?: string;
+  /** Open, multiple tags — the composer's actual "what's this about" field
+   * now (TagsField). interest above still gets the first of these for
+   * anything that only reads the legacy single-value field. */
+  tags?: string[];
   type: "photo" | "video";
   media?: string;
   /** Real picked files (1-8 for a photo Moment, exactly 1 for a video),
@@ -130,6 +138,8 @@ function rowToPost(row: any, creatorName: string): Post {
     circleTab: row.circle_tab ?? undefined,
     answered: row.answered ?? false,
     hiddenFromMoments: row.hidden_from_moments ?? false,
+    tags: row.tags ?? [],
+    pinned: row.pinned ?? false,
   };
 }
 
@@ -163,6 +173,9 @@ interface ContentContextType {
    * post stays in the list rather than vanishing from a screen that no
    * longer matches what's actually in the database. */
   deletePost: (postId: number) => Promise<boolean>;
+  /** Toggles whether a Moment you own is pinned to the top of your Shelf.
+   * Returns false if the post can't be found or the write failed. */
+  togglePin: (postId: number) => Promise<boolean>;
   /** Marks a Circle "questions" thread answered — allowed for the thread's
    * own author or the Circle's owner (sql/circle-threads.sql's
    * set_thread_answered RPC checks which). Returns false if neither. */
@@ -348,11 +361,22 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       .filter((s): s is string => !!s),
   ]);
   const activeHobbySlugs = [...activeHobbySlugsSet];
+  // Same "things you actually engage with" idea as activeHobbySlugsSet, but
+  // for the open tags a fixed Space list can't cover — someone who's posted
+  // "sourdough" should see other "sourdough" Moments even if neither side
+  // ever explicitly followed a Space for it.
+  const activeTagsSet = new Set<string>(
+    myRealPosts.flatMap((p) => (p.tags ?? []).map((t) => t.toLowerCase())),
+  );
 
   const rankPublic = (list: Post[]) =>
     list
       .filter((p) => p.visibility === "public")
-      .sort((a, b) => scorePost(b, activeHobbySlugsSet) - scorePost(a, activeHobbySlugsSet));
+      .sort(
+        (a, b) =>
+          scorePost(b, activeHobbySlugsSet, activeTagsSet) -
+          scorePost(a, activeHobbySlugsSet, activeTagsSet),
+      );
 
   const publicFeed = rankPublic(posts);
   const publicFeedByHobby = (slug: string) => rankPublic(posts.filter((p) => p.hobbySlug === slug));
@@ -490,6 +514,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           circle_id: input.visibility === "circle" ? (input.circleId ?? null) : null,
           circle_tab: input.visibility === "circle" ? (input.circleTab ?? null) : null,
           hidden_from_moments: input.hiddenFromMoments ?? false,
+          tags: input.tags ?? [],
         })
         .select()
         .single();
@@ -531,6 +556,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       hobbySlug: input.hobbySlug,
       subHobby: input.subHobby,
       interest: input.interest?.trim() || undefined,
+      tags: input.tags ?? [],
       type: input.type,
       media: localMediaUrls[0] ?? "",
       mediaUrls: localMediaUrls.length ? localMediaUrls : undefined,
@@ -613,6 +639,27 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }
 
     setRealPosts((prev) => prev.filter((p) => p.id !== postId));
+    return true;
+  };
+
+  /**
+   * Features a Moment first on your own Shelf. Same ownership check as
+   * updatePost/deletePost — trusted from the row's own userId, not from the
+   * caller — and the same RLS backs it (sql/post-pinning.sql: "own posts are
+   * editable" already restricts every update, this column included, to the
+   * post's owner).
+   */
+  const togglePin = async (postId: number): Promise<boolean> => {
+    const target = realPosts.find((p) => p.id === postId);
+    if (!target) return false;
+    const next = !target.pinned;
+
+    if (supabase && user && target.userId === user.id) {
+      const { error } = await supabase.from("posts").update({ pinned: next }).eq("id", postId);
+      if (error) return false;
+    }
+
+    setRealPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, pinned: next } : p)));
     return true;
   };
 
@@ -708,6 +755,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         addPost,
         updatePost,
         deletePost,
+        togglePin,
         setThreadAnswered,
         mediaError,
         clearMediaError: () => setMediaError(null),

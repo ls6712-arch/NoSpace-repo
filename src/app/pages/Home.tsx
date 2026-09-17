@@ -5,7 +5,6 @@ import { hobbies, getHobby, subHobbyLabel } from "../data/hobbies";
 import { seedPosts } from "../data/posts";
 import { deriveProjects } from "../lib/journal";
 import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
-import { SuggestCategory } from "../components/SuggestCategory";
 import { ContentCard } from "../components/ContentCard";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { WorldsSection } from "../components/WorldsSection";
@@ -358,10 +357,10 @@ export function Home() {
                   One place for everything you do.
                 </h2>
                 <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
-                  Fifteen Spaces today, and growing. Anyone can suggest one.
-                  Inside each Space, Corners are as specific as you need them:
-                  tag a Moment "Pasta Making" instead of just "Cooking," and
-                  the Corner exists. No approval queue.
+                  Fifteen Spaces today. Inside each one, tag a Moment
+                  anything you like — "Pasta Making," "Food Photography,"
+                  both at once — and it's there. No fixed list, no approval
+                  queue.
                 </p>
               </div>
               <Link to="/discover" className="ns-text-link hidden shrink-0 sm:inline-flex">
@@ -373,9 +372,6 @@ export function Home() {
               {hobbies.map((hobby) => (
                 <HobbyCategoryCard key={hobby.slug} hobby={hobby} showCorners />
               ))}
-              <div className="flex items-start">
-                <SuggestCategory className="h-full" />
-              </div>
             </div>
           </div>
         </section>
