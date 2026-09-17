@@ -24,6 +24,8 @@ import { fetchProfileLinks } from "../lib/profileLinksRemote";
 import { fetchSharedMilestoneIds } from "../lib/milestonesRemote";
 import { ProfileLink } from "../lib/profileLinks";
 import { ProfileLinksRow } from "../components/ProfileLinks";
+import { useFollowerCount } from "../lib/useFollowerCount";
+import { fetchIsFollowing, follow, unfollow } from "../lib/profileFollows";
 
 /** Whichever Space shows up most in their posts — used to pick a Circles
  * suggestion and the closing banner's illustration, not to claim membership
@@ -83,6 +85,15 @@ export function PublicProfile() {
   // Only the specific milestones this person chose to share — never their
   // locked ones, and never anything inferred from their public post count.
   const [sharedMilestoneIds, setSharedMilestoneIds] = useState<string[]>([]);
+  // Real, one-directional person-follows-person state (sql/profile-follows.sql)
+  // — separate from PersonActions' hobby-level "make together" asks below.
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [followRefreshKey, setFollowRefreshKey] = useState(0);
+  const followerCount = useFollowerCount(
+    state.status === "ready" ? state.personId : undefined,
+    followRefreshKey,
+  );
 
   useEffect(() => {
     // React Router reuses this component instance across two profiles under
@@ -227,6 +238,20 @@ export function PublicProfile() {
     };
   }, [state.status === "ready" ? state.personId : null]);
 
+  useEffect(() => {
+    if (state.status !== "ready" || !user || user.id === state.personId) {
+      setIsFollowing(false);
+      return;
+    }
+    let cancelled = false;
+    fetchIsFollowing(user.id, state.personId).then((following) => {
+      if (!cancelled) setIsFollowing(following);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.status === "ready" ? state.personId : null, user?.id]);
+
   if (state.status === "loading") {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
@@ -290,8 +315,16 @@ export function PublicProfile() {
   const hobby = hobbySlug ? getHobby(hobbySlug) : undefined;
   const relatedCircles = hobbySlug ? circlesByHobby(hobbySlug).slice(0, 4) : [];
 
+  const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
+  const sinceLabel = earliestPostAt
+    ? new Date(earliestPostAt).toLocaleDateString(undefined, {
+        month: "long",
+        year: new Date(earliestPostAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
+      })
+    : null;
+
   return (
-    <div className="ns-public-profile min-h-screen bg-surface py-8 sm:py-10">
+    <div className="ns-paper-theme ns-public-profile min-h-screen bg-surface py-8 sm:py-10">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-5 sm:gap-6">
@@ -301,13 +334,43 @@ export function PublicProfile() {
             </Avatar>
             <div className="min-w-0">
               <h1
-                className="truncate text-3xl leading-tight sm:text-4xl"
-                style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+                className="truncate text-4xl leading-tight sm:text-5xl"
+                style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
               >
                 {displayName}
               </h1>
-              {bio && <p className="mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">{bio}</p>}
-              {tagline && <p className="mt-1 text-sm italic text-muted-foreground">{tagline}</p>}
+              {bio && (
+                <p
+                  className="mt-1.5 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg"
+                  style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+                >
+                  {bio}
+                </p>
+              )}
+              {tagline && (
+                <p
+                  className="mt-1 max-w-md text-base italic text-muted-foreground sm:text-lg"
+                  style={{ fontFamily: "var(--font-serif)" }}
+                >
+                  {tagline}
+                </p>
+              )}
+              <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
+                <span>
+                  <strong className="text-foreground">{posts.length}</strong>{" "}
+                  {posts.length === 1 ? "moment" : "moments"} logged
+                  {sinceLabel ? ` since ${sinceLabel}` : ""}
+                </span>
+                {followerCount !== null && followerCount > 0 && (
+                  <>
+                    <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                    <span>
+                      <strong className="text-foreground">{followerCount}</strong>{" "}
+                      {followerCount === 1 ? "follower" : "followers"}
+                    </span>
+                  </>
+                )}
+              </div>
               {sessions.length > 0 && (
                 <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
                   {sessions.slice(0, 5).map((s) => s.label).join(", ")}.
@@ -320,11 +383,30 @@ export function PublicProfile() {
               )}
               {profileLinks.length > 0 && <ProfileLinksRow links={profileLinks} className="mt-3" />}
               <div className="mt-4 flex flex-wrap gap-2">
-                {/* Not a Follow button. You attach to the hobby, or ask to do a
-                    specific thing together — never to the person as a person.
-                    Not shown on your own shelf — you can't ask yourself to
-                    make something together. personId comes from the profile
-                    itself, so it exists even before this person has posted. */}
+                {/* PersonActions asks to do a specific hobby-level thing
+                    together — never to the person as a person. Follow, next
+                    to it, is the real person-level relationship (see
+                    sql/profile-follows.sql) that backs the follower count
+                    above. Neither shows on your own shelf. */}
+                {!isMe && user && (
+                  <Button
+                    variant={isFollowing ? "outline" : "brand"}
+                    disabled={followBusy}
+                    onClick={async () => {
+                      setFollowBusy(true);
+                      const ok = isFollowing
+                        ? await unfollow(user.id, personId)
+                        : await follow(user.id, personId);
+                      if (ok) {
+                        setIsFollowing(!isFollowing);
+                        setFollowRefreshKey((k) => k + 1);
+                      }
+                      setFollowBusy(false);
+                    }}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
+                )}
                 {!isMe && (
                   <PersonActions
                     personName={displayName}
@@ -334,6 +416,12 @@ export function PublicProfile() {
                 )}
                 <CopyLinkButton />
               </div>
+              <Link
+                to={`/u/${username}/studio`}
+                className="mt-2 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Open Studio →
+              </Link>
             </div>
           </div>
           <HandwrittenNote className="max-w-[220px] sm:mt-2">
@@ -342,7 +430,7 @@ export function PublicProfile() {
         </div>
 
         {tags.length > 0 && (
-          <div className="mb-8 flex flex-wrap gap-2">
+          <div className="ns-you-tags ns-you-tags--pills mb-8 flex flex-wrap gap-2">
             {tags.slice(0, 6).map(({ tag }) => {
               const on = focusTag?.toLowerCase() === tag.toLowerCase();
               return (
@@ -351,12 +439,7 @@ export function PublicProfile() {
                   type="button"
                   aria-pressed={on}
                   onClick={() => setFocus(on ? null : tag)}
-                  className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
-                    on
-                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                      : "border-border bg-white/[0.04] text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-                  }`}
-                  style={{ fontFamily: "var(--font-serif)" }}
+                  className={`ns-pill ${on ? "ns-pill--active" : ""}`}
                 >
                   {tag}
                 </button>
@@ -374,7 +457,10 @@ export function PublicProfile() {
           <section>
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
               <div>
-                <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+                <h2
+                  className="text-2xl sm:text-3xl"
+                  style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+                >
                   {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">

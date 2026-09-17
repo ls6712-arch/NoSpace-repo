@@ -23,6 +23,7 @@ import { People } from "./pages/People";
 import { AdminCategories } from "./pages/AdminCategories";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
+import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
@@ -63,6 +64,8 @@ export const router = createHashRouter([
       { path: "corner/:slug", Component: CornerPage },
       { path: "pursuit/:id", Component: Pursuit },
       { path: "u/:username", Component: PublicProfile },
+      { path: "u/:username/studio", Component: Studio },
+      { path: "studio", Component: Studio },
       { path: "login", Component: Login },
       { path: "shop", Component: Shop },
       { path: "product/:id", Component: ProductDetail },

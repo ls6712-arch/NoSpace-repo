@@ -187,6 +187,58 @@
     var(--night-wine);
 }
 
+/* ── The paper world — the Shelf, the click-to-feed overlay, the cover
+   editor, and the paginated studio view ──────────────────────────────────
+   A deliberate, scoped exception to the app's dark-void atmosphere above,
+   the same reasoning WorkGrid's own cream cards already established: the
+   portfolio/profile experience reads as a warm, physical object (paper,
+   ink, a shelf) rather than a dashboard. Nothing outside .ns-paper-theme
+   reads these — the rest of the app (Header, nav, Discover, Circles) stays
+   on the void/plum system untouched. Accent is the app's own existing
+   chosen color (--coral-deep), not a new one — "exaggerated," not
+   "different." */
+.ns-paper-theme {
+  --paper: #EFE7D8;
+  --paper-raised: #F8F2E5;
+  --ink: #2A241D;
+  --ink-soft: #726657;
+  --ink-faint: #A79A86;
+  --line: #DCD0B8;
+  --moss: #5B6B4E;
+
+  /* Re-point the semantic layer (not the raw palette) at the paper world,
+     so every existing component that already reads --surface/--foreground/
+     --border/etc. — instead of a raw dark-purple hex — adapts here for
+     free, with no per-component rewrite. Only things that hardcode a raw
+     token (--yellow, --plum-night, ...) need their own override below. */
+  --background: var(--paper);
+  --surface: var(--paper-raised);
+  --surface-elevated: #FFFFFF;
+  --surface-muted: color-mix(in srgb, var(--paper) 55%, var(--paper-raised));
+  --foreground: var(--ink);
+  --foreground-muted: var(--ink-soft);
+  --muted-foreground: var(--ink-soft);
+  --border: var(--line);
+  --hairline: var(--line);
+  --card: var(--paper-raised);
+  --card-foreground: var(--ink);
+  --popover: var(--paper-raised);
+  --popover-foreground: var(--ink);
+  --cream: var(--paper-raised);
+  --input: var(--line);
+  --input-background: var(--paper-raised);
+
+  color: var(--ink);
+  background: var(--paper);
+  font-family: 'Work Sans', sans-serif;
+}
+
+/* The one dark-theme flourish that leaks through the semantic layer above —
+   a literal --yellow border accent, not a token that repoints itself. */
+.ns-paper-theme .ns-you-profile-card {
+  border-top-color: var(--line);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -988,49 +1040,43 @@
     color: var(--foreground);
   }
 
-  /* Colored interest pills — cycles through the palette already used
-     elsewhere, so a followed hobby reads as a small dose of the app's own
-     color rather than another gray chip. Scoped under the modifier class
-     (not a bare .ns-pill) so this beats the plain `.ns-you-tags a` rule
-     above on specificity instead of being silently overridden by it. */
+  /* One neutral pill style, not a per-tag rainbow — a tag is a fact about
+     the Moment, not a category with its own color to defend. The single
+     accent (--coral-deep) is reserved for the one pill actually narrowing
+     the grid right now (.ns-pill--active below), so it still means
+     something when it shows up. Scoped under the modifier class (not a
+     bare .ns-pill) so this beats the plain `.ns-you-tags a` rule above on
+     specificity instead of being silently overridden by it. */
   .ns-you-tags--pills .ns-pill {
     display: inline-flex;
     align-items: center;
     border-radius: 999px;
-    border: none;
-    padding: 0.28rem 0.7rem;
-    font-size: 0.7rem;
+    border: 1px solid var(--line, var(--hairline));
+    background: var(--paper-raised, var(--cream));
+    padding: 0.32rem 0.75rem;
+    font-size: 0.72rem;
     font-family: var(--font-serif);
-    color: var(--forest-ink);
-    transition: transform 150ms ease;
+    color: var(--ink, var(--forest-ink));
+    transition: border-color 150ms ease;
   }
 
   .ns-you-tags--pills .ns-pill:hover {
-    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--coral-deep) 45%, var(--line, var(--hairline)));
   }
 
-  .ns-you-tags--pills .ns-pill:nth-child(5n + 1) { background: color-mix(in srgb, var(--coral) 24%, var(--cream)); }
-  .ns-you-tags--pills .ns-pill:nth-child(5n + 2) { background: color-mix(in srgb, var(--sky) 55%, var(--cream)); }
-  .ns-you-tags--pills .ns-pill:nth-child(5n + 3) { background: color-mix(in srgb, var(--yellow) 45%, var(--cream)); }
-  .ns-you-tags--pills .ns-pill:nth-child(5n + 4) { background: color-mix(in srgb, var(--forest) 20%, var(--cream)); }
-  .ns-you-tags--pills .ns-pill:nth-child(5n + 5) { background: color-mix(in srgb, var(--sky-deep) 30%, var(--cream)); }
-
-  /* Same specificity as the nth-child rules above (two classes + one
-     pseudo-class each) — defined after them so source order breaks the tie
-     in its favor no matter which position in the cycle "+ Add interest"
-     lands on. */
+  /* Same specificity as the base rule above (two classes) — defined after
+     it so source order breaks the tie in its favor. */
   .ns-you-tags--pills .ns-pill.ns-pill--ghost {
     background: transparent;
-    border: 1px dashed var(--hairline);
-    color: var(--muted-foreground);
+    border: 1px dashed var(--line, var(--hairline));
+    color: var(--ink-faint, var(--muted-foreground));
   }
 
-  /* The tag currently narrowing Your Moments below — same specificity trick
-     as the ghost rule above (two classes, defined after the nth-child cycle
-     so source order wins the tie) rather than a color from that cycle that
-     might already look "selected" by coincidence. */
+  /* The tag currently narrowing Your Moments below — the one place this
+     row spends the single accent. */
   .ns-you-tags--pills .ns-pill.ns-pill--active {
     background: var(--coral-deep);
+    border-color: var(--coral-deep);
     color: white;
   }
 

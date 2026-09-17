@@ -5,7 +5,38 @@ import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
 import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
-import { INK, tagTint } from "./WorkGrid";
+
+/** The card's own dark ink color — the cream card is a deliberate,
+ * contained exception to the app's dark surfaces (same pairing the flat
+ * illustrations already use), so its text needs to be dark-on-cream, not
+ * the page's light-on-dark foreground tokens. Local to this file now: only
+ * the "By Corner" view still groups by Space/Corner (and so still wants a
+ * per-Corner color), since the All-moments grid (WorkGrid.tsx) reads tags
+ * with one neutral pill instead — see Fix 1-2. */
+export const INK = "#3A2A1F";
+
+/** A colored tag per Space, cycling through the brand's warm-hue tokens —
+ * same idea as this file's own book-spine colors. A few Spaces get an
+ * explicit color instead of the rotation where one obviously fits (mustard
+ * for cooking, green for anything craft-adjacent, plum for travel). */
+const TAG_TINTS = [
+  "color-mix(in srgb, var(--yellow) 78%, black)",
+  "var(--sky-deep)",
+  "var(--forest)",
+  "var(--coral-deep)",
+  "var(--plum)",
+];
+const TAG_TINT_OVERRIDES: Record<string, string> = {
+  "food-cooking": TAG_TINTS[0],
+  "art-creative": "var(--forest)",
+  "crafts-making": "var(--forest)",
+  "travel-adventure": "var(--plum)",
+};
+export function tagTint(hobbySlug: string) {
+  if (TAG_TINT_OVERRIDES[hobbySlug]) return TAG_TINT_OVERRIDES[hobbySlug];
+  const idx = hobbies.findIndex((h) => h.slug === hobbySlug);
+  return TAG_TINTS[(idx < 0 ? 0 : idx) % TAG_TINTS.length];
+}
 
 export interface HobbySession {
   /** Sub-hobby slug where tagged, else `space:<slug>` for untagged entries. */

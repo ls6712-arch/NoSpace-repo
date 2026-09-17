@@ -32,6 +32,13 @@ export interface Profile {
   /** A short, optional line under the name — what got you into this, and
    * where it's going. Never required, never blocking. */
   bio?: string | null;
+  /** The Studio cover's editable title/tagline/photo (sql/profile-cover.sql)
+   * — each falls back when unset: title to display_name, tagline to bio,
+   * photo to the most recently pinned Moment. Set from the owner-only
+   * "Edit cover" panel, never inferred automatically. */
+  cover_title?: string | null;
+  cover_tagline?: string | null;
+  cover_post_id?: number | null;
 }
 
 interface AuthContextType {
@@ -60,7 +67,14 @@ interface AuthContextType {
     fields: Partial<
       Pick<
         Profile,
-        "display_name" | "tagline" | "onboarding_completed_at" | "onboarding_completed" | "bio"
+        | "display_name"
+        | "tagline"
+        | "onboarding_completed_at"
+        | "onboarding_completed"
+        | "bio"
+        | "cover_title"
+        | "cover_tagline"
+        | "cover_post_id"
       >
     >,
   ) => Promise<{ error: string | null }>;
@@ -86,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio",
+          "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id",
         )
         .eq("id", userId)
         .maybeSingle();

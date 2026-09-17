@@ -8,7 +8,6 @@ import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { CirclesJoined } from "../components/CirclesJoined";
-import { ClanList } from "../components/ClanList";
 import { AvatarPicker } from "../components/AvatarPicker";
 import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../components/PursuitCompact";
@@ -16,7 +15,6 @@ import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
-import { ProfileHeadline } from "../components/ProfileHeadline";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal, useJournalSlice } from "../lib/journal";
@@ -28,6 +26,7 @@ import { AccountSettings } from "../components/AccountSettings";
 import { useSocial } from "../context/SocialContext";
 import { subHobbyLabel, getHobby } from "../data/hobbies";
 import { tagsFromPosts } from "../lib/postTags";
+import { useFollowerCount } from "../lib/useFollowerCount";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -69,8 +68,18 @@ export function You() {
   // ones included, because a personal archive doesn't erase what's done.
   const myPursuits = journal.projects;
   // Every Moment you've ever logged, lifetime — the profile card's own
-  // one-line stat, distinct from ProfileHeadline's "N months into X" line.
+  // one-line stat.
   const totalSessions = myPosts.length;
+  const earliestPostAt = myPosts.length
+    ? Math.min(...myPosts.map((p) => p.createdAt))
+    : null;
+  const sinceLabel = earliestPostAt
+    ? new Date(earliestPostAt).toLocaleDateString(undefined, {
+        month: "long",
+        year: new Date(earliestPostAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
+      })
+    : null;
+  const followerCount = useFollowerCount(user?.id);
 
   // Never abbreviate the placeholder: "You" becomes a meaningless "Y".
   const realName = profile?.display_name?.trim();
@@ -89,7 +98,7 @@ export function You() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 sm:py-12">
+    <div className="ns-paper-theme min-h-screen bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="mb-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
           YOUR PERSONAL ARCHIVE
@@ -106,42 +115,63 @@ export function You() {
               />
               <div className="min-w-0">
                 <h2
-                  className="truncate text-xl leading-tight sm:text-2xl"
-                  style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+                  className="truncate text-2xl leading-tight sm:text-4xl"
+                  style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
                 >
                   {user ? displayName : "You"}
                 </h2>
                 {user && (
                   profile?.bio?.trim() ? (
-                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                    <p
+                      className="mt-1 text-base leading-relaxed text-muted-foreground sm:text-lg"
+                      style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+                    >
                       {profile.bio}
                     </p>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setSettingsOpen(true)}
-                      className="mt-0.5 rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                      className="mt-1 rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                     >
                       Tell your story: what got you into this, and where it's going.
                     </button>
                   )
                 )}
-                <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
-                  <span className="ns-you-sprout" aria-hidden="true">✦</span>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
                   <span>
-                    <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
-                    {totalSessions === 1 ? "session" : "sessions"}
+                    <strong className="text-foreground">{totalSessions}</strong>{" "}
+                    {totalSessions === 1 ? "moment" : "moments"} logged
+                    {sinceLabel ? ` since ${sinceLabel}` : ""}
                   </span>
-                  <span className="text-muted-foreground/60" aria-hidden="true">·</span>
-                  <ProfileHeadline variant="quiet" />
+                  {followerCount !== null && followerCount > 0 && (
+                    <>
+                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                      <span>
+                        <strong className="text-foreground">{followerCount}</strong>{" "}
+                        {followerCount === 1 ? "follower" : "followers"}
+                      </span>
+                    </>
+                  )}
+                  {followerCount === 0 && (
+                    <>
+                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                      <span>No one's following yet</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
-            <Button variant="coral" size="sm" onClick={() => setShareOpen(true)}>
-              <Share2 className="size-3.5" />
-              Share
-            </Button>
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <Button variant="coral" size="sm" onClick={() => setShareOpen(true)}>
+                <Share2 className="size-3.5" />
+                Share
+              </Button>
+              <Link to="/studio" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+                Open Studio →
+              </Link>
+            </div>
           </div>
 
           {/* One link, inline — no separate panel, no repeated helper copy.
@@ -156,7 +186,7 @@ export function You() {
         </div>
 
         {/* Open tags now, not the fixed 15-Space list — tap one to narrow
-            Your Moments below to just that tag, tap it again to clear. */}
+            Every moment below to just that tag, tap it again to clear. */}
         {myTags.length > 0 && (
           <div className="ns-you-tags ns-you-tags--pills mb-7 flex flex-wrap gap-2">
             {myTags.slice(0, 6).map(({ tag }) => (
@@ -201,14 +231,17 @@ export function You() {
           </Button>
         </div>
 
-        {/* Five sections, stacked full-width with generous space between
-            them rather than paired side by side — separation comes from
-            whitespace and a hairline rule, not from boxing each one in.
-            Order: Moments, Pursuits, Quiet Milestones, Circles, Clan. */}
-        <section className="mb-14">
-          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Your Moments
+        {/* Four sections, stacked full-width. "Every moment" is the major
+            section here — it's what the Shelf is actually for — so it gets
+            the biggest type and the most air around it. Pursuits, Quiet
+            Milestones, and Circles are minor sections: smaller headers,
+            tighter rules, less padding, so the page reads as one important
+            thing plus three supporting ones rather than five equal blocks.
+            Order: Moments, Pursuits, Quiet Milestones, Circles. */}
+        <section className="mb-16">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
+              Every moment
             </h2>
             {/* All moments (plain chronological) is the default now — By
                 Corner stays available for anyone who wants the grouped
@@ -278,9 +311,9 @@ export function You() {
           )}
         </section>
 
-        <section className="mb-14 border-t border-border pt-10">
+        <section className="mb-10 border-t border-[var(--line,var(--border))] pt-7">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               Your Pursuits
             </h2>
             <Button variant="outline" size="sm" onClick={() => setPursuitDialog(true)}>
@@ -353,9 +386,9 @@ export function You() {
           )}
         </section>
 
-        <section className="mb-14 border-t border-border pt-10">
+        <section className="mb-10 border-t border-[var(--line,var(--border))] pt-7">
           <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="flex items-center gap-2 text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
               Quiet Milestones
             </h2>
@@ -366,9 +399,9 @@ export function You() {
           <QuietMilestones />
         </section>
 
-        <section className="mb-14 border-t border-border pt-10">
+        <section className="border-t border-[var(--line,var(--border))] pt-7">
           <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="flex items-center gap-2 text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               <Users className="size-4 text-foreground" strokeWidth={1.8} />
               Your Circles
             </h2>
@@ -382,17 +415,6 @@ export function You() {
           ) : (
             <p className="text-sm text-muted-foreground">Hidden. Only you can see which Circles you've joined.</p>
           )}
-        </section>
-
-        <section className="border-t border-border pt-10">
-          <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-              <Users className="size-4 text-foreground" strokeWidth={1.8} />
-              Your Clan
-            </h2>
-          </div>
-          <p className="mb-5 text-sm text-muted-foreground">People who make the journey more fun.</p>
-          <ClanList limit={5} />
         </section>
       </div>
 
