@@ -34,12 +34,17 @@ function MomentTile({
   pinPending,
   onOpen,
   onTogglePin,
+  editable,
 }: {
   post: Post;
   index: number;
   pinPending: boolean;
   onOpen: () => void;
   onTogglePin: () => void;
+  /** False on a visitor's view of someone else's profile — the pin control
+   * is hidden entirely, not just disabled: a visitor shouldn't see it as an
+   * option at all, let alone trigger it. */
+  editable: boolean;
 }) {
   const label = momentLabel(post);
   const tint = momentTint(post);
@@ -111,22 +116,26 @@ function MomentTile({
       {/* Pin control — visible on hover when unpinned, always visible (and
           filled) once pinned, so a featured Moment doesn't lose its own
           indicator the moment the pointer moves away. Wired straight to
-          ContentContext's existing togglePin — no local-only pin state. */}
-      <button
-        type="button"
-        onClick={onTogglePin}
-        disabled={pinPending}
-        aria-pressed={!!post.pinned}
-        aria-label={post.pinned ? "Unpin this Moment" : "Pin this Moment"}
-        title={post.pinned ? "Unpin" : "Pin as a feature"}
-        className={`absolute right-2 top-9 flex size-6 items-center justify-center rounded-full border transition-opacity ${
-          post.pinned
-            ? "border-transparent bg-[var(--coral-deep)] text-white opacity-100"
-            : "border-white/40 bg-black/35 text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-        } disabled:opacity-60`}
-      >
-        <Pin className="size-3" fill={post.pinned ? "currentColor" : "none"} />
-      </button>
+          ContentContext's existing togglePin — no local-only pin state.
+          Hidden entirely (not just disabled) on a visitor's view — nothing
+          here should suggest they could re-pin someone else's Moment. */}
+      {editable && (
+        <button
+          type="button"
+          onClick={onTogglePin}
+          disabled={pinPending}
+          aria-pressed={!!post.pinned}
+          aria-label={post.pinned ? "Unpin this Moment" : "Pin this Moment"}
+          title={post.pinned ? "Unpin" : "Pin as a feature"}
+          className={`absolute right-2 top-9 flex size-6 items-center justify-center rounded-full border transition-opacity ${
+            post.pinned
+              ? "border-transparent bg-[var(--coral-deep)] text-white opacity-100"
+              : "border-white/40 bg-black/35 text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+          } disabled:opacity-60`}
+        >
+          <Pin className="size-3" fill={post.pinned ? "currentColor" : "none"} />
+        </button>
+      )}
     </div>
   );
 }
@@ -140,18 +149,25 @@ function MomentTile({
  */
 export function EditorialMomentsGrid({
   posts,
-  pendingPinId,
+  pendingPinId = null,
   onOpen,
   onTogglePin,
   emptyLabel,
+  editable = true,
 }: {
   posts: Post[];
   /** The id currently mid-write to Supabase, so a second click can't fire
-   * before the first one resolves. */
-  pendingPinId: number | null;
+   * before the first one resolves. Irrelevant (and omittable) when
+   * `editable` is false. */
+  pendingPinId?: number | null;
   onOpen: (post: Post) => void;
-  onTogglePin: (postId: number) => void;
+  /** Required only when editable — a visitor's grid never calls this since
+   * its pin buttons don't render at all. */
+  onTogglePin?: (postId: number) => void;
   emptyLabel: string;
+  /** False on a visitor's view of someone else's profile — see MomentTile's
+   * own doc. Defaults to true so You.tsx needs no change. */
+  editable?: boolean;
 }) {
   if (posts.length === 0) {
     return (
@@ -172,7 +188,8 @@ export function EditorialMomentsGrid({
           index={index}
           pinPending={pendingPinId === post.id}
           onOpen={() => onOpen(post)}
-          onTogglePin={() => onTogglePin(post.id)}
+          onTogglePin={() => onTogglePin?.(post.id)}
+          editable={editable}
         />
       ))}
     </div>

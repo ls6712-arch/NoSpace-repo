@@ -19,16 +19,24 @@ export function ProfileCoverStrip({
   post,
   canCycle,
   onChangeCover,
+  editable = true,
 }: {
   post: Post | undefined;
   canCycle: boolean;
   onChangeCover: () => void;
+  /** False on a visitor's view of someone else's profile (PublicProfile.tsx)
+   * — "Change cover" is an owner-only action, so it's hidden entirely
+   * rather than shown disabled. Defaults to true so You.tsx (the owner's
+   * own page) needs no change at all. */
+  editable?: boolean;
 }) {
   if (!post) {
     return (
       <div className="mb-8 rounded-2xl border-t-2 border-[var(--yellow)] bg-surface-muted px-5 py-6 text-center">
         <p className="text-sm text-muted-foreground">
-          Nothing logged yet — your first Moment becomes your cover automatically.
+          {editable
+            ? "Nothing logged yet — your first Moment becomes your cover automatically."
+            : "Nothing here yet."}
         </p>
       </div>
     );
@@ -59,9 +67,11 @@ export function ProfileCoverStrip({
           {post.caption}
         </h2>
       </div>
-      <Button variant="outline" size="sm" className="shrink-0 self-start sm:self-center" onClick={onChangeCover}>
-        {canCycle ? "Change cover" : "Pin a cover"}
-      </Button>
+      {editable && (
+        <Button variant="outline" size="sm" className="shrink-0 self-start sm:self-center" onClick={onChangeCover}>
+          {canCycle ? "Change cover" : "Pin a cover"}
+        </Button>
+      )}
     </div>
   );
 }
