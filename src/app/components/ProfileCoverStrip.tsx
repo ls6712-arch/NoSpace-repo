@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Post } from "../data/posts";
 import { momentLabel } from "../lib/momentDisplay";
 import { PostMedia } from "./PostMedia";
@@ -30,6 +32,14 @@ export function ProfileCoverStrip({
    * own page) needs no change at all. */
   editable?: boolean;
 }) {
+  // The edit action reveals on hover/focus of the whole strip, not just the
+  // button itself — tracked here (rather than pure CSS) so the reveal can
+  // be a real Framer Motion fade + scale-in instead of an opacity snap.
+  // React's onFocus/onBlur bubble (via focusin/focusout), so tabbing
+  // straight to the button below still reveals it correctly.
+  const [hovered, setHovered] = useState(false);
+  const reduceMotion = useReducedMotion();
+
   if (!post) {
     return (
       <div className="mb-8 rounded-2xl border-t-2 border-[var(--yellow)] bg-surface-muted px-5 py-6 text-center">
@@ -45,7 +55,13 @@ export function ProfileCoverStrip({
   const label = momentLabel(post);
 
   return (
-    <div className="mb-8 flex flex-col gap-4 rounded-2xl border-t-2 border-[var(--yellow)] bg-surface-muted px-5 py-5 sm:flex-row sm:items-center">
+    <div
+      className="mb-8 flex flex-col gap-4 rounded-2xl border-t-2 border-[var(--yellow)] bg-surface-muted px-5 py-5 sm:flex-row sm:items-center"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
+    >
       <div className="size-20 shrink-0 overflow-hidden rounded-xl border border-[var(--hairline)] sm:size-24">
         <PostMedia
           media={post.media}
@@ -68,9 +84,24 @@ export function ProfileCoverStrip({
         </h2>
       </div>
       {editable && (
-        <Button variant="outline" size="sm" className="shrink-0 self-start sm:self-center" onClick={onChangeCover}>
-          {canCycle ? "Change cover" : "Pin a cover"}
-        </Button>
+        // A real state change (the edit control becoming available), not
+        // decoration — see the module doc comment on WHERE this fires.
+        // initial={false} + reduced-motion both skip straight to the final
+        // opacity/scale so nothing animates in "for free" on page load.
+        <motion.div
+          initial={false}
+          animate={
+            reduceMotion
+              ? { opacity: hovered ? 1 : 0 }
+              : { opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.9 }
+          }
+          transition={{ duration: 0.15 }}
+          className="shrink-0 self-start sm:self-center"
+        >
+          <Button variant="outline" size="sm" onClick={onChangeCover}>
+            {canCycle ? "Change cover" : "Pin a cover"}
+          </Button>
+        </motion.div>
       )}
     </div>
   );

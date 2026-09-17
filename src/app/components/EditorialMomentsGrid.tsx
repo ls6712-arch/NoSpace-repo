@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Pin } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { Post } from "../data/posts";
 import { momentLabel, momentTint } from "../lib/momentDisplay";
 import { AUDIENCE } from "./MomentDetail";
@@ -50,9 +52,21 @@ function MomentTile({
   const tint = momentTint(post);
   const audience = AUDIENCE[post.visibility];
   const note = isNote(post);
+  const reduceMotion = useReducedMotion();
+  // 0 = no pulse yet (nothing has been clicked since mount — a fresh page
+  // load must never animate this). Incrementing gives the pulse span a new
+  // `key` on every real click, so React remounts it and its initial→animate
+  // transition replays from scratch each time, rather than a single
+  // keyframes animation that would also fire once, unwanted, on mount.
+  const [pulse, setPulse] = useState(0);
+  const handleTogglePin = () => {
+    if (!reduceMotion) setPulse((p) => p + 1);
+    onTogglePin();
+  };
 
   return (
-    <div
+    <motion.div
+      layout={!reduceMotion}
       className={`group relative overflow-hidden rounded-xl border border-transparent bg-surface-muted transition-colors hover:border-[var(--coral-deep)] ${tileSpan(post, index)}`}
     >
       <button type="button" onClick={onOpen} className="flex h-full w-full flex-col text-left">
@@ -122,7 +136,7 @@ function MomentTile({
       {editable && (
         <button
           type="button"
-          onClick={onTogglePin}
+          onClick={handleTogglePin}
           disabled={pinPending}
           aria-pressed={!!post.pinned}
           aria-label={post.pinned ? "Unpin this Moment" : "Pin this Moment"}
@@ -133,10 +147,28 @@ function MomentTile({
               : "border-white/40 bg-black/35 text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           } disabled:opacity-60`}
         >
-          <Pin className="size-3" fill={post.pinned ? "currentColor" : "none"} />
+          {/* pulse === 0: plain icon, no motion wrapper at all — guarantees
+              nothing animates on first render. A real click gives the span
+              below a fresh `key`, so its mount transition (scale 1→1.3→1)
+              replays each time, confirming the toggle landed — the pulse
+              is reserved for this one moment, never the hover-reveal
+              above, which stays a plain opacity transition. */}
+          {pulse === 0 ? (
+            <Pin className="size-3" fill={post.pinned ? "currentColor" : "none"} />
+          ) : (
+            <motion.span
+              key={pulse}
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 0.2 }}
+              className="inline-flex"
+            >
+              <Pin className="size-3" fill={post.pinned ? "currentColor" : "none"} />
+            </motion.span>
+          )}
         </button>
       )}
-    </div>
+    </motion.div>
   );
 }
 
