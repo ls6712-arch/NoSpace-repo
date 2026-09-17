@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { ImagePlus, Pin } from "lucide-react";
 import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
 import { Post } from "../data/posts";
@@ -144,6 +145,8 @@ export function WorkGrid({
    * sorts pinned Moments first, it just can't change which ones are. */
   editable?: boolean;
 }) {
+  const { justPublishedId } = useContent();
+  const reduceMotion = useReducedMotion();
   const [shown, setShown] = useState(PAGE_SIZE);
   const [pinPickerOpen, setPinPickerOpen] = useState(false);
 
@@ -200,7 +203,23 @@ export function WorkGrid({
                   }`}
                   style={{ color: INK }}
                 >
-                  <div className="relative aspect-square overflow-hidden">
+                  <motion.div
+                    layout={!reduceMotion}
+                    // Shared with the composer's own "Saved." screen preview
+                    // (Log.tsx) — when both happen to be tracked at once,
+                    // motion hands this box off between them instead of the
+                    // grid tile just appearing cold. Skipped under reduced
+                    // motion: the tile is simply there, no morph, no entrance.
+                    layoutId={reduceMotion ? undefined : `moment-${post.id}`}
+                    {...(!reduceMotion && post.id === justPublishedId
+                      ? {
+                          initial: { opacity: 0, scale: 0.85 },
+                          animate: { opacity: 1, scale: 1 },
+                          transition: { type: "spring", stiffness: 300, damping: 26 },
+                        }
+                      : {})}
+                    className="relative aspect-square overflow-hidden"
+                  >
                     <PostMedia
                       media={post.media}
                       type={post.type}
@@ -245,7 +264,7 @@ export function WorkGrid({
                         <Pin className="size-3.5" fill="currentColor" />
                       </span>
                     )}
-                  </div>
+                  </motion.div>
                   <div className="flex flex-1 items-start px-3.5 py-3">
                     <p
                       className="w-full truncate text-sm leading-snug sm:text-base"

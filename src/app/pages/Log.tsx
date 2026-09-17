@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Link, useBlocker, useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft,
@@ -305,6 +306,29 @@ export function Log() {
   const [locationName, setLocationName] = useState("");
   const [locationPrivacy, setLocationPrivacy] = useState<LocationPrivacy>("neighborhood");
   const [savedAs, setSavedAs] = useState<null | "shared" | "private">(null);
+  // The just-created Moment's id, for the "Saved." screen's own shared-
+  // layout morph into its Shelf-grid styling — see WorkGrid.tsx, which
+  // tracks the same layoutId for the real tile.
+  const [savedPostId, setSavedPostId] = useState<number | null>(null);
+  // Two stages on the "Saved." screen: the big composer-style preview,
+  // then — a beat later — the same box morphing (via layout/layoutId) into
+  // the small square the Shelf grid actually shows it as. Reduced motion
+  // skips straight to the settled stage: no morph, no delay.
+  const [savedTileSettled, setSavedTileSettled] = useState(false);
+  const reduceMotion = useReducedMotion();
+  useEffect(() => {
+    if (screen !== "saved" || savedAs !== "shared") {
+      setSavedTileSettled(false);
+      return;
+    }
+    if (reduceMotion) {
+      setSavedTileSettled(true);
+      return;
+    }
+    setSavedTileSettled(false);
+    const t = setTimeout(() => setSavedTileSettled(true), 700);
+    return () => clearTimeout(t);
+  }, [screen, savedAs, reduceMotion]);
   const [seed] = useState(() => Date.now());
   // 1-8 photos, or exactly 1 video — never mixed. See pickFiles below for
   // the one rule that keeps that true everywhere a file gets added.
@@ -754,6 +778,7 @@ export function Log() {
       }
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
+      setSavedPostId(entry.id);
       setScreen("saved");
     } catch {
       setError("Something went wrong saving that. Mind trying again?");
@@ -779,6 +804,7 @@ export function Log() {
     setFiles([]);
     setError(null);
     setSavedAs(null);
+    setSavedPostId(null);
     setMode(null);
     // Without these, posting an activity with a location and then logging
     // another (plain) Moment right after silently carried both over onto
@@ -1120,9 +1146,30 @@ export function Log() {
             </p>
           )}
 
-          <div className="mx-auto my-6 w-40 overflow-hidden rounded-xl border border-border">
+          <motion.div
+            layout={!reduceMotion}
+            // Same layoutId WorkGrid.tsx gives the real tile — when both are
+            // tracked at once, this box hands itself off into position on
+            // the Shelf instead of the grid tile just appearing cold.
+            layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
+            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            className={
+              savedTileSettled
+                ? "mx-auto my-6 w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
+                : "mx-auto my-6 w-40 overflow-hidden rounded-xl border border-border"
+            }
+          >
             <MediaPreview className="aspect-square w-full" />
-          </div>
+          </motion.div>
+          {savedAs === "shared" && !anySaveError && (
+            <p
+              className={`-mt-3 mb-3 text-xs text-muted-foreground transition-opacity duration-300 ${
+                savedTileSettled ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              Now on your Shelf.
+            </p>
+          )}
 
           {/* An honest failure beats a cheerful lie: the post is on screen but
               only in this tab, and it will be gone after a reload. */}

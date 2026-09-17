@@ -203,6 +203,11 @@ interface ContentContextType {
    * without it, this context wouldn't know about a follow written through
    * SocialContext until the next full sign-in. */
   refetchActiveHobbies: () => Promise<void>;
+  /** The id of whichever Moment addPost most recently created, for a few
+   * seconds after the save — long enough for the Shelf grid (WorkGrid.tsx)
+   * to notice it's the new arrival and play its shared-layout entrance
+   * instead of just appearing. Clears itself; nothing needs to reset it. */
+  justPublishedId: number | null;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -210,6 +215,15 @@ const ContentContext = createContext<ContentContextType | undefined>(undefined);
 export function ContentProvider({ children }: { children: ReactNode }) {
   const rewards = useRewards();
   const { user, profile } = useAuth();
+  // See justPublishedId on the context type — set right after a successful
+  // addPost, auto-cleared a few seconds later so it never lingers as a
+  // stale "this one's new" flag on a Moment from an earlier session.
+  const [justPublishedId, setJustPublishedId] = useState<number | null>(null);
+  useEffect(() => {
+    if (justPublishedId === null) return;
+    const t = setTimeout(() => setJustPublishedId(null), 4000);
+    return () => clearTimeout(t);
+  }, [justPublishedId]);
   // Same convention as SocialContext's `myId`: a stand-in identity for
   // local-only mode (no account, or an account whose write just failed),
   // so "your" posts can still be told apart from the seeded sample content.
@@ -527,6 +541,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         const withListing = productId ? { ...newPost, productId } : newPost;
         setRealPosts((prev) => [withListing, ...prev]);
         rewards.recordPostCreated(hobbyKey);
+        setJustPublishedId(withListing.id);
         return withListing;
       }
 
@@ -576,6 +591,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     };
     setRealPosts((prev) => [newPost, ...prev]);
     rewards.recordPostCreated(hobbyKey);
+    setJustPublishedId(newPost.id);
     return newPost;
   };
 
@@ -771,6 +787,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         refetchCircleMemberCounts,
         activeHobbySlugs,
         refetchActiveHobbies,
+        justPublishedId,
       }}
     >
       {children}
