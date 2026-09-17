@@ -31,8 +31,11 @@ import {
 } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-/** The audience words, identical to the ones chosen in the Log flow. */
-const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
+/** The audience words, identical to the ones chosen in the Log flow. Exported
+ * so any other per-Moment display (the profile's editorial grid tiles) shows
+ * the same audience tier as this dialog, instead of a second, separately
+ * defined copy that could drift from it. */
+export const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
   public: { label: "Everyone", icon: Globe2 },
   circle: { label: "A Circle", icon: Users },
   friends: { label: "Connections", icon: UserRound },

@@ -1,23 +1,23 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
-import { Lock, PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
+import { Lock, PenLine, Settings as SettingsIcon, Share2, Sparkles, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { QuietMilestones } from "../components/QuietMilestones";
 import { CirclesJoined } from "../components/CirclesJoined";
 import { ClanList } from "../components/ClanList";
 import { AvatarPicker } from "../components/AvatarPicker";
-import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../components/PursuitCompact";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { ProfileHeadline } from "../components/ProfileHeadline";
-import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
+import { ProfileCoverStrip } from "../components/ProfileCoverStrip";
+import { ProfileRail } from "../components/ProfileRail";
+import { EditorialMomentsGrid } from "../components/EditorialMomentsGrid";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal, useJournalSlice } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
@@ -40,7 +40,7 @@ function timeAgo(ts: number) {
 }
 
 export function You() {
-  const { myPosts, posts } = useContent();
+  const { myPosts, posts, togglePin } = useContent();
   const journal = useJournal();
   const { logs: privateLogs, remove: removePrivateLog } = usePrivateLogs();
   const [confirmDeleteLogId, setConfirmDeleteLogId] = useState<number | null>(null);
@@ -61,10 +61,40 @@ export function You() {
   const [renderedPursuitId, setRenderedPursuitId] = useState<string | null>(null);
   const entryProject = useJournalSlice((s) => s.entryProject);
 
-  const sessions = useSessionsByHobby();
   const myTags = useMemo(() => tagsFromPosts(myPosts), [myPosts]);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
-  const [momentsView, setMomentsView] = useState<"shelf" | "grid">("grid");
+  const filteredPosts = tagFilter
+    ? myPosts.filter((p) => (p.tags ?? []).some((t) => t.toLowerCase() === tagFilter.toLowerCase()))
+    : myPosts;
+
+  // Pin state (ContentContext's togglePin, sql/post-pinning.sql) is the
+  // only real signal a "cover" has to go on — there's no dedicated cover
+  // field, and this pass is scoped to page rendering only. Cover is the
+  // owner's most recently-created pinned Moment, cycling to the next
+  // pinned one on "Change cover" when more than one exists; with zero or
+  // one, that button scrolls down to the grid instead, where pinning is
+  // the same star control every tile already has.
+  const pinnedPosts = useMemo(() => myPosts.filter((p) => p.pinned), [myPosts]);
+  const [coverIndex, setCoverIndex] = useState(0);
+  const coverPost = pinnedPosts[coverIndex % (pinnedPosts.length || 1)] ?? myPosts[0];
+  const momentsGridRef = useRef<HTMLDivElement>(null);
+  const [pendingPinId, setPendingPinId] = useState<number | null>(null);
+  const handleTogglePin = async (postId: number) => {
+    setPendingPinId(postId);
+    try {
+      await togglePin(postId);
+    } finally {
+      setPendingPinId(null);
+    }
+  };
+  const handleChangeCover = () => {
+    if (pinnedPosts.length > 1) {
+      setCoverIndex((i) => (i + 1) % pinnedPosts.length);
+    } else {
+      momentsGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   // The portfolio's own record — every Pursuit you've ever started, finished
   // ones included, because a personal archive doesn't erase what's done.
   const myPursuits = journal.projects;
@@ -155,27 +185,6 @@ export function You() {
           />
         </div>
 
-        {/* Open tags now, not the fixed 15-Space list — tap one to narrow
-            Your Moments below to just that tag, tap it again to clear. */}
-        {myTags.length > 0 && (
-          <div className="ns-you-tags ns-you-tags--pills mb-7 flex flex-wrap gap-2">
-            {myTags.slice(0, 6).map(({ tag }) => (
-              <button
-                key={tag}
-                type="button"
-                aria-pressed={tagFilter === tag}
-                onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
-                className={`ns-pill ${tagFilter === tag ? "ns-pill--active" : ""}`}
-              >
-                {tag}
-              </button>
-            ))}
-            <Link to="/create" className="ns-pill ns-pill--ghost">
-              + Add a tag
-            </Link>
-          </div>
-        )}
-
         {isConfigured && !user && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted px-4 py-3">
             <p className="text-xs text-muted-foreground">
@@ -201,52 +210,25 @@ export function You() {
           </Button>
         </div>
 
-        {/* Five sections, stacked full-width with generous space between
-            them rather than paired side by side — separation comes from
-            whitespace and a hairline rule, not from boxing each one in.
-            Order: Moments, Pursuits, Quiet Milestones, Circles, Clan. */}
-        <section className="mb-14">
+        {/* Cover strip + two-column (Tags/Quiet Milestones rail, editorial
+            Moments grid) replaces the old tag-pills row and uniform
+            WorkGrid/HobbyShelf toggle — see ProfileCoverStrip.tsx,
+            ProfileRail.tsx, EditorialMomentsGrid.tsx. Pursuits, Quiet
+            Milestones' old standalone spot, Circles, and Clan below are
+            untouched. */}
+        <ProfileCoverStrip post={coverPost} canCycle={pinnedPosts.length > 1} onChangeCover={handleChangeCover} />
+
+        <section className="mb-14" ref={momentsGridRef}>
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
               Your Moments
             </h2>
-            {/* All moments (plain chronological) is the default now — By
-                Corner stays available for anyone who wants the grouped
-                view. HobbyShelf.tsx no longer renders Space-level section
-                headers at all — it's one flat grid of Corners, sorted by
-                whichever was most recently updated — so "By Corner" is
-                what actually describes it now. (An earlier pass called
-                this "By space" when the view still had Space headers with
-                Corners stacked inside each one; that structure is gone,
-                so that label would now be the wrong one.) */}
-            <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
-              <button
-                type="button"
-                onClick={() => setMomentsView("grid")}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                }`}
-              >
-                All moments
-              </button>
-              <button
-                type="button"
-                onClick={() => setMomentsView("shelf")}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                }`}
-              >
-                By Corner
-              </button>
-            </div>
           </div>
           <p className="mb-5 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {momentsView === "shelf"
-              ? "By Corner, most recently updated first — open one to see every moment inside it."
-              : tagFilter
-                ? `Tagged “${tagFilter}.”`
-                : "A visual record of what you've made, explored, and loved, newest first."}
-            {momentsView === "grid" && tagFilter && (
+            {tagFilter
+              ? `Tagged "${tagFilter}."`
+              : "A visual record of what you've made, explored, and loved, newest first."}
+            {tagFilter && (
               <button
                 type="button"
                 onClick={() => setTagFilter(null)}
@@ -256,26 +238,22 @@ export function You() {
               </button>
             )}
           </p>
-          {momentsView === "shelf" ? (
-            <HobbyShelf
-              items={sessions}
-              emptyCta={false}
-              emptyCopy="Nothing logged yet. Create something and it'll show up here."
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
+            <ProfileRail
+              tags={myTags}
+              activeTag={tagFilter}
+              onToggleTag={(tag) => setTagFilter((current) => (current === tag ? null : tag))}
             />
-          ) : (
-            <WorkGrid
-              posts={
-                tagFilter
-                  ? myPosts.filter((p) =>
-                      (p.tags ?? []).some((t) => t.toLowerCase() === tagFilter.toLowerCase()),
-                    )
-                  : myPosts
-              }
-              onOpen={setOpenPost}
-              editable
-              emptyLabel="Nothing logged yet. Create something and it'll show up here."
-            />
-          )}
+            <div className="min-w-0 flex-1">
+              <EditorialMomentsGrid
+                posts={filteredPosts}
+                pendingPinId={pendingPinId}
+                onOpen={setOpenPost}
+                onTogglePin={handleTogglePin}
+                emptyLabel="Nothing logged yet. Create something and it'll show up here."
+              />
+            </div>
+          </div>
         </section>
 
         <section className="mb-14 border-t border-border pt-10">
@@ -351,19 +329,6 @@ export function You() {
               </div>
             </>
           )}
-        </section>
-
-        <section className="mb-14 border-t border-border pt-10">
-          <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-              <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
-              Quiet Milestones
-            </h2>
-          </div>
-          <p className="mb-5 text-sm text-muted-foreground">
-            Non-metric growth that feels good. Private by default — share one at a time, only if you want to.
-          </p>
-          <QuietMilestones />
         </section>
 
         <section className="mb-14 border-t border-border pt-10">
