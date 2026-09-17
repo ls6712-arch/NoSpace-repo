@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ImagePlus, Pin } from "lucide-react";
-import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
+import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { PostMedia } from "./PostMedia";
@@ -168,12 +168,17 @@ export function WorkGrid({
     <div>
       <div className="grid grid-cols-3 gap-0.5 sm:grid-cols-4">
         {visible.map((post) => {
-          const hobby = getHobby(post.hobbySlug);
           // Corner first — the tag should name the specific thing this
           // Moment is about, not the broad Space it lives under, whenever
-          // it was actually tagged that specifically. Untagged Moments
-          // fall back to the Space name rather than a fabricated Corner.
-          const cornerLabel = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : hobby?.shortName;
+          // it was actually tagged that specifically. A Moment with no
+          // Corner falls back to its first open tag (post.tags, always the
+          // real "what's this about" now — sql/open-tags.sql) rather than
+          // the Space name: hobbySlug can be nothing more than Log.tsx's
+          // not-null-column filler, and showing it as a badge was a
+          // fabricated Corner by another name.
+          const cornerLabel = post.subHobby
+            ? subHobbyLabel(post.subHobby) ?? post.subHobby
+            : post.tags?.[0];
           return (
             <div key={post.id} className="group relative flex h-full">
               <button

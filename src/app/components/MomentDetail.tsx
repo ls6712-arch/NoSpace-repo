@@ -11,7 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { Post } from "../data/posts";
-import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { subHobbyLabel } from "../data/hobbies";
 import { getCircle } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { PostReactions } from "./PostReactions";
@@ -94,7 +94,13 @@ export function MomentDetail({
 
   if (!post) return null;
 
-  const space = getHobby(post.hobbySlug);
+  // tags (open, multiple, backfilled for every post — sql/open-tags.sql) is
+  // the real "what's this about" now. hobbySlug/subHobby stay as backend/
+  // filing fields only (PostMedia's art seed, a new Pursuit's Space) —
+  // nothing here shows hobby.name/shortName as a label anymore, since an
+  // untagged Moment's hobbySlug is just Log.tsx's not-null-column filler,
+  // never a Space the person actually chose.
+  const postTags = post.tags ?? [];
   const hobbyLabel = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : null;
   const audience = AUDIENCE[post.visibility] ?? AUDIENCE.friends;
   const attachedId = journal.entryProject[String(post.id)];
@@ -151,10 +157,10 @@ export function MomentDetail({
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>
-            {hobbyLabel ?? space?.shortName ?? "Moment"}
+            {postTags[0] ?? hobbyLabel ?? "Moment"}
           </DialogTitle>
           <DialogDescription>
-            {hobbyLabel ? `${hobbyLabel} · ${space?.name}` : space?.name} · {fullDate(post.createdAt)}
+            {postTags.length ? postTags.join(" · ") : (hobbyLabel ?? "Moment")} · {fullDate(post.createdAt)}
           </DialogDescription>
         </DialogHeader>
 
@@ -230,8 +236,8 @@ export function MomentDetail({
         {/* Where it sits */}
         <dl className="grid gap-2 rounded-2xl border border-border bg-surface-muted px-4 py-3 text-xs">
           <div className="flex items-center justify-between gap-3">
-            <dt className="text-muted-foreground">Hobby</dt>
-            <dd>{hobbyLabel ? `${hobbyLabel} · ${space?.shortName}` : space?.name}</dd>
+            <dt className="text-muted-foreground">Tags</dt>
+            <dd>{postTags.length ? postTags.join(", ") : "—"}</dd>
           </div>
           <div className="flex items-center justify-between gap-3">
             <dt className="text-muted-foreground">Who sees this</dt>
@@ -309,7 +315,7 @@ export function MomentDetail({
                   size="sm"
                   onClick={() => {
                     const project = startProject({
-                      title: hobbyLabel ?? space?.shortName ?? "New Pursuit",
+                      title: postTags[0] ?? hobbyLabel ?? "New Pursuit",
                       hobbySlug: post.hobbySlug,
                       subHobby: post.subHobby,
                     });
@@ -317,7 +323,7 @@ export function MomentDetail({
                     setAddingTo(false);
                   }}
                 >
-                  Start "{hobbyLabel ?? space?.shortName}" as a Pursuit
+                  Start "{postTags[0] ?? hobbyLabel ?? "New Pursuit"}" as a Pursuit
                 </Button>
               </>
             ) : (
