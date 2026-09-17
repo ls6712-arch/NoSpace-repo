@@ -252,15 +252,50 @@ export function Log() {
   const navigate = useNavigate();
 
   const hobbyParam = searchParams.get("hobby");
-  const initialHobby = hobbyParam ?? initialPursuit?.hobbySlug ?? hobbies[0].slug;
+  const subParam = searchParams.get("sub");
+  // The starting tag list — computed once, up front, so it can drive both
+  // `tags` itself below and the best-effort hobbySlug/spaceSet derived from
+  // it here, instead of the two being worked out separately (which used to
+  // miss the "arrived via ?sub= with no ?hobby=" case entirely: a real
+  // sub-hobby slug seeded a starting tag but left hobbySlug/spaceSet at
+  // their untouched defaults, as if nothing had been specified).
+  const initialTags = (() => {
+    if (initialPursuit?.interest) return [initialPursuit.interest];
+    const subLabel = subParam ? subHobbyLabel(subParam) : undefined;
+    if (subLabel) return [subLabel];
+    if (hobbyParam) {
+      const seeded = hobbies.find((h) => h.slug === hobbyParam);
+      if (seeded) return [seeded.name];
+    }
+    return [];
+  })();
+  // Best-effort match against a known Corner, same lookup the TagsField
+  // onChange below uses for every tag typed after mount.
+  const initialMatch = initialTags.length ? findSpaceForInterest(initialTags[0]) : undefined;
+  // hobby_slug is a not-null column in `posts`, so this still needs *some*
+  // value to send — but as of this fix, nothing here is allowed to show
+  // that value to a person unless spaceSet says it's real. Previously this
+  // fell back straight to hobbies[0].slug (Food & Cooking) whenever no
+  // ?hobby=/Pursuit was present, and several display sites below trusted
+  // that fallback as if it were a real, chosen Space — see spaceSet's own
+  // comment just below, and every hobby.name/hobby.shortName read further
+  // down this file, for the fix.
+  const initialHobby =
+    hobbyParam ?? initialPursuit?.hobbySlug ?? initialMatch?.hobbySlug ?? hobbies[0].slug;
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
-  // Whether hobbySlug reflects something the person actually chose or typed,
-  // versus just the untouched default (hobbies[0], or a ?hobby= link). A
+  // Whether hobbySlug reflects something the person actually chose, typed a
+  // matching tag for, or arrived with (?hobby=/?sub=/a Pursuit's own Space)
+  // — versus just the untouched, invisible-to-the-user backend default. A
   // private "Save this moment" never shows any Space UI at all, so filing it
   // under an unseen default Space silently mistagged private logs — this
-  // flag lets that path save untagged instead when nothing was ever set.
-  const [spaceSet, setSpaceSet] = useState(!!hobbyParam || !!initialPursuit?.hobbySlug);
-  const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
+  // flag lets that path (and every other display below) save/show untagged
+  // instead when nothing was ever actually set.
+  const [spaceSet, setSpaceSet] = useState(
+    !!hobbyParam || !!initialPursuit?.hobbySlug || !!initialMatch,
+  );
+  const [subHobby, setSubHobby] = useState<string>(
+    subParam ?? initialPursuit?.subHobby ?? initialMatch?.slug ?? "",
+  );
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
   const [type, setType] = useState<"photo" | "video">("photo");
@@ -273,20 +308,10 @@ export function Log() {
   // still used as-is by the separate "detail" screen's own Space picker for
   // Pursuits) get set from whichever of these tags happens to match a known
   // Corner — see the TagsField onChange below.
-  const [tags, setTags] = useState<string[]>(() => {
-    if (initialPursuit?.interest) return [initialPursuit.interest];
-    const subParam = searchParams.get("sub");
-    const subLabel = subParam ? subHobbyLabel(subParam) : undefined;
-    if (subLabel) return [subLabel];
-    if (hobbyParam) {
-      const seeded = hobbies.find((h) => h.slug === hobbyParam);
-      if (seeded) return [seeded.name];
-    }
-    return [];
-  });
+  const [tags, setTags] = useState<string[]>(initialTags);
   // Read-only alias so the many existing "what's this about, in one word"
-  // call sites below (the default caption, the Pursuit-attach copy, the
-  // confirmation line) don't each need to know tags is now a list.
+  // call sites below (the Pursuit-attach copy, the confirmation line) don't
+  // each need to know tags is now a list.
   const interest = tags[0] ?? "";
   const [thought, setThought] = useState("");
   const [progress, setProgress] = useState("");
@@ -614,7 +639,10 @@ export function Log() {
   );
 
   const hobby = hobbies.find((h) => h.slug === hobbySlug)!;
-  const hobbyCircles = circlesByHobby(hobbySlug);
+  // Only offered once a real Space is actually known — otherwise this
+  // listed whatever Circles happen to belong to the untouched hobbySlug
+  // default, as if that were the Space just chosen.
+  const hobbyCircles = spaceSet ? circlesByHobby(hobbySlug) : [];
   // Normally only open Pursuits are offered here — but if we arrived via
   // "Add progress" on a finished one, it needs to still appear as the
   // selected option (attaching an Update to it reopens it; see
@@ -622,10 +650,12 @@ export function Log() {
   const openProjects = journal.projects.filter(
     (p) => !p.finishedAt || p.id === initialPursuitId,
   );
-  // What the post is about, in the person's own words where they gave them.
-  const tagLabel =
-    interest.trim() ||
-    (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : hobby.shortName);
+  // What the post is about, in the person's own words where they gave them —
+  // never hobby.shortName: that's the untouched Space default whenever
+  // nothing here was actually chosen or typed, exactly the silent mistagging
+  // this whole fix removes. Empty when there's truly nothing to say yet;
+  // every call site below already has its own honest fallback for that.
+  const tagLabel = interest.trim() || (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : "");
 
   /** Whatever the camera screen produced — a live capture, a recent pick, or
    * a single fresh library file — always lands here the same way. */
@@ -663,7 +693,7 @@ export function Log() {
       }).id;
     }
     const result = await addPrivateLog({
-      note: note || `A ${tagLabel.toLowerCase()} moment`,
+      note: note || `A ${(tagLabel || "quick").toLowerCase()} moment`,
       projectId: linkTo || undefined,
       // The picture is the point of a wordless capture. It used to be dropped
       // here and replaced with a generated placeholder, which read as the app
@@ -724,7 +754,7 @@ export function Log() {
     try {
       const caption =
         [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
-        `A ${tagLabel.toLowerCase()} moment`;
+        `A ${(tagLabel || "quick").toLowerCase()} moment`;
 
       const entry = await addPost({
         hobbySlug,
@@ -1138,7 +1168,7 @@ export function Log() {
             {anySaveError ? "Not saved." : "Saved."}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {interest.trim() ? `${tagLabel} · ${hobby.name}` : hobby.name}
+            {tags.length ? tags.join(" · ") : "Moment"}
           </p>
           {!anySaveError && (
             <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-sm">
@@ -1189,7 +1219,13 @@ export function Log() {
           <div className="space-y-2">
             <Link
               to={
-                savedAs === "private"
+                // A subHobby is real, explicit data regardless of spaceSet
+                // (it only ever gets set by an actual match or pick). Beyond
+                // that, routing into a specific Space's archive needs
+                // spaceSet — otherwise "Done" on an untagged moment landed
+                // on the untouched hobbySlug default's archive page instead
+                // of the general Shelf.
+                savedAs === "private" || (!subHobby && !spaceSet)
                   ? "/you"
                   : `/you/work/${archiveKey({ subSlug: subHobby || undefined, hobbySlug })}`
               }
@@ -1489,11 +1525,13 @@ export function Log() {
                 ? "This stays a private log. Nobody else will see it."
                 : `This will appear in ${
                     audience === "public"
-                      ? `${hobby.name}`
+                      ? spaceSet
+                        ? hobby.name
+                        : "Discover"
                       : audience === "circle"
                         ? "that Circle"
                         : "My Space for people you've connected with"
-                  }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
+                  }${tags.length ? ` and be tagged ${tags.join(", ")}.` : "."}`}
             </p>
           </div>
 

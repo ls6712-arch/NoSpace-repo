@@ -87,13 +87,15 @@ const METADATA = {
   'IMG_2935': { space: 'travel-adventure', corner: 'exploration',        caption: "Brooklyn Bridge at dusk. Still stops me every time." },
   'IMG_2944': { space: 'travel-adventure', corner: 'exploration',        caption: "One sailboat, one bridge, one very lucky angle." },
   'IMG_2946': { space: 'travel-adventure', corner: 'exploration',        caption: "Lady Liberty at golden hour, from the cheap seats on a ferry." },
-  'IMG_3029': { space: 'food-cooking',     corner: 'food-photography',   caption: "NY bagel, correctly weaponized with capers and dill." },
-  'IMG_3054': { space: 'travel-adventure', corner: 'exploration',        caption: "Walked past this a hundred times. Finally stopped to look." },
+  // IMG_3029, IMG_3054, IMG_3070, IMG_3104 omitted — only .MP4 versions found
+  // in Downloads/Photos-1-001, no HEIC/JPG source to seed from.
+  // 'IMG_3029': { space: 'food-cooking',     corner: 'food-photography',   caption: "NY bagel, correctly weaponized with capers and dill." },
+  // 'IMG_3054': { space: 'travel-adventure', corner: 'exploration',        caption: "Walked past this a hundred times. Finally stopped to look." },
   // IMG_2969 (Times Square) omitted by default — crop for identifiable faces
   // before re-adding. See flag in chat.
   'IMG_3063': { space: 'food-cooking',     corner: 'food-photography',   caption: "Sesame chicken bowl that disappeared faster than I photographed it." },
-  'IMG_3070': { space: 'food-cooking',     corner: 'cooking',            caption: "Sunday spread: curry, roti, pulao, no leftovers survived." },
-  'IMG_3104': { space: 'nature-outdoors',  corner: 'outdoor-photography', caption: "Reservoir loop, golden light, zero people yet." },
+  // 'IMG_3070': { space: 'food-cooking',     corner: 'cooking',            caption: "Sunday spread: curry, roti, pulao, no leftovers survived." },
+  // 'IMG_3104': { space: 'nature-outdoors',  corner: 'outdoor-photography', caption: "Reservoir loop, golden light, zero people yet." },
   'IMG_3109': { space: 'nature-outdoors',  corner: 'outdoor-photography', caption: "The fountain earns its spot on the postcard." },
   'IMG_3127': { space: 'nature-outdoors',  corner: 'outdoor-photography', caption: "Central Park doing its one job perfectly." },
   'IMG_3135': { space: 'travel-adventure', corner: 'exploration',        caption: "Empire State, blue hour, rainbow spire." },
