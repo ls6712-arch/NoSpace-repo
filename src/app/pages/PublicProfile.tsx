@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { ArrowRight, Plus, Share2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import { useContent } from "../context/ContentContext";
 import { Post } from "../data/posts";
 import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
 import { circlesByHobby } from "../data/circles";
@@ -13,9 +14,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { PersonActions } from "../components/PersonActions";
 import { HandwrittenNote } from "../components/HandwrittenNote";
-import { WorkGrid } from "../components/WorkGrid";
+import { ProfileCoverStrip } from "../components/ProfileCoverStrip";
+import { ProfileRail } from "../components/ProfileRail";
+import { EditorialMomentsGrid } from "../components/EditorialMomentsGrid";
 import { PursuitCard } from "../components/PursuitCard";
-import { QuietMilestones, SharedMilestones } from "../components/QuietMilestones";
+import { SharedMilestones } from "../components/QuietMilestones";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { MomentDetail } from "../components/MomentDetail";
 import { milestoneText, pickPrimaryHobby } from "../components/ProfileHeadline";
@@ -83,6 +86,17 @@ export function PublicProfile() {
   // Only the specific milestones this person chose to share — never their
   // locked ones, and never anything inferred from their public post count.
   const [sharedMilestoneIds, setSharedMilestoneIds] = useState<string[]>([]);
+  // Cover + pin state for the editorial grid (ProfileCoverStrip.tsx,
+  // EditorialMomentsGrid.tsx — same components You.tsx uses). Declared up
+  // here with the other hooks for the same reason as openPost above.
+  // ContentContext's togglePin only ever writes to the signed-in user's own
+  // realPosts, never this page's separately-fetched `posts` state, so the
+  // isMe-only toggle handler below also updates `state.posts` directly so
+  // the UI reflects it without a full refetch.
+  const { togglePin } = useContent();
+  const [coverIndex, setCoverIndex] = useState(0);
+  const [pendingPinId, setPendingPinId] = useState<number | null>(null);
+  const momentsGridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // React Router reuses this component instance across two profiles under
@@ -273,6 +287,39 @@ export function PublicProfile() {
   const shownPosts = focusTag
     ? posts.filter((p) => (p.tags ?? []).some((t) => t.toLowerCase() === focusTag.toLowerCase()))
     : posts;
+
+  // Cover + pin — same derivation as You.tsx: most recent pinned Moment,
+  // cycling on "Change cover," falling back to the single most recent
+  // Moment when nothing's pinned. Only ever interactive when isMe (gated
+  // via the components' own `editable` prop below) — a visitor's grid
+  // never calls onTogglePin at all.
+  const pinnedPosts = posts.filter((p) => p.pinned);
+  const coverPost = pinnedPosts[coverIndex % (pinnedPosts.length || 1)] ?? posts[0];
+  const handleTogglePin = async (postId: number) => {
+    const current = posts.find((p) => p.id === postId);
+    if (!current) return;
+    setPendingPinId(postId);
+    try {
+      const ok = await togglePin(postId);
+      if (ok) {
+        setState((s) =>
+          s.status === "ready"
+            ? { ...s, posts: s.posts.map((p) => (p.id === postId ? { ...p, pinned: !current.pinned } : p)) }
+            : s,
+        );
+      }
+    } finally {
+      setPendingPinId(null);
+    }
+  };
+  const handleChangeCover = () => {
+    if (pinnedPosts.length > 1) {
+      setCoverIndex((i) => (i + 1) % pinnedPosts.length);
+    } else {
+      momentsGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const initials = displayName
     .split(" ")
     .map((p) => p[0])
@@ -341,99 +388,79 @@ export function PublicProfile() {
           </HandwrittenNote>
         </div>
 
-        {tags.length > 0 && (
-          <div className="mb-8 flex flex-wrap gap-2">
-            {tags.slice(0, 6).map(({ tag }) => {
-              const on = focusTag?.toLowerCase() === tag.toLowerCase();
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => setFocus(on ? null : tag)}
-                  className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
-                    on
-                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                      : "border-border bg-white/[0.04] text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-                  }`}
-                  style={{ fontFamily: "var(--font-serif)" }}
-                >
-                  {tag}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Same editorial layout as the owner's own page (You.tsx) — cover
+            strip, then a Tags/Quiet Milestones rail beside the full,
+            uncapped Moments grid. Editing controls (Change cover, pin,
+            + Add a tag) are gated on isMe via each component's own
+            `editable` prop, the same isOwnProfile check this page already
+            used for WorkGrid's `editable` before this change. */}
+        <ProfileCoverStrip
+          post={coverPost}
+          canCycle={pinnedPosts.length > 1}
+          onChangeCover={handleChangeCover}
+          editable={isMe}
+        />
 
-        {/* Their Moments and their shared Pursuits, side by side — the same
-            portfolio-first layout as the owner's own profile. A Pursuit
-            only ever shows up here when its owner explicitly shared it;
-            the section itself doesn't render at all when there are none,
-            rather than showing an empty "Pursuits" box. */}
-        <div className="mb-12 grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
-          <section>
-            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-              <div>
-                <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  A look into the things they've created, explored, and loved.
-                </p>
-              </div>
-              {focusTag && (
-                <button
-                  type="button"
-                  onClick={() => setFocus(null)}
-                  className="text-xs text-[var(--coral-text)] hover:underline"
-                >
-                  Show everything
-                </button>
-              )}
-            </div>
-            <WorkGrid
-              posts={shownPosts}
-              onOpen={setOpenPost}
-              editable={isMe}
-              emptyLabel={`${firstName} hasn't shared any Moments publicly yet.`}
-            />
-          </section>
-
-          {sharedPursuits.length > 0 && (
-            <section>
+        <section className="mb-12" ref={momentsGridRef}>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+            <div>
               <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                {firstName}'s Pursuits
+                {firstName}'s Moments
               </h2>
-              <p className="mb-4 mt-1 text-sm text-muted-foreground">
-                The things they're bringing to life, that they've chosen to share.
+              <p className="mt-1 text-sm text-muted-foreground">
+                {focusTag ? `Tagged "${focusTag}."` : "A look into the things they've created, explored, and loved."}
               </p>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                {sharedPursuits.map((pursuit) => (
-                  <PursuitCard key={pursuit.id} pursuit={pursuit} className="w-full" />
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-
-        {/* Private by default, one milestone at a time: this section simply
-            doesn't exist for a non-owner until there's something explicitly
-            shared to show. Visiting your own public link still gets the full
-            owner view, locked milestones included — same as /you. */}
-        {(isMe || sharedMilestoneIds.length > 0) && (
-          <div className="mb-10">
-            <h2 className="mb-1 flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Quiet Milestones
-            </h2>
-            <p className="mb-3 text-sm text-muted-foreground">
-              {isMe ? "Non-metric growth that feels good." : `What ${firstName} chose to share.`}
-            </p>
-            {isMe ? (
-              <QuietMilestones />
-            ) : (
-              <SharedMilestones badgeIds={sharedMilestoneIds} primary={primary} />
-            )}
+            </div>
           </div>
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
+            <ProfileRail
+              tags={tags}
+              activeTag={focusTag}
+              onToggleTag={(tag) => setFocus(focusTag === tag ? null : tag)}
+              editable={isMe}
+              milestonesContent={
+                // isMe: undefined → ProfileRail's own default, the full
+                // owner QuietMilestones. A visitor: SharedMilestones when
+                // something's actually been shared, else null (hides the
+                // whole block) — same isMe/sharedMilestoneIds branch this
+                // page already used before this change, just relocated.
+                isMe ? undefined : sharedMilestoneIds.length > 0 ? (
+                  <SharedMilestones badgeIds={sharedMilestoneIds} primary={primary} />
+                ) : null
+              }
+            />
+            <div className="min-w-0 flex-1">
+              <EditorialMomentsGrid
+                posts={shownPosts}
+                pendingPinId={pendingPinId}
+                onOpen={setOpenPost}
+                onTogglePin={handleTogglePin}
+                editable={isMe}
+                emptyLabel={`${firstName} hasn't shared any Moments publicly yet.`}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* A Pursuit only ever shows up here when its owner explicitly
+            shared it; the section itself doesn't render at all when there
+            are none, rather than showing an empty "Pursuits" box. Full-
+            width now rather than paired beside Moments — the rail+grid
+            layout above needs that width for itself. */}
+        {sharedPursuits.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              {firstName}'s Pursuits
+            </h2>
+            <p className="mb-4 mt-1 text-sm text-muted-foreground">
+              The things they're bringing to life, that they've chosen to share.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {sharedPursuits.map((pursuit) => (
+                <PursuitCard key={pursuit.id} pursuit={pursuit} className="w-full" />
+              ))}
+            </div>
+          </section>
         )}
 
         <div className="mb-10 grid gap-6 sm:grid-cols-2">

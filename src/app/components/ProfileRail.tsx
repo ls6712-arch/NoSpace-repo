@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { Link } from "react-router";
 import { TagTally } from "../lib/postTags";
 import { tagTint } from "./WorkGrid";
@@ -22,10 +23,27 @@ export function ProfileRail({
   tags,
   activeTag,
   onToggleTag,
+  editable = true,
+  milestonesContent,
 }: {
   tags: TagTally[];
   activeTag: string | null;
   onToggleTag: (tag: string) => void;
+  /** False on a visitor's view of someone else's profile — hides "+ Add a
+   * tag" (an owner-only creation action; tapping a tag to filter stays
+   * available to everyone, it's read-only). Defaults to true so You.tsx
+   * needs no change. */
+  editable?: boolean;
+  /** What renders under "Quiet Milestones" — defaults to the owner's own
+   * full QuietMilestones (locked badges included), exactly what You.tsx
+   * already got before this prop existed. PublicProfile.tsx passes
+   * SharedMilestones (or nothing, hiding the block) instead: reusing the
+   * owner-only component unchanged for a visitor would leak another
+   * person's locked-milestone state, which QuietMilestones.tsx's own docs
+   * are explicit is owner-only. Passing null hides the whole block,
+   * heading included — same as PublicProfile's existing behavior when a
+   * visitor has nothing shared to see. */
+  milestonesContent?: ReactNode;
 }) {
   return (
     <aside className="w-full shrink-0 sm:w-[150px] sm:self-start sm:sticky sm:top-6">
@@ -68,24 +86,32 @@ export function ProfileRail({
             Clear filter
           </button>
         )}
-        <Link
-          to="/create"
-          className="mt-2.5 block text-[11px] text-[var(--coral-text)] hover:underline"
-        >
-          + Add a tag
-        </Link>
+        {editable && (
+          <Link
+            to="/create"
+            className="mt-2.5 block text-[11px] text-[var(--coral-text)] hover:underline"
+          >
+            + Add a tag
+          </Link>
+        )}
       </div>
 
-      <div>
-        <h3 className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-          Quiet Milestones
-        </h3>
-        {/* Reused as-is, not rebuilt — see QuietMilestones.tsx. Its own
-            horizontally-scrolling row of discs handles being squeezed into
-            a ~150px rail on its own (overflow-x-auto), no adaptation
-            needed here. */}
-        <QuietMilestones />
-      </div>
+      {/* milestonesContent === null (PublicProfile, a visitor with nothing
+          shared) hides the whole block, heading included — same as before
+          this prop existed. undefined (You.tsx, or PublicProfile's isMe
+          case) falls back to the real, full QuietMilestones. */}
+      {milestonesContent !== null && (
+        <div>
+          <h3 className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            Quiet Milestones
+          </h3>
+          {/* Reused as-is, not rebuilt — see QuietMilestones.tsx. Its own
+              horizontally-scrolling row of discs handles being squeezed into
+              a ~150px rail on its own (overflow-x-auto), no adaptation
+              needed here. */}
+          {milestonesContent ?? <QuietMilestones />}
+        </div>
+      )}
     </aside>
   );
 }
