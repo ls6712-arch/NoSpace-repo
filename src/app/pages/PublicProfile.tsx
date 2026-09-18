@@ -11,8 +11,6 @@ import { sessionsFromPosts } from "../components/HobbyShelf";
 import { tagsFromPosts } from "../lib/postTags";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { PersonActions } from "../components/PersonActions";
-import { HandwrittenNote } from "../components/HandwrittenNote";
 import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCard } from "../components/PursuitCard";
 import { QuietMilestones, SharedMilestones } from "../components/QuietMilestones";
@@ -25,7 +23,7 @@ import { fetchSharedMilestoneIds } from "../lib/milestonesRemote";
 import { ProfileLink } from "../lib/profileLinks";
 import { ProfileLinksRow } from "../components/ProfileLinks";
 import { useFollowerCount } from "../lib/useFollowerCount";
-import { fetchIsFollowing, follow, unfollow } from "../lib/profileFollows";
+import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/profileFollows";
 
 /** Whichever Space shows up most in their posts — used to pick a Circles
  * suggestion and the closing banner's illustration, not to claim membership
@@ -85,9 +83,9 @@ export function PublicProfile() {
   // Only the specific milestones this person chose to share — never their
   // locked ones, and never anything inferred from their public post count.
   const [sharedMilestoneIds, setSharedMilestoneIds] = useState<string[]>([]);
-  // Real, one-directional person-follows-person state (sql/profile-follows.sql)
-  // — separate from PersonActions' hobby-level "make together" asks below.
-  const [isFollowing, setIsFollowing] = useState(false);
+  // Real, accept-based person-follows-person state (sql/profile-follows.sql)
+  // — a follow only counts once the followed person accepts it.
+  const [followStatus, setFollowStatus] = useState<FollowStatus>("none");
   const [followBusy, setFollowBusy] = useState(false);
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
   const followerCount = useFollowerCount(
@@ -240,12 +238,12 @@ export function PublicProfile() {
 
   useEffect(() => {
     if (state.status !== "ready" || !user || user.id === state.personId) {
-      setIsFollowing(false);
+      setFollowStatus("none");
       return;
     }
     let cancelled = false;
-    fetchIsFollowing(user.id, state.personId).then((following) => {
-      if (!cancelled) setIsFollowing(following);
+    fetchFollowStatus(user.id, state.personId).then((status) => {
+      if (!cancelled) setFollowStatus(status);
     });
     return () => {
       cancelled = true;
@@ -326,12 +324,11 @@ export function PublicProfile() {
   return (
     <div className="ns-paper-theme ns-public-profile min-h-screen bg-surface py-8 sm:py-10">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-5 sm:gap-6">
-            <Avatar className="size-20 shrink-0 sm:size-28">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt="" className="object-cover" />}
-              <AvatarFallback className="text-xl">{initials}</AvatarFallback>
-            </Avatar>
+        <div className="mb-8 flex items-start gap-5 sm:gap-6">
+          <Avatar className="size-20 shrink-0 sm:size-28">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt="" className="object-cover" />}
+            <AvatarFallback className="text-xl">{initials}</AvatarFallback>
+          </Avatar>
             <div className="min-w-0">
               <h1
                 className="truncate text-4xl leading-tight sm:text-5xl"
@@ -371,11 +368,6 @@ export function PublicProfile() {
                   </>
                 )}
               </div>
-              {sessions.length > 0 && (
-                <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  {sessions.slice(0, 5).map((s) => s.label).join(", ")}.
-                </p>
-              )}
               {primaryHobby && (
                 <p className="mt-1 text-sm text-muted-foreground">
                   {milestoneText(primaryHobby.label, primaryHobby.firstActivityAt)} · Keep going.
@@ -383,36 +375,32 @@ export function PublicProfile() {
               )}
               {profileLinks.length > 0 && <ProfileLinksRow links={profileLinks} className="mt-3" />}
               <div className="mt-4 flex flex-wrap gap-2">
-                {/* PersonActions asks to do a specific hobby-level thing
-                    together — never to the person as a person. Follow, next
-                    to it, is the real person-level relationship (see
-                    sql/profile-follows.sql) that backs the follower count
-                    above. Neither shows on your own shelf. */}
+                {/* Accept-based: a request sent isn't a follower yet, and
+                    only counts toward the number above once accepted — see
+                    sql/profile-follows.sql. Doesn't show on your own shelf. */}
                 {!isMe && user && (
                   <Button
-                    variant={isFollowing ? "outline" : "brand"}
+                    variant={followStatus === "none" || followStatus === "declined" ? "brand" : "outline"}
                     disabled={followBusy}
                     onClick={async () => {
                       setFollowBusy(true);
-                      const ok = isFollowing
-                        ? await unfollow(user.id, personId)
-                        : await follow(user.id, personId);
+                      const requesting = followStatus === "none" || followStatus === "declined";
+                      const ok = requesting
+                        ? await follow(user.id, personId)
+                        : await unfollow(user.id, personId);
                       if (ok) {
-                        setIsFollowing(!isFollowing);
+                        setFollowStatus(requesting ? "pending" : "none");
                         setFollowRefreshKey((k) => k + 1);
                       }
                       setFollowBusy(false);
                     }}
                   >
-                    {isFollowing ? "Following" : "Follow"}
+                    {followStatus === "accepted"
+                      ? "Following"
+                      : followStatus === "pending"
+                        ? "Requested"
+                        : "Follow"}
                   </Button>
-                )}
-                {!isMe && (
-                  <PersonActions
-                    personName={displayName}
-                    personId={personId}
-                    hobbyKeys={posts.map((p) => p.subHobby ?? `space:${p.hobbySlug}`)}
-                  />
                 )}
                 <CopyLinkButton />
               </div>
@@ -423,10 +411,6 @@ export function PublicProfile() {
                 Open Studio →
               </Link>
             </div>
-          </div>
-          <HandwrittenNote className="max-w-[220px] sm:mt-2">
-            Curious creators make a brighter world.
-          </HandwrittenNote>
         </div>
 
         {tags.length > 0 && (

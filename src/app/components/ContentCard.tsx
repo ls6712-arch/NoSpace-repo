@@ -2,12 +2,9 @@ import { CalendarDays, Compass, MapPin, Play, ShoppingBag, Users, UserRound } fr
 import { PostReactions } from "./PostReactions";
 import { PostBookmark } from "./PostBookmark";
 import { Thoughts } from "./Thoughts";
-import { PersonActions } from "./PersonActions";
 import { displayLocation } from "../data/participation";
-import { getCircle } from "../data/circles";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
-import { useCorners } from "../context/CornersContext";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
@@ -50,8 +47,8 @@ export function ContentCard({
   label?: string;
   /**
    * A tighter, more image-forward presentation of the exact same card —
-   * same media, same caption, same three reactions plus the Bookmark badge, same Thoughts
-   * and PersonActions, same everything — just less padding and a smaller
+   * same media, same caption, same three reactions plus the Bookmark badge,
+   * same Thoughts, same everything — just less padding and a smaller
    * reaction/action grid, for a denser grid like Discover's All Moments.
    * Every other call site leaves this off and is pixel-identical to before.
    */
@@ -70,17 +67,7 @@ export function ContentCard({
   const { findListing } = useContent();
   const social = useSocial();
   const { user } = useAuth();
-  const { cornersFor } = useCorners();
   const isOwner = !!user && post.userId === user.id;
-
-  // The narrowest real scope this Moment actually belongs to, if any — so
-  // Invite can default straight to it instead of the whole Space. A Circle
-  // (a deliberate, existing membership) wins over a Corner (a topic tag) if
-  // a Moment somehow carries both; see PersonActions' own narrowContext.
-  const postCircle = post.visibility === "circle" && post.circleId ? getCircle(post.circleId) : undefined;
-  const postCorner = post.subHobby
-    ? cornersFor(post.hobbySlug).find((c) => c.slug === post.subHobby)
-    : undefined;
 
   // An activity is a moment with a time attached — a photo walk, a workshop,
   // a meetup. Everything else is just a moment and gets none of this.
@@ -221,26 +208,6 @@ export function ContentCard({
           compact={compact}
           className={compact ? "mb-2" : "mb-3"}
         />
-
-        {!isOwner && (
-          // Explore off: repeating "follow this hobby" on every card of a
-          // feed already scoped to a hobby was redundant, and confusable
-          // with the Space-hero's own "Explore" a few inches above the
-          // whole feed. It's still offered from the Space hero and from a
-          // person's own profile — this is only the per-post row.
-          <PersonActions
-            personName={post.creator}
-            personId={post.userId}
-            hobbyKeys={[post.subHobby ?? `space:${post.hobbySlug}`]}
-            showExplore={false}
-            corner={
-              postCorner ? { spaceSlug: post.hobbySlug, slug: postCorner.slug, name: postCorner.name } : undefined
-            }
-            circle={postCircle ? { id: postCircle.id, hobbySlug: postCircle.hobbySlug, name: postCircle.name } : undefined}
-            compact={compact}
-            className={compact ? "mb-2" : "mb-3"}
-          />
-        )}
 
         {listing && (
           <Link to={`/product/${listing.id}`}>

@@ -223,9 +223,9 @@ export function CategoryFeed() {
 
   // Explore, right on the Space hero: a direct follow toggle on the Space
   // itself, not a dialog with a list to pick from — there's only ever one
-  // thing to explore here, the Space this whole page is about, so the
-  // multi-hobby picker PersonActions otherwise offers (built for a person's
-  // profile, where they may work in several hobbies) had nothing to add.
+  // thing to explore here, the Space this whole page is about, so a
+  // multi-hobby picker (built for a person's profile, where they may work
+  // in several hobbies) would have had nothing to add.
   const spaceHobbyKey = `space:${hobby.slug}`;
   const exploringSpace = social.isFollowingHobby(spaceHobbyKey);
   const toggleExploreSpace = () => social.toggleHobbyFollow(spaceHobbyKey, hobby.shortName);
