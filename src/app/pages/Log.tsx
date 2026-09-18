@@ -622,10 +622,14 @@ export function Log() {
   const openProjects = journal.projects.filter(
     (p) => !p.finishedAt || p.id === initialPursuitId,
   );
-  // What the post is about, in the person's own words where they gave them.
-  const tagLabel =
-    interest.trim() ||
-    (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : hobby.shortName);
+  // What the post is about, in the person's own words where they gave them —
+  // the open tags the person actually typed (TagsField) take priority over
+  // hobby.shortName, which is just whichever Space happens to be selected
+  // and was never itself a claim about what the Moment is about. `null`
+  // (never a hobby-flavored guess) when nothing was actually chosen — the
+  // callers below fall back to a neutral, honest default instead.
+  const tagLabel: string | null =
+    tags[0] || interest.trim() || (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : null);
 
   /** Whatever the camera screen produced — a live capture, a recent pick, or
    * a single fresh library file — always lands here the same way. */
@@ -663,7 +667,7 @@ export function Log() {
       }).id;
     }
     const result = await addPrivateLog({
-      note: note || `A ${tagLabel.toLowerCase()} moment`,
+      note: note || (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment"),
       projectId: linkTo || undefined,
       // The picture is the point of a wordless capture. It used to be dropped
       // here and replaced with a generated placeholder, which read as the app
@@ -724,7 +728,7 @@ export function Log() {
     try {
       const caption =
         [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
-        `A ${tagLabel.toLowerCase()} moment`;
+        (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment");
 
       const entry = await addPost({
         hobbySlug,
