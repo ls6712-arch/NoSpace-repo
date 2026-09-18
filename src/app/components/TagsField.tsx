@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { bestMatch, normalize } from "../lib/tagMatching";
 import { useKnownTags } from "./useKnownTags";
 import { Input } from "./ui/input";
@@ -25,14 +26,22 @@ export function TagsField({
   id = "tags",
   placeholder = "Add tags — pottery, sourdough, bouldering…",
   max = MAX_TAGS,
+  chipLayoutIdPrefix,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
   id?: string;
   placeholder?: string;
   max?: number;
+  /** When set, each chip gets a Motion `layoutId` of `${prefix}${tag}` so it
+   * can visibly travel into another mount point elsewhere in the same
+   * layout group (onboarding's tags carrying forward into later steps).
+   * Omitted everywhere else — the ordinary composer usage stays a plain,
+   * unanimated span. */
+  chipLayoutIdPrefix?: string;
 }) {
   const known = useKnownTags();
+  const reduceMotion = useReducedMotion();
   const [draft, setDraft] = useState("");
   const [focused, setFocused] = useState(false);
 
@@ -80,22 +89,27 @@ export function TagsField({
           focused ? "border-[var(--coral-deep)]" : ""
         }`}
       >
-        {value.map((tag) => (
-          <span
-            key={tag}
-            className="flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1 text-xs"
-          >
-            {tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tag)}
-              aria-label={`Remove tag ${tag}`}
-              className="text-muted-foreground transition-colors hover:text-foreground"
+        {value.map((tag) => {
+          const Chip = chipLayoutIdPrefix ? motion.span : "span";
+          return (
+            <Chip
+              key={tag}
+              layout={chipLayoutIdPrefix && !reduceMotion ? true : undefined}
+              layoutId={chipLayoutIdPrefix && !reduceMotion ? `${chipLayoutIdPrefix}${tag}` : undefined}
+              className="flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1 text-xs"
             >
-              <X className="size-3" />
-            </button>
-          </span>
-        ))}
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                aria-label={`Remove tag ${tag}`}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="size-3" />
+              </button>
+            </Chip>
+          );
+        })}
         {!atCap && (
           <input
             id={id}
