@@ -196,9 +196,9 @@ export function Header() {
                   aria-current={active ? "page" : undefined}
                   className={
                     item.accent
-                      ? "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm [background-image:var(--gradient-brand)] text-white shadow-[0_0_0_1px_rgba(166,108,255,0.3),0_8px_20px_-8px_rgba(166,108,255,0.55)] transition-[filter] hover:brightness-110"
+                      ? "flex items-center gap-1.5 rounded-btn bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
                       : `relative py-1 text-sm transition-colors ${
-                          active ? "text-[var(--violet-electric-bright)]" : "text-foreground/75 hover:text-foreground"
+                          active ? "text-accent" : "text-foreground/75 hover:text-foreground"
                         }`
                   }
                 >

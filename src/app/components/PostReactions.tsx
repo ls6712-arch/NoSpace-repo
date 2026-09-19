@@ -85,6 +85,21 @@ function toggle(postId: string | number, reaction: ReactionId) {
 }
 
 /**
+ * The same state PostReactions itself reads and writes, for a call site
+ * that needs its own markup (My Space's Moment panel: flat small-caps text
+ * labels, not pill buttons) without forking the underlying store — a
+ * reaction toggled from either place is the same reaction.
+ */
+export function useReactionState(postId: string | number) {
+  const mine = useSyncExternalStore(
+    subscribe,
+    useCallback(() => getFor(postId), [postId]),
+    () => NONE,
+  );
+  return { mine, toggle: (reaction: ReactionId) => toggle(postId, reaction) };
+}
+
+/**
  * The reusable row. Drop it under any post — moment, community, hobby
  * content — and it works, with no wiring at the call site beyond the post id.
  *
