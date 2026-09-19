@@ -22,10 +22,11 @@ function greeting(name: string): string {
 }
 
 /**
- * docs/my-space-spec.md's grid page — behind a temporary flag
- * (MySpace.tsx) until Stages 2-6 are all in. Stage 2: shell + contact
- * sheet. The Moment panel and Shelf/Circles rail below are placeholders,
- * built out in Stages 3-4.
+ * docs/my-space-spec.md's grid page. Nav below lg: this app already has a
+ * working "reach every section on a small screen" answer — the global
+ * BottomTabBar (Root.tsx, every page) — so this doesn't also build the
+ * spec's hamburger-menu nav on top of it; flagged as a deliberate deviation
+ * rather than doubling up on navigation chrome.
  */
 export function MySpaceGrid() {
   const { user, profile } = useAuth();
@@ -84,29 +85,41 @@ export function MySpaceGrid() {
     month: "long",
   }).toUpperCase();
 
+  const numeral =
+    shown.length === 0
+      ? "00–00"
+      : `${String(1).padStart(2, "0")}–${String(shown.length).padStart(2, "0")}`;
+
   return (
-    <div className="myspace-shell px-4 py-6 lg:px-8">
-      <header className="myspace-header mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-hairline pb-5">
-        <div>
-          <p className="ns-section-kicker text-gold">{dateEyebrow}</p>
-          <h1
-            className="mt-1 text-[clamp(1.75rem,4vw,2.5rem)] leading-tight"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            {greeting(profile?.display_name ?? "there")}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {unseen.length} Moment{unseen.length === 1 ? "" : "s"} from the people and Spaces you follow.
-          </p>
+    <div className="myspace-shell px-4 py-6 sm:px-5 lg:px-8">
+      <header className="myspace-header mb-6 border-b border-hairline pb-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="ns-section-kicker text-gold">{dateEyebrow}</p>
+            <h1
+              className="mt-1 text-[clamp(1.75rem,4vw,2.5rem)] leading-tight"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              {greeting(profile?.display_name ?? "there")}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {unseen.length} Moment{unseen.length === 1 ? "" : "s"} from the people and Spaces you follow.
+            </p>
+          </div>
+          {/* Numeral in foreground, not accent — docs/my-space-spec.md
+              section 1 explicitly overrides the mockup's warmer-looking
+              numeral. lg+ only here; below lg it moves under the subtitle
+              on one line instead (just below). */}
+          <div className="hidden text-right text-foreground lg:block">
+            <p className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              {numeral}
+            </p>
+            <p className="ns-section-kicker text-muted-foreground">TODAY'S SHEET</p>
+          </div>
         </div>
-        {/* Numeral in foreground, not accent — docs/my-space-spec.md section 1
-            explicitly overrides the mockup's warmer-looking numeral. */}
-        <div className="text-right text-foreground">
-          <p className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-            {String(Math.min(shown.length, 1)).padStart(2, "0")}–{String(shown.length).padStart(2, "0")}
-          </p>
-          <p className="ns-section-kicker text-muted-foreground">TODAY'S SHEET</p>
-        </div>
+        <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
+          {numeral} · TODAY'S SHEET
+        </p>
       </header>
 
       <div className="myspace-body">
@@ -121,7 +134,7 @@ export function MySpaceGrid() {
           />
         </div>
 
-        <div className="myspace-moment">
+        <div className="myspace-moment mt-8 lg:mt-0">
           {selected ? (
             <MomentPanel post={selected} />
           ) : (
@@ -131,10 +144,16 @@ export function MySpaceGrid() {
           )}
         </div>
 
-        <div className="myspace-rail space-y-8">
-          <ShelfRail />
-          <PursuitsRail pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
-          <CirclesRail />
+        <div className="myspace-rail mt-8 lg:mt-0">
+          <div className="myspace-rail-shelf">
+            <ShelfRail />
+          </div>
+          <div className="myspace-rail-pursuits">
+            <PursuitsRail pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
+          </div>
+          <div className="myspace-rail-circles">
+            <CirclesRail />
+          </div>
         </div>
       </div>
     </div>

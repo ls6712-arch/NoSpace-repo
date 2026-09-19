@@ -102,8 +102,11 @@ export function MomentPanel({ post }: { post: Post }) {
         )}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-        <ul className="flex flex-wrap gap-x-5 gap-y-2">
+      <div className="mt-5 border-t border-border pt-4">
+        {/* Phone: three equal-width reaction buttons on their own row,
+            Bookmark + OPEN on a second row. Tablet and up: all one row, as
+            in the mockup. */}
+        <ul className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-2">
           {REACTIONS.map(({ id, label }) => {
             const pressed = mine.includes(id);
             return (
@@ -113,7 +116,7 @@ export function MomentPanel({ post }: { post: Post }) {
                   aria-pressed={pressed}
                   onClick={() => toggle(id)}
                   className={
-                    "ns-section-kicker flex min-h-11 items-center transition-colors " +
+                    "ns-section-kicker flex min-h-11 w-full items-center justify-center transition-colors sm:w-auto sm:justify-start " +
                     (pressed ? "text-accent" : "text-muted-foreground hover:text-foreground")
                   }
                 >
@@ -123,7 +126,7 @@ export function MomentPanel({ post }: { post: Post }) {
             );
           })}
         </ul>
-        <div className="flex items-center gap-4">
+        <div className="mt-3 flex items-center justify-end gap-4 sm:mt-0 sm:justify-normal">
           <button
             type="button"
             aria-pressed={saved}

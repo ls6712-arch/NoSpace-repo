@@ -1,7 +1,10 @@
 /* My Space grid shell — docs/my-space-spec.md section 1.
    The global nav (Header.tsx) is h-16 (4rem), sticky, rendered once by
-   Root.tsx above every page — not rebuilt here. Everything below is scoped
-   under .myspace-shell so it can't leak into any other page. */
+   Root.tsx above every page — not rebuilt here (see the redesign/my-space
+   commit notes on why). Everything below is scoped under .myspace-shell so
+   it can't leak into any other page. Mobile-first: base rules are the
+   phone/tablet layout, min-width media queries progressively take over for
+   lg and up. */
 
 .myspace-shell {
   min-height: calc(100dvh - 4rem);
@@ -11,10 +14,6 @@
   flex-shrink: 0;
 }
 
-/* Below lg: a plain single-column stack for now (Stage 5 builds the real
-   responsive behavior — strip contact sheet, 2-col rail, phone nav). This
-   keeps the new page usable, not broken, at narrower widths in the
-   meantime. */
 .myspace-body {
   display: block;
 }
@@ -23,6 +22,69 @@
 .myspace-moment,
 .myspace-rail {
   min-width: 0;
+}
+
+/* Below lg: rail is a plain stacked column, Pursuits first (this app's most
+   useful thing to see right after the feed — docs/my-space-spec.md section
+   1's base/sm row). CSS `order` moves it visually; DOM order stays
+   Shelf/Pursuits/Circles, so tab order doesn't quite track visual order at
+   this width — a known, flagged trade-off rather than a JS-driven
+   conditional render just for that. */
+.myspace-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.myspace-rail-pursuits {
+  order: -1;
+}
+
+/* Contact sheet: horizontal snap strip below lg, a hairline-divided list at
+   lg+ (the Frame component itself switches width/layout via Tailwind
+   responsive classes; this file only handles the scroller chrome). */
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.myspace-sheet-fade {
+  background: linear-gradient(to right, transparent, var(--background));
+}
+
+/* md (768–1023): tablet. Single column, whole page scrolls (no independent
+   scroll areas yet — those start at lg). Moment panel gets its own max
+   width, centered. Rail becomes a 2-column grid: [Shelf + Circles] | [Pursuits]. */
+@media (min-width: 768px) {
+  .myspace-moment {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .myspace-rail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "shelf pursuits" "circles pursuits";
+    gap: 24px;
+  }
+
+  .myspace-rail-shelf {
+    grid-area: shelf;
+    order: 0;
+  }
+
+  .myspace-rail-pursuits {
+    grid-area: pursuits;
+    order: 0;
+  }
+
+  .myspace-rail-circles {
+    grid-area: circles;
+    order: 0;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -51,13 +113,24 @@
   .myspace-moment {
     grid-area: moment;
     overflow-y: auto;
+    max-width: none;
+    margin-inline: 0;
   }
 
   .myspace-rail {
     grid-area: rail;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
     overflow-y: auto;
     border-left: 1px solid var(--hairline);
     padding-left: 24px;
+  }
+
+  .myspace-rail-pursuits,
+  .myspace-rail-shelf,
+  .myspace-rail-circles {
+    order: 0;
   }
 
   .myspace-caption {
