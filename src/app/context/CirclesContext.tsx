@@ -79,6 +79,23 @@ interface CirclesContextType {
   createCircle: (input: NewCircleInput) => Promise<{ circle: Circle | null; error: string | null }>;
   joinRealCircle: (id: number) => Promise<{ error: string | null }>;
   leaveRealCircle: (id: number) => Promise<{ error: string | null }>;
+  /**
+   * Admin only (sql/circles-admin.sql). What still points at a real Circle.
+   * The server refuses anyone who isn't an admin, so calling this from a
+   * non-admin account just returns an error.
+   */
+  circleUsage: (
+    id: number,
+  ) => Promise<{ error: string | null; usage?: { members: number; invites: number; threads: number } }>;
+  /**
+   * Admin only. Deletes a real Circle. `threads` decides what happens to what
+   * was posted in it: keep_private turns each thread into its author's own
+   * owner-only post; delete removes them. Nothing is ever made public.
+   */
+  adminDeleteCircle: (
+    id: number,
+    threads: "keep_private" | "delete",
+  ) => Promise<{ error: string | null; result?: { threads: number; invites: number } }>;
   loading: boolean;
 }
 
@@ -295,6 +312,49 @@ export function CirclesProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
+  const circleUsage: CirclesContextType["circleUsage"] = async (id) => {
+    if (!supabase || !user) return { error: "Sign in first." };
+    if (!isRealCircle(id)) return { error: "Demo Circles are built into the app; there's nothing to check." };
+    try {
+      const { data, error } = await supabase.rpc("circle_usage", { p_id: id - REAL_CIRCLE_ID_OFFSET });
+      if (error) {
+        return {
+          error: /function .* does not exist/i.test(error.message)
+            ? "Run sql/circles-admin.sql in Supabase first."
+            : error.message,
+        };
+      }
+      const u = (data ?? {}) as any;
+      return {
+        error: null,
+        usage: {
+          members: Number(u.members ?? 0),
+          invites: Number(u.invites ?? 0),
+          threads: Number(u.threads ?? 0),
+        },
+      };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
+  const adminDeleteCircle: CirclesContextType["adminDeleteCircle"] = async (id, threads) => {
+    if (!supabase || !user) return { error: "Sign in first." };
+    if (!isRealCircle(id)) return { error: "Demo Circles are built into the app and can't be deleted here." };
+    try {
+      const { data, error } = await supabase.rpc("admin_delete_circle", {
+        p_id: id - REAL_CIRCLE_ID_OFFSET,
+        p_threads: threads,
+      });
+      if (error) return { error: error.message };
+      await refresh();
+      const r = (data ?? {}) as any;
+      return { error: null, result: { threads: Number(r.threads ?? 0), invites: Number(r.invites ?? 0) } };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
   return (
     <CirclesContext.Provider
       value={{
@@ -308,6 +368,8 @@ export function CirclesProvider({ children }: { children: ReactNode }) {
         createCircle,
         joinRealCircle,
         leaveRealCircle,
+        circleUsage,
+        adminDeleteCircle,
         loading,
       }}
     >
