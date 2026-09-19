@@ -31,6 +31,21 @@ export async function fetchFollowerCount(profileId: string): Promise<number> {
   return count;
 }
 
+/** Every profile id `userId` follows and is accepted by — the "people you
+ * follow" dimension My Space's contact sheet needs (docs/my-space-spec.md
+ * section 2). No bulk version of this existed before; fetchFollowStatus
+ * above only ever checked one profile at a time. */
+export async function fetchFollowingIds(userId: string): Promise<string[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("profile_follows")
+    .select("followed_id")
+    .eq("follower_id", userId)
+    .eq("status", "accepted");
+  if (error || !data) return [];
+  return data.map((row) => row.followed_id as string);
+}
+
 export async function fetchFollowStatus(viewerId: string, profileId: string): Promise<FollowStatus> {
   if (!supabase) return "none";
   const { data } = await supabase

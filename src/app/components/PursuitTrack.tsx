@@ -5,6 +5,7 @@ import { Project, goalProgressText } from "../lib/journal";
 import { getHobby } from "../data/hobbies";
 import { lastMomentText, pursuitMoments, startedText, TrailMoment } from "../lib/pursuitTrail";
 import { isOnlyYou } from "../lib/visibility";
+import { firstWords } from "../lib/text";
 import { MomentDetail } from "./MomentDetail";
 
 /** {SPACE} for the meta line — a real Space, a made-up one, or free-text interest. */
@@ -15,12 +16,6 @@ function spaceLabel(pursuit: Project): string {
 
 function shortDate(ms: number): string {
   return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function firstWords(caption: string, n = 6): string {
-  const words = caption.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "No caption.";
-  return words.slice(0, n).join(" ") + (words.length > n ? "…" : "");
 }
 
 /**

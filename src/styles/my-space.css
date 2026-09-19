@@ -1,0 +1,84 @@
+/* My Space grid shell — docs/my-space-spec.md section 1.
+   The global nav (Header.tsx) is h-16 (4rem), sticky, rendered once by
+   Root.tsx above every page — not rebuilt here. Everything below is scoped
+   under .myspace-shell so it can't leak into any other page. */
+
+.myspace-shell {
+  min-height: calc(100dvh - 4rem);
+}
+
+.myspace-header {
+  flex-shrink: 0;
+}
+
+/* Below lg: a plain single-column stack for now (Stage 5 builds the real
+   responsive behavior — strip contact sheet, 2-col rail, phone nav). This
+   keeps the new page usable, not broken, at narrower widths in the
+   meantime. */
+.myspace-body {
+  display: block;
+}
+
+.myspace-sheet,
+.myspace-moment,
+.myspace-rail {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .myspace-shell {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 4rem);
+  }
+
+  .myspace-body {
+    display: grid;
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: 260px minmax(0, 1fr) 280px;
+    grid-template-areas: "sheet moment rail";
+    column-gap: 24px;
+  }
+
+  .myspace-sheet {
+    grid-area: sheet;
+    overflow-y: auto;
+    border-right: 1px solid var(--hairline);
+    padding-right: 24px;
+  }
+
+  .myspace-moment {
+    grid-area: moment;
+    overflow-y: auto;
+  }
+
+  .myspace-rail {
+    grid-area: rail;
+    overflow-y: auto;
+    border-left: 1px solid var(--hairline);
+    padding-left: 24px;
+  }
+
+  .myspace-caption {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .myspace-body {
+    grid-template-columns: 300px minmax(0, 1fr) 320px;
+    column-gap: 32px;
+  }
+
+  .myspace-caption {
+    font-size: 1.375rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .myspace-shell {
+    max-width: 1600px;
+    margin-inline: auto;
+  }
+}

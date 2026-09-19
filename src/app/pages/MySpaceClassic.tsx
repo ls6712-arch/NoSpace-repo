@@ -1,0 +1,436 @@
+import { useState } from "react";
+import { Link } from "react-router";
+import { ArrowRight, Bookmark, PenLine, Sparkles, Sprout } from "lucide-react";
+import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { circles } from "../data/circles";
+import { Post } from "../data/posts";
+import { useContent } from "../context/ContentContext";
+import { daysSince, projectProgress, toggleSaved, useJournal } from "../lib/journal";
+import { PursuitsRail } from "../components/PursuitsRail";
+import { useSocial } from "../context/SocialContext";
+import { ContentCard } from "../components/ContentCard";
+import { PostMedia } from "../components/PostMedia";
+import { PursuitCard } from "../components/PursuitCard";
+import { PursuitDialog } from "../components/PursuitDialog";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Button } from "../components/ui/button";
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+/**
+ * One saved idea, in "Ready When You Are" — the creation itself, not a
+ * hobby tile: its own photo, a Space label as metadata, the maker's own
+ * caption and name, and one clear way to go start it. Tapping the bookmark
+ * again removes it from Try This; there's no due date or streak anywhere
+ * near it.
+ */
+function TryThisCard({ post, onStart }: { post: Post; onStart: (post: Post) => void }) {
+  const hobby = getHobby(post.hobbySlug);
+
+  return (
+    <div className="w-64 shrink-0 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="relative">
+        <PostMedia
+          media={post.media}
+          type={post.type}
+          hobbySlug={post.hobbySlug}
+          seed={post.id}
+          preview
+          className="aspect-[4/5] w-full"
+        />
+        {hobby && (
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--void)]/55 px-2.5 py-1 text-[10px] text-white backdrop-blur-md">
+            {hobby.shortName}
+          </span>
+        )}
+        <button
+          type="button"
+          aria-pressed={true}
+          title="Added to your Space (tap to remove)"
+          aria-label="Remove from Try This"
+          onClick={() => toggleSaved(post.id)}
+          className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
+        >
+          <Bookmark className="size-4" strokeWidth={1.9} style={{ color: "white", fill: "white" }} />
+        </button>
+      </div>
+      <div className="p-3">
+        <p className="mb-2 line-clamp-2 text-sm text-foreground/90">{post.caption}</p>
+        {post.userId ? (
+          <Link
+            to={`/u/${encodeURIComponent(post.userId)}`}
+            className="mb-3 flex min-w-0 items-center gap-2 transition-colors hover:text-[var(--coral-text)]"
+          >
+            <Avatar className="size-6 shrink-0">
+              <AvatarFallback className="text-[9px]">{initials(post.creator)}</AvatarFallback>
+            </Avatar>
+            <span className="truncate text-xs text-muted-foreground">{post.creator}</span>
+          </Link>
+        ) : (
+          <div className="mb-3 flex items-center gap-2">
+            <Avatar className="size-6 shrink-0">
+              <AvatarFallback className="text-[9px]">{initials(post.creator)}</AvatarFallback>
+            </Avatar>
+            <span className="truncate text-xs text-muted-foreground">{post.creator}</span>
+          </div>
+        )}
+        <Button variant="coral" size="sm" className="w-full" onClick={() => onStart(post)}>
+          <Sparkles className="size-3.5" />
+          Create Your Pursuit
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * My Space is continuity, not consumption. It answers "what's happened in my
+ * corner of Sushii, and what was I in the middle of?" — which is why the
+ * first thing under the fold is your own unfinished work, not other people's
+ * finished work.
+ *
+ * Deliberately not called a feed, and deliberately finite: every module has a
+ * bounded number of items and a way out of the page.
+ */
+function Section({
+  title,
+  copy,
+  action,
+  children,
+}: {
+  title: string;
+  copy?: string;
+  action?: { label: string; to: string };
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mb-11">
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+            {title}
+          </h2>
+          {copy && <p className="mt-1 text-sm text-muted-foreground">{copy}</p>}
+        </div>
+        {action && (
+          <Link
+            to={action.to}
+            className="shrink-0 text-xs text-[var(--coral-text)] hover:underline"
+          >
+            {action.label} →
+          </Link>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Empty({ children, to, cta }: { children: React.ReactNode; to: string; cta: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
+      <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">{children}</p>
+      <Link to={to} className="mt-4 inline-block">
+        <Button variant="outline" size="sm">
+          {cta}
+        </Button>
+      </Link>
+    </div>
+  );
+}
+
+export function MySpaceClassic() {
+  const { publicFeed, posts, isCircleJoined } = useContent();
+  const journal = useJournal();
+  const social = useSocial();
+  const [pursuitDialog, setPursuitDialog] = useState<{ open: boolean; seedPost: Post | null }>({
+    open: false,
+    seedPost: null,
+  });
+
+  const exploring = new Set(social.followedHobbies);
+  const joinedCircles = circles.filter((c) => isCircleJoined(c.id));
+  const joinedSpaces = new Set(joinedCircles.map((c) => c.hobbySlug));
+
+  // "Today" means the makers and Circles you actually chose. If you've chosen
+  // nobody yet, it falls back to the spaces your Circles live in rather than
+  // pretending an algorithm knows you.
+  // What you chose is a set of hobbies and Circles — never a set of people.
+  // A hobby you typed yourself is followed as "interest:<lowercased>", and
+  // matches posts whose own free-text interest says the same thing.
+  const ownInterests = new Set(
+    [...exploring].filter((k) => k.startsWith("interest:")).map((k) => k.slice(9)),
+  );
+  const chosen = publicFeed.filter(
+    (p) =>
+      (p.subHobby && exploring.has(p.subHobby)) ||
+      exploring.has(`space:${p.hobbySlug}`) ||
+      (p.interest && ownInterests.has(p.interest.trim().toLowerCase())) ||
+      joinedSpaces.has(p.hobbySlug),
+  );
+  // Before you've followed anyone or joined anything there is nothing personal
+  // to show. Rather than an empty page or a fake "for you", it shows recent
+  // work from across Sushii and says plainly that's what it is.
+  const hasChosen = chosen.length > 0;
+  const today = (hasChosen ? chosen : publicFeed).slice(0, 6);
+
+  const fromCircles = posts
+    .filter((p) => p.visibility === "circle" && p.circleId && isCircleJoined(p.circleId))
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, 4);
+
+  const exploringWork = publicFeed
+    .filter((p) => (p.subHobby && exploring.has(p.subHobby)) || exploring.has(`space:${p.hobbySlug}`))
+    .slice(0, 4);
+
+  const savedWork = journal.saved
+    .map((id) => posts.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => !!p)
+    .slice(0, 10);
+
+  const myPursuits = journal.projects.filter((p) => !p.finishedAt);
+  // "Hasn't moved" means since its last actual update, not since it started —
+  // daysSince's own doc comment says as much ("drives the gentle nudge on My
+  // Space"), but this used to sort/measure by startedAt, so a Pursuit updated
+  // daily could get nudged (oldest startedAt) while a genuinely neglected,
+  // more-recently-started one never did.
+  const lastMoved = (p: (typeof myPursuits)[number]) =>
+    projectProgress(journal.entryProject, posts, p.id).lastUpdatedAt ?? p.startedAt;
+  const nudge = [...myPursuits].sort((a, b) => lastMoved(a) - lastMoved(b))[0];
+  const nudgeDays = nudge ? daysSince(lastMoved(nudge)) : 0;
+
+  return (
+    <div className="ns-myspace-page min-h-screen bg-surface py-10 sm:py-14">
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="ns-myspace-masthead mb-10">
+          <div>
+            <div className="ns-section-kicker mb-3">YOUR SPOT IN THE CLUBHOUSE</div>
+            <h1 className="text-[clamp(2.8rem,6vw,5rem)] leading-[.9] tracking-[-.04em]" style={{ fontFamily: "var(--font-serif)" }}>
+              My Space
+            </h1>
+          </div>
+          <div className="ns-myspace-mark hidden sm:block">KEEP MAKING<br /><span>NO. 02</span></div>
+        </div>
+
+        {/* Ready When You Are — the ideas you already said yes to, put where
+            picking one back up is the first thing you see. The saved
+            creation itself is the point, not a hobby tile standing in for
+            it; the Space is just a small label on the card. */}
+        <div className="ns-myspace-tryhis mb-12">
+          <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+            Ready When You Are
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A few ideas worth making time for.
+          </p>
+
+          <div className="mt-4">
+            {savedWork.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
+                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+                  Nothing here yet. When something makes you want to try it, tap Try This.
+                </p>
+              </div>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {savedWork.map((post) => (
+                  <TryThisCard
+                    key={post.id}
+                    post={post}
+                    onStart={(p) => setPursuitDialog({ open: true, seedPost: p })}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* My Pursuits — the things you're bringing to life, right under the
+            ideas that might become one. A Pursuit needs nothing but a name;
+            interest and Space are metadata on the card, never a form you
+            have to fill out to get started. */}
+        <div className="ns-myspace-pursuits mb-12">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              My Pursuits
+            </h2>
+            <Button variant="outline" size="sm" onClick={() => setPursuitDialog({ open: true, seedPost: null })}>
+              <Sparkles className="size-3.5" />
+              Create Your Pursuit
+            </Button>
+          </div>
+          <p className="mb-4 text-sm text-muted-foreground">The things you're bringing to life.</p>
+
+          {myPursuits.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
+              <p className="mx-auto mb-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                Nothing yet. A Pursuit is just a thing you're working toward: learn pottery, learn to
+                DJ, learn bookbinding — name it and it's real.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => setPursuitDialog({ open: true, seedPost: null })}>
+                Create Your Pursuit
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {myPursuits.map((pursuit) => (
+                <PursuitCard
+                  key={pursuit.id}
+                  pursuit={pursuit}
+                  owner
+                  inspirationPost={
+                    pursuit.inspiredByPostId
+                      ? posts.find((p) => p.id === pursuit.inspiredByPostId)
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="ns-myspace-today mb-12">
+          <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+            Today in your space
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            New work from the hobbies and Circles you're part of.
+          </p>
+
+          {!hasChosen && (
+            <p className="mt-3 rounded-xl border border-[var(--hairline)] bg-card px-4 py-2.5 text-xs leading-relaxed text-muted-foreground">
+              You aren't exploring any hobbies or Circles yet, so this is recent
+              work from across Sushii. Once you pick some, only those appear here.
+            </p>
+          )}
+
+          <div className="mt-4">
+            {today.length === 0 ? (
+              <Empty to="/discover" cta="Find makers to follow">
+                Quiet so far. Follow a few makers or join a Circle and their new
+                work turns up here. Nothing else gets in.
+              </Empty>
+            ) : (
+              <div className="ns-myspace-feed grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {today.map((post) => (
+                  <ContentCard key={post.id} post={post} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* The nudge — one, gentle, and only when it's actually true. */}
+        {nudge && nudgeDays >= 7 && (
+          <div className="mb-11 flex items-center gap-4 rounded-2xl border border-border bg-[color-mix(in_srgb,var(--yellow)_14%,var(--surface))] px-5 py-4">
+            <Sprout className="size-5 shrink-0 text-foreground" />
+            <p className="text-sm">
+              <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+                {nudge.title}
+              </strong>{" "}
+              hasn't moved in {nudgeDays} days. Even a photo counts as an update.
+            </p>
+            <Link to="/create" className="ml-auto shrink-0">
+              <Button variant="coral" size="sm">
+                Add an update
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        <Section
+          title="From your Circles"
+          copy="Work shared inside the Circles you've joined."
+          action={{ label: "All Circles", to: "/circles" }}
+        >
+          {joinedCircles.length === 0 ? (
+            <Empty to="/circles" cta="Browse Circles">
+              You haven't joined a Circle yet. Circles are small groups built
+              around doing a thing together: a skill level, a city, a project.
+            </Empty>
+          ) : fromCircles.length === 0 ? (
+            <div className="ns-myspace-circle-links grid gap-2 sm:grid-cols-2">
+              {joinedCircles.slice(0, 4).map((circle) => (
+                <Link
+                  key={circle.id}
+                  to="/circles"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                      {circle.name}
+                    </span>
+                    <span className="mt-1 block text-[11px] text-muted-foreground">
+                      This week: what are you working on?
+                    </span>
+                  </span>
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="ns-myspace-feed grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {fromCircles.map((post) => (
+                <ContentCard key={post.id} post={post} label="Circle" />
+              ))}
+            </div>
+          )}
+        </Section>
+
+        <Section
+          title="Hobbies you're exploring"
+          copy="New work in the hobbies you chose to keep up with."
+          action={{ label: "Manage", to: "/you" }}
+        >
+          {exploringWork.length === 0 ? (
+            <Empty to="/discover" cta="Find a hobby">
+              Keep exploring attaches you to a hobby rather than a person, so
+              you see the craft develop, not somebody's posting habits.
+            </Empty>
+          ) : (
+            <div className="ns-myspace-feed grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {exploringWork.map((post) => (
+                <ContentCard key={post.id} post={post} />
+              ))}
+            </div>
+          )}
+        </Section>
+
+        <section className="mb-11">
+          <PursuitsRail pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
+        </section>
+
+        <div className="flex flex-wrap items-center justify-center gap-3 rounded-3xl border border-border bg-card px-6 py-9 text-center">
+          <p className="w-full text-sm text-muted-foreground">
+            That's everything new in your space. Nothing loads below this.
+          </p>
+          <Link to="/create">
+            <Button variant="coral">
+              <PenLine className="size-4" />
+              Create something
+            </Button>
+          </Link>
+          <Link to="/discover">
+            <Button variant="outline">
+              <Bookmark className="size-4" />
+              Explore a space
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <PursuitDialog
+        open={pursuitDialog.open}
+        seedPost={pursuitDialog.seedPost}
+        onOpenChange={(open) => setPursuitDialog((s) => ({ ...s, open }))}
+      />
+    </div>
+  );
+}
