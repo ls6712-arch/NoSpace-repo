@@ -351,6 +351,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-input-background: var(--input-background);
+  --color-input-border: var(--input-border);
+  --color-gold: var(--gold);
+  --color-gold-text: var(--gold-text);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
   --color-surface: var(--surface);
@@ -399,6 +402,15 @@
   --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
+  /* Redesign-brief scale (docs/CLAUDE-redesign-brief.md §1: "Radius 12px
+     cards, 8px buttons and inputs. Retire pill buttons and rounded-2xl/3xl")
+     — named tokens rather than retuning --radius itself, since that base
+     scale still drives every not-yet-restyled screen; retuning it directly
+     would ripple past this primitives pass into every rounded-xl/2xl/3xl
+     usage app-wide. Primitives restyled under Task B opt into these
+     explicitly (rounded-btn, rounded-card) instead. */
+  --radius-btn: 8px;
+  --radius-card: 12px;
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
