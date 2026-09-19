@@ -30,6 +30,7 @@ import { Pursuit } from "./pages/Pursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
+import { Settings } from "./pages/Settings";
 import { NotFound } from "./pages/NotFound";
 
 export const router = createHashRouter([
@@ -59,6 +60,7 @@ export const router = createHashRouter([
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },
+      { path: "settings", Component: Settings },
       { path: "onboarding", Component: Onboarding },
       { path: "inbox", Component: Inbox },
       // Messages was the old destination; Inbox subsumes it.
