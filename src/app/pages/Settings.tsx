@@ -2,6 +2,7 @@ import { useTheme, type ThemePreference } from "../context/ThemeContext";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Label } from "../components/ui/label";
 import { Separator } from "../components/ui/separator";
+import { SectionHeader } from "../components/ui/section-header";
 
 /**
  * The brief's Settings.tsx (section 4): one centered column, each section
@@ -49,10 +50,7 @@ function AppearanceSection() {
 
   return (
     <section>
-      <p className="ns-section-kicker mb-1 text-muted-foreground">1 · APPEARANCE</p>
-      <h2 className="mb-4 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-        Appearance
-      </h2>
+      <SectionHeader n={1} eyebrow="APPEARANCE" title="Appearance" />
       <RadioGroup
         value={preference}
         onValueChange={(v) => setPreference(v as ThemePreference)}
