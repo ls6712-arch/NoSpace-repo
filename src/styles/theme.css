@@ -38,21 +38,40 @@
      the contrast notes below). No neon, no violet glow: gradients are
      limited to soft image overlays, applied per screen as Task B visits it.
 
-     Contrast (WCAG AA — 4.5:1 body text, 3:1 large text/UI):
+     Contrast (WCAG AA — 4.5:1 body text, 3:1 large text/UI/non-text boundary):
        LIGHT  foreground/background   13.30:1 ✓✓   muted-foreground/background 5.30:1 ✓
               accent/background        5.48:1 ✓    accent-foreground/accent    5.82:1 ✓
               destructive/background   5.90:1 ✓    destructive-foreground/destructive 6.27:1 ✓
               gold/background          2.76:1 ✗ (decorative only — never as text/label color)
+              gold/card                 2.93:1 ✗ (same — decorative only)
+              gold-text/background      4.91:1 ✓    gold-text/card               5.21:1 ✓
+              input-border/background   3.50:1 ✓    input-border/card            3.72:1 ✓
        DARK   foreground/background   14.46:1 ✓✓   muted-foreground/background 6.20:1 ✓
               accent/background        4.62:1 ✓    accent-foreground/accent    4.62:1 ✓
               destructive/background   5.70:1 ✓    destructive-foreground/destructive 5.70:1 ✓
-              gold/background          7.58:1 ✓
-     The hairline/border tokens intentionally fall short of the 3:1 non-text
-     minimum in both themes (1.32:1 light, 1.42:1 dark) — a deliberately
-     faint divider, not a focus indicator or an input's sole boundary (those
-     already carry the 2px accent focus ring and a card/background fill
-     difference). Same trade-off the previous theme made with its own
-     color-mix hairline. */
+              gold/background          7.58:1 ✓    gold/card                    6.85:1 ✓
+              gold-text/background      7.58:1 ✓    gold-text/card                6.85:1 ✓ (= --gold; already clears AA text contrast, so gold-text just reuses it)
+              input-border/background   3.91:1 ✓    input-border/card            3.53:1 ✓
+     --gold stays decorative-only (icons, small dividers, non-text detail) —
+     it still fails AA text contrast in light. --gold-text is a separate,
+     darker-in-light token for any place gold is used as *text* (a label,
+     a link, a value) — same hue/saturation as --gold, just darkened enough
+     to clear 4.5:1 against both --background and --card, the two surfaces
+     it's ever likely to sit on. In dark, --gold already clears AA as text,
+     so --gold-text there is the same color as --gold.
+
+     --border stays the soft, low-contrast hairline for plain dividers
+     (1.32:1 light / 1.42:1 dark vs background — unchanged, deliberately
+     faint, never a control's sole boundary). --input-border is a separate,
+     higher-contrast token (≥3:1 against --card, which --input-background
+     resolves to) used only for input/textarea/select-trigger/unselected-
+     radio boundaries — the places WCAG 1.4.11 (non-text contrast) actually
+     applies, which a soft hairline was never enough for on its own (the
+     focus ring only appears once focused, not as a resting-state boundary).
+     --input is repointed at --input-border below (was --border) so every
+     component already reading --input/`border-input` — Input, Textarea,
+     Select's trigger, RadioGroupItem, the button outline variant — picks
+     this up automatically. */
   --background: #F6F1E7;
   --card: #FBF8F1;
   --foreground: #2B2622;
@@ -61,6 +80,8 @@
   --accent: #9A4A34;
   --accent-foreground: #FBF8F1;
   --gold: #B08D4A;
+  --gold-text: #7E6535;
+  --input-border: #957D50;
   --destructive: #A13A2E;
   --destructive-foreground: #FBF8F1;
 
@@ -165,7 +186,7 @@
   --secondary: var(--surface-muted);
   --secondary-foreground: var(--foreground);
   --muted: var(--surface-muted);
-  --input: var(--border);
+  --input: var(--input-border);
   --input-background: var(--card);
   --switch-background: color-mix(in srgb, var(--muted-foreground) 22%, transparent);
   --font-weight-medium: 500;
@@ -237,6 +258,8 @@
   --accent: #C8674D;
   --accent-foreground: #1C1816;
   --gold: #C9A55E;
+  --gold-text: #C9A55E;
+  --input-border: #847462;
   --destructive: #D9776A;
   --destructive-foreground: #1C1816;
   --surface-elevated: #2E2822;
@@ -293,7 +316,8 @@
   --popover: var(--paper-raised);
   --popover-foreground: var(--ink);
   --cream: var(--paper-raised);
-  --input: var(--line);
+  --input-border: #967D4A; /* ≥3:1 vs --paper-raised, same hue/sat family as --line */
+  --input: var(--input-border);
   --input-background: var(--paper-raised);
 
   color: var(--ink);
