@@ -1,0 +1,22 @@
+-- Storage hardening: closes the ability to list/query every object in the
+-- post-media bucket via the API, while leaving getPublicUrl() links
+-- working. Draft only.
+--
+-- Confirmed by grepping all of src/ (`.storage.`, `.list(`, `.download(`,
+-- `createSignedUrl`) that the app never calls .list(), .download(), or
+-- createSignedUrl against post-media — every read goes through
+-- getPublicUrl(), in exactly three places (AvatarPicker.tsx,
+-- SocialContext.tsx, ContentContext.tsx). getPublicUrl() resolves to the
+-- bucket's dedicated public object endpoint, which is gated by the
+-- bucket's own `public = true` flag, not by this RLS policy — so dropping
+-- the policy below should not affect any of those three call sites.
+--
+-- What this closes: the current SELECT policy on storage.objects for this
+-- bucket ("post-media files are publicly readable", qual: bucket_id =
+-- 'post-media') has no per-folder scoping at all, unlike the write
+-- policies (which all check (storage.foldername(name))[1] = auth.uid()).
+-- That means the storage list/query API — a different code path from the
+-- public object endpoint — can enumerate every object in the entire
+-- bucket, for anyone, not just their own folder. The UUID-prefixed naming
+-- looks private but isn't, because of this.
+drop policy if exists "post-media files are publicly readable" on storage.objects;

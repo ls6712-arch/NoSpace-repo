@@ -3,6 +3,15 @@
 Written per request, alongside the pause/deletion RLS work. Nothing in this
 document has been applied — no bucket created, no code changed.
 
+**Scope decision:** the bucket and the real upload path (replacing the
+`createObjectURL` blob URL in `saveAsPrivateLog`) ship as **one task**.
+There is no interim step where private photos upload to `post-media` and
+move later — that would mean a real private photo sat in the public
+bucket, readable by anyone with the URL, for however long the interim
+lasted. Not doing that. Until this task ships, private entries stay
+text-only for photos (see the interim composer behavior below), rather
+than silently losing an attached photo or briefly exposing it publicly.
+
 ## Object name predictability (asked directly)
 
 Path shape, from `storage.objects`:
@@ -59,6 +68,28 @@ current writer either — nothing today can ever produce a `posts` row with
 `visibility = 'private'` through normal use. That migration is still
 correct to have (it's what a future rewrite of the composer would need),
 just worth knowing it's currently inert.
+
+## Interim composer behavior (ships now, ahead of the bucket work)
+
+Today, attaching a photo to a private entry (either "Reflect privately"
+mode, or picking "Only you" as the audience on an ordinary Moment) fails
+**silently** — the entry saves, the photo looks attached in the UI at that
+moment, and it's gone forever the next time the app loads, with no error
+and nothing in the database pointing at the loss. That's the specific
+thing to stop before the real fix ships. Proposed, scoped as pure frontend
+UX (no upload code, no bucket, ships independently and immediately):
+
+- When `saveAsPrivateLog()` is about to run with a photo attached
+  (`filePreviewUrls[0]` set), interrupt with a confirmation instead of
+  saving straight through: *"Photos in private entries aren't saved yet —
+  this one won't be here next time you open the app. Save the note without
+  it, or go back and remove the photo?"* — two explicit choices (save
+  text-only / go back), no silent third option.
+- This is a confirmation gate, not a UI redesign — `saveAsPrivateLog()`
+  gets one early-return branch that checks for a photo and shows the
+  dialog before proceeding; everything else about the flow is unchanged.
+- Once the real upload path ships, this gate is deleted along with the
+  rest of the interim state — it's scaffolding, not a permanent feature.
 
 ## Proposed bucket
 
