@@ -10,6 +10,8 @@ import { circles } from "../data/circles";
 import { ContactSheet } from "../components/ContactSheet";
 import { MomentPanel } from "../components/MomentPanel";
 import { PursuitsRail } from "../components/PursuitsRail";
+import { ShelfRail } from "../components/ShelfRail";
+import { CirclesRail } from "../components/CirclesRail";
 
 const PAGE_SIZE = 6;
 
@@ -130,25 +132,9 @@ export function MySpaceGrid() {
         </div>
 
         <div className="myspace-rail space-y-8">
-          {/* Placeholder — Stage 4 replaces this with the real Shelf. */}
-          <section>
-            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              The Shelf
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">Where bodies of work get bound.</p>
-            <p className="mt-3 text-xs text-muted-foreground">Built in Stage 4.</p>
-          </section>
-
+          <ShelfRail />
           <PursuitsRail pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
-
-          {/* Placeholder — Stage 4 replaces this with the real Circles list. */}
-          <section>
-            <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Circles
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">Small rooms, quieter than the feed.</p>
-            <p className="mt-3 text-xs text-muted-foreground">Built in Stage 4.</p>
-          </section>
+          <CirclesRail />
         </div>
       </div>
     </div>
