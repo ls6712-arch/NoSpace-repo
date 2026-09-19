@@ -95,7 +95,12 @@ export function MySpaceGrid() {
       <header className="myspace-header mb-6 border-b border-hairline pb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="ns-section-kicker text-gold">{dateEyebrow}</p>
+            {/* text-gold-text, not text-gold: this is a rendered label, and
+                --gold fails AA text contrast in light (2.76:1) — see
+                theme.css's own contrast-audit comment. --gold-text is the
+                darkened-in-light, same-in-dark variant built for exactly this
+                (any place gold is used as text, not decoration). */}
+            <p className="ns-section-kicker text-gold-text">{dateEyebrow}</p>
             <h1
               className="mt-1 text-[clamp(1.75rem,4vw,2.5rem)] leading-tight"
               style={{ fontFamily: "var(--font-serif)" }}
