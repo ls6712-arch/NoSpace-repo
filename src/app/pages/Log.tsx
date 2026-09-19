@@ -19,7 +19,8 @@ import {
   Video,
   X,
 } from "lucide-react";
-import { hobbies, subHobbyLabel, findSpaceForInterest } from "../data/hobbies";
+import { hobbies, subHobbyLabel, findSpaceForInterest, defaultSpaceSlug } from "../data/hobbies";
+import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility } from "../data/posts";
 import { circlesByHobby } from "../data/circles";
@@ -252,7 +253,7 @@ export function Log() {
   const navigate = useNavigate();
 
   const hobbyParam = searchParams.get("hobby");
-  const initialHobby = hobbyParam ?? initialPursuit?.hobbySlug ?? hobbies[0].slug;
+  const initialHobby = hobbyParam ?? initialPursuit?.hobbySlug ?? defaultSpaceSlug();
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
   // Whether hobbySlug reflects something the person actually chose or typed,
   // versus just the untouched default (hobbies[0], or a ?hobby= link). A
@@ -260,6 +261,14 @@ export function Log() {
   // under an unseen default Space silently mistagged private logs — this
   // flag lets that path save untagged instead when nothing was ever set.
   const [spaceSet, setSpaceSet] = useState(!!hobbyParam || !!initialPursuit?.hobbySlug);
+  // Admin Space changes load a moment after the app starts. If the untouched
+  // default turns out to be a Space the admin has hidden, move to one that
+  // isn't — a post should never file itself under a Space nobody can see.
+  const { spaceRows } = useCategories();
+  useEffect(() => {
+    if (spaceSet) return;
+    if (hobbies.find((h) => h.slug === hobbySlug)?.hidden) setHobbySlug(defaultSpaceSlug());
+  }, [spaceRows, spaceSet, hobbySlug]);
   const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
@@ -389,7 +398,7 @@ export function Log() {
   // actually chosen just now, so a leftover "this was chosen" flag can't
   // survive next to the corrected value.
   useEffect(() => {
-    setHobbySlug(hobbyParam ?? initialPursuit?.hobbySlug ?? hobbies[0].slug);
+    setHobbySlug(hobbyParam ?? initialPursuit?.hobbySlug ?? defaultSpaceSlug());
     setSpaceSet(!!hobbyParam || !!initialPursuit?.hobbySlug);
   }, [hobbyParam, initialPursuit?.hobbySlug]);
 
@@ -444,7 +453,7 @@ export function Log() {
   const resumeDraft = () => {
     if (!draftPrompt) return;
     setThought(draftPrompt.thought);
-    setHobbySlug(draftPrompt.hobbySlug || hobbies[0].slug);
+    setHobbySlug(draftPrompt.hobbySlug || defaultSpaceSlug());
     setSubHobby(draftPrompt.subHobby);
     // A draft saved before tags existed only has the old single interest
     // field — recovers as one tag rather than losing it.
@@ -1633,7 +1642,7 @@ export function Log() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {hobbies.map((h) => (
+                        {hobbies.filter((h) => !h.hidden || h.slug === hobbySlug).map((h) => (
                           <SelectItem key={h.slug} value={h.slug}>
                             {h.name}
                           </SelectItem>

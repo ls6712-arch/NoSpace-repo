@@ -9,6 +9,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { CATEGORIES, type Category } from "../data/categories";
+import { applySpaceRows, isBuiltInSpace, type SpaceRow } from "../data/hobbies";
 
 /**
  * The category list, plus the way people tell us it's incomplete.
@@ -50,6 +51,34 @@ interface CategoriesContextType {
     opts?: { mergedInto?: string; note?: string },
   ) => Promise<{ error: string | null }>;
   refresh: () => Promise<void>;
+  /**
+   * Admin-managed Spaces (sql/spaces-admin.sql). Every row in `categories`,
+   * including its admin fields — the raw material for the /admin/spaces page.
+   * A built-in slug here is an override; any other slug is a Space that only
+   * exists in the database.
+   */
+  spaceRows: SpaceRow[];
+  saveSpace: (input: {
+    slug?: string;
+    name: string;
+    description?: string;
+    prompt?: string;
+    active?: boolean;
+    sortOrder?: number | null;
+  }) => Promise<{ error: string | null; slug?: string }>;
+  /** Removes a built-in's override, restoring its defaults. */
+  resetSpace: (slug: string) => Promise<{ error: string | null }>;
+  /** How many Moments / Pursuits / Circles still point at a Space. */
+  spaceUsage: (
+    slug: string,
+  ) => Promise<{ error: string | null; usage?: { posts: number; pursuits: number; circles: number; corners: number } }>;
+  /** Deletes a database-only Space, and only if nothing points at it. */
+  deleteSpace: (slug: string) => Promise<{ error: string | null }>;
+  /** Moves every Moment, Pursuit and Circle from one Space into another. */
+  moveSpaceContent: (
+    from: string,
+    to: string,
+  ) => Promise<{ error: string | null; moved?: { posts: number; pursuits: number; circles: number } }>;
 }
 
 const CategoriesContext = createContext<CategoriesContextType | undefined>(undefined);
@@ -68,11 +97,24 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   const [extra, setExtra] = useState<Category[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [spaceRows, setSpaceRows] = useState<SpaceRow[]>([]);
 
   const refresh = useCallback(async () => {
     if (!supabase) return;
     try {
       const { data: cats } = await supabase.from("categories").select("*");
+      // Apply admin overrides / database-only Spaces to the shared list
+      // *before* publishing state, so subscribers re-render against it.
+      const rows: SpaceRow[] = ((cats ?? []) as any[]).map((c) => ({
+        slug: c.slug,
+        name: c.name,
+        description: c.description ?? null,
+        prompt: c.prompt ?? null,
+        active: c.active ?? true,
+        sort_order: c.sort_order ?? null,
+      }));
+      applySpaceRows(rows);
+      setSpaceRows(rows);
       setExtra(
         ((cats ?? []) as any[]).map((c) => ({
           slug: c.slug,
@@ -222,6 +264,126 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const saveSpace: CategoriesContextType["saveSpace"] = async (input) => {
+    if (!supabase || !user) return { error: "Sign in first." };
+    if (!isAdmin) return { error: "Only an admin can do that." };
+    const name = input.name.trim();
+    if (!name) return { error: "Give the Space a name." };
+    const slug = (input.slug ?? slugify(name)).trim();
+    if (!slug) return { error: "That name doesn't make a usable link. Try plain letters." };
+
+    const isNew = input.slug === undefined;
+    if (isNew && (isBuiltInSpace(slug) || spaceRows.some((r) => r.slug === slug))) {
+      return { error: "A Space with that name already exists. Edit it instead." };
+    }
+
+    try {
+      const { error } = await supabase.from("categories").upsert(
+        {
+          slug,
+          name: name.slice(0, 60),
+          description: input.description?.trim()?.slice(0, 300) || null,
+          prompt: input.prompt?.trim()?.slice(0, 120) || null,
+          active: input.active ?? true,
+          sort_order: input.sortOrder ?? null,
+          // The name is the first keyword, so a database-only Space also
+          // collects Moments people tagged with it by hand.
+          ...(isNew ? { keywords: [name.toLowerCase()] } : {}),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "slug" },
+      );
+      if (error) {
+        return {
+          error: /column .* does not exist|active|prompt|sort_order/i.test(error.message)
+            ? "Run sql/spaces-admin.sql in Supabase first."
+            : error.message,
+        };
+      }
+      await refresh();
+      return { error: null, slug };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
+  const resetSpace: CategoriesContextType["resetSpace"] = async (slug) => {
+    if (!supabase || !user || !isAdmin) return { error: "Only an admin can do that." };
+    if (!isBuiltInSpace(slug)) return { error: "Only built-in Spaces can be reset." };
+    try {
+      const { error } = await supabase.from("categories").delete().eq("slug", slug);
+      if (error) return { error: error.message };
+      await refresh();
+      return { error: null };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
+  const spaceUsage: CategoriesContextType["spaceUsage"] = async (slug) => {
+    if (!supabase || !user || !isAdmin) return { error: "Only an admin can do that." };
+    try {
+      const { data, error } = await supabase.rpc("space_usage", { p_slug: slug });
+      if (error) {
+        return {
+          error: /function .* does not exist/i.test(error.message)
+            ? "Run sql/spaces-admin.sql in Supabase first."
+            : error.message,
+        };
+      }
+      const u = (data ?? {}) as any;
+      return {
+        error: null,
+        usage: {
+          posts: Number(u.posts ?? 0),
+          pursuits: Number(u.pursuits ?? 0),
+          circles: Number(u.circles ?? 0),
+          corners: Number(u.corners ?? 0),
+        },
+      };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
+  const deleteSpace: CategoriesContextType["deleteSpace"] = async (slug) => {
+    if (!supabase || !user || !isAdmin) return { error: "Only an admin can do that." };
+    if (isBuiltInSpace(slug)) {
+      return { error: "Built-in Spaces can be hidden, not deleted." };
+    }
+    try {
+      const { error } = await supabase.rpc("admin_delete_space", { p_slug: slug });
+      if (error) return { error: error.message };
+      await refresh();
+      return { error: null };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
+  const moveSpaceContent: CategoriesContextType["moveSpaceContent"] = async (from, to) => {
+    if (!supabase || !user || !isAdmin) return { error: "Only an admin can do that." };
+    try {
+      const { data, error } = await supabase.rpc("admin_move_space_content", {
+        p_from: from,
+        p_to: to,
+      });
+      if (error) return { error: error.message };
+      const m = (data ?? {}) as any;
+      await refresh();
+      return {
+        error: null,
+        moved: {
+          posts: Number(m.posts ?? 0),
+          pursuits: Number(m.pursuits ?? 0),
+          circles: Number(m.circles ?? 0),
+        },
+      };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
   // Approved additions append to the fifteen rather than replacing them, and
   // a duplicate slug never shadows a built-in one.
   const builtinSlugs = new Set(CATEGORIES.map((c) => c.slug));
@@ -231,7 +393,21 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
 
   return (
     <CategoriesContext.Provider
-      value={{ categories, isAdmin, suggestions, pendingCount, suggest, review, refresh }}
+      value={{
+        categories,
+        isAdmin,
+        suggestions,
+        pendingCount,
+        suggest,
+        review,
+        refresh,
+        spaceRows,
+        saveSpace,
+        resetSpace,
+        spaceUsage,
+        deleteSpace,
+        moveSpaceContent,
+      }}
     >
       {children}
     </CategoriesContext.Provider>

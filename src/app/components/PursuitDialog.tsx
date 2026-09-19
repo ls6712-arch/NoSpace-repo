@@ -259,7 +259,7 @@ export function PursuitDialog({
                 <SelectValue placeholder="Choose a Space (optional)" />
               </SelectTrigger>
               <SelectContent>
-                {hobbies.map((h) => (
+                {hobbies.filter((h) => !h.hidden).map((h) => (
                   <SelectItem key={h.slug} value={h.slug}>
                     {h.shortName}
                   </SelectItem>
