@@ -4,6 +4,7 @@ import { Post } from "../data/posts";
 import { Project, goalProgressText } from "../lib/journal";
 import { getHobby } from "../data/hobbies";
 import { lastMomentText, pursuitMoments, startedText, TrailMoment } from "../lib/pursuitTrail";
+import { isOnlyYou } from "../lib/visibility";
 import { MomentDetail } from "./MomentDetail";
 
 /** {SPACE} for the meta line — a real Space, a made-up one, or free-text interest. */
@@ -85,7 +86,7 @@ function Trail({
         <div className="relative flex w-full items-center justify-between">
           {shown.map((m, i) => {
             const isLatest = m.id === latestId;
-            const isPrivate = m.visibility === "friends";
+            const isPrivate = isOnlyYou(m);
             return (
               <button
                 key={m.id}
