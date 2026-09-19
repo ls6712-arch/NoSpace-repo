@@ -28,7 +28,6 @@ import { hobbyMatchesQuery } from "../lib/search";
 import { ContentCard } from "../components/ContentCard";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
-import { SuggestCategory } from "../components/SuggestCategory";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { PostMedia } from "../components/PostMedia";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -116,7 +115,7 @@ function DiscoverSpaceArt({
 /**
  * Featured Moments selection.
  *
- * NoSpace doesn't keep aggregate reaction, comment, or save counts today —
+ * Sushii doesn't keep aggregate reaction, comment, or save counts today —
  * only a single legacy `likes` number per post (the same one ContentContext's
  * scorePost already leans on, capped and kept a minor factor). So this ranks
  * on what's honestly available — recency first, a small boost for hobbies
@@ -558,28 +557,38 @@ export function Discover() {
 
       <div className="bg-surface pb-24 pt-5">
         <div className="container mx-auto max-w-6xl px-4">
-          {/* Spaces / Circles / People — Discover's own front door */}
-          <div role="tablist" aria-label="Discover" className="mb-6 inline-flex rounded-full border border-border bg-card p-1">
-            {DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
-              const active = tab === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setTab(id)}
-                  className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    active
-                      ? "text-white [background-color:var(--coral-deep)]"
-                      : "text-foreground hover:text-[var(--coral-text)]"
-                  }`}
-                >
-                  <Icon className="size-4" strokeWidth={1.8} />
-                  {label}
-                </button>
-              );
-            })}
+          {/* Spaces / Circles / People — Discover's own front door. Five
+              tabs never fit a phone-width pill at once, so this scrolls
+              horizontally (edge-to-edge, bleeding past the container's own
+              padding) instead of overflowing the screen or wrapping into a
+              second, layout-shifting row. */}
+          <div className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
+            <div
+              role="tablist"
+              aria-label="Discover"
+              className="inline-flex w-max rounded-full border border-border bg-card p-1"
+            >
+              {DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
+                const active = tab === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setTab(id)}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                      active
+                        ? "text-white [background-color:var(--coral-deep)]"
+                        : "text-foreground hover:text-[var(--coral-text)]"
+                    }`}
+                  >
+                    <Icon className="size-4" strokeWidth={1.8} />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {tab === "circles" && <CirclesBrowser query={query} />}
@@ -622,11 +631,6 @@ export function Discover() {
                         hobbySlug={hobby.slug}
                       />
                     ))}
-                    {!q && (
-                      <div className="w-40 shrink-0 snap-start">
-                        <SuggestCategory className="h-full" />
-                      </div>
-                    )}
                   </SpacesRow>
                 )}
               </section>
@@ -636,7 +640,7 @@ export function Discover() {
                 <section className="mb-14">
                   <div className="mb-5 flex items-end justify-between gap-4">
                     <div>
-                      <div className="ns-section-kicker mb-2">POPULAR MOMENTS FROM ACROSS NOSPACE</div>
+                      <div className="ns-section-kicker mb-2">POPULAR MOMENTS FROM ACROSS SUSHII</div>
                       <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Featured Moments</h2>
                     </div>
                     <a
@@ -730,7 +734,7 @@ export function Discover() {
               {chip === "near" ? (
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
                   <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                    NoSpace doesn't know where you are, and won't until you tell it.
+                    Sushii doesn't know where you are, and won't until you tell it.
                     These Circles have a city attached, the closest thing to near you.
                   </p>
                   <ul className="mx-auto grid max-w-2xl gap-2 text-left sm:grid-cols-2">
@@ -759,7 +763,7 @@ export function Discover() {
                     : "Nothing matches that yet. Try a broader word or a different filter."}
                 </div>
               ) : (
-                <div className="columns-1 gap-4 sm:columns-2 md:columns-3 xl:columns-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                   {visible.map((post) => (
                     <ContentCard key={post.id} post={post} compact showExploreCorner />
                   ))}

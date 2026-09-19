@@ -7,7 +7,6 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useSocial } from "../context/SocialContext";
-import { useConnections } from "../context/ConnectionsContext";
 import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { NotificationsMenu } from "./NotificationsMenu";
 
@@ -21,17 +20,16 @@ function initials(name: string) {
 }
 
 /** Only appears once an accepted request has actually opened a thread — a
- * SocialContext "make/explore together" match, or a real ConnectionsContext
- * connection. Without the latter, an accepted connection request wrote
- * correctly into ConnectionsContext but never made this icon appear, so the
- * inbox it unlocked was reachable only by typing /inbox directly. */
+ * SocialContext "make/explore together" match. The old connections-based
+ * messaging this also checked was retired along with PersonActions and the
+ * connections table it depended on (see ConnectionsContext.tsx); Follow
+ * (sql/profile-follows.sql) is a separate, accept-based relationship and
+ * doesn't unlock messaging. */
 function MessagesLink() {
   const social = useSocial();
-  const connections = useConnections();
-  const open =
-    social.participations.some(
-      (p) => p.status === "accepted" && (p.kind === "make_together" || p.kind === "explore_together"),
-    ) || connections.connectedPeople.length > 0;
+  const open = social.participations.some(
+    (p) => p.status === "accepted" && (p.kind === "make_together" || p.kind === "explore_together"),
+  );
   if (!open) return null;
   return (
     <Link to="/inbox" aria-label="Messages" title="Messages">
@@ -176,7 +174,7 @@ export function Header() {
             aria-current={pathname === "/" ? "page" : undefined}
           >
             <span className="ns-wordmark-mark" aria-hidden="true" />
-            <span className="text-2xl font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
+            <span className="text-2xl font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>Sushii</span>
             {pathname === "/" && (
               <span
                 className="absolute -bottom-0.5 left-0 right-0 h-px"
@@ -198,9 +196,9 @@ export function Header() {
                   aria-current={active ? "page" : undefined}
                   className={
                     item.accent
-                      ? "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm [background-image:var(--gradient-brand)] text-white shadow-[0_0_0_1px_rgba(166,108,255,0.3),0_8px_20px_-8px_rgba(166,108,255,0.55)] transition-[filter] hover:brightness-110"
+                      ? "flex items-center gap-1.5 rounded-btn bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
                       : `relative py-1 text-sm transition-colors ${
-                          active ? "text-[var(--violet-electric-bright)]" : "text-foreground/75 hover:text-foreground"
+                          active ? "text-accent" : "text-foreground/75 hover:text-foreground"
                         }`
                   }
                 >

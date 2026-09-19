@@ -1,4 +1,4 @@
--- NoSpace: real, user-created Circles — a name, an owner, and members other
+-- Sushii: real, user-created Circles — a name, an owner, and members other
 -- accounts can actually see, on top of the existing hand-written seed
 -- Circles (src/app/data/circles.ts), which stay exactly as they are.
 --

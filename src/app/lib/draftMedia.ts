@@ -12,7 +12,7 @@
  * private-browsing modes, storage quota, an old browser), and a failure
  * here should never break saving the rest of the draft.
  */
-const DB_NAME = "nospace-drafts";
+const DB_NAME = "sushii-drafts";
 const DB_VERSION = 1;
 const STORE_NAME = "media";
 const DRAFT_KEY = "current";

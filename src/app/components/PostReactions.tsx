@@ -3,7 +3,7 @@ import { Heart, Hand, ArrowUp } from "lucide-react";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 
 /**
- * The three NoSpace reactions. Deliberately not Like / Love / Nice work —
+ * The three Sushii reactions. Deliberately not Like / Love / Nice work —
  * each one means something different about what the viewer intends, which
  * is the whole point: a reaction here tells the maker something useful
  * rather than incrementing a number. Try This lives separately now, as
@@ -25,7 +25,7 @@ const TINT: Record<string, string> = {
 
 export type ReactionId = (typeof REACTIONS)[number]["id"];
 
-const STORAGE_KEY = "nospace.reactions.v1";
+const STORAGE_KEY = "sushii.reactions.v1";
 
 /**
  * A tiny store outside React, so a reaction row works the moment it mounts —
@@ -82,6 +82,21 @@ function toggle(postId: string | number, reaction: ReactionId) {
     : [...current, reaction];
   state = { ...state, [key]: next };
   emit();
+}
+
+/**
+ * The same state PostReactions itself reads and writes, for a call site
+ * that needs its own markup (My Space's Moment panel: flat small-caps text
+ * labels, not pill buttons) without forking the underlying store — a
+ * reaction toggled from either place is the same reaction.
+ */
+export function useReactionState(postId: string | number) {
+  const mine = useSyncExternalStore(
+    subscribe,
+    useCallback(() => getFor(postId), [postId]),
+    () => NONE,
+  );
+  return { mine, toggle: (reaction: ReactionId) => toggle(postId, reaction) };
 }
 
 /**

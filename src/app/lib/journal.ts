@@ -3,7 +3,7 @@ import { Post } from "../data/posts";
 import { LOCAL_CLEARED_EVENT } from "./localData";
 
 /**
- * The journal layer: the concepts NoSpace is actually built around, kept
+ * The journal layer: the concepts Sushii is actually built around, kept
  * separate from the raw post feed.
  *
  *   Project      a durable body of work you come back to
@@ -25,7 +25,7 @@ import { LOCAL_CLEARED_EVENT } from "./localData";
  * migration decision.
  */
 
-const KEY = "nospace.journal.v1";
+const KEY = "sushii.journal.v1";
 
 /**
  * A Pursuit — something you're bringing to life. User-facing text calls
@@ -35,7 +35,7 @@ const KEY = "nospace.journal.v1";
  * A Pursuit needs nothing but a name. `hobbySlug` (an existing, real Space)
  * and `interest` (free text, same spirit as a post's own `interest` field)
  * are both optional and independent of each other — naming a Pursuit never
- * forces it into NoSpace's taxonomy. `customSpace` holds a made-up Space
+ * forces it into Sushii's taxonomy. `customSpace` holds a made-up Space
  * name when neither existing Space fits ("Other").
  */
 /**

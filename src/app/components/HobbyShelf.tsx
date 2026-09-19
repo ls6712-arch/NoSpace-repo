@@ -5,7 +5,38 @@ import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
 import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
-import { INK, tagTint } from "./WorkGrid";
+
+/** The card's own dark ink color — the cream card is a deliberate,
+ * contained exception to the app's dark surfaces (same pairing the flat
+ * illustrations already use), so its text needs to be dark-on-cream, not
+ * the page's light-on-dark foreground tokens. Local to this file now: only
+ * the "By Corner" view still groups by Space/Corner (and so still wants a
+ * per-Corner color), since the All-moments grid (WorkGrid.tsx) reads tags
+ * with one neutral pill instead — see Fix 1-2. */
+export const INK = "#3A2A1F";
+
+/** A colored tag per Space, cycling through the brand's warm-hue tokens —
+ * same idea as this file's own book-spine colors. A few Spaces get an
+ * explicit color instead of the rotation where one obviously fits (mustard
+ * for cooking, green for anything craft-adjacent, plum for travel). */
+const TAG_TINTS = [
+  "color-mix(in srgb, var(--yellow) 78%, black)",
+  "var(--sky-deep)",
+  "var(--forest)",
+  "var(--coral-deep)",
+  "var(--plum)",
+];
+const TAG_TINT_OVERRIDES: Record<string, string> = {
+  "food-cooking": TAG_TINTS[0],
+  "art-creative": "var(--forest)",
+  "crafts-making": "var(--forest)",
+  "travel-adventure": "var(--plum)",
+};
+export function tagTint(hobbySlug: string) {
+  if (TAG_TINT_OVERRIDES[hobbySlug]) return TAG_TINT_OVERRIDES[hobbySlug];
+  const idx = hobbies.findIndex((h) => h.slug === hobbySlug);
+  return TAG_TINTS[(idx < 0 ? 0 : idx) % TAG_TINTS.length];
+}
 
 export interface HobbySession {
   /** Sub-hobby slug where tagged, else `space:<slug>` for untagged entries. */
@@ -133,12 +164,16 @@ function CornerTile({
   const note = useCornerNote(item.key);
 
   return (
-    <Link to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`} className="group block">
+    <Link to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`} className="group flex h-full">
+      {/* flex-col + h-full so this fills the grid row's height (CSS Grid
+          already stretches every tile to match) — otherwise a Corner with
+          no note was shorter than one with a note, exposing the dark page
+          background below it and making the row look ragged. */}
       <div
-        className="overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
+        className="flex h-full w-full flex-col overflow-hidden border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
         style={{ color: INK }}
       >
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-square overflow-hidden">
           {item.lastMediaUrl ? (
             <PostMedia
               media={item.lastMediaUrl}
@@ -156,13 +191,13 @@ function CornerTile({
             />
           )}
           <span
-            className="absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
+            className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
             style={{ backgroundColor: tagTint(item.hobbySlug) }}
           >
             {item.label}
           </span>
         </div>
-        <div className="px-3.5 py-3">
+        <div className="flex-1 px-3.5 py-3">
           <p
             className="truncate text-sm leading-snug sm:text-base"
             style={{ fontFamily: "var(--font-serif)" }}
@@ -240,7 +275,7 @@ export function HobbyShelf({
   // Same column/gap treatment as WorkGrid for the same reason: one visual
   // system, not two grids that happen to sit near each other.
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div className="grid grid-cols-3 gap-0.5 sm:grid-cols-4">
       {sorted.map((item) => (
         <CornerTile key={item.key} item={item} linkTo={linkTo} />
       ))}

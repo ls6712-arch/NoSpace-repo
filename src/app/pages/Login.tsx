@@ -7,7 +7,8 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export function Login() {
-  const { user, signIn, signUp, signInWithGoogle, resetPassword, isConfigured } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
+    useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
@@ -31,6 +32,8 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
   // Checked here as well as by the browser, because an account created with
   // a typo'd address can never be recovered — there's nowhere to send the
@@ -63,6 +66,16 @@ export function Login() {
     else setResetSent(true);
   };
 
+  const resend = async () => {
+    if (resending) return;
+    setResending(true);
+    setError(null);
+    const res = await resendConfirmation(email);
+    setResending(false);
+    if (res.error) setError(res.error);
+    else setResent(true);
+  };
+
   const handleGoogle = async () => {
     const result = await signInWithGoogle();
     if (result.error) setError(result.error);
@@ -88,10 +101,20 @@ export function Login() {
         return;
       }
       if (mode === "signup" && "needsConfirmation" in result && result.needsConfirmation) {
+        setResent(false);
         setNeedsConfirmation(true);
         return;
       }
-      navigate(redirectTo);
+      // A brand-new account goes through /onboarding first — Root.tsx's own
+      // guard would send them there anyway on the very next render even if
+      // this didn't, but going straight there skips that one extra bounce.
+      // The original destination rides along as its own redirect param so
+      // onboarding can continue there once it's done.
+      if (mode === "signup") {
+        navigate(`/onboarding?redirect=${encodeURIComponent(redirectTo)}`);
+      } else {
+        navigate(redirectTo);
+      }
     } catch {
       setError("Couldn't reach the server. Check your connection and try again.");
     } finally {
@@ -108,7 +131,7 @@ export function Login() {
           <AlertCircle className="size-8 mx-auto mb-3 text-muted-foreground" />
           <h2 className="text-xl mb-2">Accounts aren't set up on this build</h2>
           <p className="text-sm text-muted-foreground">
-            This copy of NoSpace isn't connected to a database yet, so there's no real
+            This copy of Sushii isn't connected to a database yet, so there's no real
             sign-up here. Everything still works in local demo mode.
           </p>
         </div>
@@ -139,6 +162,21 @@ export function Login() {
               Check <span className="text-foreground">{email}</span> for a confirmation link —
               you'll be signed in once you click it.
             </p>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              {resent
+                ? "Sent again — check your spam folder if it still doesn't turn up."
+                : "Nothing after a few minutes? It can land in spam, or just take a moment."}
+            </p>
+            {error && <p className="mt-2 text-xs text-[var(--coral-text)]">{error}</p>}
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              disabled={resending}
+              onClick={resend}
+            >
+              {resending ? "Sending…" : "Resend confirmation email"}
+            </Button>
           </div>
         ) : (
           <>

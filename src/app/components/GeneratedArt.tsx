@@ -49,20 +49,33 @@ export function mulberry32(seed: number) {
 // hobby), same idea as the reference style: a cohesive set of terracotta,
 // mustard, olive and denim tones that reads as one illustration family.
 // ---------------------------------------------------------------------------
-export const INK = "#3A2A1F";
-export const PAPER = "#F1E3C8";
-export const PAPER_DARK = "#E8D5AC";
-export const TERRACOTTA = "#C96F49";
-export const RUST = "#A8492F";
-export const MUSTARD = "#E3A83E";
-export const MUSTARD_LIGHT = "#F0C572";
-export const OLIVE = "#7C8A54";
-export const SAGE = "#A9B98C";
-export const DENIM = "#5C7C97";
-export const BLUSH = "#D98A82";
-export const CREAM = "#FBF3E2";
-const SKIN_TONES = ["#E8B98C", "#C68A5E", "#8B5A3C", "#F0C9A0"];
-const HAIR_TONES = ["#3A2A1F", "#6B4226", "#1E1512", "#8A5A32"];
+// Values live in theme.css (--gen-art-*), with dark-tuned overrides under
+// .dark — kept as string constants here (not literal hex) so every consumer
+// that already imports these by name adopts both themes automatically.
+export const INK = "var(--gen-art-ink)";
+export const PAPER = "var(--gen-art-paper)";
+export const PAPER_DARK = "var(--gen-art-paper-dark)";
+export const TERRACOTTA = "var(--gen-art-terracotta)";
+export const RUST = "var(--gen-art-rust)";
+export const MUSTARD = "var(--gen-art-mustard)";
+export const MUSTARD_LIGHT = "var(--gen-art-mustard-light)";
+export const OLIVE = "var(--gen-art-olive)";
+export const SAGE = "var(--gen-art-sage)";
+export const DENIM = "var(--gen-art-denim)";
+export const BLUSH = "var(--gen-art-blush)";
+export const CREAM = "var(--gen-art-cream)";
+const SKIN_TONES = [
+  "var(--gen-art-skin-1)",
+  "var(--gen-art-skin-2)",
+  "var(--gen-art-skin-3)",
+  "var(--gen-art-skin-4)",
+];
+const HAIR_TONES = [
+  "var(--gen-art-hair-1)",
+  "var(--gen-art-hair-2)",
+  "var(--gen-art-hair-3)",
+  "var(--gen-art-hair-4)",
+];
 
 export function skinFor(rand: () => number) {
   return SKIN_TONES[Math.floor(rand() * SKIN_TONES.length) % SKIN_TONES.length];

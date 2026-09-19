@@ -57,7 +57,7 @@ export function usePrimaryHobby() {
 /**
  * "3 months into pottery" — how long you've been at the thing, not what tier
  * the platform has sorted you into. Deliberately not a level: the milestone
- * belongs to the hobby, not to NoSpace.
+ * belongs to the hobby, not to Sushii.
  */
 export function milestoneText(label: string, firstActivityAt: number, now = Date.now()) {
   const days = Math.floor((now - firstActivityAt) / DAY);

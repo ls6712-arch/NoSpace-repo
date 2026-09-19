@@ -203,7 +203,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
 
       <div className="mt-12 rounded-3xl border border-border bg-card px-6 py-9 text-center">
         <p className="mx-auto mb-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-          No follower counts anywhere on NoSpace, not here, not on a
+          No follower counts anywhere on Sushii, not here, not on a
           profile. People are described by what they work on.
         </p>
         <Link to="/discover">

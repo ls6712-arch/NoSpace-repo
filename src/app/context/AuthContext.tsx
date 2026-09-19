@@ -18,10 +18,30 @@ export interface Profile {
   /** The short quote shown near your name — optional, set during onboarding
    * or any time after. */
   tagline?: string;
-  /** Set once, the first time the first-run guided setup on /you finishes
-   * or is skipped through. Only ever checked for null vs. not-null — never
-   * shown again once it's set, regardless of what ended up filled in. */
+  /** Set once, the first time the old inline /you setup finished or was
+   * skipped through. Superseded by onboarding_completed below (see
+   * sql/onboarding-v2.sql) — kept only because existing rows already have
+   * it; nothing reads it anymore. */
   onboarding_completed_at?: string | null;
+  /** False only for an account created after sql/onboarding-v2.sql ran —
+   * every pre-existing row was backfilled to true in that same migration,
+   * so this never retroactively gates someone who already had an account.
+   * Checked by Root.tsx to route a brand-new signup through /onboarding
+   * before anything else, and set true there on finish or skip. */
+  onboarding_completed: boolean;
+  /** A short, optional line under the name — what got you into this, and
+   * where it's going. Never required, never blocking. */
+  bio?: string | null;
+  /** The Studio cover's editable title/tagline/photo (sql/profile-cover.sql)
+   * — each falls back when unset: title to display_name, tagline to bio,
+   * photo to the most recently pinned Moment. Set from the owner-only
+   * "Edit cover" panel, never inferred automatically. */
+  cover_title?: string | null;
+  cover_tagline?: string | null;
+  cover_post_id?: number | null;
+  /** "system" follows the OS; set from Settings > Appearance and mirrored to
+   * localStorage so it survives being signed out (sql/theme-preference.sql). */
+  theme_preference?: "system" | "light" | "dark";
 }
 
 interface AuthContextType {
@@ -38,6 +58,13 @@ interface AuthContextType {
   ) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  /** Re-sends the signup confirmation email — the one self-service option
+   * when the first one never arrives (Supabase's shared default mailer is
+   * rate-limited and unreliable against some domains; the real fix is
+   * configuring a custom SMTP provider in the project's Auth settings,
+   * which this can't do). Same emailRedirectTo as signUp, for the same
+   * reason: a HashRouter path here would break the returned token parsing. */
+  resendConfirmation: (email: string) => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (next: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -47,11 +74,29 @@ interface AuthContextType {
    * else that needs to save more than AvatarPicker's own self-contained
    * avatar_url writes. */
   updateProfile: (
-    fields: Partial<Pick<Profile, "display_name" | "tagline" | "onboarding_completed_at">>,
+    fields: Partial<
+      Pick<
+        Profile,
+        | "display_name"
+        | "tagline"
+        | "onboarding_completed_at"
+        | "onboarding_completed"
+        | "bio"
+        | "cover_title"
+        | "cover_tagline"
+        | "cover_post_id"
+        | "theme_preference"
+      >
+    >,
   ) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Module-level so it survives across re-renders without extra state, and is
+// only ever set true (a schema, once migrated, doesn't go missing again
+// within a page session).
+let themeColumnKnownMissing = false;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(isSupabaseConfigured);
@@ -67,12 +112,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const loadProfile = async (userId: string, expectName?: string) => {
     if (!supabase) return;
+    // theme_preference (sql/theme-preference.sql) may not exist yet on a
+    // database that hasn't run that migration — a select naming a missing
+    // column fails outright, which would otherwise leave `profile` stuck at
+    // null for everyone. Once seen missing, stop asking for it this session.
     for (let attempt = 0; attempt < 4; attempt++) {
-      const { data } = await supabase
+      const columns = themeColumnKnownMissing
+        ? "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id"
+        : "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, theme_preference";
+      const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, tagline, onboarding_completed_at")
+        .select(columns)
         .eq("id", userId)
         .maybeSingle();
+      if (error && !themeColumnKnownMissing && error.code === "42703") {
+        themeColumnKnownMissing = true;
+        attempt -= 1;
+        continue;
+      }
       const row = data as Profile | null;
       if (row) {
         setProfile(row);
@@ -177,6 +234,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  const resendConfirmation: AuthContextType["resendConfirmation"] = async (email) => {
+    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+        },
+      });
+      return { error: error ? error.message : null };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
   const signInWithGoogle: AuthContextType["signInWithGoogle"] = async () => {
     if (!supabase) return { error: "Accounts aren't set up for this build yet." };
     const { error } = await supabase.auth.signInWithOAuth({
@@ -238,9 +311,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateProfile: AuthContextType["updateProfile"] = async (fields) => {
     if (!supabase || !session) return { error: "Not signed in." };
     try {
+      // A plain update, not an upsert: the row always already exists (the
+      // trigger that creates it fires the moment the account is made), and
+      // an upsert's ON CONFLICT DO UPDATE still validates the *proposed
+      // insert* row against every NOT NULL column first — username and
+      // display_name among them — even though it never actually inserts.
+      // That silently failed every call here that didn't happen to also
+      // pass both of those, onboarding's own finish() included, which then
+      // pressed on as if it had worked and left onboarding_completed still
+      // false in the database.
       const { error } = await supabase
         .from("profiles")
-        .upsert({ id: session.user.id, ...fields }, { onConflict: "id" });
+        .update(fields)
+        .eq("id", session.user.id);
       if (error) return { error: error.message };
       await loadProfile(session.user.id);
       return { error: null };
@@ -259,6 +342,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signInWithGoogle,
+        resendConfirmation,
         resetPassword,
         updatePassword,
         signOut,

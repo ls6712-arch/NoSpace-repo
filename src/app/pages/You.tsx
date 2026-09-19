@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Lock, PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
@@ -8,17 +8,13 @@ import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { CirclesJoined } from "../components/CirclesJoined";
-import { ClanList } from "../components/ClanList";
 import { AvatarPicker } from "../components/AvatarPicker";
-import { HandwrittenNote } from "../components/HandwrittenNote";
 import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../components/PursuitCompact";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
-import { ProfileHeadline } from "../components/ProfileHeadline";
-import { ProfileOnboarding } from "../components/ProfileOnboarding";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal, useJournalSlice } from "../lib/journal";
@@ -28,8 +24,9 @@ import { mirrorProfileLinks } from "../lib/profileLinksRemote";
 import { ProfileLinksEditor } from "../components/ProfileLinks";
 import { AccountSettings } from "../components/AccountSettings";
 import { useSocial } from "../context/SocialContext";
-import { localOnboardingDone } from "../lib/onboardingLocal";
 import { subHobbyLabel, getHobby } from "../data/hobbies";
+import { tagsFromPosts } from "../lib/postTags";
+import { useFollowerCount } from "../lib/useFollowerCount";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -62,22 +59,27 @@ export function You() {
   const [expandedPursuitId, setExpandedPursuitId] = useState<string | null>(null);
   const [renderedPursuitId, setRenderedPursuitId] = useState<string | null>(null);
   const entryProject = useJournalSlice((s) => s.entryProject);
-  // Whether to show the first-run guided setup, decided once and then left
-  // alone — null means "not decided yet". Deciding it live off the current
-  // profile/social state (rather than freezing it) was a real bug: adding
-  // your first interest on step 2 made "no interests yet" false mid-flow,
-  // which kicked the onboarding view out from under itself back to the
-  // normal page before the remaining steps ever ran.
-  const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null);
 
   const sessions = useSessionsByHobby();
+  const myTags = useMemo(() => tagsFromPosts(myPosts), [myPosts]);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [momentsView, setMomentsView] = useState<"shelf" | "grid">("grid");
   // The portfolio's own record — every Pursuit you've ever started, finished
   // ones included, because a personal archive doesn't erase what's done.
   const myPursuits = journal.projects;
   // Every Moment you've ever logged, lifetime — the profile card's own
-  // one-line stat, distinct from ProfileHeadline's "N months into X" line.
+  // one-line stat.
   const totalSessions = myPosts.length;
+  const earliestPostAt = myPosts.length
+    ? Math.min(...myPosts.map((p) => p.createdAt))
+    : null;
+  const sinceLabel = earliestPostAt
+    ? new Date(earliestPostAt).toLocaleDateString(undefined, {
+        month: "long",
+        year: new Date(earliestPostAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
+      })
+    : null;
+  const followerCount = useFollowerCount(user?.id);
 
   // Never abbreviate the placeholder: "You" becomes a meaningless "Y".
   const realName = profile?.display_name?.trim();
@@ -95,55 +97,14 @@ export function You() {
     );
   }
 
-  // First-run guided setup: only for a signed-in, genuinely-empty profile
-  // that hasn't been through onboarding before. onboarding_completed_at is
-  // authoritative once set — checked first, so this never comes back just
-  // because someone later cleared their name or unfollowed every interest.
-  // localOnboardingDone() covers the same "never again" promise when
-  // there's no account to hang that flag off (Supabase not configured) or
-  // the save on finishing failed to reach it.
-  //
-  // Decided once profile has actually loaded (isConfigured but profile is
-  // still null right after sign-in), not on every render — profile starts
-  // out null for everyone, existing accounts included, so judging "empty"
-  // against that transient null would flash onboarding at every sign-in
-  // until the real row arrives.
-  useEffect(() => {
-    if (needsOnboarding !== null || !user) return;
-    if (isConfigured && !profile) return;
-    setNeedsOnboarding(
-      !profile?.onboarding_completed_at &&
-        !localOnboardingDone() &&
-        !profile?.display_name?.trim() &&
-        !profile?.avatar_url &&
-        social.followedHobbies.length === 0,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, profile, isConfigured]);
-
-  if (needsOnboarding) {
-    return <ProfileOnboarding onDone={() => setNeedsOnboarding(false)} />;
-  }
-
   return (
-    <div className="min-h-screen bg-background py-8 sm:py-12">
+    <div className="ns-paper-theme min-h-screen bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="mb-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
           YOUR PERSONAL ARCHIVE
         </div>
-        <div className="mb-8 flex items-end justify-between gap-5">
-          <div>
-            <h1 className="text-[clamp(2.8rem,7vw,5rem)] leading-[.9] tracking-[-.04em]" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
-              You
-            </h1>
-            <p className="mt-3 max-w-md text-lg leading-relaxed text-muted-foreground">
-              Your work, your ideas, your people, your space to keep becoming.
-            </p>
-          </div>
-          <HandwrittenNote className="max-w-[220px]">A more curious you lives here.</HandwrittenNote>
-        </div>
 
-        <div className="ns-you-profile-card mb-8">
+        <div className="ns-you-profile-card ns-you-profile-card--compact mb-6">
           <div className="ns-you-profile-top">
             <div className="ns-you-profile-identity">
               <AvatarPicker
@@ -154,28 +115,63 @@ export function You() {
               />
               <div className="min-w-0">
                 <h2
-                  className="truncate text-2xl leading-tight sm:text-3xl"
-                  style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+                  className="truncate text-2xl leading-tight sm:text-4xl"
+                  style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
                 >
                   {user ? displayName : "You"}
                 </h2>
-                <div className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <span className="ns-you-sprout" aria-hidden="true">✦</span>
+                {user && (
+                  profile?.bio?.trim() ? (
+                    <p
+                      className="mt-1 text-base leading-relaxed text-muted-foreground sm:text-lg"
+                      style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+                    >
+                      {profile.bio}
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setSettingsOpen(true)}
+                      className="mt-1 rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                    >
+                      Tell your story: what got you into this, and where it's going.
+                    </button>
+                  )
+                )}
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
                   <span>
-                    <strong className="text-foreground">{totalSessions}</strong> lifetime{" "}
-                    {totalSessions === 1 ? "session" : "sessions"}
+                    <strong className="text-foreground">{totalSessions}</strong>{" "}
+                    {totalSessions === 1 ? "moment" : "moments"} logged
+                    {sinceLabel ? ` since ${sinceLabel}` : ""}
                   </span>
-                </div>
-                <div className="mt-1">
-                  <ProfileHeadline variant="quiet" />
+                  {followerCount !== null && followerCount > 0 && (
+                    <>
+                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                      <span>
+                        <strong className="text-foreground">{followerCount}</strong>{" "}
+                        {followerCount === 1 ? "follower" : "followers"}
+                      </span>
+                    </>
+                  )}
+                  {followerCount === 0 && (
+                    <>
+                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                      <span>No one's following yet</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
-            <Button variant="coral" size="sm" onClick={() => setShareOpen(true)}>
-              <Share2 className="size-3.5" />
-              Share
-            </Button>
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <Button variant="coral" size="sm" onClick={() => setShareOpen(true)}>
+                <Share2 className="size-3.5" />
+                Share
+              </Button>
+              <Link to="/studio" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+                Open Studio →
+              </Link>
+            </div>
           </div>
 
           {/* One link, inline — no separate panel, no repeated helper copy.
@@ -189,24 +185,23 @@ export function You() {
           />
         </div>
 
-        {/* Hobby chips float under the card now, not boxed in one of their own */}
-        {sessions.length > 0 && (
-          <div className="ns-you-tags mb-7 flex flex-wrap gap-2">
-            {sessions.slice(0, 6).map((s) => (
-              <Link
-                key={s.key}
-                to={s.subSlug ? `/space/${s.hobbySlug}?hobby=${s.subSlug}` : `/space/${s.hobbySlug}`}
-                className="rounded-full border border-border bg-white/[0.04] px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-                style={{ fontFamily: "var(--font-serif)" }}
+        {/* Open tags now, not the fixed 15-Space list — tap one to narrow
+            Every moment below to just that tag, tap it again to clear. */}
+        {myTags.length > 0 && (
+          <div className="ns-you-tags ns-you-tags--pills mb-7 flex flex-wrap gap-2">
+            {myTags.slice(0, 6).map(({ tag }) => (
+              <button
+                key={tag}
+                type="button"
+                aria-pressed={tagFilter === tag}
+                onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
+                className={`ns-pill ${tagFilter === tag ? "ns-pill--active" : ""}`}
               >
-                {s.label}
-              </Link>
+                {tag}
+              </button>
             ))}
-            <Link
-              to="/discover"
-              className="rounded-full border border-dashed border-border px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-            >
-              + Add interest
+            <Link to="/create" className="ns-pill ns-pill--ghost">
+              + Add a tag
             </Link>
           </div>
         )}
@@ -236,13 +231,89 @@ export function You() {
           </Button>
         </div>
 
-        {/* Five sections, stacked full-width with generous space between
-            them rather than paired side by side — separation comes from
-            whitespace and a hairline rule, not from boxing each one in.
-            Order: Pursuits, Moments, Quiet Milestones, Circles, Clan. */}
-        <section className="mb-14">
+        {/* Four sections, stacked full-width. "Every moment" is the major
+            section here — it's what the Shelf is actually for — so it gets
+            the biggest type and the most air around it. Pursuits, Quiet
+            Milestones, and Circles are minor sections: smaller headers,
+            tighter rules, less padding, so the page reads as one important
+            thing plus three supporting ones rather than five equal blocks.
+            Order: Moments, Pursuits, Quiet Milestones, Circles. */}
+        <section className="mb-16">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
+              Every moment
+            </h2>
+            {/* All moments (plain chronological) is the default now — By
+                Corner stays available for anyone who wants the grouped
+                view. HobbyShelf.tsx no longer renders Space-level section
+                headers at all — it's one flat grid of Corners, sorted by
+                whichever was most recently updated — so "By Corner" is
+                what actually describes it now. (An earlier pass called
+                this "By space" when the view still had Space headers with
+                Corners stacked inside each one; that structure is gone,
+                so that label would now be the wrong one.) */}
+            <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setMomentsView("grid")}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                }`}
+              >
+                All moments
+              </button>
+              <button
+                type="button"
+                onClick={() => setMomentsView("shelf")}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                }`}
+              >
+                By Corner
+              </button>
+            </div>
+          </div>
+          <p className="mb-5 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            {momentsView === "shelf"
+              ? "By Corner, most recently updated first — open one to see every moment inside it."
+              : tagFilter
+                ? `Tagged “${tagFilter}.”`
+                : "A visual record of what you've made, explored, and loved, newest first."}
+            {momentsView === "grid" && tagFilter && (
+              <button
+                type="button"
+                onClick={() => setTagFilter(null)}
+                className="text-xs text-[var(--coral-text)] hover:underline"
+              >
+                Show everything
+              </button>
+            )}
+          </p>
+          {momentsView === "shelf" ? (
+            <HobbyShelf
+              items={sessions}
+              emptyCta={false}
+              emptyCopy="Nothing logged yet. Create something and it'll show up here."
+            />
+          ) : (
+            <WorkGrid
+              posts={
+                tagFilter
+                  ? myPosts.filter((p) =>
+                      (p.tags ?? []).some((t) => t.toLowerCase() === tagFilter.toLowerCase()),
+                    )
+                  : myPosts
+              }
+              onOpen={setOpenPost}
+              editable
+              emptyLabel="Nothing logged yet. Create something and it'll show up here."
+            />
+          )}
+        </section>
+
+        <section className="mb-10 border-t border-[var(--line,var(--border))] pt-7">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               Your Pursuits
             </h2>
             <Button variant="outline" size="sm" onClick={() => setPursuitDialog(true)}>
@@ -315,64 +386,9 @@ export function You() {
           )}
         </section>
 
-        <section className="mb-14 border-t border-border pt-10">
-          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Your Moments
-            </h2>
-            {/* All moments (plain chronological) is the default now — By
-                Corner stays available for anyone who wants the grouped
-                view. HobbyShelf.tsx no longer renders Space-level section
-                headers at all — it's one flat grid of Corners, sorted by
-                whichever was most recently updated — so "By Corner" is
-                what actually describes it now. (An earlier pass called
-                this "By space" when the view still had Space headers with
-                Corners stacked inside each one; that structure is gone,
-                so that label would now be the wrong one.) */}
-            <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
-              <button
-                type="button"
-                onClick={() => setMomentsView("grid")}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                }`}
-              >
-                All moments
-              </button>
-              <button
-                type="button"
-                onClick={() => setMomentsView("shelf")}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
-                }`}
-              >
-                By Corner
-              </button>
-            </div>
-          </div>
-          <p className="mb-5 mt-1 text-sm text-muted-foreground">
-            {momentsView === "shelf"
-              ? "By Corner, most recently updated first — open one to see every moment inside it."
-              : "A visual record of what you've made, explored, and loved, newest first."}
-          </p>
-          {momentsView === "shelf" ? (
-            <HobbyShelf
-              items={sessions}
-              emptyCta={false}
-              emptyCopy="Nothing logged yet. Create something and it'll show up here."
-            />
-          ) : (
-            <WorkGrid
-              posts={myPosts}
-              onOpen={setOpenPost}
-              emptyLabel="Nothing logged yet. Create something and it'll show up here."
-            />
-          )}
-        </section>
-
-        <section className="mb-14 border-t border-border pt-10">
+        <section className="mb-10 border-t border-[var(--line,var(--border))] pt-7">
           <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="flex items-center gap-2 text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
               Quiet Milestones
             </h2>
@@ -383,9 +399,9 @@ export function You() {
           <QuietMilestones />
         </section>
 
-        <section className="mb-14 border-t border-border pt-10">
+        <section className="border-t border-[var(--line,var(--border))] pt-7">
           <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="flex items-center gap-2 text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
               <Users className="size-4 text-foreground" strokeWidth={1.8} />
               Your Circles
             </h2>
@@ -399,17 +415,6 @@ export function You() {
           ) : (
             <p className="text-sm text-muted-foreground">Hidden. Only you can see which Circles you've joined.</p>
           )}
-        </section>
-
-        <section className="border-t border-border pt-10">
-          <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-lg sm:text-xl" style={{ fontFamily: "var(--font-serif)" }}>
-              <Users className="size-4 text-foreground" strokeWidth={1.8} />
-              Your Clan
-            </h2>
-          </div>
-          <p className="mb-5 text-sm text-muted-foreground">People who make the journey more fun.</p>
-          <ClanList limit={5} />
         </section>
       </div>
 

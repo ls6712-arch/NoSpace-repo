@@ -2,12 +2,9 @@ import { CalendarDays, Compass, MapPin, Play, ShoppingBag, Users, UserRound } fr
 import { PostReactions } from "./PostReactions";
 import { PostBookmark } from "./PostBookmark";
 import { Thoughts } from "./Thoughts";
-import { PersonActions } from "./PersonActions";
 import { displayLocation } from "../data/participation";
-import { getCircle } from "../data/circles";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
-import { useCorners } from "../context/CornersContext";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
@@ -35,9 +32,10 @@ const AUDIENCE: Record<string, { label: string; icon: typeof Users }> = {
   friends: { label: "Connections", icon: UserRound },
 };
 
-// Varying aspect ratios give the gallery its natural, uneven rhythm even though
-// every card is generated art rather than a photo of a different shape.
-const ASPECTS = ["aspect-square", "aspect-[4/5]", "aspect-[3/4]", "aspect-[5/4]"];
+// One fixed ratio, not a per-post hash — every card the same size, in a real
+// grid rather than a Pinterest-style masonry column, so the feed reads as a
+// uniform shelf instead of a mismatched jumble of aspect ratios.
+const CARD_ASPECT = "aspect-square";
 
 export function ContentCard({
   post,
@@ -49,8 +47,8 @@ export function ContentCard({
   label?: string;
   /**
    * A tighter, more image-forward presentation of the exact same card —
-   * same media, same caption, same three reactions plus the Bookmark badge, same Thoughts
-   * and PersonActions, same everything — just less padding and a smaller
+   * same media, same caption, same three reactions plus the Bookmark badge,
+   * same Thoughts, same everything — just less padding and a smaller
    * reaction/action grid, for a denser grid like Discover's All Moments.
    * Every other call site leaves this off and is pixel-identical to before.
    */
@@ -69,17 +67,7 @@ export function ContentCard({
   const { findListing } = useContent();
   const social = useSocial();
   const { user } = useAuth();
-  const { cornersFor } = useCorners();
   const isOwner = !!user && post.userId === user.id;
-
-  // The narrowest real scope this Moment actually belongs to, if any — so
-  // Invite can default straight to it instead of the whole Space. A Circle
-  // (a deliberate, existing membership) wins over a Corner (a topic tag) if
-  // a Moment somehow carries both; see PersonActions' own narrowContext.
-  const postCircle = post.visibility === "circle" && post.circleId ? getCircle(post.circleId) : undefined;
-  const postCorner = post.subHobby
-    ? cornersFor(post.hobbySlug).find((c) => c.slug === post.subHobby)
-    : undefined;
 
   // An activity is a moment with a time attached — a photo walk, a workshop,
   // a meetup. Everything else is just a moment and gets none of this.
@@ -87,7 +75,6 @@ export function ContentCard({
   const place = displayLocation(post.locationName, post.locationPrivacy);
   const going = social.goingCount(post.id);
   const listing = post.productId ? findListing(post.productId) : undefined;
-  const aspect = ASPECTS[Math.abs(post.id) % ASPECTS.length];
   const audience = AUDIENCE[post.visibility];
   const mediaList = post.mediaUrls?.length ? post.mediaUrls : post.media ? [post.media] : [];
   // The carousel's own "current/total" counter sits top-right — the same
@@ -97,14 +84,14 @@ export function ContentCard({
     post.type !== "video" && mediaList.filter((u) => /^https?:\/\//.test(u)).length >= 2;
 
   return (
-    <div className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-border bg-card group">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card group">
       <div className="relative overflow-hidden">
         <PostMediaCarousel
           media={mediaList}
           type={post.type}
           hobbySlug={post.hobbySlug}
           seed={post.id}
-          className={`w-full ${aspect} transition-transform duration-500 group-hover:scale-105`}
+          className={`w-full ${CARD_ASPECT} transition-transform duration-500 group-hover:scale-105`}
         />
         {post.type === "video" && !/^https?:\/\//.test(post.media) && (
           <div className="absolute inset-0 flex items-center justify-center bg-[var(--void)]/25">
@@ -221,26 +208,6 @@ export function ContentCard({
           compact={compact}
           className={compact ? "mb-2" : "mb-3"}
         />
-
-        {!isOwner && (
-          // Explore off: repeating "follow this hobby" on every card of a
-          // feed already scoped to a hobby was redundant, and confusable
-          // with the Space-hero's own "Explore" a few inches above the
-          // whole feed. It's still offered from the Space hero and from a
-          // person's own profile — this is only the per-post row.
-          <PersonActions
-            personName={post.creator}
-            personId={post.userId}
-            hobbyKeys={[post.subHobby ?? `space:${post.hobbySlug}`]}
-            showExplore={false}
-            corner={
-              postCorner ? { spaceSlug: post.hobbySlug, slug: postCorner.slug, name: postCorner.name } : undefined
-            }
-            circle={postCircle ? { id: postCircle.id, hobbySlug: postCircle.hobbySlug, name: postCircle.name } : undefined}
-            compact={compact}
-            className={compact ? "mb-2" : "mb-3"}
-          />
-        )}
 
         {listing && (
           <Link to={`/product/${listing.id}`}>

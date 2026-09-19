@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router";
 import { Compass, Library, PlusCircle, UserRound, Users } from "lucide-react";
 import { useConnections } from "../context/ConnectionsContext";
+import { useAuth } from "../context/AuthContext";
+import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 
 /**
  * Phone and tablet navigation: five labelled destinations, matching the
@@ -15,9 +17,9 @@ import { useConnections } from "../context/ConnectionsContext";
  * Inbox isn't a tab of its own here: the header's notification bell and
  * message icon (Header.tsx) are visible on every breakpoint, including this
  * one, so /inbox stays one tap away without needing a sixth slot. The one
- * inbox-adjacent signal that lived on this bar — a dot for a pending
- * connection request or Circle invitation someone's waiting on — moves to
- * Profile below, the nearest personal-content tab, so it isn't lost.
+ * inbox-adjacent signal that lived on this bar — a dot for a pending follow
+ * request or Circle invitation someone's waiting on — moves to Profile
+ * below, the nearest personal-content tab, so it isn't lost.
  *
  * Visible below lg, exactly where the desktop top nav is hidden, so there is
  * never a width with no primary navigation and never two at once.
@@ -61,10 +63,10 @@ export const TABS = [
 
 export function BottomTabBar() {
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const connections = useConnections();
-  const waiting =
-    connections.connections.filter((c) => c.status === "pending" && c.addressee).length > 0 ||
-    connections.spaceInvitations.length > 0;
+  const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
+  const waiting = incomingFollows.length > 0 || connections.circleInvitations.length > 0;
 
   return (
     <>

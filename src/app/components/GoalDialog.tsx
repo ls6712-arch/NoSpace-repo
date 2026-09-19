@@ -46,7 +46,7 @@ function parseGoal(input: string): { target: number; unit: string } | null {
  * goal shows as plain-language progress ("3 of 10 pieces"), a date goal
  * just states the date, and "a feeling" never gets forced into a number at
  * all. That's deliberate: Quiet Milestones already set the precedent that
- * NoSpace doesn't scoreboard progress, and Goals shouldn't reintroduce it.
+ * Sushii doesn't scoreboard progress, and Goals shouldn't reintroduce it.
  */
 export function GoalDialog({
   open,

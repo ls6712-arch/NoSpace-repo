@@ -1,4 +1,4 @@
--- NoSpace: close privilege-escalation gaps in existing RLS policies, lock
+-- Sushii: close privilege-escalation gaps in existing RLS policies, lock
 -- down a few unrestricted writes, and add rate limiting.
 --
 --   Supabase → SQL Editor → New query → paste → Run

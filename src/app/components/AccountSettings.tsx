@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
 
 /**
  * The parts of an account a person can actually change.
@@ -26,6 +27,12 @@ export function AccountSettings() {
   const [nameDone, setNameDone] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
 
+  const [bio, setBio] = useState(profile?.bio ?? "");
+  const [savingBio, setSavingBio] = useState(false);
+  const [bioDone, setBioDone] = useState(false);
+  const [bioError, setBioError] = useState<string | null>(null);
+  const [bioTouched, setBioTouched] = useState(false);
+
   const [password, setPassword] = useState("");
   const [savingPw, setSavingPw] = useState(false);
   const [pwDone, setPwDone] = useState(false);
@@ -36,6 +43,9 @@ export function AccountSettings() {
   useEffect(() => {
     if (!touched && profile?.display_name) setName(profile.display_name);
   }, [profile?.display_name, touched]);
+  useEffect(() => {
+    if (!bioTouched) setBio(profile?.bio ?? "");
+  }, [profile?.bio, bioTouched]);
 
   // Live, not on blur/submit: emptiness has no "still typing, might become
   // valid" middle ground the way an email or password format does — the
@@ -81,6 +91,27 @@ export function AccountSettings() {
       setNameError("Couldn't reach the server. Try again in a moment.");
     } finally {
       setSavingName(false);
+    }
+  };
+
+  const saveBio = async () => {
+    if (savingBio) return;
+    const next = bio.trim();
+    setSavingBio(true);
+    setBioError(null);
+    setBioDone(false);
+    try {
+      const { error } = await supabase!.from("profiles").update({ bio: next || null }).eq("id", user.id);
+      if (error) setBioError(error.message);
+      else {
+        await refreshProfile();
+        setBioDone(true);
+        setBioTouched(false);
+      }
+    } catch {
+      setBioError("Couldn't reach the server. Try again in a moment.");
+    } finally {
+      setSavingBio(false);
     }
   };
 
@@ -145,6 +176,39 @@ export function AccountSettings() {
         {nameDone && <p className="mt-1.5 text-[11px] text-muted-foreground">Name updated.</p>}
       </div>
 
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <Label htmlFor="acct-bio" className="mb-1.5 block text-xs">
+          Bio
+        </Label>
+        <Textarea
+          id="acct-bio"
+          value={bio}
+          maxLength={280}
+          className="min-h-20"
+          placeholder="What got you into this, and where it's going…"
+          onChange={(e) => {
+            setBioTouched(true);
+            setBio(e.target.value);
+            setBioDone(false);
+          }}
+        />
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-muted-foreground">
+            Shown under your name on your Shelf and your public profile. Keep it short.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={savingBio || bio.trim() === (profile?.bio ?? "")}
+            onClick={saveBio}
+          >
+            {savingBio ? "Saving…" : bioDone ? <Check className="size-4" /> : "Save"}
+          </Button>
+        </div>
+        {bioError && <p className="mt-1.5 text-[11px] text-[var(--coral-text)]">{bioError}</p>}
+        {bioDone && <p className="mt-1.5 text-[11px] text-muted-foreground">Bio updated.</p>}
+      </div>
+
       {/* Only visible to whoever reviews suggestions — nobody, until the
           is_admin flag is granted by hand in SQL. */}
       {isAdmin && (
@@ -153,6 +217,15 @@ export function AccountSettings() {
           className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm transition-colors hover:border-[var(--coral-deep)]"
         >
           <span>Manage Spaces</span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+      )}
+      {isAdmin && (
+        <Link
+          to="/admin/circles"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm transition-colors hover:border-[var(--coral-deep)]"
+        >
+          <span>Manage Circles</span>
           <span className="text-muted-foreground">→</span>
         </Link>
       )}

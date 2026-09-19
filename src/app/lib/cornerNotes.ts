@@ -15,7 +15,7 @@ import { LOCAL_CLEARED_EVENT } from "./localData";
  * a sign-in on a different device — until then it's per-browser, and
  * nothing here claims otherwise.
  */
-const KEY = "nospace.cornerNotes.v1";
+const KEY = "sushii.cornerNotes.v1";
 const MAX_LENGTH = 140;
 
 type NotesState = Record<string, string>;

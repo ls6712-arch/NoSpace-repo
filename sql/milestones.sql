@@ -1,4 +1,4 @@
--- NoSpace: Shared milestones — which of a person's Quiet Milestones they've
+-- Sushii: Shared milestones — which of a person's Quiet Milestones they've
 -- explicitly chosen to show on their public profile.
 --
 --   Supabase → SQL Editor → New query → paste → Run

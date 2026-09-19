@@ -11,13 +11,19 @@
  * capture overwrites whatever was here before, once the person has actually
  * been asked about it (see the resume-or-discard prompt in Log.tsx).
  */
-const DRAFT_KEY = "nospace.draft.v1";
+const DRAFT_KEY = "sushii.draft.v1";
 
 export interface MomentDraftFields {
   thought: string;
   hobbySlug: string;
   subHobby: string;
   interest: string;
+  /** Open tags (TagsField) — local-only; the cross-device remote mirror
+   * (draftRemote.ts, sql/drafts.sql) still only carries the single legacy
+   * `interest` value above, so a draft recovered on a different device gets
+   * back its first tag rather than the full list. Optional so a draft saved
+   * before this field existed still loads. */
+  tags?: string[];
   spaceSet: boolean;
   audience: string;
   circleId?: number;

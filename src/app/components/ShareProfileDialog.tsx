@@ -27,7 +27,7 @@ export function ShareProfileDialog({
 
   const unlocked = badges.filter((b) => unlockedBadgeIds.includes(b.id));
 
-  const summary = `${stats.postsCreated} ${stats.postsCreated === 1 ? "thing" : "things"} created on NoSpace, ${unlocked.length} quiet ${unlocked.length === 1 ? "milestone" : "milestones"} reached. Create, don't just consume: ${publicUrl}`;
+  const summary = `${stats.postsCreated} ${stats.postsCreated === 1 ? "thing" : "things"} created on Sushii, ${unlocked.length} quiet ${unlocked.length === 1 ? "milestone" : "milestones"} reached. Create, don't just consume: ${publicUrl}`;
 
   const handleCopy = async () => {
     try {
@@ -42,7 +42,7 @@ export function ShareProfileDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
-        <DialogTitle className="sr-only">Share your NoSpace profile</DialogTitle>
+        <DialogTitle className="sr-only">Share your Sushii profile</DialogTitle>
         <div className="rounded-3xl p-[1.5px] [background-image:var(--gradient-brand)]">
           <div className="rounded-[calc(1.5rem-1.5px)] bg-[var(--surface)] p-7 text-center">
             <Avatar className="size-16 mx-auto mb-4">

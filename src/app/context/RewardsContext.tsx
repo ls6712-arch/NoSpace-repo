@@ -10,7 +10,7 @@ import { badges, RewardStats } from "../data/badges";
 import { useAuth } from "./AuthContext";
 import { shareMilestone, unshareMilestone } from "../lib/milestonesRemote";
 
-const STORAGE_KEY = "nospace.rewards.v1";
+const STORAGE_KEY = "sushii.rewards.v1";
 
 interface StoredState {
   points: number;

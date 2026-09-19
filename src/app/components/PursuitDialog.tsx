@@ -127,7 +127,7 @@ function CornerField({
 /**
  * Add to Your Pursuits — the whole point is that a Pursuit needs nothing but
  * a name. Corner and Space are both optional, both free-text at heart
- * (Space offers NoSpace's real Spaces as a shortcut, with "Other" for
+ * (Space offers Sushii's real Spaces as a shortcut, with "Other" for
  * anything that isn't one), and neither is validated against a taxonomy.
  * This is deliberately not the full Log flow: no photo, no audience, no
  * caption — just naming the thing you're about to start, plus an optional

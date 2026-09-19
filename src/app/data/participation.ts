@@ -1,5 +1,5 @@
 /**
- * The four ways to be part of something on NoSpace.
+ * The four ways to be part of something on Sushii.
  *
  * None of these is a follower relationship. "Keep exploring" attaches you to a
  * hobby, not a person. "Join in" attaches you to a thing that is happening.

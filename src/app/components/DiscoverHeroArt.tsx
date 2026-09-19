@@ -19,7 +19,7 @@ import {
  * A bespoke, one-off illustration for Discover's hero — not a generic hobby
  * scene picked from the shared rotation. It reuses the same flat-vector
  * primitives and warm palette as the rest of the app (so it still reads as
- * "NoSpace," not a foreign asset), just composed once, deliberately, at a
+ * "Sushii," not a foreign asset), just composed once, deliberately, at a
  * larger and more detailed scale: someone painting at an easel, a cat
  * keeping her company, a plant nearby — the "someone making something"
  * feeling the front door is supposed to give at a glance.

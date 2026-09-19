@@ -11,8 +11,8 @@ import {
   X,
 } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
-import { useConnections } from "../context/ConnectionsContext";
 import { useAuth } from "../context/AuthContext";
+import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 import { Button } from "./ui/button";
 
 /**
@@ -45,8 +45,8 @@ export function NotificationsMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const social = useSocial();
-  const connections = useConnections();
   const { user } = useAuth();
+  const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -66,14 +66,10 @@ export function NotificationsMenu() {
       (user ? p.toUser === user.id : false),
   );
 
-  // A pending connection request lives in ConnectionsContext, not
-  // SocialContext, so it never lit this bell before — the request itself is
-  // answered from /inbox (respondToConnection), this just says one's there.
-  const incomingConnections = connections.connections.filter(
-    (c) => c.status === "pending" && c.addressee === user?.id,
-  );
-
-  const dot = social.unreadCount > 0 || incoming.length > 0 || incomingConnections.length > 0;
+  // A pending follow request lives in profile_follows, not SocialContext, so
+  // it never lit this bell before — the request itself is answered from
+  // /inbox (respondToFollow), this just says one's there.
+  const dot = social.unreadCount > 0 || incoming.length > 0 || incomingFollows.length > 0;
 
   return (
     <div className="relative" ref={ref}>
@@ -82,7 +78,7 @@ export function NotificationsMenu() {
         size="icon"
         aria-label={
           dot
-            ? `Notifications (${social.unreadCount + incoming.length + incomingConnections.length})`
+            ? `Notifications (${social.unreadCount + incoming.length + incomingFollows.length})`
             : "Notifications"
         }
         aria-expanded={open}

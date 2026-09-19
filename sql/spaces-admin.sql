@@ -1,4 +1,4 @@
--- NoSpace: admin-managed Spaces.
+-- Sushii: admin-managed Spaces.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

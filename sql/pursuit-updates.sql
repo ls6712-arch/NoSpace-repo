@@ -1,4 +1,4 @@
--- NoSpace: link Moments/updates to the Pursuit they belong to.
+-- Sushii: link Moments/updates to the Pursuit they belong to.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

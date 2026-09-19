@@ -1,4 +1,4 @@
--- NoSpace: turn Circles into a real discussion board — threaded posts,
+-- Sushii: turn Circles into a real discussion board — threaded posts,
 -- tabs, a "mark answered" state, and photo replies.
 --
 --   Supabase → SQL Editor → New query → paste → Run

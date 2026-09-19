@@ -1,4 +1,4 @@
--- NoSpace: make people findable.
+-- Sushii: make people findable.
 --
 -- Nothing in the app could list a person, and the profiles table may also be
 -- locked to its owner — between them, someone who signed up simply did not

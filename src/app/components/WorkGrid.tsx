@@ -1,10 +1,18 @@
-import { useState } from "react";
-import { ImagePlus } from "lucide-react";
-import { Link } from "react-router";
-import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { ImagePlus, Pin } from "lucide-react";
 import { Post } from "../data/posts";
+import { useContent } from "../context/ContentContext";
 import { PostMedia } from "./PostMedia";
+import { MomentFeedOverlay } from "./MomentFeedOverlay";
 import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./ui/dialog";
 
 const PAGE_SIZE = 15;
 
@@ -12,57 +20,268 @@ function dateLabel(ts: number) {
   return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-/** The card's own dark ink color — the cream card is a deliberate, contained
- * exception to the app's dark surfaces (same pairing the flat illustrations
- * already use), so its text needs to be dark-on-cream, not the page's
- * light-on-dark foreground tokens. Exported so HobbyShelf's Corner tiles,
- * built to the same cream-card treatment, use the identical color rather
- * than a close approximation. */
-export const INK = "#3A2A1F";
+/** True only for a real, loadable upload — not a generated-art placeholder.
+ * Shared shape with HobbyShelf.tsx's own hasRealMedia, kept local here to
+ * avoid a cross-import for one line. */
+function hasRealMedia(post: Post) {
+  return !!post.media && /^https?:\/\//.test(post.media);
+}
 
-/** A colored tag per Space, cycling through the brand's warm-hue tokens —
- * same idea as HobbyShelf's book-spine colors. A few Spaces get an explicit
- * color instead of the rotation where one obviously fits (mustard for
- * cooking, green for anything craft-adjacent, plum for travel). Exported so
- * a Corner tile's tag resolves to the same color as this same Space's tag
- * on an All-moments card, instead of keeping a second, separately-hashed
- * mapping that could disagree with this one. */
-const TAG_TINTS = [
-  "color-mix(in srgb, var(--yellow) 78%, black)",
-  "var(--sky-deep)",
-  "var(--forest)",
-  "var(--coral-deep)",
-  "var(--plum)",
-];
-const TAG_TINT_OVERRIDES: Record<string, string> = {
-  "food-cooking": TAG_TINTS[0],
-  "art-creative": "var(--forest)",
-  "crafts-making": "var(--forest)",
-  "travel-adventure": "var(--plum)",
-};
-export function tagTint(hobbySlug: string) {
-  if (TAG_TINT_OVERRIDES[hobbySlug]) return TAG_TINT_OVERRIDES[hobbySlug];
-  const idx = hobbies.findIndex((h) => h.slug === hobbySlug);
-  return TAG_TINTS[(idx < 0 ? 0 : idx) % TAG_TINTS.length];
+type Aspect = "landscape" | "portrait" | "standard";
+
+/** Reads a real photo's actual shape so the bento grid can give it a block
+ * size based on its content — a wide shot spanning two columns, a portrait
+ * shot standing tall — rather than a repeating equal grid. Unknown until
+ * the image loads, at which point the grid gently reflows; a video (no
+ * cheap way to read its shape without loading the whole file) and any
+ * generated-art placeholder both stay "standard" deliberately (see Fix 5:
+ * a placeholder never grabs a block size that implies real content). */
+function useImageAspect(post: Post): Aspect {
+  const [aspect, setAspect] = useState<Aspect>("standard");
+  const url = post.type === "photo" && hasRealMedia(post) ? post.media : undefined;
+
+  useEffect(() => {
+    if (!url) return;
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      const ratio = img.naturalWidth / img.naturalHeight;
+      if (ratio >= 1.35) setAspect("landscape");
+      else if (ratio <= 0.8) setAspect("portrait");
+      else setAspect("standard");
+    };
+    img.src = url;
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  return url ? aspect : "standard";
 }
 
 /**
- * Your Moments, as a small photo-and-caption grid: a colored tag names what
- * each Moment's about, the date sits quietly in the corner, and the caption
- * reads underneath on its own cream card rather than laid over the photo.
- * "Pin a moment" closes out the row as a standing invitation to add another,
- * rather than the grid just stopping.
+ * Every one of this Shelf's own Moments, pickable to pin or unpin — opened
+ * from the grid's own "Pin a moment" tile rather than a new button
+ * somewhere else, since that tile already existed as exactly this
+ * invitation, just not wired to anything real yet.
+ */
+function PinPicker({
+  open,
+  onOpenChange,
+  posts,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  posts: Post[];
+}) {
+  const { togglePin } = useContent();
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  const toggle = async (postId: number) => {
+    setBusyId(postId);
+    await togglePin(postId);
+    setBusyId(null);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[80vh] max-w-md overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Pin your Moments</DialogTitle>
+          <DialogDescription>
+            Pinned Moments show first on your Shelf, for anyone who visits it.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1.5">
+          {posts.map((post) => (
+            <button
+              key={post.id}
+              type="button"
+              disabled={busyId === post.id}
+              onClick={() => toggle(post.id)}
+              className="flex w-full items-center gap-3 rounded-xl border border-border px-3 py-2.5 text-left transition-colors hover:border-[var(--coral-deep)] disabled:opacity-50"
+            >
+              <div className="size-11 shrink-0 overflow-hidden rounded-lg">
+                <PostMedia
+                  media={post.media}
+                  type={post.type}
+                  hobbySlug={post.hobbySlug}
+                  seed={post.id}
+                  preview
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <span className="min-w-0 flex-1 truncate text-sm">{post.caption || "Untitled moment"}</span>
+              <Pin
+                className={`size-4 shrink-0 ${post.pinned ? "text-[var(--coral-deep)]" : "text-muted-foreground"}`}
+                fill={post.pinned ? "currentColor" : "none"}
+              />
+            </button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** The bento span for one tile. Pinned always gets the hero treatment
+ * (real visual hierarchy, per Fix 7) regardless of its own photo's shape;
+ * everything else spans by its actual content. */
+function spanFor(pinned: boolean, aspect: Aspect): string {
+  if (pinned) return "col-span-2 row-span-2";
+  if (aspect === "landscape") return "col-span-2 row-span-1";
+  if (aspect === "portrait") return "col-span-1 row-span-2";
+  return "col-span-1 row-span-1";
+}
+
+function MomentTile({
+  post,
+  onOpenFeed,
+  justPublished,
+  reduceMotion,
+}: {
+  post: Post;
+  onOpenFeed: () => void;
+  justPublished: boolean;
+  reduceMotion: boolean;
+}) {
+  const aspect = useImageAspect(post);
+  const tag = post.tags?.[0];
+
+  // A placeholder illustration is never pretending to be a photo: fixed
+  // standard size, its own quiet paper-card treatment (caption underneath,
+  // not overlaid) rather than sharing the photo tiles' full-bleed one —
+  // see Fix 5. Real media always gets the full-bleed bento treatment.
+  if (!hasRealMedia(post)) {
+    return (
+      <button
+        type="button"
+        onClick={onOpenFeed}
+        className="col-span-1 row-span-1 flex h-full flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--paper-raised)] text-left transition-colors hover:border-[var(--coral-deep)]"
+        aria-label={`Open: ${post.caption.slice(0, 60)}`}
+      >
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <PostMedia
+            media={post.media}
+            type={post.type}
+            hobbySlug={post.hobbySlug}
+            seed={post.id}
+            preview
+            className="h-full w-full object-cover"
+          />
+        </div>
+        <div className="flex flex-1 flex-col gap-1 px-3.5 py-3">
+          <p
+            className="line-clamp-2 text-sm leading-snug text-[var(--ink)]"
+            style={{ fontFamily: "var(--font-serif)" }}
+          >
+            {post.caption}
+          </p>
+          <p className="mt-auto text-[11px] text-[var(--ink-faint)]">
+            {tag ? `${tag} · ` : ""}
+            {dateLabel(post.createdAt)}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onOpenFeed}
+      className={`group relative h-full overflow-hidden rounded-xl border ${
+        post.pinned ? "border-[var(--coral-deep)]" : "border-transparent"
+      } ${spanFor(post.pinned ?? false, aspect)}`}
+      aria-label={`Open: ${post.caption.slice(0, 60)}`}
+    >
+      <motion.div
+        layout={!reduceMotion}
+        // Shared with the composer's own "Saved." screen preview (Log.tsx)
+        // and the click-to-feed overlay's lead image — whichever of those
+        // is tracked alongside this tile hands its box off here instead of
+        // the tile just appearing cold. Skipped under reduced motion.
+        layoutId={reduceMotion ? undefined : `moment-${post.id}`}
+        {...(!reduceMotion && justPublished
+          ? {
+              initial: { opacity: 0, scale: 0.85 },
+              animate: { opacity: 1, scale: 1 },
+              transition: { type: "spring", stiffness: 300, damping: 26 },
+            }
+          : {})}
+        className="absolute inset-0"
+      >
+        <PostMedia
+          media={post.media}
+          type={post.type}
+          hobbySlug={post.hobbySlug}
+          seed={post.id}
+          preview
+          className="h-full w-full object-cover"
+        />
+      </motion.div>
+
+      {/* Full-bleed photo, caption on a bottom scrim — bold and oversized
+          rather than a fixed strip underneath, since the block itself is no
+          longer a fixed shape. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-3 text-left sm:p-4">
+        <p
+          className="text-base italic leading-snug text-white sm:text-lg"
+          style={{ fontFamily: "var(--font-serif)" }}
+        >
+          {post.caption.length > 90 ? `${post.caption.slice(0, 90)}…` : post.caption}
+        </p>
+        <p className="mt-1 text-[11px] text-white/70">
+          {tag ? `${tag} · ` : ""}
+          {dateLabel(post.createdAt)}
+        </p>
+      </div>
+
+      {post.pinned && (
+        <span
+          className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-[var(--coral-deep)] text-white shadow"
+          aria-hidden="true"
+        >
+          <Pin className="size-3.5" fill="currentColor" />
+        </span>
+      )}
+    </button>
+  );
+}
+
+/**
+ * Your Moments, as a genuine bento grid — block size follows the photo's
+ * own shape (a wide shot spans two columns, a portrait shot stands tall,
+ * most are standard) instead of a repeating equal grid. Pinned Moments get
+ * the same hero treatment regardless of shape, the one deliberate exception
+ * to "sized by its own content." "Pin a moment" closes out the grid as a
+ * standing invitation to add another, rather than the grid just stopping.
+ *
+ * Tags read from the Moment's own open tags now, in one neutral pill style
+ * — no per-Space color, see lib/postTags.ts and TagsField. A photo speaks
+ * for itself; the caption and tag are quiet metadata on top of it, not a
+ * colored badge claiming a category.
  */
 export function WorkGrid({
   posts,
   onOpen,
   emptyLabel,
+  editable = false,
 }: {
   posts: Post[];
   onOpen: (post: Post) => void;
   emptyLabel: string;
+  /** Only the owner can pin/unpin — a visitor's WorkGrid (PublicProfile) still
+   * sorts pinned Moments first, it just can't change which ones are. */
+  editable?: boolean;
 }) {
+  const { justPublishedId } = useContent();
+  const reduceMotion = !!useReducedMotion();
   const [shown, setShown] = useState(PAGE_SIZE);
+  const [pinPickerOpen, setPinPickerOpen] = useState(false);
+  const [feedIndex, setFeedIndex] = useState<number | null>(null);
 
   if (posts.length === 0) {
     return (
@@ -72,76 +291,37 @@ export function WorkGrid({
     );
   }
 
-  const visible = posts.slice(0, shown);
-  const remaining = posts.length - visible.length;
+  // Stable sort: pinned first, everything else keeps the order it arrived
+  // in (newest first, from the caller).
+  const ordered = [...posts].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned));
+  const visible = ordered.slice(0, shown);
+  const remaining = ordered.length - visible.length;
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {visible.map((post) => {
-          const hobby = getHobby(post.hobbySlug);
-          // Corner first — the tag should name the specific thing this
-          // Moment is about, not the broad Space it lives under, whenever
-          // it was actually tagged that specifically. Untagged Moments
-          // fall back to the Space name rather than a fabricated Corner.
-          const cornerLabel = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : hobby?.shortName;
-          return (
-            <button
-              key={post.id}
-              type="button"
-              onClick={() => onOpen(post)}
-              className="group text-left"
-              aria-label={`Open: ${post.caption.slice(0, 60)}`}
-            >
-              <div
-                className="overflow-hidden rounded-2xl border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
-                style={{ color: INK }}
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <PostMedia
-                    media={post.media}
-                    type={post.type}
-                    hobbySlug={post.hobbySlug}
-                    seed={post.id}
-                    preview
-                    className="h-full w-full object-cover"
-                  />
-                  {cornerLabel && (
-                    <span
-                      className="absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
-                      style={{ backgroundColor: tagTint(post.hobbySlug) }}
-                    >
-                      {cornerLabel}
-                    </span>
-                  )}
-                  <span
-                    className="absolute right-2.5 top-2.5 text-[11px] font-medium text-white"
-                    style={{ textShadow: "0 1px 3px rgba(0,0,0,0.45)" }}
-                  >
-                    {dateLabel(post.createdAt)}
-                  </span>
-                </div>
-                <div className="px-3.5 py-3">
-                  <p
-                    className="line-clamp-2 text-sm leading-snug sm:text-base"
-                    style={{ fontFamily: "var(--font-serif)" }}
-                  >
-                    {post.caption}
-                  </p>
-                </div>
-              </div>
-            </button>
-          );
-        })}
+      <div className="grid auto-rows-[130px] grid-cols-2 gap-2 sm:auto-rows-[160px] sm:grid-cols-3 lg:auto-rows-[190px] lg:grid-cols-4 [grid-auto-flow:dense]">
+        {visible.map((post, i) => (
+          <MomentTile
+            key={post.id}
+            post={post}
+            onOpenFeed={() => setFeedIndex(i)}
+            justPublished={post.id === justPublishedId}
+            reduceMotion={reduceMotion}
+          />
+        ))}
 
-        {remaining === 0 && (
-          <Link
-            to="/create"
-            className="flex h-full min-h-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+        {/* Owner-only: a visitor browsing someone else's Shelf has nothing
+            to pin here and no reason to be routed toward /create on their
+            own account. */}
+        {remaining === 0 && editable && (
+          <button
+            type="button"
+            onClick={() => setPinPickerOpen(true)}
+            className="col-span-1 row-span-1 flex h-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ImagePlus className="size-5" strokeWidth={1.7} />
             <span className="text-sm font-medium">Pin a moment</span>
-          </Link>
+          </button>
         )}
       </div>
 
@@ -152,6 +332,18 @@ export function WorkGrid({
           </Button>
         </div>
       )}
+
+      {editable && <PinPicker open={pinPickerOpen} onOpenChange={setPinPickerOpen} posts={posts} />}
+
+      <MomentFeedOverlay
+        posts={visible}
+        leadIndex={feedIndex}
+        onClose={() => setFeedIndex(null)}
+        onOpenDetail={(post) => {
+          setFeedIndex(null);
+          onOpen(post);
+        }}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
--- NoSpace: category suggestions, and who reviews them.
+-- Sushii: category suggestions, and who reviews them.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

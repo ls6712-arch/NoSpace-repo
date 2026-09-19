@@ -6,7 +6,7 @@ import { supabase } from "../../lib/supabase";
  * pursuitsRemote.ts/profileLinksRemote.ts, this is not a best-effort
  * mirror of a local-first store: the table is the only copy, which is the
  * whole point (a private log used to sit in localStorage under
- * `nospace.journal.v1`, tied to no account, and could leak to the next
+ * `sushii.journal.v1`, tied to no account, and could leak to the next
  * person signed in on a shared device). RLS on this table requires
  * `auth.uid() = user_id` for every operation and grants no public or
  * friends-only read path at all, so a signed-out visitor can't reach this

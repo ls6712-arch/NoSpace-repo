@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Link, useBlocker, useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft,
@@ -53,7 +54,7 @@ import {
 } from "../components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
 import { GeneratedArt } from "../components/GeneratedArt";
-import { InterestField } from "../components/InterestField";
+import { TagsField } from "../components/TagsField";
 import { CornerTagField } from "../components/CornerTagField";
 import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
@@ -272,9 +273,30 @@ export function Log() {
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
   const [type, setType] = useState<"photo" | "video">("photo");
-  const [interest, setInterest] = useState(initialPursuit?.interest ?? "");
-  // A Space is a place to put something, not a gate in front of making it.
-  const [spaceOpen, setSpaceOpen] = useState(false);
+  // Open, multiple tags — the caption screen's actual "what's this about"
+  // now (TagsField), replacing the old single interest field plus its own
+  // separate Space picker. Arriving from a Space or Corner's own "create"
+  // link (?hobby=/&sub=) still seeds a starting tag the same way it used to
+  // seed a starting Space — just as an editable, removable tag now, not a
+  // silent default nobody sees. hobbySlug/subHobby (declared above, and
+  // still used as-is by the separate "detail" screen's own Space picker for
+  // Pursuits) get set from whichever of these tags happens to match a known
+  // Corner — see the TagsField onChange below.
+  const [tags, setTags] = useState<string[]>(() => {
+    if (initialPursuit?.interest) return [initialPursuit.interest];
+    const subParam = searchParams.get("sub");
+    const subLabel = subParam ? subHobbyLabel(subParam) : undefined;
+    if (subLabel) return [subLabel];
+    if (hobbyParam) {
+      const seeded = hobbies.find((h) => h.slug === hobbyParam);
+      if (seeded) return [seeded.name];
+    }
+    return [];
+  });
+  // Read-only alias so the many existing "what's this about, in one word"
+  // call sites below (the default caption, the Pursuit-attach copy, the
+  // confirmation line) don't each need to know tags is now a list.
+  const interest = tags[0] ?? "";
   const [thought, setThought] = useState("");
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
@@ -293,6 +315,29 @@ export function Log() {
   const [locationName, setLocationName] = useState("");
   const [locationPrivacy, setLocationPrivacy] = useState<LocationPrivacy>("neighborhood");
   const [savedAs, setSavedAs] = useState<null | "shared" | "private">(null);
+  // The just-created Moment's id, for the "Saved." screen's own shared-
+  // layout morph into its Shelf-grid styling — see WorkGrid.tsx, which
+  // tracks the same layoutId for the real tile.
+  const [savedPostId, setSavedPostId] = useState<number | null>(null);
+  // Two stages on the "Saved." screen: the big composer-style preview,
+  // then — a beat later — the same box morphing (via layout/layoutId) into
+  // the small square the Shelf grid actually shows it as. Reduced motion
+  // skips straight to the settled stage: no morph, no delay.
+  const [savedTileSettled, setSavedTileSettled] = useState(false);
+  const reduceMotion = useReducedMotion();
+  useEffect(() => {
+    if (screen !== "saved" || savedAs !== "shared") {
+      setSavedTileSettled(false);
+      return;
+    }
+    if (reduceMotion) {
+      setSavedTileSettled(true);
+      return;
+    }
+    setSavedTileSettled(false);
+    const t = setTimeout(() => setSavedTileSettled(true), 700);
+    return () => clearTimeout(t);
+  }, [screen, savedAs, reduceMotion]);
   const [seed] = useState(() => Date.now());
   // 1-8 photos, or exactly 1 video — never mixed. See pickFiles below for
   // the one rule that keeps that true everywhere a file gets added.
@@ -410,7 +455,9 @@ export function Log() {
     setThought(draftPrompt.thought);
     setHobbySlug(draftPrompt.hobbySlug || defaultSpaceSlug());
     setSubHobby(draftPrompt.subHobby);
-    setInterest(draftPrompt.interest);
+    // A draft saved before tags existed only has the old single interest
+    // field — recovers as one tag rather than losing it.
+    setTags(draftPrompt.tags ?? (draftPrompt.interest ? [draftPrompt.interest] : []));
     setSpaceSet(draftPrompt.spaceSet);
     setAudience(draftPrompt.audience as Visibility | "private");
     setCircleId(draftPrompt.circleId);
@@ -447,6 +494,7 @@ export function Log() {
       hobbySlug,
       subHobby,
       interest,
+      tags,
       spaceSet,
       audience,
       circleId,
@@ -471,6 +519,7 @@ export function Log() {
     hobbySlug,
     subHobby,
     interest,
+    tags,
     spaceSet,
     audience,
     circleId,
@@ -582,10 +631,14 @@ export function Log() {
   const openProjects = journal.projects.filter(
     (p) => !p.finishedAt || p.id === initialPursuitId,
   );
-  // What the post is about, in the person's own words where they gave them.
-  const tagLabel =
-    interest.trim() ||
-    (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : hobby.shortName);
+  // What the post is about, in the person's own words where they gave them —
+  // the open tags the person actually typed (TagsField) take priority over
+  // hobby.shortName, which is just whichever Space happens to be selected
+  // and was never itself a claim about what the Moment is about. `null`
+  // (never a hobby-flavored guess) when nothing was actually chosen — the
+  // callers below fall back to a neutral, honest default instead.
+  const tagLabel: string | null =
+    tags[0] || interest.trim() || (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : null);
 
   /** Whatever the camera screen produced — a live capture, a recent pick, or
    * a single fresh library file — always lands here the same way. */
@@ -623,7 +676,7 @@ export function Log() {
       }).id;
     }
     const result = await addPrivateLog({
-      note: note || `A ${tagLabel.toLowerCase()} moment`,
+      note: note || (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment"),
       projectId: linkTo || undefined,
       // The picture is the point of a wordless capture. It used to be dropped
       // here and replaced with a generated placeholder, which read as the app
@@ -684,12 +737,13 @@ export function Log() {
     try {
       const caption =
         [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
-        `A ${tagLabel.toLowerCase()} moment`;
+        (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment");
 
       const entry = await addPost({
         hobbySlug,
         subHobby: subHobby || undefined,
         interest: interest.trim() || undefined,
+        tags,
         type,
         files: files.length ? files : undefined,
         creator: profile?.display_name?.trim() || "You",
@@ -698,8 +752,8 @@ export function Log() {
         visibility: audience,
         circleId: audience === "circle" ? circleId : undefined,
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
-        locationName: isActivity && locationName.trim() ? locationName.trim() : undefined,
-        locationPrivacy: isActivity ? locationPrivacy : undefined,
+        locationName: locationName.trim() ? locationName.trim() : undefined,
+        locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
         forSale: forSale
           ? {
               name: saleTitle.trim() || caption.slice(0, 40),
@@ -737,6 +791,7 @@ export function Log() {
       }
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
+      setSavedPostId(entry.id);
       setScreen("saved");
     } catch {
       setError("Something went wrong saving that. Mind trying again?");
@@ -755,15 +810,23 @@ export function Log() {
     setReflection("");
     setForSale(false);
     setSaleTitle("");
-    setInterest("");
-    setSpaceOpen(false);
+    setTags([]);
     setProjectTitle("");
     setProjectId("");
     setCircleId(undefined);
     setFiles([]);
     setError(null);
     setSavedAs(null);
+    setSavedPostId(null);
     setMode(null);
+    // Without these, posting an activity with a location and then logging
+    // another (plain) Moment right after silently carried both over onto
+    // the new post — a pre-existing gap that location being always visible
+    // now makes much easier to actually hit.
+    setIsActivity(false);
+    setStartsAt("");
+    setLocationName("");
+    setLocationPrivacy("neighborhood");
     setScreen(pursuitScoped ? "pursuit-menu" : "choose");
   };
 
@@ -1096,9 +1159,30 @@ export function Log() {
             </p>
           )}
 
-          <div className="mx-auto my-6 w-40 overflow-hidden rounded-xl border border-border">
+          <motion.div
+            layout={!reduceMotion}
+            // Same layoutId WorkGrid.tsx gives the real tile — when both are
+            // tracked at once, this box hands itself off into position on
+            // the Shelf instead of the grid tile just appearing cold.
+            layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
+            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            className={
+              savedTileSettled
+                ? "mx-auto my-6 w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
+                : "mx-auto my-6 w-40 overflow-hidden rounded-xl border border-border"
+            }
+          >
             <MediaPreview className="aspect-square w-full" />
-          </div>
+          </motion.div>
+          {savedAs === "shared" && !anySaveError && (
+            <p
+              className={`-mt-3 mb-3 text-xs text-muted-foreground transition-opacity duration-300 ${
+                savedTileSettled ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              Now on your Shelf.
+            </p>
+          )}
 
           {/* An honest failure beats a cheerful lie: the post is on screen but
               only in this tab, and it will be gone after a reload. */}
@@ -1242,73 +1326,33 @@ export function Log() {
             — one screen now, always expanded, one outcome decided by the
             audience picked below rather than by which button was tapped. */}
         <div className="mb-6 space-y-6">
-          {/* One merged field: typing a known hobby ("Pottery") tags the
-              Moment AND sets its Space in one step, instead of asking
-              "what's this about" and "which Space" separately. Picking
-              something that isn't a recognized hobby just leaves the Space
-              on its default — nothing here blocks posting. */}
+          {/* Open tags, not a Space picked from a fixed list: a Moment can
+              be "food photography" — two tags, not a contradiction between
+              a Space and its interest field underneath it. The first tag
+              that matches a known Corner still quietly sets hobby_slug/
+              sub_hobby for everything that still reads those (Corners,
+              badges, Pursuits) — see the onChange below — but nothing here
+              shows or requires that choice; typing tags that match nothing
+              just leaves those legacy fields on their default. */}
           <div>
             <h2 className="mb-2 text-sm">
-              <label htmlFor="interest">What is it about?</label>
+              <label htmlFor="tags">What is it about?</label>
             </h2>
-            <InterestField
-              value={interest}
+            <TagsField
+              value={tags}
               onChange={(next) => {
-                setInterest(next);
-                const match = findSpaceForInterest(next);
-                if (match) {
-                  setHobbySlug(match.hobbySlug);
-                  setSubHobby(match.slug);
-                  setSpaceSet(true);
+                setTags(next);
+                for (const t of next) {
+                  const match = findSpaceForInterest(t);
+                  if (match) {
+                    setHobbySlug(match.hobbySlug);
+                    setSubHobby(match.slug);
+                    setSpaceSet(true);
+                    break;
+                  }
                 }
               }}
-              placeholder="Search or type a hobby or interest..."
             />
-            {!spaceOpen ? (
-              <button
-                type="button"
-                onClick={() => setSpaceOpen(true)}
-                className="mt-1.5 text-[11px] text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
-              >
-                In {hobby.name} · change
-              </button>
-            ) : (
-              <div className="mt-2.5 rounded-2xl border border-border bg-surface px-4 py-3.5">
-                <div className="mb-2.5 flex items-center justify-between gap-3">
-                  <span className="text-sm">Choose a Space</span>
-                  <button
-                    type="button"
-                    onClick={() => setSpaceOpen(false)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Done
-                  </button>
-                </div>
-                <Select
-                  value={hobbySlug}
-                  onValueChange={(v) => {
-                    setHobbySlug(v);
-                    setSubHobby("");
-                    setCircleId(undefined);
-                    setSpaceSet(true);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a Space…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {hobbies.filter((h) => !h.hidden || h.slug === hobbySlug).map((h) => (
-                      <SelectItem key={h.slug} value={h.slug}>
-                        {h.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  {hobby.plainLabel}: {hobby.tagline.toLowerCase()}
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Only a thing that happens at a time needs a time. */}
@@ -1337,50 +1381,57 @@ export function Log() {
             </button>
 
             {isActivity && (
-              <div className="mt-4 space-y-3">
-                <div>
-                  <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
-                    When
-                  </Label>
-                  <Input
-                    id="startsAt"
-                    type="datetime-local"
-                    value={startsAt}
-                    onChange={(e) => setStartsAt(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="place" className="mb-1.5 block text-xs">
-                    Where
-                  </Label>
-                  <Input
-                    id="place"
-                    value={locationName}
-                    onChange={(e) => setLocationName(e.target.value)}
-                    placeholder="e.g. Prospect Park, Brooklyn"
-                  />
-                </div>
-                <div>
-                  <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
-                  <Select
-                    value={locationPrivacy}
-                    onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOCATION_PRIVACY.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}: {o.copy}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Neighborhood by default. Exact is never assumed.
-                  </p>
-                </div>
+              <div className="mt-4">
+                <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
+                  When
+                </Label>
+                <Input
+                  id="startsAt"
+                  type="datetime-local"
+                  value={startsAt}
+                  onChange={(e) => setStartsAt(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Where a Moment happened isn't only meaningful for a scheduled
+              activity — a photo from a trip or a walk deserves the same
+              option. Kept as its own section rather than nested under "This
+              is something happening" so it's never gated behind that toggle. */}
+          <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+            <div>
+              <Label htmlFor="place" className="mb-1.5 block text-xs">
+                Where (optional)
+              </Label>
+              <Input
+                id="place"
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                placeholder="e.g. Prospect Park, Brooklyn"
+              />
+            </div>
+            {locationName.trim() && (
+              <div className="mt-3">
+                <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
+                <Select
+                  value={locationPrivacy}
+                  onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOCATION_PRIVACY.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}: {o.copy}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Neighborhood by default. Exact is never assumed.
+                </p>
               </div>
             )}
           </div>
@@ -1591,7 +1642,7 @@ export function Log() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {hobbies.map((h) => (
+                        {hobbies.filter((h) => !h.hidden || h.slug === hobbySlug).map((h) => (
                           <SelectItem key={h.slug} value={h.slug}>
                             {h.name}
                           </SelectItem>

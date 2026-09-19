@@ -1,13 +1,10 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Camera, Compass, Globe2, Lock, NotebookPen, Quote, Sparkles, UserRound, Users } from "lucide-react";
-import { hobbies, getHobby, subHobbyLabel } from "../data/hobbies";
+import { ArrowRight, Camera, Compass, NotebookPen, Quote, Sparkles } from "lucide-react";
+import { hobbies } from "../data/hobbies";
 import { seedPosts } from "../data/posts";
-import { deriveProjects } from "../lib/journal";
 import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
-import { SuggestCategory } from "../components/SuggestCategory";
 import { ContentCard } from "../components/ContentCard";
-import { GeneratedArt } from "../components/GeneratedArt";
 import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
@@ -67,29 +64,6 @@ function useHeroParallax() {
   return ref;
 }
 
-const AUDIENCE_CARDS = [
-  {
-    icon: Lock,
-    label: "Just Me",
-    copy: "For the moments you want to keep for yourself.",
-  },
-  {
-    icon: UserRound,
-    label: "Clan",
-    copy: "Share with the people closest to you.",
-  },
-  {
-    icon: Users,
-    label: "Circle",
-    copy: "Share with a community built around what you're into.",
-  },
-  {
-    icon: Globe2,
-    label: "Everyone",
-    copy: "Make it visible to anyone exploring NoSpace.",
-  },
-];
-
 const VALUE_CARDS = [
   {
     icon: Camera,
@@ -124,16 +98,12 @@ export function Home() {
   // sections (see useScrollReveal.ts).
   const valueCardsRef = useScrollReveal<HTMLDivElement>();
   const loopRef = useScrollReveal<HTMLElement>();
-  const audienceRef = useScrollReveal<HTMLElement>();
-  const pursuitsRef = useScrollReveal<HTMLElement>();
   const cornerRef = useScrollReveal<HTMLElement>();
   const discoverRef = useScrollReveal<HTMLElement>();
   const quoteRef = useScrollReveal<HTMLElement>();
   const finalCtaRef = useScrollReveal<HTMLElement>();
 
   const cornerMoments = seedPosts.filter((p) => p.subHobby === "pickleball").slice(0, 4);
-
-  const pursuits = deriveProjects(seedPosts, subHobbyLabel).slice(0, 3);
 
   return (
     <div className="min-h-screen">
@@ -247,83 +217,6 @@ export function Home() {
           </div>
         </section>
 
-        {/* Audience */}
-        <section ref={audienceRef} className="ns-reveal py-20 lg:py-28">
-          <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-            <div className="mb-10 max-w-xl lg:mb-12">
-              <div className="ns-section-kicker mb-4">EVERY MOMENT, ITS OWN AUDIENCE</div>
-              <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-                Every Moment picks its own audience.
-              </h2>
-              <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
-                Choose who gets to see each Moment. Your whole life does not
-                have to be public.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              {AUDIENCE_CARDS.map(({ icon: Icon, label, copy }) => (
-                <div key={label} className="ns-audience-card rounded-2xl p-5">
-                  <span className="mb-4 flex size-10 items-center justify-center rounded-full bg-surface-muted">
-                    <Icon className="size-4.5 text-foreground" strokeWidth={1.7} />
-                  </span>
-                  <div className="mb-1.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>{label}</div>
-                  <p className="text-xs leading-relaxed text-muted-foreground">{copy}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Pursuits */}
-        {pursuits.length > 0 && (
-          <section ref={pursuitsRef} className="ns-reveal py-20 [background-color:var(--forest)] lg:py-28">
-            <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-              <div className="mx-auto mb-12 max-w-xl text-center">
-                <div className="mb-4 font-hud text-[10px] tracking-[.18em] text-[var(--yellow)]">PURSUITS</div>
-                <h2 className="mb-3 text-3xl text-[var(--on-forest)] lg:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  A story that gets richer over time.
-                </h2>
-                <p className="text-[var(--on-forest-muted)]">
-                  Your Pursuits aren't a list of achievements. They're a
-                  record of what you've been curious enough to explore.
-                </p>
-              </div>
-              <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3">
-                {pursuits.map((pursuit) => (
-                  <Link
-                    key={pursuit.key}
-                    to={`/pursuit/${encodeURIComponent(pursuit.key)}`}
-                    className="ns-pursuit-card group block overflow-hidden rounded-2xl"
-                  >
-                    <div className="relative aspect-square overflow-hidden [background-color:var(--forest-ink)]">
-                      <GeneratedArt
-                        hobbySlug={pursuit.hobbySlug}
-                        seed={pursuit.updates[0]?.id ?? pursuit.key}
-                        className="h-full w-full transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <span className="absolute left-2.5 top-2.5 rounded-sm border border-[var(--on-forest)]/30 bg-[var(--void)]/85 px-2 py-1 font-hud text-[10px] tracking-[.05em] text-[var(--on-forest)]">
-                        {pursuit.updates.length} Moment{pursuit.updates.length === 1 ? "" : "s"}
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <div className="mb-1 text-lg text-[var(--on-forest)]" style={{ fontFamily: "var(--font-serif)" }}>
-                        {pursuit.title}
-                      </div>
-                      <div className="mb-2 text-xs text-[var(--on-forest-muted)]">
-                        {pursuit.creator} · {getHobby(pursuit.hobbySlug)?.shortName}
-                      </div>
-                      <span className="font-hud text-[10px] uppercase tracking-[.06em] text-[var(--yellow)]">View Pursuit →</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-              <p className="mt-12 text-center text-lg text-[var(--on-forest)]" style={{ fontFamily: "var(--font-serif)" }}>
-                Keep living. Keep logging. Watch it add up.
-              </p>
-            </div>
-          </section>
-        )}
-
         {/* Whatever pulls you in */}
         <WorldsSection />
 
@@ -339,10 +232,10 @@ export function Home() {
                 <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
                   A Corner is the specific thing inside a Space, like Pickleball
                   inside Sports &amp; Fitness. Here's an example, shown with
-                  real Moments from NoSpace's sample content.
+                  real Moments from Sushii's sample content.
                 </p>
               </div>
-              <div className="columns-1 gap-4 sm:columns-2 lg:columns-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {cornerMoments.map((post) => (
                   <ContentCard key={post.id} post={post} compact />
                 ))}
@@ -361,10 +254,10 @@ export function Home() {
                   One place for everything you do.
                 </h2>
                 <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
-                  Fifteen Spaces today, and growing. Anyone can suggest one.
-                  Inside each Space, Corners are as specific as you need them:
-                  tag a Moment "Pasta Making" instead of just "Cooking," and
-                  the Corner exists. No approval queue.
+                  Fifteen Spaces today. Inside each one, tag a Moment
+                  anything you like — "Pasta Making," "Food Photography,"
+                  both at once — and it's there. No fixed list, no approval
+                  queue.
                 </p>
               </div>
               <Link to="/discover" className="ns-text-link hidden shrink-0 sm:inline-flex">
@@ -376,9 +269,6 @@ export function Home() {
               {hobbies.filter((h) => !h.hidden).map((hobby) => (
                 <HobbyCategoryCard key={hobby.slug} hobby={hobby} showCorners />
               ))}
-              <div className="flex items-start">
-                <SuggestCategory className="h-full" />
-              </div>
             </div>
           </div>
         </section>
@@ -420,7 +310,7 @@ export function Home() {
       <footer className="border-t border-[var(--hairline)] py-12">
         <div className="container mx-auto flex flex-col items-center gap-6 px-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="text-center sm:text-left">
-            <span className="text-lg text-foreground" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
+            <span className="text-lg text-foreground" style={{ fontFamily: "var(--font-serif)" }}>Sushii</span>
             <p className="mt-1 max-w-xs text-sm text-muted-foreground">
               One place for everything you're living, doing, and making.
             </p>

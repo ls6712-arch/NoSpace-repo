@@ -4,7 +4,7 @@ import { supabase } from "../../lib/supabase";
 /**
  * Finding people.
  *
- * The rest of NoSpace deliberately routes you Person → Hobby → People, and
+ * The rest of Sushii deliberately routes you Person → Hobby → People, and
  * that stays true: the primary way you meet someone is by being in the same
  * craft. But "I can't find my friend who just joined" is not a principle, it's
  * a bug, so a name search exists too.
@@ -187,7 +187,7 @@ export async function peopleInHobby(hobbySlug: string, limit = 12): Promise<Pers
  * A default browsable set of people, for landing on /people with nothing
  * typed and no hobby picked. Ordered by recency (newest profiles first),
  * never by post count, likes, or any popularity signal — consistent with
- * "no follower counts anywhere on NoSpace."
+ * "no follower counts anywhere on Sushii."
  */
 export async function browsePeople(limit = 24): Promise<Person[]> {
   if (!supabase) return [];

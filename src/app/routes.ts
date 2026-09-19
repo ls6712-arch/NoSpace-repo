@@ -16,17 +16,21 @@ import { Circles } from "./pages/Circles";
 import { CircleBoard } from "./pages/CircleBoard";
 import { Log } from "./pages/Log";
 import { You } from "./pages/You";
+import { Onboarding } from "./pages/Onboarding";
 import { Messages } from "./pages/Messages";
 import { Inbox } from "./pages/Inbox";
 import { People } from "./pages/People";
 import { AdminCategories } from "./pages/AdminCategories";
 import { AdminSpaces } from "./pages/AdminSpaces";
+import { AdminCircles } from "./pages/AdminCircles";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
+import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
+import { Settings } from "./pages/Settings";
 import { NotFound } from "./pages/NotFound";
 
 export const router = createHashRouter([
@@ -35,7 +39,7 @@ export const router = createHashRouter([
     Component: Root,
     children: [
       // "/" is the landing page, for everyone. The wordmark points here from
-      // every page and is the way back to what NoSpace says it is — sending a
+      // every page and is the way back to what Sushii says it is — sending a
       // signed-in person to their feed instead took that away. My Space is a
       // destination of its own, at /my-space.
       { index: true, Component: Home },
@@ -52,9 +56,12 @@ export const router = createHashRouter([
       { path: "category/:slug", loader: ({ params }) => redirect(`/space/${params.slug}`) },
       { path: "admin/categories", Component: AdminCategories },
       { path: "admin/spaces", Component: AdminSpaces },
+      { path: "admin/circles", Component: AdminCircles },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },
+      { path: "settings", Component: Settings },
+      { path: "onboarding", Component: Onboarding },
       { path: "inbox", Component: Inbox },
       // Messages was the old destination; Inbox subsumes it.
       { path: "messages", loader: () => redirect("/inbox") },
@@ -63,6 +70,8 @@ export const router = createHashRouter([
       { path: "corner/:slug", Component: CornerPage },
       { path: "pursuit/:id", Component: Pursuit },
       { path: "u/:username", Component: PublicProfile },
+      { path: "u/:username/studio", Component: Studio },
+      { path: "studio", Component: Studio },
       { path: "login", Component: Login },
       { path: "shop", Component: Shop },
       { path: "product/:id", Component: ProductDetail },

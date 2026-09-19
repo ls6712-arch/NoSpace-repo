@@ -8,10 +8,9 @@ import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
 import { circlesByHobby } from "../data/circles";
 import { usePeopleInHobby } from "../lib/people";
 import { sessionsFromPosts } from "../components/HobbyShelf";
+import { tagsFromPosts } from "../lib/postTags";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { PersonActions } from "../components/PersonActions";
-import { HandwrittenNote } from "../components/HandwrittenNote";
 import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCard } from "../components/PursuitCard";
 import { QuietMilestones, SharedMilestones } from "../components/QuietMilestones";
@@ -23,6 +22,8 @@ import { fetchProfileLinks } from "../lib/profileLinksRemote";
 import { fetchSharedMilestoneIds } from "../lib/milestonesRemote";
 import { ProfileLink } from "../lib/profileLinks";
 import { ProfileLinksRow } from "../components/ProfileLinks";
+import { useFollowerCount } from "../lib/useFollowerCount";
+import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/profileFollows";
 
 /** Whichever Space shows up most in their posts — used to pick a Circles
  * suggestion and the closing banner's illustration, not to claim membership
@@ -66,6 +67,7 @@ export function PublicProfile() {
         displayName: string;
         avatarUrl?: string;
         tagline?: string;
+        bio?: string;
         posts: Post[];
       }
   >({ status: "loading" });
@@ -81,6 +83,15 @@ export function PublicProfile() {
   // Only the specific milestones this person chose to share — never their
   // locked ones, and never anything inferred from their public post count.
   const [sharedMilestoneIds, setSharedMilestoneIds] = useState<string[]>([]);
+  // Real, accept-based person-follows-person state (sql/profile-follows.sql)
+  // — a follow only counts once the followed person accepts it.
+  const [followStatus, setFollowStatus] = useState<FollowStatus>("none");
+  const [followBusy, setFollowBusy] = useState(false);
+  const [followRefreshKey, setFollowRefreshKey] = useState(0);
+  const followerCount = useFollowerCount(
+    state.status === "ready" ? state.personId : undefined,
+    followRefreshKey,
+  );
 
   useEffect(() => {
     // React Router reuses this component instance across two profiles under
@@ -117,20 +128,21 @@ export function PublicProfile() {
         display_name: string;
         avatar_url: string | null;
         tagline: string | null;
+        bio: string | null;
       };
       let profileRow: Row | null = null;
 
       if (isUuid) {
         const { data } = await supabase
           .from("profiles")
-          .select("id, username, display_name, avatar_url, tagline")
+          .select("id, username, display_name, avatar_url, tagline, bio")
           .eq("id", username)
           .maybeSingle();
         profileRow = (data as Row | null) ?? null;
       } else {
         const { data } = await supabase
           .from("profiles")
-          .select("id, username, display_name, avatar_url, tagline")
+          .select("id, username, display_name, avatar_url, tagline, bio")
           .eq("username", username)
           .maybeSingle();
         profileRow = (data as Row | null) ?? null;
@@ -139,7 +151,7 @@ export function PublicProfile() {
         if (!profileRow) {
           const { data: byName } = await supabase
             .from("profiles")
-            .select("id, username, display_name, avatar_url, tagline")
+            .select("id, username, display_name, avatar_url, tagline, bio")
             .ilike("display_name", username)
             .limit(1);
           profileRow = (byName?.[0] as Row | undefined) ?? null;
@@ -170,6 +182,8 @@ export function PublicProfile() {
         createdAt: new Date(row.created_at).getTime(),
         visibility: "public",
         userId: row.user_id,
+        tags: row.tags ?? [],
+        pinned: row.pinned ?? false,
       }));
 
       setState({
@@ -178,6 +192,7 @@ export function PublicProfile() {
         displayName: profileRow.display_name,
         avatarUrl: profileRow.avatar_url ?? undefined,
         tagline: profileRow.tagline ?? undefined,
+        bio: profileRow.bio ?? undefined,
         posts,
       });
     })();
@@ -221,6 +236,20 @@ export function PublicProfile() {
     };
   }, [state.status === "ready" ? state.personId : null]);
 
+  useEffect(() => {
+    if (state.status !== "ready" || !user || user.id === state.personId) {
+      setFollowStatus("none");
+      return;
+    }
+    let cancelled = false;
+    fetchFollowStatus(user.id, state.personId).then((status) => {
+      if (!cancelled) setFollowStatus(status);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.status === "ready" ? state.personId : null, user?.id]);
+
   if (state.status === "loading") {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
@@ -247,24 +276,25 @@ export function PublicProfile() {
     );
   }
 
-  const { personId, displayName, avatarUrl, tagline, posts } = state;
+  const { personId, displayName, avatarUrl, tagline, bio, posts } = state;
   const isMe = !!user && user.id === personId;
   const firstName = displayName.split(" ")[0];
   const sessions = sessionsFromPosts(posts);
+  const tags = tagsFromPosts(posts);
 
-  // Focusing a hobby narrows THEIR work on THEIR page. It used to navigate to
+  // Focusing a tag narrows THEIR work on THEIR page. It used to navigate to
   // the global Space, which showed the viewer their own empty version.
-  const focusKey = searchParams.get("hobby");
-  const setFocus = (key: string | null) => {
+  const focusTag = searchParams.get("tag");
+  const setFocus = (tag: string | null) => {
     const next = new URLSearchParams(searchParams);
-    if (key) next.set("hobby", key);
-    else next.delete("hobby");
+    if (tag) next.set("tag", tag);
+    else next.delete("tag");
     setSearchParams(next, { replace: true });
   };
   // A shared link carries ?moment=<id>; open it once the posts have loaded.
   const momentParam = searchParams.get("moment");
-  const shownPosts = focusKey
-    ? posts.filter((p) => (p.subHobby ?? `space:${p.hobbySlug}`) === focusKey)
+  const shownPosts = focusTag
+    ? posts.filter((p) => (p.tags ?? []).some((t) => t.toLowerCase() === focusTag.toLowerCase()))
     : posts;
   const initials = displayName
     .split(" ")
@@ -283,28 +313,61 @@ export function PublicProfile() {
   const hobby = hobbySlug ? getHobby(hobbySlug) : undefined;
   const relatedCircles = hobbySlug ? circlesByHobby(hobbySlug).slice(0, 4) : [];
 
+  const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
+  const sinceLabel = earliestPostAt
+    ? new Date(earliestPostAt).toLocaleDateString(undefined, {
+        month: "long",
+        year: new Date(earliestPostAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
+      })
+    : null;
+
   return (
-    <div className="ns-public-profile min-h-screen bg-surface py-8 sm:py-10">
+    <div className="ns-paper-theme ns-public-profile min-h-screen bg-surface py-8 sm:py-10">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-5 sm:gap-6">
-            <Avatar className="size-20 shrink-0 sm:size-28">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt="" className="object-cover" />}
-              <AvatarFallback className="text-xl">{initials}</AvatarFallback>
-            </Avatar>
+        <div className="mb-8 flex items-start gap-5 sm:gap-6">
+          <Avatar className="size-20 shrink-0 sm:size-28">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt="" className="object-cover" />}
+            <AvatarFallback className="text-xl">{initials}</AvatarFallback>
+          </Avatar>
             <div className="min-w-0">
               <h1
-                className="truncate text-3xl leading-tight sm:text-4xl"
-                style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
+                className="truncate text-4xl leading-tight sm:text-5xl"
+                style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
               >
                 {displayName}
               </h1>
-              {tagline && <p className="mt-1 text-sm italic text-muted-foreground">{tagline}</p>}
-              {sessions.length > 0 && (
-                <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  {sessions.slice(0, 5).map((s) => s.label).join(", ")}.
+              {bio && (
+                <p
+                  className="mt-1.5 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg"
+                  style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+                >
+                  {bio}
                 </p>
               )}
+              {tagline && (
+                <p
+                  className="mt-1 max-w-md text-base italic text-muted-foreground sm:text-lg"
+                  style={{ fontFamily: "var(--font-serif)" }}
+                >
+                  {tagline}
+                </p>
+              )}
+              <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
+                <span>
+                  <strong className="text-foreground">{posts.length}</strong>{" "}
+                  {posts.length === 1 ? "moment" : "moments"} logged
+                  {sinceLabel ? ` since ${sinceLabel}` : ""}
+                </span>
+                {followerCount !== null && followerCount > 0 && (
+                  <>
+                    <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                    <span>
+                      <strong className="text-foreground">{followerCount}</strong>{" "}
+                      {followerCount === 1 ? "follower" : "followers"}
+                    </span>
+                  </>
+                )}
+              </div>
               {primaryHobby && (
                 <p className="mt-1 text-sm text-muted-foreground">
                   {milestoneText(primaryHobby.label, primaryHobby.firstActivityAt)} · Keep going.
@@ -312,45 +375,57 @@ export function PublicProfile() {
               )}
               {profileLinks.length > 0 && <ProfileLinksRow links={profileLinks} className="mt-3" />}
               <div className="mt-4 flex flex-wrap gap-2">
-                {/* Not a Follow button. You attach to the hobby, or ask to do a
-                    specific thing together — never to the person as a person.
-                    Not shown on your own shelf — you can't ask yourself to
-                    make something together. personId comes from the profile
-                    itself, so it exists even before this person has posted. */}
-                {!isMe && (
-                  <PersonActions
-                    personName={displayName}
-                    personId={personId}
-                    hobbyKeys={posts.map((p) => p.subHobby ?? `space:${p.hobbySlug}`)}
-                  />
+                {/* Accept-based: a request sent isn't a follower yet, and
+                    only counts toward the number above once accepted — see
+                    sql/profile-follows.sql. Doesn't show on your own shelf. */}
+                {!isMe && user && (
+                  <Button
+                    variant={followStatus === "none" || followStatus === "declined" ? "brand" : "outline"}
+                    disabled={followBusy}
+                    onClick={async () => {
+                      setFollowBusy(true);
+                      const requesting = followStatus === "none" || followStatus === "declined";
+                      const ok = requesting
+                        ? await follow(user.id, personId)
+                        : await unfollow(user.id, personId);
+                      if (ok) {
+                        setFollowStatus(requesting ? "pending" : "none");
+                        setFollowRefreshKey((k) => k + 1);
+                      }
+                      setFollowBusy(false);
+                    }}
+                  >
+                    {followStatus === "accepted"
+                      ? "Following"
+                      : followStatus === "pending"
+                        ? "Requested"
+                        : "Follow"}
+                  </Button>
                 )}
                 <CopyLinkButton />
               </div>
+              <Link
+                to={`/u/${username}/studio`}
+                className="mt-2 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Open Studio →
+              </Link>
             </div>
-          </div>
-          <HandwrittenNote className="max-w-[220px] sm:mt-2">
-            Curious creators make a brighter world.
-          </HandwrittenNote>
         </div>
 
-        {sessions.length > 0 && (
-          <div className="mb-8 flex flex-wrap gap-2">
-            {sessions.slice(0, 6).map((s) => {
-              const on = focusKey === s.key;
+        {tags.length > 0 && (
+          <div className="ns-you-tags ns-you-tags--pills mb-8 flex flex-wrap gap-2">
+            {tags.slice(0, 6).map(({ tag }) => {
+              const on = focusTag?.toLowerCase() === tag.toLowerCase();
               return (
                 <button
-                  key={s.key}
+                  key={tag}
                   type="button"
                   aria-pressed={on}
-                  onClick={() => setFocus(on ? null : s.key)}
-                  className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
-                    on
-                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                      : "border-border bg-white/[0.04] text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-                  }`}
-                  style={{ fontFamily: "var(--font-serif)" }}
+                  onClick={() => setFocus(on ? null : tag)}
+                  className={`ns-pill ${on ? "ns-pill--active" : ""}`}
                 >
-                  {s.label}
+                  {tag}
                 </button>
               );
             })}
@@ -366,16 +441,17 @@ export function PublicProfile() {
           <section>
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
               <div>
-                <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  {focusKey
-                    ? `What ${firstName} makes in ${sessions.find((s) => s.key === focusKey)?.label.toLowerCase()}`
-                    : `What ${firstName} makes`}
+                <h2
+                  className="text-2xl sm:text-3xl"
+                  style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+                >
+                  {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   A look into the things they've created, explored, and loved.
                 </p>
               </div>
-              {focusKey && (
+              {focusTag && (
                 <button
                   type="button"
                   onClick={() => setFocus(null)}
@@ -388,6 +464,7 @@ export function PublicProfile() {
             <WorkGrid
               posts={shownPosts}
               onOpen={setOpenPost}
+              editable={isMe}
               emptyLabel={`${firstName} hasn't shared any Moments publicly yet.`}
             />
           </section>

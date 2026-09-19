@@ -99,7 +99,7 @@ interface LocalCorner {
   description?: string;
 }
 
-const LOCAL_KEY = "nospace.corners.local.v1";
+const LOCAL_KEY = "sushii.corners.local.v1";
 
 /**
  * Corners created via "Create a Corner" while signed out, or while Supabase
