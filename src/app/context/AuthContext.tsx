@@ -39,6 +39,9 @@ export interface Profile {
   cover_title?: string | null;
   cover_tagline?: string | null;
   cover_post_id?: number | null;
+  /** "system" follows the OS; set from Settings > Appearance and mirrored to
+   * localStorage so it survives being signed out (sql/theme-preference.sql). */
+  theme_preference?: "system" | "light" | "dark";
 }
 
 interface AuthContextType {
@@ -82,12 +85,18 @@ interface AuthContextType {
         | "cover_title"
         | "cover_tagline"
         | "cover_post_id"
+        | "theme_preference"
       >
     >,
   ) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Module-level so it survives across re-renders without extra state, and is
+// only ever set true (a schema, once migrated, doesn't go missing again
+// within a page session).
+let themeColumnKnownMissing = false;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(isSupabaseConfigured);
@@ -103,14 +112,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const loadProfile = async (userId: string, expectName?: string) => {
     if (!supabase) return;
+    // theme_preference (sql/theme-preference.sql) may not exist yet on a
+    // database that hasn't run that migration — a select naming a missing
+    // column fails outright, which would otherwise leave `profile` stuck at
+    // null for everyone. Once seen missing, stop asking for it this session.
     for (let attempt = 0; attempt < 4; attempt++) {
-      const { data } = await supabase
+      const columns = themeColumnKnownMissing
+        ? "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id"
+        : "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, theme_preference";
+      const { data, error } = await supabase
         .from("profiles")
-        .select(
-          "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id",
-        )
+        .select(columns)
         .eq("id", userId)
         .maybeSingle();
+      if (error && !themeColumnKnownMissing && error.code === "42703") {
+        themeColumnKnownMissing = true;
+        attempt -= 1;
+        continue;
+      }
       const row = data as Profile | null;
       if (row) {
         setProfile(row);
