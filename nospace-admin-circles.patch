@@ -1,0 +1,635 @@
+diff --git a/sql/circles-admin.sql b/sql/circles-admin.sql
+new file mode 100644
+index 0000000..1d47ba8
+--- /dev/null
++++ b/sql/circles-admin.sql
+@@ -0,0 +1,116 @@
++-- NoSpace: let an admin delete a Circle.
++--
++--   Supabase → SQL Editor → New query → paste → Run
++--
++-- Safe to re-run. Requires sql/categories.sql (for is_admin()),
++-- sql/circles.sql, sql/circle-invites.sql and sql/circle-threads.sql.
++--
++-- Why this needs its own functions
++--   * Nobody can delete a Circle today: circles.sql gives the owner insert,
++--     select and update, but no delete policy at all.
++--   * Deleting the row is not enough. circle_members cascades, but
++--     circle_invites has no foreign key, and a Circle's threads are ordinary
++--     rows in `posts` that point at it with no foreign key either. A bare
++--     delete would leave invites and threads pointing at nothing.
++--
++-- The id offset
++--   The app numbers real Circles as (circles.id + 1,000,000) so they never
++--   collide with the small demo-Circle ids that live in code, and it stores
++--   that offset number in posts.circle_id (see CirclesContext.tsx and
++--   ContentContext.tsx). Every function here takes the RAW circles.id and does
++--   the offset itself, so nobody has to remember it.
++--
++-- What happens to the Circle's threads
++--   Chosen by the admin, per delete:
++--     'keep_private'  (default) the threads stay, become their author's own
++--                     posts (visibility 'friends' = owner-only once
++--                     sql/fix-post-read-policy.sql is in place), and are
++--                     unhooked from the Circle. Nothing is exposed, nothing
++--                     is lost.
++--     'delete'        the threads are deleted with the Circle.
++--   Threads are NEVER made public: they were posted into a room people may
++--   have believed was small.
++
++-- ─────────────────────────────────────────────────────────────────────────
++-- 1. What still points at a Circle
++--    SECURITY DEFINER so a Members-only thread still counts even though the
++--    admin couldn't read it under row-level security. Admin-only.
++-- ─────────────────────────────────────────────────────────────────────────
++create or replace function public.circle_usage(p_id bigint)
++returns jsonb
++language plpgsql
++stable
++security definer
++set search_path = public
++as $$
++begin
++  if not public.is_admin(auth.uid()) then
++    raise exception 'Only an admin can do that.';
++  end if;
++
++  return jsonb_build_object(
++    'members', (select count(*) from public.circle_members where circle_id = p_id),
++    'invites', (select count(*) from public.circle_invites where circle_id = p_id),
++    'threads', (select count(*) from public.posts          where circle_id = p_id + 1000000)
++  );
++end;
++$$;
++
++revoke all on function public.circle_usage(bigint) from public, anon;
++grant execute on function public.circle_usage(bigint) to authenticated;
++
++-- ─────────────────────────────────────────────────────────────────────────
++-- 2. Delete a Circle
++-- ─────────────────────────────────────────────────────────────────────────
++create or replace function public.admin_delete_circle(
++  p_id bigint,
++  p_threads text default 'keep_private'
++)
++returns jsonb
++language plpgsql
++security definer
++set search_path = public
++as $$
++declare
++  n_threads int;
++  n_invites int;
++begin
++  if not public.is_admin(auth.uid()) then
++    raise exception 'Only an admin can do that.';
++  end if;
++
++  if p_threads not in ('keep_private', 'delete') then
++    raise exception 'Choose what happens to the threads: keep_private or delete.';
++  end if;
++
++  if not exists (select 1 from public.circles where id = p_id) then
++    raise exception 'That Circle doesn''t exist. (Demo Circles are built into the app and can''t be deleted here.)';
++  end if;
++
++  if p_threads = 'keep_private' then
++    update public.posts
++       set visibility = 'friends',
++           circle_id = null,
++           circle_tab = null,
++           -- circle contributions default to hidden from the author's own
++           -- Moments; once they're the author's private posts they should
++           -- show up there.
++           hidden_from_moments = false
++     where circle_id = p_id + 1000000;
++  else
++    delete from public.posts where circle_id = p_id + 1000000;
++  end if;
++  get diagnostics n_threads = row_count;
++
++  delete from public.circle_invites where circle_id = p_id;
++  get diagnostics n_invites = row_count;
++
++  -- circle_members cascades from this.
++  delete from public.circles where id = p_id;
++
++  return jsonb_build_object('threads', n_threads, 'invites', n_invites, 'mode', p_threads);
++end;
++$$;
++
++revoke all on function public.admin_delete_circle(bigint, text) from public, anon;
++grant execute on function public.admin_delete_circle(bigint, text) to authenticated;
+diff --git a/sql/fix-post-read-policy.sql b/sql/fix-post-read-policy.sql
+new file mode 100644
+index 0000000..4904aaf
+--- /dev/null
++++ b/sql/fix-post-read-policy.sql
+@@ -0,0 +1,92 @@
++-- NoSpace: fix who can read `posts`.
++--
++--   Supabase → SQL Editor → New query → paste → Run
++--
++-- ── READ THIS FIRST ────────────────────────────────────────────────────
++-- Step 1: look at what is actually live, before changing anything:
++--
++--   select policyname, permissive, cmd, qual
++--   from pg_policies
++--   where schemaname = 'public' and tablename = 'posts' and cmd = 'SELECT';
++--
++-- This file fixes the situation the repo's SQL describes. If your live
++-- database already differs (someone edited policies in the dashboard), the
++-- two policy names below may not match and you should look before running.
++--
++-- Step 2 (optional but wise): see whether anyone could have been exposed:
++--
++--   -- owner-only posts ('friends') that were readable by anyone
++--   select count(*) from public.posts where visibility = 'friends';
++--   -- threads in Members-only Circles
++--   select count(*) from public.posts p
++--   join public.circles c on c.id = p.circle_id - 1000000
++--   where p.visibility = 'circle' and c.visibility = 'Members only';
++-- ────────────────────────────────────────────────────────────────────────
++--
++-- What was wrong (reproduced in a scratch database)
++--
++--   Two permissive SELECT policies exist on posts, and Postgres ORs
++--   permissive policies together:
++--
++--     "posts are readable by their audience"   (retire-connections.sql)
++--         public, or your own.
++--     "circle threads follow the circle's visibility"   (circles.sql)
++--         visibility <> 'circle' OR circle_id is null OR ...
++--
++--   The second one starts with "visibility <> 'circle'", which is true for
++--   every ordinary post, so it quietly grants everyone (including a
++--   signed-out visitor holding the public anon key) read access to every
++--   non-Circle post, including 'friends' posts that are meant to be
++--   owner-only.
++--
++--   Second problem: for a real Circle the app stores the thread's
++--   circle_id as (circles.id + 1,000,000), but that policy compared it to the
++--   raw circles.id. It never matched, so "Members only" never actually
++--   restricted anything.
++--
++-- The fix: one policy, no loopholes.
++--   * public posts: everyone, as before;
++--   * your own posts: you;
++--   * Circle threads: only when you're signed in AND the Circle is a demo
++--     Circle (id under 1,000,000, no row, open by design) or a real Circle
++--     that is 'Open to read', or you own it or belong to it.
++--   * a thread whose Circle no longer exists is visible only to its author.
++
++drop policy if exists "circle threads follow the circle's visibility" on public.posts;
++drop policy if exists "posts are readable by their audience" on public.posts;
++
++create policy "posts are readable by their audience"
++  on public.posts for select
++  using (
++    visibility = 'public'
++    or user_id = auth.uid()
++    or (
++      visibility = 'circle'
++      and circle_id is not null
++      and auth.uid() is not null
++      and (
++        -- demo Circle: lives in code, has no row, open by design
++        circle_id < 1000000
++        -- real Circle that anyone signed in may read
++        or exists (
++          select 1 from public.circles ci
++          where ci.id = posts.circle_id - 1000000
++            and ci.visibility = 'Open to read'
++        )
++        -- real Circle you own or belong to
++        or public.owns_circle(posts.circle_id - 1000000, auth.uid())
++        or public.is_circle_member(posts.circle_id - 1000000, auth.uid())
++      )
++    )
++  );
++
++-- A check for stragglers: a thread aimed at a REAL Circle but stored with the
++-- raw id (no offset) would be treated as a demo Circle above and be readable
++-- by any signed-in user. This should return no rows. If it returns some,
++-- those threads were written by an older version of the app.
++--
++--   select p.id, p.circle_id, c.name
++--   from public.posts p
++--   join public.circles c on c.id = p.circle_id
++--   where p.visibility = 'circle' and p.circle_id < 1000000
++--     and c.visibility = 'Members only';
+diff --git a/src/app/components/AccountSettings.tsx b/src/app/components/AccountSettings.tsx
+index c39cd79..c1941b6 100644
+--- a/src/app/components/AccountSettings.tsx
++++ b/src/app/components/AccountSettings.tsx
+@@ -220,6 +220,15 @@ export function AccountSettings() {
+           <span className="text-muted-foreground">→</span>
+         </Link>
+       )}
++      {isAdmin && (
++        <Link
++          to="/admin/circles"
++          className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm transition-colors hover:border-[var(--coral-deep)]"
++        >
++          <span>Manage Circles</span>
++          <span className="text-muted-foreground">→</span>
++        </Link>
++      )}
+       {isAdmin && (
+         <Link
+           to="/admin/categories"
+diff --git a/src/app/context/CirclesContext.tsx b/src/app/context/CirclesContext.tsx
+index 2b0a35e..3f31911 100644
+--- a/src/app/context/CirclesContext.tsx
++++ b/src/app/context/CirclesContext.tsx
+@@ -79,6 +79,23 @@ interface CirclesContextType {
+   createCircle: (input: NewCircleInput) => Promise<{ circle: Circle | null; error: string | null }>;
+   joinRealCircle: (id: number) => Promise<{ error: string | null }>;
+   leaveRealCircle: (id: number) => Promise<{ error: string | null }>;
++  /**
++   * Admin only (sql/circles-admin.sql). What still points at a real Circle.
++   * The server refuses anyone who isn't an admin, so calling this from a
++   * non-admin account just returns an error.
++   */
++  circleUsage: (
++    id: number,
++  ) => Promise<{ error: string | null; usage?: { members: number; invites: number; threads: number } }>;
++  /**
++   * Admin only. Deletes a real Circle. `threads` decides what happens to what
++   * was posted in it: keep_private turns each thread into its author's own
++   * owner-only post; delete removes them. Nothing is ever made public.
++   */
++  adminDeleteCircle: (
++    id: number,
++    threads: "keep_private" | "delete",
++  ) => Promise<{ error: string | null; result?: { threads: number; invites: number } }>;
+   loading: boolean;
+ }
+ 
+@@ -295,6 +312,49 @@ export function CirclesProvider({ children }: { children: ReactNode }) {
+     return { error: null };
+   };
+ 
++  const circleUsage: CirclesContextType["circleUsage"] = async (id) => {
++    if (!supabase || !user) return { error: "Sign in first." };
++    if (!isRealCircle(id)) return { error: "Demo Circles are built into the app; there's nothing to check." };
++    try {
++      const { data, error } = await supabase.rpc("circle_usage", { p_id: id - REAL_CIRCLE_ID_OFFSET });
++      if (error) {
++        return {
++          error: /function .* does not exist/i.test(error.message)
++            ? "Run sql/circles-admin.sql in Supabase first."
++            : error.message,
++        };
++      }
++      const u = (data ?? {}) as any;
++      return {
++        error: null,
++        usage: {
++          members: Number(u.members ?? 0),
++          invites: Number(u.invites ?? 0),
++          threads: Number(u.threads ?? 0),
++        },
++      };
++    } catch {
++      return { error: "Couldn't reach the server. Try again in a moment." };
++    }
++  };
++
++  const adminDeleteCircle: CirclesContextType["adminDeleteCircle"] = async (id, threads) => {
++    if (!supabase || !user) return { error: "Sign in first." };
++    if (!isRealCircle(id)) return { error: "Demo Circles are built into the app and can't be deleted here." };
++    try {
++      const { data, error } = await supabase.rpc("admin_delete_circle", {
++        p_id: id - REAL_CIRCLE_ID_OFFSET,
++        p_threads: threads,
++      });
++      if (error) return { error: error.message };
++      await refresh();
++      const r = (data ?? {}) as any;
++      return { error: null, result: { threads: Number(r.threads ?? 0), invites: Number(r.invites ?? 0) } };
++    } catch {
++      return { error: "Couldn't reach the server. Try again in a moment." };
++    }
++  };
++
+   return (
+     <CirclesContext.Provider
+       value={{
+@@ -308,6 +368,8 @@ export function CirclesProvider({ children }: { children: ReactNode }) {
+         createCircle,
+         joinRealCircle,
+         leaveRealCircle,
++        circleUsage,
++        adminDeleteCircle,
+         loading,
+       }}
+     >
+diff --git a/src/app/pages/AdminCircles.tsx b/src/app/pages/AdminCircles.tsx
+new file mode 100644
+index 0000000..5ecb95f
+--- /dev/null
++++ b/src/app/pages/AdminCircles.tsx
+@@ -0,0 +1,282 @@
++import { useEffect, useState } from "react";
++import { Link } from "react-router";
++import { Trash2, X } from "lucide-react";
++import { useAuth } from "../context/AuthContext";
++import { useCategories } from "../context/CategoriesContext";
++import { useCircles } from "../context/CirclesContext";
++import { getHobby } from "../data/hobbies";
++import { supabase } from "../../lib/supabase";
++import { Button } from "../components/ui/button";
++import { ConfirmDialog } from "../components/ConfirmDialog";
++
++/**
++ * Deleting a Circle.
++ *
++ * Nobody can delete one from the app today (the owner can edit but not
++ * delete), so this is the one place it can happen, and only for admins.
++ * The demo Circles that ship inside the app aren't stored anywhere that can
++ * be deleted from here; they're listed as a count so that's not a surprise.
++ *
++ * A Circle's threads are ordinary posts, so deleting the Circle raises the
++ * question of what becomes of them. The default keeps them: each thread
++ * becomes its author's own owner-only post. Nothing is ever made public,
++ * because people posted into a room they may have thought was small. Deleting
++ * the threads along with the Circle is the explicit alternative.
++ *
++ * Invisible unless the profiles row says is_admin (sql/categories.sql). Needs
++ * sql/circles-admin.sql to have been run.
++ */
++
++type Mode = "keep_private" | "delete";
++
++interface Plan {
++  id: number;
++  name: string;
++  usage: { members: number; invites: number; threads: number };
++  mode: Mode;
++}
++
++function plural(n: number, one: string, many: string) {
++  return `${n} ${n === 1 ? one : many}`;
++}
++
++export function AdminCircles() {
++  const { user } = useAuth();
++  const { isAdmin } = useCategories();
++  const { circles, isRealCircle, circleUsage, adminDeleteCircle } = useCircles();
++
++  const [busy, setBusy] = useState<number | null>(null);
++  const [error, setError] = useState<string | null>(null);
++  const [notice, setNotice] = useState<string | null>(null);
++  const [plan, setPlan] = useState<Plan | null>(null);
++  const [dialogOpen, setDialogOpen] = useState(false);
++  const [ownerNames, setOwnerNames] = useState<Record<string, string>>({});
++
++  const real = circles.filter((c) => isRealCircle(c.id));
++  const demoCount = circles.length - real.length;
++  const ownerKey = [...new Set(real.map((c) => c.ownerId).filter(Boolean))].sort().join(",");
++
++  // Owners' display names, so a row says who made it rather than showing an id.
++  useEffect(() => {
++    if (!isAdmin || !supabase || !ownerKey) return;
++    let cancelled = false;
++    (async () => {
++      const { data } = await supabase!
++        .from("profiles")
++        .select("id, display_name")
++        .in("id", ownerKey.split(","));
++      if (cancelled) return;
++      const names: Record<string, string> = {};
++      for (const p of (data ?? []) as any[]) names[p.id] = p.display_name?.trim() || "Someone";
++      setOwnerNames(names);
++    })();
++    return () => {
++      cancelled = true;
++    };
++  }, [isAdmin, ownerKey]);
++
++  if (!user || !isAdmin) {
++    return (
++      <div className="flex min-h-[70vh] items-center justify-center px-4">
++        <div className="text-center">
++          <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
++            Nothing here for you
++          </h2>
++          <p className="mb-6 max-w-sm text-sm text-muted-foreground">
++            This screen is for whoever manages Circles.
++          </p>
++          <Link to="/discover">
++            <Button variant="outline">Back to Discover</Button>
++          </Link>
++        </div>
++      </div>
++    );
++  }
++
++  const startDelete = async (id: number, name: string) => {
++    if (busy) return;
++    setBusy(id);
++    setError(null);
++    setNotice(null);
++    const res = await circleUsage(id);
++    setBusy(null);
++    if (res.error || !res.usage) {
++      setError(res.error ?? "Couldn't check what's in this Circle.");
++      return;
++    }
++    setPlan({ id, name, usage: res.usage, mode: "keep_private" });
++  };
++
++  const performDelete = async () => {
++    if (!plan) return;
++    setError(null);
++    const res = await adminDeleteCircle(plan.id, plan.mode);
++    setDialogOpen(false);
++    setPlan((p) => (p && res.error ? p : null));
++    if (res.error) {
++      setError(res.error);
++      return;
++    }
++    const t = res.result?.threads ?? 0;
++    setNotice(
++      `Deleted “${plan.name}”.` +
++        (t > 0
++          ? plan.mode === "keep_private"
++            ? ` ${plural(t, "thread was", "threads were")} kept as private posts.`
++            : ` ${plural(t, "thread was", "threads were")} deleted with it.`
++          : ""),
++    );
++  };
++
++  return (
++    <div className="min-h-screen bg-surface py-8 sm:py-12">
++      <div className="container mx-auto max-w-3xl px-4">
++        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
++          Circles
++        </h1>
++        <p className="mb-8 mt-2 text-sm text-muted-foreground">
++          Every Circle people have created. Deleting one can't be undone. By default, what was posted in
++          it is kept as each author's own private post. It is never made public.
++        </p>
++
++        {error && (
++          <p className="mb-5 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
++            {error}
++          </p>
++        )}
++        {notice && (
++          <p className="mb-5 rounded-xl border border-border bg-[var(--surface-elevated)] px-4 py-3 text-sm">
++            {notice}
++          </p>
++        )}
++
++        {real.length === 0 ? (
++          <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
++            No Circles have been created yet.
++          </div>
++        ) : (
++          <ul className="space-y-3">
++            {real.map((c) => {
++              const space = getHobby(c.hobbySlug)?.name ?? c.hobbySlug;
++              const isPlanned = plan?.id === c.id;
++              return (
++                <li key={c.id} className="rounded-2xl border border-border bg-[var(--surface-elevated)] p-4">
++                  <div className="flex flex-wrap items-start justify-between gap-3">
++                    <div className="min-w-0">
++                      <div className="flex flex-wrap items-center gap-2">
++                        <span className="text-base font-medium">{c.name}</span>
++                        <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
++                          {c.visibility}
++                        </span>
++                      </div>
++                      <p className="mt-0.5 text-xs text-muted-foreground">
++                        {space}
++                        {c.location ? ` · ${c.location}` : ""} ·{" "}
++                        {c.ownerId ? `by ${ownerNames[c.ownerId] ?? "…"}` : "no owner"} ·{" "}
++                        {plural(c.memberCount, "member", "members")}
++                      </p>
++                    </div>
++                    <Button
++                      variant="outline"
++                      size="sm"
++                      disabled={busy === c.id}
++                      onClick={() => (isPlanned ? setPlan(null) : startDelete(c.id, c.name))}
++                    >
++                      <Trash2 className="size-3.5" />
++                      Delete
++                    </Button>
++                  </div>
++
++                  {isPlanned && plan && (
++                    <div className="mt-4 space-y-3 border-t border-border pt-4 text-sm">
++                      <p>
++                        This Circle has {plural(plan.usage.members, "member", "members")},{" "}
++                        {plural(plan.usage.invites, "invite", "invites")} and{" "}
++                        {plural(plan.usage.threads, "thread", "threads")}.
++                      </p>
++
++                      {plan.usage.threads > 0 && (
++                        <fieldset className="space-y-2">
++                          <legend className="mb-1 text-xs text-muted-foreground">
++                            What should happen to its threads?
++                          </legend>
++                          <label className="flex cursor-pointer items-start gap-2">
++                            <input
++                              type="radio"
++                              name={`mode-${plan.id}`}
++                              className="mt-1"
++                              checked={plan.mode === "keep_private"}
++                              onChange={() => setPlan({ ...plan, mode: "keep_private" })}
++                            />
++                            <span>
++                              Keep them as private posts <span className="text-muted-foreground">(recommended)</span>
++                              <span className="block text-xs text-muted-foreground">
++                                Each thread stays, visible only to whoever wrote it.
++                              </span>
++                            </span>
++                          </label>
++                          <label className="flex cursor-pointer items-start gap-2">
++                            <input
++                              type="radio"
++                              name={`mode-${plan.id}`}
++                              className="mt-1"
++                              checked={plan.mode === "delete"}
++                              onChange={() => setPlan({ ...plan, mode: "delete" })}
++                            />
++                            <span>
++                              Delete them too
++                              <span className="block text-xs text-muted-foreground">
++                                The threads are removed permanently.
++                              </span>
++                            </span>
++                          </label>
++                        </fieldset>
++                      )}
++
++                      <div className="flex gap-2">
++                        <Button size="sm" variant="destructive" onClick={() => setDialogOpen(true)}>
++                          Delete this Circle
++                        </Button>
++                        <Button size="sm" variant="outline" onClick={() => setPlan(null)}>
++                          <X className="size-3.5" />
++                          Cancel
++                        </Button>
++                      </div>
++                    </div>
++                  )}
++                </li>
++              );
++            })}
++          </ul>
++        )}
++
++        {demoCount > 0 && (
++          <p className="mt-6 text-xs text-muted-foreground">
++            {plural(demoCount, "demo Circle", "demo Circles")} built into the app{" "}
++            {demoCount === 1 ? "isn't" : "aren't"} listed. They live in the code, so they can't be deleted
++            from here.
++          </p>
++        )}
++      </div>
++
++      <ConfirmDialog
++        open={dialogOpen && !!plan}
++        onOpenChange={(o) => {
++          if (!o) setDialogOpen(false);
++        }}
++        title={plan ? `Delete “${plan.name}”?` : ""}
++        description={
++          plan
++            ? plan.usage.threads > 0 && plan.mode === "delete"
++              ? `The Circle and its ${plural(plan.usage.threads, "thread", "threads")} are deleted permanently. This can't be undone.`
++              : plan.usage.threads > 0
++                ? `The Circle is deleted permanently. Its ${plural(plan.usage.threads, "thread", "threads")} stay as private posts, visible only to whoever wrote them.`
++                : "The Circle is deleted permanently. This can't be undone."
++            : ""
++        }
++        confirmLabel="Delete Circle"
++        onConfirm={performDelete}
++      />
++    </div>
++  );
++}
+diff --git a/src/app/routes.ts b/src/app/routes.ts
+index 845c520..6541f6d 100644
+--- a/src/app/routes.ts
++++ b/src/app/routes.ts
+@@ -22,6 +22,7 @@ import { Inbox } from "./pages/Inbox";
+ import { People } from "./pages/People";
+ import { AdminCategories } from "./pages/AdminCategories";
+ import { AdminSpaces } from "./pages/AdminSpaces";
++import { AdminCircles } from "./pages/AdminCircles";
+ import { HobbyArchive } from "./pages/HobbyArchive";
+ import { PublicProfile } from "./pages/PublicProfile";
+ import { Studio } from "./pages/Studio";
+@@ -54,6 +55,7 @@ export const router = createHashRouter([
+       { path: "category/:slug", loader: ({ params }) => redirect(`/space/${params.slug}`) },
+       { path: "admin/categories", Component: AdminCategories },
+       { path: "admin/spaces", Component: AdminSpaces },
++      { path: "admin/circles", Component: AdminCircles },
+       // "Log" was the old name for creating; keep old links working.
+       { path: "log", loader: () => redirect("/create") },
+       { path: "you", Component: You },
