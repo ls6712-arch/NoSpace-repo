@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
+import { motion, useReducedMotion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
@@ -36,6 +37,7 @@ export function MySpaceGrid() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [pages, setPages] = useState(1);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
+  const reducedMotion = !!useReducedMotion();
 
   useEffect(() => {
     if (!user) return;
@@ -141,7 +143,17 @@ export function MySpaceGrid() {
 
         <div className="myspace-moment mt-8 lg:mt-0">
           {selected ? (
-            <MomentPanel post={selected} />
+            // Cross-fade on selection change (docs/my-space-spec.md section
+            // 5) — keyed by post id so a new Moment mounts its own faded-in
+            // instance rather than mutating one in place.
+            <motion.div
+              key={selected.id}
+              initial={reducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <MomentPanel post={selected} />
+            </motion.div>
           ) : (
             <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               Nothing selected yet.

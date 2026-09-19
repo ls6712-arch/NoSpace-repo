@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router";
+import { useReducedMotion } from "motion/react";
 import { Post } from "../data/posts";
 import { firstWords } from "../lib/text";
 
@@ -38,11 +39,13 @@ function Frame({
   index,
   selected,
   onSelect,
+  reducedMotion,
 }: {
   post: Post;
   index: number;
   selected: boolean;
   onSelect: () => void;
+  reducedMotion: boolean;
 }) {
   return (
     <button
@@ -50,6 +53,11 @@ function Frame({
       data-frame-id={post.id}
       aria-current={selected}
       onClick={onSelect}
+      style={
+        reducedMotion
+          ? undefined
+          : { animation: "myspace-frame-rise 300ms ease-out both", animationDelay: `${index * 40}ms` }
+      }
       className={
         "myspace-sheet-frame flex w-[200px] shrink-0 snap-start items-start gap-3 rounded-lg border p-2.5 text-left transition-colors lg:w-full lg:shrink lg:snap-align-none " +
         (selected ? "border-accent" : "border-transparent hover:border-border")
@@ -100,6 +108,7 @@ export function ContactSheet({
   hasMore: boolean;
 }) {
   const stripRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = !!useReducedMotion();
   const selectedIndex = Math.max(0, moments.findIndex((m) => m.id === selectedId));
 
   // Keeps the selected frame scrolled into view in strip mode when
@@ -165,6 +174,7 @@ export function ContactSheet({
                   index={i}
                   selected={post.id === selectedId}
                   onSelect={() => onSelect(post.id)}
+                  reducedMotion={reducedMotion}
                 />
               ))}
               <EndOfSheetCard strip />

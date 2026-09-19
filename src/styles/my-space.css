@@ -55,6 +55,21 @@
   background: linear-gradient(to right, transparent, var(--background));
 }
 
+/* Stage 6 motion (docs/my-space-spec.md section 5). Sheet frames fade + rise
+   8px on load, staggered 40ms per frame index; JS gates all of it off under
+   prefers-reduced-motion (ContactSheet.tsx), so this keyframe is only ever
+   attached when motion is wanted. */
+@keyframes myspace-frame-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* md (768–1023): tablet. Single column, whole page scrolls (no independent
    scroll areas yet — those start at lg). Moment panel gets its own max
    width, centered. Rail becomes a 2-column grid: [Shelf + Circles] | [Pursuits]. */
