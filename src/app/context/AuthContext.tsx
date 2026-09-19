@@ -55,6 +55,13 @@ interface AuthContextType {
   ) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  /** Re-sends the signup confirmation email — the one self-service option
+   * when the first one never arrives (Supabase's shared default mailer is
+   * rate-limited and unreliable against some domains; the real fix is
+   * configuring a custom SMTP provider in the project's Auth settings,
+   * which this can't do). Same emailRedirectTo as signUp, for the same
+   * reason: a HashRouter path here would break the returned token parsing. */
+  resendConfirmation: (email: string) => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (next: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -208,6 +215,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  const resendConfirmation: AuthContextType["resendConfirmation"] = async (email) => {
+    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+        },
+      });
+      return { error: error ? error.message : null };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
+    }
+  };
+
   const signInWithGoogle: AuthContextType["signInWithGoogle"] = async () => {
     if (!supabase) return { error: "Accounts aren't set up for this build yet." };
     const { error } = await supabase.auth.signInWithOAuth({
@@ -300,6 +323,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signInWithGoogle,
+        resendConfirmation,
         resetPassword,
         updatePassword,
         signOut,

@@ -7,7 +7,8 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 export function Login() {
-  const { user, signIn, signUp, signInWithGoogle, resetPassword, isConfigured } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
+    useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
@@ -31,6 +32,8 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
   // Checked here as well as by the browser, because an account created with
   // a typo'd address can never be recovered — there's nowhere to send the
@@ -63,6 +66,16 @@ export function Login() {
     else setResetSent(true);
   };
 
+  const resend = async () => {
+    if (resending) return;
+    setResending(true);
+    setError(null);
+    const res = await resendConfirmation(email);
+    setResending(false);
+    if (res.error) setError(res.error);
+    else setResent(true);
+  };
+
   const handleGoogle = async () => {
     const result = await signInWithGoogle();
     if (result.error) setError(result.error);
@@ -88,6 +101,7 @@ export function Login() {
         return;
       }
       if (mode === "signup" && "needsConfirmation" in result && result.needsConfirmation) {
+        setResent(false);
         setNeedsConfirmation(true);
         return;
       }
@@ -148,6 +162,21 @@ export function Login() {
               Check <span className="text-foreground">{email}</span> for a confirmation link —
               you'll be signed in once you click it.
             </p>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              {resent
+                ? "Sent again — check your spam folder if it still doesn't turn up."
+                : "Nothing after a few minutes? It can land in spam, or just take a moment."}
+            </p>
+            {error && <p className="mt-2 text-xs text-[var(--coral-text)]">{error}</p>}
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              disabled={resending}
+              onClick={resend}
+            >
+              {resending ? "Sending…" : "Resend confirmation email"}
+            </Button>
           </div>
         ) : (
           <>
