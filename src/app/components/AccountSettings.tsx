@@ -222,6 +222,15 @@ export function AccountSettings() {
       )}
       {isAdmin && (
         <Link
+          to="/admin/circles"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm transition-colors hover:border-[var(--coral-deep)]"
+        >
+          <span>Manage Circles</span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+      )}
+      {isAdmin && (
+        <Link
           to="/admin/categories"
           className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm transition-colors hover:border-[var(--coral-deep)]"
         >
