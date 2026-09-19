@@ -39,6 +39,16 @@ export interface Hobby {
   coverImage: string;
   /** Demo/placeholder figure — like the rest of this prototype's numbers, not real data. */
   creatorCount: string;
+  /**
+   * Admin-managed fields (sql/spaces-admin.sql). `hidden` Spaces stay
+   * resolvable by getHobby/hobbies.find — so old posts, profiles and links
+   * still render — but browsable lists skip them. `custom` marks a Space that
+   * exists only in the database. `prompt` is the one-line invitation shown at
+   * the top of a Space page ("Show us your plant.").
+   */
+  hidden?: boolean;
+  custom?: boolean;
+  prompt?: string;
 }
 
 /**
@@ -326,6 +336,122 @@ export const LEGACY_SPACES: Record<string, string> = {
   thestudio: "art-creative",
   rabbithole: "gaming-tabletop",
 };
+
+/**
+ * Admin-managed Spaces.
+ *
+ * `hobbies` is shared, module-level state read by dozens of files (mostly
+ * `hobbies.find(...)` lookups). Rather than rewrite every call site, the
+ * admin's database rows are applied to this array *in place*: a row with a
+ * built-in slug overrides that Space's name/tagline/prompt/order and can hide
+ * it; a row with any other slug adds a database-only Space. Lookups therefore
+ * keep working for everything — including hidden Spaces, so nothing already
+ * posted ever stops resolving — and only lists that *display* Spaces need to
+ * skip `hidden` ones (see `visibleSpaces`).
+ *
+ * CategoriesContext calls applySpaceRows() before it publishes new state, so
+ * any component that subscribes to that context re-renders against the
+ * updated array.
+ */
+export interface SpaceRow {
+  slug: string;
+  name: string;
+  description?: string | null;
+  prompt?: string | null;
+  active?: boolean | null;
+  sort_order?: number | null;
+}
+
+const BUILTIN_HOBBIES: Hobby[] = hobbies.map((h) => ({ ...h }));
+const BUILTIN_SLUGS = new Set(BUILTIN_HOBBIES.map((h) => h.slug));
+
+const CUSTOM_GRADIENTS = [
+  "from-[var(--sky-deep)] to-[var(--forest)]",
+  "from-[var(--coral-deep)] to-[var(--yellow)]",
+  "from-[var(--forest)] to-[var(--yellow)]",
+];
+
+function gradientFor(slug: string) {
+  let n = 0;
+  for (let i = 0; i < slug.length; i++) n = (n * 31 + slug.charCodeAt(i)) >>> 0;
+  return CUSTOM_GRADIENTS[n % CUSTOM_GRADIENTS.length];
+}
+
+export function isBuiltInSpace(slug: string) {
+  return BUILTIN_SLUGS.has(slug);
+}
+
+/** A built-in Space exactly as shipped in code, before any admin override. */
+export function builtInSpace(slug: string): Hobby | undefined {
+  return BUILTIN_HOBBIES.find((h) => h.slug === slug);
+}
+
+export function applySpaceRows(rows: SpaceRow[]) {
+  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+
+  const built: Hobby[] = BUILTIN_HOBBIES.map((b) => {
+    const r = bySlug.get(b.slug);
+    if (!r) return { ...b };
+    const name = r.name?.trim() || b.name;
+    const description = r.description?.trim() || b.description;
+    return {
+      ...b,
+      name,
+      shortName: name,
+      description,
+      plainLabel: r.description?.trim() || b.plainLabel,
+      tagline: r.description?.trim() || b.tagline,
+      prompt: r.prompt?.trim() || undefined,
+      hidden: r.active === false,
+    };
+  });
+
+  const custom: Hobby[] = rows
+    .filter((r) => !BUILTIN_SLUGS.has(r.slug))
+    .map((r) => ({
+      slug: r.slug,
+      name: r.name,
+      shortName: r.name,
+      tagline: r.description?.trim() || "",
+      plainLabel: r.description?.trim() || "",
+      description: r.description?.trim() || "",
+      subItems: [],
+      gradient: gradientFor(r.slug),
+      coverImage: "",
+      creatorCount: "-",
+      custom: true,
+      prompt: r.prompt?.trim() || undefined,
+      hidden: r.active === false,
+    }));
+
+  // Explicit sort_order wins; everything without one keeps its natural place
+  // (built-ins in their original order, then custom Spaces as created).
+  const all = [...built, ...custom];
+  const order = new Map(all.map((h, i) => [h.slug, i]));
+  all.sort((a, b) => {
+    const ao = bySlug.get(a.slug)?.sort_order;
+    const bo = bySlug.get(b.slug)?.sort_order;
+    if (ao != null && bo != null && ao !== bo) return ao - bo;
+    if (ao != null && bo == null) return -1;
+    if (ao == null && bo != null) return 1;
+    return order.get(a.slug)! - order.get(b.slug)!;
+  });
+
+  hobbies.splice(0, hobbies.length, ...all);
+}
+
+/**
+ * Where a Moment is filed when nobody picked a Space: the first one an admin
+ * hasn't hidden. Never a hidden Space, which would quietly bury the post.
+ */
+export function defaultSpaceSlug(): string {
+  return (hobbies.find((h) => !h.hidden) ?? hobbies[0]).slug;
+}
+
+/** Spaces that should appear in browsable lists (hidden ones excluded). */
+export function visibleSpaces(): Hobby[] {
+  return hobbies.filter((h) => !h.hidden);
+}
 
 /** Resolves a Space by slug, including the eight names it used to have. */
 export function getHobby(slug: string) {

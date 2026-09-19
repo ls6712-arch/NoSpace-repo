@@ -153,7 +153,10 @@ export function CategoryFeed() {
   const { cornersFor } = useCorners();
   const [createCornerOpen, setCreateCornerOpen] = useState(false);
 
-  const builtIn = getHobby(slug);
+  // getHobby also resolves Spaces an admin created (`custom`), which have no
+  // curated Corners and collect posts the way an approved category always has.
+  const found = getHobby(slug);
+  const builtIn = found && !found.custom ? found : undefined;
 
   /**
    * A Space approved from a suggestion exists only in the database, so it has
@@ -168,6 +171,8 @@ export function CategoryFeed() {
   const approved = !builtIn ? categories.find((c) => c.slug === slug) : undefined;
   const hobby = builtIn
     ? builtIn
+    : found
+      ? found
     : approved
       ? {
           slug: approved.slug,
@@ -214,9 +219,14 @@ export function CategoryFeed() {
 
   // A built-in Space collects by stored slug; an approved one collects by
   // matching what the maker typed against its own vocabulary.
+  // A Space an admin created collects both what was filed under its slug and
+  // what people tagged with its name.
   const allPosts = builtIn
     ? publicFeedByHobby(spaceSlug)
-    : publicFeed.filter((p) => postInCategory(p, approved!, subHobbyLabel));
+    : publicFeed.filter(
+        (p) =>
+          p.hobbySlug === spaceSlug || (approved ? postInCategory(p, approved, subHobbyLabel) : false),
+      );
   const posts = activeSub ? allPosts.filter((p) => p.subHobby === activeSub) : allPosts;
   const listings = listingsByHobby(hobby.slug);
   const circles = circlesByHobby(hobby.slug);
@@ -254,6 +264,14 @@ export function CategoryFeed() {
           <div className="min-w-0 flex-1">
             <h1 className="mb-4 text-[clamp(2.8rem,6vw,5rem)] leading-[.94] tracking-[-.035em]" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h1>
             <p className="mb-3 text-xl text-foreground" style={{ fontFamily: "var(--font-heading)" }}>{hobby.tagline}</p>
+            {hobby.prompt && (
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <p className="text-base text-muted-foreground">{hobby.prompt}</p>
+                <Link to={`/create?hobby=${hobby.slug}`}>
+                  <Button variant="coral" size="sm">Add yours</Button>
+                </Link>
+              </div>
+            )}
             <HobbyActivity hobbySlug={hobby.slug} className="mt-4 text-foreground" />
             <div className="mt-6">
               <Button

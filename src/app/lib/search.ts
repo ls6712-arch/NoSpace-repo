@@ -87,7 +87,10 @@ export function useUnifiedSearchIndex(query: string) {
 
   const cornersByHobby = useMemo(() => {
     const map = new Map<string, ReturnType<typeof cornersFor>>();
-    for (const hobby of hobbies) map.set(hobby.slug, cornersFor(hobby.slug).filter(isDiscoverable));
+    for (const hobby of hobbies) {
+      if (hobby.hidden) continue;
+      map.set(hobby.slug, cornersFor(hobby.slug).filter(isDiscoverable));
+    }
     return map;
   }, [cornersFor]);
 
@@ -106,6 +109,7 @@ export function useUnifiedSearchIndex(query: string) {
     if (!q) return groups;
 
     for (const hobby of hobbies) {
+      if (hobby.hidden) continue;
       if (includesQ(hobby.shortName, q) || includesQ(hobby.name, q) || includesQ(hobby.tagline, q) || includesQ(hobby.description, q)) {
         groups.space.push({
           group: "space",

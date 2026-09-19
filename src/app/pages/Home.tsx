@@ -10,6 +10,7 @@ import { GeneratedArt } from "../components/GeneratedArt";
 import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
+import { useCategories } from "../context/CategoriesContext";
 import heroWorldsImg from "../../assets/hero-worlds.png";
 
 /**
@@ -114,6 +115,8 @@ const LOOP_STEPS = [
 
 export function Home() {
   const heroRef = useHeroParallax();
+  // Subscribing re-renders the Space grid when admin changes load.
+  useCategories();
 
   // One below the hero, in the order they appear — the entire page reads as
   // one continuous unfolding story rather than five separately-loaded
@@ -369,7 +372,7 @@ export function Home() {
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
-              {hobbies.map((hobby) => (
+              {hobbies.filter((h) => !h.hidden).map((hobby) => (
                 <HobbyCategoryCard key={hobby.slug} hobby={hobby} showCorners />
               ))}
             </div>

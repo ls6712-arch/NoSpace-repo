@@ -22,6 +22,7 @@ import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { useCorners, isDiscoverable } from "../context/CornersContext";
+import { useCategories } from "../context/CategoriesContext";
 import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
 import { hobbyMatchesQuery } from "../lib/search";
 import { ContentCard } from "../components/ContentCard";
@@ -375,9 +376,10 @@ function MarketplaceTab({ query }: { query: string }) {
  */
 function AllCornersBrowser({ query }: { query: string }) {
   const { cornersFor } = useCorners();
+  useCategories();
   const q = query.trim().toLowerCase();
 
-  const allCorners = hobbies.flatMap((hobby) =>
+  const allCorners = hobbies.filter((h) => !h.hidden).flatMap((hobby) =>
     cornersFor(hobby.slug)
       .filter(isDiscoverable)
       .map((c) => ({ ...c, spaceSlug: hobby.slug, spaceName: hobby.shortName })),
@@ -422,6 +424,8 @@ function AllCornersBrowser({ query }: { query: string }) {
 
 export function Discover() {
   const { publicFeed } = useContent();
+  // Subscribing re-renders this page when admin Space changes load.
+  const { spaceRows } = useCategories();
   const social = useSocial();
   const { cornersFor } = useCorners();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -468,7 +472,7 @@ export function Discover() {
     [publicFeed, social.followedHobbies],
   );
 
-  const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), []);
+  const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), [spaceRows]);
 
   // The search box promises hobbies and spaces, not just post captions, so a
   // Space's own name and tagline count as a match too — and so does any of
@@ -476,14 +480,15 @@ export function Discover() {
   // inside Crafts & Making, not a Space name on its own, and searching it
   // used to turn up nothing here at all.
   const filteredHobbies = useMemo(() => {
-    if (!q) return hobbies;
-    return hobbies.filter((h) => {
+    const visible = hobbies.filter((h) => !h.hidden);
+    if (!q) return visible;
+    return visible.filter((h) => {
       const cornerNames = cornersFor(h.slug)
         .filter(isDiscoverable)
         .map((c) => c.name);
       return hobbyMatchesQuery(h, cornerNames, q);
     });
-  }, [q, cornersFor]);
+  }, [q, cornersFor, spaceRows]);
 
   const feedBase = useMemo(() => {
     if (feedTab === "recent") return [...publicFeed].sort((a, b) => b.createdAt - a.createdAt);

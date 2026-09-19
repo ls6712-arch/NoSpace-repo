@@ -213,6 +213,15 @@ export function AccountSettings() {
           is_admin flag is granted by hand in SQL. */}
       {isAdmin && (
         <Link
+          to="/admin/spaces"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm transition-colors hover:border-[var(--coral-deep)]"
+        >
+          <span>Manage Spaces</span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+      )}
+      {isAdmin && (
+        <Link
           to="/admin/categories"
           className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm transition-colors hover:border-[var(--coral-deep)]"
         >
