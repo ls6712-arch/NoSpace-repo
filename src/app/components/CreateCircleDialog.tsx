@@ -105,7 +105,7 @@ export function CreateCircleDialog({
                 <SelectValue placeholder="Choose a Space" />
               </SelectTrigger>
               <SelectContent>
-                {hobbies.map((h) => (
+                {hobbies.filter((h) => !h.hidden).map((h) => (
                   <SelectItem key={h.slug} value={h.slug}>
                     {h.shortName}
                   </SelectItem>

@@ -20,6 +20,7 @@ import { Messages } from "./pages/Messages";
 import { Inbox } from "./pages/Inbox";
 import { People } from "./pages/People";
 import { AdminCategories } from "./pages/AdminCategories";
+import { AdminSpaces } from "./pages/AdminSpaces";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Pursuit } from "./pages/Pursuit";
@@ -50,6 +51,7 @@ export const router = createHashRouter([
       // Spaces are the categories now, so there is one page and one URL.
       { path: "category/:slug", loader: ({ params }) => redirect(`/space/${params.slug}`) },
       { path: "admin/categories", Component: AdminCategories },
+      { path: "admin/spaces", Component: AdminSpaces },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },
