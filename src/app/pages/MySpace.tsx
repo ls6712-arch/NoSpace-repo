@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Bookmark, PenLine, Sparkles, Sprout, Users } from "lucide-react";
+import { ArrowRight, Bookmark, PenLine, Sparkles, Sprout } from "lucide-react";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
-import { daysSince, deriveProjects, projectProgress, toggleSaved, useJournal } from "../lib/journal";
+import { daysSince, projectProgress, toggleSaved, useJournal } from "../lib/journal";
+import { PursuitsRail } from "../components/PursuitsRail";
 import { useSocial } from "../context/SocialContext";
 import { ContentCard } from "../components/ContentCard";
 import { PostMedia } from "../components/PostMedia";
@@ -205,9 +206,6 @@ export function MySpace() {
   const nudge = [...myPursuits].sort((a, b) => lastMoved(a) - lastMoved(b))[0];
   const nudgeDays = nudge ? daysSince(lastMoved(nudge)) : 0;
 
-  // Other people's ongoing work, grouped honestly into projects.
-  const nearbyProjects = deriveProjects(publicFeed, subHobbyLabel).slice(0, 3);
-
   return (
     <div className="ns-myspace-page min-h-screen bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-5xl px-4">
@@ -405,33 +403,9 @@ export function MySpace() {
           )}
         </Section>
 
-        <Section
-          title="Pursuits still moving"
-          copy="Ongoing work across Sushii you could be part of."
-          action={{ label: "Discover", to: "/discover" }}
-        >
-          <ul className="grid gap-3 sm:grid-cols-3">
-            {nearbyProjects.map((project) => (
-              <li key={project.key}>
-                <Link
-                  to={`/space/${project.hobbySlug}${project.subHobby ? `?hobby=${project.subHobby}` : ""}`}
-                  className="flex h-full flex-col rounded-2xl border border-border bg-card p-4 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
-                >
-                  <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
-                    {project.title}
-                  </span>
-                  <span className="mt-1 text-xs text-muted-foreground">
-                    {project.creator} · {project.updates.length} updates
-                  </span>
-                  <span className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Users className="size-3.5" />
-                    {getHobby(project.hobbySlug)?.shortName}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Section>
+        <section className="mb-11">
+          <PursuitsRail pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
+        </section>
 
         <div className="flex flex-wrap items-center justify-center gap-3 rounded-3xl border border-border bg-card px-6 py-9 text-center">
           <p className="w-full text-sm text-muted-foreground">
