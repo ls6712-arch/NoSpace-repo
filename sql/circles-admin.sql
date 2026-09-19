@@ -22,11 +22,15 @@
 --
 -- What happens to the Circle's threads
 --   Chosen by the admin, per delete:
---     'keep_private'  (default) the threads stay, become their author's own
---                     posts (visibility 'friends' = owner-only once
---                     sql/fix-post-read-policy.sql is in place), and are
---                     unhooked from the Circle. Nothing is exposed, nothing
---                     is lost.
+--     'keep_private'  (default) the threads stay, are unhooked from the
+--                     Circle (circle_id and circle_tab cleared) and remain
+--                     readable only by whoever wrote them. They keep
+--                     visibility 'circle' on purpose: a 'circle' post with no
+--                     Circle attached matches none of the read rules except
+--                     "your own", whereas 'friends' would hand them to the
+--                     author's connections. The app shows such a post with
+--                     the label "A Circle" and no name.
+--                     Requires sql/fix-post-read-policy.sql to be in place.
 --     'delete'        the threads are deleted with the Circle.
 --   Threads are NEVER made public: they were posted into a room people may
 --   have believed was small.
@@ -89,12 +93,11 @@ begin
 
   if p_threads = 'keep_private' then
     update public.posts
-       set visibility = 'friends',
-           circle_id = null,
+       set circle_id = null,
            circle_tab = null,
            -- circle contributions default to hidden from the author's own
-           -- Moments; once they're the author's private posts they should
-           -- show up there.
+           -- Moments; once they're the author's own private posts they
+           -- should show up there. visibility stays 'circle' (see header).
            hidden_from_moments = false
      where circle_id = p_id + 1000000;
   else
