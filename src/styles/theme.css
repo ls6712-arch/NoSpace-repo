@@ -122,6 +122,38 @@
   --success: #4ADE80;
   --warning: var(--yellow);
 
+  /* ── GeneratedArt.tsx illustration palette ───────────────────────────────
+     The flat-vector hobby illustrations' own colors — deliberately a
+     separate family from the UI tokens above (illustrations read as warm,
+     hand-made objects regardless of what's fashionable in the chrome around
+     them). Dark values are hand-tuned, not derived: paper/cream (the
+     illustration's own light backdrop and highlight) get real dark
+     equivalents so they don't sit on the page as a glowing rectangle, ink
+     flips light-on-dark so outlines stay visible against charcoal, and the
+     five prop/figure colors are each deepened slightly for the same
+     reason. Skin and hair tones don't get a dark variant — a person's skin
+     tone isn't a UI surface. */
+  --gen-art-ink: #3A2A1F;
+  --gen-art-paper: #F1E3C8;
+  --gen-art-paper-dark: #E8D5AC;
+  --gen-art-terracotta: #C96F49;
+  --gen-art-rust: #A8492F;
+  --gen-art-mustard: #E3A83E;
+  --gen-art-mustard-light: #F0C572;
+  --gen-art-olive: #7C8A54;
+  --gen-art-sage: #A9B98C;
+  --gen-art-denim: #5C7C97;
+  --gen-art-blush: #D98A82;
+  --gen-art-cream: #FBF3E2;
+  --gen-art-skin-1: #E8B98C;
+  --gen-art-skin-2: #C68A5E;
+  --gen-art-skin-3: #8B5A3C;
+  --gen-art-skin-4: #F0C9A0;
+  --gen-art-hair-1: #3A2A1F;
+  --gen-art-hair-2: #6B4226;
+  --gen-art-hair-3: #1E1512;
+  --gen-art-hair-4: #8A5A32;
+
   /* ── shadcn/ui mappings ───────────────────────────────────────────────────
      The ui/ primitives consume these names, so pointing them at the semantic
      tokens above converts every button, dialog, select, tab and input at once
@@ -208,6 +240,19 @@
   --destructive: #D9776A;
   --destructive-foreground: #1C1816;
   --surface-elevated: #2E2822;
+
+  --gen-art-ink: #D9C7A8;
+  --gen-art-paper: #4A3F2E;
+  --gen-art-paper-dark: #3D3325;
+  --gen-art-terracotta: #A85A3A;
+  --gen-art-rust: #8A3B26;
+  --gen-art-mustard: #C08F35;
+  --gen-art-mustard-light: #C9A25E;
+  --gen-art-olive: #6B7847;
+  --gen-art-sage: #8FA173;
+  --gen-art-denim: #4D6980;
+  --gen-art-blush: #B8746D;
+  --gen-art-cream: #6B5C45;
 }
 
 /* ── The paper world — the Shelf, the click-to-feed overlay, the cover
