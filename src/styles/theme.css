@@ -504,25 +504,6 @@
 
   .ns-portfolio-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 26%, transparent); }
 
-  .ns-audience-card {
-    border: 1px solid var(--hairline);
-    background: var(--surface-elevated);
-    box-shadow: 0 16px 32px -20px rgba(0, 0, 0, 0.55);
-  }
-
-  .ns-pursuit-card {
-    border: 1px solid color-mix(in srgb, var(--violet-electric) 16%, transparent);
-    background: color-mix(in srgb, var(--violet-electric) 5%, var(--surface-elevated));
-    transition: transform 320ms cubic-bezier(.22,.61,.36,1), box-shadow 320ms ease, border-color 320ms ease;
-  }
-
-  .ns-pursuit-card:hover,
-  .ns-pursuit-card:focus-visible {
-    transform: translateY(-5px);
-    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
-    box-shadow: 0 24px 40px -20px color-mix(in srgb, var(--violet-electric) 30%, transparent);
-  }
-
   /* ── Value cards — "Create moments / Document / Explore," right below the
      hero. Dark-plum elevated surfaces with a soft violet-tinted shadow, and
      a hover lift restrained enough to still read as premium rather than
