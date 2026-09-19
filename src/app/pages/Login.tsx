@@ -163,11 +163,21 @@ export function Login() {
               you'll be signed in once you click it.
             </p>
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-              {resent
-                ? "Sent again — check your spam folder if it still doesn't turn up."
-                : "Nothing after a few minutes? It can land in spam, or just take a moment."}
+              Nothing after a few minutes? It can land in spam, or just take a moment.
             </p>
-            {error && <p className="mt-2 text-xs text-[var(--coral-text)]">{error}</p>}
+            {/* A separate, persistent block rather than swapping the hint text above in
+                place — that change was easy to miss entirely, which read as the button
+                doing nothing even when the request behind it had gone through fine. */}
+            {resent && !error && (
+              <div className="mt-3 rounded-xl border border-[var(--hairline)] bg-surface-muted px-3 py-2.5 text-xs leading-relaxed">
+                Sent again, just now. Still nothing after a few minutes? The link may not
+                be reaching this inbox at all — try a different email address, or reach out
+                so we can look into it.
+              </div>
+            )}
+            {error && (
+              <p className="mt-3 text-xs text-[var(--coral-text)]">{error}</p>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -175,7 +185,7 @@ export function Login() {
               disabled={resending}
               onClick={resend}
             >
-              {resending ? "Sending…" : "Resend confirmation email"}
+              {resending ? "Sending…" : resent ? "Resend again" : "Resend confirmation email"}
             </Button>
           </div>
         ) : (
