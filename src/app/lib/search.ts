@@ -233,7 +233,7 @@ export function useUnifiedSearch(query: string) {
           .map((k) => hobbies.find((h) => h.slug === k)?.shortName)
           .filter(Boolean)
           .slice(0, 2)
-          .join(" · ") || "On NoSpace",
+          .join(" · ") || "On Sushii",
       to: profilePath(p),
       avatarUrl: p.avatarUrl,
     }));

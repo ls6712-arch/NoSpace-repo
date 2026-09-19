@@ -131,7 +131,7 @@ export function Login() {
           <AlertCircle className="size-8 mx-auto mb-3 text-muted-foreground" />
           <h2 className="text-xl mb-2">Accounts aren't set up on this build</h2>
           <p className="text-sm text-muted-foreground">
-            This copy of NoSpace isn't connected to a database yet, so there's no real
+            This copy of Sushii isn't connected to a database yet, so there's no real
             sign-up here. Everything still works in local demo mode.
           </p>
         </div>

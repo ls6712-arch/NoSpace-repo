@@ -15,8 +15,8 @@ import { useAuth } from "./AuthContext";
 import { SOCIAL_STORAGE_KEY } from "./SocialContext";
 import { supabase } from "../../lib/supabase";
 
-const LISTINGS_KEY = "nospace.listings.v1";
-const CIRCLES_KEY = "nospace.circles.joined.v1";
+const LISTINGS_KEY = "sushii.listings.v1";
+const CIRCLES_KEY = "sushii.circles.joined.v1";
 
 /** Whole-Space follows (SocialContext's "space:<slug>" keys) read straight
  * from that context's own signed-out localStorage shape, since

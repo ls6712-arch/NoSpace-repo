@@ -1,4 +1,4 @@
--- NoSpace: pinning — feature a Moment first on your own Shelf.
+-- Sushii: pinning — feature a Moment first on your own Shelf.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

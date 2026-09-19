@@ -1,4 +1,4 @@
--- NoSpace: real, cross-device likes.
+-- Sushii: real, cross-device likes.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

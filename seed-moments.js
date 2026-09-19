@@ -1,7 +1,7 @@
 /**
  * seed-moments.js
  *
- * One-time script to seed No Space with founder-curated Moments from a
+ * One-time script to seed Sushii with founder-curated Moments from a
  * local photo folder (exported from Google Takeout).
  *
  * RUN THIS LOCALLY ON YOUR MAC — via Claude Code, not in any cloud sandbox.

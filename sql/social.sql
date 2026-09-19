@@ -1,4 +1,4 @@
--- NoSpace: participation, thoughts, notifications and messages.
+-- Sushii: participation, thoughts, notifications and messages.
 --
 -- Everything here is inherently between two people, which is why none of it
 -- can live in the browser: the recipient of a request is on another device.

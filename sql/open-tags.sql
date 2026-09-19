@@ -1,4 +1,4 @@
--- NoSpace: open tags — replaces the fixed 15-Space picker as the primary
+-- Sushii: open tags — replaces the fixed 15-Space picker as the primary
 -- way a Moment says what it's about, without touching what's already there.
 --
 --   Supabase → SQL Editor → New query → paste → Run

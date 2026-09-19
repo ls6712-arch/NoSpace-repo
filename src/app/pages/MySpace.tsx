@@ -91,7 +91,7 @@ function TryThisCard({ post, onStart }: { post: Post; onStart: (post: Post) => v
 
 /**
  * My Space is continuity, not consumption. It answers "what's happened in my
- * corner of NoSpace, and what was I in the middle of?" — which is why the
+ * corner of Sushii, and what was I in the middle of?" — which is why the
  * first thing under the fold is your own unfinished work, not other people's
  * finished work.
  *
@@ -176,7 +176,7 @@ export function MySpace() {
   );
   // Before you've followed anyone or joined anything there is nothing personal
   // to show. Rather than an empty page or a fake "for you", it shows recent
-  // work from across NoSpace and says plainly that's what it is.
+  // work from across Sushii and says plainly that's what it is.
   const hasChosen = chosen.length > 0;
   const today = (hasChosen ? chosen : publicFeed).slice(0, 6);
 
@@ -309,7 +309,7 @@ export function MySpace() {
           {!hasChosen && (
             <p className="mt-3 rounded-xl border border-[var(--hairline)] bg-card px-4 py-2.5 text-xs leading-relaxed text-muted-foreground">
               You aren't exploring any hobbies or Circles yet, so this is recent
-              work from across NoSpace. Once you pick some, only those appear here.
+              work from across Sushii. Once you pick some, only those appear here.
             </p>
           )}
 
@@ -407,7 +407,7 @@ export function MySpace() {
 
         <Section
           title="Pursuits still moving"
-          copy="Ongoing work across NoSpace you could be part of."
+          copy="Ongoing work across Sushii you could be part of."
           action={{ label: "Discover", to: "/discover" }}
         >
           <ul className="grid gap-3 sm:grid-cols-3">

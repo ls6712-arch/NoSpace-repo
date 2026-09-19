@@ -38,7 +38,7 @@ export const router = createHashRouter([
     Component: Root,
     children: [
       // "/" is the landing page, for everyone. The wordmark points here from
-      // every page and is the way back to what NoSpace says it is — sending a
+      // every page and is the way back to what Sushii says it is — sending a
       // signed-in person to their feed instead took that away. My Space is a
       // destination of its own, at /my-space.
       { index: true, Component: Home },

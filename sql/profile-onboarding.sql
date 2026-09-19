@@ -1,4 +1,4 @@
--- NoSpace: profile onboarding — a short tagline, and the flag that marks the
+-- Sushii: profile onboarding — a short tagline, and the flag that marks the
 -- first-run guided setup as done.
 --
 --   Supabase → SQL Editor → New query → paste → Run

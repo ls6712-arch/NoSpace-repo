@@ -1,4 +1,4 @@
--- NoSpace: profile bio — a short "what got you into this" line under the
+-- Sushii: profile bio — a short "what got you into this" line under the
 -- name, on your own Shelf and on your public profile.
 --
 --   Supabase → SQL Editor → New query → paste → Run

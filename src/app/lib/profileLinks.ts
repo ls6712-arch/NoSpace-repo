@@ -11,7 +11,7 @@ import { LOCAL_CLEARED_EVENT } from "./localData";
  * (lib/profileLinksRemote.ts) so a visitor on another device can see them.
  */
 
-const KEY = "nospace.profileLinks.v1";
+const KEY = "sushii.profileLinks.v1";
 
 export interface ProfileLink {
   id: string;

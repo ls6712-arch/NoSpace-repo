@@ -1,4 +1,4 @@
--- NoSpace: connections, user-made Spaces, and invitations.
+-- Sushii: connections, user-made Spaces, and invitations.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

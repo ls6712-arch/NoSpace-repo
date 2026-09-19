@@ -1,4 +1,4 @@
--- NoSpace: Profile links — GitHub, a design studio, a Substack, whatever
+-- Sushii: Profile links — GitHub, a design studio, a Substack, whatever
 -- someone wants people to find from their profile.
 --
 --   Supabase → SQL Editor → New query → paste → Run

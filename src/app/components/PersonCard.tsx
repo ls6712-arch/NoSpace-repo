@@ -41,7 +41,7 @@ export function PersonCard({ person, className = "" }: { person: Person; classNa
           {hobbies.length > 0
             ? hobbies.join(" · ")
             : person.postCount > 0
-              ? "Sharing work on NoSpace"
+              ? "Sharing work on Sushii"
               : "Just joined, nothing shared yet"}
         </span>
       </span>

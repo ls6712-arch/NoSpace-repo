@@ -1,4 +1,4 @@
--- NoSpace: editable cover — the paginated studio view's own cover state,
+-- Sushii: editable cover — the paginated studio view's own cover state,
 -- separate from the everyday Shelf's plain name/bio.
 --
 --   Supabase → SQL Editor → New query → paste → Run

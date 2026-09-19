@@ -1,4 +1,4 @@
--- NoSpace: block obviously-test display names before they land in
+-- Sushii: block obviously-test display names before they land in
 -- `profiles`, so a throwaway QA account never has to be hunted down and
 -- purged from the public feed after the fact again.
 --

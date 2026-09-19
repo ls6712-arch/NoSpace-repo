@@ -1,4 +1,4 @@
--- NoSpace: fix "Couldn't make that Space".
+-- Sushii: fix "Couldn't make that Space".
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

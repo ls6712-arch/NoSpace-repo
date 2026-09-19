@@ -1,4 +1,4 @@
--- NoSpace: retire the connections / user-made-Spaces / connections-messaging
+-- Sushii: retire the connections / user-made-Spaces / connections-messaging
 -- system that backed PersonActions' Explore/Connect/Invite, now that
 -- PersonActions.tsx is deleted and ConnectionsContext.tsx no longer
 -- references any of it (see that file's own updated docstring). Circle

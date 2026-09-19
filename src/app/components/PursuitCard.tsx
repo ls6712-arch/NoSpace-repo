@@ -81,7 +81,7 @@ export type PursuitLike = {
 /**
  * One Pursuit, as a card someone would actually want to look at: its own
  * inspiration image when it has one (a real photo if the maker uploaded
- * one, the same illustrated fallback as everywhere else in NoSpace
+ * one, the same illustrated fallback as everywhere else in Sushii
  * otherwise), the Space and Interest as quiet metadata rather than a
  * taxonomy to fill in, and a status worked out from what's actually
  * happened rather than a field someone has to remember to update.

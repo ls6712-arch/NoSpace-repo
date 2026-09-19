@@ -174,7 +174,7 @@ export function Header() {
             aria-current={pathname === "/" ? "page" : undefined}
           >
             <span className="ns-wordmark-mark" aria-hidden="true" />
-            <span className="text-2xl font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
+            <span className="text-2xl font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>Sushii</span>
             {pathname === "/" && (
               <span
                 className="absolute -bottom-0.5 left-0 right-0 h-px"

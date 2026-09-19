@@ -232,7 +232,7 @@ export function Home() {
                 <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
                   A Corner is the specific thing inside a Space, like Pickleball
                   inside Sports &amp; Fitness. Here's an example, shown with
-                  real Moments from NoSpace's sample content.
+                  real Moments from Sushii's sample content.
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -310,7 +310,7 @@ export function Home() {
       <footer className="border-t border-[var(--hairline)] py-12">
         <div className="container mx-auto flex flex-col items-center gap-6 px-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="text-center sm:text-left">
-            <span className="text-lg text-foreground" style={{ fontFamily: "var(--font-serif)" }}>NoSpace</span>
+            <span className="text-lg text-foreground" style={{ fontFamily: "var(--font-serif)" }}>Sushii</span>
             <p className="mt-1 max-w-xs text-sm text-muted-foreground">
               One place for everything you're living, doing, and making.
             </p>

@@ -262,7 +262,7 @@ export function Studio() {
           className="absolute right-8 top-7 text-sm italic text-white/80"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          NoSpace
+          Sushii
         </span>
 
         {isMe && (

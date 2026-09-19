@@ -1,4 +1,4 @@
--- NoSpace: Moment drafts — a best-effort cross-device mirror of the one
+-- Sushii: Moment drafts — a best-effort cross-device mirror of the one
 -- in-progress composer draft someone hasn't published or discarded yet.
 --
 --   Supabase → SQL Editor → New query → paste → Run

@@ -1,4 +1,4 @@
--- NoSpace: real invite-and-accept membership for Circles.
+-- Sushii: real invite-and-accept membership for Circles.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

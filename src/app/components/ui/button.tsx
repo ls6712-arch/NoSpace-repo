@@ -17,7 +17,7 @@ const buttonVariants = cva(
           "bg-primary text-primary-foreground shadow-[0_0_0_1px_rgba(166,108,255,0.35)] transition-shadow hover:shadow-[0_0_0_1px_rgba(166,108,255,0.5),0_0_24px_-4px_rgba(166,108,255,0.55)] active:brightness-95",
         brand:
           "text-white shadow-[0_0_0_1px_rgba(166,108,255,0.3),0_10px_28px_-10px_rgba(166,108,255,0.6)] hover:brightness-110 hover:scale-[1.02] active:scale-[0.99] [background-image:var(--gradient-brand)]",
-        // The warm action, kept for places that want NoSpace's human warmth
+        // The warm action, kept for places that want Sushii's human warmth
         // rather than the violet system's own accent (--coral-deep clears
         // 5.15:1 with white).
         coral:

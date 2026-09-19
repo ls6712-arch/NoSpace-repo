@@ -1,4 +1,4 @@
--- NoSpace: profile follows — one person following another's Shelf, the real
+-- Sushii: profile follows — one person following another's Shelf, the real
 -- relationship the studio view's "N followers" count needs. Deliberately
 -- separate from hobby_follows (interest-level, follows a Space/Corner).
 --

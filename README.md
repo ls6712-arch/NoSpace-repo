@@ -1,4 +1,4 @@
-# NoSpace
+# Sushii
 
 **Create, don't just consume.** A hobby app built around logging what you
 actually make — a photo, a note, a small win — rather than a feed to scroll.

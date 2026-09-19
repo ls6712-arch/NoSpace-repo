@@ -115,7 +115,7 @@ function DiscoverSpaceArt({
 /**
  * Featured Moments selection.
  *
- * NoSpace doesn't keep aggregate reaction, comment, or save counts today —
+ * Sushii doesn't keep aggregate reaction, comment, or save counts today —
  * only a single legacy `likes` number per post (the same one ContentContext's
  * scorePost already leans on, capped and kept a minor factor). So this ranks
  * on what's honestly available — recency first, a small boost for hobbies
@@ -640,7 +640,7 @@ export function Discover() {
                 <section className="mb-14">
                   <div className="mb-5 flex items-end justify-between gap-4">
                     <div>
-                      <div className="ns-section-kicker mb-2">POPULAR MOMENTS FROM ACROSS NOSPACE</div>
+                      <div className="ns-section-kicker mb-2">POPULAR MOMENTS FROM ACROSS SUSHII</div>
                       <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Featured Moments</h2>
                     </div>
                     <a
@@ -734,7 +734,7 @@ export function Discover() {
               {chip === "near" ? (
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
                   <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                    NoSpace doesn't know where you are, and won't until you tell it.
+                    Sushii doesn't know where you are, and won't until you tell it.
                     These Circles have a city attached, the closest thing to near you.
                   </p>
                   <ul className="mx-auto grid max-w-2xl gap-2 text-left sm:grid-cols-2">

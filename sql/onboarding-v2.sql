@@ -1,4 +1,4 @@
--- NoSpace: post-signup onboarding v2 — a Space picker + optional first
+-- Sushii: post-signup onboarding v2 — a Space picker + optional first
 -- Moments, gated by a real /onboarding route instead of the old inline
 -- 3-step setup on /you (name/photo/tagline/free-text interests, gated by
 -- profiles.onboarding_completed_at). That flow is retired by this change

@@ -1,4 +1,4 @@
--- NoSpace: correctness fixes.
+-- Sushii: correctness fixes.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

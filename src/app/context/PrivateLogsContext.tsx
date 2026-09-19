@@ -26,7 +26,7 @@ import {
  * A signed-out visitor has no account for RLS to key off, so "Just keep
  * it for myself" (Log.tsx's no-login escape hatch) still needs somewhere
  * to write — this falls back to a local-only store, deliberately under a
- * fresh key rather than the old `nospace.journal.v1`. That old key's
+ * fresh key rather than the old `sushii.journal.v1`. That old key's
  * privateLogs are intentionally left alone here (not read, not migrated,
  * not deleted) pending a separate decision on what to do with them.
  *
@@ -41,7 +41,7 @@ import {
  * stale by the time the wait resolves.
  */
 
-const LOCAL_KEY = "nospace.privateLogs.local.v1";
+const LOCAL_KEY = "sushii.privateLogs.local.v1";
 
 interface LocalState {
   logs: PrivateLog[];

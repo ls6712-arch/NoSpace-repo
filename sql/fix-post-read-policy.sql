@@ -1,4 +1,4 @@
--- NoSpace: fix who can read `posts`.
+-- Sushii: fix who can read `posts`.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

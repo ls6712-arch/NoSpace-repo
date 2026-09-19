@@ -1,4 +1,4 @@
--- NoSpace: let an admin delete a Circle.
+-- Sushii: let an admin delete a Circle.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

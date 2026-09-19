@@ -11,7 +11,7 @@
  * capture overwrites whatever was here before, once the person has actually
  * been asked about it (see the resume-or-discard prompt in Log.tsx).
  */
-const DRAFT_KEY = "nospace.draft.v1";
+const DRAFT_KEY = "sushii.draft.v1";
 
 export interface MomentDraftFields {
   thought: string;

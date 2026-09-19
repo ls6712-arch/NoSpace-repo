@@ -1,4 +1,4 @@
--- NoSpace: Corners, created by tagging rather than suggest-and-approve.
+-- Sushii: Corners, created by tagging rather than suggest-and-approve.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --

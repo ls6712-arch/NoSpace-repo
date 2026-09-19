@@ -1,4 +1,4 @@
--- NoSpace: Pursuits — the things someone is bringing to life.
+-- Sushii: Pursuits — the things someone is bringing to life.
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --
