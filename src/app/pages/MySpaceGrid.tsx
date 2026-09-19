@@ -8,6 +8,7 @@ import { fetchFollowingIds } from "../lib/profileFollows";
 import { getLastVisit, markVisited } from "../lib/mySpaceVisit";
 import { circles } from "../data/circles";
 import { ContactSheet } from "../components/ContactSheet";
+import { MomentPanel } from "../components/MomentPanel";
 import { PursuitsRail } from "../components/PursuitsRail";
 
 const PAGE_SIZE = 6;
@@ -119,14 +120,8 @@ export function MySpaceGrid() {
         </div>
 
         <div className="myspace-moment">
-          {/* Placeholder — Stage 3 replaces this with the real Moment panel. */}
           {selected ? (
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-sm text-muted-foreground">{selected.creator}</p>
-              <p className="mt-2 myspace-caption" style={{ fontFamily: "var(--font-serif)" }}>
-                {selected.caption}
-              </p>
-            </div>
+            <MomentPanel post={selected} />
           ) : (
             <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               Nothing selected yet.
