@@ -5,6 +5,16 @@
 -- and have it succeed. Tested 2026-09-20 in a rolled-back transaction
 -- with a non-admin throwaway account: before=false, after=true.
 --
+-- Applied 2026-09-20 as migration profiles_is_admin_lock
+-- (v20260920232441), after 20260920005000_theme_preference.sql. Full
+-- test suite re-run against the live, committed state: is_admin
+-- escalation blocked, normal update succeeds, paused_at set/cleared
+-- succeeds, theme_preference update succeeds, insert with is_admin=true
+-- blocked, signup-shaped upsert (id + display_name, matching the actual
+-- client code) succeeds. A username-included variant of that same
+-- upsert correctly fails (permission denied) — username is deliberately
+-- not in the allow-list; the real signup code doesn't send it either.
+--
 -- Root cause: "You can update your own profile" has USING (auth.uid() =
 -- id) and NO with_check at all, so once the row-ownership check passes,
 -- any column can be set to anything. A column-level

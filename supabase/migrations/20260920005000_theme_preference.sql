@@ -8,6 +8,8 @@
 -- migration's UPDATE column grant includes theme_preference, which would
 -- fail outright (GRANT UPDATE on a column that doesn't exist errors
 -- immediately) if this hasn't run first.
+--
+-- Applied 2026-09-20 as migration theme_preference (v20260920222514).
 
 alter table public.profiles
   add column if not exists theme_preference text not null default 'system'
