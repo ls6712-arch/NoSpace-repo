@@ -1,30 +1,33 @@
-Fresh snapshot of every public-schema RLS policy after applying migrations
-(a) pause_deletion_foundation, (b) consolidate_visibility_policies,
+Fresh full pg_policies dump — every public-schema table plus storage.objects
+(post-media bucket) — taken 2026-09-20 on project eyzokuhhbyidvmuqfmwm, after
+migrations (a) pause_deletion_foundation, (b) consolidate_visibility_policies,
 (b2) pause_visibility_b2, (c) posts_visibility_private,
-(d) reactions_and_bookmarks, and the storage migration
-close_post_media_listing — all applied and tested 2026-09-20 on project
-eyzokuhhbyidvmuqfmwm. The write-side pause check
-(20260920000000_pause_write_checks.sql) was NOT applied, per instruction
-("draft it, don't apply it") — posts/pursuits still show their original two
-INSERT and two UPDATE policies each below, unchanged.
+(d) reactions_and_bookmarks, and storage close_post_media_listing.
+
+This is the single "after" snapshot for this work — an earlier, less
+complete public-schema-only dump (previously also named
+policies-after-20260920.txt) was superseded by this one and removed rather
+than kept alongside it.
 
 Query:
-  select tablename, policyname, roles, cmd, qual, with_check
-  from pg_policies
-  where schemaname='public'
-  order by tablename, cmd, policyname;
+  select 'public' as schema, tablename, policyname, roles, cmd, qual, with_check
+  from pg_policies where schemaname='public'
+  union all
+  select 'storage', tablename, policyname, roles, cmd, qual, with_check
+  from pg_policies where schemaname='storage' and tablename='objects'
+  order by schema, tablename, cmd, policyname;
 
+===============================================================================
+PUBLIC SCHEMA
 ===============================================================================
 
 bookmarks
   ALL "you manage your own bookmarks"  roles={public}
-    qual: (select auth.uid()) = user_id
-    with_check: (select auth.uid()) = user_id
+    qual/with_check: (select auth.uid()) = user_id
 
 categories
   ALL "reviewers manage categories"  roles={public}
-    qual: private.is_admin(auth.uid())
-    with_check: private.is_admin(auth.uid())
+    qual/with_check: private.is_admin(auth.uid())
   SELECT "categories are readable by anyone"  roles={public}
     qual: true
 
@@ -38,13 +41,13 @@ category_suggestions
   UPDATE "reviewers decide"  roles={public}
     qual/with_check: private.is_admin(auth.uid())
 
-circle_members  -- unchanged, per decision (no change)
+circle_members  -- unchanged (decision: no change)
   DELETE "you can leave a circle"  roles={public}
     qual: user_id = auth.uid()
   INSERT "you can join a circle yourself"  roles={authenticated}
-    with_check: (user_id = auth.uid()) AND (role='member' OR private.owns_circle(circle_id, auth.uid()))
+    with_check: (user_id=auth.uid()) AND (role='member' OR private.owns_circle(circle_id, auth.uid()))
   SELECT "you see the roster of a circle you're in"  roles={public}
-    qual: (user_id = auth.uid()) OR private.is_circle_member(circle_id, auth.uid()) OR private.owns_circle(circle_id, auth.uid())
+    qual: (user_id=auth.uid()) OR private.is_circle_member(circle_id, auth.uid()) OR private.owns_circle(circle_id, auth.uid())
 
 circles
   INSERT "you create your own circle"  roles={authenticated}
@@ -54,62 +57,57 @@ circles
   UPDATE "the owner edits their own circle"  roles={public}
     qual/with_check: owner = auth.uid()
 
-connections  -- unchanged, per decision (retired feature, no change)
+connections  -- unchanged (decision: retired feature, no change)
   DELETE "either side can withdraw or disconnect"  roles={public}
-    qual: (auth.uid()=requester) OR (auth.uid()=addressee)
   INSERT "you can ask to connect"  roles={authenticated}
-    with_check: (auth.uid()=requester) AND (requester<>addressee)
   SELECT "you see your own connections"  roles={public}
-    qual: (auth.uid()=requester) OR (auth.uid()=addressee)
   UPDATE "only the addressee answers"  roles={public}
-    qual/with_check: auth.uid() = addressee
+  (qual text unchanged from docs/policies-before-20260919.txt)
 
 corners
   INSERT "anyone signed in can create a corner"  roles={authenticated}
-    with_check: space_slug in (fixed list) OR exists(categories c where c.slug=space_slug)
   INSERT "space members can create a corner"  roles={authenticated}
-    with_check: exists(spaces s where s.hobby_slug=space_slug and (s.owner=auth.uid() or private.is_space_member(s.id, auth.uid())))
   SELECT "corners are readable when signed in"  roles={public}
     qual: auth.uid() IS NOT NULL
 
-hobby_follows  -- UPDATED (b2): added is_visible_profile
+hobby_follows  -- UPDATED (b2)
   ALL "you manage your own hobby follows"  roles={public}
     qual/with_check: auth.uid() = user_id
   SELECT "hobby follows are readable"  roles={public}
     qual: (select auth.uid()) IS NOT NULL AND is_visible_profile(user_id)
 
-messages  -- unchanged, per decision (retired feature, no change)
+messages  -- unchanged (decision: retired feature, no change)
   INSERT "you can write in an accepted thread"  roles={authenticated}
   INSERT "you write to connections and your spaces"  roles={authenticated}
   SELECT "messages need an accepted participation"  roles={public}
   SELECT "you read messages meant for you"  roles={public}
-  (qual text unchanged from docs/policies-before-20260919.txt)
 
 moment_drafts
-  DELETE/INSERT/SELECT/UPDATE all owner-only (auth.uid() = user_id) — unchanged
+  DELETE/INSERT/SELECT/UPDATE all owner-only: auth.uid() = user_id
 
 notifications
-  INSERT "signed-in users can notify"  roles={authenticated}, with_check: true
-  SELECT/UPDATE owner-only (auth.uid() = user_id) — unchanged
+  INSERT "signed-in users can notify"  roles={authenticated}  with_check: true
+  SELECT/UPDATE owner-only: auth.uid() = user_id
 
-participations  -- unchanged, per decision (retired feature, no change)
-  DELETE/INSERT/UPDATE owner-scoped; SELECT still includes the wide-open
-  "to_user IS NULL" branch, exactly as before
+participations  -- unchanged (decision: retired feature, no change)
+  DELETE/INSERT/UPDATE owner-scoped
+  SELECT "you see participations you are part of"  roles={public}
+    qual: (auth.uid()=from_user) OR (auth.uid()=to_user) OR (to_user IS NULL)  -- still the wide-open branch, unchanged
 
-post_likes  -- UPDATED (b2): added is_visible_profile
+post_likes  -- UPDATED (b2)
   ALL "you manage your own likes"  roles={public}
     qual/with_check: auth.uid() = user_id
   SELECT "post likes are readable"  roles={public}
     qual: (select auth.uid()) IS NOT NULL AND is_visible_profile(user_id)
 
-posts  -- UPDATED (b): consolidated SELECT, is_visible_profile added,
-       -- 'friends' branch dropped. INSERT/UPDATE deliberately left as their
-       -- original duplicate pairs (write-side check migration not applied).
+posts  -- UPDATED (b): SELECT consolidated to one policy.
+       -- INSERT/UPDATE deliberately unchanged (write-side check is drafted,
+       -- not applied — see supabase/migrations/20260920000000_pause_write_checks.sql)
   DELETE "You can delete your own posts"  roles={public}
   DELETE "you delete your own moments"  roles={public}
   INSERT "You can post as yourself"  roles={public}
   INSERT "you post your own moments"  roles={authenticated}
-  SELECT "posts are readable by their audience"  roles={public}  <-- now the only SELECT policy
+  SELECT "posts are readable by their audience"  roles={public}  <-- only SELECT policy now
     qual: (select auth.uid())=user_id
         OR (visibility='public' AND is_visible_profile(user_id))
         OR (visibility='circle' AND circle_id IS NOT NULL AND (select auth.uid()) IS NOT NULL
@@ -121,10 +119,10 @@ posts  -- UPDATED (b): consolidated SELECT, is_visible_profile added,
   UPDATE "You can edit or delete your own posts"  roles={public}
   UPDATE "own posts are editable"  roles={public}
 
-private_logs  -- unchanged (owner-only on every command, confirmed again)
+private_logs  -- unchanged, owner-only on every command (re-confirmed)
   DELETE/INSERT/SELECT/UPDATE all: auth.uid() = user_id
 
-profile_follows  -- UPDATED (b2): hides the row unless both parties visible
+profile_follows  -- UPDATED (b2)
   DELETE "either side can end a follow"  roles={public}
   INSERT "you follow people as yourself"  roles={authenticated}
   SELECT "profile follows are readable when signed in"  roles={public}
@@ -132,7 +130,7 @@ profile_follows  -- UPDATED (b2): hides the row unless both parties visible
         AND is_visible_profile(follower_id) AND is_visible_profile(followed_id)
   UPDATE "only the followed person answers"  roles={public}
 
-profile_links  -- UPDATED (b2): added is_visible_profile
+profile_links  -- UPDATED (b2)
   DELETE/INSERT/UPDATE owner-only, unchanged
   SELECT "profile links are readable when signed in"  roles={public}
     qual: (select auth.uid()) IS NOT NULL AND is_visible_profile(user_id)
@@ -140,20 +138,19 @@ profile_links  -- UPDATED (b2): added is_visible_profile
 profile_settings  -- NEW (a)
   INSERT/SELECT/UPDATE all owner-only: auth.uid() = user_id
 
-profiles  -- UPDATED (b): consolidated to one SELECT policy
+profiles  -- UPDATED (b): SELECT consolidated to one policy
   INSERT "you can create your own profile"  roles={authenticated}
-  SELECT "profiles are visible unless paused or deleting"  roles={public}  <-- now the only SELECT policy
-    qual: (paused_at IS NULL AND deletion_requested_at IS NULL)
-        OR (select auth.uid()) = id
+  SELECT "profiles are visible unless paused or deleting"  roles={public}  <-- only SELECT policy now
+    qual: (paused_at IS NULL AND deletion_requested_at IS NULL) OR (select auth.uid())=id
   UPDATE "You can update your own profile"  roles={public}
 
-pursuits  -- UPDATED (b): consolidated SELECT, is_visible_profile added.
-          -- INSERT/UPDATE deliberately left as original duplicate pairs.
+pursuits  -- UPDATED (b): SELECT consolidated. INSERT/UPDATE deliberately
+          -- unchanged (write-side check drafted, not applied).
   DELETE "you can delete your own pursuit"  roles={authenticated}
   DELETE "you delete your own pursuits"  roles={public}
   INSERT "you can start a pursuit"  roles={authenticated}
   INSERT "you create your own pursuits"  roles={authenticated}
-  SELECT "you see your own pursuits, others see only shared ones"  roles={public}  <-- now the only SELECT policy
+  SELECT "you see your own pursuits, others see only shared ones"  roles={public}  <-- only SELECT policy now
     qual: (select auth.uid())=user_id OR (shared=true AND is_visible_profile(user_id))
   UPDATE "you can update your own pursuit"  roles={authenticated}
   UPDATE "you edit your own pursuits"  roles={public}
@@ -167,10 +164,10 @@ reactions  -- NEW (d)
     qual: (select auth.uid())=user_id
         OR (select auth.uid()) = (select p.user_id from posts p where p.id=reactions.post_id)
 
-space_members / spaces  -- unchanged, per decision (retired feature, no change)
+space_members / spaces  -- unchanged (decision: retired feature, no change)
   (qual text unchanged from docs/policies-before-20260919.txt)
 
-thoughts  -- UPDATED (b2): hides a non-visible commenter's comment everywhere
+thoughts  -- UPDATED (b2)
   DELETE "you can remove your own thought"  roles={public}
   INSERT "anyone signed in can add a thought"  roles={authenticated}
   SELECT "thoughts follow the moment's setting"  roles={public}
@@ -180,26 +177,37 @@ thoughts  -- UPDATED (b2): hides a non-visible commenter's comment everywhere
                 and (p.thoughts_private=false or p.user_id=(select auth.uid()))))
 
 ===============================================================================
-posts.visibility constraint (updated, migration c)
-
-posts_visibility_check: CHECK (visibility = ANY (ARRAY['public','circle','private','friends']))
-0 rows converted from 'friends' to 'private' (0 existed at conversion time).
-
+STORAGE SCHEMA — storage.objects, post-media bucket
 ===============================================================================
-storage.objects, post-media bucket (updated, storage migration)
 
-SELECT "you see your own post-media files"  roles={public}
+DELETE "You can delete your own uploads"  roles={public}
+  qual: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+DELETE "you delete your own post-media files"  roles={authenticated}
+  qual: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+INSERT "You can upload into your own folder"  roles={public}
+  with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+INSERT "signed-in users can upload their own media"  roles={authenticated}
+  with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+INSERT "you upload into your own post-media folder"  roles={authenticated}
+  with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+SELECT "you see your own post-media files"  roles={public}  -- UPDATED (storage migration)
   qual: bucket_id='post-media' AND (storage.foldername(name))[1] = (select auth.uid())::text
-(replaces the old unconditional "post-media files are publicly readable";
-INSERT/UPDATE/DELETE policies on this bucket are unchanged from before.)
+  (replaces the old unconditional "post-media files are publicly readable")
+UPDATE "you replace your own post-media files"  roles={authenticated}
+  qual/with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+
+Note: three near-duplicate INSERT policies and two near-duplicate DELETE
+policies pre-date this work and were left as-is — not touched by anything in
+this session, listed here only because the query pulls every policy on the
+table.
 
 ===============================================================================
 Live data, end of session
 
-auth.users: 10 rows (unchanged)
-profiles: 10 rows (unchanged)
-posts: 26 rows, all visibility='public' (unchanged)
-pursuits: 9 rows (unchanged)
-connections: 3 rows (unchanged)
-reactions: 0 rows (new, empty table)
-bookmarks: 0 rows (new, empty table)
+auth.users: 10 rows (unchanged throughout)
+profiles: 10 rows
+posts: 26 rows, all visibility='public'
+pursuits: 9 rows
+connections: 3 rows
+reactions: 0 rows (new table)
+bookmarks: 0 rows (new table)
