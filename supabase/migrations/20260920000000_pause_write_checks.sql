@@ -4,7 +4,10 @@
 -- being minted. This closes that gap at the database itself: a paused or
 -- pending-deletion account's own INSERT/UPDATE on posts, pursuits, or
 -- thoughts (comments) is rejected regardless of whether its access token
--- is still technically valid. Draft only, for review — not applied.
+-- is still technically valid. Applied 2026-09-20 as migration
+-- pause_write_checks (v20260920174056); all seven test groups (including
+-- anon INSERT/UPDATE denial) passed in a rolled-back transaction, no data
+-- persisted from testing.
 --
 -- Scope decisions from review:
 --  - Blocks on paused_at OR deletion_requested_at (both close the same
