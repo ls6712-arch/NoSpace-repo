@@ -457,7 +457,14 @@ export function Log() {
     // field — recovers as one tag rather than losing it.
     setTags(draftPrompt.tags ?? (draftPrompt.interest ? [draftPrompt.interest] : []));
     setSpaceSet(draftPrompt.spaceSet);
-    setAudience(draftPrompt.audience as Visibility | "private");
+    // A draft saved before the "Connections" audience option was retired
+    // can still have audience: "friends" sitting in localStorage or the
+    // remote mirror. That value has no picker option anymore, so without
+    // this it would resume as nothing-selected and, if published as-is,
+    // would try to write a visibility no longer offered anywhere. Falls
+    // back to "Only you", the same private default a brand-new draft gets.
+    const savedAudience = draftPrompt.audience as Visibility | "private";
+    setAudience(AUDIENCE.some((opt) => opt.value === savedAudience) ? savedAudience : "private");
     setCircleId(draftPrompt.circleId);
     setIsActivity(draftPrompt.isActivity);
     setStartsAt(draftPrompt.startsAt);
