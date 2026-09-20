@@ -15,7 +15,6 @@ import {
   Plus,
   Sparkle,
   Users,
-  UserRound,
   Video,
   X,
 } from "lucide-react";
@@ -108,7 +107,6 @@ const AUDIENCE: {
   icon: typeof Globe2;
 }[] = [
   { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
-  { value: "friends", label: "Connections", copy: "Only people you have connected with - both of you agreed", icon: UserRound },
   { value: "circle", label: "A Circle", copy: "Only members of one Circle you pick", icon: Users },
   { value: "public", label: "Everyone", copy: "Anyone browsing this space can find it", icon: Globe2 },
 ];

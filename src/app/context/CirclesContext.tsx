@@ -137,7 +137,7 @@ export function CirclesProvider({ children }: { children: ReactNode }) {
         .select("id, display_name")
         .in("id", ownerIds);
       const names: Record<string, string> = {};
-      for (const p of (profiles ?? []) as any[]) names[p.id] = p.display_name?.trim() || "Someone";
+      for (const p of (profiles ?? []) as any[]) names[p.id] = p.display_name?.trim() || "A member who's away";
       setOwnerNames(names);
     }
 
@@ -179,7 +179,7 @@ export function CirclesProvider({ children }: { children: ReactNode }) {
       activity: activityFor(offsetId),
       prompt: row.prompt,
       rules: row.rules ?? [],
-      moderators: [ownerNames[row.owner] ?? "Someone"],
+      moderators: [ownerNames[row.owner] ?? "A member who's away"],
       visibility: row.visibility,
       ownerId: row.owner,
     };
@@ -219,7 +219,7 @@ export function CirclesProvider({ children }: { children: ReactNode }) {
 
     return memberRows.map((m) => ({
       userId: m.user_id,
-      displayName: byId.get(m.user_id)?.display_name?.trim() || "Someone",
+      displayName: byId.get(m.user_id)?.display_name?.trim() || "A member who's away",
       avatarUrl: byId.get(m.user_id)?.avatar_url ?? undefined,
       role: m.role,
       joinedAt: new Date(m.joined_at).getTime(),

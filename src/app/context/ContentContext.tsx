@@ -275,7 +275,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       : { data: [] as { id: string; display_name: string }[] };
     const nameById = new Map((profilesData ?? []).map((p) => [p.id, p.display_name]));
 
-    setRealPosts(data.map((row: any) => rowToPost(row, nameById.get(row.user_id) ?? "Someone")));
+    setRealPosts(data.map((row: any) => rowToPost(row, nameById.get(row.user_id) ?? "A member who's away")));
   };
 
   const refetchCircleMemberCounts = async () => {

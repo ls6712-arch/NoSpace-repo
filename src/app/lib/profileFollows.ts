@@ -124,7 +124,7 @@ export async function fetchIncomingFollowRequests(userId: string): Promise<Incom
     const p = byId.get(r.follower_id);
     return {
       followerId: r.follower_id,
-      displayName: p?.display_name?.trim() || "Someone",
+      displayName: p?.display_name?.trim() || "A member who's away",
       avatarUrl: p?.avatar_url ?? undefined,
       createdAt: new Date(r.created_at).getTime(),
     };

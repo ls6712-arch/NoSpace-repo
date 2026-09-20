@@ -54,7 +54,7 @@ function toPerson(row: ProfileRow): Person {
   return {
     id: row.id,
     username: row.username,
-    displayName: row.display_name?.trim() || "Someone",
+    displayName: row.display_name?.trim() || "A member who's away",
     avatarUrl: row.avatar_url ?? undefined,
     hobbyKeys: [],
     postCount: 0,

@@ -243,13 +243,13 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       ? await supabase.from("profiles").select("id, display_name, avatar_url").in("id", [...ids])
       : { data: [] as any[] };
     const byId = new Map((people ?? []).map((p: any) => [p.id, p]));
-    const nameOf = (id?: string) => (id ? byId.get(id)?.display_name ?? "Someone" : undefined);
+    const nameOf = (id?: string) => (id ? byId.get(id)?.display_name ?? "A member who's away" : undefined);
 
     const participations: Participation[] = (parts.data ?? []).map((p: any) => ({
       id: p.id,
       kind: p.kind,
       fromUser: p.from_user,
-      fromName: nameOf(p.from_user) ?? "Someone",
+      fromName: nameOf(p.from_user) ?? "A member who's away",
       toUser: p.to_user ?? undefined,
       toName: nameOf(p.to_user),
       postId: p.post_id ?? undefined,
@@ -279,7 +279,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         id: t.id,
         postId: t.post_id,
         userId: t.user_id,
-        authorName: nameOf(t.user_id) ?? "Someone",
+        authorName: nameOf(t.user_id) ?? "A member who's away",
         authorAvatar: byId.get(t.user_id)?.avatar_url ?? undefined,
         prompt: t.prompt ?? undefined,
         body: t.body,

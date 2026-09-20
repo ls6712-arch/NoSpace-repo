@@ -160,7 +160,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
             .select("id, display_name")
             .in("id", ids);
           for (const p of (profs ?? []) as any[]) {
-            names[p.id] = p.display_name?.trim() || "Someone";
+            names[p.id] = p.display_name?.trim() || "A member who's away";
           }
         }
       }

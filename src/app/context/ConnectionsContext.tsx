@@ -104,7 +104,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
         for (const p of (profs ?? []) as any[]) {
           byId[p.id] = {
             id: p.id,
-            displayName: p.display_name?.trim() || "Someone",
+            displayName: p.display_name?.trim() || "A member who's away",
             username: p.username,
             avatarUrl: p.avatar_url ?? undefined,
           };

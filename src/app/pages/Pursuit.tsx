@@ -124,7 +124,7 @@ export function Pursuit() {
       setRemote({
         status: "found",
         data,
-        ownerName: profileRow?.display_name?.trim() || "Someone",
+        ownerName: profileRow?.display_name?.trim() || "A member who's away",
         ownerAvatar: profileRow?.avatar_url ?? undefined,
       });
     })();

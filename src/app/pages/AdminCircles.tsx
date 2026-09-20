@@ -67,7 +67,7 @@ export function AdminCircles() {
         .in("id", ownerKey.split(","));
       if (cancelled) return;
       const names: Record<string, string> = {};
-      for (const p of (data ?? []) as any[]) names[p.id] = p.display_name?.trim() || "Someone";
+      for (const p of (data ?? []) as any[]) names[p.id] = p.display_name?.trim() || "A member who's away";
       setOwnerNames(names);
     })();
     return () => {
