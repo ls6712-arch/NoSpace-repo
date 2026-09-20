@@ -1,10 +1,10 @@
 -- Reverses supabase/migrations/20260920020000_admin_function_and_grant_hardening.sql:
 -- restores the five admin/usage functions to their original (buggy)
 -- public.is_admin(auth.uid()) reference, re-grants anon EXECUTE on the
--- three functions revoked from it, clears the pinned search_path on
--- reject_test_display_names, and re-grants UPDATE on profiles.is_admin
--- to authenticated and anon (restoring the privilege-escalation gap —
--- only meant for a full rollback of this migration, not a partial one).
+-- three functions revoked from it, and clears the pinned search_path on
+-- reject_test_display_names. Does not touch profiles.is_admin grants or
+-- policies — those are Migration 1's own rollback
+-- (rollback_20260920010000_profiles_is_admin_lock.sql).
 
 create or replace function public.admin_delete_circle(p_id bigint, p_threads text default 'keep_private'::text)
 returns jsonb
@@ -164,5 +164,3 @@ grant execute on function public.sync_post_likes_count() to anon;
 grant execute on function public.set_thread_answered(bigint, boolean) to anon;
 
 alter function public.reject_test_display_names() reset search_path;
-
-grant update (is_admin) on public.profiles to authenticated, anon;

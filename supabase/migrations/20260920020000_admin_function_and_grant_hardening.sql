@@ -1,4 +1,9 @@
--- Security hardening, draft only — NOT APPLIED. Three independent fixes:
+-- Security hardening, draft only — NOT APPLIED. Apply AFTER
+-- 20260920010000_profiles_is_admin_lock.sql (Migration 1), which closes
+-- the profiles.is_admin privilege escalation separately — that section
+-- has been split out of this file, not duplicated here.
+--
+-- Three independent fixes:
 --
 -- (1) admin_delete_circle, admin_delete_space, admin_move_space_content,
 --     circle_usage, and space_usage all call `public.is_admin(auth.uid())`
@@ -63,25 +68,6 @@
 --     here — tracked as the existing drift follow-up, not new scope for
 --     this migration.
 --
--- (5) profiles privilege-escalation fix. Tested (2026-09-20, rolled-back
---     transaction, non-admin throwaway account): "You can update your
---     own profile" has NO with_check clause at all — only
---     `using (auth.uid() = id)` — so any authenticated user can already
---     run `update profiles set is_admin = true where id = auth.uid()`
---     and it succeeds. Confirmed live: before=false, after=true. This is
---     a real, currently-exploitable privilege escalation, not a
---     fails-closed situation like (1). grep of src/ confirms is_admin is
---     never written from the client anywhere (AccountSettings.tsx's own
---     comment: "is_admin flag is granted by hand in SQL") — no legitimate
---     flow needs UPDATE on this column via the API at all, from any
---     role. Fixed with a column-level REVOKE rather than a trigger:
---     simpler, and nothing legitimate is lost since nothing legitimate
---     used it. profile_settings and the rest of profiles were checked
---     for other privilege-like columns — none exist
---     (default_visibility/paused_until/username_changed_at/
---     notification_preferences are all user-facing preferences, not
---     access-control flags).
-
 -- (1) fix the broken admin-check reference -----------------------------
 
 create or replace function public.admin_delete_circle(p_id bigint, p_threads text default 'keep_private'::text)
@@ -248,13 +234,3 @@ revoke execute on function public.set_thread_answered(bigint, boolean) from anon
 -- (3) pin search_path on reject_test_display_names ----------------------
 
 alter function public.reject_test_display_names() set search_path = public;
-
--- (5) close the is_admin privilege-escalation path -----------------------
--- No legitimate client flow writes is_admin (grep confirms it's read-only
--- from the app; the flag is set by hand in SQL). Revoking column-level
--- UPDATE closes the gap regardless of the profiles UPDATE policy's
--- missing with_check — a separate, wider gap not fixed here since only
--- is_admin is a privilege flag; nothing else on profiles or
--- profile_settings is.
-
-revoke update (is_admin) on public.profiles from authenticated, anon;
