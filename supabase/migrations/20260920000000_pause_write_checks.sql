@@ -12,6 +12,10 @@
 --    account should keep posting during its grace period either).
 --  - reactions, bookmarks, post_likes, and profile_follows are deliberately
 --    NOT touched — those are unblocked per explicit instruction.
+--  - Every consolidated policy below is `to authenticated` only, even
+--    where one of the two originals it replaces was `{public}` — anon
+--    never had a valid auth.uid() to satisfy these checks anyway, this
+--    just makes that explicit rather than implicit.
 --  - DELETE is untouched on every table here. Verified against a live
 --    pg_policies read (2026-09-20): the only DELETE policies on posts and
 --    pursuits are the pre-existing owner-only ones below, and this
@@ -32,7 +36,15 @@
 --  - storage.objects (post-media uploads) is a separate schema with its
 --    own policy shape; a proposed follow-up draft for it is in
 --    supabase/migrations/20260920000100_pause_storage_upload_check.sql,
---    also not applied.
+--    also not applied — left as a comment only, not drafted further.
+--  - profiles is not touched by this migration at all. Confirmed live
+--    (2026-09-20): its only UPDATE policy is "You can update your own
+--    profile" (roles={public}, using: auth.uid() = id, with_check: null —
+--    no with_check means any new column values are allowed once the using
+--    clause matches the existing row). A paused or deletion-pending user
+--    can still run `update profiles set paused_at = null` or
+--    `deletion_requested_at = null` on their own row; tested explicitly
+--    for both columns below.
 --
 -- Every existing posts/pursuits INSERT and UPDATE policy this migration
 -- drops (live pg_policies read, 2026-09-20) — all functionally identical
@@ -74,19 +86,21 @@ drop policy if exists "You can post as yourself" on public.posts;
 drop policy if exists "you post your own moments" on public.posts;
 create policy "you post your own moments"
   on public.posts for insert
+  to authenticated
   with check (
     (select auth.uid()) = user_id
-    and not public.write_blocked()
+    and not (select public.write_blocked())
   );
 
 drop policy if exists "You can edit or delete your own posts" on public.posts;
 drop policy if exists "own posts are editable" on public.posts;
 create policy "own posts are editable"
   on public.posts for update
+  to authenticated
   using ((select auth.uid()) = user_id)
   with check (
     (select auth.uid()) = user_id
-    and not public.write_blocked()
+    and not (select public.write_blocked())
   );
 
 -- pursuits ---------------------------------------------------------------
@@ -95,19 +109,21 @@ drop policy if exists "you can start a pursuit" on public.pursuits;
 drop policy if exists "you create your own pursuits" on public.pursuits;
 create policy "you create your own pursuits"
   on public.pursuits for insert
+  to authenticated
   with check (
     (select auth.uid()) = user_id
-    and not public.write_blocked()
+    and not (select public.write_blocked())
   );
 
 drop policy if exists "you can update your own pursuit" on public.pursuits;
 drop policy if exists "you edit your own pursuits" on public.pursuits;
 create policy "you edit your own pursuits"
   on public.pursuits for update
+  to authenticated
   using ((select auth.uid()) = user_id)
   with check (
     (select auth.uid()) = user_id
-    and not public.write_blocked()
+    and not (select public.write_blocked())
   );
 
 -- thoughts (comments) ------------------------------------------------------
@@ -119,5 +135,5 @@ create policy "anyone signed in can add a thought"
   to authenticated
   with check (
     (select auth.uid()) = user_id
-    and not public.write_blocked()
+    and not (select public.write_blocked())
   );
