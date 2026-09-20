@@ -2,6 +2,10 @@
 -- several that OR together — multiple SELECT policies on the same table
 -- combine with OR, so tightening one while a wider sibling policy still
 -- exists changes nothing. Draft only.
+--
+-- auth.uid() is wrapped as (select auth.uid()) everywhere below, so it
+-- plans as a single InitPlan per statement instead of re-evaluating per
+-- row — same reasoning as migration (b2).
 
 -- profiles: was "Profiles are visible to everyone" (qual = true, no auth
 -- check at all) OR "profiles are readable when signed in" (auth.uid() is
@@ -14,7 +18,7 @@ create policy "profiles are visible unless paused or deleting"
   on public.profiles for select
   using (
     (paused_at is null and deletion_requested_at is null)
-    or auth.uid() = id
+    or (select auth.uid()) = id
   );
 
 -- posts: three overlapping SELECT policies existed ("Public posts are
@@ -33,20 +37,29 @@ drop policy if exists "circle posts follow the circle's own visibility" on publi
 create policy "posts are readable by their audience"
   on public.posts for select
   using (
-    auth.uid() = user_id
+    (select auth.uid()) = user_id
     or (visibility = 'public' and public.is_visible_profile(user_id))
     or (
       visibility = 'circle'
       and circle_id is not null
-      and auth.uid() is not null
+      and (select auth.uid()) is not null
       and public.is_visible_profile(user_id)
       and exists (
         select 1 from public.circles c
-        where c.id = (posts.circle_id - 1000000)
+        where c.id = (
+          -- Real Circle ids and the synthetic seed-data Circle ids in
+          -- data/circles.ts share one numeric id space on the client, kept
+          -- apart by this offset: seed Circles are < 1000000, real
+          -- (Supabase-backed) Circles are numbered from 1000001 up on the
+          -- client (client id = db id + 1000000). A post's circle_id is
+          -- stored as that client-space id, so this subtracts the offset
+          -- back off to look the real circle up by its actual db id.
+          posts.circle_id - 1000000
+        )
           and (
             c.visibility = any (array['open_to_read', 'Open to read'])
-            or c.owner = auth.uid()
-            or private.is_circle_member(c.id, auth.uid())
+            or c.owner = (select auth.uid())
+            or private.is_circle_member(c.id, (select auth.uid()))
           )
       )
     )
@@ -61,6 +74,6 @@ drop policy if exists "you see your own pursuits, others see only shared ones" o
 create policy "you see your own pursuits, others see only shared ones"
   on public.pursuits for select
   using (
-    auth.uid() = user_id
+    (select auth.uid()) = user_id
     or (shared = true and public.is_visible_profile(user_id))
   );

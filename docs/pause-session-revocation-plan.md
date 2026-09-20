@@ -49,18 +49,37 @@ external side effect happened" in a way that's easy to lose track of
 during review. Worth keeping in mind only as a fallback if the Edge
 Function path turns out to be impractical for some reason.
 
-## Scope of revocation
+## Scope of revocation — decided: `'global'`
 
 `supabase.auth.admin.signOut(userId, scope)` takes `'global' | 'local' |
-'others'`. For pausing, `'global'` — sign out everywhere, including
-whatever session just made the pause request. Reasoning: if pausing is
-supposed to mean "this account is not active right now," leaving the
-initiating session logged in contradicts that, and it keeps "pause" and
-"resume" symmetric — pause signs you out, resume requires signing back in.
-Flagging this as a decision point, not asserting it's obviously right: a
-product could reasonably want `'others'` instead, so the person pausing
-can still see their own paused-state UI without re-authenticating. Confirm
-before building either way.
+'others'`. Going with `'global'` — sign out everywhere, including whatever
+session just made the pause request. Keeps "pause" and "resume"
+symmetric — pause signs you out, resume requires signing back in.
+
+**What `signOut` alone does not do: the access token stays valid until it
+expires on its own.** `signOut` revokes the *refresh token*, so no new
+access token can be minted after it — but the *current* access token is a
+self-contained, signed JWT that Supabase's API gateway accepts purely by
+checking its signature and expiry, with no server-side revocation list
+consulted per request. A session paused mid-session keeps working with
+whatever access token the browser already holds until that token's own
+expiry passes, however long that is.
+
+I could not read this project's actual configured JWT expiry through any
+tool available to me — it's a GoTrue/Auth setting (Studio → Authentication
+→ Settings → "Access token (JWT) expiry"), not something exposed through
+the Postgres catalog or the Supabase management tools this session has.
+Supabase's platform default is **3600 seconds (1 hour)** if it was never
+changed, but that's a default to check against, not a confirmed value for
+this project — please check that setting directly and tell me the real
+number if it matters for how urgent this gap is. Whatever it is, that's
+the maximum window a paused account's already-open tab keeps working
+after `signOut` fires. If that's too long, the fix isn't a shorter
+`signOut` — it's making the RLS policies themselves check the actor's own
+`paused_at`, which is exactly what the write-side check below does: even
+with a still-valid access token, an `INSERT`/`UPDATE` from a paused
+account gets rejected at the database, immediately, regardless of token
+expiry.
 
 ## Trigger condition
 
