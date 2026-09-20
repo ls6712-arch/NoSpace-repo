@@ -210,16 +210,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // The profile row is created automatically by a database trigger with a
     // default name derived from the email; overwrite it with what they typed.
     if (data.user && displayName.trim()) {
+      const trimmedName = displayName.trim();
       try {
-        // The trigger may not have created the row yet, so upsert rather than
-        // update — an update against a missing row silently changes nothing,
-        // which is how people ended up named after their email address.
-        await supabase
-          .from("profiles")
-          .upsert({ id: data.user.id, display_name: displayName.trim() }, { onConflict: "id" });
+        // The trigger may not have created the row yet, so a plain update
+        // can land first and silently affect zero rows -- which is how
+        // people ended up named after their email address. An upsert isn't
+        // the fix: its proposed insert row gets validated against every
+        // NOT NULL column (username included) even when the row already
+        // exists and it never actually inserts, so it fails outright
+        // rather than falling through to the update. Retrying the update
+        // with the same backoff loadProfile already uses below for this
+        // exact race closes the gap without that failure mode.
+        for (let attempt = 0; attempt < 4; attempt++) {
+          const { data: updated } = await supabase
+            .from("profiles")
+            .update({ display_name: trimmedName })
+            .eq("id", data.user.id)
+            .select("id");
+          if (updated && updated.length > 0) break;
+          await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+        }
         // Read it back before returning, so the first screen after signup
         // already has the right name rather than correcting itself later.
-        await loadProfile(data.user.id, displayName.trim());
+        await loadProfile(data.user.id, trimmedName);
       } catch {
         // The account exists either way; they can rename themselves in
         // Settings. Failing the whole sign-up over a name would be worse.
