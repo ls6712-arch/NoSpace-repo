@@ -8,6 +8,7 @@
 -- full, deliberate rollback of this specific migration.
 
 revoke update (
+  id,
   display_name,
   avatar_url,
   tagline,
@@ -17,6 +18,7 @@ revoke update (
   cover_post_id,
   onboarding_completed,
   onboarding_completed_at,
+  theme_preference,
   paused_at,
   deletion_requested_at,
   discoverable,

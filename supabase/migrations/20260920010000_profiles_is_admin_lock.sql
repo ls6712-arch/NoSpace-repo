@@ -26,25 +26,40 @@
 --   Confirmed via AuthContext.tsx's updateProfile() allow-list (the one
 --   general-purpose write path other than the two above):
 --     tagline, onboarding_completed_at, onboarding_completed,
---     cover_title, cover_tagline, cover_post_id
---   theme_preference is in that same updateProfile() allow-list but is
---   NOT included in this grant — checked information_schema.columns:
---   this column does not exist yet on this database (sql/theme-
---   preference.sql hasn't run here; AuthContext.tsx already defends
---   against exactly this with its own themeColumnKnownMissing fallback).
---   Add it to this grant list when that migration runs — new user-
---   editable columns need an explicit grant here, they don't get one for
---   free from a table-level default.
+--     cover_title, cover_tagline, cover_post_id, theme_preference
+--   theme_preference now included: apply order is
+--   20260920005000_theme_preference.sql (adds the column) BEFORE this
+--   migration. It's read via ThemeContext.tsx's updateProfile({
+--   theme_preference: pref }) call.
 --   Included per explicit decision, not currently grep-confirmed as
 --   written anywhere in src/ (no pause/delete/discoverability UI exists
 --   yet — this is pure database-layer support ahead of that frontend
 --   work): paused_at, deletion_requested_at, discoverable,
 --   show_this_corner.
---   Deliberately excluded: id (own with_check below), is_admin (the
---   vulnerability this migration closes), username (no editing flow
---   anywhere — profile_settings.username_changed_at exists but nothing
---   reads or writes it, matching grep finding no username-change call
---   at all), created_at (system-managed).
+--   id is ALSO included, despite the with_check below already blocking
+--   any actual identity change. Found by testing the exact SQL shape
+--   PostgREST's merge-duplicates upsert generates for
+--   AuthContext.tsx's signup call
+--   (.from("profiles").upsert({ id, display_name }, { onConflict: "id" })):
+--   it produces
+--     insert ... on conflict (id) do update set id = excluded.id, display_name = excluded.display_name
+--   — every payload column appears in the DO UPDATE SET clause, including
+--   the conflict target itself, even though its value never changes.
+--   Postgres requires UPDATE privilege on every column named in a SET
+--   clause regardless of whether the value actually changes, so without
+--   id in this grant that signup upsert would fail outright with
+--   "permission denied for table profiles" the moment a profile row
+--   already exists (i.e. every real signup, since handle_new_user's
+--   trigger creates the row first). Confirmed by reproducing that exact
+--   statement in a rolled-back transaction before adding id here. Safe
+--   to grant: the with_check below still requires the new row's id equal
+--   auth.uid(), so granting UPDATE on the column doesn't reopen the
+--   ability to actually change it to a different value.
+--   Deliberately excluded: is_admin (the vulnerability this migration
+--   closes), username (no editing flow anywhere —
+--   profile_settings.username_changed_at exists but nothing reads or
+--   writes it, matching grep finding no username-change call at all),
+--   created_at (system-managed).
 --
 -- Also adds a with_check to the same UPDATE policy blocking id from
 -- changing — belt-and-suspenders on top of the column grant, and closes
@@ -77,6 +92,7 @@
 revoke update on public.profiles from authenticated, anon;
 
 grant update (
+  id,
   display_name,
   avatar_url,
   tagline,
@@ -86,6 +102,7 @@ grant update (
   cover_post_id,
   onboarding_completed,
   onboarding_completed_at,
+  theme_preference,
   paused_at,
   deletion_requested_at,
   discoverable,
