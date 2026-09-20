@@ -1,4 +1,4 @@
--- Security hardening, draft only — NOT APPLIED. Two independent fixes:
+-- Security hardening, draft only — NOT APPLIED. Three independent fixes:
 --
 -- (1) admin_delete_circle, admin_delete_space, admin_move_space_content,
 --     circle_usage, and space_usage all call `public.is_admin(auth.uid())`
@@ -35,19 +35,14 @@
 --         `if (!supabase || !user) return false;` before ever calling the
 --         RPC — confirmed never reachable while logged out. Safe to
 --         revoke from anon.
---       - real_circle_member_counts: EXCLUDED from this migration.
---         CirclesContext.tsx's refresh() calls
+--       - real_circle_member_counts: EXCLUDED from this migration, per
+--         decision. CirclesContext.tsx's refresh() calls
 --         `supabase.rpc("real_circle_member_counts")` unconditionally, in
 --         the same Promise.all as the unauthenticated-safe circles list —
 --         it is NOT gated behind `if (user)` the way the circle_members
---         "mine" fetch two lines below it is. So the grep this migration
---         was supposed to confirm against does NOT confirm "nothing calls
---         it logged out" — something does. Revoking anon's EXECUTE here
+--         "mine" fetch two lines below it is. Revoking anon's EXECUTE here
 --         would degrade circle member counts to empty for logged-out
---         visitors (a caught RPC error, not a crash, but a real UI
---         regression). Left untouched pending a decision: revoke anyway
---         and accept the anon UX regression, or gate the frontend call
---         behind `user` first and revoke in a follow-up.
+--         visitors, so it stays anon-callable.
 --
 -- is_visible_profile is untouched — already anon + authenticated, as
 -- intended.
@@ -55,6 +50,37 @@
 -- (3) reject_test_display_names has a mutable search_path (advisor WARN).
 --     Trigger function body has no schema-qualified calls, so this is a
 --     plain ALTER, no body change needed.
+--
+-- (4) Drift note: circle_usage (and admin_delete_circle) query
+--     public.circle_invites, a table that does not show up anywhere in
+--     the public-schema introspection this baseline was built from —
+--     same drift already flagged in docs/backend-state-20260920.md
+--     ("circle_invites / shared_milestones / is_admin drift"). Until that
+--     table is accounted for, circle_usage(p_id) and the invites branch
+--     of admin_delete_circle(p_id, ...) will fail with
+--     "relation public.circle_invites does not exist" for an actual
+--     admin, on top of (now fixed) the is_admin reference. Not fixed
+--     here — tracked as the existing drift follow-up, not new scope for
+--     this migration.
+--
+-- (5) profiles privilege-escalation fix. Tested (2026-09-20, rolled-back
+--     transaction, non-admin throwaway account): "You can update your
+--     own profile" has NO with_check clause at all — only
+--     `using (auth.uid() = id)` — so any authenticated user can already
+--     run `update profiles set is_admin = true where id = auth.uid()`
+--     and it succeeds. Confirmed live: before=false, after=true. This is
+--     a real, currently-exploitable privilege escalation, not a
+--     fails-closed situation like (1). grep of src/ confirms is_admin is
+--     never written from the client anywhere (AccountSettings.tsx's own
+--     comment: "is_admin flag is granted by hand in SQL") — no legitimate
+--     flow needs UPDATE on this column via the API at all, from any
+--     role. Fixed with a column-level REVOKE rather than a trigger:
+--     simpler, and nothing legitimate is lost since nothing legitimate
+--     used it. profile_settings and the rest of profiles were checked
+--     for other privilege-like columns — none exist
+--     (default_visibility/paused_until/username_changed_at/
+--     notification_preferences are all user-facing preferences, not
+--     access-control flags).
 
 -- (1) fix the broken admin-check reference -----------------------------
 
@@ -222,3 +248,13 @@ revoke execute on function public.set_thread_answered(bigint, boolean) from anon
 -- (3) pin search_path on reject_test_display_names ----------------------
 
 alter function public.reject_test_display_names() set search_path = public;
+
+-- (5) close the is_admin privilege-escalation path -----------------------
+-- No legitimate client flow writes is_admin (grep confirms it's read-only
+-- from the app; the flag is set by hand in SQL). Revoking column-level
+-- UPDATE closes the gap regardless of the profiles UPDATE policy's
+-- missing with_check — a separate, wider gap not fixed here since only
+-- is_admin is a privilege flag; nothing else on profiles or
+-- profile_settings is.
+
+revoke update (is_admin) on public.profiles from authenticated, anon;
