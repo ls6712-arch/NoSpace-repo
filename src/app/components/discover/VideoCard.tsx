@@ -7,10 +7,19 @@ import { realMediaUrls } from "./discoverMedia";
 import { CardActions, CardByline, CornerChip } from "./DiscoverCardChrome";
 
 /**
- * Masonry's video tile. A real <video> has no known height until its
- * metadata loads (it paints at 0×0 until then), which would jump the whole
- * masonry column around as clips load in — so, unlike PhotoCard, this stays
- * a fixed aspect ratio rather than sizing to content.
+ * Masonry's video tile. Sized like PhotoCard — `h-auto`, to the thumbnail's
+ * own aspect ratio, not a fixed 16:9/4:5 — because a uniform ratio across
+ * every tile is exactly what was flattening the masonry into a plain grid.
+ *
+ * The tradeoff that trades for: a real <video> has no known height until
+ * its metadata loads (it paints at 0×0 until then, same as an <img> before
+ * its first byte), so this tile's column briefly reflows once that arrives
+ * — accepted rather than worked around with a locked ratio, since the
+ * whole point of this layout is tiles sized by their actual content.
+ * `preload="metadata"` keeps that window short (only the header downloads,
+ * not the clip). GeneratedArt is the one exception that keeps a fixed
+ * aspect ratio, same reason PhotoCard's fallback does: it fills whatever
+ * box it's given rather than sizing itself.
  *
  * The play overlay is ContentCard's existing badge (see ContentCard.tsx),
  * reused as-is. A duration badge is not: Post carries no duration field
@@ -24,7 +33,7 @@ export function VideoCard({ post }: { post: Post }) {
 
   return (
     <div className="group overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="relative aspect-[4/5] w-full overflow-hidden">
+      <div className="relative overflow-hidden">
         {url ? (
           // #t=0.1 seeks the still frame the same way PostMedia.tsx's
           // preview mode does, so a video tile isn't solid black until
@@ -35,10 +44,10 @@ export function VideoCard({ post }: { post: Post }) {
             playsInline
             preload="metadata"
             onError={() => setFailed(true)}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 [background-color:var(--void)]"
+            className="block h-auto w-full object-cover transition-transform duration-500 group-hover:scale-105 [background-color:var(--void)]"
           />
         ) : (
-          <GeneratedArt hobbySlug={post.hobbySlug} seed={post.id} className="h-full w-full" />
+          <GeneratedArt hobbySlug={post.hobbySlug} seed={post.id} className="aspect-[4/5] w-full" />
         )}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[var(--void)]/25">
           <span className="flex size-12 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-md">
