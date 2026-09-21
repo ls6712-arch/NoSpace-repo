@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Lock, PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
+import { PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 import { Post } from "../data/posts";
 import { Button } from "../components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { CirclesJoined } from "../components/CirclesJoined";
 import { AvatarPicker } from "../components/AvatarPicker";
@@ -13,43 +13,24 @@ import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../components/PursuitCompact";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
-import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal, useJournalSlice } from "../lib/journal";
-import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useProfileLinks } from "../lib/profileLinks";
 import { mirrorProfileLinks } from "../lib/profileLinksRemote";
 import { ProfileLinksEditor } from "../components/ProfileLinks";
-import { AccountSettings } from "../components/AccountSettings";
-import { useSocial } from "../context/SocialContext";
-import { subHobbyLabel, getHobby } from "../data/hobbies";
 import { tagsFromPosts } from "../lib/postTags";
 import { useFollowerCount } from "../lib/useFollowerCount";
-
-function timeAgo(ts: number) {
-  const diff = Math.max(0, Date.now() - ts);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 export function You() {
   const { myPosts, posts } = useContent();
   const journal = useJournal();
-  const { logs: privateLogs, remove: removePrivateLog } = usePrivateLogs();
-  const [confirmDeleteLogId, setConfirmDeleteLogId] = useState<number | null>(null);
-  const social = useSocial();
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
-  const { user, profile, isConfigured, signOut } = useAuth();
+  const { user, profile, isConfigured } = useAuth();
+  const { circlesVisible } = useSettings();
   const profileLinks = useProfileLinks();
   const [shareOpen, setShareOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [circlesVisible, setCirclesVisible] = useState(true);
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [pursuitDialog, setPursuitDialog] = useState(false);
   // Only one Pursuit expanded at a time. renderedPursuitId lags behind on
@@ -129,13 +110,12 @@ export function You() {
                       {profile.bio}
                     </p>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => setSettingsOpen(true)}
-                      className="mt-1 rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                    <Link
+                      to="/profile"
+                      className="mt-1 inline-block rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                     >
                       Tell your story: what got you into this, and where it's going.
-                    </button>
+                    </Link>
                   )
                 )}
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
@@ -226,9 +206,11 @@ export function You() {
               Create
             </Button>
           </Link>
-          <Button variant="outline" size="icon" title="Settings" aria-label="Settings" onClick={() => setSettingsOpen(true)}>
-            <SettingsIcon className="size-4" />
-          </Button>
+          <Link to="/settings">
+            <Button variant="outline" size="icon" title="Settings" aria-label="Settings">
+              <SettingsIcon className="size-4" />
+            </Button>
+          </Link>
         </div>
 
         {/* Four sections, stacked full-width. "Every moment" is the major
@@ -421,127 +403,6 @@ export function You() {
       <MomentDetail post={openPost} owned onOpenChange={(o) => !o && setOpenPost(null)} />
       <ShareProfileDialog open={shareOpen} onOpenChange={setShareOpen} />
       <PursuitDialog open={pursuitDialog} onOpenChange={setPursuitDialog} />
-      <ConfirmDialog
-        open={confirmDeleteLogId !== null}
-        onOpenChange={(o) => !o && setConfirmDeleteLogId(null)}
-        title="Delete this private log?"
-        description="This can't be undone — nobody else ever saw it, and once it's gone there's no copy left anywhere."
-        onConfirm={async () => {
-          if (confirmDeleteLogId !== null) await removePrivateLog(confirmDeleteLogId);
-          setConfirmDeleteLogId(null);
-        }}
-      />
-
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
-          <DialogHeader className="text-left">
-            <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Settings</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <AccountSettings />
-
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="mb-1 text-sm">Who sees your Circles</div>
-              <button
-                type="button"
-                onClick={() => setCirclesVisible((v) => !v)}
-                className="text-xs text-[var(--coral-text)] hover:underline"
-              >
-                {circlesVisible ? "Visible on your work (hide them)" : "Hidden (show them on your work)"}
-              </button>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="mb-1 flex items-center gap-2 text-sm">
-                <Users className="size-4 text-muted-foreground" />
-                Hobbies you're exploring
-              </div>
-              {social.followedHobbies.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  Not exploring anything yet. Attach yourself to a hobby from any Space.
-                </p>
-              ) : (
-                <ul className="mt-2 space-y-1.5">
-                  {social.followedHobbies.map((key) => {
-                    const isSpace = key.startsWith("space:");
-                    const isOwn = key.startsWith("interest:");
-                    const slug = isSpace ? key.slice(6) : isOwn ? key.slice(9) : key;
-                    const label = isOwn
-                      ? slug.replace(/\b\w/g, (c: string) => c.toUpperCase())
-                      : isSpace
-                        ? getHobby(slug)?.name ?? slug
-                        : subHobbyLabel(slug) ?? slug;
-                    return (
-                      <li key={key} className="flex items-center justify-between gap-3 text-sm">
-                        <span style={{ fontFamily: "var(--font-serif)" }}>{label}</span>
-                        <button
-                          type="button"
-                          onClick={() => social.toggleHobbyFollow(key, label)}
-                          className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
-                        >
-                          Stop exploring
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="mb-2 flex items-center gap-2 text-sm">
-                <Lock className="size-4 text-muted-foreground" />
-                Private logs
-              </div>
-              <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-                Kept here and nowhere else. Private logs never appear in a Space, a feed, or your public shelf.
-              </p>
-              {privateLogs.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nothing private yet.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {privateLogs.map((entry) => (
-                    <li key={entry.id} className="rounded-xl border border-[var(--hairline)] p-3">
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <span className="text-[11px] text-muted-foreground">
-                          Only you · {timeAgo(entry.createdAt)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDeleteLogId(entry.id)}
-                          className="text-[11px] text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                      {entry.media && (
-                        <div className="mb-2 overflow-hidden rounded-lg border border-[var(--hairline)]">
-                          {entry.mediaType === "video" ? (
-                            <video src={entry.media} controls className="w-full" />
-                          ) : (
-                            <img src={entry.media} alt="" className="w-full" />
-                          )}
-                        </div>
-                      )}
-                      <p className="whitespace-pre-line text-sm leading-relaxed">{entry.note}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {user && (
-              <button
-                type="button"
-                onClick={signOut}
-                className="w-full rounded-2xl border border-border bg-card p-4 text-left text-sm transition-colors hover:border-[var(--coral-deep)]"
-              >
-                Log out
-              </button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

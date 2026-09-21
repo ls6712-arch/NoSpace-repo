@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { MessagesSquare, Package, Plus, Search, ShoppingBag, Sparkle, UserRound, Users, PenLine, Compass, X, type LucideIcon } from "lucide-react";
+import { MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, Users, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useTheme, type ThemePreference } from "../context/ThemeContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -40,6 +41,77 @@ function MessagesLink() {
   );
 }
 
+const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+
+/** The avatar itself always goes straight to /you — that's intentional, a
+ * personal archive is somewhere you go on purpose. This small caret next to
+ * it is the actual "avatar menu": quick access to Settings and an instant
+ * theme switch, without hijacking the avatar's own click. */
+function AccountMenuPopover() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { preference, setPreference } = useTheme();
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        aria-label="Account menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex min-h-11 min-w-6 items-center justify-center rounded-btn text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ChevronDown className="size-3.5" aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-btn border border-border bg-popover shadow-lg">
+          <Link
+            to="/settings"
+            onClick={() => setOpen(false)}
+            className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-sm transition-colors hover:bg-surface-muted"
+          >
+            <SettingsIcon className="size-4 text-muted-foreground" aria-hidden="true" />
+            Settings
+          </Link>
+          <div className="border-t border-[var(--hairline)] px-4 py-3">
+            <div className="mb-2 text-xs text-muted-foreground">Theme</div>
+            <div className="flex gap-1 rounded-btn border border-border p-0.5">
+              {THEME_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={preference === opt.value}
+                  onClick={() => setPreference(opt.value)}
+                  className={
+                    "min-h-8 flex-1 rounded-[6px] px-2 text-xs transition-colors " +
+                    (preference === opt.value
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AccountMenu() {
   const { user, profile, isConfigured } = useAuth();
 
@@ -62,16 +134,19 @@ function AccountMenu() {
   const name = profile?.display_name?.trim();
 
   return (
-    <Link to="/you" aria-label="You: your work, saved ideas, and settings" title="You">
-      <Avatar className="size-8">
-        {profile?.avatar_url && (
-          <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />
-        )}
-        <AvatarFallback className="text-[11px]">
-          {name ? initials(name) : <UserRound className="size-4 text-muted-foreground" />}
-        </AvatarFallback>
-      </Avatar>
-    </Link>
+    <div className="flex items-center gap-0.5">
+      <Link to="/you" aria-label="You: your work and saved ideas" title="You">
+        <Avatar className="size-8">
+          {profile?.avatar_url && (
+            <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />
+          )}
+          <AvatarFallback className="text-[11px]">
+            {name ? initials(name) : <UserRound className="size-4 text-muted-foreground" />}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
+      <AccountMenuPopover />
+    </div>
   );
 }
 

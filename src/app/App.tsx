@@ -11,30 +11,33 @@ import { CategoriesProvider } from "./context/CategoriesContext";
 import { CornersProvider } from "./context/CornersContext";
 import { PrivateLogsProvider } from "./context/PrivateLogsContext";
 import { CirclesProvider } from "./context/CirclesContext";
+import { SettingsProvider } from "./context/SettingsContext";
 
 export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <RewardsProvider>
-          <ContentProvider>
-            <CirclesProvider>
-              <CornersProvider>
-                <PrivateLogsProvider>
-                  <SocialProvider>
-                    <ConnectionsProvider>
-                      <CategoriesProvider>
-                        <CartProvider>
-                          <RouterProvider router={router} />
-                        </CartProvider>
-                      </CategoriesProvider>
-                    </ConnectionsProvider>
-                  </SocialProvider>
-                </PrivateLogsProvider>
-              </CornersProvider>
-            </CirclesProvider>
-          </ContentProvider>
-        </RewardsProvider>
+        <SettingsProvider>
+          <RewardsProvider>
+            <ContentProvider>
+              <CirclesProvider>
+                <CornersProvider>
+                  <PrivateLogsProvider>
+                    <SocialProvider>
+                      <ConnectionsProvider>
+                        <CategoriesProvider>
+                          <CartProvider>
+                            <RouterProvider router={router} />
+                          </CartProvider>
+                        </CategoriesProvider>
+                      </ConnectionsProvider>
+                    </SocialProvider>
+                  </PrivateLogsProvider>
+                </CornersProvider>
+              </CirclesProvider>
+            </ContentProvider>
+          </RewardsProvider>
+        </SettingsProvider>
       </ThemeProvider>
     </AuthProvider>
   );
