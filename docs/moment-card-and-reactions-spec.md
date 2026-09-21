@@ -18,20 +18,22 @@ Branch `redesign/moment-card`, off `main`. Commits below are oldest first.
 - #76 Discover's Featured Moments row → MomentCard (scoped down from board 7 — see report in that commit; the "All Moments" ContentCard grid is untouched, that's #77's job) — `fec97e7`
 - #87 My Space → board 4's lead+grid sheet, replacing ContactSheet + single panel; right rail kept as a sidebar (explicit call, boards 4/5 show none) — `f8ff790`
 - #79 (partial) deleted ContactSheet, MomentPanel, MyPostsGrid, MomentFeedOverlay (zero importers) — `87dafd4`
+- #77 CircleBoard → MomentCard, extended with an Answered/Open badge (reads `post.circleTab`/`post.answered` directly) plus a `canMarkAnswered` prop, and an activity block (when/where/going) shown whenever `post.startsAt` is set — `8466dc7`
+- #77 Corner, CategoryFeed (Work tab), Pursuit (Updates grid) → MomentCard, each gaining its own `openPost`/MomentDetail dialog — `e4c1096`. PublicProfile was already done via WorkGrid (#75); nothing to change there.
 
 **Next, in order:**
-1. #77 Migrate PublicProfile, Corner, CategoryFeed, CircleBoard, Pursuit off `ContentCard` onto MomentCard
-2. #78 Migrate MomentDetail to MomentCard at lead size + its own thoughts list
-3. #79 (finish) — delete `ContentCard.tsx`, `PostBookmark.tsx`, MomentDetail's old inline reaction/thought markup once #77/#78 land and nothing imports them
-4. #81 Close out the post_engagement plan (marker task, no migration needed — already true, just needs saying in the final report)
-5. #83 Report on `post.likes`/`post_likes`: defined, still written by `toggleLike`, but zero UI callers since MyPostsGrid's deletion — confirm nothing else reads it, then report, don't drop
-6. #85 Final report: every difference from the mockups, `reactions` row count (0 as of `425ed5c`, including any `keepgoing` rows), anything still reading `posts.likes`, any surface not migrated and why
+1. #78 Migrate MomentDetail to MomentCard at lead size + its own thoughts list
+2. #79 (finish) — delete `ContentCard.tsx`, `PostBookmark.tsx`, MomentDetail's old inline reaction/thought markup once #78 lands and nothing imports them. `ContentCard`'s only remaining callers are Discover's own "All Moments" grid and Home.tsx (neither in this spec's migration list)
+3. #81 Close out the post_engagement plan (marker task, no migration needed — already true, just needs saying in the final report)
+4. #83 Report on `post.likes`/`post_likes`: defined, still written by `toggleLike`, but zero UI callers since MyPostsGrid's deletion — confirm nothing else reads it, then report, don't drop
+5. #85 Final report: every difference from the mockups, `reactions` row count (0 as of `425ed5c`, including any `keepgoing` rows), anything still reading `posts.likes`, any surface not migrated and why
 
 **Known, deliberate mockup differences (see each commit for detail — don't re-litigate):**
 - Boards 6/7/4 show counts on someone else's Moment (the pre-maker-only design); every surface built on this branch keeps counts maker-only per §4.1 instead
 - Discover has no "All Moments" masonry to migrate (only the Featured row existed) — scope cut in `fec97e7`
 - My Space's right rail is a sidebar; boards 4/5 show no rail at all — kept per an explicit product call in `f8ff790`
 - WorkGrid has no click-through "quiet read" feed (MomentFeedOverlay, retired) — card media opens MomentDetail directly instead, matching every other surface
+- MomentCard's anatomy now includes two things §2.1 never mentions (an Answered/Open badge, an activity when/where/going block) — added for CircleBoard on an explicit call in `8466dc7` rather than leaving Circle threads on their own bespoke markup
 
 ## 0. Setup
 
