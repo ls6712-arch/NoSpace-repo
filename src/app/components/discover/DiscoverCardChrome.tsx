@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Compass, ShoppingBag, Users, UserRound } from "lucide-react";
-import { Post } from "../../data/posts";
+import { Post, postCorner } from "../../data/posts";
 import { useContent } from "../../context/ContentContext";
 import { PostReactions } from "../PostReactions";
 import { Thoughts } from "../Thoughts";
@@ -62,10 +62,11 @@ export function CardByline({ post }: { post: Post }) {
  * Discover's masonry feed is. */
 export function CornerChip({ post }: { post: Post }) {
   if (!post.interest) return null;
-  if (post.subHobby) {
+  const corner = postCorner(post);
+  if (corner) {
     return (
       <Link
-        to={`/space/${post.hobbySlug}?hobby=${encodeURIComponent(post.subHobby)}`}
+        to={`/space/${post.hobbySlug}?hobby=${encodeURIComponent(corner)}`}
         title={`Explore this Corner: ${post.interest}`}
         aria-label={`Explore this Corner: ${post.interest}`}
         className="mb-3 inline-flex items-center gap-1 rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/30 hover:text-foreground"

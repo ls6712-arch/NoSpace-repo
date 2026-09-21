@@ -65,13 +65,20 @@ export interface NewPostInput {
   hobbySlug: string;
   /** Optional specific hobby within the space, e.g. "pottery" in "workbench". */
   subHobby?: string;
+  /** Which Corner this Moment is filed under — independent of subHobby, set
+   * only when the composer's own Corner field was used. Never derived from
+   * subHobby here; a post with no Corner chosen simply has none. */
+  corner?: string;
   /** What it's about, typed by the person: "Pottery", "Bouldering". */
   interest?: string;
   /** Open, multiple tags — the composer's actual "what's this about" field
    * now (TagsField). interest above still gets the first of these for
    * anything that only reads the legacy single-value field. */
   tags?: string[];
-  type: "photo" | "video";
+  /** "written" for a Moment with no photo or video attached — the composer
+   * decides this at publish time from whether any file was actually picked,
+   * not from caption length. See Log.tsx's publish(). */
+  type: "photo" | "video" | "written";
   media?: string;
   /** Real picked files (1-8 for a photo Moment, exactly 1 for a video),
    * uploaded to storage in order when a real account is signed in. */
@@ -118,6 +125,11 @@ function rowToPost(row: any, creatorName: string): Post {
     // migrated in the database; it is translated on the way in instead.
     hobbySlug: currentSpaceSlug(row.hobby_slug),
     subHobby: row.sub_hobby ?? undefined,
+    // Falls back to sub_hobby only for a row the add_post_corner migration's
+    // backfill hasn't reached — every row it did reach already has corner
+    // set (possibly to the same value sub_hobby has), so this is a safety
+    // net, not the primary path. See postCorner() in data/posts.ts.
+    corner: row.corner ?? row.sub_hobby ?? undefined,
     interest: row.interest ?? undefined,
     type: row.type,
     media: row.media_url,
@@ -514,6 +526,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           user_id: user.id,
           hobby_slug: input.hobbySlug,
           sub_hobby: input.subHobby ?? null,
+          corner: input.corner ?? null,
           interest: input.interest?.trim() ? input.interest.trim() : null,
           type: input.type,
           media_url: mediaUrl,
@@ -570,6 +583,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       userId: myId,
       hobbySlug: input.hobbySlug,
       subHobby: input.subHobby,
+      corner: input.corner,
       interest: input.interest?.trim() || undefined,
       tags: input.tags ?? [],
       type: input.type,

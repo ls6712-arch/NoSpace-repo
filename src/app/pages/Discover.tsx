@@ -17,7 +17,7 @@ import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { spacePhoto } from "../data/hobbyPhotos";
 import { categoryIcon } from "../data/categoryIcons";
 import { circles } from "../data/circles";
-import { Post } from "../data/posts";
+import { Post, postCorner } from "../data/posts";
 import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
@@ -544,14 +544,15 @@ export function Discover() {
   const cornerCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const p of spaceScoped) {
-      if (!p.subHobby) continue;
-      counts.set(p.subHobby, (counts.get(p.subHobby) ?? 0) + 1);
+      const slug = postCorner(p);
+      if (!slug) continue;
+      counts.set(slug, (counts.get(slug) ?? 0) + 1);
     }
     return counts;
   }, [spaceScoped]);
 
   const scoped = useMemo(
-    () => (cornerFilter ? spaceScoped.filter((p) => p.subHobby === cornerFilter) : spaceScoped),
+    () => (cornerFilter ? spaceScoped.filter((p) => postCorner(p) === cornerFilter) : spaceScoped),
     [spaceScoped, cornerFilter],
   );
 

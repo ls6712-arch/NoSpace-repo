@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Bookmark, ArrowUpRight } from "lucide-react";
-import { Post } from "../data/posts";
+import { Post, postCorner } from "../data/posts";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { circles } from "../data/circles";
 import { REACTIONS, useReactionState } from "./PostReactions";
@@ -39,7 +39,8 @@ export function MomentPanel({ post }: { post: Post }) {
   const pursuitTitle = usePursuitTitle(post.pursuitId);
 
   const space = getHobby(post.hobbySlug)?.name;
-  const corner = post.subHobby ? subHobbyLabel(post.subHobby) : undefined;
+  const cornerSlug = postCorner(post);
+  const corner = cornerSlug ? (subHobbyLabel(cornerSlug) ?? cornerSlug) : undefined;
   const metaParts = [pursuitTitle, space, corner].filter(Boolean);
   const isTextOnly = !hasRealMedia(post);
 
