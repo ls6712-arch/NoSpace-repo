@@ -39,9 +39,11 @@ function readLocalFollowedSpaceSlugs(): string[] {
 const HOUR = 3600 * 1000;
 
 /**
- * Discovery ranking: recency + relevance to the hobbies you actually engage with
- * (posted in, or joined a circle for) dominate; raw like count only nudges the
- * order, so this doesn't collapse into an engagement-maximizing sort.
+ * Discovery ranking: recency + relevance to the hobbies you actually engage
+ * with (posted in, or joined a circle for). No engagement/like term —
+ * docs/moment-card-and-reactions-spec.md §4.6 bars counts from sorting,
+ * ranking, filtering or promoting anything, and that guardrail applies to
+ * this legacy engagementScore too, not only to the new reaction counts.
  */
 function scorePost(post: Post, activeHobbies: Set<string>, activeTags: Set<string>): number {
   const ageHours = (Date.now() - post.createdAt) / HOUR;
@@ -51,8 +53,7 @@ function scorePost(post: Post, activeHobbies: Set<string>, activeTags: Set<strin
   // surfaces for someone who's posted the same tag themselves.
   const tagOverlap = (post.tags ?? []).some((t) => activeTags.has(t.toLowerCase()));
   const relevanceBonus = activeHobbies.has(post.hobbySlug) || tagOverlap ? 60 : 0;
-  const engagementScore = Math.min(post.likes, 100) * 0.3; // capped, minor influence
-  return recencyScore + relevanceBonus + engagementScore;
+  return recencyScore + relevanceBonus;
 }
 
 export interface ForSaleInput {

@@ -113,18 +113,13 @@ function DiscoverSpaceArt({
 }
 
 /**
- * Featured Moments selection.
- *
- * Sushii doesn't keep aggregate reaction, comment, or save counts today —
- * only a single legacy `likes` number per post (the same one ContentContext's
- * scorePost already leans on, capped and kept a minor factor). So this ranks
- * on what's honestly available — recency first, a small boost for hobbies
- * you're actually in, `likes` last and capped — and then spreads the result
- * across creators and Spaces so one popular thread or one Space can't fill
- * the whole row. No score is ever shown; it only decides the order.
- *
- * TODO: once posts carry real aggregate reaction/comment/save counts, weight
- * those ahead of `likes` here.
+ * Featured Moments selection: recency first, a small boost for hobbies
+ * you're actually in — no engagement/like term. Counts (reaction or legacy
+ * `likes`) never sort, rank, filter or promote anything here, per
+ * docs/moment-card-and-reactions-spec.md §4.6; "Featured Moments stays
+ * curated," not a popularity ranking. Then the result is spread across
+ * creators and Spaces so one thread or one Space can't fill the whole row.
+ * No score is ever shown; it only decides the order.
  */
 function rankFeatured(posts: Post[], followedHobbies: string[], take: number): Post[] {
   const followed = new Set(followedHobbies);
@@ -132,8 +127,7 @@ function rankFeatured(posts: Post[], followedHobbies: string[], take: number): P
     const ageHours = (Date.now() - post.createdAt) / HOUR;
     const recency = Math.max(0, 200 - ageHours);
     const relevance = followed.has(post.hobbySlug) ? 40 : 0;
-    const engagement = Math.min(post.likes, 100) * 0.2;
-    return { post, score: recency + relevance + engagement };
+    return { post, score: recency + relevance };
   });
   scored.sort((a, b) => b.score - a.score);
 
