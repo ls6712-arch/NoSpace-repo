@@ -43,8 +43,8 @@ Build a single `MomentCard` and replace every separate card implementation with 
    - Your Moments: small-caps Corner on the left, `{PUBLIC | Circle name | ONLY YOU} . {time}` on the right.
 3. **Caption**, Fraunces italic, 22px on cards, 26px on wide cards, 40 to 44px on a lead card. No ellipsis truncation of meaningful text (clamp to 3 lines on small cards with a real "Open" affordance).
 4. **Action row.**
-   - Others' Moments: `Love this`, `Count me in`, `Add a thought` (icon buttons with counts, section 4), and a private Bookmark icon pushed to the right.
-   - Your Moments: `Edit`, a visibility button (eye icon, opens the existing visibility control), and a dashed **Reflection** mark **only when a Reflection exists**. The Reflection mark and the Reflection text are visible to the owner only and never rendered for anyone else.
+   - Others' Moments: `Love this`, `Count me in`, `Add a thought` — **icon-only, no counts** — and a private Bookmark icon pushed to the right.
+   - Your Moments: the same three icons, **read-only** (you don't react to your own Moment) and **each showing its own count**, hidden at zero (section 4), plus `Edit`, a visibility button (eye icon, opens the existing visibility control), and a dashed **Reflection** mark **only when a Reflection exists**. The Reflection mark and the Reflection text are visible to the owner only and never rendered for anyone else.
 
 ### 2.2 Props
 
@@ -63,7 +63,7 @@ type MomentCardProps = {
 ### 2.3 States and behavior
 
 - Hover, focus-visible and pressed states on every button. Minimum 44px touch targets.
-- Every icon button has an `aria-label`, a `title`, and `aria-pressed` where it toggles. The accessible name includes the count: "Love this, 12".
+- Every icon button has an `aria-label`, a `title`, and `aria-pressed` where it toggles. On someone else's Moment the accessible name is just "Love this" (no count exists to include). On your own Moment the icons are read-only counts, not toggles — the accessible name includes the number: "Love this, 12".
 - Keyboard: Tab order is media (opens the Moment), name link, action buttons.
 - Animations at most 150ms, and none under `prefers-reduced-motion`.
 - Private/only-you and visibility labels come from the same helper used by `MomentDetail` today. Do not fork it.
@@ -97,9 +97,9 @@ type MomentCardProps = {
 
 ## 4. Counts
 
-### 4.1 Setting
+### 4.1 Who sees a count
 
-One constant, `REACTION_COUNTS`, with three values: `"everyone" | "maker" | "off"`. The default is **`"everyone"`**. It must be enforced **on the server** (4.3), not only in the UI. The client treats a `null` count as "do not show", so changing the value later needs no redesign.
+**Maker-only, fixed — not a setting.** A count is visible only to the Moment's own maker, viewing their own Moment. Everyone else sees icon-only buttons: no number, ever, on someone else's Moment. There is no `REACTION_COUNTS` constant and no "everyone" mode — this replaces that three-way toggle entirely.
 
 ### 4.2 What is counted
 
@@ -109,45 +109,22 @@ One constant, `REACTION_COUNTS`, with three values: `"everyone" | "maker" | "off
 | Raised hand | rows in `reactions` with `type = 'in'` |
 | Comment bubble | rows in `thoughts` |
 
-### 4.3 Data: new migration
+### 4.3 Data: no new view, no new function
 
-Create `supabase/migrations/<timestamp>_post_engagement.sql` (and a matching file in `sql/` if that is the convention).
+Because a count only ever needs to be correct for the Moment's own maker looking at their own Moment, the existing RLS already does the gating — there is nothing new to build server-side:
 
-```sql
-create or replace function public.post_engagement(post_ids bigint[])
-returns table (post_id bigint, love_count int, in_count int, thought_count int)
-language sql stable security definer set search_path = public as $$
-  select p.id,
-         (select count(*) from reactions r where r.post_id = p.id and r.type = 'love')::int,
-         (select count(*) from reactions r where r.post_id = p.id and r.type = 'in')::int,
-         case when p.thoughts_private and p.user_id <> auth.uid() then null
-              else (select count(*) from thoughts t where t.post_id = p.id)::int end
-  from posts p
-  where p.id = any (post_ids)
-    and cardinality(post_ids) <= 100
-    -- MUST equal the posts SELECT policy, including pause and deletion rules.
-    -- Reuse the helper from consolidate_visibility_policies if one exists.
-    and <caller can read this post>;
-$$;
-revoke all on function public.post_engagement(bigint[]) from public, anon;
-grant execute on function public.post_engagement(bigint[]) to authenticated;
-```
-
-Requirements:
-- **The function may only return rows for posts the caller can read.** Mirror the live `posts` SELECT policy exactly, including friends-only, Only you, paused and deletion-pending authors. Do not write a second, looser copy of that logic. Reuse the helper if one exists.
-- It **never returns who reacted.** The existing `reactions` SELECT policy (the reactor and the post's author only) stays as it is.
-- `thought_count` is `null` when the Moment has private thoughts and the caller is not the author.
-- If `REACTION_COUNTS` is `"maker"`, add `and p.user_id = auth.uid()` to the function. If `"off"`, return null counts. This is the single place that decides.
-- Call it **once per rendered page of Moments** with all the ids. No N+1.
-- Confirm indexes on `reactions (post_id, type)` and `thoughts (post_id)`.
+- `reactions`' own SELECT policy is "the reactor and the post's author can see a reaction." A plain `select count(*) from reactions where post_id = :id and type = 'love'`, run as the signed-in viewer, naturally returns the true total when that viewer is the post's author, and at most 1 (their own row, if any) otherwise. The UI only *displays* the number when `post.userId === viewer.id` — belt and braces, since a non-maker's query is already capped at their own single row, never the real total.
+- `thoughts`' own SELECT policy is wider (anyone who can see the Moment reads its thoughts, not just the maker), so it does not self-limit the same way — the client must gate the display explicitly there: query the count only when rendering your own Moment, exactly as for the two reactions.
+- No migration, no `post_engagement` function, no security-definer anything. One small `select count`-style query per icon per own-Moment card, or one batched query per rendered page of your own Moments if that turns out cheap to do (no requirement either way — there's no cross-post visibility logic left to worry about since this never runs for someone else's Moment).
+- Confirm indexes on `reactions (post_id, type)` and `thoughts (post_id)` still make sense for these — no different from before.
 
 ### 4.4 UI
 
-- Each of the three icon buttons is a pill: icon, then the count in a small tabular-figure numeral. **The count is hidden at zero.** Above 999 show `999+`.
-- Pressed states: heart fills with `--accent`, hand fills with the moss token and shows a small "You're in" label, comment fills with the ink token once you have added a thought.
-- Toggle is optimistic: update the count at once, roll back with a quiet inline error if the write fails. Toggling twice returns the original count.
-- **Count me in** keeps its existing behavior. After the first tap, offer a quiet inline "Ask {name} to make it together?" that reuses the existing participation flow (`BePart` / `requestTogether`). Do not build a second one.
-- Numbers are for the viewer's orientation only. They never change order, size or emphasis of a card.
+- Others' Moments: the three icons are plain toggle buttons, no number anywhere on or near them.
+- Your own Moments: the three icons are **read-only** (you don't react to your own Moment) and each shows its own count as a small tabular-figure numeral beside the icon. **Hidden at zero.** Above 999 show `999+`.
+- Toggling (on someone else's Moment) is optimistic client-side reaction state as before — see section 3 — it just never surfaces a number to the person doing the toggling.
+- **Count me in** keeps its existing behavior on others' Moments. After the first tap, offer a quiet inline "Ask {name} to make it together?" that reuses the existing participation flow (`BePart` / `requestTogether`). Do not build a second one.
+- Numbers are for the maker's own orientation only. They never change order, size or emphasis of a card, and never appear to anyone but the maker.
 
 ### 4.5 Add a thought (the comment icon)
 
@@ -177,20 +154,22 @@ Discover stays chronological. "Featured Moments" stays curated.
 ## 5. Tests and "done when"
 
 Second-account RLS tests (the brief already requires these habits):
-- [ ] `post_engagement` returns nothing for a Moment the caller cannot read (friends-only, Only you, paused author).
-- [ ] `thought_count` is null for private thoughts when the caller is not the author.
-- [ ] `anon` cannot call `post_engagement`.
-- [ ] A third party cannot read another person's `reactions` rows.
-- [ ] Toggling Love this or Count me in twice restores the original count.
+- [ ] A plain `reactions` count query for someone else's Moment, run as a signed-in non-owner, returns at most 1 (their own row only) — never the true total.
+- [ ] A plain `thoughts` count query for someone else's Moment, run as a non-owner, still returns the true total when thoughts aren't private (RLS is wider there) — confirming the UI-level maker-only gate is load-bearing for that one, not RLS.
+- [ ] `anon` gets the same capped/zero behavior as a signed-out viewer on both tables.
+- [ ] A third party cannot read another person's `reactions` rows (existing policy, unchanged).
+- [ ] Toggling Love this or Count me in twice restores the original state.
 
 UI checks:
 - [ ] One `MomentCard` renders the same anatomy on My Space, You, Discover, profile, Circle and Pursuit, at 390, 768 and 1280 widths.
+- [ ] No count of any kind ever renders on a Moment you don't own, on any surface.
+- [ ] A count on your own Moment is hidden at zero and matches the real row count in `reactions`/`thoughts`.
 - [ ] Reflection text and the Reflection mark never render for anyone but the owner.
 - [ ] Only-you Moments are dashed and labelled on every surface.
-- [ ] Keyboard only: every action reachable, `aria-pressed` correct, 44px targets.
+- [ ] Keyboard only: every action reachable, `aria-pressed` correct (toggle buttons) or absent (read-only own-Moment counts), 44px targets.
 - [ ] `rg "#[0-9a-fA-F]{3,6}" src/app/components` finds no raw color in the new components.
 - [ ] No old card component is left with zero importers.
 
 ## 6. Report back
 
-List: every difference from the mockups; the `reactions` row count including any `keepgoing` rows; whether a visibility helper already existed for the `post_engagement` filter; anything still reading `posts.likes`; and any surface you could not migrate, with the reason.
+List: every difference from the mockups; the `reactions` row count including any `keepgoing` rows; anything still reading `posts.likes`; and any surface you could not migrate, with the reason.
