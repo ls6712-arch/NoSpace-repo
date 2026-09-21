@@ -25,7 +25,6 @@ import { useCorners, isDiscoverable } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
 import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
 import { hobbyMatchesQuery } from "../lib/search";
-import { ContentCard } from "../components/ContentCard";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { GeneratedArt } from "../components/GeneratedArt";
@@ -34,6 +33,8 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { CirclesBrowser } from "./Circles";
 import { PeopleBrowser } from "./People";
+import { MasonryCard } from "../components/discover/MasonryCard";
+import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
@@ -75,6 +76,13 @@ const FEED_TABS = [
   { id: "recent", label: "Recent" },
 ] as const;
 type FeedTab = (typeof FEED_TABS)[number]["id"];
+
+const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
+  { id: "all", label: "Everything" },
+  { id: "photo", label: "Photos" },
+  { id: "video", label: "Video" },
+  { id: "written", label: "Written" },
+];
 
 function initials(name: string) {
   return name
@@ -453,6 +461,14 @@ export function Discover() {
   const [feedTab, setFeedTab] = useState<FeedTab>("forYou");
   const [chip, setChip] = useState("all");
   const [shown, setShown] = useState(PAGE_SIZE);
+  // Corners are scoped to one Space (context.CornersContext's cornersFor
+  // takes a single spaceSlug), so a Corner filter only means something once
+  // a Space is chosen — hence the two live together, and picking a new
+  // Space (or clearing it) always clears whatever Corner was chosen inside
+  // the last one.
+  const [spaceFilter, setSpaceFilter] = useState("");
+  const [cornerFilter, setCornerFilter] = useState("");
+  const [mediaFilter, setMediaFilter] = useState<MediaFilter>("all");
 
   const q = query.trim().toLowerCase();
 
@@ -501,10 +517,14 @@ export function Discover() {
     return publicFeed;
   }, [publicFeed, feedTab, social.followedHobbies]);
 
-  const filtered = useMemo(() => {
+  // Space-scoped, but not yet narrowed by Corner or media type — this is
+  // what the Corner filter row's own live counts are measured against, so
+  // picking a Corner doesn't make every other Corner's count collapse to 0.
+  const spaceScoped = useMemo(() => {
     let list = feedBase;
     if (chip === "new") list = list.filter((p) => Date.now() - p.createdAt < DAY);
     else if (chip === "progress") list = list.filter((p) => inProgressIds.has(p.id));
+    if (spaceFilter) list = list.filter((p) => p.hobbySlug === spaceFilter);
 
     if (q) {
       list = list.filter((p) => {
@@ -519,7 +539,55 @@ export function Discover() {
       });
     }
     return list;
-  }, [feedBase, chip, q, inProgressIds, hobbyBySlug]);
+  }, [feedBase, chip, spaceFilter, q, inProgressIds, hobbyBySlug]);
+
+  const cornerCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of spaceScoped) {
+      if (!p.subHobby) continue;
+      counts.set(p.subHobby, (counts.get(p.subHobby) ?? 0) + 1);
+    }
+    return counts;
+  }, [spaceScoped]);
+
+  const scoped = useMemo(
+    () => (cornerFilter ? spaceScoped.filter((p) => p.subHobby === cornerFilter) : spaceScoped),
+    [spaceScoped, cornerFilter],
+  );
+
+  const mediaCounts = useMemo(
+    () => ({
+      all: scoped.length,
+      photo: scoped.filter((p) => matchesMediaFilter(p, "photo")).length,
+      video: scoped.filter((p) => matchesMediaFilter(p, "video")).length,
+      written: scoped.filter((p) => matchesMediaFilter(p, "written")).length,
+    }),
+    [scoped],
+  );
+
+  const filtered = useMemo(
+    () => (mediaFilter === "all" ? scoped : scoped.filter((p) => matchesMediaFilter(p, mediaFilter))),
+    [scoped, mediaFilter],
+  );
+
+  // A Space's Corners (context.CornersContext), for the filter row below —
+  // the exact same source /space/:slug's own "Follow a Corner" grid reads
+  // (see CategoryFeed.tsx), not a second copy of Corner data.
+  const spaceCorners = useMemo(
+    () => (spaceFilter ? cornersFor(spaceFilter).filter(isDiscoverable) : []),
+    [spaceFilter, cornersFor],
+  );
+
+  function selectSpace(slug: string) {
+    setSpaceFilter((prev) => (prev === slug ? "" : slug));
+    setCornerFilter("");
+    setShown(PAGE_SIZE);
+  }
+
+  function selectCorner(slug: string) {
+    setCornerFilter((prev) => (prev === slug ? "" : slug));
+    setShown(PAGE_SIZE);
+  }
 
   const visible = filtered.slice(0, shown);
   const remaining = filtered.length - visible.length;
@@ -725,6 +793,88 @@ export function Discover() {
                 })}
               </ul>
 
+              {/* Space filter — same coral-deep pill language as the chips
+                  above, scoped to Explore Spaces' own Space list. Picking one
+                  narrows the feed to that Space and, below, opens its own
+                  Corner row — the same "Follow a Corner" data /space/:slug
+                  shows, filtered to this one Space, since a Corner never
+                  means anything across more than one Space at once. */}
+              <ul className="mb-3 flex flex-wrap gap-2">
+                {filteredHobbies.map((hobby) => {
+                  const active = spaceFilter === hobby.slug;
+                  return (
+                    <li key={hobby.slug}>
+                      <button
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => selectSpace(hobby.slug)}
+                        className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                          active
+                            ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                            : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
+                        }`}
+                      >
+                        {hobby.shortName}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {spaceFilter && spaceCorners.length > 0 && (
+                <ul className="mb-3 flex flex-wrap gap-2 pl-4">
+                  {spaceCorners.map((c) => {
+                    const active = cornerFilter === c.slug;
+                    const count = cornerCounts.get(c.slug) ?? 0;
+                    return (
+                      <li key={c.slug}>
+                        <button
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => selectCorner(c.slug)}
+                          className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                            active
+                              ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                              : "border-border bg-surface text-muted-foreground hover:border-[var(--foreground)]/35 hover:text-foreground"
+                          }`}
+                        >
+                          {c.name} · {count}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {/* Media type — the same pill markup and gradient-brand active
+                  state as the For You/Following/Recent tabs above, per the
+                  brief: reuse that pill language rather than add a new one. */}
+              <ul className="mb-6 flex gap-1 rounded-full border border-border bg-card p-1" role="tablist" aria-label="Media type">
+                {MEDIA_FILTERS.map(({ id, label }) => {
+                  const active = mediaFilter === id;
+                  return (
+                    <li key={id}>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => {
+                          setMediaFilter(id);
+                          setShown(PAGE_SIZE);
+                        }}
+                        className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                          active
+                            ? "text-white [background-image:var(--gradient-brand)]"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {label} · {mediaCounts[id]}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
               <p className="mb-6 text-sm text-muted-foreground">
                 {chip === "near"
                   ? "Location isn't switched on yet. Circles with a city are the closest thing for now."
@@ -763,9 +913,16 @@ export function Discover() {
                     : "Nothing matches that yet. Try a broader word or a different filter."}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                // Pinterest-style masonry: CSS multi-column, not a grid — a
+                // real grid forces every row to match its tallest cell,
+                // which is exactly the uniform look this layout is meant to
+                // avoid. break-inside-avoid keeps a single card from ever
+                // splitting across two columns.
+                <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
                   {visible.map((post) => (
-                    <ContentCard key={post.id} post={post} compact showExploreCorner />
+                    <div key={post.id} className="mb-6 break-inside-avoid">
+                      <MasonryCard post={post} />
+                    </div>
                   ))}
                 </div>
               )}
