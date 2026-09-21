@@ -11,6 +11,7 @@ import { isOnlyYou, visibilityWord, MOMENT_VISIBILITY_OPTIONS } from "../lib/vis
 import { useReactionState } from "./PostReactions";
 import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Thoughts } from "./Thoughts";
+import { BePart } from "./BePart";
 import { toggleSaved, useJournalSlice } from "../lib/journal";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -166,6 +167,33 @@ function VisibilityDialog({
   );
 }
 
+/** A maker-only, read-only count beside its icon — docs/moment-card-and-
+ * reactions-spec.md §4.4: hidden at zero, capped at "999+", never a
+ * toggle. This is never rendered for anyone but the Moment's own maker
+ * (the caller only mounts it inside the `mine` branch below). */
+function OwnCountPill({
+  icon: Icon,
+  label,
+  count,
+}: {
+  icon: typeof Heart;
+  label: string;
+  count: number;
+}) {
+  if (count <= 0) return null;
+  const shown = count > 999 ? "999+" : String(count);
+  return (
+    <span
+      aria-label={`${label}, ${count}`}
+      title={`${label}, ${count}`}
+      className="flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3.5 text-sm text-muted-foreground"
+    >
+      <Icon className="size-4" strokeWidth={1.9} aria-hidden="true" />
+      <span className="tabular-nums">{shown}</span>
+    </span>
+  );
+}
+
 /** Bookmark, inline in the action row rather than overlaid on the media —
  * PostBookmark.tsx is built for the latter (hardcoded `absolute` position),
  * so this reuses its underlying toggleSaved/isSaved state directly instead
@@ -189,10 +217,16 @@ function InlineBookmark({ postId }: { postId: string | number }) {
 export function MomentCard({ post, surface, number, size = "standard", onOpen }: MomentCardProps) {
   const { user } = useAuth();
   const { circles } = useCircles();
+  const { ownCounts } = useContent();
   const mine = !!user && post.userId === user.id;
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [thoughtsOpen, setThoughtsOpen] = useState(false);
+  const [askTogetherOpen, setAskTogetherOpen] = useState(false);
   const { mine: myReactions, toggle } = useReactionState(post.id);
+  // Maker-only — never fetched or shown for a Moment that isn't yours (see
+  // ContentContext's ownCounts). Missing entry (a page that hasn't loaded
+  // counts yet) reads as all-zero, i.e. hidden, never a stray "0".
+  const counts = ownCounts[post.id] ?? { love: 0, in: 0, thoughts: 0 };
 
   const space = getHobby(post.hobbySlug);
   const corner = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : undefined;
@@ -296,6 +330,9 @@ export function MomentCard({ post, surface, number, size = "standard", onOpen }:
         <div className="mt-3.5 flex items-center gap-2">
           {mine ? (
             <>
+              <OwnCountPill icon={Heart} label="Love this" count={counts.love} />
+              <OwnCountPill icon={Hand} label="Count me in" count={counts.in} />
+              <OwnCountPill icon={MessageCircle} label="Thoughts" count={counts.thoughts} />
               <Button variant="outline" size="sm" onClick={onOpen}>
                 <Pencil className="size-3.5" />
                 Edit
@@ -360,23 +397,51 @@ export function MomentCard({ post, surface, number, size = "standard", onOpen }:
             </>
           )}
         </div>
+
+        {/* Count me in keeps its existing behavior; after the first tap
+            this quietly offers the existing make-together request instead
+            of building a second flow — see BePart's initialPane/hideTrigger,
+            docs/moment-card-and-reactions-spec.md §4.4. */}
+        {!mine && myReactions.includes("in") && post.userId && (
+          <button
+            type="button"
+            onClick={() => setAskTogetherOpen(true)}
+            className="mt-2 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+          >
+            Ask {post.creator} to make it together?
+          </button>
+        )}
       </div>
 
       {!mine && (
-        <Dialog open={thoughtsOpen} onOpenChange={setThoughtsOpen}>
-          <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Thoughts</DialogTitle>
-            </DialogHeader>
-            <Thoughts
-              postId={post.id}
-              postOwnerId={post.userId}
-              postOwnerName={post.creator}
-              isOwner={false}
-              privateThoughts={post.thoughtsPrivate}
-            />
-          </DialogContent>
-        </Dialog>
+        <>
+          <Dialog open={thoughtsOpen} onOpenChange={setThoughtsOpen}>
+            <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Thoughts</DialogTitle>
+              </DialogHeader>
+              <Thoughts
+                postId={post.id}
+                postOwnerId={post.userId}
+                postOwnerName={post.creator}
+                isOwner={false}
+                privateThoughts={post.thoughtsPrivate}
+              />
+            </DialogContent>
+          </Dialog>
+
+          <BePart
+            open={askTogetherOpen}
+            onOpenChange={setAskTogetherOpen}
+            hideTrigger
+            initialPane="make_together"
+            personName={post.creator}
+            personId={post.userId}
+            hobbySlug={post.hobbySlug}
+            subSlug={post.subHobby}
+            postId={post.id}
+          />
+        </>
       )}
     </article>
   );

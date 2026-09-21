@@ -69,6 +69,21 @@ export function BePart({
   activityWhere,
   isActivity,
   className = "",
+  /** Controlled open state, for a call site with its own trigger (e.g.
+   * MomentCard's "Ask {name} to make it together?" prompt) instead of this
+   * component's own "Be part" button. Uncontrolled (the default) when
+   * omitted — the button below manages its own open state as before. */
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+  /** Skips the top-level "four ways in" list and opens straight into one
+   * pane — for a call site that already knows which one it wants (e.g.
+   * "Ask to make it together" only ever means make_together). Reuses this
+   * same dialog/flow rather than building a second one, per docs/moment-
+   * card-and-reactions-spec.md §4.4. */
+  initialPane,
+  /** Hides the "Be part" button itself — for a call site rendering its own
+   * trigger and only using BePart for the dialog underneath. */
+  hideTrigger = false,
 }: {
   personName?: string;
   personId?: string;
@@ -80,11 +95,17 @@ export function BePart({
   activityWhere?: string;
   isActivity?: boolean;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  initialPane?: Option;
+  hideTrigger?: boolean;
 }) {
   const social = useSocial();
   const { user } = useAuth();
-  const [open, setOpen] = useState(false);
-  const [pane, setPane] = useState<Option | null>(null);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = onOpenChangeProp ?? setOpenState;
+  const [pane, setPane] = useState<Option | null>(initialPane ?? null);
   const [text, setText] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -97,13 +118,13 @@ export function BePart({
 
   useEffect(() => {
     if (!open) {
-      setPane(null);
+      setPane(initialPane ?? null);
       setText("");
       setSent(false);
       setError(null);
       setSending(false);
     }
-  }, [open]);
+  }, [open, initialPane]);
 
   const hobbyKey = subSlug ?? `space:${hobbySlug}`;
   const hobbyLabel = (
@@ -174,26 +195,28 @@ export function BePart({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-haspopup="dialog"
-        className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors ${
-          state
-            ? "text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]"
-            : "text-white [background-image:var(--gradient-brand)]"
-        } ${className}`}
-      >
-        {state ? (
-          <>
-            <state.icon className="size-4" strokeWidth={1.9} />
-            {state.label}
-          </>
-        ) : (
-          "Be part"
-        )}
-        <ChevronDown className="size-4 opacity-70" />
-      </button>
+      {!hideTrigger && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors ${
+            state
+              ? "text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]"
+              : "text-white [background-image:var(--gradient-brand)]"
+          } ${className}`}
+        >
+          {state ? (
+            <>
+              <state.icon className="size-4" strokeWidth={1.9} />
+              {state.label}
+            </>
+          ) : (
+            "Be part"
+          )}
+          <ChevronDown className="size-4 opacity-70" />
+        </button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">

@@ -25,6 +25,11 @@ function initials(name: string) {
     .toUpperCase();
 }
 
+// "Keep going" was a reaction button before docs/moment-card-and-
+// reactions-spec.md section 1 retired it as one — it survives here, a
+// quick starter inside Add a thought rather than gone entirely.
+const QUICK_STARTERS = ["Keep going", "How did you...?", "Show us the next one"];
+
 function ago(ts: number) {
   const mins = Math.floor((Date.now() - ts) / 60000);
   if (mins < 1) return "just now";
@@ -127,6 +132,22 @@ export function Thoughts({
         </button>
       ) : (
         <div className="mb-3">
+          {/* Fills the field, never posts on tap — a starting point to
+              edit or send as-is, not a one-tap comment. */}
+          {!body && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {QUICK_STARTERS.map((starter) => (
+                <button
+                  key={starter}
+                  type="button"
+                  onClick={() => setBody(starter)}
+                  className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+                >
+                  {starter}
+                </button>
+              ))}
+            </div>
+          )}
           <Textarea
             autoFocus
             value={body}

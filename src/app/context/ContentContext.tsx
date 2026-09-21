@@ -18,6 +18,12 @@ import { supabase } from "../../lib/supabase";
 const LISTINGS_KEY = "sushii.listings.v1";
 const CIRCLES_KEY = "sushii.circles.joined.v1";
 
+// Matches public.reactions' own check constraint (supabase/migrations/
+// 20260919230300_reactions_and_bookmarks.sql) and PostReactions.tsx's own
+// REACTIONS ids — kept as a plain literal union here rather than imported,
+// so this data-layer file doesn't reach into a component file for a type.
+type ReactionId = "love" | "in" | "keepgoing";
+
 /** Whole-Space follows (SocialContext's "space:<slug>" keys) read straight
  * from that context's own signed-out localStorage shape, since
  * SocialProvider sits below ContentProvider in App.tsx's tree and useSocial()
@@ -216,10 +222,23 @@ interface ContentContextType {
    * SocialContext until the next full sign-in. */
   refetchActiveHobbies: () => Promise<void>;
   /** The id of whichever Moment addPost most recently created, for a few
-   * seconds after the save — long enough for the Shelf grid (WorkGrid.tsx)
-   * to notice it's the new arrival and play its shared-layout entrance
-   * instead of just appearing. Clears itself; nothing needs to reset it. */
+   * seconds after the save. No current surface reads this (WorkGrid's own
+   * shared-layout entrance animation was retired when it moved to
+   * MomentCard — see docs/moment-card-and-reactions-spec.md's #75 report);
+   * left in place since addPost still sets it and it's cheap to keep, but
+   * it's effectively unused today. Clears itself either way. */
   justPublishedId: number | null;
+  /** Your own reactions, real rows in `public.reactions` (cross-device),
+   * keyed by post id — not the old localStorage-only store. Empty when
+   * signed out or unconfigured; PostReactions.tsx's useReactionState falls
+   * back to its own local store in that case, same shape as likedPostIds. */
+  myReactionsByPostId: Record<number, ReactionId[]>;
+  toggleReaction: (postId: number, type: ReactionId) => void;
+  /** Maker-only counts for your own Moments — docs/moment-card-and-
+   * reactions-spec.md §4: a count is never fetched, stored or shown for
+   * anyone else's Moment. Populated alongside realPosts; empty for a post
+   * id not yet in this map (render sites treat that as all-zero). */
+  ownCounts: Record<number, { love: number; in: number; thoughts: number }>;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -257,6 +276,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // the bug this table exists to fix (gone on reload, invisible on another
   // device for the same account).
   const [likedPostIds, setLikedPostIds] = useState<Set<number>>(new Set());
+  // Real, per-account reactions (public.reactions) — see myReactionsByPostId
+  // on the context type. Empty when signed out/unconfigured, same shape and
+  // same reasoning as likedPostIds above.
+  const [myReactionsByPostId, setMyReactionsByPostId] = useState<Record<number, ReactionId[]>>({});
+  // Maker-only counts (docs/moment-card-and-reactions-spec.md §4) — see
+  // ownCounts on the context type.
+  const [ownCounts, setOwnCounts] = useState<
+    Record<number, { love: number; in: number; thoughts: number }>
+  >({});
   const [mediaError, setMediaError] = useState<string | null>(null);
   /** Set when a post couldn't reach the database, so the flow can say so. */
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -312,6 +340,95 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         return post;
       }),
     );
+
+    if (user) {
+      const ownPostIds = data
+        .filter((row: any) => row.user_id === user.id)
+        .map((row: any) => row.id as number);
+      await refetchOwnCounts(ownPostIds);
+    } else {
+      setOwnCounts({});
+    }
+  };
+
+  /**
+   * Maker-only counts (docs/moment-card-and-reactions-spec.md §4.3): "no
+   * new view, no new function" — a plain count per icon, batched once per
+   * page of your own Moments rather than one query per card. Only ever
+   * called with YOUR OWN post ids; a count is never fetched for a Moment
+   * you don't own; the two queries below only ever run as the signed-in
+   * `user`, and RLS on both tables already lets a post's author read every
+   * row on it regardless of who wrote it — this is what makes "the maker's
+   * own view of their own Moment" the one place a true total is correct.
+   */
+  const refetchOwnCounts = async (ownPostIds: number[]) => {
+    if (!supabase || !user || ownPostIds.length === 0) {
+      setOwnCounts({});
+      return;
+    }
+    const [{ data: reactionRows }, { data: thoughtRows }] = await Promise.all([
+      supabase.from("reactions").select("post_id, type").in("post_id", ownPostIds),
+      supabase.from("thoughts").select("post_id").in("post_id", ownPostIds),
+    ]);
+
+    const counts: Record<number, { love: number; in: number; thoughts: number }> = {};
+    for (const id of ownPostIds) counts[id] = { love: 0, in: 0, thoughts: 0 };
+    for (const row of (reactionRows ?? []) as { post_id: number; type: string }[]) {
+      if (row.type === "love" || row.type === "in") counts[row.post_id][row.type]++;
+    }
+    for (const row of (thoughtRows ?? []) as { post_id: number }[]) {
+      if (counts[row.post_id]) counts[row.post_id].thoughts++;
+    }
+    setOwnCounts(counts);
+  };
+
+  /** Your own reactions across every post — one query, not one per post,
+   * same shape as refetchLikedPosts above. */
+  const refetchMyReactions = async () => {
+    if (!supabase || !user) {
+      setMyReactionsByPostId({});
+      return;
+    }
+    const { data, error } = await supabase
+      .from("reactions")
+      .select("post_id, type")
+      .eq("user_id", user.id);
+    if (error || !data) return;
+    const map: Record<number, ReactionId[]> = {};
+    for (const row of data as { post_id: number; type: ReactionId }[]) {
+      (map[row.post_id] ??= []).push(row.type);
+    }
+    setMyReactionsByPostId(map);
+  };
+
+  /**
+   * Toggles Love this or Count me in on a Moment — a real row in
+   * `public.reactions`, cross-device, not the old localStorage-only store
+   * (PostReactions.tsx still falls back to that store when signed out or
+   * unconfigured). Optimistic, same pattern as toggleLike: flip local state
+   * immediately, revert if the write fails.
+   */
+  const toggleReaction = (postId: number, type: ReactionId) => {
+    if (!supabase || !user) return;
+    const current = myReactionsByPostId[postId] ?? [];
+    const reacted = current.includes(type);
+
+    const apply = (list: ReactionId[]) =>
+      reacted ? list.filter((t) => t !== type) : [...list, type];
+    const revertList = (list: ReactionId[]) =>
+      reacted ? [...list, type] : list.filter((t) => t !== type);
+
+    setMyReactionsByPostId((prev) => ({ ...prev, [postId]: apply(prev[postId] ?? []) }));
+
+    const write = reacted
+      ? supabase.from("reactions").delete().eq("post_id", postId).eq("user_id", user.id).eq("type", type)
+      : supabase.from("reactions").insert({ post_id: postId, user_id: user.id, type });
+
+    void write.then(({ error }) => {
+      if (error) {
+        setMyReactionsByPostId((prev) => ({ ...prev, [postId]: revertList(prev[postId] ?? []) }));
+      }
+    });
   };
 
   const refetchCircleMemberCounts = async () => {
@@ -358,6 +475,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     refetchRealPosts();
     refetchCircleMemberCounts();
     refetchLikedPosts();
+    refetchMyReactions();
     refetchActiveHobbies();
     // Re-fetch when the logged-in user changes, so switching accounts (or
     // logging in) picks up posts visible to that session, and this
@@ -862,6 +980,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         activeHobbySlugs,
         refetchActiveHobbies,
         justPublishedId,
+        myReactionsByPostId,
+        toggleReaction,
+        ownCounts,
       }}
     >
       {children}
