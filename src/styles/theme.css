@@ -121,6 +121,18 @@
   --lavender-muted: var(--muted-foreground);
   --lavender-faint: var(--muted-foreground);
 
+  /* MomentCard's rotating text-only tile (docs/moment-card-and-reactions-
+     spec.md §2.1: "accent, a moss/green token, an ink token"). Global, not
+     paper-theme-scoped — a Moment card needs to look identical on My Space
+     and Discover (the void/plum world) as on You (.ns-paper-theme), and
+     .ns-paper-theme's own --moss/--ink only exist inside that scope. The
+     accent leg of the rotation reuses --accent/--accent-foreground directly;
+     these two are the moss and ink legs. */
+  --moment-tile-moss: #5B6B4E;
+  --moment-tile-moss-foreground: #FBF8F1;
+  --moment-tile-ink: #2A241D;
+  --moment-tile-ink-foreground: #FBF8F1;
+
   /* Warm hues, untouched for now — Task B retires the ones that turn out to
      be glow/gradient ingredients (atmo-*, gradient-brand, etc.) screen by
      screen; the rest (coral, yellow/gold's sibling accents, forest) may
@@ -263,6 +275,12 @@
   --destructive: #D9776A;
   --destructive-foreground: #1C1816;
   --surface-elevated: #2E2822;
+
+  /* Lightened from the light-theme value so the "ink" tile still reads as
+     its own block against the dark background (#1C1816) instead of nearly
+     disappearing into it. Moss keeps its light-theme value — already
+     visibly distinct from both dark surfaces. */
+  --moment-tile-ink: #332B22;
 
   --gen-art-ink: #D9C7A8;
   --gen-art-paper: #4A3F2E;
@@ -411,6 +429,9 @@
      explicitly (rounded-btn, rounded-card) instead. */
   --radius-btn: 8px;
   --radius-card: 12px;
+  /* MomentCard's own media radius (docs/moment-card-and-reactions-spec.md
+     §2.1: "radius 22px, define one radius token, do not scatter values"). */
+  --radius-moment: 22px;
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

@@ -167,7 +167,7 @@ interface ContentContextType {
   /** Edits a moment you own. Returns false if the change couldn't be saved. */
   updatePost: (
     postId: number,
-    patch: { caption?: string; reflection?: string },
+    patch: { caption?: string; reflection?: string; visibility?: Visibility | "private"; circleId?: number },
   ) => Promise<boolean>;
   /** Deletes a moment you own. Returns false if it couldn't be deleted — the
    * post stays in the list rather than vanishing from a screen that no
@@ -604,7 +604,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
    */
   const updatePost = async (
     postId: number,
-    patch: { caption?: string; reflection?: string },
+    patch: { caption?: string; reflection?: string; visibility?: Visibility | "private"; circleId?: number },
   ): Promise<boolean> => {
     const target = realPosts.find((p) => p.id === postId);
     const apply = (list: Post[]) =>
@@ -617,6 +617,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
                 patch.reflection === undefined
                   ? p.reflection
                   : patch.reflection.trim() || undefined,
+              // "private" isn't in the Visibility type yet (see lib/visibility.ts's
+              // isOnlyYou) even though the live posts.visibility column already
+              // allows it — same tolerance rowToPost's own `row.visibility`
+              // assignment already relies on.
+              visibility: (patch.visibility ?? p.visibility) as Visibility,
+              circleId: patch.visibility === undefined ? p.circleId : patch.circleId,
             }
           : p,
       );
@@ -628,6 +634,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           ...(patch.caption !== undefined ? { caption: patch.caption } : {}),
           ...(patch.reflection !== undefined
             ? { reflection: patch.reflection.trim() || null }
+            : {}),
+          // circle_id always travels with visibility: switching away from
+          // "circle" must clear it, same as a fresh post's own write below.
+          ...(patch.visibility !== undefined
+            ? {
+                visibility: patch.visibility,
+                circle_id: patch.visibility === "circle" ? (patch.circleId ?? null) : null,
+              }
             : {}),
         })
         .eq("id", postId)
