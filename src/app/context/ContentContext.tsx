@@ -111,7 +111,19 @@ function loadFromStorage<T>(key: string): T[] {
   }
 }
 
-/** Maps a row from the real `posts` table into the app's existing Post shape. */
+// Every column `rowToPost` reads, deliberately spelled out and never
+// `select("*")` — a Reflection is written by its owner alone (post_
+// reflections, sql/post-reflections.sql) and must never round-trip to
+// anyone else's browser, even as a field the app's own JS ignores. A
+// wildcard select would put it on the wire regardless of what the mapper
+// below does with it. See docs/moment-card-and-reactions-spec.md's #86.
+const POST_COLUMNS =
+  "id, user_id, hobby_slug, sub_hobby, interest, type, media_url, media_urls, caption, likes, created_at, visibility, starts_at, location_name, location_privacy, thoughts_private, pursuit_id, circle_id, circle_tab, answered, hidden_from_moments, tags, pinned";
+
+/** Maps a row from the real `posts` table into the app's existing Post shape.
+ * Never sets `reflection` — that comes from a separate, owner-only fetch
+ * (see refetchRealPosts) merged in afterward, only for the signed-in
+ * user's own rows. */
 function rowToPost(row: any, creatorName: string): Post {
   return {
     id: row.id,
@@ -125,7 +137,6 @@ function rowToPost(row: any, creatorName: string): Post {
     mediaUrls: row.media_urls ?? (row.media_url ? [row.media_url] : []),
     creator: creatorName,
     caption: row.caption,
-    reflection: row.reflection ?? undefined,
     likes: row.likes ?? 0,
     createdAt: new Date(row.created_at).getTime(),
     visibility: row.visibility,
@@ -266,7 +277,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
     const { data, error } = await supabase
       .from("posts")
-      .select("*")
+      .select(POST_COLUMNS)
       .order("created_at", { ascending: false });
     if (error || !data) return;
 
@@ -276,7 +287,31 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       : { data: [] as { id: string; display_name: string }[] };
     const nameById = new Map((profilesData ?? []).map((p) => [p.id, p.display_name]));
 
-    setRealPosts(data.map((row: any) => rowToPost(row, nameById.get(row.user_id) ?? "Someone")));
+    // Your own Reflections only — a separate, owner-only table (sql/post-
+    // reflections.sql), never folded into the shared posts select above.
+    // RLS on post_reflections already caps this to `user`'s own rows even
+    // without the .eq below; the filter is kept anyway so the query reads
+    // as exactly what it is.
+    const reflectionByPostId = new Map<number, string>();
+    if (user) {
+      const { data: reflectionRows } = await supabase
+        .from("post_reflections")
+        .select("post_id, reflection")
+        .eq("user_id", user.id);
+      for (const row of reflectionRows ?? []) {
+        reflectionByPostId.set(row.post_id, row.reflection);
+      }
+    }
+
+    setRealPosts(
+      data.map((row: any) => {
+        const post = rowToPost(row, nameById.get(row.user_id) ?? "Someone");
+        if (user && row.user_id === user.id) {
+          post.reflection = reflectionByPostId.get(row.id);
+        }
+        return post;
+      }),
+    );
   };
 
   const refetchCircleMemberCounts = async () => {
@@ -520,7 +555,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           media_url: mediaUrl,
           media_urls: mediaUrls.length ? mediaUrls : null,
           caption: input.caption,
-          reflection: input.reflection?.trim() ? input.reflection.trim() : null,
           visibility: input.visibility,
           starts_at: input.startsAt ? new Date(input.startsAt).toISOString() : null,
           location_name: input.locationName ?? null,
@@ -531,11 +565,21 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           hidden_from_moments: input.hiddenFromMoments ?? false,
           tags: input.tags ?? [],
         })
-        .select()
+        .select(POST_COLUMNS)
         .single();
 
       if (!error && data) {
         const newPost = rowToPost(data, profile?.display_name ?? (input.creator || "You"));
+        // A Reflection is never written to `posts` (see #86) — its own
+        // owner-only table, set right after the post exists since it needs
+        // the new row's id.
+        const trimmedReflection = input.reflection?.trim();
+        if (trimmedReflection) {
+          newPost.reflection = trimmedReflection;
+          await supabase
+            .from("post_reflections")
+            .upsert({ post_id: newPost.id, user_id: user.id, reflection: trimmedReflection });
+        }
         // A sale listing is tracked separately from the post row; without
         // this, a real post never knew it was for sale and the buy link
         // disappeared the moment the page reloaded.
@@ -629,25 +673,40 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       );
 
     if (supabase && user && target?.userId === user.id) {
-      const { data, error } = await supabase
-        .from("posts")
-        .update({
-          ...(patch.caption !== undefined ? { caption: patch.caption } : {}),
-          ...(patch.reflection !== undefined
-            ? { reflection: patch.reflection.trim() || null }
-            : {}),
-          // circle_id always travels with visibility: switching away from
-          // "circle" must clear it, same as a fresh post's own write below.
-          ...(patch.visibility !== undefined
-            ? {
-                visibility: patch.visibility,
-                circle_id: patch.visibility === "circle" ? (patch.circleId ?? null) : null,
-              }
-            : {}),
-        })
-        .eq("id", postId)
-        .select();
-      if (error || !data || data.length === 0) return false;
+      const postsPatch: Record<string, unknown> = {};
+      if (patch.caption !== undefined) postsPatch.caption = patch.caption;
+      // circle_id always travels with visibility: switching away from
+      // "circle" must clear it, same as a fresh post's own write below.
+      if (patch.visibility !== undefined) {
+        postsPatch.visibility = patch.visibility;
+        postsPatch.circle_id = patch.visibility === "circle" ? (patch.circleId ?? null) : null;
+      }
+
+      // A no-op `.update({})` (only the Reflection changed) is skipped
+      // entirely — Reflection never touches `posts` at all (see #86), and
+      // an empty patch object is nothing worth sending.
+      if (Object.keys(postsPatch).length > 0) {
+        const { data, error } = await supabase
+          .from("posts")
+          .update(postsPatch)
+          .eq("id", postId)
+          .select();
+        if (error || !data || data.length === 0) return false;
+      }
+
+      if (patch.reflection !== undefined) {
+        const trimmed = patch.reflection.trim();
+        const { error: reflectionError } = trimmed
+          ? await supabase
+              .from("post_reflections")
+              .upsert({ post_id: postId, user_id: user.id, reflection: trimmed })
+          : await supabase
+              .from("post_reflections")
+              .delete()
+              .eq("post_id", postId)
+              .eq("user_id", user.id);
+        if (reflectionError) return false;
+      }
     }
 
     setRealPosts(apply);

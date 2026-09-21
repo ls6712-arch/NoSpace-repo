@@ -109,9 +109,15 @@ export function Studio() {
         if (cancelled) return;
         if (!profileRow) return setRemote({ status: "missing" });
 
+        // Explicit columns, never "*" — same reasoning as PublicProfile.tsx's
+        // own fetch: a Reflection (public.post_reflections) is owner-only,
+        // and this view only ever shows the public slice of a Shelf, so it
+        // has no legitimate reason to receive one over the wire either.
         const { data: rows } = await supabase
           .from("posts")
-          .select("*")
+          .select(
+            "id, hobby_slug, sub_hobby, type, media_url, caption, likes, created_at, user_id, tags, pinned",
+          )
           .eq("user_id", profileRow.id)
           .eq("visibility", "public")
           .order("created_at", { ascending: false });
