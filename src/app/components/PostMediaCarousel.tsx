@@ -26,7 +26,10 @@ export function PostMediaCarousel({
   preview,
 }: {
   media: string[];
-  type?: "photo" | "video";
+  // "written" is treated the same as "photo" below — a written Moment
+  // never has a real video, so it just falls through to the photo/
+  // GeneratedArt branches like any other media-less post.
+  type?: "photo" | "video" | "written";
   hobbySlug: string;
   seed: string | number;
   className?: string;

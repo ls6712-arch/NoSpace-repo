@@ -23,6 +23,7 @@ import { hobbies, subHobbyLabel, findSpaceForInterest, defaultSpaceSlug } from "
 import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility } from "../data/posts";
+import { classifyMomentType } from "../lib/momentType";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
@@ -272,8 +273,17 @@ export function Log() {
     if (hobbies.find((h) => h.slug === hobbySlug)?.hidden) setHobbySlug(defaultSpaceSlug());
   }, [spaceRows, spaceSet, hobbySlug]);
   const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
+  // Independent of subHobby — a Moment can be tagged Woodwork (subHobby,
+  // still set above via TagsField's Corner-name matching) and filed under
+  // the Gift-making Corner (this) at once. Never derived from subHobby;
+  // left "" means the composer simply didn't set one.
+  const [corner, setCorner] = useState<string>("");
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
+  // The type actually sent to addPost is computed at publish time from
+  // whether a file is attached (see publish() below), not read straight
+  // from this — this only tracks which of photo/video the picked file(s)
+  // were, same as always.
   const [type, setType] = useState<"photo" | "video">("photo");
   // Open, multiple tags — the caption screen's actual "what's this about"
   // now (TagsField), replacing the old single interest field plus its own
@@ -759,12 +769,25 @@ export function Log() {
         [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
         (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment");
 
+      // Decided from the actual attached files, not the `type` state (which
+      // only ever reflects whichever single pick set it last) — video wins
+      // over any photos in the same submission, same rule
+      // lib/momentType.ts's own backfill-migration counterpart uses for
+      // existing rows. "written" whenever nothing was actually attached,
+      // regardless of caption length; the real photo/video type whenever
+      // something was, also regardless of caption length. Computed here
+      // rather than kept in `type` itself so every entry point ("Write a
+      // moment", the camera's own "text only", or picking then removing
+      // every file) lands on the same answer without each having to set it.
+      const effectiveType = classifyMomentType(files);
+
       const entry = await addPost({
         hobbySlug,
         subHobby: subHobby || undefined,
+        corner: corner || undefined,
         interest: interest.trim() || undefined,
         tags,
-        type,
+        type: effectiveType,
         files: files.length ? files : undefined,
         creator: profile?.display_name?.trim() || "You",
         caption,
@@ -1373,6 +1396,22 @@ export function Log() {
                 }
               }}
             />
+          </div>
+
+          {/* Its own field, independent of the tag match above: a Moment
+              can be tagged Woodwork (whichever tag above matched a Corner
+              name, setting subHobby) and filed under the Gift-making Corner
+              here at the same time — one is what it's made of, this is
+              which Corner it's filed under for Discover/Space browsing.
+              Optional either way; leaving it blank just files nothing. */}
+          <div>
+            <h2 className="mb-1 text-sm">
+              <label htmlFor="corner">Which Corner?</label>
+            </h2>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Where this shows up when someone browses {hobbies.find((h) => h.slug === hobbySlug)?.shortName ?? "this Space"} by Corner.
+            </p>
+            <CornerTagField spaceSlug={hobbySlug} value={corner} onChange={(slug) => setCorner(slug)} />
           </div>
 
           {/* Only a thing that happens at a time needs a time. */}
