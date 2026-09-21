@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router";
 import {
   ArrowLeft,
   CalendarDays,
-  Check,
   Eye,
   HelpCircle,
   Lock,
@@ -21,8 +20,7 @@ import { useConnections } from "../context/ConnectionsContext";
 import { useAuth } from "../context/AuthContext";
 import { CircleComposer } from "../components/CircleComposer";
 import { CircleRoster } from "../components/CircleRoster";
-import { Thoughts } from "../components/Thoughts";
-import { PostMedia } from "../components/PostMedia";
+import { MomentCard } from "../components/MomentCard";
 import { Button } from "../components/ui/button";
 
 const TABS: { id: CircleTabId; label: string; icon: typeof PenLine }[] = [
@@ -31,15 +29,6 @@ const TABS: { id: CircleTabId; label: string; icon: typeof PenLine }[] = [
   { id: "questions", label: "Questions", icon: HelpCircle },
   { id: "events", label: "Events", icon: CalendarDays },
 ];
-
-function timeAgo(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 /**
  * A Circle's own place — a board with four tabs, real threads, and a real
@@ -52,7 +41,7 @@ export function CircleBoard() {
   const { id = "" } = useParams();
   const circleId = Number(id);
   const { getCircle, isRealCircle, isMemberOfReal, joinRealCircle, leaveRealCircle } = useCircles();
-  const { circleFeed, isCircleJoined, joinCircle, leaveCircle, setThreadAnswered } = useContent();
+  const { circleFeed, isCircleJoined, joinCircle, leaveCircle } = useContent();
   const connections = useConnections();
   const { user } = useAuth();
   const [tab, setTab] = useState<CircleTabId>("updates");
@@ -181,67 +170,21 @@ export function CircleBoard() {
                   )}
                 </div>
 
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-6">
                   {threads.length === 0 ? (
                     <p className="rounded-2xl border border-dashed border-border px-5 py-9 text-center text-sm text-muted-foreground">
                       Nothing here yet. Yours would be the first.
                     </p>
                   ) : (
-                    threads.map((thread) => {
-                      const canMarkAnswered = tab === "questions" && !!user && (user.id === thread.userId || isOwner);
-                      const hasMedia = thread.media && /^https?:\/\//.test(thread.media);
-                      return (
-                        <div key={thread.id} className="rounded-2xl border border-border bg-card p-4">
-                          <div className="mb-2 flex items-center justify-between gap-3">
-                            <span className="text-sm">
-                              <span style={{ fontFamily: "var(--font-serif)" }}>{thread.creator}</span>{" "}
-                              <span className="text-muted-foreground">· {timeAgo(thread.createdAt)}</span>
-                            </span>
-                            {tab === "questions" && (
-                              <span
-                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${
-                                  thread.answered
-                                    ? "bg-[var(--pastel-sage)]/40 text-foreground"
-                                    : "bg-surface-muted text-muted-foreground"
-                                }`}
-                              >
-                                {thread.answered ? "Answered" : "Open"}
-                              </span>
-                            )}
-                          </div>
-                          {hasMedia && (
-                            <div className="mb-2 overflow-hidden rounded-xl border border-[var(--hairline)]">
-                              <PostMedia
-                                media={thread.media}
-                                type={thread.type}
-                                hobbySlug={thread.hobbySlug}
-                                seed={thread.id}
-                                className="w-full"
-                              />
-                            </div>
-                          )}
-                          <p className="whitespace-pre-line text-sm leading-relaxed">{thread.caption}</p>
-                          {canMarkAnswered && (
-                            <button
-                              type="button"
-                              onClick={() => setThreadAnswered(thread.id, !thread.answered)}
-                              className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                              <Check className="size-3" />
-                              {thread.answered ? "Reopen" : "Mark answered"}
-                            </button>
-                          )}
-                          <Thoughts
-                            postId={thread.id}
-                            postOwnerId={thread.userId}
-                            postOwnerName={thread.creator}
-                            allowMedia
-                            compact
-                            className="mt-3"
-                          />
-                        </div>
-                      );
-                    })
+                    threads.map((thread) => (
+                      <MomentCard
+                        key={thread.id}
+                        post={thread}
+                        surface="circle"
+                        size="standard"
+                        canMarkAnswered={tab === "questions" && !!user && (user.id === thread.userId || isOwner)}
+                      />
+                    ))
                   )}
                 </div>
               </>

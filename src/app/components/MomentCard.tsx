@@ -1,11 +1,25 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Heart, Hand, MessageCircle, Bookmark, Pencil, Eye, PenLine, Lock } from "lucide-react";
+import {
+  Heart,
+  Hand,
+  MessageCircle,
+  Bookmark,
+  Pencil,
+  Eye,
+  PenLine,
+  Lock,
+  Check,
+  CalendarDays,
+  MapPin,
+} from "lucide-react";
 import { Post } from "../data/posts";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useCircles } from "../context/CirclesContext";
+import { useSocial } from "../context/SocialContext";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { displayLocation } from "../data/participation";
 import { usePursuitTitle } from "../lib/pursuitTitle";
 import { isOnlyYou, visibilityWord, MOMENT_VISIBILITY_OPTIONS } from "../lib/visibility";
 import { useReactionState } from "./PostReactions";
@@ -75,6 +89,13 @@ export interface MomentCardProps {
   size?: "lead" | "wide" | "standard" | "compact";
   /** Opens MomentDetail at the call site. */
   onOpen?: () => void;
+  /** Circle thread extras (CircleBoard.tsx) — a plain Moment never sets
+   * these. The Answered/Open badge itself is derived straight from
+   * `post.circleTab === "questions"` and `post.answered`, not a prop, since
+   * both already live on the post; only the *permission* to toggle it
+   * (the thread's own author, or the Circle's owner) can't be derived from
+   * the post alone, so the caller passes it explicitly. */
+  canMarkAnswered?: boolean;
 }
 
 /** "Change who sees this" — the eye-icon control on your own Moment. Only
@@ -214,10 +235,18 @@ function InlineBookmark({ postId }: { postId: string | number }) {
   );
 }
 
-export function MomentCard({ post, surface, number, size = "standard", onOpen }: MomentCardProps) {
+export function MomentCard({
+  post,
+  surface,
+  number,
+  size = "standard",
+  onOpen,
+  canMarkAnswered = false,
+}: MomentCardProps) {
   const { user } = useAuth();
   const { circles } = useCircles();
-  const { ownCounts } = useContent();
+  const { ownCounts, setThreadAnswered } = useContent();
+  const social = useSocial();
   const mine = !!user && post.userId === user.id;
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [thoughtsOpen, setThoughtsOpen] = useState(false);
@@ -227,6 +256,17 @@ export function MomentCard({ post, surface, number, size = "standard", onOpen }:
   // ContentContext's ownCounts). Missing entry (a page that hasn't loaded
   // counts yet) reads as all-zero, i.e. hidden, never a stray "0".
   const counts = ownCounts[post.id] ?? { love: 0, in: 0, thoughts: 0 };
+
+  // A Circle "Questions" thread — post.circleTab and post.answered already
+  // exist on every Post row (sql/circle-threads.sql), so this reads
+  // straight off the post rather than a surface-specific prop.
+  const isQuestion = post.circleTab === "questions";
+  // An "activity" moment — a photo walk, a workshop, a Circle event — has a
+  // time attached. Same fields ContentCard.tsx already reads; shown
+  // wherever they're set; not exclusive to Circle threads.
+  const isActivity = !!post.startsAt;
+  const activityPlace = displayLocation(post.locationName, post.locationPrivacy);
+  const goingCount = isActivity ? social.goingCount(post.id) : 0;
 
   const space = getHobby(post.hobbySlug);
   const corner = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : undefined;
@@ -325,6 +365,54 @@ export function MomentCard({ post, surface, number, size = "standard", onOpen }:
           >
             Open
           </button>
+        )}
+
+        {isActivity && (
+          <div className="mt-3 rounded-xl border border-border bg-surface px-3.5 py-3">
+            <div className="flex items-center gap-1.5 text-xs">
+              <CalendarDays className="size-3.5 shrink-0 text-foreground" />
+              {new Date(post.startsAt!).toLocaleString(undefined, {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </div>
+            {activityPlace && (
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <MapPin className="size-3.5 shrink-0" />
+                {activityPlace}
+              </div>
+            )}
+            <div className="mt-2 text-xs text-muted-foreground">
+              {goingCount} {goingCount === 1 ? "person" : "people"} going
+            </div>
+          </div>
+        )}
+
+        {isQuestion && (
+          <div className="mt-3 flex items-center gap-2">
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] ${
+                post.answered
+                  ? "bg-[var(--pastel-sage)]/40 text-foreground"
+                  : "bg-surface-muted text-muted-foreground"
+              }`}
+            >
+              {post.answered ? "Answered" : "Open"}
+            </span>
+            {canMarkAnswered && (
+              <button
+                type="button"
+                onClick={() => setThreadAnswered(post.id, !post.answered)}
+                className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Check className="size-3" />
+                {post.answered ? "Reopen" : "Mark answered"}
+              </button>
+            )}
+          </div>
         )}
 
         <div className="mt-3.5 flex items-center gap-2">
@@ -426,6 +514,7 @@ export function MomentCard({ post, surface, number, size = "standard", onOpen }:
                 postOwnerName={post.creator}
                 isOwner={false}
                 privateThoughts={post.thoughtsPrivate}
+                allowMedia={post.circleId != null}
               />
             </DialogContent>
           </Dialog>
