@@ -15,6 +15,10 @@ import {
 
 const PAGE_SIZE = 15;
 
+function monthKey(ts: number) {
+  return new Date(ts).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
 /**
  * Every one of this Shelf's own Moments, pickable to pin or unpin — opened
  * from the grid's own "Pin a moment" tile rather than a new button
@@ -83,14 +87,15 @@ function PinPicker({
  * Your Moments (or, on a visitor's read of `PublicProfile`, someone else's
  * public ones), built from the shared `MomentCard` (docs/moment-card-and-
  * reactions-spec.md §2) instead of this grid's own bespoke tiles. A pinned
- * Moment is always the wide lead card up top; everything else follows in a
- * plain responsive grid at standard size, newest first. "Pin a moment"
- * closes out the grid as a standing invitation to add another.
+ * Moment is always the wide lead card up top, ungrouped; everything else
+ * follows month by month (board 1), newest first, in a plain responsive
+ * grid at standard size. "Pin a moment" closes out the last month's grid
+ * as a standing invitation to add another.
  *
- * Deliberately simpler than board 1's month-divider Shelf (see the #75
- * report): no month grouping and no click-through "quiet read" feed — a
- * card's own media now opens `MomentDetail` directly via `onOpen`, the same
- * one-open-affordance MomentCard already gives every other surface.
+ * Still simpler than board 1 in one way: no click-through "quiet read"
+ * feed — a card's own media now opens `MomentDetail` directly via `onOpen`,
+ * the same one-open-affordance MomentCard already gives every other
+ * surface.
  */
 export function WorkGrid({
   posts,
@@ -126,27 +131,70 @@ export function WorkGrid({
   const rest = lead ? visible.slice(1) : visible;
   const surface: MomentCardSurface = editable ? "you" : "profile";
 
+  // Grouped by month, newest first — board 1's Shelf. The lead pinned card
+  // above is deliberately left out of this grouping: it's always first,
+  // regardless of when it was made.
+  const byMonth: { month: string; items: Post[] }[] = [];
+  for (const post of rest) {
+    const key = monthKey(post.createdAt);
+    const last = byMonth[byMonth.length - 1];
+    if (last && last.month === key) last.items.push(post);
+    else byMonth.push({ month: key, items: [post] });
+  }
+  const lastMonthIndex = byMonth.length - 1;
+
   return (
     <div>
       {lead && (
-        <div className="mb-4">
+        <div className="mb-8">
           <MomentCard post={lead} surface={surface} size="wide" onOpen={() => onOpen(lead)} />
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {rest.map((post) => (
-          <MomentCard key={post.id} post={post} surface={surface} size="standard" onOpen={() => onOpen(post)} />
+      <div className="space-y-8">
+        {byMonth.map(({ month, items }, i) => (
+          <section key={month}>
+            <div className="mb-4 flex items-center gap-3">
+              <span className="ns-section-kicker text-muted-foreground">{month}</span>
+              <span className="h-px flex-1 bg-[var(--line,var(--hairline))]" aria-hidden="true" />
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((post) => (
+                <MomentCard
+                  key={post.id}
+                  post={post}
+                  surface={surface}
+                  size="standard"
+                  onOpen={() => onOpen(post)}
+                />
+              ))}
+
+              {/* Owner-only: a visitor browsing someone else's Shelf has
+                  nothing to pin here and no reason to be routed toward
+                  /create on their own account. Appended to the last
+                  month's grid rather than a section of its own. */}
+              {i === lastMonthIndex && remaining === 0 && editable && (
+                <button
+                  type="button"
+                  onClick={() => setPinPickerOpen(true)}
+                  className="flex h-[220px] flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground sm:h-[320px]"
+                >
+                  <ImagePlus className="size-5" strokeWidth={1.7} />
+                  <span className="text-sm font-medium">Pin a moment</span>
+                </button>
+              )}
+            </div>
+          </section>
         ))}
 
-        {/* Owner-only: a visitor browsing someone else's Shelf has nothing
-            to pin here and no reason to be routed toward /create on their
-            own account. */}
-        {remaining === 0 && editable && (
+        {/* Nothing left but the pinned lead card — still needs somewhere
+            to offer "Pin a moment" when there's no month section to
+            append it to. */}
+        {byMonth.length === 0 && remaining === 0 && editable && (
           <button
             type="button"
             onClick={() => setPinPickerOpen(true)}
-            className="flex h-[220px] flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground sm:h-[320px]"
+            className="flex h-[220px] w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground sm:h-[320px]"
           >
             <ImagePlus className="size-5" strokeWidth={1.7} />
             <span className="text-sm font-medium">Pin a moment</span>
