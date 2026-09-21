@@ -23,6 +23,7 @@ import { hobbies, subHobbyLabel, findSpaceForInterest, defaultSpaceSlug } from "
 import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility } from "../data/posts";
+import { classifyMomentType } from "../lib/momentType";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
@@ -768,13 +769,17 @@ export function Log() {
         [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
         (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment");
 
-      // "written" whenever nothing was actually attached — regardless of
-      // how long the caption is — and the real photo/video type whenever
-      // something was, regardless of caption length either way. Computed
-      // here rather than kept in `type` itself so every entry point ("Write
-      // a moment", the camera's own "text only", or picking then removing
+      // Decided from the actual attached files, not the `type` state (which
+      // only ever reflects whichever single pick set it last) — video wins
+      // over any photos in the same submission, same rule
+      // lib/momentType.ts's own backfill-migration counterpart uses for
+      // existing rows. "written" whenever nothing was actually attached,
+      // regardless of caption length; the real photo/video type whenever
+      // something was, also regardless of caption length. Computed here
+      // rather than kept in `type` itself so every entry point ("Write a
+      // moment", the camera's own "text only", or picking then removing
       // every file) lands on the same answer without each having to set it.
-      const effectiveType = files.length > 0 ? type : "written";
+      const effectiveType = classifyMomentType(files);
 
       const entry = await addPost({
         hobbySlug,

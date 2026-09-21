@@ -1,4 +1,4 @@
--- Rollback for 20260921160000_backfill_written_post_type.sql.
+-- Rollback for 20260921170000_backfill_written_post_type.sql.
 --
 -- Draft only — staged for review, not run.
 --
@@ -12,6 +12,11 @@
 -- that happened to be 'video' with a failed upload (the one case the bug
 -- could produce something other than 'photo') will come back as 'photo'
 -- instead of its original 'video' — flagged rather than silently guessed.
+--
+-- Run this before rollback_20260921160000_widen_post_type_enum.sql, not
+-- after: that one refuses to run (if posts.type is a native enum) while
+-- any row still references 'written', and this is what clears every row
+-- back off of it.
 --
 -- ── DOWN ────────────────────────────────────────────────────────────────
 update public.posts
