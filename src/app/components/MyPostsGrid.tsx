@@ -50,10 +50,6 @@ export function MyPostsGrid() {
                 <Play className="size-2.5 text-white fill-white" />
               </span>
             )}
-            <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/0 group-hover:bg-black/40 opacity-0 group-hover:opacity-100 transition-all text-white text-sm">
-              <Heart className="size-3.5 fill-white" />
-              {post.likes}
-            </div>
           </button>
         ))}
       </div>
