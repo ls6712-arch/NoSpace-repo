@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router";
-import { motion, useReducedMotion } from "motion/react";
+import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
@@ -8,8 +7,9 @@ import { useJournal } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
 import { getLastVisit, markVisited } from "../lib/mySpaceVisit";
 import { circles } from "../data/circles";
-import { ContactSheet } from "../components/ContactSheet";
-import { MomentPanel } from "../components/MomentPanel";
+import { Post } from "../data/posts";
+import { MomentCard } from "../components/MomentCard";
+import { MomentDetail } from "../components/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
 import { ShelfRail } from "../components/ShelfRail";
 import { CirclesRail } from "../components/CirclesRail";
@@ -23,11 +23,23 @@ function greeting(name: string): string {
 }
 
 /**
- * docs/my-space-spec.md's grid page. Nav below lg: this app already has a
- * working "reach every section on a small screen" answer — the global
- * BottomTabBar (Root.tsx, every page) — so this doesn't also build the
- * spec's hamburger-menu nav on top of it; flagged as a deliberate deviation
- * rather than doubling up on navigation chrome.
+ * docs/my-space-spec.md's grid page. Board 4's lead-plus-grid sheet: item 01
+ * is the shared MomentCard at size="lead", 02–04 a 3-column row, 05–06 a
+ * 1.6fr/1fr row, all numbered — replacing ContactSheet's thumbnail strip
+ * plus a single selected-Moment panel. "Turn the page" now moves to the
+ * NEXT distinct sheet of 6 (re-slicing the same already-loaded `unseen`
+ * list — no fetch, no auto-load) rather than accumulating a longer
+ * scrollable list the old strip let you browse.
+ *
+ * The right rail (Shelf, Pursuits, Circles) stays a sidebar at lg+, a
+ * deliberate difference from boards 4/5 (which show no rail at all) — kept
+ * on an explicit call rather than dropped or moved off this page.
+ *
+ * Nav below lg: this app already has a working "reach every section on a
+ * small screen" answer — the global BottomTabBar (Root.tsx, every page) —
+ * so this doesn't also build the spec's hamburger-menu nav on top of it;
+ * flagged as a deliberate deviation rather than doubling up on navigation
+ * chrome.
  */
 export function MySpaceGrid() {
   const { user, profile } = useAuth();
@@ -35,9 +47,8 @@ export function MySpaceGrid() {
   const social = useSocial();
   const journal = useJournal();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [pages, setPages] = useState(1);
+  const [pageIndex, setPageIndex] = useState(0);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
-  const reducedMotion = !!useReducedMotion();
 
   useEffect(() => {
     if (!user) return;
@@ -69,15 +80,27 @@ export function MySpaceGrid() {
     [publicFeed, user?.id, lastVisit, followingIds, exploring, joinedSpaces],
   );
 
-  const shown = unseen.slice(0, pages * PAGE_SIZE);
-  const hasMore = unseen.length > shown.length;
+  // One distinct sheet of (at most) 6 — "Turn the page" moves to the next
+  // one rather than growing this list.
+  const sheet = unseen.slice(pageIndex * PAGE_SIZE, pageIndex * PAGE_SIZE + PAGE_SIZE);
+  const hasMore = unseen.length > (pageIndex + 1) * PAGE_SIZE;
+  const lead = sheet[0];
+  const row1 = sheet.slice(1, 4);
+  const row2 = sheet.slice(4, 6);
 
-  const selectedId = searchParams.get("m") ? Number(searchParams.get("m")) : shown[0]?.id ?? null;
-  const selected = shown.find((p) => p.id === selectedId) ?? null;
-
-  const setSelectedId = (id: number) => {
+  // ?m=<id> opens MomentDetail over the sheet — a deep link to one Moment,
+  // not "which one is selected" (every Moment on the sheet is already
+  // visible as its own card, so there's nothing else for ?m= to mean).
+  const openId = searchParams.get("m") ? Number(searchParams.get("m")) : null;
+  const openPost = openId != null ? (unseen.find((p) => p.id === openId) ?? null) : null;
+  const openDetail = (post: Post) => {
     const next = new URLSearchParams(searchParams);
-    next.set("m", String(id));
+    next.set("m", String(post.id));
+    setSearchParams(next, { replace: true });
+  };
+  const closeDetail = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("m");
     setSearchParams(next, { replace: true });
   };
 
@@ -88,9 +111,9 @@ export function MySpaceGrid() {
   }).toUpperCase();
 
   const numeral =
-    shown.length === 0
+    sheet.length === 0
       ? "00–00"
-      : `${String(1).padStart(2, "0")}–${String(shown.length).padStart(2, "0")}`;
+      : `${String(1).padStart(2, "0")}–${String(sheet.length).padStart(2, "0")}`;
 
   return (
     <div className="myspace-shell px-4 py-6 sm:px-5 lg:px-8">
@@ -130,33 +153,72 @@ export function MySpaceGrid() {
       </header>
 
       <div className="myspace-body">
-        <div className="myspace-sheet">
-          <ContactSheet
-            moments={shown}
-            totalUnseen={unseen.length}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onTurnPage={() => setPages((p) => p + 1)}
-            hasMore={hasMore}
-          />
-        </div>
-
-        <div className="myspace-moment mt-8 lg:mt-0">
-          {selected ? (
-            // Cross-fade on selection change (docs/my-space-spec.md section
-            // 5) — keyed by post id so a new Moment mounts its own faded-in
-            // instance rather than mutating one in place.
-            <motion.div
-              key={selected.id}
-              initial={reducedMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <MomentPanel post={selected} />
-            </motion.div>
-          ) : (
+        <div className="myspace-feed">
+          {sheet.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              Nothing selected yet.
+              Nothing new since your last visit.
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {lead && (
+                <MomentCard
+                  post={lead}
+                  surface="mySpace"
+                  size="lead"
+                  number="01"
+                  onOpen={() => openDetail(lead)}
+                />
+              )}
+              {row1.length > 0 && (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                  {row1.map((post, i) => (
+                    <MomentCard
+                      key={post.id}
+                      post={post}
+                      surface="mySpace"
+                      size="standard"
+                      number={String(i + 2).padStart(2, "0")}
+                      onOpen={() => openDetail(post)}
+                    />
+                  ))}
+                </div>
+              )}
+              {row2.length > 0 && (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-[1.6fr_1fr]">
+                  {row2.map((post, i) => (
+                    <MomentCard
+                      key={post.id}
+                      post={post}
+                      surface="mySpace"
+                      size={i === 0 ? "wide" : "standard"}
+                      number={String(i + 5).padStart(2, "0")}
+                      onOpen={() => openDetail(post)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => setPageIndex((p) => p + 1)}
+              className="mt-6 text-xs text-accent hover:underline"
+            >
+              Turn the page
+            </button>
+          )}
+
+          {sheet.length > 0 && (
+            <div className="mt-6 rounded-lg border-t border-border pt-4">
+              <p className="ns-section-kicker text-muted-foreground">END OF THE SHEET</p>
+              <p className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                You're caught up
+              </p>
+              <Link to="/create" className="mt-2 inline-block text-xs text-accent hover:underline">
+                Add a Moment
+              </Link>
             </div>
           )}
         </div>
@@ -173,6 +235,8 @@ export function MySpaceGrid() {
           </div>
         </div>
       </div>
+
+      <MomentDetail post={openPost} owned={false} onOpenChange={(o) => !o && closeDetail()} />
     </div>
   );
 }
