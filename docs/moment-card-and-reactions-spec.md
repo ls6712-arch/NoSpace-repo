@@ -2,6 +2,37 @@
 
 Save as `docs/moment-card-and-reactions-spec.md`. Read `docs/CLAUDE-redesign-brief.md` first. This spec **amends** that brief and the glossary where noted in section 1. Nothing else needs to be read to build this.
 
+## STATUS (keep this current — survives context compaction)
+
+Branch `redesign/moment-card`, off `main`. Commits below are oldest first.
+
+**Done:**
+- MomentCard built (§2), no callers yet — `5c05933`
+- Counts decided maker-only, not a setting (§4) — `f2a8f16`, docs updated `9d994b0`
+- `post.likes` dropped from feed/Featured ranking — `6b5abae`
+- My Space → MomentCard (MomentPanel) — `07a10a7`
+- You/Shelf → MomentCard (WorkGrid, HobbyArchive, MyPostsGrid) — `51316e3`
+- #86 Reflection leak fixed: owner-only `post_reflections` table, explicit column lists everywhere posts are fetched, no more `select("*")` on posts — `9d8c498`
+- WorkGrid grouped by month per board 1 (both You and PublicProfile) — `e4ba4a5`
+- #80 + #82: reactions moved off localStorage onto `public.reactions`; maker-only count pills wired into MomentCard; "Ask {name} to make it together?" reuses BePart/requestTogether; Add-a-thought quick starters — `425ed5c`
+- #76 Discover's Featured Moments row → MomentCard (scoped down from board 7 — see report in that commit; the "All Moments" ContentCard grid is untouched, that's #77's job) — `fec97e7`
+- #87 My Space → board 4's lead+grid sheet, replacing ContactSheet + single panel; right rail kept as a sidebar (explicit call, boards 4/5 show none) — `f8ff790`
+- #79 (partial) deleted ContactSheet, MomentPanel, MyPostsGrid, MomentFeedOverlay (zero importers) — `87dafd4`
+
+**Next, in order:**
+1. #77 Migrate PublicProfile, Corner, CategoryFeed, CircleBoard, Pursuit off `ContentCard` onto MomentCard
+2. #78 Migrate MomentDetail to MomentCard at lead size + its own thoughts list
+3. #79 (finish) — delete `ContentCard.tsx`, `PostBookmark.tsx`, MomentDetail's old inline reaction/thought markup once #77/#78 land and nothing imports them
+4. #81 Close out the post_engagement plan (marker task, no migration needed — already true, just needs saying in the final report)
+5. #83 Report on `post.likes`/`post_likes`: defined, still written by `toggleLike`, but zero UI callers since MyPostsGrid's deletion — confirm nothing else reads it, then report, don't drop
+6. #85 Final report: every difference from the mockups, `reactions` row count (0 as of `425ed5c`, including any `keepgoing` rows), anything still reading `posts.likes`, any surface not migrated and why
+
+**Known, deliberate mockup differences (see each commit for detail — don't re-litigate):**
+- Boards 6/7/4 show counts on someone else's Moment (the pre-maker-only design); every surface built on this branch keeps counts maker-only per §4.1 instead
+- Discover has no "All Moments" masonry to migrate (only the Featured row existed) — scope cut in `fec97e7`
+- My Space's right rail is a sidebar; boards 4/5 show no rail at all — kept per an explicit product call in `f8ff790`
+- WorkGrid has no click-through "quiet read" feed (MomentFeedOverlay, retired) — card media opens MomentDetail directly instead, matching every other surface
+
 ## 0. Setup
 
 **Visual target.** The design canvas: https://claude.ai/artifact/CL9dzjVaNzsKhznwVHW8dY. Export boards 1 to 7 into `docs/mockups/` (You, You with theme cover, You mobile, My Space desktop and mobile, the shared Moment card, Discover). Where a mockup and this text disagree, **the mockup wins for layout, spacing and type; this text wins for behavior.** Report every difference you choose.
