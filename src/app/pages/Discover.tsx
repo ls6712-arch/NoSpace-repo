@@ -84,6 +84,24 @@ const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
   { id: "written", label: "Written" },
 ];
 
+/**
+ * Shared look for every navigational tab/filter on this page: plain
+ * small-caps text, letter-spaced, no pill background — active means a thin
+ * underline plus darker text, not a fill. Deliberately not used for
+ * "Add a Moment"/"Start your log" or any other primary action button,
+ * which stay solid — this is for choosing what you're looking at, not
+ * doing something.
+ */
+function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
+  return `border-b-2 font-medium uppercase tracking-wider transition-colors ${
+    size === "sm" ? "pb-2 text-xs" : "pb-1 text-[11px]"
+  } ${
+    active
+      ? "border-[var(--coral-deep)] text-foreground"
+      : "border-transparent text-muted-foreground hover:text-foreground"
+  }`;
+}
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -632,11 +650,7 @@ export function Discover() {
               padding) instead of overflowing the screen or wrapping into a
               second, layout-shifting row. */}
           <div className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
-            <div
-              role="tablist"
-              aria-label="Discover"
-              className="inline-flex w-max rounded-full border border-border bg-card p-1"
-            >
+            <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
               {DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
                 const active = tab === id;
                 return (
@@ -646,13 +660,9 @@ export function Discover() {
                     role="tab"
                     aria-selected={active}
                     onClick={() => setTab(id)}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                      active
-                        ? "text-white [background-color:var(--coral-deep)]"
-                        : "text-foreground hover:text-[var(--coral-text)]"
-                    }`}
+                    className={`flex shrink-0 items-center gap-1.5 ${tabLabelClass(active)}`}
                   >
-                    <Icon className="size-4" strokeWidth={1.8} />
+                    <Icon className="size-3.5" strokeWidth={1.8} />
                     {label}
                   </button>
                 );
@@ -823,7 +833,7 @@ export function Discover() {
               </ul>
 
               {spaceFilter && spaceCorners.length > 0 && (
-                <ul className="mb-3 flex flex-wrap gap-2 pl-4">
+                <ul className="mb-4 flex flex-wrap items-center gap-5 pl-4">
                   {spaceCorners.map((c) => {
                     const active = cornerFilter === c.slug;
                     const count = cornerCounts.get(c.slug) ?? 0;
@@ -833,11 +843,7 @@ export function Discover() {
                           type="button"
                           aria-pressed={active}
                           onClick={() => selectCorner(c.slug)}
-                          className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
-                            active
-                              ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                              : "border-border bg-surface text-muted-foreground hover:border-[var(--foreground)]/35 hover:text-foreground"
-                          }`}
+                          className={tabLabelClass(active, "xs")}
                         >
                           {c.name} · {count}
                         </button>
@@ -847,10 +853,12 @@ export function Discover() {
                 </ul>
               )}
 
-              {/* Media type — the same pill markup and gradient-brand active
-                  state as the For You/Following/Recent tabs above, per the
-                  brief: reuse that pill language rather than add a new one. */}
-              <ul className="mb-6 flex gap-1 rounded-full border border-border bg-card p-1" role="tablist" aria-label="Media type">
+              {/* Media type — same plain-text, underline-on-active look as
+                  the top-level Discover tabs and the Corner row above, per
+                  the brief: navigational filters read as text choices, not
+                  filled pills. "Add a Moment"/"Start your log" is the one
+                  thing on this page that stays a solid button. */}
+              <ul className="mb-6 flex items-center gap-6" role="tablist" aria-label="Media type">
                 {MEDIA_FILTERS.map(({ id, label }) => {
                   const active = mediaFilter === id;
                   return (
@@ -863,11 +871,7 @@ export function Discover() {
                           setMediaFilter(id);
                           setShown(PAGE_SIZE);
                         }}
-                        className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                          active
-                            ? "text-white [background-image:var(--gradient-brand)]"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
+                        className={tabLabelClass(active)}
                       >
                         {label} · {mediaCounts[id]}
                       </button>
