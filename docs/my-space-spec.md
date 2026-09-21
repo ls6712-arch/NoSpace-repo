@@ -15,7 +15,7 @@ If a mockup is missing, stop and ask. Do not guess pixel values. Where the mocku
 
 **First, inspect** the schema and existing queries for Moments, Pursuits, Updates, follows, reactions, bookmarks and the Shelf. Reuse what exists. Don't invent tables. Report anything missing before adding it.
 
-**Rules (from the brief):** tokens only (no raw hex, no `text-white`), product name `Sushii` via `APP_NAME`, vocabulary as in the glossary (Moment, Pursuit, Space, Corner, Circle, Shelf, Reflection; no Clan; reactions are Love this / I'm in / Keep going, no counts shown to others; Bookmark is separate). No streaks, percentages, confetti, leaderboards or numeric badges. Accent only for primary actions and active states; gold only for tiny details (`--gold-text` for any gold text).
+**Rules (from the brief):** tokens only (no raw hex, no `text-white`), product name `Sushii` via `APP_NAME`, vocabulary as in the glossary (Moment, Pursuit, Space, Corner, Circle, Shelf, Reflection; no Clan; reactions are Love this / Count me in / Add a thought, icon-only, three across; counts are maker-only — nobody but a Moment's own maker ever sees a number, and only on their own Moment; Bookmark is separate). No streaks, percentages, confetti, leaderboards or numeric badges. Accent only for primary actions and active states; gold only for tiny details (`--gold-text` for any gold text). See `docs/moment-card-and-reactions-spec.md` for the full reactions/counts model.
 
 ## 1. Layout
 
@@ -62,7 +62,7 @@ If a mockup is missing, stop and ask. Do not guess pixel values. Where the mocku
 - Header: maker avatar, serif name, `{Pursuit} . {Corner}` (each links to its page). Right side: visibility label (PUBLIC or the Circle's name) and time.
 - Media: full-width image, aspect 4/3 on phone, 3/2 on tablet, mockup ratio on xl. `object-cover`, radius 12px, max height 70dvh. **Text-only Moments:** the text as a large Fraunces italic pull-quote (scales with `clamp()`, left-aligned on phone).
 - Italic serif caption under the media.
-- Action row: LOVE THIS / I'M IN / KEEP GOING (three across, small caps, no counts), Bookmark icon, OPEN. Hover, pressed and active (accent) states; at least 44px touch targets. Use the existing reactions/bookmark logic, with optimistic update and rollback on error.
+- Action row: Love this / Count me in / Add a thought (three icon buttons, no counts — this is someone else's Moment, and counts are maker-only), Bookmark icon, OPEN. Hover, pressed and active (accent) states; at least 44px touch targets. Use the existing reactions/bookmark logic, with optimistic update and rollback on error. As of `docs/moment-card-and-reactions-spec.md`, the panel draws this from the shared `MomentCard` component rather than its own markup — the row above still describes the actions, MomentCard supplies the pixels.
 - Phone: three equal-width reaction buttons on the first row, Bookmark and OPEN on a second row. Try making the row sticky to the viewport bottom only while the Moment is in view, with safe-area padding and a hairline top border. If that feels heavy, use a normal inline row and tell me.
 
 ## 4. Right rail

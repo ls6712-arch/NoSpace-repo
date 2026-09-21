@@ -11,7 +11,7 @@ Read this whole file before changing anything. Work on a branch. Make small, rev
    - **Space** (top-level community), **Corner** (craft inside a Space), **Circle** (smaller community; you can **Follow** or **Join**), **My Space** (your feed), **Discover**.
    - **Moment** (anything logged, private or shared), **Reflection** (private note), **Pursuit** (ongoing named thing), **Update**.
    - **Clan** (private mutual connections, visible only to the owner), **This Corner**, **Quiet Milestones**, **Shelf**.
-   - Reactions: **Love this / I'm in / Keep going**, three across, no counts shown to others. **Bookmark** is separate.
+   - Reactions: **Love this** (heart), **Count me in** (raised hand), **Add a thought** (comment bubble) — icon-only buttons, three across. **Keep going** is retired as a button; it survives only as a quick starter inside Add a thought. Counts are **maker-only**: nobody but a Moment's own maker ever sees a number, on their own Moment only — never a setting, never shown to anyone else. **Bookmark** is separate and private. See `docs/moment-card-and-reactions-spec.md` for the full anatomy.
    - Never use: Creation, Entry, Post, Project, Category, Thread (as a feature).
 5. **Anti-extractive tone.** No streaks, no confetti, no leaderboards, no urgency copy, no auto-loading feeds, no numeric badges. When in doubt, choose quieter.
 6. **Product name:** the mockups say "Sushii", the project files say "NoSpace". Put the name in a single constant (`APP_NAME`) and use it everywhere. Ask me which to use if it isn't obvious from the repo.
@@ -141,7 +141,7 @@ Add via migrations, don't edit the DB by hand:
 - [ ] Settings: profile, account, privacy, notifications, data, and delete flows all work end to end.
 - [ ] Default visibility for new accounts is Only you, and visibility is verified by a second-account test.
 - [ ] Account deletion cannot be completed from the client alone, and the grace period works.
-- [ ] No banned vocabulary, no counts on reactions, no streak or leaderboard elements.
+- [ ] No banned vocabulary, no count on a reaction shown to anyone but the Moment's own maker, no streak or leaderboard elements.
 - [ ] Open questions listed (product name, points, grace period, Archive vs Shelf wording).
 
 ## 6. Kickoff prompts (send one at a time)
