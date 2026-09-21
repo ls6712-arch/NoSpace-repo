@@ -30,7 +30,15 @@ import { Pursuit } from "./pages/Pursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
-import { Settings } from "./pages/Settings";
+import {
+  Settings,
+  AppearanceSettingsPage,
+  ProfileSettingsPage,
+  AccountSettingsPage,
+  PrivacySettingsPage,
+  DataSettingsPage,
+  PauseOrLeaveSettingsPage,
+} from "./pages/Settings";
 import { NotFound } from "./pages/NotFound";
 
 export const router = createHashRouter([
@@ -61,6 +69,14 @@ export const router = createHashRouter([
       { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },
       { path: "settings", Component: Settings },
+      { path: "settings/appearance", Component: AppearanceSettingsPage },
+      // Deliberately top-level, not nested under /settings/* — only
+      // Appearance keeps that prefix, per the redesign spec.
+      { path: "profile", Component: ProfileSettingsPage },
+      { path: "account", Component: AccountSettingsPage },
+      { path: "privacy", Component: PrivacySettingsPage },
+      { path: "data", Component: DataSettingsPage },
+      { path: "pause-or-leave", Component: PauseOrLeaveSettingsPage },
       { path: "onboarding", Component: Onboarding },
       { path: "inbox", Component: Inbox },
       // Messages was the old destination; Inbox subsumes it.
@@ -78,8 +94,10 @@ export const router = createHashRouter([
 
       // Old paths people may have bookmarked or shared. Kept as redirects so
       // no link that used to work quietly turns into a 404.
-
-      { path: "profile", loader: () => redirect("/you") },
+      //
+      // /profile used to redirect here to /you — it's now the Settings
+      // Profile section route instead (redesign/settings), so that redirect
+      // is gone; nothing else pointed at it.
 
       { path: "*", Component: NotFound },
     ],

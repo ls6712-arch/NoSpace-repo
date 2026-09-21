@@ -26,6 +26,7 @@ import { Visibility } from "../data/posts";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 import { useRewards } from "../context/RewardsContext";
 import { startProject, useJournal } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
@@ -224,6 +225,7 @@ export function Log() {
   const [searchParams] = useSearchParams();
   const { addPost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
+  const { defaultVisibility, defaultVisibilityLoaded } = useSettings();
   const rewards = useRewards();
   const { add: addPrivateLog } = usePrivateLogs();
   const journal = useJournal();
@@ -301,10 +303,24 @@ export function Log() {
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
   const [reflection, setReflection] = useState("");
-  // Private by default — matches the product's "Private by default"
-  // positioning: hitting Share without ever touching this selector must
-  // actually save privately, not just show "Only you" pre-highlighted.
-  const [audience, setAudience] = useState<Visibility | "private">("private");
+  // Starts at the account's own default (Settings → Privacy → "Default
+  // visibility for new Moments"), "Only you" unless changed there. Falls
+  // back to private for the instant before that setting has loaded.
+  const [audience, setAudience] = useState<Visibility | "private">(() =>
+    defaultVisibilityLoaded ? defaultVisibility : "private",
+  );
+  // Sticks once the person (or a resumed draft, or "Reflect privately")
+  // has actually decided an audience, so the default-visibility setting
+  // loading in afterward never overwrites a real choice.
+  const audienceDecidedRef = useRef(false);
+  const chooseAudience = (v: Visibility | "private") => {
+    audienceDecidedRef.current = true;
+    setAudience(v);
+  };
+  useEffect(() => {
+    if (audienceDecidedRef.current || !defaultVisibilityLoaded) return;
+    setAudience(defaultVisibility);
+  }, [defaultVisibilityLoaded, defaultVisibility]);
   const [circleId, setCircleId] = useState<number | undefined>(undefined);
   const [forSale, setForSale] = useState(false);
   const [saleTitle, setSaleTitle] = useState("");
@@ -411,7 +427,10 @@ export function Log() {
   // chosen. Audience should only ever change here, or by the person's own
   // click on the selector below.
   useEffect(() => {
-    if (mode === "private") setAudience("private");
+    if (mode === "private") {
+      audienceDecidedRef.current = true;
+      setAudience("private");
+    }
   }, [mode]);
 
   // ── Draft recovery: checked once, on entry, before anything else touches
@@ -459,6 +478,7 @@ export function Log() {
     // field — recovers as one tag rather than losing it.
     setTags(draftPrompt.tags ?? (draftPrompt.interest ? [draftPrompt.interest] : []));
     setSpaceSet(draftPrompt.spaceSet);
+    audienceDecidedRef.current = true;
     setAudience(draftPrompt.audience as Visibility | "private");
     setCircleId(draftPrompt.circleId);
     setIsActivity(draftPrompt.isActivity);
@@ -1447,7 +1467,7 @@ export function Log() {
                       type="button"
                       aria-pressed={active}
                       onClick={() => {
-                        setAudience(opt.value);
+                        chooseAudience(opt.value);
                         if (opt.value !== "circle") setCircleId(undefined);
                       }}
                       className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
@@ -1764,7 +1784,7 @@ export function Log() {
                     key={opt.value}
                     type="button"
                     onClick={() => {
-                      setAudience(opt.value);
+                      chooseAudience(opt.value);
                       if (opt.value !== "circle") setCircleId(undefined);
                     }}
                     aria-pressed={audience === opt.value}

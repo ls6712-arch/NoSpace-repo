@@ -68,6 +68,13 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (next: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  /** Revokes every refresh token for this account, not just this browser's —
+   * Settings > Account's "Sign out everywhere". A revoked session's own
+   * access token still works until it expires on its own (see
+   * docs/pause-session-revocation-plan.md); this stops any NEW token from
+   * being minted on any other device, same as the pause flow's own
+   * revocation. */
+  signOutEverywhere: () => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
   /** Upserts the given fields onto your own profile row and reloads it.
    * Used by onboarding (name, tagline, the completed-at flag) and anywhere
@@ -294,7 +301,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /** Changing your own password, from Settings, while signed in. */
   const updatePassword: AuthContextType["updatePassword"] = async (next) => {
     if (!supabase) return { error: "Accounts aren't set up for this build yet." };
-    if (next.length < 8) return { error: "Your password needs at least 8 characters." };
+    if (next.length < 10) return { error: "Your password needs at least 10 characters." };
     try {
       const { error } = await supabase.auth.updateUser({ password: next });
       return { error: error ? error.message : null };
@@ -314,6 +321,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
     } catch {
       // Already signed out locally; the session token expires on its own.
+    }
+  };
+
+  const signOutEverywhere = async () => {
+    clearLocalData();
+    if (!supabase) return { error: null };
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "global" });
+      return { error: error ? error.message : null };
+    } catch {
+      return { error: "Couldn't reach the server. Try again in a moment." };
     }
   };
 
@@ -359,6 +377,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         updatePassword,
         signOut,
+        signOutEverywhere,
         refreshProfile,
         updateProfile,
       }}
