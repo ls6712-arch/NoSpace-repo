@@ -5,15 +5,32 @@
 -- The spec's own words: "This needs a defined heuristic before backend work
 -- starts; flag that as an open decision rather than guessing at the join
 -- logic here." Decided (proposed and implemented on request, not silently
--- guessed): pursuits.inspired_by_post_id (sql/pursuits.sql) already exists
--- and is already populated whenever someone starts a Pursuit from a
--- specific Moment (PursuitDialog.tsx's seedPost, Log.tsx's own post-save
--- flow) — an explicit, recorded link, not an inferred one from reaction
--- timing. "Shortly after engaging with this user's post via an 'I'm in' or
--- similar" (the spec's own suggested fallback) would mean joining
--- public.reactions to posts.hobby_slug on a timing window with no explicit
--- causal claim behind it — weaker and guessier than a column that already
--- says, plainly, "this Pursuit came from that Moment." Used instead.
+-- guessed): pursuits.inspired_by_post_id (sql/pursuits.sql, added well
+-- before this feature, in the original Pursuits work) already exists — an
+-- explicit, recorded link, not an inferred one from reaction timing.
+-- "Shortly after engaging with this user's post via an 'I'm in' or similar"
+-- (the spec's own suggested fallback) would mean joining public.reactions
+-- to posts.hobby_slug on a timing window with no explicit causal claim
+-- behind it — weaker and guessier than a column that already says,
+-- plainly, "this Pursuit came from that Moment." Used instead.
+--
+-- Correction from this migration's first draft: PursuitDialog.tsx's
+-- seedPost prop already threaded inspiredByPostId through, but before a
+-- review pass caught it, nothing ever called PursuitDialog with someone
+-- ELSE's post — Log.tsx's own "Start a Pursuit" only ever seeds from the
+-- Moment you're publishing yourself (self-referential: pursuit owner ==
+-- inspiring post's author, which this function's own `p.user_id <>
+-- auth.uid()` filter excludes), and MomentDetail.tsx's owned-only "Add to
+-- Pursuit" action never set inspiredByPostId at all. Concretely: every row
+-- this table had before that fix made this function permanently return
+-- zero rows for every user, forever. Fixed alongside this migration by
+-- adding a real cross-user entry point — MomentDetail.tsx's "Start a
+-- Pursuit — inspired by this" button, shown only when viewing someone
+-- else's Moment, opening PursuitDialog with seedPost set to that Moment.
+-- PursuitDialog's own submit handler already mirrors every new Pursuit to
+-- Supabase via mirrorPursuit regardless of shared status (see journal.ts),
+-- so a Pursuit started this way is durably recorded the same way as any
+-- other, with inspired_by_post_id pointing at the other person's post.
 --
 -- "Computed monthly" is read as *scoped* to the current calendar month
 -- (matches the mockup's own "This month, 2 people…" copy), not a

@@ -1,5 +1,4 @@
 import { Link } from "react-router";
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useSessionsByHobby, archiveKey } from "./HobbyShelf";
 
 /** Cycled per spine — the same dark-tuned illustration palette GeneratedArt
@@ -14,25 +13,6 @@ const SPINE_COLORS = [
   "var(--gen-art-blush)",
 ];
 
-function ShelfChartTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: { payload: { label: string; sessions: number } }[];
-}) {
-  if (!active || !payload?.length) return null;
-  const { label, sessions } = payload[0].payload;
-  return (
-    <div className="rounded-lg border border-border bg-popover px-2.5 py-1.5 text-xs shadow-md">
-      <span className="block" style={{ fontFamily: "var(--font-serif)" }}>{label}</span>
-      <span className="text-muted-foreground">
-        {sessions} {sessions === 1 ? "moment" : "moments"}
-      </span>
-    </div>
-  );
-}
-
 /**
  * Right rail, item 1 (docs/my-space-spec.md section 4.1). Reuses
  * useSessionsByHobby() — this app's existing "Shelf" concept (HobbyShelf.tsx
@@ -41,14 +21,15 @@ function ShelfChartTooltip({
  * The bar chart is purely a supplementary visual: the list below it already
  * carries the same numbers as text (dataviz skill's "a table view exists"
  * requirement), so the chart itself skips axis labels and a legend — one
- * series, identity already spelled out a few pixels away. Hover still shows
- * a per-bar tooltip. No dual axis, no color-only identity: each bar's color
- * matches its own row below via the same fixed SPINE_COLORS order.
+ * series, identity already spelled out a few pixels away. Five static,
+ * non-interactive bars don't need a charting library — plain flexbox divs
+ * plus a native `title` for the same per-bar hover disclosure a
+ * `recharts` tooltip gave, at zero bundle cost (see the bundle-size note
+ * in this PR's description for the comparison that led here).
  */
 export function ShelfRail() {
   const sessions = useSessionsByHobby().slice(0, 5);
   const max = Math.max(1, ...sessions.map((s) => s.sessions));
-  const chartData = sessions.map((s) => ({ label: s.label, sessions: s.sessions }));
 
   return (
     <section>
@@ -63,20 +44,18 @@ export function ShelfRail() {
         </p>
       ) : (
         <>
-          <div className="mt-3 h-16" aria-hidden="true">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} barCategoryGap="20%">
-                <Tooltip
-                  content={<ShelfChartTooltip />}
-                  cursor={{ fill: "var(--foreground)", opacity: 0.05 }}
-                />
-                <Bar dataKey="sessions" radius={[4, 4, 0, 0]} isAnimationActive={false}>
-                  {chartData.map((_, i) => (
-                    <Cell key={i} fill={SPINE_COLORS[i % SPINE_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="mt-3 flex h-16 items-end gap-2" aria-hidden="true">
+            {sessions.map((s, i) => (
+              <div
+                key={s.key}
+                title={`${s.label}: ${s.sessions} ${s.sessions === 1 ? "moment" : "moments"}`}
+                className="min-w-0 flex-1 rounded-t-[4px]"
+                style={{
+                  height: `${Math.max(6, (s.sessions / max) * 100)}%`,
+                  backgroundColor: SPINE_COLORS[i % SPINE_COLORS.length],
+                }}
+              />
+            ))}
           </div>
 
           <ul className="mt-3 space-y-2.5">
