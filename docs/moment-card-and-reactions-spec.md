@@ -20,6 +20,7 @@ Branch `redesign/moment-card`, off `main`. Commits below are oldest first.
 - #79 (partial) deleted ContactSheet, MomentPanel, MyPostsGrid, MomentFeedOverlay (zero importers) — `87dafd4`
 - #77 CircleBoard → MomentCard, extended with an Answered/Open badge (reads `post.circleTab`/`post.answered` directly) plus a `canMarkAnswered` prop, and an activity block (when/where/going) shown whenever `post.startsAt` is set — `8466dc7`
 - #77 Corner, CategoryFeed (Work tab), Pursuit (Updates grid) → MomentCard, each gaining its own `openPost`/MomentDetail dialog — `e4c1096`. PublicProfile was already done via WorkGrid (#75); nothing to change there.
+- §4.6 amended: Circle Events' "N going" approved as a non-ranking exception (may show "0", unlike reaction pills) — `0f2a82a`
 
 **Next, in order:**
 1. #78 Migrate MomentDetail to MomentCard at lead size + its own thoughts list
