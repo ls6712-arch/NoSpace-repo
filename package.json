@@ -26,6 +26,7 @@
     "clsx": "2.1.1",
     "dotenv": "^17.4.2",
     "heic-convert": "^2.1.0",
+    "heic2any": "^0.0.4",
     "lucide-react": "0.487.0",
     "motion": "^13.4.0",
     "react": "18.3.1",

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { Camera as CameraIcon, Images, Play, SwitchCamera, Type, X } from "lucide-react";
 import { addRecentCapture, useRecentCaptures } from "../lib/recentCaptures";
+import { convertHeicFiles } from "../lib/heicConversion";
 import { Button } from "./ui/button";
 
 /** Confirmed with product: 60s, matching Instagram-length clips — long enough
@@ -66,6 +67,11 @@ export function CameraCapture({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  // Only HEIC/HEIF picks actually wait on this (see convertHeicFiles) — a
+  // JPEG/PNG/video pick resolves synchronously-fast and this never visibly
+  // flips true for it. Disables the library buttons for that window so a
+  // second tap mid-decode can't start a race between two picks.
+  const [converting, setConverting] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -189,10 +195,19 @@ export function CameraCapture({
     }
   };
 
-  const pickFromLibrary = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = Array.from(e.target.files ?? []);
+  const pickFromLibrary = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawPicked = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (picked.length === 0) return;
+    if (rawPicked.length === 0) return;
+
+    setConverting(true);
+    // iOS hands the picker .heic by default — nothing downstream (preview,
+    // upload, Discover's own cards) can render that, so it's normalized to
+    // a real JPEG right here, before a single video among the picks (never
+    // HEIC) or anything else sees it.
+    const picked = await convertHeicFiles(rawPicked);
+    setConverting(false);
+
     if (picked.length === 1) {
       const type = picked[0].type.startsWith("video") ? "video" : "photo";
       addRecentCapture(picked[0], type);
@@ -318,9 +333,11 @@ export function CameraCapture({
             ) : (
               <button
                 type="button"
-                aria-label="Choose from library"
+                aria-label={converting ? "Preparing your photo…" : "Choose from library"}
+                aria-busy={converting}
+                disabled={converting}
                 onClick={() => libraryInputRef.current?.click()}
-                className="flex size-16 items-center justify-center rounded-full border-4 border-white/90"
+                className="flex size-16 items-center justify-center rounded-full border-4 border-white/90 disabled:opacity-50"
               >
                 <Images className="size-6 text-white" />
               </button>
@@ -328,9 +345,11 @@ export function CameraCapture({
 
             <button
               type="button"
-              aria-label="Choose from library"
+              aria-label={converting ? "Preparing your photo…" : "Choose from library"}
+              aria-busy={converting}
+              disabled={converting}
               onClick={() => libraryInputRef.current?.click()}
-              className="flex size-11 flex-col items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60"
+              className="flex size-11 flex-col items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 disabled:opacity-50"
             >
               <Images className="size-4" />
             </button>
