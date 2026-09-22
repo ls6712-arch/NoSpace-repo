@@ -24,7 +24,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility } from "../data/posts";
 import { classifyMomentType } from "../lib/momentType";
-import { convertHeicFiles, convertHeicIfNeeded } from "../lib/heicConversion";
+import { convertHeicFiles, convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
@@ -376,6 +376,12 @@ export function Log() {
   // saved screen below needs to tell "it saved" apart from "it didn't,"
   // rather than showing success just because the call finished.
   const [privateSaveError, setPrivateSaveError] = useState<string | null>(null);
+  // Set only when convertHeicFiles/convertHeicIfNeeded hands back a file
+  // that's still HEIC-shaped — conversion silently failed and, unfixed,
+  // that file would go on to become a Moment nobody but a Safari user could
+  // ever see (see heicConversion.ts's own comment on why this is worth
+  // surfacing rather than swallowing).
+  const [heicWarning, setHeicWarning] = useState<string | null>(null);
 
   // A saved draft found on entry, offered before anything else happens —
   // never auto-loaded, since silently dropping someone into an old draft
@@ -1337,14 +1343,31 @@ export function Log() {
             const rawPicked = Array.from(e.target.files ?? []);
             e.target.value = "";
             if (rawPicked.length === 0) return;
+            setHeicWarning(null);
             // Same HEIC normalization as the camera screen's own library
             // pick (CameraCapture.tsx) — this tile is the other place a
             // fresh file enters the multi-photo picker.
-            const picked = await convertHeicFiles(rawPicked);
+            const converted = await convertHeicFiles(rawPicked);
+            const picked = converted.filter((f) => !isHeicFile(f));
+            const failedCount = converted.length - picked.length;
+            if (failedCount > 0) {
+              setHeicWarning(
+                failedCount === 1
+                  ? "One photo couldn't be processed and wasn't added — try a different photo."
+                  : `${failedCount} photos couldn't be processed and weren't added — try different photos.`,
+              );
+            }
+            if (picked.length === 0) return;
             const result = pickFiles(files, picked);
             setFiles(result.files);
           }}
         />
+
+        {heicWarning && (
+          <p className="mb-4 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+            {heicWarning}
+          </p>
+        )}
 
         <div className="mb-6">
           <Label htmlFor="thought" className="sr-only">
@@ -1758,11 +1781,23 @@ export function Log() {
                         const raw = e.target.files?.[0];
                         e.target.value = "";
                         if (!raw) return;
+                        setHeicWarning(null);
                         const picked = await convertHeicIfNeeded(raw);
+                        if (isHeicFile(picked)) {
+                          setHeicWarning(
+                            "That photo couldn't be processed and wasn't added — try a different photo.",
+                          );
+                          return;
+                        }
                         setFiles([picked]);
                         setType(picked.type.startsWith("video") ? "video" : "photo");
                       }}
                     />
+                    {heicWarning && (
+                      <p className="mb-2 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3 py-2 text-left text-[11px] leading-relaxed text-foreground">
+                        {heicWarning}
+                      </p>
+                    )}
                     <div className="mb-2 flex gap-2">
                       <span className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
                         {type === "video" ? (

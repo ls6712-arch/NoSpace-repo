@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { Button } from "./ui/button";
-import { convertHeicIfNeeded } from "../lib/heicConversion";
+import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 
 /**
  * A small, reusable "attach a photo or video" control — the same picked
@@ -17,6 +17,13 @@ import { convertHeicIfNeeded } from "../lib/heicConversion";
  * component is a separate file-input path all three of its callers share,
  * and none of them called convertHeicIfNeeded themselves. Fixed once here
  * so every caller gets it, rather than three times at each call site.
+ *
+ * A real HEIC file that heic2any's WASM decoder can't handle (a known
+ * limitation of that library, not the same thing as this sandbox's own
+ * synthetic-bytes test file) comes back from convertHeicIfNeeded() still
+ * HEIC-shaped — isHeicFile() catches that and rejects the pick with a
+ * message, rather than silently handing the caller a file that will never
+ * render for anyone but a Safari user.
  */
 export function MediaAttachPicker({
   file,
@@ -30,6 +37,7 @@ export function MediaAttachPicker({
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [converting, setConverting] = useState(false);
+  const [heicWarning, setHeicWarning] = useState<string | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -65,6 +73,7 @@ export function MediaAttachPicker({
   const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0] ?? null;
     e.target.value = "";
+    setHeicWarning(null);
     if (!picked) {
       onChange(null);
       return;
@@ -72,6 +81,12 @@ export function MediaAttachPicker({
     setConverting(true);
     const converted = await convertHeicIfNeeded(picked);
     setConverting(false);
+    // Still HEIC-shaped means conversion failed — don't hand back a file
+    // nothing but Safari can ever render; say so instead.
+    if (isHeicFile(converted)) {
+      setHeicWarning("That photo couldn't be processed and wasn't added — try a different photo.");
+      return;
+    }
     onChange(converted);
   };
 
@@ -94,6 +109,11 @@ export function MediaAttachPicker({
         <ImagePlus className="size-3.5" />
         {converting ? "Preparing…" : label}
       </Button>
+      {heicWarning && (
+        <p className="mt-1.5 max-w-[16rem] text-[11px] leading-relaxed text-[var(--coral-text)]">
+          {heicWarning}
+        </p>
+      )}
     </>
   );
 }
