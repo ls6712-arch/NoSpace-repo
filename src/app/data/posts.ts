@@ -20,6 +20,12 @@ export interface Post {
   /** "written" carries no real photo or video — see NewPostInput.type in
    * ContentContext.tsx for how the composer decides it. */
   type: "photo" | "video" | "written";
+  /** Set only on the local-only fallback copy addPost() returns when a
+   * signed-in save to Supabase actually failed (as opposed to a genuine
+   * signed-out/offline post, which is also local-only but never sets this).
+   * Distinguishes the two so a failed save doesn't silently earn rewards or
+   * count toward share-card numbers. */
+  unsaved?: boolean;
   media: string;
   /** The full ordered set of photos when this Moment carries more than one
    * (1-8; videos stay single-item). media always mirrors mediaUrls[0], for
