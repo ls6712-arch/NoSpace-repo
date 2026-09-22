@@ -21,13 +21,14 @@ Branch `redesign/moment-card`, off `main`. Commits below are oldest first.
 - #77 CircleBoard → MomentCard, extended with an Answered/Open badge (reads `post.circleTab`/`post.answered` directly) plus a `canMarkAnswered` prop, and an activity block (when/where/going) shown whenever `post.startsAt` is set — `8466dc7`
 - #77 Corner, CategoryFeed (Work tab), Pursuit (Updates grid) → MomentCard, each gaining its own `openPost`/MomentDetail dialog — `e4c1096`. PublicProfile was already done via WorkGrid (#75); nothing to change there.
 - §4.6 amended: Circle Events' "N going" approved as a non-ranking exception (may show "0", unlike reaction pills) — `0f2a82a`
+- `post-media` storage bucket: set `file_size_limit` (25 MiB) and `allowed_mime_types` (images + mp4/webm/quicktime) — had neither before. Covers post photos and Add-a-thought photo replies both, same bucket — `d44691a`
+- #78 MomentDetail → MomentCard's media/meta/reaction treatment at lead size: `PostMediaCarousel` + colored-tile note card (was `PostMedia`+overlaid `PostBookmark`), a creator row for someone else's Moment (dialog can now open from mixed-author feeds since #77), `OwnCountPill`/icon-toggle reactions replacing `PostReactions`. Dialog shell, `<dl>` block, owner actions, Pursuit picker, delete confirm all untouched. Verified live: owner sees counts + reflection (from `post_reflections`); non-owner sees creator row + icon reactions + bookmark — `cf1abc9`
 
 **Next, in order:**
-1. #78 Migrate MomentDetail to MomentCard at lead size + its own thoughts list
-2. #79 (finish) — delete `ContentCard.tsx`, `PostBookmark.tsx`, MomentDetail's old inline reaction/thought markup once #78 lands and nothing imports them. `ContentCard`'s only remaining callers are Discover's own "All Moments" grid and Home.tsx (neither in this spec's migration list)
-3. #81 Close out the post_engagement plan (marker task, no migration needed — already true, just needs saying in the final report)
-4. #83 Report on `post.likes`/`post_likes`: defined, still written by `toggleLike`, but zero UI callers since MyPostsGrid's deletion — confirm nothing else reads it, then report, don't drop
-5. #85 Final report: every difference from the mockups, `reactions` row count (0 as of `425ed5c`, including any `keepgoing` rows), anything still reading `posts.likes`, any surface not migrated and why
+1. #79 (finish) — delete `PostBookmark.tsx` and `PostReactions.tsx` (the component, not the `useReactionState` hook MomentCard/MomentDetail both import from it) once confirmed unused; delete `ContentCard.tsx` only once Discover's "All Moments" grid and Home.tsx no longer import it — tighten `ContentContext.tsx`'s bare `.select()` on the posts update to an explicit column list while in here
+2. #81 Close out the post_engagement plan (marker task, no migration needed — already true, just needs saying in the final report)
+3. #83 Report on `post.likes`/`post_likes`: defined, still written by `toggleLike`, but zero UI callers since MyPostsGrid's deletion — confirm nothing else reads it, then report, don't drop
+4. #85 Final report: every difference from the mockups, `reactions` row count (0 as of `425ed5c`, including any `keepgoing` rows), anything still reading `posts.likes`, any surface not migrated and why
 
 **Known, deliberate mockup differences (see each commit for detail — don't re-litigate):**
 - Boards 6/7/4 show counts on someone else's Moment (the pre-maker-only design); every surface built on this branch keeps counts maker-only per §4.1 instead
