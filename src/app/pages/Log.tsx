@@ -24,6 +24,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility } from "../data/posts";
 import { classifyMomentType } from "../lib/momentType";
+import { convertHeicFiles, convertHeicIfNeeded } from "../lib/heicConversion";
 import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
@@ -1332,10 +1333,14 @@ export function Log() {
           accept="image/*"
           multiple
           className="hidden"
-          onChange={(e) => {
-            const picked = Array.from(e.target.files ?? []);
+          onChange={async (e) => {
+            const rawPicked = Array.from(e.target.files ?? []);
             e.target.value = "";
-            if (picked.length === 0) return;
+            if (rawPicked.length === 0) return;
+            // Same HEIC normalization as the camera screen's own library
+            // pick (CameraCapture.tsx) — this tile is the other place a
+            // fresh file enters the multi-photo picker.
+            const picked = await convertHeicFiles(rawPicked);
             const result = pickFiles(files, picked);
             setFiles(result.files);
           }}
@@ -1749,9 +1754,11 @@ export function Log() {
                       type="file"
                       accept="image/*,video/*"
                       className="hidden"
-                      onChange={(e) => {
-                        const picked = e.target.files?.[0];
-                        if (!picked) return;
+                      onChange={async (e) => {
+                        const raw = e.target.files?.[0];
+                        e.target.value = "";
+                        if (!raw) return;
+                        const picked = await convertHeicIfNeeded(raw);
                         setFiles([picked]);
                         setType(picked.type.startsWith("video") ? "video" : "photo");
                       }}
