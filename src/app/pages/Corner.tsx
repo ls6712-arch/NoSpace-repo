@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { hobbies } from "../data/hobbies";
-import { postCorner } from "../data/posts";
+import { Post, postCorner } from "../data/posts";
 import { useCorners } from "../context/CornersContext";
 import { useContent } from "../context/ContentContext";
-import { ContentCard } from "../components/ContentCard";
+import { MomentCard } from "../components/MomentCard";
+import { MomentDetail } from "../components/MomentDetail";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 
 /**
@@ -15,6 +18,8 @@ export function CornerPage() {
   const { slug = "" } = useParams();
   const { cornersFor } = useCorners();
   const { publicFeed } = useContent();
+  const { user } = useAuth();
+  const [openPost, setOpenPost] = useState<Post | null>(null);
 
   // A Corner's slug is only unique within its own Space — two different
   // Spaces could each have a corner slugged "basics". This flat route can't
@@ -70,13 +75,25 @@ export function CornerPage() {
             No {corner.name.toLowerCase()} work yet. Be the first.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => (
-              <ContentCard key={post.id} post={post} />
+              <MomentCard
+                key={post.id}
+                post={post}
+                surface="feed"
+                size="standard"
+                onOpen={() => setOpenPost(post)}
+              />
             ))}
           </div>
         )}
       </section>
+
+      <MomentDetail
+        post={openPost}
+        owned={!!user && openPost?.userId === user.id}
+        onOpenChange={(o) => !o && setOpenPost(null)}
+      />
     </div>
   );
 }

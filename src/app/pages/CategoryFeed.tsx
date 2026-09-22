@@ -4,15 +4,18 @@ import { Compass, Plus, Sprout, Users, X } from "lucide-react";
 import { getHobby, currentSpaceSlug, subHobbyLabel } from "../data/hobbies";
 import { postCorner } from "../data/posts";
 import { postInCategory } from "../data/categories";
+import { Post } from "../data/posts";
 import { useCategories } from "../context/CategoriesContext";
 import { useCorners } from "../context/CornersContext";
 import { useSocial } from "../context/SocialContext";
+import { useAuth } from "../context/AuthContext";
 import { HobbyTile } from "../components/HobbyTile";
 import { CreateCornerDialog } from "../components/CreateCornerDialog";
 import { useContent } from "../context/ContentContext";
 import { useCircles } from "../context/CirclesContext";
 import { useRewards } from "../context/RewardsContext";
-import { ContentCard } from "../components/ContentCard";
+import { MomentCard } from "../components/MomentCard";
+import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { GeneratedArt } from "../components/GeneratedArt";
@@ -152,7 +155,9 @@ export function CategoryFeed() {
   const { categories } = useCategories();
   const { publicFeed } = useContent();
   const { cornersFor } = useCorners();
+  const { user } = useAuth();
   const [createCornerOpen, setCreateCornerOpen] = useState(false);
+  const [openPost, setOpenPost] = useState<Post | null>(null);
 
   // getHobby also resolves Spaces an admin created (`custom`), which have no
   // curated Corners and collect posts the way an approved category always has.
@@ -406,9 +411,15 @@ export function CategoryFeed() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {posts.map((post) => (
-                  <ContentCard key={post.id} post={post} />
+                  <MomentCard
+                    key={post.id}
+                    post={post}
+                    surface="feed"
+                    size="standard"
+                    onOpen={() => setOpenPost(post)}
+                  />
                 ))}
               </div>
             )}
@@ -448,6 +459,12 @@ export function CategoryFeed() {
         Contribute
       </Link>
       </div>
+
+      <MomentDetail
+        post={openPost}
+        owned={!!user && openPost?.userId === user.id}
+        onOpenChange={(o) => !o && setOpenPost(null)}
+      />
     </div>
   );
 }

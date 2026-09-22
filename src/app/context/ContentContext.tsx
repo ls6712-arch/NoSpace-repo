@@ -18,6 +18,12 @@ import { supabase } from "../../lib/supabase";
 const LISTINGS_KEY = "sushii.listings.v1";
 const CIRCLES_KEY = "sushii.circles.joined.v1";
 
+// Matches public.reactions' own check constraint (supabase/migrations/
+// 20260919230300_reactions_and_bookmarks.sql) and PostReactions.tsx's own
+// REACTIONS ids — kept as a plain literal union here rather than imported,
+// so this data-layer file doesn't reach into a component file for a type.
+type ReactionId = "love" | "in" | "keepgoing";
+
 /** Whole-Space follows (SocialContext's "space:<slug>" keys) read straight
  * from that context's own signed-out localStorage shape, since
  * SocialProvider sits below ContentProvider in App.tsx's tree and useSocial()
@@ -39,9 +45,11 @@ function readLocalFollowedSpaceSlugs(): string[] {
 const HOUR = 3600 * 1000;
 
 /**
- * Discovery ranking: recency + relevance to the hobbies you actually engage with
- * (posted in, or joined a circle for) dominate; raw like count only nudges the
- * order, so this doesn't collapse into an engagement-maximizing sort.
+ * Discovery ranking: recency + relevance to the hobbies you actually engage
+ * with (posted in, or joined a circle for). No engagement/like term —
+ * docs/moment-card-and-reactions-spec.md §4.6 bars counts from sorting,
+ * ranking, filtering or promoting anything, and that guardrail applies to
+ * this legacy engagementScore too, not only to the new reaction counts.
  */
 function scorePost(post: Post, activeHobbies: Set<string>, activeTags: Set<string>): number {
   const ageHours = (Date.now() - post.createdAt) / HOUR;
@@ -51,8 +59,7 @@ function scorePost(post: Post, activeHobbies: Set<string>, activeTags: Set<strin
   // surfaces for someone who's posted the same tag themselves.
   const tagOverlap = (post.tags ?? []).some((t) => activeTags.has(t.toLowerCase()));
   const relevanceBonus = activeHobbies.has(post.hobbySlug) || tagOverlap ? 60 : 0;
-  const engagementScore = Math.min(post.likes, 100) * 0.3; // capped, minor influence
-  return recencyScore + relevanceBonus + engagementScore;
+  return recencyScore + relevanceBonus;
 }
 
 export interface ForSaleInput {
@@ -117,7 +124,19 @@ function loadFromStorage<T>(key: string): T[] {
   }
 }
 
-/** Maps a row from the real `posts` table into the app's existing Post shape. */
+// Every column `rowToPost` reads, deliberately spelled out and never
+// `select("*")` — a Reflection is written by its owner alone (post_
+// reflections, sql/post-reflections.sql) and must never round-trip to
+// anyone else's browser, even as a field the app's own JS ignores. A
+// wildcard select would put it on the wire regardless of what the mapper
+// below does with it. See docs/moment-card-and-reactions-spec.md's #86.
+const POST_COLUMNS =
+  "id, user_id, hobby_slug, sub_hobby, corner, interest, type, media_url, media_urls, caption, likes, created_at, visibility, starts_at, location_name, location_privacy, thoughts_private, pursuit_id, circle_id, circle_tab, answered, hidden_from_moments, tags, pinned";
+
+/** Maps a row from the real `posts` table into the app's existing Post shape.
+ * Never sets `reflection` — that comes from a separate, owner-only fetch
+ * (see refetchRealPosts) merged in afterward, only for the signed-in
+ * user's own rows. */
 function rowToPost(row: any, creatorName: string): Post {
   return {
     id: row.id,
@@ -136,7 +155,6 @@ function rowToPost(row: any, creatorName: string): Post {
     mediaUrls: row.media_urls ?? (row.media_url ? [row.media_url] : []),
     creator: creatorName,
     caption: row.caption,
-    reflection: row.reflection ?? undefined,
     likes: row.likes ?? 0,
     createdAt: new Date(row.created_at).getTime(),
     visibility: row.visibility,
@@ -179,7 +197,7 @@ interface ContentContextType {
   /** Edits a moment you own. Returns false if the change couldn't be saved. */
   updatePost: (
     postId: number,
-    patch: { caption?: string; reflection?: string },
+    patch: { caption?: string; reflection?: string; visibility?: Visibility | "private"; circleId?: number },
   ) => Promise<boolean>;
   /** Deletes a moment you own. Returns false if it couldn't be deleted — the
    * post stays in the list rather than vanishing from a screen that no
@@ -216,10 +234,23 @@ interface ContentContextType {
    * SocialContext until the next full sign-in. */
   refetchActiveHobbies: () => Promise<void>;
   /** The id of whichever Moment addPost most recently created, for a few
-   * seconds after the save — long enough for the Shelf grid (WorkGrid.tsx)
-   * to notice it's the new arrival and play its shared-layout entrance
-   * instead of just appearing. Clears itself; nothing needs to reset it. */
+   * seconds after the save. No current surface reads this (WorkGrid's own
+   * shared-layout entrance animation was retired when it moved to
+   * MomentCard — see docs/moment-card-and-reactions-spec.md's #75 report);
+   * left in place since addPost still sets it and it's cheap to keep, but
+   * it's effectively unused today. Clears itself either way. */
   justPublishedId: number | null;
+  /** Your own reactions, real rows in `public.reactions` (cross-device),
+   * keyed by post id — not the old localStorage-only store. Empty when
+   * signed out or unconfigured; PostReactions.tsx's useReactionState falls
+   * back to its own local store in that case, same shape as likedPostIds. */
+  myReactionsByPostId: Record<number, ReactionId[]>;
+  toggleReaction: (postId: number, type: ReactionId) => void;
+  /** Maker-only counts for your own Moments — docs/moment-card-and-
+   * reactions-spec.md §4: a count is never fetched, stored or shown for
+   * anyone else's Moment. Populated alongside realPosts; empty for a post
+   * id not yet in this map (render sites treat that as all-zero). */
+  ownCounts: Record<number, { love: number; in: number; thoughts: number }>;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -257,6 +288,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // the bug this table exists to fix (gone on reload, invisible on another
   // device for the same account).
   const [likedPostIds, setLikedPostIds] = useState<Set<number>>(new Set());
+  // Real, per-account reactions (public.reactions) — see myReactionsByPostId
+  // on the context type. Empty when signed out/unconfigured, same shape and
+  // same reasoning as likedPostIds above.
+  const [myReactionsByPostId, setMyReactionsByPostId] = useState<Record<number, ReactionId[]>>({});
+  // Maker-only counts (docs/moment-card-and-reactions-spec.md §4) — see
+  // ownCounts on the context type.
+  const [ownCounts, setOwnCounts] = useState<
+    Record<number, { love: number; in: number; thoughts: number }>
+  >({});
   const [mediaError, setMediaError] = useState<string | null>(null);
   /** Set when a post couldn't reach the database, so the flow can say so. */
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -277,7 +317,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
     const { data, error } = await supabase
       .from("posts")
-      .select("*")
+      .select(POST_COLUMNS)
       .order("created_at", { ascending: false });
     if (error || !data) return;
 
@@ -287,7 +327,120 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       : { data: [] as { id: string; display_name: string }[] };
     const nameById = new Map((profilesData ?? []).map((p) => [p.id, p.display_name]));
 
-    setRealPosts(data.map((row: any) => rowToPost(row, nameById.get(row.user_id) ?? "Someone")));
+    // Your own Reflections only — a separate, owner-only table (sql/post-
+    // reflections.sql), never folded into the shared posts select above.
+    // RLS on post_reflections already caps this to `user`'s own rows even
+    // without the .eq below; the filter is kept anyway so the query reads
+    // as exactly what it is.
+    const reflectionByPostId = new Map<number, string>();
+    if (user) {
+      const { data: reflectionRows } = await supabase
+        .from("post_reflections")
+        .select("post_id, reflection")
+        .eq("user_id", user.id);
+      for (const row of reflectionRows ?? []) {
+        reflectionByPostId.set(row.post_id, row.reflection);
+      }
+    }
+
+    setRealPosts(
+      data.map((row: any) => {
+        const post = rowToPost(row, nameById.get(row.user_id) ?? "Someone");
+        if (user && row.user_id === user.id) {
+          post.reflection = reflectionByPostId.get(row.id);
+        }
+        return post;
+      }),
+    );
+
+    if (user) {
+      const ownPostIds = data
+        .filter((row: any) => row.user_id === user.id)
+        .map((row: any) => row.id as number);
+      await refetchOwnCounts(ownPostIds);
+    } else {
+      setOwnCounts({});
+    }
+  };
+
+  /**
+   * Maker-only counts (docs/moment-card-and-reactions-spec.md §4.3): "no
+   * new view, no new function" — a plain count per icon, batched once per
+   * page of your own Moments rather than one query per card. Only ever
+   * called with YOUR OWN post ids; a count is never fetched for a Moment
+   * you don't own; the two queries below only ever run as the signed-in
+   * `user`, and RLS on both tables already lets a post's author read every
+   * row on it regardless of who wrote it — this is what makes "the maker's
+   * own view of their own Moment" the one place a true total is correct.
+   */
+  const refetchOwnCounts = async (ownPostIds: number[]) => {
+    if (!supabase || !user || ownPostIds.length === 0) {
+      setOwnCounts({});
+      return;
+    }
+    const [{ data: reactionRows }, { data: thoughtRows }] = await Promise.all([
+      supabase.from("reactions").select("post_id, type").in("post_id", ownPostIds),
+      supabase.from("thoughts").select("post_id").in("post_id", ownPostIds),
+    ]);
+
+    const counts: Record<number, { love: number; in: number; thoughts: number }> = {};
+    for (const id of ownPostIds) counts[id] = { love: 0, in: 0, thoughts: 0 };
+    for (const row of (reactionRows ?? []) as { post_id: number; type: string }[]) {
+      if (row.type === "love" || row.type === "in") counts[row.post_id][row.type]++;
+    }
+    for (const row of (thoughtRows ?? []) as { post_id: number }[]) {
+      if (counts[row.post_id]) counts[row.post_id].thoughts++;
+    }
+    setOwnCounts(counts);
+  };
+
+  /** Your own reactions across every post — one query, not one per post,
+   * same shape as refetchLikedPosts above. */
+  const refetchMyReactions = async () => {
+    if (!supabase || !user) {
+      setMyReactionsByPostId({});
+      return;
+    }
+    const { data, error } = await supabase
+      .from("reactions")
+      .select("post_id, type")
+      .eq("user_id", user.id);
+    if (error || !data) return;
+    const map: Record<number, ReactionId[]> = {};
+    for (const row of data as { post_id: number; type: ReactionId }[]) {
+      (map[row.post_id] ??= []).push(row.type);
+    }
+    setMyReactionsByPostId(map);
+  };
+
+  /**
+   * Toggles Love this or Count me in on a Moment — a real row in
+   * `public.reactions`, cross-device, not the old localStorage-only store
+   * (PostReactions.tsx still falls back to that store when signed out or
+   * unconfigured). Optimistic, same pattern as toggleLike: flip local state
+   * immediately, revert if the write fails.
+   */
+  const toggleReaction = (postId: number, type: ReactionId) => {
+    if (!supabase || !user) return;
+    const current = myReactionsByPostId[postId] ?? [];
+    const reacted = current.includes(type);
+
+    const apply = (list: ReactionId[]) =>
+      reacted ? list.filter((t) => t !== type) : [...list, type];
+    const revertList = (list: ReactionId[]) =>
+      reacted ? [...list, type] : list.filter((t) => t !== type);
+
+    setMyReactionsByPostId((prev) => ({ ...prev, [postId]: apply(prev[postId] ?? []) }));
+
+    const write = reacted
+      ? supabase.from("reactions").delete().eq("post_id", postId).eq("user_id", user.id).eq("type", type)
+      : supabase.from("reactions").insert({ post_id: postId, user_id: user.id, type });
+
+    void write.then(({ error }) => {
+      if (error) {
+        setMyReactionsByPostId((prev) => ({ ...prev, [postId]: revertList(prev[postId] ?? []) }));
+      }
+    });
   };
 
   const refetchCircleMemberCounts = async () => {
@@ -334,6 +487,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     refetchRealPosts();
     refetchCircleMemberCounts();
     refetchLikedPosts();
+    refetchMyReactions();
     refetchActiveHobbies();
     // Re-fetch when the logged-in user changes, so switching accounts (or
     // logging in) picks up posts visible to that session, and this
@@ -532,7 +686,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           media_url: mediaUrl,
           media_urls: mediaUrls.length ? mediaUrls : null,
           caption: input.caption,
-          reflection: input.reflection?.trim() ? input.reflection.trim() : null,
           visibility: input.visibility,
           starts_at: input.startsAt ? new Date(input.startsAt).toISOString() : null,
           location_name: input.locationName ?? null,
@@ -543,11 +696,21 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           hidden_from_moments: input.hiddenFromMoments ?? false,
           tags: input.tags ?? [],
         })
-        .select()
+        .select(POST_COLUMNS)
         .single();
 
       if (!error && data) {
         const newPost = rowToPost(data, profile?.display_name ?? (input.creator || "You"));
+        // A Reflection is never written to `posts` (see #86) — its own
+        // owner-only table, set right after the post exists since it needs
+        // the new row's id.
+        const trimmedReflection = input.reflection?.trim();
+        if (trimmedReflection) {
+          newPost.reflection = trimmedReflection;
+          await supabase
+            .from("post_reflections")
+            .upsert({ post_id: newPost.id, user_id: user.id, reflection: trimmedReflection });
+        }
         // A sale listing is tracked separately from the post row; without
         // this, a real post never knew it was for sale and the buy link
         // disappeared the moment the page reloaded.
@@ -618,7 +781,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
    */
   const updatePost = async (
     postId: number,
-    patch: { caption?: string; reflection?: string },
+    patch: { caption?: string; reflection?: string; visibility?: Visibility | "private"; circleId?: number },
   ): Promise<boolean> => {
     const target = realPosts.find((p) => p.id === postId);
     const apply = (list: Post[]) =>
@@ -631,22 +794,51 @@ export function ContentProvider({ children }: { children: ReactNode }) {
                 patch.reflection === undefined
                   ? p.reflection
                   : patch.reflection.trim() || undefined,
+              // "private" isn't in the Visibility type yet (see lib/visibility.ts's
+              // isOnlyYou) even though the live posts.visibility column already
+              // allows it — same tolerance rowToPost's own `row.visibility`
+              // assignment already relies on.
+              visibility: (patch.visibility ?? p.visibility) as Visibility,
+              circleId: patch.visibility === undefined ? p.circleId : patch.circleId,
             }
           : p,
       );
 
     if (supabase && user && target?.userId === user.id) {
-      const { data, error } = await supabase
-        .from("posts")
-        .update({
-          ...(patch.caption !== undefined ? { caption: patch.caption } : {}),
-          ...(patch.reflection !== undefined
-            ? { reflection: patch.reflection.trim() || null }
-            : {}),
-        })
-        .eq("id", postId)
-        .select();
-      if (error || !data || data.length === 0) return false;
+      const postsPatch: Record<string, unknown> = {};
+      if (patch.caption !== undefined) postsPatch.caption = patch.caption;
+      // circle_id always travels with visibility: switching away from
+      // "circle" must clear it, same as a fresh post's own write below.
+      if (patch.visibility !== undefined) {
+        postsPatch.visibility = patch.visibility;
+        postsPatch.circle_id = patch.visibility === "circle" ? (patch.circleId ?? null) : null;
+      }
+
+      // A no-op `.update({})` (only the Reflection changed) is skipped
+      // entirely — Reflection never touches `posts` at all (see #86), and
+      // an empty patch object is nothing worth sending.
+      if (Object.keys(postsPatch).length > 0) {
+        const { data, error } = await supabase
+          .from("posts")
+          .update(postsPatch)
+          .eq("id", postId)
+          .select(POST_COLUMNS);
+        if (error || !data || data.length === 0) return false;
+      }
+
+      if (patch.reflection !== undefined) {
+        const trimmed = patch.reflection.trim();
+        const { error: reflectionError } = trimmed
+          ? await supabase
+              .from("post_reflections")
+              .upsert({ post_id: postId, user_id: user.id, reflection: trimmed })
+          : await supabase
+              .from("post_reflections")
+              .delete()
+              .eq("post_id", postId)
+              .eq("user_id", user.id);
+        if (reflectionError) return false;
+      }
     }
 
     setRealPosts(apply);
@@ -802,6 +994,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         activeHobbySlugs,
         refetchActiveHobbies,
         justPublishedId,
+        myReactionsByPostId,
+        toggleReaction,
+        ownCounts,
       }}
     >
       {children}

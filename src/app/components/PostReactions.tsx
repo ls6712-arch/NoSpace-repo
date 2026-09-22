@@ -1,6 +1,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { Heart, Hand, ArrowUp } from "lucide-react";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
+import { useAuth } from "../context/AuthContext";
+import { useContent } from "../context/ContentContext";
 
 /**
  * The three Sushii reactions. Deliberately not Like / Love / Nice work —
@@ -86,17 +88,34 @@ function toggle(postId: string | number, reaction: ReactionId) {
 
 /**
  * The same state PostReactions itself reads and writes, for a call site
- * that needs its own markup (My Space's Moment panel: flat small-caps text
- * labels, not pill buttons) without forking the underlying store — a
- * reaction toggled from either place is the same reaction.
+ * that needs its own markup (MomentCard's icon-only buttons) without
+ * forking the underlying store — a reaction toggled from either place is
+ * the same reaction.
+ *
+ * Signed in (and Supabase configured): backed by real rows in
+ * `public.reactions` (ContentContext's myReactionsByPostId/toggleReaction)
+ * — cross-device, visible to the post's author for counting (see
+ * docs/moment-card-and-reactions-spec.md §4). Signed out, or no Supabase
+ * project configured at all: falls back to this file's own local,
+ * same-tab-only store, same as before — there's no account for a real row
+ * to belong to.
  */
 export function useReactionState(postId: string | number) {
-  const mine = useSyncExternalStore(
+  const { user } = useAuth();
+  const content = useContent();
+  const localMine = useSyncExternalStore(
     subscribe,
     useCallback(() => getFor(postId), [postId]),
     () => NONE,
   );
-  return { mine, toggle: (reaction: ReactionId) => toggle(postId, reaction) };
+
+  if (user) {
+    return {
+      mine: content.myReactionsByPostId[Number(postId)] ?? NONE,
+      toggle: (reaction: ReactionId) => content.toggleReaction(Number(postId), reaction),
+    };
+  }
+  return { mine: localMine, toggle: (reaction: ReactionId) => toggle(postId, reaction) };
 }
 
 /**
@@ -120,11 +139,7 @@ export function PostReactions({
   compact?: boolean;
   className?: string;
 }) {
-  const mine = useSyncExternalStore(
-    subscribe,
-    useCallback(() => getFor(postId), [postId]),
-    () => NONE,
-  );
+  const { mine, toggle: toggleReaction } = useReactionState(postId);
 
   return (
     <ul className={`grid grid-cols-3 ${compact ? "gap-1.5" : "gap-2"} ${className}`}>
@@ -138,7 +153,7 @@ export function PostReactions({
               aria-pressed={pressed}
               aria-label={`${label}: ${meaning}${count > 0 ? ` (${count})` : ""}`}
               title={`${label}: ${meaning}`}
-              onClick={() => toggle(postId, id)}
+              onClick={() => toggleReaction(id)}
               className={`relative flex w-full items-center justify-center whitespace-nowrap rounded-full border transition-colors duration-150 ${
                 compact ? "gap-1 px-2 py-2 text-[13px]" : "gap-1.5 px-3 py-2 text-[13px]"
               } ${

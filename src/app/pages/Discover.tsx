@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
-  Bookmark,
   ChevronLeft,
   ChevronRight,
   Compass,
@@ -20,16 +19,17 @@ import { circles } from "../data/circles";
 import { Post, postCorner } from "../data/posts";
 import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
+import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useCorners, isDiscoverable } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
-import { deriveProjects, toggleSaved, useJournalSlice } from "../lib/journal";
+import { deriveProjects } from "../lib/journal";
 import { hobbyMatchesQuery } from "../lib/search";
+import { MomentCard } from "../components/MomentCard";
+import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { GeneratedArt } from "../components/GeneratedArt";
-import { PostMedia } from "../components/PostMedia";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { CirclesBrowser } from "./Circles";
 import { PeopleBrowser } from "./People";
@@ -102,15 +102,6 @@ function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
   }`;
 }
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 function DiscoverSpaceArt({
   hobbySlug,
   seed,
@@ -139,18 +130,13 @@ function DiscoverSpaceArt({
 }
 
 /**
- * Featured Moments selection.
- *
- * Sushii doesn't keep aggregate reaction, comment, or save counts today —
- * only a single legacy `likes` number per post (the same one ContentContext's
- * scorePost already leans on, capped and kept a minor factor). So this ranks
- * on what's honestly available — recency first, a small boost for hobbies
- * you're actually in, `likes` last and capped — and then spreads the result
- * across creators and Spaces so one popular thread or one Space can't fill
- * the whole row. No score is ever shown; it only decides the order.
- *
- * TODO: once posts carry real aggregate reaction/comment/save counts, weight
- * those ahead of `likes` here.
+ * Featured Moments selection: recency first, a small boost for hobbies
+ * you're actually in — no engagement/like term. Counts (reaction or legacy
+ * `likes`) never sort, rank, filter or promote anything here, per
+ * docs/moment-card-and-reactions-spec.md §4.6; "Featured Moments stays
+ * curated," not a popularity ranking. Then the result is spread across
+ * creators and Spaces so one thread or one Space can't fill the whole row.
+ * No score is ever shown; it only decides the order.
  */
 function rankFeatured(posts: Post[], followedHobbies: string[], take: number): Post[] {
   const followed = new Set(followedHobbies);
@@ -158,8 +144,7 @@ function rankFeatured(posts: Post[], followedHobbies: string[], take: number): P
     const ageHours = (Date.now() - post.createdAt) / HOUR;
     const recency = Math.max(0, 200 - ageHours);
     const relevance = followed.has(post.hobbySlug) ? 40 : 0;
-    const engagement = Math.min(post.likes, 100) * 0.2;
-    return { post, score: recency + relevance + engagement };
+    return { post, score: recency + relevance };
   });
   scored.sort((a, b) => b.score - a.score);
 
@@ -176,63 +161,6 @@ function rankFeatured(posts: Post[], followedHobbies: string[], take: number): P
     if (picked.length >= take) break;
   }
   return picked;
-}
-
-/** A light tile for the Featured Moments row — image, caption, creator,
- * and Try This. Deliberately not a full ContentCard: no reaction grid, no
- * counts, nothing that reads as a leaderboard entry. */
-function FeaturedMomentTile({ post }: { post: Post }) {
-  const saved = useJournalSlice((s) => s.saved.includes(post.id));
-
-  return (
-    <div className="w-64 shrink-0 overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="relative">
-        <PostMedia
-          media={post.media}
-          type={post.type}
-          hobbySlug={post.hobbySlug}
-          seed={post.id}
-          preview
-          className="aspect-[4/5] w-full"
-        />
-        <button
-          type="button"
-          aria-pressed={saved}
-          title={saved ? "Added to your Space" : "Try This"}
-          aria-label={saved ? "Added to your Space" : "Try This"}
-          onClick={() => toggleSaved(post.id)}
-          className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
-        >
-          <Bookmark
-            className="size-4"
-            strokeWidth={1.9}
-            style={{ color: "white", fill: saved ? "white" : "none" }}
-          />
-        </button>
-      </div>
-      <div className="p-3">
-        <p className="mb-2 line-clamp-2 text-sm text-foreground/90">{post.caption}</p>
-        {post.userId ? (
-          <Link
-            to={`/u/${encodeURIComponent(post.userId)}`}
-            className="flex min-w-0 items-center gap-2 transition-colors hover:text-[var(--coral-text)]"
-          >
-            <Avatar className="size-6 shrink-0">
-              <AvatarFallback className="text-[9px]">{initials(post.creator)}</AvatarFallback>
-            </Avatar>
-            <span className="truncate text-xs text-muted-foreground">{post.creator}</span>
-          </Link>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Avatar className="size-6 shrink-0">
-              <AvatarFallback className="text-[9px]">{initials(post.creator)}</AvatarFallback>
-            </Avatar>
-            <span className="truncate text-xs text-muted-foreground">{post.creator}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 }
 
 /** One tile in the Explore Spaces row — image-forward, same shape as a
@@ -450,12 +378,17 @@ function AllCornersBrowser({ query }: { query: string }) {
 
 export function Discover() {
   const { publicFeed } = useContent();
+  const { user } = useAuth();
   // Subscribing re-renders this page when admin Space changes load.
   const { spaceRows } = useCategories();
   const social = useSocial();
   const { cornersFor } = useCorners();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("about") ?? "");
+  // Opening a Featured Moment is how you react to it or leave a thought —
+  // same "media opens MomentDetail" contract MomentCard gives every other
+  // surface (docs/moment-card-and-reactions-spec.md §2.3).
+  const [openPost, setOpenPost] = useState<Post | null>(null);
 
   // Tapping what a post is about lands here with that subject already searched.
   useEffect(() => {
@@ -739,7 +672,14 @@ export function Discover() {
                   </div>
                   <div className="flex gap-4 overflow-x-auto pb-2">
                     {featured.map((post) => (
-                      <FeaturedMomentTile key={post.id} post={post} />
+                      <div key={post.id} className="w-64 shrink-0">
+                        <MomentCard
+                          post={post}
+                          surface="discover"
+                          size="compact"
+                          onOpen={() => setOpenPost(post)}
+                        />
+                      </div>
                     ))}
                   </div>
                 </section>
@@ -975,6 +915,12 @@ export function Discover() {
           )}
         </div>
       </div>
+
+      <MomentDetail
+        post={openPost}
+        owned={!!user && openPost?.userId === user.id}
+        onOpenChange={(o) => !o && setOpenPost(null)}
+      />
     </div>
   );
 }

@@ -20,7 +20,8 @@ import { fetchPursuitById, mirrorPursuit, SharedPursuit } from "../lib/pursuitsR
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { ContentCard } from "../components/ContentCard";
+import { MomentCard } from "../components/MomentCard";
+import { MomentDetail } from "../components/MomentDetail";
 import { GoalDialog } from "../components/GoalDialog";
 import { GoalProgressTap } from "../components/GoalProgressTap";
 
@@ -86,6 +87,7 @@ export function Pursuit() {
   const { logs: privateLogs } = usePrivateLogs();
   const [goalOpen, setGoalOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
+  const [openPost, setOpenPost] = useState<Post | null>(null);
   const [remote, setRemote] = useState<
     { status: "idle" | "loading" | "not-found" } | { status: "found"; data: SharedPursuit; ownerName: string; ownerAvatar?: string }
   >({ status: "idle" });
@@ -417,9 +419,15 @@ export function Pursuit() {
             <p className="text-sm text-muted-foreground">Nothing logged yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {updates.map((post) => (
-              <ContentCard key={post.id} post={post} compact />
+              <MomentCard
+                key={post.id}
+                post={post}
+                surface="pursuit"
+                size="standard"
+                onOpen={() => setOpenPost(post)}
+              />
             ))}
           </div>
         )}
@@ -428,6 +436,12 @@ export function Pursuit() {
       {owner && ownProject && (
         <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={ownProject as Project} />
       )}
+
+      <MomentDetail
+        post={openPost}
+        owned={!!user && openPost?.userId === user.id}
+        onOpenChange={(o) => !o && setOpenPost(null)}
+      />
     </div>
   );
 }

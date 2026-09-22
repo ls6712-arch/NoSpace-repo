@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft, FileText, Globe2, PenLine, Play, Users, UserRound } from "lucide-react";
+import { ArrowLeft, PenLine } from "lucide-react";
 import { Post } from "../data/posts";
 import { getHobby } from "../data/hobbies";
 import { useContent } from "../context/ContentContext";
@@ -9,8 +9,8 @@ import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal } from "../lib/journal";
 import { setCornerNote, useCornerNote } from "../lib/cornerNotes";
 import { parseArchiveKey, updatedLabel } from "../components/HobbyShelf";
+import { MomentCard } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
-import { PostMediaCarousel } from "../components/PostMediaCarousel";
 import { Button } from "../components/ui/button";
 
 /**
@@ -27,12 +27,6 @@ const FILTERS = [
 ] as const;
 
 type FilterId = (typeof FILTERS)[number]["id"];
-
-const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
-  public: { label: "Everyone", icon: Globe2 },
-  circle: { label: "A Circle", icon: Users },
-  friends: { label: "Connections", icon: UserRound },
-};
 
 const hasMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -232,56 +226,16 @@ export function HobbyArchive() {
                 {byMonth.map(({ month, items }) => (
                   <section key={month}>
                     <h2 className="mb-3 text-sm text-muted-foreground">{month}</h2>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      {items.map((post) => {
-                        const audience = AUDIENCE[post.visibility] ?? AUDIENCE.friends;
-                        const media = hasMedia(post);
-                        return (
-                          <button
-                            key={post.id}
-                            type="button"
-                            onClick={() => setOpen(post)}
-                            className="group relative flex aspect-square flex-col overflow-hidden rounded-xl border border-border bg-card text-left transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)]"
-                          >
-                            {media ? (
-                              <>
-                                <PostMediaCarousel
-                                  media={post.mediaUrls?.length ? post.mediaUrls : post.media ? [post.media] : []}
-                                  type={post.type}
-                                  hobbySlug={post.hobbySlug}
-                                  seed={post.id}
-                                  preview
-                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-                                />
-                                {post.type === "video" && (
-                                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                    <span className="flex size-9 items-center justify-center rounded-full bg-[var(--void)]/55 backdrop-blur-sm">
-                                      <Play className="size-4 fill-white text-white" />
-                                    </span>
-                                  </span>
-                                )}
-                              </>
-                            ) : (
-                              // A text-only log is still a moment — it gets a
-                              // note card rather than vanishing from the grid.
-                              <div className="flex h-full flex-col justify-between bg-surface-muted p-3">
-                                <FileText className="size-4 text-muted-foreground" />
-                                <p className="line-clamp-4 text-xs leading-relaxed">
-                                  {post.caption}
-                                </p>
-                              </div>
-                            )}
-
-                            <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[var(--void)]/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
-                              <audience.icon className="size-2.5" />
-                              {audience.label}
-                            </span>
-                            <span className="absolute bottom-2 right-2 rounded-full bg-[var(--void)]/60 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
-                              {dayLabel(post.createdAt)}
-                            </span>
-                          </button>
-                        );
-                      })}
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                      {items.map((post) => (
+                        <MomentCard
+                          key={post.id}
+                          post={post}
+                          surface="archive"
+                          size="standard"
+                          onOpen={() => setOpen(post)}
+                        />
+                      ))}
                     </div>
                   </section>
                 ))}

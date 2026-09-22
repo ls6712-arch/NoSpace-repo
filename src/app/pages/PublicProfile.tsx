@@ -161,9 +161,15 @@ export function PublicProfile() {
       if (cancelled) return;
       if (!profileRow) return setState({ status: "missing" });
 
+      // Explicit columns, never "*" — a Reflection (public.post_reflections,
+      // sql/post-reflections.sql) is owner-only and this page is always a
+      // non-owner's read of someone else's Shelf; a wildcard select would
+      // put it on the wire even though the mapper below never reads it.
       const { data: rows } = await supabase
         .from("posts")
-        .select("*")
+        .select(
+          "id, hobby_slug, sub_hobby, type, media_url, caption, likes, created_at, user_id, tags, pinned",
+        )
         .eq("user_id", profileRow.id)
         .eq("visibility", "public")
         .order("created_at", { ascending: false });

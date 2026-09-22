@@ -18,8 +18,7 @@
   display: block;
 }
 
-.myspace-sheet,
-.myspace-moment,
+.myspace-feed,
 .myspace-rail {
   min-width: 0;
 }
@@ -40,45 +39,10 @@
   order: -1;
 }
 
-/* Contact sheet: horizontal snap strip below lg, a hairline-divided list at
-   lg+ (the Frame component itself switches width/layout via Tailwind
-   responsive classes; this file only handles the scroller chrome). */
-.hide-scrollbar {
-  scrollbar-width: none;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.myspace-sheet-fade {
-  background: linear-gradient(to right, transparent, var(--background));
-}
-
-/* Stage 6 motion (docs/my-space-spec.md section 5). Sheet frames fade + rise
-   8px on load, staggered 40ms per frame index; JS gates all of it off under
-   prefers-reduced-motion (ContactSheet.tsx), so this keyframe is only ever
-   attached when motion is wanted. */
-@keyframes myspace-frame-rise {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* md (768–1023): tablet. Single column, whole page scrolls (no independent
-   scroll areas yet — those start at lg). Moment panel gets its own max
-   width, centered. Rail becomes a 2-column grid: [Shelf + Circles] | [Pursuits]. */
+   scroll areas yet — those start at lg). Rail becomes a 2-column grid:
+   [Shelf + Circles] | [Pursuits]. */
 @media (min-width: 768px) {
-  .myspace-moment {
-    max-width: 720px;
-    margin-inline: auto;
-  }
-
   .myspace-rail {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -113,23 +77,18 @@
     display: grid;
     flex: 1;
     min-height: 0;
-    grid-template-columns: 260px minmax(0, 1fr) 280px;
-    grid-template-areas: "sheet moment rail";
+    /* One fewer column than before: the contact-sheet strip is gone,
+       folded into the feed itself (board 4's lead + grid), kept as a
+       right sidebar per an explicit product call rather than boards 4/5's
+       own single-column layout — see docs/my-space-spec.md. */
+    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-areas: "feed rail";
     column-gap: 24px;
   }
 
-  .myspace-sheet {
-    grid-area: sheet;
+  .myspace-feed {
+    grid-area: feed;
     overflow-y: auto;
-    border-right: 1px solid var(--hairline);
-    padding-right: 24px;
-  }
-
-  .myspace-moment {
-    grid-area: moment;
-    overflow-y: auto;
-    max-width: none;
-    margin-inline: 0;
   }
 
   .myspace-rail {
@@ -155,7 +114,7 @@
 
 @media (min-width: 1280px) {
   .myspace-body {
-    grid-template-columns: 300px minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 320px;
     column-gap: 32px;
   }
 
