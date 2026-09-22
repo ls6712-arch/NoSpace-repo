@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { ArrowLeft, PenLine } from "lucide-react";
-import { Post } from "../data/posts";
+import { Post, postCorner } from "../data/posts";
 import { getHobby } from "../data/hobbies";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
@@ -64,12 +64,21 @@ export function HobbyArchive() {
     return myPosts
       .filter((p) =>
         target.subSlug
-          ? p.subHobby === target.subSlug
-          : p.hobbySlug === target.hobbySlug && !p.subHobby,
+          ? postCorner(p) === target.subSlug
+          : p.hobbySlug === target.hobbySlug && !postCorner(p),
       )
       .sort((a, b) => b.createdAt - a.createdAt);
   }, [myPosts, target]);
 
+  // Deliberately still subHobby, not postCorner-style: a Pursuit only ever
+  // carries subHobby (lib/journal.ts) — it was never given an independent
+  // Corner field the way Post was. That means this tab and the Moments one
+  // above can now genuinely disagree on a Corner archive page: a Pursuit
+  // tagged "Woodwork" won't show up here under a "Gift-making" Corner even
+  // if every Moment logged against it was retagged there, since a Pursuit
+  // has no "Gift-making" of its own to match against. Known, not fixed —
+  // giving Pursuits their own Corner field is a bigger decision than this
+  // page's filter logic should make on its own.
   const projects = useMemo(() => {
     if (!target) return [];
     return journal.projects.filter((p) =>
