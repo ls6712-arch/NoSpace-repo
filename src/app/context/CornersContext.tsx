@@ -39,6 +39,12 @@ export interface Corner {
    * deliberately (via "Create a Corner" on the Space page), never by
    * tagging-into-existence, which only ever has a name to go on. */
   description?: string;
+  /** When this Corner's row was actually created in Supabase (sql/corners.sql's
+   * created_at) — only ever set for a real remote row. Never fabricated for
+   * the curated baseline (which wasn't "created" at any point in time) or a
+   * signed-out/local one (no real clock to read), so newestCorners() below
+   * only ever surfaces Corners this field is honestly set for. */
+  createdAt?: number;
 }
 
 /**
@@ -76,6 +82,12 @@ interface CornersContextType {
     description?: string,
   ) => Promise<{ slug: string; name: string }>;
   refresh: () => Promise<void>;
+  /** The most recently created real Corners, platform-wide — not scoped to
+   * one Space, not filtered by follows (My Space's "Freshly opened this
+   * week"). Only ever draws from real Supabase rows (see Corner.createdAt);
+   * signed out or unconfigured, this is always empty rather than guessing
+   * at a creation time that was never actually recorded. */
+  newestCorners: (limit: number) => Corner[];
 }
 
 const CornersContext = createContext<CornersContextType | undefined>(undefined);
@@ -139,7 +151,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
     try {
       const { data } = await supabase
         .from("corners")
-        .select("space_slug, slug, name, moment_count, description");
+        .select("space_slug, slug, name, moment_count, description, created_at");
       setRemote(
         ((data ?? []) as any[]).map((r) => ({
           spaceSlug: r.space_slug,
@@ -148,6 +160,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
           momentCount: r.moment_count ?? 0,
           isCurated: false,
           description: r.description ?? undefined,
+          createdAt: r.created_at ? new Date(r.created_at).getTime() : undefined,
         })),
       );
     } catch {
@@ -235,6 +248,15 @@ export function CornersProvider({ children }: { children: ReactNode }) {
     [cornersFor],
   );
 
+  const newestCorners = useCallback(
+    (limit: number) =>
+      [...remote]
+        .filter((c) => c.createdAt != null)
+        .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+        .slice(0, limit),
+    [remote],
+  );
+
   const getOrCreateCorner: CornersContextType["getOrCreateCorner"] = async (spaceSlug, rawName, description) => {
     const name = rawName.trim().slice(0, 60);
     const slug = slugifyCorner(name);
@@ -268,7 +290,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <CornersContext.Provider value={{ cornersFor, matchesFor, getOrCreateCorner, refresh }}>
+    <CornersContext.Provider value={{ cornersFor, matchesFor, getOrCreateCorner, refresh, newestCorners }}>
       {children}
     </CornersContext.Provider>
   );

@@ -5,7 +5,6 @@ import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { useJournal } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
-import { getLastVisit, markVisited } from "../lib/mySpaceVisit";
 import { circles } from "../data/circles";
 import { Post } from "../data/posts";
 import { MomentCard } from "../components/MomentCard";
@@ -13,6 +12,9 @@ import { MomentDetail } from "../components/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
 import { ShelfRail } from "../components/ShelfRail";
 import { CirclesRail } from "../components/CirclesRail";
+import { InspiredRail } from "../components/InspiredRail";
+import { NewSpacesRail } from "../components/NewSpacesRail";
+import { WelcomeBanner } from "../components/WelcomeBanner";
 
 const PAGE_SIZE = 6;
 
@@ -55,20 +57,24 @@ export function MySpaceGrid() {
     fetchFollowingIds(user.id).then(setFollowingIds);
   }, [user?.id]);
 
-  useEffect(() => () => markVisited(), []);
-
   const exploring = new Set(social.followedHobbies);
   const joinedCircles = circles.filter((c) => isCircleJoined(c.id));
   const joinedSpaces = new Set(joinedCircles.map((c) => c.hobbySlug));
-  const lastVisit = useMemo(() => getLastVisit(), []);
 
-  // Moments from people, Spaces or Circles you follow or joined, since your
-  // last visit, never your own (docs/my-space-spec.md section 2).
+  // Moments from people, Spaces or Circles you follow or joined, never your
+  // own (docs/my-space-spec.md section 2). Deliberately not gated to "since
+  // your last visit" — that's the cold-start bug this round's spec calls
+  // out by name: a person whose follows haven't posted since they were last
+  // here saw an empty sheet even though there was plenty to show. This is
+  // just the most recent N regardless of when they were last on this page —
+  // "recent" is entirely carried by the sort below, with no age floor
+  // either (confirmed explicitly: always show the N most recent, even if
+  // the newest one is months old, rather than a sheet that's sometimes
+  // empty for an active account with a quiet circle).
   const unseen = useMemo(
     () =>
       publicFeed
         .filter((p) => p.userId !== user?.id)
-        .filter((p) => p.createdAt > lastVisit)
         .filter(
           (p) =>
             (p.userId && followingIds.includes(p.userId)) ||
@@ -77,7 +83,7 @@ export function MySpaceGrid() {
             joinedSpaces.has(p.hobbySlug),
         )
         .sort((a, b) => b.createdAt - a.createdAt),
-    [publicFeed, user?.id, lastVisit, followingIds, exploring, joinedSpaces],
+    [publicFeed, user?.id, followingIds, exploring, joinedSpaces],
   );
 
   // One distinct sheet of (at most) 6 — "Turn the page" moves to the next
@@ -117,6 +123,7 @@ export function MySpaceGrid() {
 
   return (
     <div className="myspace-shell px-4 py-6 sm:px-5 lg:px-8">
+      <WelcomeBanner />
       <header className="myspace-header mb-6 border-b border-hairline pb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -156,7 +163,11 @@ export function MySpaceGrid() {
         <div className="myspace-feed">
           {sheet.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              Nothing new since your last visit.
+              {/* Genuinely empty now only means zero eligible Moments exist
+                  at all — the sheet no longer gates on "since your last
+                  visit" (see the unseen memo above), so that copy would be
+                  inaccurate here. */}
+              Nothing here yet. Follow a Space or a person to start your sheet.
             </div>
           ) : (
             <div className="space-y-6">
@@ -223,6 +234,18 @@ export function MySpaceGrid() {
           )}
         </div>
 
+        {/* Not numbered: the spec's own "design patterns to reuse" section
+            asks for sequential numbering on new right-rail sections, but
+            Shelf/Pursuits/Circles never actually shipped with one (they're
+            plain <h2> headings, no kicker), and a mobile-only CSS rule
+            just below (.myspace-rail-pursuits' order: -1) already moves
+            Pursuits above Shelf on small screens — a numeral would show
+            "2" sitting visually above "1" there. Matching the page's own
+            established unnumbered style avoids inventing a visible
+            contradiction to chase a numbering scheme the live page never
+            had; docs/my-space-deviations.md already flags that same
+            DOM/visual gap once, for tab order — this doesn't add a second,
+            visible instance of it. */}
         <div className="myspace-rail mt-8 lg:mt-0">
           <div className="myspace-rail-shelf">
             <ShelfRail />
@@ -232,6 +255,12 @@ export function MySpaceGrid() {
           </div>
           <div className="myspace-rail-circles">
             <CirclesRail />
+          </div>
+          <div className="myspace-rail-inspired">
+            <InspiredRail />
+          </div>
+          <div className="myspace-rail-newspaces">
+            <NewSpacesRail />
           </div>
         </div>
       </div>
