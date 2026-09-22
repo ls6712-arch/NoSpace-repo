@@ -1,7 +1,7 @@
 import { Link } from "react-router";
-import { Post } from "../data/posts";
+import { Post, postCorner } from "../data/posts";
 import { useContent } from "../context/ContentContext";
-import { getHobby, hobbies, subHobbyLabel } from "../data/hobbies";
+import { getHobby, hobbies, subHobbyLabel, titleCaseSlug } from "../data/hobbies";
 import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
@@ -58,12 +58,24 @@ export interface HobbySession {
   lastMediaAt?: number;
 }
 
-/** URL-safe id for a hobby book, used as the Hobby Archive route param. */
+/** URL-safe id for a hobby book, used as the Hobby Archive route param. A
+ * Corner slug is only unique within its own Space — a self-serve tag isn't
+ * checked against every other Space's — so once there's a subSlug the Space
+ * has to travel with it in the key, or two different Spaces' same-named
+ * Corner collide/misresolve. `corner-<space>~<slug>` carries both; `~` never
+ * appears in a slug so the split below is unambiguous. `space-<slug>` (no
+ * Corner) is unchanged. */
 export function archiveKey(item: { subSlug?: string; hobbySlug: string }) {
-  return item.subSlug ?? `space-${item.hobbySlug}`;
+  return item.subSlug ? `corner-${item.hobbySlug}~${item.subSlug}` : `space-${item.hobbySlug}`;
 }
 
-/** Resolves an archive route param back into a hobby tag and its parent Space. */
+/** Resolves an archive route param back into a hobby tag and its parent
+ * Space. Three shapes: the current `corner-<space>~<slug>` format (Space
+ * travels with the slug, so a freeform Corner resolves via titleCaseSlug
+ * even when it isn't one of the curated subItems below); older bare-slug
+ * links from before that, which only ever resolved a curated subItem
+ * anyway, kept working by searching every Space's fixed list as before; and
+ * `space-<slug>` for an untagged archive. */
 export function parseArchiveKey(param: string) {
   if (param.startsWith("space-")) {
     const hobbySlug = param.slice("space-".length);
@@ -71,6 +83,19 @@ export function parseArchiveKey(param: string) {
     if (!space) return null;
     return { hobbySlug, subSlug: undefined, label: space.shortName };
   }
+  if (param.startsWith("corner-")) {
+    const rest = param.slice("corner-".length);
+    const sep = rest.indexOf("~");
+    if (sep === -1) return null;
+    const hobbySlug = rest.slice(0, sep);
+    const subSlug = rest.slice(sep + 1);
+    const space = getHobby(hobbySlug);
+    if (!space || !subSlug) return null;
+    return { hobbySlug, subSlug, label: subHobbyLabel(subSlug) ?? titleCaseSlug(subSlug) };
+  }
+  // Legacy links made before a Corner's Space traveled with it in the key —
+  // can only ever land on a curated subItem, since a freeform Corner was
+  // never resolvable without knowing its Space up front.
   for (const space of hobbies) {
     const sub = space.subItems.find((s) => s.slug === param);
     if (sub) return { hobbySlug: space.slug, subSlug: sub.slug, label: sub.label };
@@ -87,7 +112,11 @@ function hasRealMedia(post: Post) {
 export function sessionsFromPosts(posts: Post[]): HobbySession[] {
   const tally = new Map<string, HobbySession>();
   for (const post of posts) {
-    const key = post.subHobby ?? `space:${post.hobbySlug}`;
+    // postCorner(), not post.subHobby directly — a Moment retagged to a
+    // different Corner via the composer only ever writes post.corner, and
+    // subHobby-only grouping never saw that change (the bug this fixes).
+    const corner = postCorner(post);
+    const key = corner ?? `space:${post.hobbySlug}`;
     const existing = tally.get(key);
     if (existing) {
       existing.sessions += 1;
@@ -107,11 +136,14 @@ export function sessionsFromPosts(posts: Post[]): HobbySession[] {
     }
     tally.set(key, {
       key,
-      label: post.subHobby
-        ? subHobbyLabel(post.subHobby) ?? post.subHobby
+      // subHobbyLabel only resolves a curated subItem; a freeform Corner
+      // (self-serve, not in the fixed hobbies[] list) falls back to its
+      // title-cased slug rather than the raw dashed slug.
+      label: corner
+        ? subHobbyLabel(corner) ?? titleCaseSlug(corner)
         : getHobby(post.hobbySlug)?.shortName ?? post.hobbySlug,
       hobbySlug: post.hobbySlug,
-      subSlug: post.subHobby,
+      subSlug: corner,
       sessions: 1,
       firstAt: post.createdAt,
       lastAt: post.createdAt,

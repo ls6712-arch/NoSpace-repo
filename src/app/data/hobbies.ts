@@ -480,6 +480,16 @@ export function subHobbyLabel(subSlug: string) {
   return allSubHobbies.find((s) => s.slug === subSlug)?.label;
 }
 
+/** Turns a freeform, self-serve slug ("gift-making") into a readable label
+ * ("Gift Making") when there's no canonical name on hand for it — a Corner
+ * or tag that isn't one of the curated subItems above, so subHobbyLabel has
+ * nothing to find. Shared so every such fallback (CornersContext.tsx's
+ * locally-derived Corners, HobbyShelf.tsx's archive labels) stays in sync
+ * rather than each keeping its own copy of the same transform. */
+export function titleCaseSlug(slug: string) {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /**
  * Resolves a typed interest ("Pottery") to the Space it actually lives in,
  * so the Create Moment tag field can merge "what's this about" and "which

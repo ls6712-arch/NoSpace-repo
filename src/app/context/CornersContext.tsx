@@ -9,7 +9,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { useContent } from "./ContentContext";
-import { hobbies } from "../data/hobbies";
+import { hobbies, titleCaseSlug } from "../data/hobbies";
 import { postCorner } from "../data/posts";
 
 /**
@@ -177,7 +177,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
       // No local store for the canonical name a slug like this was tagged
       // with, so this title-cases the slug as a reasonable stand-in — the
       // real Supabase path always has the actual typed name instead.
-      const name = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      const name = titleCaseSlug(slug);
       derived.push({ spaceSlug, slug, name, momentCount: count, isCurated: false });
     }
   }
