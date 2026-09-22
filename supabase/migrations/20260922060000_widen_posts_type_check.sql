@@ -1,0 +1,38 @@
+-- Fixes a live bug: creating a text-only Moment (no photo/video attached)
+-- fails with "new row for relation "posts" violates check constraint
+-- "posts_type_check"".
+--
+-- Root cause: posts.type is plain text (confirmed directly against
+-- Supabase: information_schema.columns.udt_name / pg_type.typtype = 'b',
+-- not a native enum), enforced instead by a CHECK constraint —
+-- docs/schema-baseline-20260920.sql:428 has its real, live definition:
+--
+--   ALTER TABLE posts ADD CONSTRAINT posts_type_check
+--     CHECK ((type = ANY (ARRAY['photo'::text, 'video'::text])));
+--
+-- It only ever allowed 'photo' and 'video'. src/app/lib/momentType.ts's
+-- classifyMomentType() — added in 3bfa0ac, the day after that baseline
+-- snapshot — legitimately returns 'written' for a Moment with no attached
+-- files (Log.tsx's publish() sends it straight through as
+-- `type: effectiveType`, ContentContext.tsx's insert passes it straight
+-- through as `type: input.type`; not a typo, not a stray value). The
+-- constraint was never updated to match: it's the stale side of this,
+-- not the client.
+--
+-- 20260921160000_widen_post_type_enum.sql already anticipated needing to
+-- widen posts.type for 'written', but only handled the case where type is
+-- a native Postgres enum (ALTER TYPE ... ADD VALUE) — it correctly
+-- self-detects that posts.type is *not* an enum and no-ops in that branch,
+-- but nothing was ever written to handle the CHECK-constraint case that
+-- self-detection turned up. This migration is that missing piece.
+--
+-- Safe to re-run: DROP CONSTRAINT IF EXISTS, then re-add with the widened
+-- list.
+--
+-- Draft only — staged for review. Do not run this against Supabase until
+-- it's been approved.
+--
+-- ── UP ──────────────────────────────────────────────────────────────────
+alter table public.posts drop constraint if exists posts_type_check;
+alter table public.posts add constraint posts_type_check
+  check (type = any (array['photo'::text, 'video'::text, 'written'::text]));
