@@ -808,7 +808,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           .from("posts")
           .update(postsPatch)
           .eq("id", postId)
-          .select();
+          .select(POST_COLUMNS);
         if (error || !data || data.length === 0) return false;
       }
 
