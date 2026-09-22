@@ -6,7 +6,7 @@ import { displayLocation } from "../data/participation";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router";
-import { Post } from "../data/posts";
+import { Post, postCorner } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Badge } from "./ui/badge";
@@ -152,9 +152,9 @@ export function ContentCard({
             actual Corner feed to send someone to — free-text-only interest
             keeps the search fallback rather than fabricating a route. */}
         {post.interest &&
-          (showExploreCorner && post.subHobby ? (
+          (showExploreCorner && postCorner(post) ? (
             <Link
-              to={`/space/${post.hobbySlug}?hobby=${encodeURIComponent(post.subHobby)}`}
+              to={`/space/${post.hobbySlug}?hobby=${encodeURIComponent(postCorner(post)!)}`}
               title={`Explore this Corner: ${post.interest}`}
               aria-label={`Explore this Corner: ${post.interest}`}
               className={`inline-flex items-center gap-1 rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/30 hover:text-foreground ${compact ? "mb-2" : "mb-3"}`}

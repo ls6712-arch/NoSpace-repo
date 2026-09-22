@@ -97,7 +97,9 @@ export function sessionsFromPosts(posts: Post[]): HobbySession[] {
       // whether the very latest moment happened to be a text-only note.
       if (hasRealMedia(post) && post.createdAt >= (existing.lastMediaAt ?? 0)) {
         existing.lastMediaUrl = post.media;
-        existing.lastMediaType = post.type;
+        // hasRealMedia(post) rules out "written" (it never carries a real
+        // upload), so this is always "photo" or "video" here.
+        existing.lastMediaType = post.type as "photo" | "video";
         existing.lastMediaId = post.id;
         existing.lastMediaAt = post.createdAt;
       }
@@ -114,7 +116,7 @@ export function sessionsFromPosts(posts: Post[]): HobbySession[] {
       firstAt: post.createdAt,
       lastAt: post.createdAt,
       lastMediaUrl: hasRealMedia(post) ? post.media : undefined,
-      lastMediaType: hasRealMedia(post) ? post.type : undefined,
+      lastMediaType: hasRealMedia(post) ? (post.type as "photo" | "video") : undefined,
       lastMediaId: hasRealMedia(post) ? post.id : undefined,
       lastMediaAt: hasRealMedia(post) ? post.createdAt : undefined,
     });

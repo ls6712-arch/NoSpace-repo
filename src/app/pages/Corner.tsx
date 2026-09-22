@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { hobbies } from "../data/hobbies";
-import { Post } from "../data/posts";
+import { Post, postCorner } from "../data/posts";
 import { useCorners } from "../context/CornersContext";
 import { useContent } from "../context/ContentContext";
 import { MomentCard } from "../components/MomentCard";
@@ -53,7 +53,7 @@ export function CornerPage() {
   }
 
   const spaceSlug = corner.spaceSlug;
-  const posts = publicFeed.filter((p) => p.hobbySlug === spaceSlug && p.subHobby === corner.slug);
+  const posts = publicFeed.filter((p) => p.hobbySlug === spaceSlug && postCorner(p) === corner.slug);
 
   return (
     <div className="min-h-screen">

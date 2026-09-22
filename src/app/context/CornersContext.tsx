@@ -10,6 +10,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { useContent } from "./ContentContext";
 import { hobbies } from "../data/hobbies";
+import { postCorner } from "../data/posts";
 
 /**
  * Corners, created by tagging rather than suggest-and-approve (sql/corners.sql):
@@ -165,9 +166,10 @@ export function CornersProvider({ children }: { children: ReactNode }) {
   if (!supabase) {
     const counts = new Map<string, { spaceSlug: string; slug: string; count: number }>();
     for (const post of publicFeed) {
-      if (!post.subHobby) continue;
-      const key = `${post.hobbySlug}::${post.subHobby}`;
-      const entry = counts.get(key) ?? { spaceSlug: post.hobbySlug, slug: post.subHobby, count: 0 };
+      const slug = postCorner(post);
+      if (!slug) continue;
+      const key = `${post.hobbySlug}::${slug}`;
+      const entry = counts.get(key) ?? { spaceSlug: post.hobbySlug, slug, count: 0 };
       entry.count += 1;
       counts.set(key, entry);
     }

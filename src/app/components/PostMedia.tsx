@@ -22,7 +22,10 @@ export function PostMedia({
   preview,
 }: {
   media?: string;
-  type?: "photo" | "video";
+  // "written" behaves exactly like the "photo" default below — there's
+  // never a real video to play, so it falls straight to the isRealMedia
+  // checks and, having none, on to GeneratedArt.
+  type?: "photo" | "video" | "written";
   hobbySlug: string;
   seed: string | number;
   className?: string;

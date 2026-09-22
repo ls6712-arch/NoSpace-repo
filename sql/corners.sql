@@ -67,6 +67,11 @@ create index if not exists corners_space_idx on public.corners (space_slug, mome
 -- in the app (HobbyActivity, the derived "Projects still moving" clusters)
 -- already only ever looks at the public feed.
 -- ─────────────────────────────────────────────────────────────────────────
+-- Reads corner first, sub_hobby as its fallback (coalesce) — see
+-- supabase/migrations/20260921150000_add_post_corner.sql, which adds
+-- posts.corner as its own field, independent of sub_hobby, and backfills
+-- it from sub_hobby for every pre-existing row. This function's source
+-- lives here; that migration only recreates it against a real database.
 create or replace function public.sync_corner_moment_count()
 returns trigger
 language plpgsql
@@ -75,24 +80,24 @@ set search_path = public
 as $$
 begin
   if (tg_op = 'DELETE') then
-    if old.sub_hobby is not null and old.visibility = 'public' then
+    if coalesce(old.corner, old.sub_hobby) is not null and old.visibility = 'public' then
       update public.corners set moment_count = greatest(moment_count - 1, 0)
-        where space_slug = old.hobby_slug and slug = old.sub_hobby;
+        where space_slug = old.hobby_slug and slug = coalesce(old.corner, old.sub_hobby);
     end if;
     return old;
   end if;
 
   if (tg_op = 'UPDATE') then
-    if old.sub_hobby is distinct from new.sub_hobby
+    if coalesce(old.corner, old.sub_hobby) is distinct from coalesce(new.corner, new.sub_hobby)
        or old.hobby_slug is distinct from new.hobby_slug
        or old.visibility is distinct from new.visibility then
-      if old.sub_hobby is not null and old.visibility = 'public' then
+      if coalesce(old.corner, old.sub_hobby) is not null and old.visibility = 'public' then
         update public.corners set moment_count = greatest(moment_count - 1, 0)
-          where space_slug = old.hobby_slug and slug = old.sub_hobby;
+          where space_slug = old.hobby_slug and slug = coalesce(old.corner, old.sub_hobby);
       end if;
-      if new.sub_hobby is not null and new.visibility = 'public' then
+      if coalesce(new.corner, new.sub_hobby) is not null and new.visibility = 'public' then
         insert into public.corners (space_slug, slug, name, moment_count)
-        values (new.hobby_slug, new.sub_hobby, new.sub_hobby, 1)
+        values (new.hobby_slug, coalesce(new.corner, new.sub_hobby), coalesce(new.corner, new.sub_hobby), 1)
         on conflict (space_slug, slug)
           do update set moment_count = public.corners.moment_count + 1;
       end if;
@@ -101,9 +106,9 @@ begin
   end if;
 
   -- INSERT
-  if new.sub_hobby is not null and new.visibility = 'public' then
+  if coalesce(new.corner, new.sub_hobby) is not null and new.visibility = 'public' then
     insert into public.corners (space_slug, slug, name, moment_count)
-    values (new.hobby_slug, new.sub_hobby, new.sub_hobby, 1)
+    values (new.hobby_slug, coalesce(new.corner, new.sub_hobby), coalesce(new.corner, new.sub_hobby), 1)
     on conflict (space_slug, slug)
       do update set moment_count = public.corners.moment_count + 1;
   end if;

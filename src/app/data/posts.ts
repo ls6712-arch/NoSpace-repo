@@ -6,11 +6,20 @@ export type Visibility = "public" | "circle" | "friends";
 export interface Post {
   id: number;
   hobbySlug: string;
-  /** The specific hobby within the space, e.g. "pottery" inside "workbench". */
+  /** The specific hobby within the space, e.g. "pottery" inside "workbench" —
+   * still what badges, Pursuits, and the shelf group a Moment by. */
   subHobby?: string;
+  /** Which Corner (the Discover/Space browsing category — sql's `corners`
+   * table) this Moment sits in, set independently of subHobby: a Moment can
+   * be tagged Woodwork (subHobby) and filed under the Gift-making Corner at
+   * the same time. Null on a post logged before this field existed — see
+   * postCorner() below for the fallback every Corner-facing read should use. */
+  corner?: string;
   /** What the post is about, in the maker's own words: "Pottery", "Bouldering". */
   interest?: string;
-  type: "photo" | "video";
+  /** "written" carries no real photo or video — see NewPostInput.type in
+   * ContentContext.tsx for how the composer decides it. */
+  type: "photo" | "video" | "written";
   media: string;
   /** The full ordered set of photos when this Moment carries more than one
    * (1-8; videos stay single-item). media always mirrors mediaUrls[0], for
@@ -65,6 +74,17 @@ export interface Post {
   /** Set by the owner to feature this Moment first on their Shelf — see
    * sql/post-pinning.sql. */
   pinned?: boolean;
+}
+
+/** Which Corner a Moment belongs to, for every Corner-facing read (Discover's
+ * filter, a Space's "Follow a Corner" grid, a Corner's own page, "Explore
+ * this Corner"). corner is the real field going forward; subHobby is the
+ * fallback for a post logged before it existed — see supabase/migrations'
+ * add_post_corner migration, which backfills corner = sub_hobby once, but
+ * can't retroactively backfill a post written after that migration ran on
+ * a build that predates this field. */
+export function postCorner(post: Pick<Post, "corner" | "subHobby">): string | undefined {
+  return post.corner ?? post.subHobby;
 }
 
 const HOUR = 3600 * 1000;

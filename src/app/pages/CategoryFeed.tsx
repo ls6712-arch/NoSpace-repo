@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { Compass, Plus, Sprout, Users, X } from "lucide-react";
 import { getHobby, currentSpaceSlug, subHobbyLabel } from "../data/hobbies";
+import { postCorner } from "../data/posts";
 import { postInCategory } from "../data/categories";
 import { Post } from "../data/posts";
 import { useCategories } from "../context/CategoriesContext";
@@ -232,7 +233,7 @@ export function CategoryFeed() {
         (p) =>
           p.hobbySlug === spaceSlug || (approved ? postInCategory(p, approved, subHobbyLabel) : false),
       );
-  const posts = activeSub ? allPosts.filter((p) => p.subHobby === activeSub) : allPosts;
+  const posts = activeSub ? allPosts.filter((p) => postCorner(p) === activeSub) : allPosts;
   const listings = listingsByHobby(hobby.slug);
   const circles = circlesByHobby(hobby.slug);
 
@@ -246,7 +247,7 @@ export function CategoryFeed() {
   const toggleExploreSpace = () => social.toggleHobbyFollow(spaceHobbyKey, hobby.shortName);
 
   const countFor = (subSlug: string) =>
-    allPosts.filter((p) => p.subHobby === subSlug).length;
+    allPosts.filter((p) => postCorner(p) === subSlug).length;
   // The curated baseline plus anything tagged or deliberately created — not
   // just hobby.subItems, or a Corner made just now (or tagged into
   // existence by an earlier Moment) would never actually show up here.
