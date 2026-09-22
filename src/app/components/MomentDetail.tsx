@@ -31,6 +31,7 @@ import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Thoughts } from "./Thoughts";
 import { BePart } from "./BePart";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { PursuitDialog } from "./PursuitDialog";
 import { attachEntry, startProject, useJournal } from "../lib/journal";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -95,6 +96,7 @@ export function MomentDetail({
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [askTogetherOpen, setAskTogetherOpen] = useState(false);
+  const [inspiredDialogOpen, setInspiredDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!post) return;
@@ -293,6 +295,26 @@ export function MomentDetail({
               </button>
             )}
 
+            {/* The one real (cross-user) way pursuits.inspired_by_post_id
+                (sql/pursuits.sql) ever gets set to someone else's Moment —
+                PursuitDialog's own seedPost prop already existed and already
+                wired inspiredByPostId through, but until now nothing ever
+                called it with another person's post: Log.tsx's "Start a
+                Pursuit" only ever seeds from the Moment you're publishing
+                yourself, and MomentDetail's owned-only "Add to Pursuit"
+                action doesn't set inspiredByPostId at all. Without this,
+                My Space's "You Inspired" rail could never have a real row to
+                show — this button is what actually produces one. */}
+            {!owned && (
+              <button
+                type="button"
+                onClick={() => setInspiredDialogOpen(true)}
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              >
+                Start a Pursuit — inspired by this
+              </button>
+            )}
+
             <Thoughts
               postId={post.id}
               postOwnerId={post.userId}
@@ -316,6 +338,10 @@ export function MomentDetail({
             subSlug={post.subHobby}
             postId={post.id}
           />
+        )}
+
+        {!owned && (
+          <PursuitDialog open={inspiredDialogOpen} onOpenChange={setInspiredDialogOpen} seedPost={post} />
         )}
 
         {editing && (

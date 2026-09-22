@@ -46,7 +46,11 @@
   .myspace-rail {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-areas: "shelf pursuits" "circles pursuits";
+    grid-template-areas:
+      "shelf pursuits"
+      "circles pursuits"
+      "inspired inspired"
+      "newspaces newspaces";
     gap: 24px;
   }
 
@@ -62,6 +66,16 @@
 
   .myspace-rail-circles {
     grid-area: circles;
+    order: 0;
+  }
+
+  .myspace-rail-inspired {
+    grid-area: inspired;
+    order: 0;
+  }
+
+  .myspace-rail-newspaces {
+    grid-area: newspaces;
     order: 0;
   }
 }
@@ -103,7 +117,9 @@
 
   .myspace-rail-pursuits,
   .myspace-rail-shelf,
-  .myspace-rail-circles {
+  .myspace-rail-circles,
+  .myspace-rail-inspired,
+  .myspace-rail-newspaces {
     order: 0;
   }
 
