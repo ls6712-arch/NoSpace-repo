@@ -33,7 +33,6 @@ import { GeneratedArt } from "../components/GeneratedArt";
 import { Button } from "../components/ui/button";
 import { CirclesBrowser } from "./Circles";
 import { PeopleBrowser } from "./People";
-import { MasonryCard } from "../components/discover/MasonryCard";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
 
 /**
@@ -858,16 +857,15 @@ export function Discover() {
                     : "Nothing matches that yet. Try a broader word or a different filter."}
                 </div>
               ) : (
-                // Pinterest-style masonry: CSS multi-column, not a grid — a
-                // real grid forces every row to match its tallest cell,
-                // which is exactly the uniform look this layout is meant to
-                // avoid. break-inside-avoid keeps a single card from ever
-                // splitting across two columns.
-                <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {visible.map((post) => (
-                    <div key={post.id} className="mb-6 break-inside-avoid">
-                      <MasonryCard post={post} />
-                    </div>
+                    <MomentCard
+                      key={post.id}
+                      post={post}
+                      surface="discover"
+                      size="standard"
+                      onOpen={() => setOpenPost(post)}
+                    />
                   ))}
                 </div>
               )}
