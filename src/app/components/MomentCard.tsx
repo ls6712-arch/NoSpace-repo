@@ -39,7 +39,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
+export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -53,18 +53,18 @@ const TILE_TOKENS = [
   { bg: "var(--moment-tile-ink)", fg: "var(--moment-tile-ink-foreground)" },
 ] as const;
 
-function tileTokenFor(postId: number) {
+export function tileTokenFor(postId: number) {
   return TILE_TOKENS[Math.abs(postId) % TILE_TOKENS.length];
 }
 
-const MEDIA_HEIGHT: Record<NonNullable<MomentCardProps["size"]>, string> = {
+export const MEDIA_HEIGHT: Record<NonNullable<MomentCardProps["size"]>, string> = {
   lead: "h-[320px] sm:h-[480px]",
   wide: "h-[260px] sm:h-[360px]",
   standard: "h-[220px] sm:h-[320px]",
   compact: "h-[160px] sm:h-[200px]",
 };
 
-const CAPTION_SIZE: Record<NonNullable<MomentCardProps["size"]>, string> = {
+export const CAPTION_SIZE: Record<NonNullable<MomentCardProps["size"]>, string> = {
   lead: "text-[32px] sm:text-[44px] leading-[1.05]",
   wide: "text-[26px] leading-[1.2]",
   standard: "text-[22px] leading-[1.25]",
@@ -192,7 +192,7 @@ function VisibilityDialog({
  * reactions-spec.md §4.4: hidden at zero, capped at "999+", never a
  * toggle. This is never rendered for anyone but the Moment's own maker
  * (the caller only mounts it inside the `mine` branch below). */
-function OwnCountPill({
+export function OwnCountPill({
   icon: Icon,
   label,
   count,
@@ -219,7 +219,7 @@ function OwnCountPill({
  * PostBookmark.tsx is built for the latter (hardcoded `absolute` position),
  * so this reuses its underlying toggleSaved/isSaved state directly instead
  * of fighting that component's own layout assumptions. */
-function InlineBookmark({ postId }: { postId: string | number }) {
+export function InlineBookmark({ postId }: { postId: string | number }) {
   const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
   return (
     <button

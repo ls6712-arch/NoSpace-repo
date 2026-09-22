@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import {
   Check,
   Copy,
   FolderPlus,
   Globe2,
+  Hand,
+  Heart,
   Lock,
+  MessageCircle,
   Pencil,
   Trash2,
   Users,
@@ -14,12 +18,21 @@ import { Post } from "../data/posts";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { getCircle } from "../data/circles";
 import { useContent } from "../context/ContentContext";
-import { PostReactions } from "./PostReactions";
-import { PostBookmark } from "./PostBookmark";
+import { useReactionState } from "./PostReactions";
+import {
+  CAPTION_SIZE,
+  hasRealMedia,
+  InlineBookmark,
+  MEDIA_HEIGHT,
+  OwnCountPill,
+  tileTokenFor,
+} from "./MomentCard";
+import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Thoughts } from "./Thoughts";
+import { BePart } from "./BePart";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { attachEntry, startProject, useJournal } from "../lib/journal";
-import { PostMedia } from "./PostMedia";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import {
@@ -47,6 +60,10 @@ function fullDate(ts: number) {
   });
 }
 
+function initials(name: string) {
+  return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+}
+
 /**
  * One moment, opened. Shows the thing itself, what it belongs to, and — for
  * the owner only — the private reflection written alongside it.
@@ -64,8 +81,9 @@ export function MomentDetail({
   owned: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { updatePost, deletePost } = useContent();
+  const { updatePost, deletePost, ownCounts } = useContent();
   const journal = useJournal();
+  const { mine: myReactions, toggle } = useReactionState(post?.id ?? 0);
 
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState("");
@@ -76,6 +94,7 @@ export function MomentDetail({
   const [addingTo, setAddingTo] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [askTogetherOpen, setAskTogetherOpen] = useState(false);
 
   useEffect(() => {
     if (!post) return;
@@ -97,7 +116,11 @@ export function MomentDetail({
   const attachedId = journal.entryProject[String(post.id)];
   const attached = journal.projects.find((p) => p.id === attachedId);
   const openProjects = journal.projects.filter((p) => !p.finishedAt);
-  const isNote = !post.media || !/^https?:\/\//.test(post.media);
+  const isNote = !hasRealMedia(post);
+  const tile = tileTokenFor(post.id);
+  // Maker-only, same gate as MomentCard — missing entry reads as
+  // all-zero, i.e. hidden, never a stray "0" (see ContentContext.ownCounts).
+  const counts = ownCounts[post.id] ?? { love: 0, in: 0, thoughts: 0 };
 
   const save = async () => {
     if (saving) return;
@@ -155,27 +178,121 @@ export function MomentDetail({
           </DialogDescription>
         </DialogHeader>
 
-        {/* The moment itself — a picture, or a note card when there's no media */}
+        {/* Who posted it — this dialog can now open from feeds that mix
+            authors (Corner, Discover, CategoryFeed, Pursuit), so it can't
+            assume "you already know whose page you're on" the way it
+            could when every caller was your own Shelf or My Space. */}
+        {!owned && (
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Link to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"} className="shrink-0">
+              <Avatar className="size-9">
+                <AvatarFallback className="text-xs">{initials(post.creator)}</AvatarFallback>
+              </Avatar>
+            </Link>
+            <Link
+              to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
+              className="truncate text-base transition-colors hover:text-[var(--coral-text)]"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              {post.creator}
+            </Link>
+          </div>
+        )}
+
+        {/* The moment itself — MomentCard's own media treatment (a
+            carousel, or a colored tile with the caption set into it when
+            there's no media), so the same Moment looks the same here as
+            it does everywhere else it's shown. */}
         {isNote ? (
-          <div className="rounded-2xl border border-border bg-surface-muted px-5 py-6">
-            <p className="whitespace-pre-line text-sm leading-relaxed">{post.caption}</p>
+          <div
+            className={`flex w-full items-center justify-center rounded-[var(--radius-moment)] p-6 sm:p-8 ${MEDIA_HEIGHT.lead}`}
+            style={{ background: tile.bg, color: tile.fg }}
+          >
+            <p className={`text-center italic ${CAPTION_SIZE.lead}`} style={{ fontFamily: "var(--font-serif)" }}>
+              {post.caption}
+            </p>
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-2xl border border-border">
-            <PostMedia
-              media={post.media}
-              type={post.type}
-              hobbySlug={post.hobbySlug}
-              seed={post.id}
-              className="w-full"
-            />
-            <PostBookmark postId={post.id} />
-          </div>
+          <PostMediaCarousel
+            media={post.mediaUrls?.length ? post.mediaUrls : [post.media]}
+            type={post.type}
+            hobbySlug={post.hobbySlug}
+            seed={post.id}
+            className={`w-full ${MEDIA_HEIGHT.lead} rounded-[var(--radius-moment)] object-cover`}
+          />
+        )}
+
+        {!editing && !isNote && post.caption && (
+          <p className={`italic ${CAPTION_SIZE.standard}`} style={{ fontFamily: "var(--font-serif)" }}>
+            {post.caption}
+          </p>
         )}
 
         {!editing && (
           <>
-            <PostReactions postId={post.id} />
+            <div className="flex items-center gap-2">
+              {owned ? (
+                <>
+                  <OwnCountPill icon={Heart} label="Love this" count={counts.love} />
+                  <OwnCountPill icon={Hand} label="Count me in" count={counts.in} />
+                  <OwnCountPill icon={MessageCircle} label="Thoughts" count={counts.thoughts} />
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    aria-pressed={myReactions.includes("love")}
+                    aria-label={`Love this${myReactions.includes("love") ? ", pressed" : ""}`}
+                    title="Love this"
+                    onClick={() => toggle("love")}
+                    className={`flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
+                      myReactions.includes("love")
+                        ? "border-transparent bg-accent text-accent-foreground"
+                        : "border-border text-foreground hover:border-[var(--foreground)]/35"
+                    }`}
+                  >
+                    <Heart
+                      className="size-4"
+                      strokeWidth={1.9}
+                      fill={myReactions.includes("love") ? "currentColor" : "none"}
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={myReactions.includes("in")}
+                    aria-label={`Count me in${myReactions.includes("in") ? ", pressed" : ""}`}
+                    title="Count me in"
+                    onClick={() => toggle("in")}
+                    className={`flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
+                      myReactions.includes("in")
+                        ? "border-transparent [background-color:var(--moment-tile-moss)] [color:var(--moment-tile-moss-foreground)]"
+                        : "border-border text-foreground hover:border-[var(--foreground)]/35"
+                    }`}
+                  >
+                    <Hand
+                      className="size-4"
+                      strokeWidth={1.9}
+                      fill={myReactions.includes("in") ? "currentColor" : "none"}
+                    />
+                  </button>
+                  <InlineBookmark postId={post.id} />
+                </>
+              )}
+            </div>
+
+            {/* Same quiet hand-off as MomentCard's own grid cards — after
+                the first "Count me in" tap, this reuses the existing
+                make-together request instead of building a second flow. */}
+            {!owned && myReactions.includes("in") && post.userId && (
+              <button
+                type="button"
+                onClick={() => setAskTogetherOpen(true)}
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              >
+                Ask {post.creator} to make it together?
+              </button>
+            )}
+
             <Thoughts
               postId={post.id}
               postOwnerId={post.userId}
@@ -187,7 +304,21 @@ export function MomentDetail({
           </>
         )}
 
-        {editing ? (
+        {!owned && (
+          <BePart
+            open={askTogetherOpen}
+            onOpenChange={setAskTogetherOpen}
+            hideTrigger
+            initialPane="make_together"
+            personName={post.creator}
+            personId={post.userId}
+            hobbySlug={post.hobbySlug}
+            subSlug={post.subHobby}
+            postId={post.id}
+          />
+        )}
+
+        {editing && (
           <div className="space-y-3">
             <div>
               <label htmlFor="m-caption" className="mb-1.5 block text-xs text-muted-foreground">
@@ -218,10 +349,6 @@ export function MomentDetail({
               </Button>
             </div>
           </div>
-        ) : (
-          !isNote && post.caption && (
-            <p className="text-sm leading-relaxed">{post.caption}</p>
-          )
         )}
 
         {/* Where it sits */}
