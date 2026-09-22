@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { Camera as CameraIcon, Images, Play, SwitchCamera, Type, X } from "lucide-react";
 import { addRecentCapture, useRecentCaptures } from "../lib/recentCaptures";
-import { convertHeicFiles } from "../lib/heicConversion";
+import { convertHeicFiles, isHeicFile } from "../lib/heicConversion";
 import { Button } from "./ui/button";
 
 /** Confirmed with product: 60s, matching Instagram-length clips — long enough
@@ -72,6 +72,11 @@ export function CameraCapture({
   // flips true for it. Disables the library buttons for that window so a
   // second tap mid-decode can't start a race between two picks.
   const [converting, setConverting] = useState(false);
+  // Set only when convertHeicFiles hands back a file that's still
+  // HEIC-shaped — i.e. conversion silently failed (see heicConversion.ts's
+  // own comment on why that's worth surfacing rather than uploading a photo
+  // nothing but Safari can ever display).
+  const [heicWarning, setHeicWarning] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -200,13 +205,28 @@ export function CameraCapture({
     e.target.value = "";
     if (rawPicked.length === 0) return;
 
+    setHeicWarning(null);
     setConverting(true);
     // iOS hands the picker .heic by default — nothing downstream (preview,
     // upload, Discover's own cards) can render that, so it's normalized to
     // a real JPEG right here, before a single video among the picks (never
     // HEIC) or anything else sees it.
-    const picked = await convertHeicFiles(rawPicked);
+    const converted = await convertHeicFiles(rawPicked);
     setConverting(false);
+
+    // isHeicFile() true after conversion means conversion failed and handed
+    // the original, still-unrenderable file back — don't let that go on to
+    // become a Moment nobody can ever see; drop it and say so.
+    const picked = converted.filter((f) => !isHeicFile(f));
+    const failedCount = converted.length - picked.length;
+    if (failedCount > 0) {
+      setHeicWarning(
+        failedCount === 1
+          ? "One photo couldn't be processed and wasn't added — try a different photo."
+          : `${failedCount} photos couldn't be processed and weren't added — try different photos.`,
+      );
+    }
+    if (picked.length === 0) return;
 
     if (picked.length === 1) {
       const type = picked[0].type.startsWith("video") ? "video" : "photo";
@@ -354,6 +374,12 @@ export function CameraCapture({
               <Images className="size-4" />
             </button>
           </div>
+
+          {heicWarning && (
+            <p className="mt-3 rounded-full bg-[var(--coral-deep)]/90 px-3 py-1.5 text-center text-xs text-white">
+              {heicWarning}
+            </p>
+          )}
 
           {/* Recent picks from this visit — tapping one skips straight past
               the picker. Browsers don't expose a real photo-library listing

@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const heic2anyMock = vi.fn();
 vi.mock("heic2any", () => ({ default: (...args: unknown[]) => heic2anyMock(...args) }));
 
-const { convertHeicIfNeeded, convertHeicFiles } = await import("./heicConversion");
+const { convertHeicIfNeeded, convertHeicFiles, isHeicFile } = await import("./heicConversion");
 
 function makeFile(name: string, type: string): File {
   return new File(["fake-bytes"], name, { type });
@@ -47,11 +47,36 @@ describe("convertHeicIfNeeded", () => {
     expect(await result.text()).toBe("frame-1");
   });
 
-  it("falls back to the original file if conversion throws", async () => {
+  it("falls back to the original file if conversion throws, logging the real error", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     heic2anyMock.mockRejectedValue(new Error("unsupported HEIC variant"));
     const file = makeFile("broken.heic", "image/heic");
     const result = await convertHeicIfNeeded(file);
     expect(result).toBe(file);
+    // A caller checks this to tell a real failure apart from a real
+    // conversion — see MediaAttachPicker.tsx/CameraCapture.tsx/Log.tsx,
+    // which all reject a pick that's still HEIC-shaped after this call
+    // rather than silently accepting an unrenderable file.
+    expect(isHeicFile(result)).toBe(true);
+    expect(consoleError).toHaveBeenCalledWith(
+      "HEIC conversion failed, falling back to the original file:",
+      expect.any(Error),
+    );
+    consoleError.mockRestore();
+  });
+});
+
+describe("isHeicFile", () => {
+  it("is true for a successfully converted file's original, unconverted input but false for its output", async () => {
+    heic2anyMock.mockResolvedValue(new Blob(["converted"], { type: "image/jpeg" }));
+    const file = makeFile("IMG_0002.heic", "image/heic");
+    expect(isHeicFile(file)).toBe(true);
+    const result = await convertHeicIfNeeded(file);
+    expect(isHeicFile(result)).toBe(false);
+  });
+
+  it("is false for an ordinary image", () => {
+    expect(isHeicFile(makeFile("mug.jpg", "image/jpeg"))).toBe(false);
   });
 });
 
