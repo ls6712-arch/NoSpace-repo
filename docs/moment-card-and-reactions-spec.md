@@ -180,6 +180,8 @@ Counts must **never**:
 
 Discover stays chronological. "Featured Moments" stays curated.
 
+**Approved exception:** a Circle Event's "N going" count (§4's activity block, added in `8466dc7`) is not a reaction count and may show a "0" — knowing nobody's going yet is the point, unlike a Moment's reaction pills, which hide at zero to avoid a visible "0 loved this." It must never be used to sort, rank, or promote Events, same as every other count on this page.
+
 ### 4.7 Cleanup
 
 `MyPostsGrid.tsx` displays `post.likes` (a legacy field). Replace it with the new counts or remove it. `posts.likes` and any `post_likes` table are legacy: **do not drop them**, just stop reading them, and report whether anything else still does.
