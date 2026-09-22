@@ -766,9 +766,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       locationName: input.locationName,
       locationPrivacy: input.locationPrivacy,
     };
-    setRealPosts((prev) => [newPost, ...prev]);
-    rewards.recordPostCreated(hobbyKey);
-    setJustPublishedId(newPost.id);
+    const cameFromFailedSave = Boolean(supabase && user);
+    setRealPosts((prev) => [{ ...newPost, unsaved: cameFromFailedSave }, ...prev]);
+    if (!cameFromFailedSave) {
+      rewards.recordPostCreated(hobbyKey);
+      setJustPublishedId(newPost.id);
+    }
     return newPost;
   };
 
