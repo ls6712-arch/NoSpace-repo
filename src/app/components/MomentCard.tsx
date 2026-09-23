@@ -249,6 +249,7 @@ export function MomentCard({
   const { ownCounts, setThreadAnswered } = useContent();
   const social = useSocial();
   const mine = !!user && post.userId === user.id;
+  const [expanded, setExpanded] = useState(false);
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [thoughtsOpen, setThoughtsOpen] = useState(false);
   const [askTogetherOpen, setAskTogetherOpen] = useState(false);
@@ -353,11 +354,22 @@ export function MomentCard({
         )}
 
         <p
-          className={`mt-3 italic ${CAPTION_SIZE[size]} ${size === "compact" ? "line-clamp-3" : ""}`}
+          className={`mt-3 italic ${CAPTION_SIZE[size]} ${
+            size === "compact" ? "line-clamp-3" : !expanded ? "line-clamp-2" : ""
+          }`}
           style={{ fontFamily: "var(--font-serif)" }}
         >
           {post.caption}
         </p>
+        {size !== "compact" && !expanded && post.caption.length > 140 && (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="mt-0.5 text-xs text-muted-foreground hover:underline"
+          >
+            more
+          </button>
+        )}
         {size === "compact" && post.caption.length > 140 && (
           <button
             type="button"
