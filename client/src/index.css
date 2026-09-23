@@ -480,3 +480,36 @@ h1 em, h2 em { color: var(--rust); font-style: italic; font-weight: 400; }
   .reference-hero-content .hero-copy { max-width: 320px; font-size: 15px; }
   .reference-hero-content .hero-actions { flex-wrap: wrap; justify-content: center; }
 }
+
+/* THREE-STEP PRODUCT WORKFLOW */
+.workflow-section { padding-top: 154px; padding-bottom: 146px; }
+.workflow-heading { margin-bottom: 70px; }
+.workflow-heading h2 { font-size: clamp(50px, 5.2vw, 78px); }
+.workflow-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+.workflow-step { min-width: 0; }
+.workflow-image { position: relative; height: 318px; overflow: hidden; padding: 25px 18px 0; border-radius: 2px 2px 0 0; }
+.workflow-image .product-frame { position: absolute; width: 90%; left: 5%; bottom: -25px; box-shadow: 0 16px 28px rgba(47,34,18,.15); }
+.workflow-moment .workflow-image { background: #e0b497; }
+.workflow-pursuit .workflow-image { background: #c8d2c2; }
+.workflow-keepgoing .workflow-image { background: #d9c9d9; }
+.workflow-pursuit .workflow-image .product-frame { transform: rotate(1.2deg); }
+.workflow-keepgoing .workflow-image .product-frame { transform: rotate(-1.2deg); bottom: -40px; }
+.workflow-caption { display: grid; grid-template-columns: 36px 1fr; gap: 13px; padding: 22px 22px 26px; min-height: 155px; background: #f2eadf; }
+.workflow-pursuit .workflow-caption { background: #edf0e7; }
+.workflow-keepgoing .workflow-caption { background: #eee9f1; }
+.workflow-caption > span { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; color: #9b563f; background: rgba(176,107,80,.12); font: 10px "DM Mono", monospace; }
+.workflow-caption h3 { margin: 1px 0 9px; color: var(--ink); font: 26px/1.02 "DM Serif Display", serif; }
+.workflow-caption p { max-width: 275px; margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+.workflow-footer { margin: 50px auto 0; color: var(--ink); text-align: center; font: 29px "DM Serif Display", serif; }
+.workflow-footer::before, .workflow-footer::after { content: ""; display: inline-block; width: 45px; height: 1px; margin: 0 15px 8px; background: var(--line); }
+@media (max-width: 780px) {
+  .workflow-section { padding-top: 105px; padding-bottom: 94px; }
+  .workflow-heading { display: block; margin-bottom: 42px; }
+  .workflow-heading > p { margin-top: 22px; }
+  .workflow-steps { grid-template-columns: 1fr; gap: 20px; }
+  .workflow-image { height: 300px; }
+  .workflow-caption { min-height: 0; padding: 19px 19px 23px; }
+  .workflow-caption h3 { font-size: 24px; }
+  .workflow-footer { font-size: 24px; line-height: 1.1; }
+  .workflow-footer::before, .workflow-footer::after { width: 20px; margin-left: 7px; margin-right: 7px; }
+}

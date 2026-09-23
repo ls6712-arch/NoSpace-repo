@@ -250,14 +250,23 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="montage-section section-wrap">
-          <div className="montage-heading"><div><p className="eyebrow"><span /> A PLACE WITH ROOM TO GROW</p><h2>All the pieces<br />of <em>your Space.</em></h2></div><p>Different views of the same life, held together in one place.</p></div>
-          <div className="screen-montage">
-            <div className="montage-card montage-space"><span>01 / MY SPACE</span><SpaceScreen compact /></div>
-            <div className="montage-card montage-moment"><span>02 / MOMENTS</span><MomentScreen /></div>
-            <div className="montage-card montage-pursuit"><span>03 / PURSUITS</span><PursuitScreen /></div>
-            <div className="montage-card montage-circles"><span>04 / CIRCLES</span><CirclesScreen /></div>
+        <section className="montage-section workflow-section" id="workflow">
+          <div className="montage-heading workflow-heading"><div><p className="eyebrow"><span /> THE SUSHII WORKFLOW</p><h2>Create a Moment.<br />Start a Pursuit.<br /><em>Keep going.</em></h2></div><p>Sushii helps you move from something you want to remember to something you want to keep doing.</p></div>
+          <div className="workflow-steps">
+            <article className="workflow-step workflow-moment">
+              <div className="workflow-image"><MomentScreen /></div>
+              <div className="workflow-caption"><span>01</span><div><h3>Create a Moment</h3><p>Capture something you did, discovered, made, or want to remember.</p></div></div>
+            </article>
+            <article className="workflow-step workflow-pursuit">
+              <div className="workflow-image"><PursuitScreen /></div>
+              <div className="workflow-caption"><span>02</span><div><h3>Start a Pursuit</h3><p>Choose something you want to practice or work toward, on your own or with friends.</p></div></div>
+            </article>
+            <article className="workflow-step workflow-keepgoing">
+              <div className="workflow-image"><PursuitScreen /></div>
+              <div className="workflow-caption"><span>03</span><div><h3>Keep Going</h3><p>Add progress as you return, and let the story of the Pursuit take shape.</p></div></div>
+            </article>
           </div>
+          <p className="workflow-footer">Your interests are part of your story.</p>
         </section>
 
         <section className="final-cta section-wrap">
