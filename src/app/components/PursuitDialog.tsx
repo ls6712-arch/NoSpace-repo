@@ -226,7 +226,7 @@ export function PursuitDialog({
 
     if (user) void mirrorPursuit(user.id, project);
     onOpenChange(false);
-    // Straight to the new Pursuit, where Day Zero is waiting — a starting
+    // Straight to the new Pursuit, where its first Moment is prompted — a starting
     // point captured now is what every before-and-after is measured from.
     navigate(`/pursuit/${project.id}?new=1`);
   };

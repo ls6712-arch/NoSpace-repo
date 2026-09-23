@@ -436,17 +436,27 @@ export function Pursuit() {
           <ComparePhotos first={photos.first} latest={photos.latest} owner={owner} />
         )}
 
-        {/* Day Zero — a brand-new Pursuit asks for its starting point first.
-            Everything later is measured against it. */}
+        {/* A new Pursuit's empty state. There used to be a separate "Day
+            Zero" box here with its own inline logger — a third way to add a
+            Moment, next to Add a Moment. It's gone: the before-and-after
+            already uses whichever Moment has the first photo, so the only
+            thing worth keeping is the nudge to make that one a photo. */}
         {owner && ownProject && moments.length === 0 && (
           <div className={`mb-6 rounded-2xl border p-4 ${isNew ? "border-[var(--coral-deep)]" : "border-dashed border-border"}`}>
             <p className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
-              Start with Day Zero
+              Add your first Moment
             </p>
-            <p className="mb-3 mt-0.5 text-sm text-muted-foreground">
-              Show where you're starting from, even if it's rough. Later, this is what you'll compare against.
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              A photo of where you're starting makes the best before-and-after later.
             </p>
-            <QuickLog pursuit={ownProject} placeholder="Where are you starting from?" autoFocus={isNew} />
+            {!hasMeasure(ownProject) && (
+              <Link to={`/pursuit/${ownProject.id}/moment`} className="mt-3 inline-block">
+                <Button variant="coral" size="sm">
+                  <Plus className="size-3.5" />
+                  Add a Moment
+                </Button>
+              </Link>
+            )}
           </div>
         )}
 
