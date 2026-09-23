@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
-import { Handshake, MessagesSquare, Send } from "lucide-react";
+import { Link, useSearchParams } from "react-router";
+import { Handshake, MessageCircle, MessagesSquare, Send } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
@@ -8,10 +8,12 @@ import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 
 /**
- * Messages exist only inside an accepted Make together or Explore together.
- * There is no inbox to cold-message into and no way to start a thread from
- * here — every thread on this page began as someone asking to do a specific
- * thing, and the other person saying yes.
+ * Messages live inside an accepted Make together or Explore together, or a
+ * direct message either side sent (see SocialContext.tsx's
+ * startDirectMessage() — the "Message" button on a profile). There's still
+ * no way to start a thread from *this* page itself; every thread here began
+ * somewhere else — a request that got accepted, or a "Message" tap on
+ * someone's profile, which is how `?thread=` lands here already selected.
  */
 function initials(name: string) {
   return name
@@ -25,12 +27,19 @@ function initials(name: string) {
 export function Messages() {
   const social = useSocial();
   const { user } = useAuth();
-  const [activeId, setActiveId] = useState<string | number | null>(null);
+  const [searchParams] = useSearchParams();
+  // Set once, from whatever ?thread= arrived with (a "Message" tap on a
+  // profile navigates here with the new-or-reused thread's id already known)
+  // — never re-read after that, so picking a different thread in the list
+  // below isn't fought by the URL on every render.
+  const [activeId, setActiveId] = useState<string | number | null>(() => searchParams.get("thread"));
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
   const threads = social.participations.filter(
-    (p) => p.status === "accepted" && (p.kind === "make_together" || p.kind === "explore_together"),
+    (p) =>
+      p.status === "accepted" &&
+      (p.kind === "make_together" || p.kind === "explore_together" || p.kind === "direct_message"),
   );
 
   const active = threads.find((t) => String(t.id) === String(activeId)) ?? threads[0];
@@ -66,9 +75,9 @@ export function Messages() {
             No open threads
           </h1>
           <p className="mx-auto mb-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Messaging opens when someone accepts a Make together or Explore
-            together request, never before. There's no way to message a
-            stranger here, by design.
+            Nothing yet. A thread opens when someone accepts a Make together
+            or Explore together request, or when you send someone a direct
+            message from their profile.
           </p>
           <Link to="/discover">
             <Button variant="outline">Find someone to make something with</Button>
@@ -85,7 +94,8 @@ export function Messages() {
           Messages
         </h1>
         <p className="mb-8 text-sm text-muted-foreground">
-          Only with people who accepted making or exploring something together.
+          People who accepted making or exploring something together, and
+          anyone who's sent or received a direct message.
         </p>
 
         <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
@@ -111,10 +121,12 @@ export function Messages() {
                       <span className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
                         {t.kind === "make_together" ? (
                           <Handshake className="size-3" />
-                        ) : (
+                        ) : t.kind === "explore_together" ? (
                           <MessagesSquare className="size-3" />
+                        ) : (
+                          <MessageCircle className="size-3" />
                         )}
-                        {t.intent}
+                        {t.kind === "direct_message" ? "Direct message" : t.intent}
                       </span>
                     </span>
                   </button>
@@ -131,8 +143,11 @@ export function Messages() {
                   {otherName}
                 </div>
                 <div className="text-[11px] text-muted-foreground">
-                  {active.kind === "make_together" ? "Making together" : "Exploring together"} ·{" "}
-                  {active.intent}
+                  {active.kind === "make_together"
+                    ? `Making together · ${active.intent}`
+                    : active.kind === "explore_together"
+                      ? `Exploring together · ${active.intent}`
+                      : "Direct message"}
                 </div>
               </div>
 
