@@ -197,7 +197,15 @@ interface ContentContextType {
   /** Edits a moment you own. Returns false if the change couldn't be saved. */
   updatePost: (
     postId: number,
-    patch: { caption?: string; reflection?: string; visibility?: Visibility | "private"; circleId?: number },
+    patch: {
+      caption?: string;
+      reflection?: string;
+      visibility?: Visibility | "private";
+      circleId?: number;
+      hobbySlug?: string;
+      subHobby?: string;
+      mediaUrl?: string;
+    },
   ) => Promise<boolean>;
   /** Deletes a moment you own. Returns false if it couldn't be deleted — the
    * post stays in the list rather than vanishing from a screen that no
@@ -784,7 +792,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
    */
   const updatePost = async (
     postId: number,
-    patch: { caption?: string; reflection?: string; visibility?: Visibility | "private"; circleId?: number },
+    patch: {
+      caption?: string;
+      reflection?: string;
+      visibility?: Visibility | "private";
+      circleId?: number;
+      hobbySlug?: string;
+      subHobby?: string;
+      mediaUrl?: string;
+    },
   ): Promise<boolean> => {
     const target = realPosts.find((p) => p.id === postId);
     const apply = (list: Post[]) =>
@@ -803,6 +819,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
               // assignment already relies on.
               visibility: (patch.visibility ?? p.visibility) as Visibility,
               circleId: patch.visibility === undefined ? p.circleId : patch.circleId,
+              hobbySlug: patch.hobbySlug ?? p.hobbySlug,
+              subHobby: patch.subHobby === undefined ? p.subHobby : patch.subHobby || undefined,
+              media: patch.mediaUrl ?? p.media,
+              mediaUrls: patch.mediaUrl ? [patch.mediaUrl] : p.mediaUrls,
             }
           : p,
       );
@@ -815,6 +835,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       if (patch.visibility !== undefined) {
         postsPatch.visibility = patch.visibility;
         postsPatch.circle_id = patch.visibility === "circle" ? (patch.circleId ?? null) : null;
+      }
+      if (patch.hobbySlug !== undefined) postsPatch.hobby_slug = patch.hobbySlug;
+      if (patch.subHobby !== undefined) postsPatch.sub_hobby = patch.subHobby || null;
+      if (patch.mediaUrl !== undefined) {
+        postsPatch.media_url = patch.mediaUrl;
+        postsPatch.media_urls = [patch.mediaUrl];
       }
 
       // A no-op `.update({})` (only the Reflection changed) is skipped

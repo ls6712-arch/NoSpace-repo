@@ -15,10 +15,12 @@ import {
   UserRound,
 } from "lucide-react";
 import { Post } from "../data/posts";
-import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { getHobby, subHobbyLabel, visibleSpaces } from "../data/hobbies";
 import { getCircle } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../../lib/supabase";
 import { useReactionState } from "./PostReactions";
 import {
   CAPTION_SIZE,
@@ -85,12 +87,18 @@ export function MomentDetail({
 }) {
   const { updatePost, deletePost, ownCounts } = useContent();
   const { update: updatePrivateLogEntry, remove: removePrivateLogEntry } = usePrivateLogs();
+  const { user } = useAuth();
   const journal = useJournal();
   const { mine: myReactions, toggle } = useReactionState(post?.id ?? 0);
 
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState("");
   const [reflection, setReflection] = useState("");
+  const [editHobbySlug, setEditHobbySlug] = useState("");
+  const [editSubHobby, setEditSubHobby] = useState("");
+  const [newMediaFile, setNewMediaFile] = useState<File | null>(null);
+  const [newMediaPreview, setNewMediaPreview] = useState<string | null>(null);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -104,6 +112,10 @@ export function MomentDetail({
     if (!post) return;
     setCaption(post.caption);
     setReflection(post.reflection ?? "");
+    setEditHobbySlug(post.hobbySlug);
+    setEditSubHobby(post.subHobby ?? "");
+    setNewMediaFile(null);
+    setNewMediaPreview(null);
     setEditing(false);
     setSaveError(null);
     setCopied(false);
@@ -131,9 +143,41 @@ export function MomentDetail({
     setSaving(true);
     setSaveError(null);
     try {
+      // Only set when a replacement photo was actually picked this time —
+      // updatePost only overwrites the photo when mediaUrl is present, so
+      // an edit that doesn't touch the photo never risks blanking it out.
+      let uploadedMediaUrl: string | undefined;
+      if (newMediaFile && supabase && user) {
+        setUploadingMedia(true);
+        // Same upload shape as ContentContext.tsx's addPost — bucket,
+        // per-user path, extension sniffed from the filename.
+        const dot = newMediaFile.name.lastIndexOf(".");
+        const ext = (dot > -1 ? newMediaFile.name.slice(dot + 1) : "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "")
+          .slice(0, 5);
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? `.${ext}` : ""}`;
+        const { error: uploadError } = await supabase.storage
+          .from("post-media")
+          .upload(path, newMediaFile, { contentType: newMediaFile.type || undefined, upsert: false });
+        setUploadingMedia(false);
+        if (uploadError) {
+          setSaveError("Your photo didn't upload. Try again.");
+          setSaving(false);
+          return;
+        }
+        uploadedMediaUrl = supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl;
+      }
+
       const ok = post.isPrivateLog
         ? Boolean((await updatePrivateLogEntry(post.privateLogId!, { note: caption })).data)
-        : await updatePost(post.id, { caption, reflection });
+        : await updatePost(post.id, {
+            caption,
+            reflection,
+            hobbySlug: editHobbySlug,
+            subHobby: editSubHobby || undefined,
+            ...(uploadedMediaUrl ? { mediaUrl: uploadedMediaUrl } : {}),
+          });
       if (ok) setEditing(false);
       else setSaveError("Couldn't save that change. Your edit is still here, try again.");
     } catch {
@@ -356,6 +400,79 @@ export function MomentDetail({
 
         {editing && (
           <div className="space-y-3">
+            {!post.isPrivateLog && (
+              <>
+                <div>
+                  <label htmlFor="m-space" className="mb-1.5 block text-xs text-muted-foreground">
+                    Space
+                  </label>
+                  <Select
+                    value={editHobbySlug}
+                    onValueChange={(v) => {
+                      setEditHobbySlug(v);
+                      // A sub-hobby from the previous Space shouldn't silently
+                      // carry over to a new one.
+                      setEditSubHobby("");
+                    }}
+                  >
+                    <SelectTrigger id="m-space">
+                      <SelectValue placeholder="Choose a Space" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {visibleSpaces().map((h) => (
+                        <SelectItem key={h.slug} value={h.slug}>
+                          {h.shortName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {(getHobby(editHobbySlug)?.subItems?.length ?? 0) > 0 && (
+                  <div>
+                    <label htmlFor="m-sub-hobby" className="mb-1.5 block text-xs text-muted-foreground">
+                      What within it
+                    </label>
+                    <Select value={editSubHobby} onValueChange={setEditSubHobby}>
+                      <SelectTrigger id="m-sub-hobby">
+                        <SelectValue placeholder="Choose one" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getHobby(editHobbySlug)?.subItems.map((s) => (
+                          <SelectItem key={s.slug} value={s.slug}>
+                            {s.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </>
+            )}
+            {post.type === "photo" && !post.isPrivateLog && (
+              <div>
+                <label htmlFor="m-media" className="mb-1.5 block text-xs text-muted-foreground">
+                  Replace photo
+                </label>
+                <input
+                  id="m-media"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setNewMediaFile(file);
+                    setNewMediaPreview(file ? URL.createObjectURL(file) : null);
+                  }}
+                  className="block w-full text-xs text-muted-foreground"
+                />
+                {newMediaPreview && (
+                  <img
+                    src={newMediaPreview}
+                    alt="New photo preview"
+                    className="mt-2 h-32 w-full rounded-lg object-cover"
+                  />
+                )}
+              </div>
+            )}
             <div>
               <label htmlFor="m-caption" className="mb-1.5 block text-xs text-muted-foreground">
                 What you wrote
