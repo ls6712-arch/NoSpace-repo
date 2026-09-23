@@ -3,8 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { Handshake, MessageCircle, MessagesSquare, Send } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
-import { supabase } from "../../lib/supabase";
-import { fetchFollowingIds } from "../lib/profileFollows";
+import { usePeopleSearch } from "../lib/people";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -14,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/
  * Messages live inside an accepted Make together or Explore together, or a
  * direct message either side sent (see SocialContext.tsx's
  * startDirectMessage() — the "Message" button on a profile, and this page's
- * own "New message" picker, limited to people you follow). A thread can also
+ * own "New message" picker, open to anyone found by name). A thread can also
  * arrive already selected via `?thread=`, e.g. from a "Message" tap on
  * someone's profile.
  */
@@ -39,9 +38,10 @@ export function Messages() {
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [following, setFollowing] = useState<{ id: string; name: string }[]>([]);
-  const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const [query, setQuery] = useState("");
   const [startError, setStartError] = useState<string | null>(null);
+  const { people, loading } = usePeopleSearch(query);
+  const results = people.filter((p) => p.id !== user?.id);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -49,32 +49,6 @@ export function Messages() {
     }, 4000);
     return () => clearInterval(interval);
   }, [social.refresh]);
-
-  useEffect(() => {
-    if (!pickerOpen || !user) return;
-    let cancelled = false;
-    (async () => {
-      setLoadingFollowing(true);
-      const ids = await fetchFollowingIds(user.id);
-      if (!supabase || ids.length === 0) {
-        if (!cancelled) {
-          setFollowing([]);
-          setLoadingFollowing(false);
-        }
-        return;
-      }
-      const { data } = await supabase.from("profiles").select("id, display_name").in("id", ids);
-      if (!cancelled) {
-        setFollowing(
-          (data ?? []).map((p: any) => ({ id: p.id as string, name: (p.display_name as string) || "Someone" })),
-        );
-        setLoadingFollowing(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [pickerOpen, user]);
 
   const threads = social.participations.filter(
     (p) =>
@@ -106,6 +80,7 @@ export function Messages() {
 
   const openPicker = () => {
     setStartError(null);
+    setQuery("");
     setPickerOpen(true);
   };
 
@@ -127,25 +102,33 @@ export function Messages() {
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>New message</DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
-          {loadingFollowing ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">Loading…</p>
-          ) : following.length === 0 ? (
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search people by name"
+            autoFocus
+          />
+          {query.trim().length < 2 ? (
             <p className="py-6 text-center text-xs text-muted-foreground">
-              Follow someone first to message them.
+              Type a name to find someone.
             </p>
+          ) : loading ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">Searching…</p>
+          ) : results.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">No one found.</p>
           ) : (
             <ul className="max-h-72 space-y-1 overflow-y-auto">
-              {following.map((person) => (
+              {results.map((person) => (
                 <li key={person.id}>
                   <button
                     type="button"
-                    onClick={() => startThreadWith(person)}
+                    onClick={() => startThreadWith({ id: person.id, name: person.displayName })}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
                   >
                     <Avatar className="size-7 shrink-0">
-                      <AvatarFallback className="text-[10px]">{initials(person.name)}</AvatarFallback>
+                      <AvatarFallback className="text-[10px]">{initials(person.displayName)}</AvatarFallback>
                     </Avatar>
-                    {person.name}
+                    {person.displayName}
                   </button>
                 </li>
               ))}
