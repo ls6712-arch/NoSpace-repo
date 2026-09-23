@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft,
@@ -29,7 +29,7 @@ import {
   PursuitMode,
   startProject,
 } from "../lib/journal";
-import { MEASURE_KINDS, defaultMeasure, formatAmount, targetText } from "../lib/pursuitProgress";
+import { MEASURE_KINDS, defaultMeasure, formatAmount, guessSpace, localDateMs, targetText, unitFor } from "../lib/pursuitProgress";
 import { mirrorPursuit, mirrorPursuitMeasure, saveInvites } from "../lib/pursuitsRemote";
 import { Person, usePeopleSearch } from "../lib/people";
 
@@ -74,12 +74,18 @@ export function CreatePursuit() {
 
   const patch = (p: Partial<Measure>) => setMeasure((m) => ({ ...m, ...p }));
 
+  // Each step starts at the top. Keeping the last step's scroll position
+  // put the next step's options under the finger that just tapped Continue.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen]);
+
   const pickKind = (k: MeasureKind) => {
     setKind(k);
     const d = defaultMeasure(k);
     // Guess the unit from the goal text when it reads "Paint 10 paintings".
     const m = title.match(/([\d,.]+)\s+([a-zA-Z][a-zA-Z ]*)$/);
-    if (m && (k === "count" || k === "quantity" || k === "custom")) {
+    if (m && (k === "count" || k === "quantity" || k === "time" || k === "custom")) {
       d.target = Number(m[1].replace(/,/g, "")) || d.target;
       d.unit = m[2].trim();
     }
@@ -91,7 +97,7 @@ export function CreatePursuit() {
       ...measure,
       target: measure.kind === "milestones" ? (measure.milestones ?? []).filter((x) => x.trim()).length || measure.target : measure.target,
       milestones: measure.kind === "milestones" ? (measure.milestones ?? []).map((x) => x.trim()).filter(Boolean) : undefined,
-      targetDate: hasDeadline && deadline ? new Date(deadline).getTime() : undefined,
+      targetDate: hasDeadline && deadline ? localDateMs(deadline) : undefined,
     }),
     [measure, hasDeadline, deadline],
   );
@@ -137,6 +143,7 @@ export function CreatePursuit() {
           ];
     const project = startProject({
       title: title.trim(),
+      hobbySlug: guessSpace(title),
       measure: finalMeasure,
       mode: pursuitMode,
       members,
@@ -319,10 +326,10 @@ export function CreatePursuit() {
           <section>
             {heading("Set your rules", "You can change these anytime.")}
             <div className="mt-6 divide-y divide-border rounded-xl border border-border bg-card">
-              <RuleRow label="Allow partial amounts" hint="Log 0.5 of a painting">
+              <RuleRow label="Allow partial amounts" hint={`Log 0.5 of ${/^[aeiou]|^hour/i.test(unitFor(measure, 1) || "thing") ? "an" : "a"} ${unitFor(measure, 1) || "thing"}`}>
                 <Toggle checked={measure.allowPartial} onChange={(v) => patch({ allowPartial: v })} label="Allow partial amounts" />
               </RuleRow>
-              <RuleRow label="Allow decimals" hint="e.g. 1.5 hours">
+              <RuleRow label="Allow decimals" hint={`e.g. 1.5 ${measure.unit || "hours"}`}>
                 <Toggle checked={measure.allowDecimals} onChange={(v) => patch({ allowDecimals: v })} label="Allow decimals" />
               </RuleRow>
               <RuleRow label="Default amount per Moment">
@@ -480,6 +487,18 @@ export function CreatePursuit() {
             <ul className="mt-5 divide-y divide-border rounded-xl border border-border bg-card text-sm">
               <ReviewRow icon={Hash} label="Unit" value={finalMeasure.unit} />
               {finalMeasure.whatCounts && <ReviewRow icon={CheckCircle2} label="What counts" value={finalMeasure.whatCounts} />}
+              {finalMeasure.kind === "milestones" && (
+                <ReviewRow icon={Flag} label="Milestones" value={(finalMeasure.milestones ?? []).map((n, i) => `${i + 1}. ${n}`).join("  ")} />
+              )}
+              <ReviewRow
+                icon={Target}
+                label="Rules"
+                value={[
+                  `Partial amounts ${finalMeasure.allowPartial ? "on" : "off"}`,
+                  `decimals ${finalMeasure.allowDecimals ? "on" : "off"}`,
+                  `${formatAmount(finalMeasure.defaultAmount)} per Moment`,
+                ].join(" · ")}
+              />
               <ReviewRow icon={Sigma} label="Starting amount" value={formatAmount(finalMeasure.startingAmount)} />
               <ReviewRow
                 icon={CalendarDays}

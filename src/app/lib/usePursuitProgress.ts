@@ -40,7 +40,7 @@ export function usePursuitProgress(projectId: string | undefined, refreshKey = 0
 /** Participants: the database's list when there is one, otherwise the
  * members saved locally at creation (so the owner sees who they invited
  * even before the migration runs or while offline). Owner always first. */
-export function usePursuitMembers(project: Project | undefined, ownerFallback?: PursuitMember) {
+export function usePursuitMembers(project: Project | undefined, ownerFallback?: PursuitMember, refreshKey = 0) {
   const [remote, setRemote] = useState<PursuitMember[] | null>(null);
   useEffect(() => {
     if (!project || (project.mode ?? "solo") === "solo") return;
@@ -49,7 +49,7 @@ export function usePursuitMembers(project: Project | undefined, ownerFallback?: 
     return () => {
       cancelled = true;
     };
-  }, [project?.id, project?.mode]);
+  }, [project?.id, project?.mode, refreshKey]);
   const list = remote ?? project?.members ?? [];
   const withOwner = ownerFallback && !list.some((m) => m.role === "owner") ? [ownerFallback, ...list] : list;
   return withOwner.filter((m) => m.status !== "declined");

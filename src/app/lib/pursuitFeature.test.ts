@@ -126,3 +126,25 @@ describe("Moments on a Pursuit", () => {
     expect(months[0].moments[0].key).toBe("post-3");
   });
 });
+
+import { guessSpace, localDateMs, toDateInput, unitFor } from "./pursuitProgress";
+
+describe("fixes from the Sep 23 test pass", () => {
+  it("keeps a picked deadline on the picked day (no time-zone shift)", () => {
+    const ms = localDateMs("2026-12-31")!;
+    const d = new Date(ms);
+    expect([d.getFullYear(), d.getMonth(), d.getDate()]).toEqual([2026, 11, 31]);
+    expect(toDateInput(ms)).toBe("2026-12-31");
+  });
+  it("guesses a sensible Space from the goal text", () => {
+    expect(guessSpace("Learn watercolor")).toBe("art-creative");
+    expect(guessSpace("Write 20,000 words")).toBe("books-writing");
+    expect(guessSpace("Practice guitar 20 hours")).toBe("music");
+    expect(guessSpace("Something else entirely")).toBeUndefined();
+  });
+  it("uses the singular unit for one", () => {
+    const m = { kind: "count", target: 20, unit: "paintings", allowPartial: false, allowDecimals: false, defaultAmount: 1, startingAmount: 0 } as const;
+    expect(unitFor(m, 1)).toBe("painting");
+    expect(unitFor(m, 5)).toBe("paintings");
+  });
+});

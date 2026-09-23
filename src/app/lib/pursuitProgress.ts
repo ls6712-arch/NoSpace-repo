@@ -88,6 +88,45 @@ export function unitFor(measure: Measure, n: number): string {
   return u.slice(0, -1);
 }
 
+/**
+ * A date input's "YYYY-MM-DD" as the END of that day in the viewer's own
+ * time zone. `new Date("2026-12-31")` parses as UTC midnight, which is Dec
+ * 30 anywhere west of London — the deadline showed a day early.
+ */
+export function localDateMs(value: string): number | undefined {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!m) return undefined;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 23, 59, 59).getTime();
+}
+
+/** A stored date back into a date input's "YYYY-MM-DD", in local time. */
+export function toDateInput(ms: number): string {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const SPACE_KEYWORDS: [RegExp, string][] = [
+  [/paint|draw|sketch|watercolou?r|illustrat|mural|art\b|calligraph/i, "art-creative"],
+  [/knit|crochet|sew|pottery|ceramic|wood|craft|bookbind|embroider|quilt/i, "crafts-making"],
+  [/writ|word|novel|book|read|poem|poetry|journal|blog/i, "books-writing"],
+  [/guitar|piano|sing|song|music|drum|dj\b|violin|ukulele|band/i, "music"],
+  [/run|mile|gym|lift|yoga|swim|cycl|climb|boulder|marathon|tennis|pickleball|fitness|workout/i, "sports-fitness"],
+  [/cook|bake|recipe|bread|sourdough|meal/i, "food-cooking"],
+  [/photo|film|video|camera/i, "photography-film"],
+  [/garden|plant|grow/i, "home-garden"],
+  [/hike|trail|camp|outdoor|bird/i, "nature-outdoors"],
+  [/code|app|build|program|robot|electronic/i, "tech-building"],
+  [/travel|trip|country|countries/i, "travel-adventure"],
+  [/meditat|sleep|health|wellness/i, "health-wellness"],
+];
+
+/** Best-guess Space for a Pursuit that wasn't given one, from its goal text,
+ * so its Moments aren't filed under whichever Space happens to be first in
+ * the list (which is how a watercolor Moment got labelled "The Lego Makers"). */
+export function guessSpace(title: string): string | undefined {
+  return SPACE_KEYWORDS.find(([re]) => re.test(title))?.[1];
+}
+
 /** Projects with a measure read progress from entries; older ones from their goal. */
 export function hasMeasure(p: Pick<Project, "measure">): p is { measure: Measure } {
   return !!p.measure && p.measure.target > 0;

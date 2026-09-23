@@ -40,7 +40,8 @@ import { QuickLog } from "../components/QuickLog";
 import { EndingDialog } from "../components/EndingDialog";
 import { PursuitProgressPanel } from "../components/pursuit/PursuitProgressPanel";
 import { ProgressBar } from "../components/pursuit/ui";
-import { hasMeasure } from "../lib/pursuitProgress";
+import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
+import { usePursuitProgress } from "../lib/usePursuitProgress";
 
 function initials(name: string) {
   return name
@@ -211,6 +212,18 @@ export function Pursuit() {
   // Every Moment on this Pursuit, oldest first — shared posts, plus (for
   // the owner only) their "Only you" entries, which used to sit in a
   // separate "Private reflections" box and never counted as progress.
+  // Amount each Moment logged, keyed the same way as the timeline's keys —
+  // so a Moment that didn't count toward progress can say so.
+  const progressEntries = usePursuitProgress(ownProject && hasMeasure(ownProject) ? ownProject.id : undefined);
+  const amountByKey = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of progressEntries) {
+      if (e.postId != null) m.set(`post-${e.postId}`, (m.get(`post-${e.postId}`) ?? 0) + e.amount);
+      if (e.logId != null) m.set(`log-${e.logId}`, (m.get(`log-${e.logId}`) ?? 0) + e.amount);
+    }
+    return m;
+  }, [progressEntries]);
+
   const moments: PursuitMoment[] = useMemo(() => {
     if (demo) {
       return [...demo.updates]
@@ -544,19 +557,26 @@ export function Pursuit() {
               <section key={month.key}>
                 <MonthHeader label={month.label} moments={month.moments} />
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  {month.moments.map((m) =>
-                    m.post ? (
-                      <MomentCard
-                        key={m.key}
-                        post={m.post}
-                        surface="pursuit"
-                        size="standard"
-                        onOpen={() => setOpenPost(m.post!)}
-                      />
-                    ) : (
-                      <PrivateMomentCard key={m.key} moment={m} />
-                    ),
-                  )}
+                  {month.moments.map((m) => {
+                    const measure = ownProject && hasMeasure(ownProject) ? ownProject.measure : undefined;
+                    const amount = amountByKey.get(m.key);
+                    return (
+                      <div key={m.key}>
+                        {m.post ? (
+                          <MomentCard post={m.post} surface="pursuit" size="standard" onOpen={() => setOpenPost(m.post!)} />
+                        ) : (
+                          <PrivateMomentCard moment={m} />
+                        )}
+                        {measure && owner && (
+                          <p className={`mt-1.5 text-xs ${amount ? "text-foreground" : "text-muted-foreground"}`}>
+                            {amount
+                              ? `+${formatAmount(amount)} ${unitFor(measure, amount)}`
+                              : "Not counted toward progress"}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             ))}

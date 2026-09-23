@@ -7,6 +7,7 @@ import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useRewards } from "../context/RewardsContext";
 import { useSettings } from "../context/SettingsContext";
 import { defaultSpaceSlug } from "../data/hobbies";
+import { guessSpace } from "../lib/pursuitProgress";
 import { addProgress, markActivity, pursuitStatus, useJournalSlice } from "../lib/journal";
 import { attachPostToPursuit, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
@@ -113,7 +114,7 @@ export function AddMoment() {
         rewards.recordPostCreated(project.subHobby || (project.hobbySlug ? `space:${project.hobbySlug}` : undefined));
       } else {
         const entry = await addPost({
-          hobbySlug: project.hobbySlug ?? defaultSpaceSlug(),
+          hobbySlug: project.hobbySlug ?? guessSpace(project.title) ?? defaultSpaceSlug(),
           subHobby: project.subHobby,
           interest: project.interest,
           type: file ? "photo" : "written",

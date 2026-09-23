@@ -187,6 +187,22 @@ export async function restoreOwnPursuits(userId: string) {
       .order("started_at", { ascending: false });
     if (error || !data) return;
     mergeRemoteProjects((data as any[]).map(rowToProject));
+
+    // Pursuits other people created that this person joined. Without this,
+    // signing out and back in dropped every joined Pursuit from the list.
+    const { data: memberships } = await supabase
+      .from("pursuit_members")
+      .select("pursuit_id")
+      .eq("user_id", userId)
+      .eq("status", "joined")
+      .eq("role", "member");
+    const ids = ((memberships as any[]) ?? []).map((m) => m.pursuit_id);
+    if (ids.length) {
+      const { data: joined } = await supabase.from("pursuits").select("*").in("id", ids);
+      mergeRemoteProjects(
+        ((joined as any[]) ?? []).map((row) => ({ ...rowToProject(row), ownerId: row.user_id, role: "member" as const })),
+      );
+    }
   } catch {
     // Best effort — the local journal is unaffected either way.
   }
@@ -290,24 +306,47 @@ export async function fetchPursuitProgress(pursuitId: string): Promise<ProgressE
   }
 }
 
+/** display_name / username / avatar for a set of user ids. A separate
+ * query on purpose: pursuit_members.user_id and pursuits.user_id point at
+ * auth.users, not profiles, so PostgREST can't embed profiles through
+ * them — the embedded version errored and silently returned nothing, which
+ * is why invites sent from a Pursuit's page never showed up. */
+async function profilesById(ids: string[]) {
+  const map = new Map<string, { username: string | null; displayName: string; avatarUrl?: string }>();
+  if (!supabase || ids.length === 0) return map;
+  const { data } = await supabase.from("profiles").select("id, username, display_name, avatar_url").in("id", ids);
+  for (const r of (data as any[]) ?? []) {
+    map.set(r.id, {
+      username: r.username ?? null,
+      displayName: r.display_name?.trim() || r.username || "Someone",
+      avatarUrl: r.avatar_url ?? undefined,
+    });
+  }
+  return map;
+}
+
 /** Members with their profile names, owner first. */
 export async function fetchPursuitMembers(pursuitId: string): Promise<PursuitMember[]> {
   if (!supabase) return [];
   try {
     const { data, error } = await supabase
       .from("pursuit_members")
-      .select("user_id, role, status, profiles:user_id (username, display_name, avatar_url)")
+      .select("user_id, role, status")
       .eq("pursuit_id", pursuitId);
     if (error || !data) return [];
+    const profiles = await profilesById((data as any[]).map((r) => r.user_id));
     return (data as any[])
-      .map((r) => ({
-        userId: r.user_id,
-        username: r.profiles?.username ?? null,
-        displayName: r.profiles?.display_name?.trim() || r.profiles?.username || "Someone",
-        avatarUrl: r.profiles?.avatar_url ?? undefined,
-        status: r.status,
-        role: r.role,
-      }))
+      .map((r) => {
+        const p = profiles.get(r.user_id);
+        return {
+          userId: r.user_id,
+          username: p?.username ?? null,
+          displayName: p?.displayName ?? "Someone",
+          avatarUrl: p?.avatarUrl,
+          status: r.status,
+          role: r.role,
+        } as PursuitMember;
+      })
       .sort((a, b) => (a.role === "owner" ? -1 : b.role === "owner" ? 1 : 0));
   } catch {
     return [];
@@ -343,21 +382,25 @@ export interface PursuitInvite {
 export async function fetchMyInvites(userId: string): Promise<PursuitInvite[]> {
   if (!supabase) return [];
   try {
-    const { data, error } = await supabase
+    const { data: rows, error } = await supabase
       .from("pursuit_members")
-      .select("pursuit_id, pursuits:pursuit_id (title, mode, user_id, profiles:user_id (display_name, avatar_url))")
+      .select("pursuit_id")
       .eq("user_id", userId)
       .eq("status", "invited");
-    if (error || !data) return [];
-    return (data as any[])
-      .filter((r) => r.pursuits)
-      .map((r) => ({
-        pursuitId: r.pursuit_id,
-        title: r.pursuits.title,
-        mode: (r.pursuits.mode ?? "together") as PursuitMode,
-        ownerName: r.pursuits.profiles?.display_name?.trim() || "Someone",
-        ownerAvatar: r.pursuits.profiles?.avatar_url ?? undefined,
-      }));
+    if (error || !rows?.length) return [];
+    const { data: pursuits } = await supabase
+      .from("pursuits")
+      .select("id, title, mode, user_id")
+      .in("id", (rows as any[]).map((r) => r.pursuit_id));
+    const list = (pursuits as any[]) ?? [];
+    const owners = await profilesById([...new Set(list.map((p) => p.user_id))]);
+    return list.map((p) => ({
+      pursuitId: p.id,
+      title: p.title,
+      mode: (p.mode ?? "together") as PursuitMode,
+      ownerName: owners.get(p.user_id)?.displayName ?? "Someone",
+      ownerAvatar: owners.get(p.user_id)?.avatarUrl,
+    }));
   } catch {
     return [];
   }

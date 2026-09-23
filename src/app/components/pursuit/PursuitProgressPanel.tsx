@@ -43,8 +43,9 @@ export function PursuitProgressPanel({
     status: "joined",
     role: "owner",
   };
-  const members = usePursuitMembers(project, ownerFallback);
   const [inviting, setInviting] = useState(false);
+  const [membersVersion, setMembersVersion] = useState(0);
+  const members = usePursuitMembers(project, ownerFallback, membersVersion);
   if (!hasMeasure(project)) return null;
   const measure = project.measure;
   const mode = project.mode ?? "solo";
@@ -126,7 +127,7 @@ export function PursuitProgressPanel({
           })}
         </div>
         {actions}
-        <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} />
+        <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} onInvited={() => setMembersVersion((v) => v + 1)} />
       </section>
     );
   }
@@ -167,9 +168,9 @@ export function PursuitProgressPanel({
       </ul>
 
       <h3 className="mb-2 mt-5 text-sm">Our journey</h3>
-      <Journey current={s.current} target={measure.target} unit={measure.unit} entries={entries} milestones={measure.milestones} />
+      <Journey current={s.current} target={measure.target} unitOf={(n) => unitFor(measure, n)} entries={entries} milestones={measure.milestones} />
       {actions}
-      <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} />
+      <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} onInvited={() => setMembersVersion((v) => v + 1)} />
     </section>
   );
 }
@@ -229,13 +230,13 @@ function MilestoneList({ names, reached }: { names: string[]; reached: number })
 function Journey({
   current,
   target,
-  unit,
+  unitOf,
   entries,
   milestones,
 }: {
   current: number;
   target: number;
-  unit: string;
+  unitOf: (n: number) => string;
   entries: ProgressEntry[];
   milestones?: string[];
 }) {
@@ -243,7 +244,7 @@ function Journey({
     ? milestones.map((name, i) => ({ at: i + 1, label: name }))
     : [0.25, 0.5, 0.75, 1].map((f) => {
         const at = Math.max(1, Math.round(target * f));
-        return { at, label: `${formatAmount(at)} ${unit}` };
+        return { at, label: `${formatAmount(at)} ${unitOf(at)}` };
       });
   // When each mark was crossed, from the running total.
   let running = 0;
@@ -286,11 +287,13 @@ export function InviteDialog({
   onOpenChange,
   project,
   existing,
+  onInvited,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   project: Project;
   existing: PursuitMember[];
+  onInvited?: () => void;
 }) {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
@@ -301,6 +304,7 @@ export function InviteDialog({
     if (!user) return;
     const err = await saveInvites(project.id, user.id, [personId]);
     setStatus(err ? `Couldn't invite ${name}: ${err}` : `Invited ${name}.`);
+    if (!err) onInvited?.();
     setQuery("");
   };
 

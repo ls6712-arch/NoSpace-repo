@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Check, Minus, Plus } from "lucide-react";
 
 /** Terracotta fill used by every Pursuit progress bar. */
@@ -67,6 +67,15 @@ export function AmountStepper({
   allowDecimals: boolean;
 }) {
   const round = (v: number) => Math.max(0, allowDecimals ? Math.round(v * 100) / 100 : Math.round(v));
+  // The field keeps what's being typed, and only reports a number once it's
+  // a complete one. Parsing on every keystroke turned "1." back into "1", so
+  // typing 1.5 produced 15.
+  const [text, setText] = useState(String(value));
+  useEffect(() => {
+    if (Number(text.replace(/,/g, "")) !== value) setText(String(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+  const pattern = allowDecimals ? /^[\d,]*\.?\d*$/ : /^[\d,]*$/;
   return (
     <div className="flex items-center gap-2">
       <button
@@ -79,11 +88,16 @@ export function AmountStepper({
       </button>
       <input
         inputMode={allowDecimals ? "decimal" : "numeric"}
-        value={Number.isFinite(value) ? String(value) : ""}
+        value={text}
         onChange={(e) => {
-          const v = Number(e.target.value.replace(/,/g, ""));
-          onChange(Number.isFinite(v) ? round(v) : 0);
+          const t = e.target.value;
+          if (!pattern.test(t)) return;
+          setText(t);
+          if (t === "" || t.endsWith(".")) return;
+          const v = Number(t.replace(/,/g, ""));
+          if (Number.isFinite(v)) onChange(round(v));
         }}
+        onBlur={() => setText(String(value))}
         className="h-9 w-20 rounded-lg border border-border bg-card text-center text-sm text-foreground outline-none focus:border-[var(--coral-deep)]"
         aria-label="Amount"
       />

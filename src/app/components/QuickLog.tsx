@@ -8,6 +8,7 @@ import { useRewards } from "../context/RewardsContext";
 import { useSettings } from "../context/SettingsContext";
 import { Project, markActivity } from "../lib/journal";
 import { defaultSpaceSlug } from "../data/hobbies";
+import { guessSpace } from "../lib/pursuitProgress";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
 import { Button } from "./ui/button";
@@ -92,7 +93,7 @@ export function QuickLog({
     setSaving(true);
     setError(null);
     const text = line.trim();
-    const hobbySlug = pursuit.hobbySlug ?? defaultSpaceSlug();
+    const hobbySlug = pursuit.hobbySlug ?? guessSpace(pursuit.title) ?? defaultSpaceSlug();
     try {
       if (audience === "private") {
         const result = await addPrivateLog({ note: text, projectId: pursuit.id });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { localDateMs, toDateInput } from "../lib/pursuitProgress";
 import { Hash, CalendarDays, Heart } from "lucide-react";
 import { Goal, GoalShape, Project, setProjectGoal } from "../lib/journal";
 import { mirrorPursuit } from "../lib/pursuitsRemote";
@@ -19,7 +20,7 @@ function templateLabel(shape: GoalShape, targetNumber: string, unit: string, tar
     return `Finish ${targetNumber}${unit ? ` ${unit}` : ""}`;
   }
   if (shape === "date" && targetDate) {
-    const d = new Date(targetDate);
+    const d = new Date(localDateMs(targetDate) ?? targetDate);
     return `Ready by ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
   }
   return "";
@@ -79,7 +80,7 @@ export function GoalDialog({
     setTargetNumber(g?.targetNumber != null ? String(g.targetNumber) : "");
     setUnit(g?.unit ?? "");
     setVerb(g?.verb ?? "");
-    setTargetDate(g?.targetDate ? new Date(g.targetDate).toISOString().slice(0, 10) : "");
+    setTargetDate(g?.targetDate ? toDateInput(g.targetDate) : "");
     setHasDeadline(g?.shape === "number" && !!g?.targetDate);
     setFeeling(g?.shape === "feeling" ? g.label : "");
     setLabel(g?.label ?? "");
@@ -117,10 +118,10 @@ export function GoalDialog({
       targetDate:
         shape === "date"
           ? targetDate
-            ? new Date(targetDate).getTime()
+            ? localDateMs(targetDate)
             : undefined
           : shape === "number" && hasDeadline && targetDate
-            ? new Date(targetDate).getTime()
+            ? localDateMs(targetDate)
             : undefined,
     };
     setProjectGoal(project.id, goal);

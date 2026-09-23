@@ -12,7 +12,6 @@ import { PursuitDialog } from "./PursuitDialog";
 import { PursuitInvitesCard } from "./pursuit/PursuitProgressPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 
-const RAIL_LIMIT = 5;
 
 /**
  * Right rail, item 2 — your own Pursuits, and My Space's home for them.
@@ -51,7 +50,9 @@ export function PursuitsRail({
     return m.length ? m[m.length - 1].createdAt : undefined;
   };
   const due = active.filter((p) => checkInDue(p, lastMomentOf(p))).slice(0, 2);
-  const shown = active.filter((p) => !due.includes(p)).slice(0, RAIL_LIMIT);
+  // Every active Pursuit. A cap of 5 quietly hid the sixth — usually the
+  // newest, since it has no Moments to sort it up.
+  const shown = active.filter((p) => !due.includes(p));
   const resting = pursuits.filter((p) => pursuitStatus(p) === "resting");
   const complete = pursuits.filter((p) => pursuitStatus(p) === "complete");
 
