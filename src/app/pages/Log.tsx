@@ -878,6 +878,8 @@ export function Log() {
     setLocationName("");
     setLocationPrivacy("neighborhood");
     setScreen(pursuitScoped ? "pursuit-menu" : "choose");
+    audienceDecidedRef.current = false;
+    setAudience(defaultVisibilityLoaded ? defaultVisibility : "private");
   };
 
   const requiresLogin =
