@@ -34,7 +34,10 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   pathname === "/you" ||
   pathname.startsWith("/you/") ||
   pathname === "/studio" ||
-  pathname.startsWith("/u/");
+  pathname.startsWith("/u/") ||
+  // A Pursuit invite link: shows who invited you and to what before asking
+  // you to sign up — the whole point is reaching people not on Sushii yet.
+  pathname.startsWith("/join/");
 
 export function Root() {
   const { user, profile, loading, isConfigured } = useAuth();

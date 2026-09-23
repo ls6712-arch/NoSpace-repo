@@ -675,6 +675,10 @@ export function setProjectMembers(projectId: string, members: PursuitMember[]): 
   return patchProject(projectId, () => ({ members }));
 }
 
+export function setProjectMode(projectId: string, mode: PursuitMode): Project | undefined {
+  return patchProject(projectId, () => ({ mode }));
+}
+
 export function setProjectMeasure(projectId: string, measure: Measure): Project | undefined {
   return patchProject(projectId, () => ({ measure }));
 }

@@ -7,7 +7,9 @@ import {
   MessageCircleQuestion,
   MessagesSquare,
   Sprout,
+  Target,
   UserPlus,
+  Users,
   X,
 } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
@@ -31,6 +33,9 @@ const ICON: Record<string, typeof Bell> = {
   accepted: Check,
   message: MessagesSquare,
   hobby_follow: Sprout,
+  pursuit_invite: UserPlus,
+  pursuit_joined: Users,
+  pursuit_progress: Target,
 };
 
 function ago(ts: number) {

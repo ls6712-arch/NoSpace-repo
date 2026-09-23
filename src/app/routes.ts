@@ -29,6 +29,7 @@ import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
 import { CreatePursuit } from "./pages/CreatePursuit";
 import { AddMoment } from "./pages/AddMoment";
+import { JoinPursuit } from "./pages/JoinPursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
@@ -89,6 +90,7 @@ export const router = createHashRouter([
       { path: "space/:slug", Component: CategoryFeed },
       { path: "corner/:slug", Component: CornerPage },
       { path: "pursuits/new", Component: CreatePursuit },
+      { path: "join/:token", Component: JoinPursuit },
       { path: "pursuit/:id/moment", Component: AddMoment },
       { path: "pursuit/:id", Component: Pursuit },
       { path: "u/:username", Component: PublicProfile },

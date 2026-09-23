@@ -436,3 +436,96 @@ export async function fetchPursuitAsProject(pursuitId: string) {
     return null;
   }
 }
+
+// ── Invite links ─────────────────────────────────────────────────────────
+// supabase/migrations/20260923120000_pursuit_invite_links_and_notifications.sql
+
+/** The shareable URL for a token. Hash routing, so it works from any host. */
+export function inviteUrl(token: string): string {
+  const base = `${window.location.origin}${window.location.pathname}`;
+  return `${base}#/join/${token}`;
+}
+
+/** Reuses the Pursuit's active link if there is one, otherwise makes one. */
+export async function getOrCreateInviteLink(pursuitId: string, userId: string): Promise<{ token?: string; error?: string }> {
+  if (!supabase) return { error: "Invite links need an account." };
+  try {
+    const { data: existing } = await supabase
+      .from("pursuit_invite_links")
+      .select("token")
+      .eq("pursuit_id", pursuitId)
+      .is("revoked_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (existing?.[0]?.token) return { token: existing[0].token };
+    const { data, error } = await supabase
+      .from("pursuit_invite_links")
+      .insert({ pursuit_id: pursuitId, created_by: userId })
+      .select("token")
+      .single();
+    if (error || !data) return { error: error?.message ?? "Couldn't make a link." };
+    return { token: data.token };
+  } catch (e: any) {
+    return { error: e?.message ?? "Couldn't make a link." };
+  }
+}
+
+/** Stops a link working. The next "Copy invite link" makes a fresh one. */
+export async function revokeInviteLinks(pursuitId: string): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase
+      .from("pursuit_invite_links")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("pursuit_id", pursuitId)
+      .is("revoked_at", null);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export interface InvitePreview {
+  pursuitId: string;
+  title: string;
+  mode: PursuitMode;
+  measure?: Measure;
+  ownerId: string;
+  ownerName: string;
+  ownerAvatar?: string;
+  memberCount: number;
+}
+
+/** What /join/:token shows — works signed out. Null = link dead or unknown. */
+export async function fetchInvitePreview(token: string): Promise<InvitePreview | null> {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase.rpc("pursuit_invite_preview", { invite_token: token });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (error || !row) return null;
+    return {
+      pursuitId: row.pursuit_id,
+      title: row.title,
+      mode: (row.mode ?? "solo") as PursuitMode,
+      measure: row.measure ?? undefined,
+      ownerId: row.owner_id,
+      ownerName: row.owner_name,
+      ownerAvatar: row.owner_avatar ?? undefined,
+      memberCount: row.member_count ?? 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Joins via a link. Returns the Pursuit id, or an error to show. */
+export async function joinViaLink(token: string): Promise<{ pursuitId?: string; error?: string }> {
+  if (!supabase) return { error: "Joining needs an account." };
+  try {
+    const { data, error } = await supabase.rpc("join_pursuit_via_link", { invite_token: token });
+    if (error) return { error: error.message };
+    return { pursuitId: data as string };
+  } catch (e: any) {
+    return { error: e?.message ?? "Couldn't join." };
+  }
+}

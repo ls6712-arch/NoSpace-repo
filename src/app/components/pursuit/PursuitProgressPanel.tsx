@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Check, Plus, Search, UserPlus, Users } from "lucide-react";
+import { Check, Copy, Link2, Plus, Search, Share2, UserPlus, Users } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { Project, ProgressEntry, PursuitMember, addJoinedProject } from "../../lib/journal";
+import { Project, ProgressEntry, PursuitMember, addJoinedProject, setProjectMode } from "../../lib/journal";
 import { formatAmount, hasMeasure, summarize, targetText, unitFor } from "../../lib/pursuitProgress";
 import { usePursuitMembers, usePursuitProgress } from "../../lib/usePursuitProgress";
 import {
@@ -10,6 +10,10 @@ import {
   answerInvite,
   fetchMyInvites,
   fetchPursuitAsProject,
+  getOrCreateInviteLink,
+  inviteUrl,
+  mirrorPursuitMeasure,
+  revokeInviteLinks,
   saveInvites,
 } from "../../lib/pursuitsRemote";
 import { usePeopleSearch } from "../../lib/people";
@@ -56,14 +60,14 @@ export function PursuitProgressPanel({
 
   const actions = (
     <div className="mt-4 grid grid-cols-2 gap-2">
-      {viewerIsOwner && mode !== "solo" ? (
+      {viewerIsOwner ? (
         <Button variant="outline" className="h-11 rounded-xl" onClick={() => setInviting(true)}>
           <UserPlus className="size-4" /> Invite people
         </Button>
       ) : (
         <span />
       )}
-      <Link to={`/pursuit/${project.id}/moment`} className={mode === "solo" || !viewerIsOwner ? "col-span-2" : ""}>
+      <Link to={`/pursuit/${project.id}/moment`} className={!viewerIsOwner ? "col-span-2" : ""}>
         <Button variant="coral" className="h-11 w-full rounded-xl">
           <Plus className="size-4" /> Add a Moment
         </Button>
@@ -82,6 +86,7 @@ export function PursuitProgressPanel({
         {measure.kind === "milestones" && <MilestoneList names={measure.milestones ?? []} reached={Math.floor(s.current)} />}
         {measure.whatCounts && <p className="mt-3 text-xs text-muted-foreground">Counts: {measure.whatCounts}</p>}
         {viewerIsOwner && actions}
+        <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} onInvited={() => setMembersVersion((v) => v + 1)} />
       </section>
     );
   }
@@ -300,12 +305,60 @@ export function InviteDialog({
   const { people, loading } = usePeopleSearch(query);
   const [status, setStatus] = useState<string | null>(null);
 
+  const [link, setLink] = useState<string | null>(null);
+  const [linkState, setLinkState] = useState<"idle" | "making" | "copied" | "error">("idle");
+
+  // Inviting anyone into a solo Pursuit makes it side by side.
+  const ensureShared = () => {
+    if ((project.mode ?? "solo") !== "solo") return;
+    setProjectMode(project.id, "together");
+    void mirrorPursuitMeasure(project.id, "together", project.measure);
+  };
+
   const invite = async (personId: string, name: string) => {
     if (!user) return;
+    ensureShared();
     const err = await saveInvites(project.id, user.id, [personId]);
     setStatus(err ? `Couldn't invite ${name}: ${err}` : `Invited ${name}.`);
     if (!err) onInvited?.();
     setQuery("");
+  };
+
+  const makeLink = async () => {
+    if (!user) return;
+    setLinkState("making");
+    ensureShared();
+    const { token, error } = await getOrCreateInviteLink(project.id, user.id);
+    if (!token) {
+      setLinkState("error");
+      setStatus(`Couldn't make a link: ${error}`);
+      return;
+    }
+    const url = inviteUrl(token);
+    setLink(url);
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkState("copied");
+    } catch {
+      setLinkState("idle");
+    }
+  };
+
+  const shareLink = async () => {
+    if (!link) return;
+    try {
+      await navigator.share?.({ title: project.title, text: `Pursue "${project.title}" with me on Sushii`, url: link });
+    } catch {
+      // cancelled — nothing to do
+    }
+  };
+
+  const turnOff = async () => {
+    if (await revokeInviteLinks(project.id)) {
+      setLink(null);
+      setLinkState("idle");
+      setStatus("That link no longer works. Make a new one anytime.");
+    }
   };
 
   return (
@@ -313,8 +366,37 @@ export function InviteDialog({
       <DialogContent className="max-w-md">
         <DialogHeader className="text-left">
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Invite people</DialogTitle>
-          <DialogDescription>They'll see an invite in My Space.</DialogDescription>
+          <DialogDescription>Send a link to anyone, or invite people already on Sushii.</DialogDescription>
         </DialogHeader>
+        <div className="rounded-xl border border-border bg-surface-muted/40 p-3">
+          <p className="flex items-center gap-2 text-sm">
+            <Link2 className="size-4" /> Invite link
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Works for people who aren't on Sushii yet — they sign up and land in this Pursuit.</p>
+          {link ? (
+            <>
+              <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-lg border border-border bg-card px-2 text-xs" />
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button variant="coral" size="sm" onClick={makeLink}>
+                  <Copy className="size-3.5" /> {linkState === "copied" ? "Copied" : "Copy"}
+                </Button>
+                {typeof navigator !== "undefined" && "share" in navigator && (
+                  <Button variant="outline" size="sm" onClick={shareLink}>
+                    <Share2 className="size-3.5" /> Share
+                  </Button>
+                )}
+                <button type="button" onClick={turnOff} className="text-xs text-muted-foreground hover:text-foreground">
+                  Turn off link
+                </button>
+              </div>
+            </>
+          ) : (
+            <Button variant="coral" size="sm" className="mt-2" onClick={makeLink} disabled={!user || linkState === "making"}>
+              <Copy className="size-3.5" /> {linkState === "making" ? "Making link…" : "Copy invite link"}
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">Or find someone on Sushii — they'll get a notification.</p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
