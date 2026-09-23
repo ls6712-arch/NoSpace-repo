@@ -7,7 +7,6 @@ import { useTheme, type ThemePreference } from "../context/ThemeContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { useSocial } from "../context/SocialContext";
 import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { NotificationsMenu } from "./NotificationsMenu";
 
@@ -20,21 +19,7 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-/** Only appears once a real thread exists — a SocialContext "make/explore
- * together" match, or a direct message either side has sent (see
- * startDirectMessage(), the profile "Message" button). The old
- * connections-based messaging this also checked was retired along with
- * PersonActions and the connections table it depended on (see
- * ConnectionsContext.tsx); Follow (sql/profile-follows.sql) is a separate,
- * accept-based relationship and doesn't unlock messaging on its own. */
 function MessagesLink() {
-  const social = useSocial();
-  const open = social.participations.some(
-    (p) =>
-      p.status === "accepted" &&
-      (p.kind === "make_together" || p.kind === "explore_together" || p.kind === "direct_message"),
-  );
-  if (!open) return null;
   return (
     <Link to="/messages" aria-label="Messages" title="Messages">
       <Button variant="ghost" size="icon">
