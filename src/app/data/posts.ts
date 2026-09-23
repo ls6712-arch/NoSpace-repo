@@ -1,7 +1,7 @@
 import { CircleTabId } from "./circles";
 import { getHobby, subHobbyLabel } from "./hobbies";
 
-export type Visibility = "public" | "circle" | "friends";
+export type Visibility = "public" | "circle" | "followers";
 
 export interface Post {
   id: number;

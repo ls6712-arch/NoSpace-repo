@@ -50,7 +50,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
   public: { label: "Everyone", icon: Globe2 },
   circle: { label: "A Circle", icon: Users },
-  friends: { label: "Connections", icon: UserRound },
+  followers: { label: "Followers", icon: UserRound },
 };
 
 function fullDate(ts: number) {
@@ -116,7 +116,7 @@ export function MomentDetail({
 
   const space = getHobby(post.hobbySlug);
   const hobbyLabel = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : null;
-  const audience = AUDIENCE[post.visibility] ?? AUDIENCE.friends;
+  const audience = AUDIENCE[post.visibility] ?? AUDIENCE.followers;
   const attachedId = journal.entryProject[String(post.id)];
   const attached = journal.projects.find((p) => p.id === attachedId);
   const openProjects = journal.projects.filter((p) => !p.finishedAt);

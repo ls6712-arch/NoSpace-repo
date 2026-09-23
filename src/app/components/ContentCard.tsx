@@ -29,7 +29,7 @@ function initials(name: string) {
  */
 const AUDIENCE: Record<string, { label: string; icon: typeof Users }> = {
   circle: { label: "A Circle", icon: Users },
-  friends: { label: "Connections", icon: UserRound },
+  followers: { label: "Followers", icon: UserRound },
 };
 
 // One fixed ratio, not a per-post hash — every card the same size, in a real

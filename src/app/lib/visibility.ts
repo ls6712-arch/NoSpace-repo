@@ -1,15 +1,14 @@
 import { Globe2, Lock, Users, type LucideIcon } from "lucide-react";
 
 /**
- * "Only you" — the closest existing thing to a private Moment. There is no
- * literal `private` value in `Visibility` yet (`public | circle | friends`);
- * `friends` depended on the now-retired Connections feature and is the
- * closest analog until Task C adds a real one. Structurally typed (not
- * `Post["visibility"]`) so this keeps working the moment that value exists,
- * with no signature change needed here or at any call site.
+ * "Only you" — a Moment truly nobody else can see. `private` is a real,
+ * independent value here, not a stand-in for anything else. Structurally
+ * typed (not `Post["visibility"]`, which doesn't carry a literal `"private"`
+ * member) so this keeps working regardless of whether the type it's checking
+ * against has caught up to include it.
  */
 export function isOnlyYou(post: { visibility: string }): boolean {
-  return post.visibility === "friends" || post.visibility === "private";
+  return post.visibility === "private";
 }
 
 type VisibilityPost = { visibility: string; circleId?: number };
@@ -17,8 +16,8 @@ type VisibilityPost = { visibility: string; circleId?: number };
 /**
  * The three audiences a Moment can be switched to *after* it's posted —
  * deliberately narrower than Log.tsx's own four-way creation-time picker
- * (which still offers the legacy "friends"/Connections value for whatever
- * keeps using it). Matches the three-way vocabulary Settings > Privacy's
+ * (which also offers "followers", a real, independent tier this switcher
+ * doesn't expose). Matches the three-way vocabulary Settings > Privacy's
  * "Default visibility for new Moments" already uses (`private|circle|public`),
  * so a Moment's own visibility control and the account-wide default speak
  * the same three words.
@@ -45,5 +44,6 @@ export const MOMENT_VISIBILITY_OPTIONS: {
 export function visibilityWord(post: VisibilityPost, circleName?: string): string {
   if (isOnlyYou(post)) return "ONLY YOU";
   if (post.visibility === "circle") return circleName ?? "A Circle";
+  if (post.visibility === "followers") return "FOLLOWERS";
   return "PUBLIC";
 }

@@ -49,8 +49,7 @@ export function You() {
     createdAt: log.createdAt,
     // Post["visibility"] doesn't have a literal "private" value yet — see
     // lib/visibility.ts's isOnlyYou(), which is deliberately typed structurally
-    // (not Post["visibility"]) for exactly this reason, and already treats a
-    // literal "private" string the same as "friends". Cast here rather than
+    // (not Post["visibility"]) for exactly this reason. Cast here rather than
     // widen Visibility itself, which is out of scope for this change.
     visibility: "private" as Post["visibility"],
   }));

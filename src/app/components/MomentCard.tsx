@@ -101,7 +101,8 @@ export interface MomentCardProps {
 /** "Change who sees this" — the eye-icon control on your own Moment. Only
  * three choices, matching Settings > Privacy's own "Default visibility for
  * new Moments" vocabulary, not Log.tsx's wider four-way creation-time picker
- * (which still carries the legacy "friends"/Connections value). */
+ * (which also offers "followers", a real, independent tier this switcher
+ * doesn't expose). */
 function VisibilityDialog({
   post,
   open,
