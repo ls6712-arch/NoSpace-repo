@@ -270,19 +270,19 @@ export default function Home() {
         </section>
 
         <section className="montage-section workflow-section" id="workflow">
-          <div className="montage-heading workflow-heading"><div><p className="eyebrow"><span /> THE SUSHII WORKFLOW</p><h2>Create a Moment.<br />Start a Pursuit.<br /><em>Keep going.</em></h2></div><p>Sushii helps you move from something you want to remember to something you want to keep doing.</p></div>
+          <div className="montage-heading workflow-heading"><div><p className="eyebrow"><span /> THE SUSHII WORKFLOW</p><h2>Create moments.<br />Follow your interests.<br /><em>Keep going.</em></h2></div><p>Sushii gives the things you care about a place to grow.</p></div>
           <div className="workflow-steps">
             <article className="workflow-step workflow-moment">
               <div className="workflow-image"><MomentScreen /></div>
-              <div className="workflow-caption"><span>01</span><div><small className="workflow-screen-label">Moment detail · My Space</small><h3>Create a Moment</h3><p>Capture something you did, discovered, made, or want to remember.</p></div></div>
+              <div className="workflow-caption"><span>01</span><div><small className="workflow-screen-label">Create Moment · My Space</small><h3>Create a Moment</h3><p>Something happened. Keep it.</p><small className="workflow-detail-copy">Capture something worth keeping: a photo, thought, discovery, small win, or something you want to remember.</small></div></div>
             </article>
             <article className="workflow-step workflow-pursuit">
               <div className="workflow-image"><PursuitScreen /></div>
-              <div className="workflow-caption"><span>02</span><div><small className="workflow-screen-label">Pursuit detail · My Space</small><h3>Start a Pursuit</h3><p>Choose something you want to practice or work toward, on your own or with friends.</p></div></div>
+              <div className="workflow-caption"><span>02</span><div><small className="workflow-screen-label">Pursuit detail · My Space</small><h3>Start a Pursuit</h3><p>Want to keep doing it? Make it a Pursuit.</p><small className="workflow-detail-copy">Do it yourself or invite friends.</small></div></div>
             </article>
             <article className="workflow-step workflow-keepgoing">
               <div className="workflow-image"><PursuitScreen /></div>
-              <div className="workflow-caption"><span>03</span><div><small className="workflow-screen-label">Pursuit progress · My Space</small><h3>Keep Going</h3><p>Add progress as you return, and let the story of the Pursuit take shape.</p></div></div>
+              <div className="workflow-caption"><span>03</span><div><small className="workflow-screen-label">Pursuit progress · My Space</small><h3>Keep Going</h3><p>Come back to it. Add another Moment.</p><small className="workflow-detail-copy">Your Moments become the record of the thing you are doing.</small></div></div>
             </article>
           </div>
           <p className="workflow-footer">Your interests are part of your story.</p>

@@ -529,3 +529,8 @@ h1 em, h2 em { color: var(--rust); font-style: italic; font-weight: 400; }
   .workflow-step { opacity: 1; transform: none; transition: none; }
   .workflow-image .product-frame { transition: none; }
 }
+
+.workflow-detail-copy { display: block; max-width: 280px; margin-top: 10px; color: #8a7d70; font-size: 12px; line-height: 1.45; }
+@media (max-width: 780px) {
+  .workflow-detail-copy { max-width: none; }
+}
