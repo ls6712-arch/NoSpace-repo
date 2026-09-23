@@ -246,7 +246,7 @@ export default function Home() {
         <section className="difference-section" id="how-it-works">
           <div className="brand-statement section-wrap">
             <div className="brand-statement-image"><img src={imagery.identity} alt="A table of many interests and creative practices" /></div>
-            <div className="brand-statement-copy"><p className="eyebrow"><span /> A WIDER WAY TO BE A PERSON</p><h2>Your interests do not have to fit <em>one identity.</em></h2><p>You can be a gardener and a reader, a beginner and an expert, a maker and a wanderer. Sushii gives every part of your curiosity somewhere to live.</p><div className="difference-lines"><p><span>01</span> No endless scrolling.</p><p><span>02</span> No popularity contest.</p><p><span>03</span> Just the things you care about and the people who care about them too.</p></div></div>
+            <div className="brand-statement-copy"><p className="eyebrow"><span /> A WIDER WAY TO BE A PERSON</p><h2>Your interests do not have to fit <em>one identity.</em></h2><p>You can be a gardener and a reader, a beginner and an expert, a maker and a wanderer.</p><p>Sushii gives all the things you are curious about a place to grow.</p></div>
           </div>
         </section>
 
