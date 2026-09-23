@@ -13,6 +13,7 @@ import {
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
+import { respondToFollow } from "../lib/profileFollows";
 import { Button } from "./ui/button";
 
 /**
@@ -46,7 +47,9 @@ export function NotificationsMenu() {
   const ref = useRef<HTMLDivElement>(null);
   const social = useSocial();
   const { user } = useAuth();
-  const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
+  const [followRefreshKey, setFollowRefreshKey] = useState(0);
+  const incomingFollows = useIncomingFollowRequests(user?.id, followRefreshKey) ?? [];
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -66,10 +69,19 @@ export function NotificationsMenu() {
       (user ? p.toUser === user.id : false),
   );
 
-  // A pending follow request lives in profile_follows, not SocialContext, so
-  // it never lit this bell before — the request itself is answered from
-  // /inbox (respondToFollow), this just says one's there.
+  // A pending follow request lives in profile_follows, not SocialContext —
+  // this used to only light the bell for one (the request itself was only
+  // answerable from /inbox); it's now rendered and answerable right here
+  // too, the same respondToFollow() /inbox uses, via answerFollow() below.
   const dot = social.unreadCount > 0 || incoming.length > 0 || incomingFollows.length > 0;
+
+  const answerFollow = async (followerId: string, accept: boolean) => {
+    if (!user || respondingTo) return;
+    setRespondingTo(followerId);
+    await respondToFollow(followerId, user.id, accept);
+    setFollowRefreshKey((k) => k + 1);
+    setRespondingTo(null);
+  };
 
   return (
     <div className="relative" ref={ref}>
@@ -130,10 +142,46 @@ export function NotificationsMenu() {
             </ul>
           )}
 
-          {social.notifications.length === 0 && incoming.length === 0 ? (
+          {incomingFollows.length > 0 && (
+            <ul className="border-b border-[var(--hairline)]">
+              {incomingFollows.map((r) => (
+                <li key={r.followerId} className="px-4 py-3">
+                  <p className="text-sm">
+                    <strong className="font-normal" style={{ fontFamily: "var(--font-serif)" }}>
+                      {r.displayName}
+                    </strong>{" "}
+                    wants to follow your Shelf.
+                  </p>
+                  <div className="mt-2.5 flex gap-2">
+                    <Button
+                      variant="coral"
+                      size="sm"
+                      disabled={respondingTo === r.followerId}
+                      onClick={() => answerFollow(r.followerId, true)}
+                    >
+                      <Check className="size-3.5" />
+                      Accept
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={respondingTo === r.followerId}
+                      onClick={() => answerFollow(r.followerId, false)}
+                    >
+                      <X className="size-3.5" />
+                      Decline
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {social.notifications.length === 0 && incoming.length === 0 && incomingFollows.length === 0 ? (
             <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground">
               Nothing yet. Thoughts on your moments, people joining your
-              activities, and requests to make or explore together turn up here.
+              activities, follow requests, and asks to make or explore
+              together all turn up here.
             </p>
           ) : (
             <ul className="max-h-80 overflow-y-auto py-1">
