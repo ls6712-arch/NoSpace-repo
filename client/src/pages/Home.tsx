@@ -13,6 +13,8 @@ import {
   MessageCircle,
   MoveUpRight,
   Plus,
+  Search,
+  Bell,
   Sparkles,
   UsersRound,
   X,
@@ -197,24 +199,19 @@ export default function Home() {
           <a href="#space" onClick={() => setMenuOpen(false)}>My Space</a>
           <a href="#circles" onClick={() => setMenuOpen(false)}>Circles</a>
         </nav>
-        <div className="nav-cta"><a href="#discover" onClick={() => setMenuOpen(false)}>Start your log</a><a href="https://www.trynospace.com" target="_blank" rel="noreferrer">Log in</a></div>
+        <div className="nav-cta reference-nav-actions"><a className="start-log-link" href="#discover" onClick={() => setMenuOpen(false)}><Plus size={14} /> Start your log</a><label className="nav-search"><Search size={14} /><input aria-label="Search hobbies, people, or spaces" placeholder="Search hobbies, people, or spaces" /></label><button className="nav-icon-button" type="button" aria-label="Notifications"><Bell size={16} /></button><a className="login-link" href="https://www.trynospace.com" target="_blank" rel="noreferrer">Log in</a></div>
         <button className="menu-toggle" type="button" aria-label="Toggle navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
       </header>
 
       <main id="top">
-        <section className="hero section-wrap" id="discover">
-          <div className="hero-intro">
-            <p className="eyebrow"><span /> A PLACE FOR THE MANY SIDES OF YOU</p>
+        <section className="hero reference-hero" id="discover">
+          <div className="reference-hero-image"><img src={imagery.hero} alt="Different activities and interests coming together" /></div>
+          <div className="reference-hero-wash" aria-hidden="true" />
+          <div className="reference-hero-content">
+            <p className="eyebrow"><span /> A SPACE FOR MORE OF YOU</p>
             <h1>Your interests are <em>part of</em> your story.</h1>
             <p className="hero-copy">Keep track of what you are into, what you are learning, making, exploring, and doing.</p>
             <div className="hero-actions"><ActionLink dark href="#moments">Start exploring</ActionLink><a href="#how-it-works" className="text-link">See how it works <ArrowDown size={15} /></a></div>
-            <SocialProof />
-          </div>
-          <div className="hero-visual" aria-label="Sushii product interface with a world of interests behind it">
-            <div className="hero-backdrop"><img src={imagery.hero} alt="Different activities and interests coming together" /></div>
-            <div className="hero-product-foreground"><SpaceScreen /></div>
-            <div className="hero-visual-caption"><span>01</span> many interests, one story</div>
-            <div className="hero-visual-note"><span>02</span> keep exploring</div>
           </div>
         </section>
 
