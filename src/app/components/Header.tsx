@@ -33,7 +33,7 @@ function MessagesLink() {
   );
   if (!open) return null;
   return (
-    <Link to="/inbox" aria-label="Messages" title="Messages">
+    <Link to="/messages" aria-label="Messages" title="Messages">
       <Button variant="ghost" size="icon">
         <MessagesSquare className="size-5" />
       </Button>
