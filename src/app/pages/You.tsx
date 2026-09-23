@@ -18,6 +18,7 @@ import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../com
 import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
+import { FollowListDialog } from "../components/FollowListDialog";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
 import { usePrimaryHobbyKey } from "../components/usePrimaryHobbyKey";
 import { SignUpPrompt } from "../components/SignUpPrompt";
@@ -63,6 +64,8 @@ export function You() {
   const { circlesVisible } = useSettings();
   const profileLinks = useProfileLinks();
   const [shareOpen, setShareOpen] = useState(false);
+  const [followListOpen, setFollowListOpen] = useState(false);
+  const [followListTab, setFollowListTab] = useState<"followers" | "following">("followers");
   const { unlockedBadgeIds } = useRewards();
   const { slug: primaryHobbySlug, label: primaryHobbyLabel } = usePrimaryHobbyKey();
   const unlockedBadges = badges.filter((b) => unlockedBadgeIds.includes(b.id));
@@ -162,16 +165,41 @@ export function You() {
                   {followerCount !== null && followerCount > 0 && (
                     <>
                       <span className="text-muted-foreground/60" aria-hidden="true">·</span>
-                      <span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFollowListTab("followers");
+                          setFollowListOpen(true);
+                        }}
+                        className="transition-colors hover:text-foreground hover:underline"
+                      >
                         <strong className="text-foreground">{followerCount}</strong>{" "}
                         {followerCount === 1 ? "follower" : "followers"}
-                      </span>
+                      </button>
                     </>
                   )}
                   {followerCount === 0 && (
                     <>
                       <span className="text-muted-foreground/60" aria-hidden="true">·</span>
                       <span>No one's following yet</span>
+                    </>
+                  )}
+                  {/* No count shown here — "who you follow" isn't a number
+                      worth advertising the way follower count is, it's just
+                      a place to get to the list. */}
+                  {user && (
+                    <>
+                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFollowListTab("following");
+                          setFollowListOpen(true);
+                        }}
+                        className="transition-colors hover:text-foreground hover:underline"
+                      >
+                        Following
+                      </button>
                     </>
                   )}
                 </div>
@@ -482,6 +510,14 @@ export function You() {
 
       <MomentDetail post={openPost} owned onOpenChange={(o) => !o && setOpenPost(null)} />
       <ShareProfileDialog open={shareOpen} onOpenChange={setShareOpen} />
+      {user && (
+        <FollowListDialog
+          open={followListOpen}
+          onOpenChange={setFollowListOpen}
+          profileId={user.id}
+          initialTab={followListTab}
+        />
+      )}
       <PursuitDialog open={pursuitDialog} onOpenChange={setPursuitDialog} />
     </div>
   );

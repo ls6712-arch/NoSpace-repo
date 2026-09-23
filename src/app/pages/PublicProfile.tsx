@@ -25,6 +25,7 @@ import { ProfileLink } from "../lib/profileLinks";
 import { ProfileLinksRow } from "../components/ProfileLinks";
 import { useFollowerCount } from "../lib/useFollowerCount";
 import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/profileFollows";
+import { FollowListDialog } from "../components/FollowListDialog";
 
 /** Whichever Space shows up most in their posts — used to pick a Circles
  * suggestion and the closing banner's illustration, not to claim membership
@@ -92,6 +93,7 @@ export function PublicProfile() {
   const [followBusy, setFollowBusy] = useState(false);
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
   const [messageBusy, setMessageBusy] = useState(false);
+  const [followListOpen, setFollowListOpen] = useState(false);
   const followerCount = useFollowerCount(
     state.status === "ready" ? state.personId : undefined,
     followRefreshKey,
@@ -371,10 +373,14 @@ export function PublicProfile() {
                 {followerCount !== null && followerCount > 0 && (
                   <>
                     <span className="text-muted-foreground/60" aria-hidden="true">·</span>
-                    <span>
+                    <button
+                      type="button"
+                      onClick={() => setFollowListOpen(true)}
+                      className="transition-colors hover:text-foreground hover:underline"
+                    >
                       <strong className="text-foreground">{followerCount}</strong>{" "}
                       {followerCount === 1 ? "follower" : "followers"}
-                    </span>
+                    </button>
                   </>
                 )}
               </div>
@@ -616,6 +622,13 @@ export function PublicProfile() {
               setSearchParams(next, { replace: true });
             }
           }}
+        />
+
+        <FollowListDialog
+          open={followListOpen}
+          onOpenChange={setFollowListOpen}
+          profileId={personId}
+          initialTab="followers"
         />
 
         {/* The one place this page asks for anything */}

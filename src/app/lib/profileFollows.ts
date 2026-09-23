@@ -19,6 +19,23 @@ export interface IncomingFollowRequest {
   createdAt: number;
 }
 
+export type FollowListPerson = { id: string; username: string | null; displayName: string; avatarUrl?: string };
+
+async function fetchProfilesByIds(ids: string[]): Promise<FollowListPerson[]> {
+  if (!supabase || ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, avatar_url")
+    .in("id", ids);
+  if (error || !data) return [];
+  return data.map((p: any) => ({
+    id: p.id as string,
+    username: p.username as string | null,
+    displayName: (p.display_name as string)?.trim() || "Someone",
+    avatarUrl: (p.avatar_url as string) ?? undefined,
+  }));
+}
+
 export async function fetchFollowerCount(profileId: string): Promise<number> {
   if (!supabase) return 0;
   // A pending or declined row isn't a follower yet — only an accepted one is.
@@ -44,6 +61,32 @@ export async function fetchFollowingIds(userId: string): Promise<string[]> {
     .eq("status", "accepted");
   if (error || !data) return [];
   return data.map((row) => row.followed_id as string);
+}
+
+/** Who's actually following this profile — the people, not just the count
+ * `fetchFollowerCount` above answers. */
+export async function fetchFollowers(profileId: string): Promise<FollowListPerson[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("profile_follows")
+    .select("follower_id")
+    .eq("followed_id", profileId)
+    .eq("status", "accepted");
+  if (error || !data) return [];
+  return fetchProfilesByIds(data.map((r: any) => r.follower_id as string));
+}
+
+/** Who this profile follows — same shape as fetchFollowers, the other
+ * direction. */
+export async function fetchFollowing(profileId: string): Promise<FollowListPerson[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("profile_follows")
+    .select("followed_id")
+    .eq("follower_id", profileId)
+    .eq("status", "accepted");
+  if (error || !data) return [];
+  return fetchProfilesByIds(data.map((r: any) => r.followed_id as string));
 }
 
 export async function fetchFollowStatus(viewerId: string, profileId: string): Promise<FollowStatus> {
