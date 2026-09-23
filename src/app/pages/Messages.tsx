@@ -3,17 +3,20 @@ import { Link, useSearchParams } from "react-router";
 import { Handshake, MessageCircle, MessagesSquare, Send } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
+import { supabase } from "../../lib/supabase";
+import { fetchFollowingIds } from "../lib/profileFollows";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
  * direct message either side sent (see SocialContext.tsx's
- * startDirectMessage() — the "Message" button on a profile). There's still
- * no way to start a thread from *this* page itself; every thread here began
- * somewhere else — a request that got accepted, or a "Message" tap on
- * someone's profile, which is how `?thread=` lands here already selected.
+ * startDirectMessage() — the "Message" button on a profile, and this page's
+ * own "New message" picker, limited to people you follow). A thread can also
+ * arrive already selected via `?thread=`, e.g. from a "Message" tap on
+ * someone's profile.
  */
 function initials(name: string) {
   return name
@@ -35,6 +38,43 @@ export function Messages() {
   const [activeId, setActiveId] = useState<string | number | null>(() => searchParams.get("thread"));
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [following, setFollowing] = useState<{ id: string; name: string }[]>([]);
+  const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      social.refresh();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [social.refresh]);
+
+  useEffect(() => {
+    if (!pickerOpen || !user) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingFollowing(true);
+      const ids = await fetchFollowingIds(user.id);
+      if (!supabase || ids.length === 0) {
+        if (!cancelled) {
+          setFollowing([]);
+          setLoadingFollowing(false);
+        }
+        return;
+      }
+      const { data } = await supabase.from("profiles").select("id, display_name").in("id", ids);
+      if (!cancelled) {
+        setFollowing(
+          (data ?? []).map((p: any) => ({ id: p.id as string, name: (p.display_name as string) || "Someone" })),
+        );
+        setLoadingFollowing(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pickerOpen, user]);
 
   const threads = social.participations.filter(
     (p) =>
@@ -64,6 +104,59 @@ export function Messages() {
     setDraft("");
   };
 
+  const openPicker = () => {
+    setStartError(null);
+    setPickerOpen(true);
+  };
+
+  const startThreadWith = async (person: { id: string; name: string }) => {
+    setStartError(null);
+    const result = await social.startDirectMessage(person.id, person.name);
+    if (result.id) {
+      setActiveId(result.id);
+      setPickerOpen(false);
+    } else {
+      setStartError("Couldn't start that conversation. Try again.");
+    }
+  };
+
+  const newMessageDialog = (
+    <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>New message</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          {loadingFollowing ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">Loading…</p>
+          ) : following.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              Follow someone first to message them.
+            </p>
+          ) : (
+            <ul className="max-h-72 space-y-1 overflow-y-auto">
+              {following.map((person) => (
+                <li key={person.id}>
+                  <button
+                    type="button"
+                    onClick={() => startThreadWith(person)}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                  >
+                    <Avatar className="size-7 shrink-0">
+                      <AvatarFallback className="text-[10px]">{initials(person.name)}</AvatarFallback>
+                    </Avatar>
+                    {person.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {startError && <p className="text-xs text-[var(--coral-text)]">{startError}</p>}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   if (threads.length === 0) {
     return (
       <div className="min-h-screen bg-surface py-14">
@@ -79,9 +172,15 @@ export function Messages() {
             or Explore together request, or when you send someone a direct
             message from their profile.
           </p>
-          <Link to="/discover">
-            <Button variant="outline">Find someone to make something with</Button>
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Link to="/discover">
+              <Button variant="outline">Find someone to make something with</Button>
+            </Link>
+            <Button variant="coral" onClick={openPicker}>
+              New message
+            </Button>
+          </div>
+          {newMessageDialog}
         </div>
       </div>
     );
@@ -90,13 +189,19 @@ export function Messages() {
   return (
     <div className="min-h-screen bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-4xl px-4">
-        <h1 className="mb-1 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Messages
-        </h1>
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <h1 className="text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+            Messages
+          </h1>
+          <Button variant="coral" size="sm" onClick={openPicker}>
+            New message
+          </Button>
+        </div>
         <p className="mb-8 text-sm text-muted-foreground">
           People who accepted making or exploring something together, and
           anyone who's sent or received a direct message.
         </p>
+        {newMessageDialog}
 
         <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
           {/* Threads */}
