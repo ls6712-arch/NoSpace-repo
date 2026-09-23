@@ -90,8 +90,10 @@ export function Messages() {
     if (result.id) {
       setActiveId(result.id);
       setPickerOpen(false);
+    } else if (result.error === "self") {
+      setStartError("That's your own account.");
     } else {
-      setStartError("Couldn't start that conversation. Try again.");
+      setStartError(`Couldn't start that conversation (${result.error ?? "unknown error"}). Try again.`);
     }
   };
 
