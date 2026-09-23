@@ -105,6 +105,17 @@ interface SocialContextType {
   /** Keyed by user id — display names are not unique. */
   threadWith: (personId: string) => Participation | undefined;
   canMessage: (personId: string) => boolean;
+  /**
+   * Opens (or reuses) a direct-message thread with someone, no request or
+   * acceptance needed — the "Message" button on a profile. Reuses whatever
+   * accepted thread already exists with this person, of any kind, rather
+   * than forking a second parallel one if a make/explore-together match
+   * already unlocked messaging.
+   */
+  startDirectMessage: (
+    personId: string,
+    personName: string,
+  ) => Promise<{ id: number | string | null; error: "self" | "failed" | null }>;
 
   thoughtsFor: (postId: number) => Thought[];
   addThought: (
@@ -515,11 +526,51 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     state.participations.find(
       (p) =>
         p.status === "accepted" &&
-        (p.kind === "make_together" || p.kind === "explore_together") &&
+        (p.kind === "make_together" || p.kind === "explore_together" || p.kind === "direct_message") &&
         (p.toUser === personId || p.fromUser === personId),
     );
 
   const canMessage = (name: string) => !!threadWith(name);
+
+  const startDirectMessage: SocialContextType["startDirectMessage"] = async (personId, personName) => {
+    if (user && personId === user.id) return { id: null, error: "self" as const };
+
+    // Already have an open thread with this person — of any kind, not just
+    // a prior direct message — so this never forks a second, parallel one.
+    const existing = threadWith(personId);
+    if (existing) return { id: existing.id, error: null };
+
+    if (supabase && user) {
+      const { data, error } = await supabase
+        .from("participations")
+        .insert({
+          kind: "direct_message",
+          from_user: user.id,
+          to_user: personId,
+          // Pre-accepted: nobody has to agree to anything for a direct
+          // message to open, unlike make_together/explore_together.
+          status: "accepted",
+        })
+        .select()
+        .single();
+      if (error || !data) return { id: null, error: "failed" as const };
+      refresh();
+      return { id: data.id, error: null };
+    }
+
+    const entry: Participation = {
+      id: localId(),
+      kind: "direct_message",
+      fromUser: myId,
+      fromName: myName,
+      toUser: personId,
+      toName: personName,
+      status: "accepted",
+      createdAt: Date.now(),
+    };
+    setState({ ...state, participations: [entry, ...state.participations] });
+    return { id: entry.id, error: null };
+  };
 
   /* ── Thoughts ───────────────────────────────────────────────────────── */
 
@@ -664,6 +715,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         respond,
         threadWith,
         canMessage,
+        startDirectMessage,
         thoughtsFor,
         addThought,
         removeThought,

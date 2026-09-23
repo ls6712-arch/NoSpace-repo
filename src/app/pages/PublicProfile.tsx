@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router";
-import { ArrowRight, Plus, Share2 } from "lucide-react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { ArrowRight, MessageCircle, Plus, Share2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import { useSocial } from "../context/SocialContext";
 import { Post } from "../data/posts";
 import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
 import { circlesByHobby } from "../data/circles";
@@ -57,6 +58,8 @@ function primaryHobbySlug(posts: Post[]): string | undefined {
 export function PublicProfile() {
   const { username = "" } = useParams();
   const { user } = useAuth();
+  const social = useSocial();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [state, setState] = useState<
     | { status: "loading" }
@@ -88,6 +91,7 @@ export function PublicProfile() {
   const [followStatus, setFollowStatus] = useState<FollowStatus>("none");
   const [followBusy, setFollowBusy] = useState(false);
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
+  const [messageBusy, setMessageBusy] = useState(false);
   const followerCount = useFollowerCount(
     state.status === "ready" ? state.personId : undefined,
     followRefreshKey,
@@ -406,6 +410,24 @@ export function PublicProfile() {
                       : followStatus === "pending"
                         ? "Requested"
                         : "Follow"}
+                  </Button>
+                )}
+                {/* No request, no acceptance — see SocialContext.tsx's
+                    startDirectMessage(). Reuses an existing thread with this
+                    person if one's already open, of any kind. */}
+                {!isMe && user && (
+                  <Button
+                    variant="outline"
+                    disabled={messageBusy}
+                    onClick={async () => {
+                      setMessageBusy(true);
+                      const { id, error } = await social.startDirectMessage(personId, displayName);
+                      setMessageBusy(false);
+                      if (!error && id != null) navigate(`/messages?thread=${id}`);
+                    }}
+                  >
+                    <MessageCircle className="size-3.5" />
+                    Message
                   </Button>
                 )}
                 <CopyLinkButton />

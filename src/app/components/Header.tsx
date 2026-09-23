@@ -20,16 +20,19 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-/** Only appears once an accepted request has actually opened a thread — a
- * SocialContext "make/explore together" match. The old connections-based
- * messaging this also checked was retired along with PersonActions and the
- * connections table it depended on (see ConnectionsContext.tsx); Follow
- * (sql/profile-follows.sql) is a separate, accept-based relationship and
- * doesn't unlock messaging. */
+/** Only appears once a real thread exists — a SocialContext "make/explore
+ * together" match, or a direct message either side has sent (see
+ * startDirectMessage(), the profile "Message" button). The old
+ * connections-based messaging this also checked was retired along with
+ * PersonActions and the connections table it depended on (see
+ * ConnectionsContext.tsx); Follow (sql/profile-follows.sql) is a separate,
+ * accept-based relationship and doesn't unlock messaging on its own. */
 function MessagesLink() {
   const social = useSocial();
   const open = social.participations.some(
-    (p) => p.status === "accepted" && (p.kind === "make_together" || p.kind === "explore_together"),
+    (p) =>
+      p.status === "accepted" &&
+      (p.kind === "make_together" || p.kind === "explore_together" || p.kind === "direct_message"),
   );
   if (!open) return null;
   return (

@@ -48,18 +48,24 @@ create policy "you manage your own hobby follows"
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 4. Participation — the four ways to be part of something
+-- 4. Participation — the five ways to be part of something
 --
 --    keep_exploring  follows a hobby (no person relationship, no request)
 --    join_in         taking part in an activity someone posted
 --    make_together   mutual, must be accepted
 --    explore_together mutual, must be accepted
+--    direct_message  not mutual — inserted already 'accepted' (see
+--                    supabase/migrations/20260923000000_widen_participations_
+--                    kind_for_dm.sql for the widening this needed on an
+--                    already-live table; this create-fresh script's own
+--                    constraint already reflects it)
 --
--- Only an accepted make_together / explore_together unlocks messaging.
+-- An accepted make_together / explore_together / direct_message unlocks
+-- messaging.
 -- ─────────────────────────────────────────────────────────────────────────
 create table if not exists public.participations (
   id bigint generated always as identity primary key,
-  kind text not null check (kind in ('join_in','make_together','explore_together')),
+  kind text not null check (kind in ('join_in','make_together','explore_together','direct_message')),
   from_user uuid not null references auth.users (id) on delete cascade,
   to_user uuid references auth.users (id) on delete cascade,
   -- What it's about: the post being joined, and/or the hobby it concerns.
@@ -170,7 +176,8 @@ create policy "you mark your own as read"
 create index if not exists notifications_user_idx on public.notifications (user_id, created_at desc);
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 7. Messages — only within an accepted make_together / explore_together
+-- 7. Messages — only within an accepted make_together / explore_together /
+--    direct_message
 -- ─────────────────────────────────────────────────────────────────────────
 create table if not exists public.messages (
   id bigint generated always as identity primary key,
@@ -189,7 +196,7 @@ create policy "messages need an accepted participation"
       select 1 from public.participations p
       where p.id = messages.participation_id
         and p.status = 'accepted'
-        and p.kind in ('make_together','explore_together')
+        and p.kind in ('make_together','explore_together','direct_message')
         and (auth.uid() = p.from_user or auth.uid() = p.to_user)
     )
   );
@@ -203,7 +210,7 @@ create policy "you can write in an accepted thread"
       select 1 from public.participations p
       where p.id = messages.participation_id
         and p.status = 'accepted'
-        and p.kind in ('make_together','explore_together')
+        and p.kind in ('make_together','explore_together','direct_message')
         and (auth.uid() = p.from_user or auth.uid() = p.to_user)
     )
   );

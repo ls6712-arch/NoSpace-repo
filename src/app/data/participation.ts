@@ -1,16 +1,22 @@
 /**
- * The four ways to be part of something on Sushii.
+ * The five ways to be part of something on Sushii.
  *
  * None of these is a follower relationship. "Keep exploring" attaches you to a
  * hobby, not a person. "Join in" attaches you to a thing that is happening.
- * The two mutual ones are requests about doing something specific together,
- * and they are the only route to a private message — there are no cold DMs.
+ * The two mutual ones are requests about doing something specific together.
+ *
+ * "Direct message" is the exception to "no cold DMs" this file used to
+ * describe: a message sent from someone's profile, with no request or
+ * acceptance step first — see SocialContext.tsx's startDirectMessage(). It
+ * still isn't "mutual" in the make/explore-together sense (nobody has to
+ * agree to anything), so it's inserted pre-`accepted` rather than `pending`.
  */
 export type ParticipationKind =
   | "keep_exploring"
   | "join_in"
   | "make_together"
-  | "explore_together";
+  | "explore_together"
+  | "direct_message";
 
 export interface ParticipationAction {
   kind: ParticipationKind;
@@ -49,6 +55,13 @@ export const ACTIONS: Record<ParticipationKind, ParticipationAction> = {
     label: "Explore together",
     copy: "Ask, compare, learn or share how you approach the hobby.",
     mutual: true,
+    unlocksMessaging: true,
+  },
+  direct_message: {
+    kind: "direct_message",
+    label: "Message",
+    copy: "Send them a message directly, no request needed.",
+    mutual: false,
     unlocksMessaging: true,
   },
 };
