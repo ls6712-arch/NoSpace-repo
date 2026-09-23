@@ -20,6 +20,8 @@ import {
 import { useState } from "react";
 
 const imagery = {
+  hero: "/manus-storage/sushii-multi-interest-hero_76ba0381.png",
+  identity: "/manus-storage/sushii-identity-brand_35962dc6.jpg",
   ceramics: "/manus-storage/sushii-ceramics_0c673685.jpg",
   garden: "/manus-storage/sushii-garden_91fc05a6.jpg",
   reading: "/manus-storage/sushii-reading_4ff1bf6d.jpg",
@@ -203,29 +205,16 @@ export default function Home() {
       <main id="top">
         <section className="hero section-wrap">
           <div className="hero-intro">
-            <p className="eyebrow"><span /> A PERSONAL SPACE, KEPT YOUR WAY</p>
+            <p className="eyebrow"><span /> A PLACE FOR THE MANY SIDES OF YOU</p>
             <h1>Your interests are <em>part of</em> your story.</h1>
-            <p className="hero-copy">Sushii is a place to keep the things you make, learn, explore, and love.</p>
-            <div className="hero-actions"><ActionLink dark>Create your Space</ActionLink><a href="#space" className="text-link">Explore Sushii <ArrowDown size={15} /></a></div>
+            <p className="hero-copy">A place to keep track of what you are into, what you are learning, making, exploring, and doing.</p>
+            <div className="hero-actions"><ActionLink dark href="#moments">Start exploring</ActionLink><a href="#how-it-works" className="text-link">See how Sushii works <ArrowDown size={15} /></a></div>
             <SocialProof />
           </div>
-          <div className="hero-product">
-            <div className="hero-note note-one"><span>01</span> a record, not a feed</div>
-            <div className="hero-note note-two"><span>02</span> yours to keep</div>
-            <div className="hero-sun" aria-hidden="true" />
-            <SpaceScreen />
-          </div>
-        </section>
-
-        <section className="core-idea section-wrap" id="space">
-          <div className="section-label"><span>01</span><p>THE CORE IDEA</p></div>
-          <div className="core-copy"><h2>Not another feed.<br /><em>A record of you.</em></h2><p>Your Space grows with the things you actually care about. Capture moments, follow your interests, and build something that feels like you.</p></div>
-          <div className="archive-scene">
-            <div className="archive-caption"><span>MARIN’S SPACE</span><strong>September, so far</strong><p>12 small things, kept close.</p></div>
-            <div className="archive-polaroid is-one"><img src={imagery.ceramics} alt="A pottery moment" /><span>A softer blue</span></div>
-            <div className="archive-polaroid is-two"><img src={imagery.garden} alt="A garden moment" /><span>First tomatoes</span></div>
-            <div className="archive-polaroid is-three"><img src={imagery.reading} alt="A reading moment" /><span>Margin notes</span></div>
-            <div className="archive-mark"><Sparkles size={18} /> <span>KEEP BECOMING</span></div>
+          <div className="hero-visual" aria-label="A collection of interests and activities coming together">
+            <div className="hero-visual-caption"><span>01</span> many interests, one story</div>
+            <div className="hero-image-wrap"><img src={imagery.hero} alt="A collection of creative interests, hobbies, and moments" /></div>
+            <div className="hero-visual-note"><span>02</span> keep exploring</div>
           </div>
         </section>
 
@@ -240,13 +229,28 @@ export default function Home() {
           <div className="pursuit-product-stage"><PursuitScreen /><div className="scrap-label">small<br />progress<br />counts <MoveUpRight size={15} /></div></div>
         </section>
 
+        <section className="core-idea section-wrap" id="space">
+          <div className="section-label"><span>01</span><p>YOUR SPACE</p></div>
+          <div className="core-copy"><div><h2>Bring it all together.<br /><em>Make room for your story.</em></h2><a className="text-link space-secondary-link" href="https://www.trynospace.com" target="_blank" rel="noreferrer">Make a Space <ArrowUpRight size={15} /></a></div><p>Your Space brings your Moments and Pursuits together in one place. See the things you care about begin to feel like a life.</p></div>
+          <div className="archive-scene">
+            <div className="archive-caption"><span>MARIN’S SPACE</span><strong>September, so far</strong><p>12 small things, kept close.</p></div>
+            <div className="archive-polaroid is-one"><img src={imagery.ceramics} alt="A pottery moment" /><span>A softer blue</span></div>
+            <div className="archive-polaroid is-two"><img src={imagery.garden} alt="A garden moment" /><span>First tomatoes</span></div>
+            <div className="archive-polaroid is-three"><img src={imagery.reading} alt="A reading moment" /><span>Margin notes</span></div>
+            <div className="archive-mark"><Sparkles size={18} /> <span>KEEP BECOMING</span></div>
+          </div>
+        </section>
+
         <section className="circles-section section-wrap" id="circles">
           <div className="circles-text"><div className="section-label"><span>04</span><p>CIRCLES</p></div><h2>Find people who are doing the <em>same things.</em></h2><p>Circles are smaller communities built around shared interests and actually doing things together.</p><a href="https://www.trynospace.com" target="_blank" rel="noreferrer" className="text-link">Meet the circles <ArrowUpRight size={15} /></a></div>
           <div className="circles-product-stage"><CirclesScreen /></div>
         </section>
 
-        <section className="difference-section">
-          <div className="difference-inner section-wrap"><p className="eyebrow"><span /> THE DIFFERENCE</p><h2>A different kind<br />of social space.</h2><div className="difference-lines"><p><span>01</span> No endless scrolling.</p><p><span>02</span> No popularity contest.</p><p><span>03</span> Just the things you care about—and the people who care about them too.</p></div></div>
+        <section className="difference-section" id="how-it-works">
+          <div className="brand-statement section-wrap">
+            <div className="brand-statement-image"><img src={imagery.identity} alt="A table of many interests and creative practices" /></div>
+            <div className="brand-statement-copy"><p className="eyebrow"><span /> A WIDER WAY TO BE A PERSON</p><h2>Your interests do not have to fit <em>one identity.</em></h2><p>You can be a gardener and a reader, a beginner and an expert, a maker and a wanderer. Sushii gives every part of your curiosity somewhere to live.</p><div className="difference-lines"><p><span>01</span> No endless scrolling.</p><p><span>02</span> No popularity contest.</p><p><span>03</span> Just the things you care about—and the people who care about them too.</p></div></div>
+          </div>
         </section>
 
         <section className="montage-section section-wrap">
@@ -261,7 +265,7 @@ export default function Home() {
 
         <section className="final-cta section-wrap">
           <div className="final-orbit orbit-a" /><div className="final-orbit orbit-b" />
-          <div className="cta-content"><p className="eyebrow"><span /> MAKE A LITTLE ROOM</p><h2>Build a Space<br />that feels like <em>you.</em></h2><p>Start keeping track of the things you’re into.</p><ActionLink dark>Create your Space</ActionLink><small>Free to begin. Kept private unless you choose otherwise.</small></div>
+          <div className="cta-content"><p className="eyebrow"><span /> KEEP EXPLORING</p><h2>Explore the things<br />that make <em>you.</em></h2><p>Start keeping track of what you’re into, one Moment at a time.</p><ActionLink dark href="#moments">Explore Sushii</ActionLink><a className="text-link cta-secondary-link" href="https://www.trynospace.com" target="_blank" rel="noreferrer">Make a Space <ArrowUpRight size={15} /></a><small>Free to begin. Kept private unless you choose otherwise.</small></div>
           <div className="cta-moments" aria-hidden="true"><div><Flower2 size={20} /><span>begin anywhere</span></div><div><BookOpen size={20} /><span>keep what matters</span></div><div><MessageCircle size={20} /><span>find your people</span></div></div>
         </section>
       </main>
