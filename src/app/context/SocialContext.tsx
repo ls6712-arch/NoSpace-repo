@@ -554,7 +554,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         .select()
         .single();
       if (error || !data) return { id: null, error: "failed" as const };
-      refresh();
+      // Awaited so the new thread is already in `participations` by the
+      // time the caller navigates to it — otherwise Messages.tsx renders
+      // its "No open threads" empty state for the moment refresh() is
+      // still in flight, with no compose box to show.
+      await refresh();
       return { id: data.id, error: null };
     }
 
