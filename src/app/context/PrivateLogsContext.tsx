@@ -15,6 +15,7 @@ import {
   fetchPrivateLogs,
   createPrivateLog,
   deletePrivateLog,
+  updatePrivateLog,
 } from "../lib/privateLogsRemote";
 
 /**
@@ -79,6 +80,7 @@ interface PrivateLogsContextType {
     projectId?: string;
   }) => Promise<RemoteResult<PrivateLog>>;
   remove: (id: number) => Promise<RemoteResult<true>>;
+  update: (id: number, input: { note: string }) => Promise<RemoteResult<PrivateLog>>;
 }
 
 const PrivateLogsContext = createContext<PrivateLogsContextType | undefined>(undefined);
@@ -179,10 +181,34 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
     return { data: true, error: null };
   }, []);
 
+  const update = useCallback<PrivateLogsContextType["update"]>(async (id, input) => {
+    await authReadyRef.current!.promise;
+    const currentUser = userRef.current;
+
+    if (currentUser) {
+      const result = await updatePrivateLog(id, input);
+      if (result.data) setRemoteLogs((prev) => prev.map((l) => (l.id === id ? result.data! : l)));
+      return result;
+    }
+
+    let updated: PrivateLog | undefined;
+    setLocal((prev) => {
+      const logs = prev.logs.map((l) => {
+        if (l.id !== id) return l;
+        updated = { ...l, note: input.note };
+        return updated;
+      });
+      const next = { logs };
+      saveLocal(next);
+      return next;
+    });
+    return updated ? { data: updated, error: null } : { data: null, error: "Not found." };
+  }, []);
+
   const logs = shared ? remoteLogs : local.logs;
 
   return (
-    <PrivateLogsContext.Provider value={{ logs, isShared: shared, add, remove }}>
+    <PrivateLogsContext.Provider value={{ logs, isShared: shared, add, remove, update }}>
       {children}
     </PrivateLogsContext.Provider>
   );

@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
+import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useSettings } from "../context/SettingsContext";
 import { Post } from "../data/posts";
 import { Button } from "../components/ui/button";
@@ -28,6 +29,34 @@ export function You() {
   const journal = useJournal();
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const { user, profile, isConfigured } = useAuth();
+  const { logs: privateLogEntries } = usePrivateLogs();
+  // A private log's caption grid was missing entirely from this page — this
+  // folds each entry in as a Post-shaped stand-in (negative id so it can
+  // never collide with a real post's), so the same WorkGrid/MomentDetail
+  // machinery that already handles real Moments handles these too, instead
+  // of building a second, parallel grid just for private logs.
+  const privateLogsAsPosts: Post[] = privateLogEntries.map((log) => ({
+    id: -log.id,
+    privateLogId: log.id,
+    isPrivateLog: true,
+    userId: user?.id ?? "you",
+    hobbySlug: log.hobbySlug ?? "",
+    type: log.media ? (log.mediaType === "video" ? "video" : "photo") : "written",
+    media: log.media ?? "",
+    creator: "You",
+    caption: log.note,
+    likes: 0,
+    createdAt: log.createdAt,
+    // Post["visibility"] doesn't have a literal "private" value yet — see
+    // lib/visibility.ts's isOnlyYou(), which is deliberately typed structurally
+    // (not Post["visibility"]) for exactly this reason, and already treats a
+    // literal "private" string the same as "friends". Cast here rather than
+    // widen Visibility itself, which is out of scope for this change.
+    visibility: "private" as Post["visibility"],
+  }));
+  const myPostsAndPrivate = [...myPosts, ...privateLogsAsPosts].sort(
+    (a, b) => b.createdAt - a.createdAt,
+  );
   const { circlesVisible } = useSettings();
   const profileLinks = useProfileLinks();
   const [shareOpen, setShareOpen] = useState(false);
@@ -281,10 +310,10 @@ export function You() {
             <WorkGrid
               posts={
                 tagFilter
-                  ? myPosts.filter((p) =>
+                  ? myPostsAndPrivate.filter((p) =>
                       (p.tags ?? []).some((t) => t.toLowerCase() === tagFilter.toLowerCase()),
                     )
-                  : myPosts
+                  : myPostsAndPrivate
               }
               onOpen={setOpenPost}
               editable

@@ -80,6 +80,12 @@ export interface Post {
   /** Set by the owner to feature this Moment first on their Shelf — see
    * sql/post-pinning.sql. */
   pinned?: boolean;
+  /** Set when this entry is actually a private log shown in the main
+   * archive, not a real row in `posts`. `id` here is a negative stand-in
+   * to avoid colliding with real post ids in the same list; privateLogId
+   * holds the real id to use when calling private-log update/delete. */
+  isPrivateLog?: boolean;
+  privateLogId?: number;
 }
 
 /** Which Corner a Moment belongs to, for every Corner-facing read (Discover's
