@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { hobbies } from "../data/hobbies";
 import { useCircles } from "../context/CirclesContext";
+import { useCategories } from "../context/CategoriesContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -23,6 +24,11 @@ export function CreateCircleDialog({
 }) {
   const navigate = useNavigate();
   const { createCircle } = useCircles();
+  // Subscribes this component to re-render once the real Space list
+  // finishes loading — the same mechanism Log.tsx already relies on.
+  // Without this, `hobbies` below is whatever it was at import time, and
+  // never picks up anything CategoriesContext appends from the database.
+  useCategories();
 
   const [name, setName] = useState("");
   const [hobbySlug, setHobbySlug] = useState("");
