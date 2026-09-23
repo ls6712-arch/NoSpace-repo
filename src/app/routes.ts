@@ -79,8 +79,7 @@ export const router = createHashRouter([
       { path: "pause-or-leave", Component: PauseOrLeaveSettingsPage },
       { path: "onboarding", Component: Onboarding },
       { path: "inbox", Component: Inbox },
-      // Messages was the old destination; Inbox subsumes it.
-      { path: "messages", loader: () => redirect("/inbox") },
+      { path: "messages", Component: Messages },
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
       { path: "space/:slug", Component: CategoryFeed },
       { path: "corner/:slug", Component: CornerPage },
