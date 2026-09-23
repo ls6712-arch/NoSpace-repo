@@ -113,8 +113,8 @@ describe("startedText", () => {
 });
 
 describe("isOnlyYou", () => {
-  it("treats 'friends' as Only you", () => {
-    expect(isOnlyYou({ visibility: "friends" })).toBe(true);
+  it("does not treat 'followers' as Only you", () => {
+    expect(isOnlyYou({ visibility: "followers" })).toBe(false);
   });
 
   it("treats a future 'private' value as Only you", () => {
