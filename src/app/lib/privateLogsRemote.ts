@@ -100,3 +100,25 @@ export async function deletePrivateLog(logId: number): Promise<RemoteResult<true
   }
   return { data: true, error: null };
 }
+
+export async function updatePrivateLog(
+  logId: number,
+  input: { note: string },
+): Promise<RemoteResult<PrivateLog>> {
+  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
+  const { data, error } = await supabase
+    .from("private_logs")
+    .update({ body: input.note })
+    .eq("id", logId)
+    .select()
+    .single();
+  if (error) {
+    console.error("[privateLogsRemote] updatePrivateLog failed:", error);
+    return { data: null, error: error.message };
+  }
+  if (!data) {
+    console.error("[privateLogsRemote] updatePrivateLog: update returned no row and no error");
+    return { data: null, error: "The save didn't come back with a result." };
+  }
+  return { data: fromRow(data), error: null };
+}

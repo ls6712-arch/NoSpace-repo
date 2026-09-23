@@ -18,6 +18,7 @@ import { Post } from "../data/posts";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { getCircle } from "../data/circles";
 import { useContent } from "../context/ContentContext";
+import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useReactionState } from "./PostReactions";
 import {
   CAPTION_SIZE,
@@ -83,6 +84,7 @@ export function MomentDetail({
   onOpenChange: (open: boolean) => void;
 }) {
   const { updatePost, deletePost, ownCounts } = useContent();
+  const { update: updatePrivateLogEntry, remove: removePrivateLogEntry } = usePrivateLogs();
   const journal = useJournal();
   const { mine: myReactions, toggle } = useReactionState(post?.id ?? 0);
 
@@ -129,7 +131,9 @@ export function MomentDetail({
     setSaving(true);
     setSaveError(null);
     try {
-      const ok = await updatePost(post.id, { caption, reflection });
+      const ok = post.isPrivateLog
+        ? Boolean((await updatePrivateLogEntry(post.privateLogId!, { note: caption })).data)
+        : await updatePost(post.id, { caption, reflection });
       if (ok) setEditing(false);
       else setSaveError("Couldn't save that change. Your edit is still here, try again.");
     } catch {
@@ -143,7 +147,9 @@ export function MomentDetail({
 
   const handleDelete = async () => {
     setDeleteError(null);
-    const ok = await deletePost(post.id);
+    const ok = post.isPrivateLog
+      ? (await removePrivateLogEntry(post.privateLogId!)).data === true
+      : await deletePost(post.id);
     if (!ok) {
       setDeleteError("Couldn't delete that. Try again in a moment.");
       return;
@@ -230,7 +236,11 @@ export function MomentDetail({
           </p>
         )}
 
-        {!editing && (
+        {/* Reactions, the "make it together"/"inspired by this" hand-offs,
+            and Thoughts (real comments) — none of these are meaningful on a
+            private-log stand-in, which was never a real row anything could
+            react to or comment on. */}
+        {!editing && !post.isPrivateLog && (
           <>
             <div className="flex items-center gap-2">
               {owned ? (

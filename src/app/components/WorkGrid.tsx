@@ -210,7 +210,13 @@ export function WorkGrid({
         </div>
       )}
 
-      {editable && <PinPicker open={pinPickerOpen} onOpenChange={setPinPickerOpen} posts={posts} />}
+      {editable && (
+        <PinPicker
+          open={pinPickerOpen}
+          onOpenChange={setPinPickerOpen}
+          posts={posts.filter((p) => !p.isPrivateLog)}
+        />
+      )}
     </div>
   );
 }
