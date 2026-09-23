@@ -91,14 +91,14 @@ import { LinkPreviewCard } from "../components/LinkPreviewCard";
  * to the same private outcome — the caption screen is one screen, with one
  * submit button whose label follows the audience picked on it.
  */
-type Screen = "choose" | "camera" | "caption" | "saved" | "detail" | "pursuit-menu";
+type Screen = "choose" | "camera" | "caption" | "saved" | "detail";
 
 /** The considered path: four kinds of record, chosen up front. */
 type Mode = "project" | "update" | "moment" | "private";
 
 const MODES: { id: Mode; title: string; copy: string; icon: typeof Plus }[] = [
   { id: "project", title: "Start a Pursuit", copy: "Give a new thing a home", icon: Plus },
-  { id: "update", title: "Add an update", copy: "Keep an existing Pursuit moving", icon: PenLine },
+  { id: "update", title: "Add a Moment", copy: "Keep an existing Pursuit moving", icon: PenLine },
   { id: "moment", title: "Quick moment", copy: "A photo, win, question, or small discovery", icon: Sparkle },
   { id: "private", title: "Reflect privately", copy: "Keep a note just for you", icon: Lock },
 ];
@@ -245,8 +245,12 @@ export function Log() {
   // so the detail form's own picker for all three stays hidden too.
   const pursuitScoped = !!initialPursuit;
 
-  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "pursuit-menu" : "choose");
-  const [mode, setMode] = useState<Mode | null>(null);
+  // A Pursuit's own "Add a Moment" opens the form directly. There used to
+  // be a chooser first ("Add an update" vs "Reflect privately"), but the
+  // form already has a private reflection section and an "Only you"
+  // audience, so that screen was a step that decided nothing.
+  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "detail" : "choose");
+  const [mode, setMode] = useState<Mode | null>(pursuitScoped ? "update" : null);
   const [pursuitDialogOpen, setPursuitDialogOpen] = useState(false);
   // Where the caption screen's Back link returns to — "camera" when a photo
   // or video was actually captured/picked there, "choose" when "Write a
@@ -314,6 +318,7 @@ export function Log() {
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
   const [reflection, setReflection] = useState("");
+  const [reflectionOpen, setReflectionOpen] = useState(false);
   // Starts at the account's own default (Settings → Privacy → "Default
   // visibility for new Moments"), "Only you" unless changed there. Falls
   // back to private for the instant before that setting has loaded.
@@ -418,7 +423,11 @@ export function Log() {
   // change on the same route, so the initial-screen choice above needs this
   // to actually follow along.
   useEffect(() => {
-    if (pursuitScoped) setScreen("pursuit-menu");
+    if (pursuitScoped) {
+      setScreen("detail");
+      setMode("update");
+      setProjectId(initialPursuitId);
+    }
   }, [initialPursuitId]);
 
   // Same reason as the resync above: React Router doesn't remount this
@@ -862,13 +871,14 @@ export function Log() {
     setSaleTitle("");
     setTags([]);
     setProjectTitle("");
-    setProjectId("");
+    setProjectId(pursuitScoped ? initialPursuitId : "");
     setCircleId(undefined);
     setFiles([]);
     setError(null);
     setSavedAs(null);
     setSavedPostId(null);
-    setMode(null);
+    setMode(pursuitScoped ? "update" : null);
+    setReflectionOpen(false);
     // Without these, posting an activity with a location and then logging
     // another (plain) Moment right after silently carried both over onto
     // the new post — a pre-existing gap that location being always visible
@@ -877,7 +887,7 @@ export function Log() {
     setStartsAt("");
     setLocationName("");
     setLocationPrivacy("neighborhood");
-    setScreen(pursuitScoped ? "pursuit-menu" : "choose");
+    setScreen(pursuitScoped ? "detail" : "choose");
     audienceDecidedRef.current = false;
     setAudience(defaultVisibilityLoaded ? defaultVisibility : "private");
   };
@@ -1061,75 +1071,6 @@ export function Log() {
             setScreen("caption");
           }}
         />
-      </Shell>
-    );
-  }
-
-  // ── Pursuit-scoped menu: reached only via a Pursuit's own "Add progress"
-  // button, entirely bypassing Capture and "More ways to create" — the
-  // Pursuit is already known, so the only real choice left is whether this
-  // is visible or private. ─────────────────────────────────────────────────
-  if (screen === "pursuit-menu" && initialPursuit) {
-    return (
-      <Shell>
-        <Link
-          to={`/pursuit/${initialPursuit.id}`}
-          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Back
-        </Link>
-        <h1 className="text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Add progress
-        </h1>
-        <p className="mt-1.5 text-muted-foreground">{initialPursuit.title}</p>
-
-        <ul className="mt-8 space-y-3">
-          <li>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("update");
-                setScreen("detail");
-              }}
-              className="group flex w-full items-start gap-3 rounded-2xl border border-border bg-card p-5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-[0_14px_28px_-18px_rgba(11,62,46,0.5)]"
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-foreground transition-colors group-hover:bg-[var(--coral-deep)] group-hover:text-white">
-                <PenLine className="size-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-base" style={{ fontFamily: "var(--font-serif)" }}>
-                  Add an update
-                </span>
-                <span className="block text-xs leading-relaxed text-muted-foreground">
-                  A photo, video, or note — shown per whatever audience you pick.
-                </span>
-              </span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("private");
-                setScreen("detail");
-              }}
-              className="group flex w-full items-start gap-3 rounded-2xl border border-border bg-card p-5 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-[0_14px_28px_-18px_rgba(11,62,46,0.5)]"
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-foreground transition-colors group-hover:bg-[var(--coral-deep)] group-hover:text-white">
-                <Lock className="size-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-base" style={{ fontFamily: "var(--font-serif)" }}>
-                  Reflect privately
-                </span>
-                <span className="block text-xs leading-relaxed text-muted-foreground">
-                  Only you will ever see this note, not shown to anyone else viewing this Pursuit.
-                </span>
-              </span>
-            </button>
-          </li>
-        </ul>
       </Shell>
     );
   }
@@ -1665,7 +1606,17 @@ export function Log() {
   return (
     <div className="min-h-screen bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-2xl px-4">
-        <Back to={pursuitScoped ? "pursuit-menu" : "camera"} />
+        {pursuitScoped ? (
+          <Link
+            to={`/pursuit/${initialPursuit!.id}`}
+            className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Back
+          </Link>
+        ) : (
+          <Back to="camera" />
+        )}
 
         <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
           {activeMode.title}
@@ -1751,7 +1702,7 @@ export function Log() {
               )}
 
               <section>
-                <h2 className="mb-1 text-sm">Show your progress</h2>
+                <h2 className="mb-1 text-sm">Show where it's at</h2>
                 <p className="mb-3 text-xs text-muted-foreground">
                   Add a photo, video, or short note.
                 </p>
@@ -1845,18 +1796,35 @@ export function Log() {
             </>
           )}
 
-          <section>
-            <h2 className="mb-1 text-sm">Private reflection</h2>
-            <p className="mb-3 text-xs text-muted-foreground">
-              What do you want to remember for yourself?
-            </p>
-            <Textarea
-              id="reflection"
-              placeholder="Never shown to anyone, this part is only ever yours"
-              value={reflection}
-              onChange={(e) => setReflection(e.target.value)}
-            />
-          </section>
+          {/* Collapsed by default on a regular Moment — it's optional, and a
+              third open text box made posting feel like homework. Always
+              open for a private-only entry, where it's the whole point. */}
+          {isPrivateOnly || reflectionOpen || reflection.trim() ? (
+            <section>
+              <h2 className="mb-1 flex items-center gap-1.5 text-sm">
+                <Lock className="size-3.5" /> Private reflection
+              </h2>
+              <p className="mb-3 text-xs text-muted-foreground">
+                What do you want to remember for yourself?
+              </p>
+              <Textarea
+                id="reflection"
+                placeholder="Never shown to anyone, this part is only ever yours"
+                value={reflection}
+                autoFocus={reflectionOpen && !reflection}
+                onChange={(e) => setReflection(e.target.value)}
+              />
+            </section>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setReflectionOpen(true)}
+              className="flex w-full items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Lock className="size-3.5" />
+              Add a private reflection <span className="text-xs">(only you)</span>
+            </button>
+          )}
 
           {!isPrivateOnly && (
             <section>

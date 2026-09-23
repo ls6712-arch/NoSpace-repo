@@ -70,6 +70,61 @@ export interface Goal {
   reachedAt?: number;
 }
 
+/**
+ * How a Pursuit's progress adds up — chosen when it's created (the "How
+ * should progress add up?" step). Every Moment can carry an amount toward
+ * `target`; progress is startingAmount plus the sum of those amounts.
+ */
+export type MeasureKind = "count" | "quantity" | "time" | "milestones" | "custom";
+
+export interface Measure {
+  kind: MeasureKind;
+  /** The target amount, e.g. 20000. For "milestones" it's the number of milestones. */
+  target: number;
+  /** Plural unit name, e.g. "words", "paintings", "hours". */
+  unit: string;
+  /** "What counts as one?" — free text, shown on the Pursuit. */
+  whatCounts?: string;
+  allowPartial: boolean;
+  allowDecimals: boolean;
+  /** Pre-filled amount on each new Moment. */
+  defaultAmount: number;
+  /** Progress already made before starting on Sushii. */
+  startingAmount: number;
+  targetDate?: number;
+  /** Named milestones, for kind === "milestones". */
+  milestones?: string[];
+}
+
+/** solo — just you. together — everyone has their own goal and journey,
+ * side by side ("Paint together"). group — one shared goal everyone
+ * contributes to ("Community mural"). */
+export type PursuitMode = "solo" | "together" | "group";
+
+export interface PursuitMember {
+  userId?: string;
+  username?: string | null;
+  displayName: string;
+  avatarUrl?: string;
+  status: "invited" | "joined" | "declined";
+  /** Owner is also listed, so every view can iterate one list. */
+  role: "owner" | "member";
+}
+
+/** One amount logged toward a Pursuit — by a Moment, or a bare tap. */
+export interface ProgressEntry {
+  id: string;
+  projectId: string;
+  amount: number;
+  createdAt: number;
+  /** Who logged it. Undefined = this browser's own maker (signed out). */
+  userId?: string;
+  postId?: number | string;
+  logId?: number;
+  note?: string;
+  image?: string;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -91,6 +146,56 @@ export interface Project {
   goal?: Goal;
   /** Replaced goals, kept rather than deleted — see setProjectGoal. */
   pastGoals?: Goal[];
+  /** Set when the maker chose to rest this Pursuit — "Pausing for now."
+   * A third state beside active and finished, so stepping away is a
+   * decision rather than a silent failure. Cleared by resumeProject or by
+   * logging a new Moment against it. */
+  pausedAt?: number;
+  /** How often the maker asked to be checked in on, in days. The only
+   * reminder this Pursuit ever gets is one they set themselves. 0 means
+   * "never"; undefined means they haven't chosen, which falls back to
+   * DEFAULT_CHECK_IN_DAYS. */
+  checkInDays?: number;
+  /** When the last check-in was answered or dismissed — the next one waits
+   * a full interval from here, so ignoring one never produces another the
+   * next day. */
+  checkInAnsweredAt?: number;
+  /** How many check-ins in a row went unanswered. After two, Sushii stops
+   * asking rather than escalating. */
+  checkInsIgnored?: number;
+  /** The answer to "What would you tell yourself on day one?" — asked once,
+   * when the Pursuit is marked complete. Shown at the top of it from then on. */
+  endingNote?: string;
+  /** How progress adds up. Pursuits made before measures existed have none
+   * and fall back to their `goal`, if any. */
+  measure?: Measure;
+  mode?: PursuitMode;
+  members?: PursuitMember[];
+  /** Set on a Pursuit someone else created and invited you into. */
+  ownerId?: string;
+  role?: "owner" | "member";
+}
+
+/** The check-in interval used when the maker hasn't picked one. Two weeks:
+ * long enough that it never reads as a streak. */
+export const DEFAULT_CHECK_IN_DAYS = 14;
+
+/** The cadences a maker can pick from — creation dialog and Pursuit page alike. */
+export const CHECK_IN_OPTIONS: { days: number; label: string }[] = [
+  { days: 7, label: "Weekly" },
+  { days: 14, label: "2 weeks" },
+  { days: 30, label: "Monthly" },
+  { days: 0, label: "Never" },
+];
+
+/** A Pursuit's state, derived — never stored as its own field, so it can't
+ * disagree with finishedAt/pausedAt. */
+export type PursuitStatus = "active" | "resting" | "complete";
+
+export function pursuitStatus(p: Pick<Project, "finishedAt" | "pausedAt">): PursuitStatus {
+  if (p.finishedAt) return "complete";
+  if (p.pausedAt) return "resting";
+  return "active";
 }
 
 interface JournalState {
@@ -102,6 +207,8 @@ interface JournalState {
   /** projectId → the amount logged on each tap, in order — what
    * undoLastProgress pops from to undo a mis-tap without a form. */
   progressHistory: Record<string, number[]>;
+  /** Amounts logged toward measured Pursuits, newest last. */
+  progress: ProgressEntry[];
 }
 
 const EMPTY: JournalState = {
@@ -109,6 +216,7 @@ const EMPTY: JournalState = {
   entryProject: {},
   saved: [],
   progressHistory: {},
+  progress: [],
 };
 
 function load(): JournalState {
@@ -175,6 +283,10 @@ export function startProject(input: {
   customSpace?: string;
   inspiredByPostId?: number;
   shared?: boolean;
+  measure?: Measure;
+  mode?: PursuitMode;
+  members?: PursuitMember[];
+  checkInDays?: number;
 }): Project {
   const project: Project = { id: id(), startedAt: Date.now(), ...input };
   commit({ ...state, projects: [project, ...state.projects] });
@@ -220,8 +332,18 @@ export function attachEntry(postId: number | string, projectId: string) {
     // Logging a new Update against a Pursuit that was marked finished means
     // you're back at it — reopen it automatically rather than silently
     // filing the Update against something that still reads as done.
+    // Same for a resting one: a new Moment is the clearest possible sign
+    // it's moving again. It also counts as answering any open check-in.
     projects: state.projects.map((p) =>
-      p.id === projectId && p.finishedAt ? { ...p, finishedAt: undefined } : p,
+      p.id === projectId
+        ? {
+            ...p,
+            finishedAt: undefined,
+            pausedAt: undefined,
+            checkInAnsweredAt: Date.now(),
+            checkInsIgnored: 0,
+          }
+        : p,
     ),
   });
 }
@@ -337,13 +459,94 @@ export function goalDeadlineText(goal: Goal): string | undefined {
   return new Date(goal.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function finishProject(projectId: string) {
-  commit({
-    ...state,
-    projects: state.projects.map((p) =>
-      p.id === projectId ? { ...p, finishedAt: Date.now() } : p,
-    ),
+/** Applies a patch to one Pursuit and returns the updated copy, for the
+ * caller to mirror to Supabase. Every state change below goes through here. */
+function patchProject(projectId: string, patch: (p: Project) => Partial<Project>): Project | undefined {
+  let updated: Project | undefined;
+  const projects = state.projects.map((p) => {
+    if (p.id !== projectId) return p;
+    updated = { ...p, ...patch(p) };
+    return updated;
   });
+  if (!updated) return undefined;
+  commit({ ...state, projects });
+  return updated;
+}
+
+/** Marks a Pursuit complete, optionally with the answer to "What would you
+ * tell yourself on day one?" */
+export function finishProject(projectId: string, endingNote?: string): Project | undefined {
+  return patchProject(projectId, () => ({
+    finishedAt: Date.now(),
+    pausedAt: undefined,
+    ...(endingNote?.trim() ? { endingNote: endingNote.trim() } : {}),
+  }));
+}
+
+/** Adds or edits the ending note after the fact. */
+export function setEndingNote(projectId: string, endingNote: string): Project | undefined {
+  return patchProject(projectId, () => ({ endingNote: endingNote.trim() || undefined }));
+}
+
+/** "Pausing for now." Rests the Pursuit — no warning, no penalty. */
+export function pauseProject(projectId: string): Project | undefined {
+  return patchProject(projectId, () => ({
+    pausedAt: Date.now(),
+    finishedAt: undefined,
+    checkInAnsweredAt: Date.now(),
+    checkInsIgnored: 0,
+  }));
+}
+
+/** A Moment landed on this Pursuit by a path that doesn't go through
+ * attachEntry (a private log). Same effect: reopens it if it was resting or
+ * finished, and counts as answering any open check-in. */
+export function markActivity(projectId: string): Project | undefined {
+  return patchProject(projectId, () => ({
+    pausedAt: undefined,
+    finishedAt: undefined,
+    checkInAnsweredAt: Date.now(),
+    checkInsIgnored: 0,
+  }));
+}
+
+/** Picks a resting or finished Pursuit back up. */
+export function resumeProject(projectId: string): Project | undefined {
+  return patchProject(projectId, () => ({
+    pausedAt: undefined,
+    finishedAt: undefined,
+    checkInAnsweredAt: Date.now(),
+    checkInsIgnored: 0,
+  }));
+}
+
+/** The maker's own check-in cadence, in days (0 = never). */
+export function setCheckInDays(projectId: string, days: number): Project | undefined {
+  return patchProject(projectId, () => ({ checkInDays: days, checkInAnsweredAt: Date.now(), checkInsIgnored: 0 }));
+}
+
+/** "Not now" on a check-in. Counts toward the two-strikes rule, after
+ * which Sushii stops asking about this Pursuit. */
+export function dismissCheckIn(projectId: string): Project | undefined {
+  return patchProject(projectId, (p) => ({
+    checkInAnsweredAt: Date.now(),
+    checkInsIgnored: (p.checkInsIgnored ?? 0) + 1,
+  }));
+}
+
+/**
+ * Whether this Pursuit is due a check-in right now. Only active Pursuits,
+ * only on the maker's own cadence, measured from whichever is latest: the
+ * last Moment, the last answered check-in, or the start. Stops for good
+ * after two unanswered check-ins in a row.
+ */
+export function checkInDue(p: Project, lastMomentAt: number | undefined, now = Date.now()): boolean {
+  if (pursuitStatus(p) !== "active") return false;
+  const days = p.checkInDays ?? DEFAULT_CHECK_IN_DAYS;
+  if (days <= 0) return false;
+  if ((p.checkInsIgnored ?? 0) >= 2) return false;
+  const since = Math.max(lastMomentAt ?? 0, p.checkInAnsweredAt ?? 0, p.startedAt);
+  return now - since >= days * 86_400_000;
 }
 
 /**
@@ -360,10 +563,29 @@ export function finishProject(projectId: string) {
 export function mergeRemoteProjects(remote: Project[]) {
   const knownIds = new Set(state.projects.map((p) => p.id));
   const toAdd = remote.filter((p) => !knownIds.has(p.id));
-  if (toAdd.length === 0) return;
+  // Fields added after a Pursuit was first restored (resting, check-in
+  // cadence, ending note) can be missing from a local copy that's otherwise
+  // up to date. Fill only what's absent locally — never overwrite, same
+  // local-wins rule as the add path above.
+  const byId = new Map(remote.map((p) => [p.id, p]));
+  let filled = false;
+  const existing = state.projects.map((p) => {
+    const r = byId.get(p.id);
+    if (!r) return p;
+    const patch: Partial<Project> = {};
+    if (p.pausedAt === undefined && r.pausedAt !== undefined && !p.finishedAt) patch.pausedAt = r.pausedAt;
+    if (p.checkInDays === undefined && r.checkInDays !== undefined) patch.checkInDays = r.checkInDays;
+    if (p.endingNote === undefined && r.endingNote !== undefined) patch.endingNote = r.endingNote;
+    if (p.measure === undefined && r.measure !== undefined) patch.measure = r.measure;
+    if (p.mode === undefined && r.mode !== undefined) patch.mode = r.mode;
+    if (Object.keys(patch).length === 0) return p;
+    filled = true;
+    return { ...p, ...patch };
+  });
+  if (toAdd.length === 0 && !filled) return;
   commit({
     ...state,
-    projects: [...state.projects, ...toAdd].sort((a, b) => b.startedAt - a.startedAt),
+    projects: [...existing, ...toAdd].sort((a, b) => b.startedAt - a.startedAt),
   });
 }
 
@@ -423,4 +645,36 @@ export function deriveProjects(posts: Post[], subHobbyLabel: (s: string) => stri
 /** Days since a project last moved — drives the gentle nudge on My Space. */
 export function daysSince(ms: number) {
   return Math.floor((Date.now() - ms) / 86_400_000);
+}
+
+
+// ── Measured progress ──────────────────────────────────────────────────
+
+/** Logs an amount toward a Pursuit. Returns the entry (for the caller to
+ * mirror to Supabase). */
+export function addProgress(entry: Omit<ProgressEntry, "id" | "createdAt"> & { createdAt?: number }): ProgressEntry {
+  const full: ProgressEntry = { id: id(), createdAt: Date.now(), ...entry };
+  commit({ ...state, progress: [...(state.progress ?? []), full] });
+  return full;
+}
+
+export function removeProgress(entryId: string) {
+  commit({ ...state, progress: (state.progress ?? []).filter((e) => e.id !== entryId) });
+}
+
+/** Adds a joined Pursuit (someone else's) to this browser's journal. */
+export function addJoinedProject(project: Project) {
+  if (state.projects.some((p) => p.id === project.id)) {
+    commit({ ...state, projects: state.projects.map((p) => (p.id === project.id ? { ...p, ...project } : p)) });
+    return;
+  }
+  commit({ ...state, projects: [project, ...state.projects] });
+}
+
+export function setProjectMembers(projectId: string, members: PursuitMember[]): Project | undefined {
+  return patchProject(projectId, () => ({ members }));
+}
+
+export function setProjectMeasure(projectId: string, measure: Measure): Project | undefined {
+  return patchProject(projectId, () => ({ measure }));
 }

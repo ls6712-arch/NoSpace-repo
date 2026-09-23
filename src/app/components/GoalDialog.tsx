@@ -307,7 +307,7 @@ export function GoalDialog({
             {project.goal ? "Save goal" : "Set goal"}
           </Button>
           <p className="text-center text-[11px] text-muted-foreground">
-            No percentages, no streaks. Just what you said you're going for.
+            Just what you said you're going for. Progress shows on the Pursuit.
           </p>
         </div>
       </DialogContent>

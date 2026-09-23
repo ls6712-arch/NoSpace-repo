@@ -5,7 +5,6 @@ import { getHobby } from "../data/hobbies";
 import { Post } from "../data/posts";
 import {
   Project,
-  finishProject,
   goalDeadlineText,
   goalProgressText,
   markGoalReached,
@@ -16,43 +15,41 @@ import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { GoalDialog } from "./GoalDialog";
+import { EndingDialog } from "./EndingDialog";
 import { GoalProgressTap } from "./GoalProgressTap";
 import { WorkGrid } from "./WorkGrid";
+import { formatAmount, hasMeasure, summarize } from "../lib/pursuitProgress";
+import { ProgressEntry, useJournalSlice } from "../lib/journal";
+
+const NO_PROGRESS: ProgressEntry[] = [];
 
 const SIZE = 44;
-const RADIUS = 18;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-/** A percent-labelled ring, sized to double as its own tap target. Same
- * single-stroke-color, fill-in-once-on-mount treatment as the full-size
- * ring on PursuitCard — this is a smaller sibling, not a different design. */
-function MiniProgressRing({ percent }: { percent: number }) {
-  const [filled, setFilled] = useState(false);
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setFilled(true));
-    return () => cancelAnimationFrame(raf);
-  }, []);
-  const offset = CIRCUMFERENCE * (1 - (filled ? percent : 0));
+const R = 18;
+const C = 2 * Math.PI * R;
 
+/** Progress ring with the count in the middle — "4/10". */
+function CountBadge({ current, target }: { current: number; target: number }) {
+  const f = target > 0 ? Math.min(1, current / target) : 0;
+  const short = (n: number) => (n >= 1000 ? `${Math.round(n / 100) / 10}k` : String(Math.round(n * 10) / 10));
   return (
     <div className="relative shrink-0" style={{ width: SIZE, height: SIZE }}>
       <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="-rotate-90">
-        <circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} fill="none" stroke="var(--border)" strokeWidth="3" />
+        <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="var(--border)" strokeWidth="3" />
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
-          r={RADIUS}
+          r={R}
           fill="none"
           stroke="var(--coral)"
           strokeWidth="3"
           strokeLinecap="round"
-          strokeDasharray={CIRCUMFERENCE}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 400ms ease-out" }}
+          strokeDasharray={C}
+          strokeDashoffset={C * (1 - f)}
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-foreground">
-        {Math.round(percent * 100)}%
+      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-medium text-foreground">
+        {short(current)}/{short(target)}
       </span>
     </div>
   );
@@ -103,10 +100,17 @@ export function PursuitCompactCard({
   // Tap-to-log (GoalProgressTap) is what actually moves a number goal's
   // current now — count (attached Updates) stays a separate, honest signal
   // of narrative activity, not a second, silently-disagreeing progress number.
-  const ringPercent =
-    goal?.shape === "number" && goal.targetNumber ? Math.min(1, (goal.current ?? 0) / goal.targetNumber) : undefined;
-  const status = pursuit.finishedAt ? "Completed" : count > 0 ? "In progress" : "Just started";
-  const progressText = goal?.shape === "number" ? goalProgressText(goal) : goal?.label;
+  const allProgress = useJournalSlice((s) => s.progress ?? NO_PROGRESS);
+  const measured = hasMeasure(pursuit)
+    ? summarize(pursuit.measure!, allProgress.filter((e) => e.projectId === pursuit.id))
+    : undefined;
+  const hasCount = !measured && goal?.shape === "number" && !!goal.targetNumber;
+  const status = pursuit.finishedAt ? "Completed" : pursuit.pausedAt ? "Resting" : count > 0 ? "In progress" : "Just started";
+  const progressText = measured
+    ? `${formatAmount(measured.current)} of ${formatAmount(measured.target)} ${pursuit.measure!.unit} · ${measured.percent}%`
+    : goal?.shape === "number"
+      ? goalProgressText(goal)
+      : goal?.label;
 
   return (
     <button
@@ -117,7 +121,13 @@ export function PursuitCompactCard({
         expanded ? "border-[var(--coral-deep)]" : "border-border hover:border-[var(--coral-deep)]"
       }`}
     >
-      {ringPercent !== undefined ? <MiniProgressRing percent={ringPercent} /> : <EmptyRing />}
+      {measured ? (
+        <CountBadge current={measured.current} target={measured.target} />
+      ) : hasCount ? (
+        <CountBadge current={goal!.current ?? 0} target={goal!.targetNumber!} />
+      ) : (
+        <EmptyRing />
+      )}
       <span className="min-w-0 flex-1">
         {label && (
           <span className="block truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -168,6 +178,7 @@ export function PursuitExpandedPanel({
 }) {
   const { user, profile } = useAuth();
   const [goalOpen, setGoalOpen] = useState(false);
+  const [endingOpen, setEndingOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
 
   const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
@@ -196,10 +207,8 @@ export function PursuitExpandedPanel({
     }
   };
 
-  const markDone = () => {
-    finishProject(pursuit.id);
-    if (user) void mirrorPursuit(user.id, { ...pursuit, finishedAt: Date.now() });
-  };
+  // Completing goes through the ending question, same as the Pursuit page.
+  const markDone = () => setEndingOpen(true);
 
   const reachIt = () => markGoalReached(pursuit.id);
 
@@ -217,9 +226,9 @@ export function PursuitExpandedPanel({
           </h3>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link to={`/create?pursuit=${pursuit.id}`}>
+          <Link to={`/pursuit/${pursuit.id}/moment`}>
             <Button variant="coral" size="sm">
-              Add progress
+              Add a Moment
             </Button>
           </Link>
           <Button variant="outline" size="sm" onClick={() => setGoalOpen(true)}>
@@ -274,7 +283,7 @@ export function PursuitExpandedPanel({
                 {/* A number goal not yet reached gets the tap-to-log control
                     in place of the plain "Current" label — logging a count
                     and writing a narrative update stay two separate actions,
-                    so this sits alongside "Add progress" above, not instead
+                    so this sits alongside "Add a Moment" above, not instead
                     of it. */}
                 {goal.shape === "number" && !goal.reachedAt ? (
                   <GoalProgressTap project={pursuit} goal={goal} />
@@ -306,6 +315,7 @@ export function PursuitExpandedPanel({
       </div>
 
       <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={pursuit} />
+      <EndingDialog open={endingOpen} onOpenChange={setEndingOpen} project={pursuit} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { supabase } from "../../lib/supabase";
 import { Goal, GoalShape, Project, attachEntry, mergeRemoteProjects } from "./journal";
+import type { Measure, PursuitMember, PursuitMode, ProgressEntry } from "./journal";
 
 /** Shared by every reader of a `pursuits` row — fetchPursuitById,
  * restoreOwnPursuits — so the goal-column mapping only lives in one place. */
@@ -34,6 +35,14 @@ function rowToProject(row: any): Project {
     startedAt: new Date(row.started_at).getTime(),
     finishedAt: row.finished_at ? new Date(row.finished_at).getTime() : undefined,
     goal: rowToGoal(row),
+    // Columns from supabase/migrations/20260923100000_pursuit_rest_and_checkins.sql.
+    // Absent (undefined) on a database that hasn't run it yet, which reads
+    // exactly like a Pursuit that never set them.
+    pausedAt: row.paused_at ? new Date(row.paused_at).getTime() : undefined,
+    checkInDays: row.check_in_days ?? undefined,
+    endingNote: row.ending_note ?? undefined,
+    measure: row.measure ?? undefined,
+    mode: row.mode ?? undefined,
   };
 }
 
@@ -78,6 +87,18 @@ export async function mirrorPursuit(userId: string, project: Project) {
       goal_reached_at: project.goal?.reachedAt ? new Date(project.goal.reachedAt).toISOString() : null,
       updated_at: new Date().toISOString(),
     });
+    // The resting / check-in / ending-note columns go in their own write on
+    // purpose. If the migration that adds them hasn't been run, this update
+    // fails on its own and the core mirror above has already landed —
+    // folding them into the upsert would make every mirror fail instead.
+    await supabase
+      .from("pursuits")
+      .update({
+        paused_at: project.pausedAt ? new Date(project.pausedAt).toISOString() : null,
+        check_in_days: project.checkInDays ?? null,
+        ending_note: project.endingNote ?? null,
+      })
+      .eq("id", project.id);
   } catch {
     // Best effort — the owner's own copy in the local journal is unaffected.
   }
@@ -94,6 +115,8 @@ export interface SharedPursuit {
   startedAt: number;
   finishedAt?: number;
   goal?: Goal;
+  pausedAt?: number;
+  endingNote?: string;
 }
 
 /**
@@ -136,6 +159,8 @@ export async function fetchPursuitById(id: string): Promise<SharedPursuit | null
       startedAt: new Date(data.started_at).getTime(),
       finishedAt: data.finished_at ? new Date(data.finished_at).getTime() : undefined,
       goal,
+      pausedAt: data.paused_at ? new Date(data.paused_at).getTime() : undefined,
+      endingNote: data.ending_note ?? undefined,
     };
   } catch {
     return null;
@@ -194,5 +219,177 @@ export async function fetchSharedPursuits(userId: string): Promise<SharedPursuit
     }));
   } catch {
     return [];
+  }
+}
+
+// ── Measured progress and pursuing together ──────────────────────────────
+// Tables from supabase/migrations/20260923110000_pursuits_measured_and_shared.sql.
+// Everything here is best-effort like the rest of this file: without the
+// migration (or signed out) a Pursuit still works locally, solo.
+
+
+/** Mirrors mode + measure (separate write, same reason as the check-in columns). */
+export async function mirrorPursuitMeasure(projectId: string, mode: PursuitMode, measure?: Measure) {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuits").update({ mode, measure: measure ?? null }).eq("id", projectId);
+  } catch {
+    // best effort
+  }
+}
+
+export async function mirrorProgress(userId: string, e: ProgressEntry) {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuit_progress").upsert({
+      id: e.id,
+      pursuit_id: e.projectId,
+      user_id: userId,
+      amount: e.amount,
+      note: e.note ?? null,
+      image_url: e.image && !e.image.startsWith("blob:") ? e.image : null,
+      post_id: typeof e.postId === "number" ? e.postId : null,
+      created_at: new Date(e.createdAt).toISOString(),
+    });
+  } catch {
+    // best effort
+  }
+}
+
+export async function deleteRemoteProgress(entryId: string) {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuit_progress").delete().eq("id", entryId);
+  } catch {
+    // best effort
+  }
+}
+
+/** Every participant's progress on one Pursuit. */
+export async function fetchPursuitProgress(pursuitId: string): Promise<ProgressEntry[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("pursuit_progress")
+      .select("*")
+      .eq("pursuit_id", pursuitId)
+      .order("created_at", { ascending: true });
+    if (error || !data) return [];
+    return data.map((r: any) => ({
+      id: r.id,
+      projectId: r.pursuit_id,
+      userId: r.user_id,
+      amount: Number(r.amount) || 0,
+      note: r.note ?? undefined,
+      image: r.image_url ?? undefined,
+      postId: r.post_id ?? undefined,
+      createdAt: new Date(r.created_at).getTime(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Members with their profile names, owner first. */
+export async function fetchPursuitMembers(pursuitId: string): Promise<PursuitMember[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("pursuit_members")
+      .select("user_id, role, status, profiles:user_id (username, display_name, avatar_url)")
+      .eq("pursuit_id", pursuitId);
+    if (error || !data) return [];
+    return (data as any[])
+      .map((r) => ({
+        userId: r.user_id,
+        username: r.profiles?.username ?? null,
+        displayName: r.profiles?.display_name?.trim() || r.profiles?.username || "Someone",
+        avatarUrl: r.profiles?.avatar_url ?? undefined,
+        status: r.status,
+        role: r.role,
+      }))
+      .sort((a, b) => (a.role === "owner" ? -1 : b.role === "owner" ? 1 : 0));
+  } catch {
+    return [];
+  }
+}
+
+/** Owner adds themselves plus invitees. Returns an error message or null. */
+export async function saveInvites(pursuitId: string, ownerId: string, inviteeIds: string[]): Promise<string | null> {
+  if (!supabase) return "Invites need an account.";
+  try {
+    const rows = [
+      { pursuit_id: pursuitId, user_id: ownerId, role: "owner", status: "joined", invited_by: ownerId },
+      ...inviteeIds
+        .filter((id) => id !== ownerId)
+        .map((id) => ({ pursuit_id: pursuitId, user_id: id, role: "member", status: "invited", invited_by: ownerId })),
+    ];
+    const { error } = await supabase.from("pursuit_members").upsert(rows, { onConflict: "pursuit_id,user_id", ignoreDuplicates: true });
+    return error ? error.message : null;
+  } catch (e: any) {
+    return e?.message ?? "Invites didn't send.";
+  }
+}
+
+export interface PursuitInvite {
+  pursuitId: string;
+  title: string;
+  mode: PursuitMode;
+  ownerName: string;
+  ownerAvatar?: string;
+}
+
+/** Invites waiting for this person's answer. */
+export async function fetchMyInvites(userId: string): Promise<PursuitInvite[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("pursuit_members")
+      .select("pursuit_id, pursuits:pursuit_id (title, mode, user_id, profiles:user_id (display_name, avatar_url))")
+      .eq("user_id", userId)
+      .eq("status", "invited");
+    if (error || !data) return [];
+    return (data as any[])
+      .filter((r) => r.pursuits)
+      .map((r) => ({
+        pursuitId: r.pursuit_id,
+        title: r.pursuits.title,
+        mode: (r.pursuits.mode ?? "together") as PursuitMode,
+        ownerName: r.pursuits.profiles?.display_name?.trim() || "Someone",
+        ownerAvatar: r.pursuits.profiles?.avatar_url ?? undefined,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function answerInvite(pursuitId: string, userId: string, accept: boolean): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase
+      .from("pursuit_members")
+      .update({ status: accept ? "joined" : "declined" })
+      .eq("pursuit_id", pursuitId)
+      .eq("user_id", userId);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/** The full row for a Pursuit you were invited to, as a local Project. */
+export async function fetchPursuitAsProject(pursuitId: string) {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase.from("pursuits").select("*").eq("id", pursuitId).maybeSingle();
+    if (error || !data) return null;
+    return {
+      ...rowToProject(data),
+      measure: (data.measure as Measure) ?? undefined,
+      mode: (data.mode as PursuitMode) ?? "solo",
+      ownerId: data.user_id as string,
+    };
+  } catch {
+    return null;
   }
 }

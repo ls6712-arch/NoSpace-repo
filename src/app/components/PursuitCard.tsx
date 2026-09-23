@@ -6,7 +6,6 @@ import { Post } from "../data/posts";
 import {
   Project,
   setProjectShared,
-  finishProject,
   projectProgress,
   useJournalSlice,
   markGoalReached,
@@ -19,6 +18,7 @@ import { useContent } from "../context/ContentContext";
 import { GeneratedArt } from "./GeneratedArt";
 import { PostMedia } from "./PostMedia";
 import { GoalDialog } from "./GoalDialog";
+import { EndingDialog } from "./EndingDialog";
 import { GoalProgressTap } from "./GoalProgressTap";
 
 function timeAgo(ts: number) {
@@ -30,41 +30,6 @@ function timeAgo(ts: number) {
   return `${months} ${months === 1 ? "month" : "months"} ago`;
 }
 
-const RING_RADIUS = 15;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-
-/**
- * A numeric goal's completion, as a ring — one stroke color everywhere it
- * appears, since the fill level is what carries the meaning, not a hue
- * picked per card. Starts empty and fills in once on mount (~400ms
- * ease-out), the one motion this card keeps.
- */
-function ProgressRing({ percent }: { percent: number }) {
-  const [filled, setFilled] = useState(false);
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setFilled(true));
-    return () => cancelAnimationFrame(raf);
-  }, []);
-  const offset = RING_CIRCUMFERENCE * (1 - (filled ? percent : 0));
-
-  return (
-    <svg width="36" height="36" viewBox="0 0 36 36" className="shrink-0 -rotate-90">
-      <circle cx="18" cy="18" r={RING_RADIUS} fill="none" stroke="var(--border)" strokeWidth="3" />
-      <circle
-        cx="18"
-        cy="18"
-        r={RING_RADIUS}
-        fill="none"
-        stroke="var(--coral)"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeDasharray={RING_CIRCUMFERENCE}
-        strokeDashoffset={offset}
-        style={{ transition: "stroke-dashoffset 400ms ease-out" }}
-      />
-    </svg>
-  );
-}
 
 /** What a Pursuit card actually needs — either the owner's own live Project
  * (with edit actions) or someone else's shared row (read-only). */
@@ -102,6 +67,7 @@ export function PursuitCard({
   const { posts } = useContent();
   const entryProject = useJournalSlice((s) => s.entryProject);
   const [goalOpen, setGoalOpen] = useState(false);
+  const [endingOpen, setEndingOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   // Only the owner's own card is ever backed by a full Project (with a
   // `shared` flag and edit actions) — a friend's view only ever gets the
@@ -143,11 +109,12 @@ export function PursuitCard({
     }
   };
 
+  // Completing goes through the ending question, same as the Pursuit page.
   const markDone = () => {
     if (!asProject) return;
-    finishProject(pursuit.id);
-    if (user) void mirrorPursuit(user.id, { ...asProject, finishedAt: Date.now() });
+    setEndingOpen(true);
   };
+
 
   const goal = asProject?.goal;
   const goalText = goal
@@ -162,10 +129,6 @@ export function PursuitCard({
   // journal.ts's logProgress. Those are two honest, separate signals
   // (how many times you tapped +1 vs. how many narrative updates you wrote)
   // that used to quietly disagree when both were read as "progress."
-  const ringPercent =
-    owner && goal?.shape === "number" && goal.targetNumber
-      ? Math.min(1, (goal.current ?? 0) / goal.targetNumber)
-      : undefined;
 
   const reachIt = () => {
     if (!asProject) return;
@@ -244,7 +207,6 @@ export function PursuitCard({
 
         {owner && (
           <div className="mt-2.5 flex items-center gap-2.5">
-            {ringPercent !== undefined && <ProgressRing percent={ringPercent} />}
             <button
               type="button"
               onClick={() => setGoalOpen(true)}
@@ -266,7 +228,7 @@ export function PursuitCard({
 
         {/* Logging a count and writing a narrative update are two different
             things someone might or might not both want to do — this sits
-            beside "Add progress" below, not instead of it. */}
+            beside "Add a Moment" below, not instead of it. */}
         {owner && asProject && goal?.shape === "number" && !goal.reachedAt && (
           <div className="mt-2.5">
             {goalDeadlineText(goal) && (
@@ -279,10 +241,10 @@ export function PursuitCard({
         {owner && (
           <div className="mt-3 flex items-center gap-2">
             <Link
-              to={`/create?pursuit=${pursuit.id}`}
+              to={`/pursuit/${pursuit.id}/moment`}
               className="flex-1 rounded-full border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
             >
-              Add progress
+              Add a Moment
             </Link>
             {goal && !goal.reachedAt && (
               <button
@@ -309,7 +271,10 @@ export function PursuitCard({
       </div>
 
       {owner && asProject && (
-        <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={asProject} />
+        <>
+          <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={asProject} />
+          <EndingDialog open={endingOpen} onOpenChange={setEndingOpen} project={asProject} />
+        </>
       )}
     </div>
   );

@@ -27,6 +27,8 @@ import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
+import { CreatePursuit } from "./pages/CreatePursuit";
+import { AddMoment } from "./pages/AddMoment";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
@@ -68,6 +70,9 @@ export const router = createHashRouter([
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },
+      // The old personal page. Anyone who saved or shared /me landed on a
+      // 404 after the rename; send them to My Space instead.
+      { path: "me", loader: () => redirect("/my-space") },
       { path: "settings", Component: Settings },
       { path: "settings/appearance", Component: AppearanceSettingsPage },
       // Deliberately top-level, not nested under /settings/* — only
@@ -83,6 +88,8 @@ export const router = createHashRouter([
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
       { path: "space/:slug", Component: CategoryFeed },
       { path: "corner/:slug", Component: CornerPage },
+      { path: "pursuits/new", Component: CreatePursuit },
+      { path: "pursuit/:id/moment", Component: AddMoment },
       { path: "pursuit/:id", Component: Pursuit },
       { path: "u/:username", Component: PublicProfile },
       { path: "u/:username/studio", Component: Studio },

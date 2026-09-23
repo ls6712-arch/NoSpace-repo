@@ -1,8 +1,9 @@
+import { useNavigate } from "react-router";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ChevronDown, Hash, Sparkles } from "lucide-react";
 import { hobbies } from "../data/hobbies";
 import { Post } from "../data/posts";
-import { GoalShape, setProjectGoal, startProject } from "../lib/journal";
+import { CHECK_IN_OPTIONS, DEFAULT_CHECK_IN_DAYS, GoalShape, setCheckInDays, setProjectGoal, startProject } from "../lib/journal";
 import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { useAuth } from "../context/AuthContext";
 import { useCorners, isDiscoverable } from "../context/CornersContext";
@@ -154,6 +155,19 @@ export function PursuitDialog({
   const [goalTargetNumber, setGoalTargetNumber] = useState("");
   const [goalUnit, setGoalUnit] = useState("");
   const [goalTargetDate, setGoalTargetDate] = useState("");
+  const [checkIn, setCheckIn] = useState<number>(DEFAULT_CHECK_IN_DAYS);
+  const navigate = useNavigate();
+
+  // Starting a Pursuit now happens in the full Create a Pursuit flow
+  // (/pursuits/new — goal, measure, rules, people, review). Every place
+  // that used to open this dialog lands there instead, carrying a seed
+  // post's first line as the goal text.
+  useEffect(() => {
+    if (!open) return;
+    const seedTitle = seedPost ? seedPost.caption.split(".")[0].slice(0, 60).trim() : "";
+    onOpenChange(false);
+    navigate(`/pursuits/new${seedTitle ? `?title=${encodeURIComponent(seedTitle)}` : ""}`);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -166,6 +180,7 @@ export function PursuitDialog({
     setGoalTargetNumber("");
     setGoalUnit("");
     setGoalTargetDate("");
+    setCheckIn(DEFAULT_CHECK_IN_DAYS);
   }, [open, seedPost]);
 
   const isOther = spaceSlug === OTHER;
@@ -185,6 +200,10 @@ export function PursuitDialog({
       inspiredByPostId: seedPost?.id,
       shared: false,
     });
+    // The maker's own check-in cadence — the only reminder this Pursuit will
+    // ever send is one they asked for here.
+    setCheckInDays(project.id, checkIn);
+    project.checkInDays = checkIn;
 
     if (goalOpen) {
       const goal =
@@ -207,6 +226,9 @@ export function PursuitDialog({
 
     if (user) void mirrorPursuit(user.id, project);
     onOpenChange(false);
+    // Straight to the new Pursuit, where Day Zero is waiting — a starting
+    // point captured now is what every before-and-after is measured from.
+    navigate(`/pursuit/${project.id}?new=1`);
   };
 
   return (
@@ -345,10 +367,33 @@ export function PursuitDialog({
                   </div>
                 )}
                 <p className="text-[11px] text-muted-foreground">
-                  No percentages, no streaks. You can add or change this later from the Pursuit's own page, too.
+                  You can add or change this later from the Pursuit's own page, too.
                 </p>
               </div>
             )}
+          </div>
+
+          <div>
+            <Label className="mb-1.5 block text-xs">Check in with me</Label>
+            <div className="grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Check in with me">
+              {CHECK_IN_OPTIONS.map((o) => (
+                <button
+                  key={o.days}
+                  type="button"
+                  role="radio"
+                  aria-checked={checkIn === o.days}
+                  onClick={() => setCheckIn(o.days)}
+                  className={`rounded-xl border px-2 py-1.5 text-xs transition-colors ${
+                    checkIn === o.days ? "border-[var(--coral-deep)] bg-surface-muted text-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              One gentle question if it goes quiet. Never a streak.
+            </p>
           </div>
 
           <Button variant="coral" className="w-full" disabled={!title.trim() || !goalReady} onClick={submit}>
