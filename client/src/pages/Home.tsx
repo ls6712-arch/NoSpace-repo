@@ -19,7 +19,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const imagery = {
   hero: "/manus-storage/sushii-multi-interest-hero_76ba0381.png",
@@ -190,6 +190,25 @@ function SocialProof() {
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const steps = Array.from(document.querySelectorAll<HTMLElement>(".workflow-step"));
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      steps.forEach((step) => step.classList.add("is-visible"));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18, rootMargin: "0px 0px -8% 0px" });
+    steps.forEach((step) => observer.observe(step));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="site-shell">
       <header className="site-nav">
@@ -255,15 +274,15 @@ export default function Home() {
           <div className="workflow-steps">
             <article className="workflow-step workflow-moment">
               <div className="workflow-image"><MomentScreen /></div>
-              <div className="workflow-caption"><span>01</span><div><h3>Create a Moment</h3><p>Capture something you did, discovered, made, or want to remember.</p></div></div>
+              <div className="workflow-caption"><span>01</span><div><small className="workflow-screen-label">Moment detail · My Space</small><h3>Create a Moment</h3><p>Capture something you did, discovered, made, or want to remember.</p></div></div>
             </article>
             <article className="workflow-step workflow-pursuit">
               <div className="workflow-image"><PursuitScreen /></div>
-              <div className="workflow-caption"><span>02</span><div><h3>Start a Pursuit</h3><p>Choose something you want to practice or work toward, on your own or with friends.</p></div></div>
+              <div className="workflow-caption"><span>02</span><div><small className="workflow-screen-label">Pursuit detail · My Space</small><h3>Start a Pursuit</h3><p>Choose something you want to practice or work toward, on your own or with friends.</p></div></div>
             </article>
             <article className="workflow-step workflow-keepgoing">
               <div className="workflow-image"><PursuitScreen /></div>
-              <div className="workflow-caption"><span>03</span><div><h3>Keep Going</h3><p>Add progress as you return, and let the story of the Pursuit take shape.</p></div></div>
+              <div className="workflow-caption"><span>03</span><div><small className="workflow-screen-label">Pursuit progress · My Space</small><h3>Keep Going</h3><p>Add progress as you return, and let the story of the Pursuit take shape.</p></div></div>
             </article>
           </div>
           <p className="workflow-footer">Your interests are part of your story.</p>
