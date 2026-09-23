@@ -169,8 +169,8 @@ function CirclesScreen() {
           <div className="circle-card-info"><span className="circle-count">42 people</span><h4>Books in the margins</h4><p>For the passages that followed you around all day.</p><div className="avatar-stack"><MiniAvatar name="A" color="#B58668" /><MiniAvatar name="L" color="#808B70" /><MiniAvatar name="P" color="#7B5766" /><span>+39</span></div></div>
         </article>
         <div className="circle-notes">
-          <div className="note-card"><MiniAvatar name="R" color="#B06D55" /><p>“The book chose me in a thrift shop. The first page had a grocery list tucked inside.”</p><small>Rae · 16m</small></div>
-          <div className="note-card peach"><MiniAvatar name="S" color="#567969" /><p>“New to watercolors. The tiny orange is my eighth try.”</p><small>Simon · 1h</small></div>
+          <div className="note-card"><MiniAvatar name="R" color="#B06D55" /><p>The book chose me in a thrift shop. The first page had a grocery list tucked inside.</p><small>Rae · 16m</small></div>
+          <div className="note-card peach"><MiniAvatar name="S" color="#567969" /><p>New to watercolors. The tiny orange is my eighth try.</p><small>Simon · 1h</small></div>
         </div>
       </div>
     </div>
@@ -193,27 +193,27 @@ export default function Home() {
       <header className="site-nav">
         <a className="brand" href="#top" aria-label="Sushii home"><span className="brand-orbit" />Sushii</a>
         <nav className={menuOpen ? "mobile-open" : ""} aria-label="Primary navigation">
+          <a href="#discover" onClick={() => setMenuOpen(false)}>Discover</a>
           <a href="#space" onClick={() => setMenuOpen(false)}>My Space</a>
-          <a href="#moments" onClick={() => setMenuOpen(false)}>Moments</a>
-          <a href="#pursuits" onClick={() => setMenuOpen(false)}>Pursuits</a>
           <a href="#circles" onClick={() => setMenuOpen(false)}>Circles</a>
         </nav>
-        <div className="nav-cta"><a href="https://www.trynospace.com" target="_blank" rel="noreferrer">Log in</a><ActionLink>Create your Space</ActionLink></div>
+        <div className="nav-cta"><a href="#discover" onClick={() => setMenuOpen(false)}>Start your log</a><a href="https://www.trynospace.com" target="_blank" rel="noreferrer">Log in</a></div>
         <button className="menu-toggle" type="button" aria-label="Toggle navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
       </header>
 
       <main id="top">
-        <section className="hero section-wrap">
+        <section className="hero section-wrap" id="discover">
           <div className="hero-intro">
             <p className="eyebrow"><span /> A PLACE FOR THE MANY SIDES OF YOU</p>
             <h1>Your interests are <em>part of</em> your story.</h1>
-            <p className="hero-copy">A place to keep track of what you are into, what you are learning, making, exploring, and doing.</p>
-            <div className="hero-actions"><ActionLink dark href="#moments">Start exploring</ActionLink><a href="#how-it-works" className="text-link">See how Sushii works <ArrowDown size={15} /></a></div>
+            <p className="hero-copy">Keep track of what you are into, what you are learning, making, exploring, and doing.</p>
+            <div className="hero-actions"><ActionLink dark href="#moments">Start exploring</ActionLink><a href="#how-it-works" className="text-link">See how it works <ArrowDown size={15} /></a></div>
             <SocialProof />
           </div>
-          <div className="hero-visual" aria-label="A collection of interests and activities coming together">
+          <div className="hero-visual" aria-label="Sushii product interface with a world of interests behind it">
+            <div className="hero-backdrop"><img src={imagery.hero} alt="Different activities and interests coming together" /></div>
+            <div className="hero-product-foreground"><SpaceScreen /></div>
             <div className="hero-visual-caption"><span>01</span> many interests, one story</div>
-            <div className="hero-image-wrap"><img src={imagery.hero} alt="A collection of creative interests, hobbies, and moments" /></div>
             <div className="hero-visual-note"><span>02</span> keep exploring</div>
           </div>
         </section>
@@ -225,8 +225,13 @@ export default function Home() {
         </section>
 
         <section className="pursuits-section section-wrap" id="pursuits">
-          <div className="pursuit-copy-block"><div className="section-label"><span>03</span><p>PURSUITS</p></div><h2>Turn interests into things you <em>actually do.</em></h2><p>Create Pursuits for the things you are learning, making, practicing, or working toward. Add moments as you go.</p><div className="pursuit-pullquote"><span>“</span><p>Every return is part of the work.</p></div></div>
+          <div className="pursuit-copy-block"><div className="section-label"><span>03</span><p>PURSUITS</p></div><h2>Turn interests into things you <em>actually do.</em></h2><p>Create Pursuits for the things you are learning, making, practicing, or working toward. Add moments as you go.</p><div className="pursuit-pullquote"><p>Every return is part of the work.</p></div></div>
           <div className="pursuit-product-stage"><PursuitScreen /><div className="scrap-label">small<br />progress<br />counts <MoveUpRight size={15} /></div></div>
+        </section>
+
+        <section className="circles-section section-wrap" id="circles">
+          <div className="circles-text"><div className="section-label"><span>04</span><p>CIRCLES</p></div><h2>Find people who are doing the <em>same things.</em></h2><p>Circles are smaller communities built around shared interests and actually doing things together.</p><a href="https://www.trynospace.com" target="_blank" rel="noreferrer" className="text-link">Meet the circles <ArrowUpRight size={15} /></a></div>
+          <div className="circles-product-stage"><CirclesScreen /></div>
         </section>
 
         <section className="core-idea section-wrap" id="space">
@@ -241,15 +246,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="circles-section section-wrap" id="circles">
-          <div className="circles-text"><div className="section-label"><span>04</span><p>CIRCLES</p></div><h2>Find people who are doing the <em>same things.</em></h2><p>Circles are smaller communities built around shared interests and actually doing things together.</p><a href="https://www.trynospace.com" target="_blank" rel="noreferrer" className="text-link">Meet the circles <ArrowUpRight size={15} /></a></div>
-          <div className="circles-product-stage"><CirclesScreen /></div>
-        </section>
-
         <section className="difference-section" id="how-it-works">
           <div className="brand-statement section-wrap">
             <div className="brand-statement-image"><img src={imagery.identity} alt="A table of many interests and creative practices" /></div>
-            <div className="brand-statement-copy"><p className="eyebrow"><span /> A WIDER WAY TO BE A PERSON</p><h2>Your interests do not have to fit <em>one identity.</em></h2><p>You can be a gardener and a reader, a beginner and an expert, a maker and a wanderer. Sushii gives every part of your curiosity somewhere to live.</p><div className="difference-lines"><p><span>01</span> No endless scrolling.</p><p><span>02</span> No popularity contest.</p><p><span>03</span> Just the things you care about—and the people who care about them too.</p></div></div>
+            <div className="brand-statement-copy"><p className="eyebrow"><span /> A WIDER WAY TO BE A PERSON</p><h2>Your interests do not have to fit <em>one identity.</em></h2><p>You can be a gardener and a reader, a beginner and an expert, a maker and a wanderer. Sushii gives every part of your curiosity somewhere to live.</p><div className="difference-lines"><p><span>01</span> No endless scrolling.</p><p><span>02</span> No popularity contest.</p><p><span>03</span> Just the things you care about and the people who care about them too.</p></div></div>
           </div>
         </section>
 
