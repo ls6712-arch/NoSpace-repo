@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { PenLine, Settings as SettingsIcon, Share2, Sparkles, Sprout, Users } from "lucide-react";
+import * as Icons from "lucide-react";
+import { Settings as SettingsIcon, Sparkles, Sprout, Users } from "lucide-react";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useSettings } from "../context/SettingsContext";
+import { useRewards } from "../context/RewardsContext";
+import { badges, badgeName } from "../data/badges";
 import { Post } from "../data/posts";
 import { Button } from "../components/ui/button";
 import { QuietMilestones } from "../components/QuietMilestones";
@@ -16,6 +19,7 @@ import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { ShareProfileDialog } from "../components/ShareProfileDialog";
 import { HobbyShelf, useSessionsByHobby } from "../components/HobbyShelf";
+import { usePrimaryHobbyKey } from "../components/usePrimaryHobbyKey";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal, useJournalSlice } from "../lib/journal";
 import { useProfileLinks } from "../lib/profileLinks";
@@ -59,6 +63,9 @@ export function You() {
   const { circlesVisible } = useSettings();
   const profileLinks = useProfileLinks();
   const [shareOpen, setShareOpen] = useState(false);
+  const { unlockedBadgeIds } = useRewards();
+  const { slug: primaryHobbySlug, label: primaryHobbyLabel } = usePrimaryHobbyKey();
+  const unlockedBadges = badges.filter((b) => unlockedBadgeIds.includes(b.id));
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [pursuitDialog, setPursuitDialog] = useState(false);
   // Only one Pursuit expanded at a time. renderedPursuitId lags behind on
@@ -113,9 +120,9 @@ export function You() {
           YOUR PERSONAL ARCHIVE
         </div>
 
-        <div className="ns-you-profile-card ns-you-profile-card--compact mb-6">
-          <div className="ns-you-profile-top">
-            <div className="ns-you-profile-identity">
+        <div className="mb-6 flex flex-col gap-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-start gap-3.5">
               <AvatarPicker
                 compact
                 name={displayName}
@@ -168,17 +175,58 @@ export function You() {
                     </>
                   )}
                 </div>
+
+                {/* Earned milestones only — a locked badge has nothing to
+                    say here yet. Real data straight off the rewards ledger,
+                    same source ShareProfileDialog already reads. */}
+                {unlockedBadges.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+                    {unlockedBadges.map((b) => {
+                      const Icon = (Icons as any)[b.icon] ?? Icons.Sparkles;
+                      return (
+                        <span
+                          key={b.id}
+                          title={b.description}
+                          className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
+                        >
+                          <Icon className="size-3.5 text-[var(--coral-deep)]" strokeWidth={1.8} aria-hidden="true" />
+                          {badgeName(b, primaryHobbySlug, primaryHobbyLabel)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex shrink-0 flex-col items-end gap-1.5">
-              <Button variant="coral" size="sm" onClick={() => setShareOpen(true)}>
-                <Share2 className="size-3.5" />
-                Share
-              </Button>
-              <Link to="/studio" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
-                Open Studio →
-              </Link>
+            <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/create"
+                  className="text-xs font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
+                >
+                  Add a moment
+                </Link>
+                <Link to="/settings" title="Settings" aria-label="Settings">
+                  <SettingsIcon className="size-3.5 text-muted-foreground transition-colors hover:text-foreground" />
+                </Link>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setShareOpen(true)}
+                  className="text-xs uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Share
+                </button>
+                <span className="text-muted-foreground/50" aria-hidden="true">·</span>
+                <Link
+                  to="/studio"
+                  className="text-xs uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Public archive ↗
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -196,23 +244,43 @@ export function You() {
         {/* Open tags now, not the fixed 15-Space list — tap one to narrow
             Every moment below to just that tag, tap it again to clear. */}
         {myTags.length > 0 && (
-          <div className="ns-you-tags ns-you-tags--pills mb-7 flex flex-wrap gap-2">
-            {myTags.slice(0, 6).map(({ tag }) => (
-              <button
-                key={tag}
-                type="button"
-                aria-pressed={tagFilter === tag}
-                onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
-                className={`ns-pill ${tagFilter === tag ? "ns-pill--active" : ""}`}
-              >
-                {tag}
-              </button>
+          <div
+            className="mb-5 flex flex-wrap items-center gap-2 text-base"
+            style={{ fontFamily: "var(--font-serif)" }}
+          >
+            {myTags.slice(0, 6).map(({ tag }, i) => (
+              <span key={tag} className="flex items-center gap-2">
+                {i > 0 && (
+                  <span className="text-muted-foreground/50" aria-hidden="true">
+                    ·
+                  </span>
+                )}
+                <button
+                  type="button"
+                  aria-pressed={tagFilter === tag}
+                  onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
+                  className={`transition-colors ${
+                    tagFilter === tag
+                      ? "text-[var(--coral-text)]"
+                      : "text-foreground hover:text-[var(--coral-text)]"
+                  }`}
+                >
+                  {tag}
+                </button>
+              </span>
             ))}
-            <Link to="/create" className="ns-pill ns-pill--ghost">
-              + Add a tag
+            <Link
+              to="/create"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Add a tag"
+              title="Add a tag"
+            >
+              +
             </Link>
           </div>
         )}
+
+        <div className="mb-7 border-t border-[var(--hairline)]" />
 
         {isConfigured && !user && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted px-4 py-3">
@@ -224,22 +292,6 @@ export function You() {
             </Link>
           </div>
         )}
-
-        {/* Share now lives on the profile card itself, up top — no need to
-            repeat it here too. */}
-        <div className="ns-you-actions mb-11 flex gap-2">
-          <Link to="/create" className="flex-1">
-            <Button variant="coral" className="w-full">
-              <PenLine className="size-4" />
-              Create
-            </Button>
-          </Link>
-          <Link to="/settings">
-            <Button variant="outline" size="icon" title="Settings" aria-label="Settings">
-              <SettingsIcon className="size-4" />
-            </Button>
-          </Link>
-        </div>
 
         {/* Four sections, stacked full-width. "Every moment" is the major
             section here — it's what the Shelf is actually for — so it gets
