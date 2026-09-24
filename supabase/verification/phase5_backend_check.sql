@@ -93,7 +93,7 @@ begin
 
   insert into public.posts (id, user_id, hobby_slug, type, media_url, caption, visibility) overriding system value values
     (900005001, '00000000-0000-4000-8000-000000003003', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Joiner public Moment.', 'public'),
-    (900005002, '00000000-0000-4000-8000-000000003003', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Joiner private Moment.', 'private'),
+    (900005002, '00000000-0000-4000-8000-000000003003', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Joiner private Moment.', 'just_me'),
     (900005003, '00000000-0000-4000-8000-000000003004', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Other user''s public Moment.', 'public'),
     (900005004, '00000000-0000-4000-8000-000000003006', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'M2 member''s Moment.', 'public'),
     (900005005, '00000000-0000-4000-8000-000000003007', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'DEL host''s Moment.', 'public');
