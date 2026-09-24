@@ -44,6 +44,7 @@ declare
   v_c3 bigint;
   v_c4 bigint;
   v_space_id uuid;
+  v_space3_id uuid;
   v_l2_event_id bigint;
   v_q2_event_id bigint;
 begin
@@ -354,6 +355,108 @@ begin
   select count(*) into v_n from notifications
   where notifications.user_id = '00000000-0000-4000-8000-000000003011' and notifications.kind = 'space_event_cancelled' and notifications.href is null;
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 25-27. create_space: an in-person Space needs a neighborhood and
+  --        city; the exact address, when given, lands in
+  --        space_private_details (ESTABLISHED_USER, who still has room
+  --        under their limit).
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000003002"}', true);
+  v_i := v_i + 1;
+  begin
+    perform public.create_space('phase5b-established-inperson-bad', 'In-Person No Location', '', 'https://example.invalid/cover.jpg', 'in_person', 'open', 'immediate', 'hosts', array[v_c1]);
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  select public.create_space(
+    'phase5b-established-third', 'Established Third', '', 'https://example.invalid/cover.jpg', 'in_person', 'open', 'immediate', 'hosts', array[v_c1],
+    p_neighborhood := 'Downtown', p_city := 'Testville', p_exact_address := '123 Established Ave, Testville'
+  ) into v_space3_id;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_space3_id is not null then 'PASS' else 'FAIL' end));
+
+  select count(*) into v_n from space_private_details
+  where space_private_details.space_id = v_space3_id and space_private_details.exact_address = '123 Established Ave, Testville';
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 28-30. update_space: a null exact address keeps the current one, and
+  --        p_clear_address removes it explicitly (same as update_event);
+  --        an in-person Space still needs a neighborhood and city.
+  -- ───────────────────────────────────────────────────────────────────────
+  perform public.update_space(
+    v_space3_id, 'Established Third', '', 'https://example.invalid/cover.jpg', 'in_person', 'open', 'immediate', 'hosts',
+    p_neighborhood := 'Downtown', p_city := 'Testville'
+  );
+  select count(*) into v_n from space_private_details where space_private_details.space_id = v_space3_id;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  perform public.update_space(
+    v_space3_id, 'Established Third', '', 'https://example.invalid/cover.jpg', 'in_person', 'open', 'immediate', 'hosts',
+    p_neighborhood := 'Downtown', p_city := 'Testville', p_clear_address := true
+  );
+  select count(*) into v_n from space_private_details where space_private_details.space_id = v_space3_id;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
+
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000003005"}', true);
+  v_i := v_i + 1;
+  begin
+    perform public.update_space('00000000-0000-4000-8000-0000000000e1', 'M2', '', 'https://example.invalid/cover.jpg', 'in_person', 'closed', 'immediate', 'hosts');
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 31-32. update_space: switching Closed -> Open is refused while M2 has
+  --        JOINER's still-pending request (from check 17); once M2_HOST
+  --        resolves it, the switch succeeds.
+  -- ───────────────────────────────────────────────────────────────────────
+  v_i := v_i + 1;
+  begin
+    perform public.update_space('00000000-0000-4000-8000-0000000000e1', 'Phase 5b Test M2', '', 'https://example.invalid/cover.jpg', 'online', 'open', 'immediate', 'hosts');
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  perform public.approve_join_request('00000000-0000-4000-8000-0000000000e1', '00000000-0000-4000-8000-000000003003');
+  perform public.update_space('00000000-0000-4000-8000-0000000000e1', 'Phase 5b Test M2', '', 'https://example.invalid/cover.jpg', 'online', 'open', 'immediate', 'hosts');
+  perform set_config('role', v_owner_role, true);
+  select spaces.access into v_text from spaces where spaces.id = '00000000-0000-4000-8000-0000000000e1';
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_text = 'open' then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 33. Creation limit: a rolling 30-day window, deleted Spaces included.
+  --     NEW_USER's one Space (check 7) gets soft-deleted; they're still
+  --     refused a new one, since it was created within the last 30 days
+  --     regardless of its current status.
+  -- ───────────────────────────────────────────────────────────────────────
+  update spaces set status = 'deleted' where spaces.id = v_space_id;
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000003001"}', true);
+  v_i := v_i + 1;
+  begin
+    perform public.create_space('phase5b-new-third', 'New User''s Third Space', '', 'https://example.invalid/cover.jpg', 'online', 'open', 'immediate', 'hosts', array[v_c1]);
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
 
   -- ───────────────────────────────────────────────────────────────────────
   -- Done. This is the ONLY way this block ends — the exception aborts the

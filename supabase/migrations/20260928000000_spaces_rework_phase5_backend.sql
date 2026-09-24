@@ -7,12 +7,19 @@
 --
 -- 1. create_space / update_space (new): the only way a Space gets made or
 --    edited going forward — friendly pre-checks (blocklist, reserved slug,
---    duplicate slug, the creation limit from app_config) before ever
---    hitting a raw constraint violation, 1-3 Corners linked in the same
---    transaction (first = primary), creator auto-added as founding host.
---    Slug and Corner membership aren't editable here — space_corners
---    already has its own "hosts manage their space's corners" policy for
---    direct table access, so Corner add/remove doesn't need a function.
+--    duplicate slug, an in-person Space needs a neighborhood and city,
+--    the creation limit from app_config) before ever hitting a raw
+--    constraint violation, 1-3 Corners linked in the same transaction
+--    (first = primary), creator auto-added as founding host. The exact
+--    address goes into space_private_details, same null-means-keep /
+--    p_clear_address-means-delete convention as update_event. Switching
+--    access from closed to open with requests still pending is refused —
+--    resolve them first. Slug and Corner membership aren't editable here
+--    — space_corners already has its own "hosts manage their space's
+--    corners" policy for direct table access, so Corner add/remove
+--    doesn't need a function. The creation limit itself counts every
+--    Space created in a rolling 30 days, deleted ones included, so a
+--    create/delete/re-create cycle can't be used to bypass it.
 --
 -- 2. request_or_join_space (redefined): the optional-message/optional-
 --    Moment "Request to join" flow. Validates an attached Moment belongs
@@ -60,7 +67,8 @@ create or replace function public.create_space(
   p_neighborhood text default null,
   p_city text default null,
   p_member_cap int default null,
-  p_rules text default null
+  p_rules text default null,
+  p_exact_address text default null
 )
 returns uuid
 language plpgsql
@@ -92,6 +100,10 @@ begin
     raise exception 'One of those Corners doesn''t exist.';
   end if;
 
+  if p_meets in ('in_person', 'both') and (coalesce(trim(p_neighborhood), '') = '' or coalesce(trim(p_city), '') = '') then
+    raise exception 'An in-person Space needs a neighborhood and city.';
+  end if;
+
   if public.is_blocklisted_name(p_name) then
     raise exception 'That name isn''t available.';
   end if;
@@ -105,8 +117,11 @@ begin
   select app_config.value into v_limit_config from app_config where app_config.key = 'space_creation_limit';
   v_established_after := coalesce((v_limit_config->>'established_after_days')::int, 30);
   select auth.users.created_at into v_account_created from auth.users where auth.users.id = auth.uid();
+  -- A rolling 30-day window, deleted Spaces included — counting only
+  -- current non-deleted Spaces would let a create/delete/re-create cycle
+  -- bypass the limit entirely.
   select count(*) into v_created_count
-  from spaces where spaces.created_by = auth.uid() and spaces.status <> 'deleted';
+  from spaces where spaces.created_by = auth.uid() and spaces.created_at > now() - interval '30 days';
 
   if v_account_created is not null and v_account_created <= now() - make_interval(days => v_established_after) then
     v_limit := coalesce((v_limit_config->>'established')::int, 5);
@@ -130,11 +145,15 @@ begin
     insert into space_corners (space_id, corner_id, is_primary) values (v_space_id, v_corner_id, v_i = 1);
   end loop;
 
+  if p_exact_address is not null then
+    insert into space_private_details (space_id, exact_address) values (v_space_id, p_exact_address);
+  end if;
+
   return v_space_id;
 end;
 $$;
-revoke all on function public.create_space(text, text, text, text, text, text, text, text, bigint[], text, text, int, text) from public, anon;
-grant execute on function public.create_space(text, text, text, text, text, text, text, text, bigint[], text, text, int, text) to authenticated;
+revoke all on function public.create_space(text, text, text, text, text, text, text, text, bigint[], text, text, int, text, text) from public, anon;
+grant execute on function public.create_space(text, text, text, text, text, text, text, text, bigint[], text, text, int, text, text) to authenticated;
 
 -- Slug isn't editable (it's a stable identifier once shared/linked to) and
 -- Corner membership goes through space_corners' own policy directly, not
@@ -144,6 +163,15 @@ grant execute on function public.create_space(text, text, text, text, text, text
 -- one implicitly; assert_space_active additionally covers a deleted
 -- Space, whose host rows are kept and would otherwise still pass that
 -- check.
+--
+-- p_exact_address follows update_event's own convention: null keeps
+-- whatever's already stored, p_clear_address deletes it explicitly.
+--
+-- Switching access from closed to open while requests are still pending
+-- is refused outright — the host has to resolve every one (approve or
+-- decline, both already self-service via approve_join_request/
+-- decline_join_request) before an Open Space's "anyone can join" rule
+-- makes the whole idea of a pending request moot.
 create or replace function public.update_space(
   p_space_id uuid,
   p_name text,
@@ -156,13 +184,17 @@ create or replace function public.update_space(
   p_neighborhood text default null,
   p_city text default null,
   p_member_cap int default null,
-  p_rules text default null
+  p_rules text default null,
+  p_exact_address text default null,
+  p_clear_address boolean default false
 )
 returns void
 language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_current_access text;
 begin
   if not public.is_space_host(p_space_id, auth.uid()) then
     raise exception 'Only a host can do that.';
@@ -170,17 +202,34 @@ begin
   if public.is_blocklisted_name(p_name) then
     raise exception 'That name isn''t available.';
   end if;
+  if p_meets in ('in_person', 'both') and (coalesce(trim(p_neighborhood), '') = '' or coalesce(trim(p_city), '') = '') then
+    raise exception 'An in-person Space needs a neighborhood and city.';
+  end if;
   perform public.assert_space_active(p_space_id);
+
+  select spaces.access into v_current_access from spaces where spaces.id = p_space_id;
+  if v_current_access = 'closed' and p_access = 'open' and exists (
+    select 1 from space_join_requests where space_join_requests.space_id = p_space_id
+  ) then
+    raise exception 'Approve or decline pending requests first.';
+  end if;
 
   update spaces
   set name = p_name, description = p_description, cover_image = p_cover_image, meets = p_meets,
       neighborhood = p_neighborhood, city = p_city, access = p_access, member_cap = p_member_cap,
       posting_mode = p_posting_mode, events_created_by = p_events_created_by, rules = p_rules
   where spaces.id = p_space_id;
+
+  if p_clear_address then
+    delete from space_private_details where space_private_details.space_id = p_space_id;
+  elsif p_exact_address is not null then
+    insert into space_private_details (space_id, exact_address) values (p_space_id, p_exact_address)
+    on conflict (space_id) do update set exact_address = excluded.exact_address;
+  end if;
 end;
 $$;
-revoke all on function public.update_space(uuid, text, text, text, text, text, text, text, text, text, int, text) from public, anon;
-grant execute on function public.update_space(uuid, text, text, text, text, text, text, text, text, text, int, text) to authenticated;
+revoke all on function public.update_space(uuid, text, text, text, text, text, text, text, text, text, int, text, text, boolean) from public, anon;
+grant execute on function public.update_space(uuid, text, text, text, text, text, text, text, text, text, int, text, text, boolean) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 2. request_or_join_space — redefined. Full body reproduced from

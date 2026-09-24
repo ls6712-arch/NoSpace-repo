@@ -6,8 +6,8 @@
 -- request_or_join_space/cancel_event/execute_space_deletion to their
 -- exact pre-Phase-5 bodies (merged via PR #91).
 
-drop function if exists public.create_space(text, text, text, text, text, text, text, text, bigint[], text, text, int, text);
-drop function if exists public.update_space(uuid, text, text, text, text, text, text, text, text, text, int, text);
+drop function if exists public.create_space(text, text, text, text, text, text, text, text, bigint[], text, text, int, text, text);
+drop function if exists public.update_space(uuid, text, text, text, text, text, text, text, text, text, int, text, text, boolean);
 drop function if exists public.space_moment_count_30d(uuid);
 
 create or replace function public.request_or_join_space(p_space_id uuid, p_join_answers jsonb default null)
