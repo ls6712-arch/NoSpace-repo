@@ -19,7 +19,7 @@ Save as `docs/moment-card-and-reactions-spec.md`. Read `docs/CLAUDE-redesign-bri
 - `915ecc8` — `docs/CLAUDE-redesign-brief.md` and `docs/my-space-spec.md`'s maker-only counts language marked superseded (pointing here); `docs/backend-state-20260924.md` added, flagging that `list_migrations` under-reports what's actually live (the four Sept 23 Pursuit migrations aren't in its history but are confirmed applied against the real schema)
 
 **Not yet done — needs a human decision before merging:**
-1. `supabase/migrations/20260924200000_post_reaction_counts.sql` (adds `posts.love_count`/`in_count`, a trigger on `reactions` to keep them in sync, one-time backfill) is staged, reviewed, **not applied** — needs approval first (see the PR).
+1. `supabase/migrations/20260924200000_post_reaction_counts.sql` (adds `posts.love_count`/`in_count`, a trigger on `reactions` to keep them in sync, one-time backfill) — **applied to live Sept 24, 2026** and verified; see `docs/backend-state-20260924.md`.
 2. Once applied: confirm `love_count`/`in_count` match `count(*)` on `reactions` for a handful of real posts, then flip `ContentContext.tsx`'s `POST_COLUMNS` fallback isn't silently masking a real problem (it should stop needing the retry once the columns exist).
 
 **Known follow-ups, out of scope for this branch (listed in the PR):**

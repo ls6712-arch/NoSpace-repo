@@ -21,7 +21,7 @@ Nothing to apply here — just flagging that `list_migrations` under-reports, in
 
 ## This task's own migration
 
-`20260924200000_post_reaction_counts.sql` (public `love_count`/`in_count` on `posts`) — **not applied**. Confirmed: neither column exists on `posts` yet. Staged, per the patch's own note, until reviewed and approved — see the PR for the review point.
+`20260924200000_post_reaction_counts.sql` (public `love_count`/`in_count` on `posts`) — **applied Sept 24, 2026, ~5 PM ET** (recorded on live as `post_reaction_counts`). Verified: all 33 posts' counts match `count(*)` on `reactions` (3 Love, 0 Count me in); trigger `reactions_sync_counts` present; `anon`/`authenticated` cannot execute `sync_post_reaction_counts()`; a rolled-back insert/delete test moved `in_count` 0 → 1 → 0.
 
 ## Also not in `list_migrations` (not part of this task, not verified)
 
