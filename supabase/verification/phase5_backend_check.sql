@@ -459,6 +459,41 @@ begin
   end;
 
   -- ───────────────────────────────────────────────────────────────────────
+  -- 34. Cancelling an event with a 300-char title still succeeds —
+  --     space_events.title has no length limit of its own, and
+  --     notifications' enforce_notification_insert trigger rejects any
+  --     body over 300 chars, so a long enough title would otherwise fail
+  --     the notification insert (and, before the fix, the whole
+  --     cancellation with it).
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000003008"}', true);
+  select public.create_event('00000000-0000-4000-8000-0000000000e3', repeat('A', 300), null, now() + interval '5 days', null, 'America/New_York', 'online', null, null, null) into v_l2_event_id;
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000003009"}', true);
+  perform public.rsvp_to_event(v_l2_event_id);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000003008"}', true);
+  v_i := v_i + 1;
+  begin
+    perform public.cancel_event(v_l2_event_id);
+    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- Matched by the truncated title's leading run of 200 'A's, not just
+  -- user+kind — EVT_RSVP already has an earlier space_event_cancelled
+  -- notification from check 22 (a short title), so a bare count would
+  -- double-count both.
+  perform set_config('role', v_owner_role, true);
+  select count(*) into v_n from notifications
+  where notifications.user_id = '00000000-0000-4000-8000-000000003009'
+    and notifications.kind = 'space_event_cancelled'
+    and notifications.body like ('%' || repeat('A', 200) || '%')
+    and char_length(notifications.body) <= 300;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
   -- Done. This is the ONLY way this block ends — the exception aborts the
   -- transaction (nothing above ever persists) and carries every result.
   -- ───────────────────────────────────────────────────────────────────────
