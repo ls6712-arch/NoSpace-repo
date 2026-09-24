@@ -18,7 +18,7 @@ import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useCircles } from "../context/CirclesContext";
 import { useSocial } from "../context/SocialContext";
-import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { subHobbyLabel } from "../data/hobbies";
 import { displayLocation } from "../data/participation";
 import { usePursuitTitle } from "../lib/pursuitTitle";
 import { isOnlyYou, visibilityWord, MOMENT_VISIBILITY_OPTIONS } from "../lib/visibility";
@@ -270,10 +270,13 @@ export function MomentCard({
   const activityPlace = displayLocation(post.locationName, post.locationPrivacy);
   const goingCount = isActivity ? social.goingCount(post.id) : 0;
 
-  const space = getHobby(post.hobbySlug);
+  // No Category-name fallback here (Spaces Rework follow-up): a Moment
+  // with no Corner shows no label at all, never its Category's name (e.g.
+  // "Art & Creative") — Category is internal-only now, nothing user-facing
+  // ever names one directly.
   const corner = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : undefined;
   const pursuitTitle = usePursuitTitle(post.pursuitId);
-  const cornerLine = [corner ?? space?.shortName, pursuitTitle].filter(Boolean).join(" · ");
+  const cornerLine = [corner, pursuitTitle].filter(Boolean).join(" · ");
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   const onlyYou = isOnlyYou(post);
   const circleName = post.circleId != null ? circles.find((c) => c.id === post.circleId)?.name : undefined;
@@ -325,7 +328,7 @@ export function MomentCard({
       <div className="mt-4">
         {mine ? (
           <div className="flex items-center justify-between gap-3">
-            <span className="ns-section-kicker text-muted-foreground">{corner ?? space?.shortName}</span>
+            <span className="ns-section-kicker text-muted-foreground">{corner}</span>
             <span className="ns-section-kicker flex items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
               {visibilityWord(post, circleName)} · {timeLabel}

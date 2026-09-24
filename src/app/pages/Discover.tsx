@@ -259,9 +259,13 @@ function AllCornersBrowser({ query }: { query: string }) {
     .sort((a, b) => b.momentCount30d - a.momentCount30d);
 
   if (matching.length === 0) {
+    // No active filter (nothing searched) — there's nothing to say "no
+    // matches" about, so hide the row entirely rather than show an empty
+    // box with a message that presupposes a search happened.
+    if (!q) return null;
     return (
       <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
-        No corners match that yet.
+        Corners appear here once people start making in them.
       </div>
     );
   }
@@ -581,7 +585,7 @@ export function Discover() {
               {/* All Moments */}
               <div id="all-moments" className="mb-4 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <div className="ns-section-kicker mb-2">A FEED OF MOMENTS FROM ALL SPACES, CIRCLES AND PEOPLE</div>
+                  <div className="ns-section-kicker mb-2">MOMENTS FROM ACROSS SUSHII</div>
                   <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>All Moments</h2>
                 </div>
                 <ul role="tablist" aria-label="Feed" className="flex gap-1 rounded-full border border-border bg-card p-1">
@@ -694,7 +698,7 @@ export function Discover() {
               <p className="mb-6 text-sm text-muted-foreground">
                 {chip === "near"
                   ? "Location isn't switched on yet. Circles with a city are the closest thing for now."
-                  : `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"} of work${q ? ` matching "${query}"` : ""}.`}
+                  : `${filtered.length} ${filtered.length === 1 ? "Moment" : "Moments"}${q ? ` matching "${query}"` : ""}.`}
               </p>
 
               {chip === "near" ? (
