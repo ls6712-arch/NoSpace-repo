@@ -5,7 +5,6 @@ import {
   Hand,
   MessageCircle,
   Bookmark,
-  Pencil,
   Eye,
   PenLine,
   Lock,
@@ -27,6 +26,7 @@ import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Thoughts } from "./Thoughts";
 import { BePart } from "./BePart";
 import { toggleSaved, useJournalSlice } from "../lib/journal";
+import { formatCount } from "../lib/formatCount";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -258,11 +258,6 @@ export function BookmarkOverlay({
   );
 }
 
-function formatCount(n: number) {
-  if (n >= 10_000) return `${Math.floor(n / 1000)}k`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
-  return String(n);
-}
 
 const ICON_BTN =
   "flex h-10 shrink-0 min-w-10 items-center justify-center gap-1 rounded-full px-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
@@ -279,14 +274,10 @@ const ICON_BTN =
 export function MomentActions({
   post,
   mine,
-  onEdit,
-  onVisibility,
   onThoughts,
 }: {
   post: Post;
   mine: boolean;
-  onEdit?: () => void;
-  onVisibility?: () => void;
   onThoughts?: () => void;
 }) {
   const { posts, ownCounts } = useContent();
@@ -300,41 +291,25 @@ export function MomentActions({
   const loved = myReactions.includes("love");
   const inPressed = myReactions.includes("in");
 
-  const Count = ({ n }: { n: number }) => <span className="tabular-nums">{formatCount(n)}</span>;
+  // Zero shows as the bare icon, not "0".
+  const Count = ({ n }: { n: number }) =>
+    n > 0 ? <span className="tabular-nums">{formatCount(n)}</span> : null;
 
   return (
     <div className="-ml-2 flex items-center">
       {mine ? (
         <>
-          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Love this, ${love}`} title="Love this">
+          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Love this, ${love}`} title="Love this" role="img">
             <Heart className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
             <Count n={love} />
           </span>
-          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Count me in, ${inCount}`} title="Count me in">
+          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Count me in, ${inCount}`} title="Count me in" role="img">
             <Hand className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
             <Count n={inCount} />
           </span>
-          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Thoughts, ${thoughts}`} title="Thoughts">
+          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Thoughts, ${thoughts}`} title="Thoughts" role="img">
             <MessageCircle className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
             <Count n={thoughts} />
-          </span>
-          <span className="ml-auto flex items-center">
-            {onEdit && (
-              <button type="button" onClick={onEdit} aria-label="Edit" title="Edit" className={`${ICON_BTN} text-foreground hover:bg-surface-muted`}>
-                <Pencil className="size-4 shrink-0" strokeWidth={1.9} />
-              </button>
-            )}
-            {onVisibility && (
-              <button
-                type="button"
-                onClick={onVisibility}
-                aria-label="Change who sees this"
-                title="Change who sees this"
-                className={`${ICON_BTN} -mr-2 text-foreground hover:bg-surface-muted`}
-              >
-                <Eye className="size-4 shrink-0" strokeWidth={1.9} />
-              </button>
-            )}
           </span>
         </>
       ) : (
@@ -457,7 +432,35 @@ export function MomentCard({
             </span>
           )}
         </button>
-        {!mine && <BookmarkOverlay postId={post.id} tone={hasRealMedia(post) ? undefined : tile.fg} />}
+        {/* The top-right corner is "your action on this Moment": Save for
+            someone else's, who-sees-this for your own. */}
+        {mine ? (
+          <button
+            type="button"
+            onClick={() => setVisibilityOpen(true)}
+            aria-label={`Who sees this: ${visibilityWord(post, circleName)}. Change it`}
+            title="Who sees this"
+            className="absolute right-1.5 top-1.5 z-[1] flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+          >
+            {onlyYou ? (
+              <Lock
+                className="size-[20px] [filter:drop-shadow(0_0_1px_rgb(0_0_0/0.7))_drop-shadow(0_1px_3px_rgb(0_0_0/0.45))]"
+                strokeWidth={2}
+                style={{ color: hasRealMedia(post) ? "#fff" : tile.fg }}
+                aria-hidden="true"
+              />
+            ) : (
+              <Eye
+                className="size-[20px] [filter:drop-shadow(0_0_1px_rgb(0_0_0/0.7))_drop-shadow(0_1px_3px_rgb(0_0_0/0.45))]"
+                strokeWidth={2}
+                style={{ color: hasRealMedia(post) ? "#fff" : tile.fg }}
+                aria-hidden="true"
+              />
+            )}
+          </button>
+        ) : (
+          <BookmarkOverlay postId={post.id} tone={hasRealMedia(post) ? undefined : tile.fg} />
+        )}
       </div>
 
       <div className="mt-3 flex min-w-0 flex-1 flex-col">
@@ -551,8 +554,6 @@ export function MomentCard({
           <MomentActions
             post={post}
             mine={mine}
-            onEdit={onOpen}
-            onVisibility={() => setVisibilityOpen(true)}
             onThoughts={() => setThoughtsOpen(true)}
           />
         </div>
