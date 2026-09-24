@@ -36,6 +36,11 @@ export interface Post {
   /** A private reflection captured at post time — "Log, then Reflect" — never shown publicly. */
   reflection?: string;
   likes: number;
+  /** Public reaction totals (posts.love_count / posts.in_count, kept in step
+   * by a trigger on public.reactions). Visible to anyone who can see the
+   * Moment — see supabase/migrations/20260924100000_post_reaction_counts.sql. */
+  loveCount?: number;
+  inCount?: number;
   createdAt: number;
   visibility: Visibility;
   /** Set when visibility === "circle" — which circle this post belongs to. */

@@ -7,7 +7,7 @@ import { useJournal } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
 import { circles } from "../data/circles";
 import { Post } from "../data/posts";
-import { MomentCard } from "../components/MomentCard";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
 import { ShelfRail } from "../components/ShelfRail";
@@ -25,9 +25,10 @@ function greeting(name: string): string {
 }
 
 /**
- * docs/my-space-spec.md's grid page. Board 4's lead-plus-grid sheet: item 01
- * is the shared MomentCard at size="lead", 02–04 a 3-column row, 05–06 a
- * 1.6fr/1fr row, all numbered — replacing ContactSheet's thumbnail strip
+ * docs/my-space-spec.md's grid page. Board 4's sheet of 6, numbered 01–06.
+ * Since Sept 24, 2026 every card is the same square in one even grid
+ * (MOMENT_GRID) instead of board 4's lead + mixed-width rows, so a Moment
+ * looks the same here as on every other page — replacing ContactSheet's thumbnail strip
  * plus a single selected-Moment panel. "Turn the page" now moves to the
  * NEXT distinct sheet of 6 (re-slicing the same already-loaded `unseen`
  * list — no fetch, no auto-load) rather than accumulating a longer
@@ -90,9 +91,6 @@ export function MySpaceGrid() {
   // one rather than growing this list.
   const sheet = unseen.slice(pageIndex * PAGE_SIZE, pageIndex * PAGE_SIZE + PAGE_SIZE);
   const hasMore = unseen.length > (pageIndex + 1) * PAGE_SIZE;
-  const lead = sheet[0];
-  const row1 = sheet.slice(1, 4);
-  const row2 = sheet.slice(4, 6);
 
   // ?m=<id> opens MomentDetail over the sheet — a deep link to one Moment,
   // not "which one is selected" (every Moment on the sheet is already
@@ -170,44 +168,17 @@ export function MySpaceGrid() {
               Nothing here yet. Follow a Space or a person to start your sheet.
             </div>
           ) : (
-            <div className="space-y-6">
-              {lead && (
+            <div className={MOMENT_GRID}>
+              {sheet.map((post, i) => (
                 <MomentCard
-                  post={lead}
+                  key={post.id}
+                  post={post}
                   surface="mySpace"
-                  size="lead"
-                  number="01"
-                  onOpen={() => openDetail(lead)}
+                  size="standard"
+                  number={String(i + 1).padStart(2, "0")}
+                  onOpen={() => openDetail(post)}
                 />
-              )}
-              {row1.length > 0 && (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                  {row1.map((post, i) => (
-                    <MomentCard
-                      key={post.id}
-                      post={post}
-                      surface="mySpace"
-                      size="standard"
-                      number={String(i + 2).padStart(2, "0")}
-                      onOpen={() => openDetail(post)}
-                    />
-                  ))}
-                </div>
-              )}
-              {row2.length > 0 && (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-[1.6fr_1fr]">
-                  {row2.map((post, i) => (
-                    <MomentCard
-                      key={post.id}
-                      post={post}
-                      surface="mySpace"
-                      size={i === 0 ? "wide" : "standard"}
-                      number={String(i + 5).padStart(2, "0")}
-                      onOpen={() => openDetail(post)}
-                    />
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
           )}
 

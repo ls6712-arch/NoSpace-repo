@@ -5,6 +5,7 @@ import { getHobby, hobbies, subHobbyLabel, titleCaseSlug } from "../data/hobbies
 import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
+import { MOMENT_GRID, MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./MomentCard";
 
 /** The card's own dark ink color — the cream card is a deliberate,
  * contained exception to the app's dark surfaces (same pairing the flat
@@ -197,55 +198,60 @@ function CornerTile({
 }) {
   const note = useCornerNote(item.key);
 
+  const tile = tileTokenFor(item.key);
+
+  // Same square, rounding and tag pill as a MomentCard, so switching
+  // between "All moments" and "By Corner" doesn't change the look.
   return (
-    <Link to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`} className="group flex h-full">
-      {/* flex-col + h-full so this fills the grid row's height (CSS Grid
-          already stretches every tile to match) — otherwise a Corner with
-          no note was shorter than one with a note, exposing the dark page
-          background below it and making the row look ragged. */}
-      <div
-        className="flex h-full w-full flex-col overflow-hidden border border-transparent bg-[var(--cream)] transition-colors group-hover:border-[var(--coral-deep)]"
-        style={{ color: INK }}
-      >
-        <div className="relative aspect-square overflow-hidden">
-          {item.lastMediaUrl ? (
-            <PostMedia
-              media={item.lastMediaUrl}
-              type={item.lastMediaType}
-              hobbySlug={item.hobbySlug}
-              seed={item.lastMediaId ?? item.key}
-              preview
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <SubHobbyArt
-              hobbySlug={item.hobbySlug}
-              subSlug={item.subSlug ?? ""}
-              className="h-full w-full object-cover"
-            />
-          )}
-          <span
-            className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
-            style={{ backgroundColor: tagTint(item.hobbySlug) }}
+    <Link
+      to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`}
+      className="group flex min-w-0 flex-col rounded-[var(--radius-moment)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--coral-deep)]"
+    >
+      <div className={`relative overflow-hidden ${MOMENT_MEDIA}`}>
+        {item.lastMediaUrl ? (
+          <PostMedia
+            media={item.lastMediaUrl}
+            type={item.lastMediaType}
+            hobbySlug={item.hobbySlug}
+            seed={item.lastMediaId ?? item.key}
+            preview
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] motion-reduce:transition-none"
+          />
+        ) : item.subSlug ? (
+          <SubHobbyArt
+            hobbySlug={item.hobbySlug}
+            subSlug={item.subSlug}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          // No photo and no Corner to draw — the Space itself, set as a
+          // colored tile like a text-only Moment. Used to render blank.
+          <div
+            className="flex h-full w-full items-center justify-center p-[9%] [container-type:inline-size]"
+            style={{ background: tile.bg, color: tile.fg }}
           >
-            {item.label}
-          </span>
-        </div>
-        <div className="flex-1 px-3.5 py-3">
-          <p
-            className="truncate text-sm leading-snug sm:text-base"
-            style={{ fontFamily: "var(--font-serif)" }}
-            title={item.label}
-          >
-            {item.label}
-          </p>
-          {note && (
-            <p className="mt-0.5 truncate text-xs opacity-60" title={note}>
-              {note}
+            <p className={TILE_CAPTION} style={{ fontFamily: "var(--font-serif)" }}>
+              {item.label}
             </p>
-          )}
-        </div>
+          </div>
+        )}
+        <span
+          className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
+          style={{ backgroundColor: tagTint(item.hobbySlug) }}
+        >
+          {getHobby(item.hobbySlug)?.shortName ?? item.label}
+        </span>
       </div>
+      <p
+        className="mt-3 truncate text-[17px] leading-snug transition-colors group-hover:text-[var(--coral-text)] sm:text-[19px]"
+        style={{ fontFamily: "var(--font-serif)" }}
+        title={item.label}
+      >
+        {item.label}
+      </p>
+      <p className="mt-0.5 min-h-[1.25rem] truncate text-xs text-muted-foreground" title={note ?? undefined}>
+        {note ?? ""}
+      </p>
     </Link>
   );
 }
@@ -309,7 +315,7 @@ export function HobbyShelf({
   // Same column/gap treatment as WorkGrid for the same reason: one visual
   // system, not two grids that happen to sit near each other.
   return (
-    <div className="grid grid-cols-3 gap-0.5 sm:grid-cols-4">
+    <div className={MOMENT_GRID}>
       {sorted.map((item) => (
         <CornerTile key={item.key} item={item} linkTo={linkTo} />
       ))}

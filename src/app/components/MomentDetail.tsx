@@ -5,10 +5,7 @@ import {
   Copy,
   FolderPlus,
   Globe2,
-  Hand,
-  Heart,
   Lock,
-  MessageCircle,
   Pencil,
   Trash2,
   Users,
@@ -21,16 +18,15 @@ import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { useReactionState } from "./PostReactions";
+import { useReactionState } from "../lib/reactionState";
 import {
-  CAPTION_SIZE,
+  BookmarkOverlay,
+  CARD_CAPTION,
   hasRealMedia,
-  InlineBookmark,
-  MEDIA_HEIGHT,
-  OwnCountPill,
+  MomentActions,
+  MomentMedia,
   tileTokenFor,
 } from "./MomentCard";
-import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Thoughts } from "./Thoughts";
 import { BePart } from "./BePart";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -85,11 +81,11 @@ export function MomentDetail({
   owned: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { updatePost, deletePost, ownCounts } = useContent();
+  const { updatePost, deletePost } = useContent();
   const { update: updatePrivateLogEntry, remove: removePrivateLogEntry } = usePrivateLogs();
   const { user } = useAuth();
   const journal = useJournal();
-  const { mine: myReactions, toggle } = useReactionState(post?.id ?? 0);
+  const { mine: myReactions } = useReactionState(post?.id ?? 0);
 
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState("");
@@ -134,9 +130,6 @@ export function MomentDetail({
   const openProjects = journal.projects.filter((p) => !p.finishedAt);
   const isNote = !hasRealMedia(post);
   const tile = tileTokenFor(post.id);
-  // Maker-only, same gate as MomentCard — missing entry reads as
-  // all-zero, i.e. hidden, never a stray "0" (see ContentContext.ownCounts).
-  const counts = ownCounts[post.id] ?? { love: 0, in: 0, thoughts: 0 };
 
   const save = async () => {
     if (saving) return;
@@ -255,27 +248,17 @@ export function MomentDetail({
             carousel, or a colored tile with the caption set into it when
             there's no media), so the same Moment looks the same here as
             it does everywhere else it's shown. */}
-        {isNote ? (
-          <div
-            className={`flex w-full items-center justify-center rounded-[var(--radius-moment)] p-6 sm:p-8 ${MEDIA_HEIGHT.lead}`}
-            style={{ background: tile.bg, color: tile.fg }}
-          >
-            <p className={`text-center italic ${CAPTION_SIZE.lead}`} style={{ fontFamily: "var(--font-serif)" }}>
-              {post.caption}
-            </p>
-          </div>
-        ) : (
-          <PostMediaCarousel
-            media={post.mediaUrls?.length ? post.mediaUrls : [post.media]}
-            type={post.type}
-            hobbySlug={post.hobbySlug}
-            seed={post.id}
-            className={`w-full ${MEDIA_HEIGHT.lead} rounded-[var(--radius-moment)] object-cover`}
-          />
-        )}
+        {/* Same square as every card, capped so it fits a laptop screen
+            without scrolling. Save sits on the media, same as the grid. */}
+        <div className="relative mx-auto w-full max-w-[min(100%,62vh)]">
+          <MomentMedia post={post} />
+          {!owned && !post.isPrivateLog && (
+            <BookmarkOverlay postId={post.id} tone={isNote ? tile.fg : undefined} />
+          )}
+        </div>
 
         {!editing && !isNote && post.caption && (
-          <p className={`italic ${CAPTION_SIZE.standard}`} style={{ fontFamily: "var(--font-serif)" }}>
+          <p className={`${CARD_CAPTION} line-clamp-none min-h-0`} style={{ fontFamily: "var(--font-serif)" }}>
             {post.caption}
           </p>
         )}
@@ -286,55 +269,7 @@ export function MomentDetail({
             react to or comment on. */}
         {!editing && !post.isPrivateLog && (
           <>
-            <div className="flex items-center gap-2">
-              {owned ? (
-                <>
-                  <OwnCountPill icon={Heart} label="Love this" count={counts.love} />
-                  <OwnCountPill icon={Hand} label="Count me in" count={counts.in} />
-                  <OwnCountPill icon={MessageCircle} label="Thoughts" count={counts.thoughts} />
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    aria-pressed={myReactions.includes("love")}
-                    aria-label={`Love this${myReactions.includes("love") ? ", pressed" : ""}`}
-                    title="Love this"
-                    onClick={() => toggle("love")}
-                    className={`flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
-                      myReactions.includes("love")
-                        ? "border-transparent bg-accent text-accent-foreground"
-                        : "border-border text-foreground hover:border-[var(--foreground)]/35"
-                    }`}
-                  >
-                    <Heart
-                      className="size-4"
-                      strokeWidth={1.9}
-                      fill={myReactions.includes("love") ? "currentColor" : "none"}
-                    />
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={myReactions.includes("in")}
-                    aria-label={`Count me in${myReactions.includes("in") ? ", pressed" : ""}`}
-                    title="Count me in"
-                    onClick={() => toggle("in")}
-                    className={`flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
-                      myReactions.includes("in")
-                        ? "border-transparent [background-color:var(--moment-tile-moss)] [color:var(--moment-tile-moss-foreground)]"
-                        : "border-border text-foreground hover:border-[var(--foreground)]/35"
-                    }`}
-                  >
-                    <Hand
-                      className="size-4"
-                      strokeWidth={1.9}
-                      fill={myReactions.includes("in") ? "currentColor" : "none"}
-                    />
-                  </button>
-                  <InlineBookmark postId={post.id} />
-                </>
-              )}
-            </div>
+            <MomentActions post={post} mine={owned} />
 
             {/* Same quiet hand-off as MomentCard's own grid cards — after
                 the first "Count me in" tap, this reuses the existing
