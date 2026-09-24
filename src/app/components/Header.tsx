@@ -164,13 +164,16 @@ const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
  * primary nav anymore, so the phone bar's five tabs and this list describe
  * the same places in the same order rather than two different apps.
  */
+// Circles nav link removed (Spaces Rework follow-up): Circles are being
+// retired and nobody should be able to reach a "start a new one" entry
+// point anymore, but the pages themselves stay live until Phase 6 — the
+// /circles route still resolves for anyone with a direct or bookmarked
+// link, it's just not offered here.
 const PRIMARY_NAV = [
-  { to: "/discover", label: "Discover", hint: "Spaces, Circles, people and pursuits",
+  { to: "/discover", label: "Discover", hint: "Spaces, people and pursuits",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },
-  { to: "/my-space", label: "My Space", hint: "New work from the people, hobbies and Circles you're part of",
+  { to: "/my-space", label: "My Space", hint: "New work from the people and hobbies you're part of",
     match: (p: string) => p.startsWith("/my-space") },
-  { to: "/circles", label: "Circles", hint: "Communities you can join",
-    match: (p: string) => p.startsWith("/circles") },
   { to: "/create", label: "Start your log", hint: "Share a moment, or start a pursuit.", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];

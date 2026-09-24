@@ -1,15 +1,21 @@
 import { Link, useLocation } from "react-router";
-import { Compass, Library, PlusCircle, UserRound, Users } from "lucide-react";
+import { Compass, Library, PlusCircle, UserRound } from "lucide-react";
 import { useConnections } from "../context/ConnectionsContext";
 import { useAuth } from "../context/AuthContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 
 /**
- * Phone and tablet navigation: five labelled destinations, matching the
- * desktop top nav's Discover / My Space / Circles / Create in the same
- * order (plus Profile, which hangs off the avatar on desktop) — one mental
- * model, not two. The desktop button reads "Start your log"; this tab stays
- * the shorter "Create" since a 10px, single-line tab has no room for it.
+ * Phone and tablet navigation: four labelled destinations, matching the
+ * desktop top nav's Discover / My Space / Create in the same order (plus
+ * Profile, which hangs off the avatar on desktop) — one mental model, not
+ * two. The desktop button reads "Start your log"; this tab stays the
+ * shorter "Create" since a 10px, single-line tab has no room for it.
+ *
+ * Circles nav link removed (Spaces Rework follow-up): Circles are being
+ * retired and nobody should be able to reach a "start a new one" entry
+ * point anymore, but the pages themselves stay live until Phase 6 — the
+ * /circles route still resolves for anyone with a direct or bookmarked
+ * link, it's just not offered here.
  *
  * Create sits in the middle because it's the thing you came to do, and it
  * keeps its word rather than becoming an anonymous "+".
@@ -48,12 +54,6 @@ export const TABS = [
     accent: true,
   },
   {
-    to: "/circles",
-    label: "Circles",
-    icon: Users,
-    match: (p: string) => p.startsWith("/circles"),
-  },
-  {
     to: "/you",
     label: "Profile",
     icon: UserRound,
@@ -78,7 +78,7 @@ export function BottomTabBar() {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Main"
       >
-        <div className="mx-auto grid max-w-md grid-cols-5 px-1 pb-1.5 pt-1.5">
+        <div className="mx-auto grid max-w-md grid-cols-4 px-1 pb-1.5 pt-1.5">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = tab.match(pathname);

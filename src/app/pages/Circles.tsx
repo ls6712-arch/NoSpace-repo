@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Eye, HelpCircle, MapPin, PenLine, CalendarDays, Plus, Shield, Users } from "lucide-react";
+import { Eye, HelpCircle, MapPin, PenLine, CalendarDays, Shield, Users } from "lucide-react";
 import { Circle } from "../data/circles";
 import { getHobby } from "../data/hobbies";
 import { useContent } from "../context/ContentContext";
 import { useConnections } from "../context/ConnectionsContext";
 import { useCircles } from "../context/CirclesContext";
 import { Button } from "../components/ui/button";
-import { CreateCircleDialog } from "../components/CreateCircleDialog";
 
 /**
  * Circles are for doing, not for chatting. Each one leads with who it's for and
@@ -316,28 +315,24 @@ export function CirclesBrowser({ query = "" }: { query?: string }) {
 }
 
 export function Circles() {
-  const [createOpen, setCreateOpen] = useState(false);
   return (
     <div className="min-h-screen bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-4xl px-4">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
-              Circles
-            </h1>
-            <p className="mt-2 max-w-xl text-lg text-muted-foreground">
-              Smaller communities built around doing.
-            </p>
-          </div>
-          <Button variant="coral" onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            Start a Circle
-          </Button>
+        {/* "Start a Circle" removed (Spaces Rework follow-up): Circles are
+            being retired and nobody should be able to create a new one
+            anymore — this page stays up for browsing/existing ones until
+            Phase 6 actually removes it. */}
+        <div className="mb-10">
+          <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+            Circles
+          </h1>
+          <p className="mt-2 max-w-xl text-lg text-muted-foreground">
+            Smaller communities built around doing.
+          </p>
         </div>
 
         <CirclesBrowser />
       </div>
-      <CreateCircleDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

@@ -17,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useCircles } from "../context/CirclesContext";
 import { useSocial } from "../context/SocialContext";
-import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { subHobbyLabel } from "../data/hobbies";
 import { displayLocation } from "../data/participation";
 import { usePursuitTitle } from "../lib/pursuitTitle";
 import { isOnlyYou, visibilityWord, MOMENT_VISIBILITY_OPTIONS } from "../lib/visibility";
@@ -399,10 +399,13 @@ export function MomentCard({
   const activityPlace = displayLocation(post.locationName, post.locationPrivacy);
   const goingCount = isActivity ? social.goingCount(post.id) : 0;
 
-  const space = getHobby(post.hobbySlug);
+  // No Category-name fallback here (Spaces Rework follow-up): a Moment
+  // with no Corner shows no label at all, never its Category's name (e.g.
+  // "Art & Creative") — Category is internal-only now, nothing user-facing
+  // ever names one directly.
   const corner = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : undefined;
   const pursuitTitle = usePursuitTitle(post.pursuitId);
-  const cornerLine = [corner ?? space?.shortName, pursuitTitle].filter(Boolean).join(" · ");
+  const cornerLine = [corner, pursuitTitle].filter(Boolean).join(" · ");
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   const onlyYou = isOnlyYou(post);
   const circleName = post.circleId != null ? circles.find((c) => c.id === post.circleId)?.name : undefined;
@@ -466,7 +469,9 @@ export function MomentCard({
       <div className="mt-3 flex min-w-0 flex-1 flex-col">
         {mine ? (
           <div className="flex min-h-9 min-w-0 items-center justify-between gap-2">
-            <span className="ns-section-kicker min-w-0 truncate text-muted-foreground">{corner ?? space?.shortName}</span>
+            {/* No Category-name fallback (Spaces Rework follow-up, PR #83):
+                a Moment with no Corner shows no label at all here either. */}
+            <span className="ns-section-kicker min-w-0 truncate text-muted-foreground">{corner}</span>
             <span className="ns-section-kicker flex shrink-0 items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
               {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
