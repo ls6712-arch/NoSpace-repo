@@ -1,0 +1,143 @@
+Snapshot of public-schema RLS policies before the pause/deletion migrations
+(supabase/migrations/20260919230000..20260919230300), taken 2026-09-19 on
+project eyzokuhhbyidvmuqfmwm.
+
+Query:
+  select tablename, policyname, roles, qual
+  from pg_policies
+  where schemaname='public' and cmd='SELECT'
+  order by tablename, policyname;
+
+============================== SELECT policies ==============================
+
+categories
+  "categories are readable by anyone"  roles={public}
+  qual: true
+
+category_suggestions
+  "you see your own suggestions"  roles={public}
+  qual: (suggested_by = auth.uid()) OR private.is_admin(auth.uid())
+
+circle_members
+  "you see the roster of a circle you're in"  roles={public}
+  qual: (user_id = auth.uid()) OR private.is_circle_member(circle_id, auth.uid())
+        OR private.owns_circle(circle_id, auth.uid())
+
+circles
+  "circles are readable when signed in"  roles={public}
+  qual: auth.uid() IS NOT NULL
+
+connections
+  "you see your own connections"  roles={public}
+  qual: (auth.uid() = requester) OR (auth.uid() = addressee)
+
+corners
+  "corners are readable when signed in"  roles={public}
+  qual: auth.uid() IS NOT NULL
+
+hobby_follows
+  "hobby follows are readable"  roles={public}
+  qual: auth.uid() IS NOT NULL
+
+messages
+  "messages need an accepted participation"  roles={public}
+  qual: EXISTS (SELECT 1 FROM participations p WHERE p.id = messages.participation_id
+        AND p.status = 'accepted' AND p.kind = ANY (ARRAY['make_together','explore_together'])
+        AND (auth.uid() = p.from_user OR auth.uid() = p.to_user))
+  "you read messages meant for you"  roles={public}
+  qual: (to_user IS NOT NULL AND (auth.uid() = from_user OR auth.uid() = to_user)
+        AND private.are_connected(from_user, to_user))
+        OR (space_id IS NOT NULL AND private.is_space_member(space_id, auth.uid()))
+
+moment_drafts
+  "you see only your own draft"  roles={public}
+  qual: auth.uid() = user_id
+
+notifications
+  "you read your own notifications"  roles={public}
+  qual: auth.uid() = user_id
+
+participations
+  "you see participations you are part of"  roles={public}
+  qual: (auth.uid() = from_user) OR (auth.uid() = to_user) OR (to_user IS NULL)
+
+post_likes
+  "post likes are readable"  roles={public}
+  qual: auth.uid() IS NOT NULL
+
+posts  (THREE overlapping SELECT policies — see migration b)
+  "Public posts are visible to everyone, private ones only to you"  roles={public}
+  qual: (visibility = 'public') OR (auth.uid() = user_id)
+
+  "circle posts follow the circle's own visibility"  roles={public}
+  qual: (visibility = 'circle') AND (circle_id IS NOT NULL) AND (auth.uid() IS NOT NULL)
+        AND EXISTS (SELECT 1 FROM circles c WHERE c.id = (posts.circle_id - 1000000)
+        AND (c.visibility = ANY (ARRAY['open_to_read','Open to read'])
+             OR c.owner = auth.uid() OR private.is_circle_member(c.id, auth.uid())))
+
+  "posts are readable by their audience"  roles={public}
+  qual: (visibility = 'public') OR (user_id = auth.uid())
+        OR (visibility = 'friends' AND private.are_connected(user_id, auth.uid()))
+
+private_logs
+  "you see only your own private logs"  roles={public}
+  qual: auth.uid() = user_id
+  (all four commands — SELECT/INSERT/UPDATE/DELETE — are owner-only; confirmed
+   by a separate query against all cmd values, not just SELECT.)
+
+profile_follows
+  "profile follows are readable when signed in"  roles={public}
+  qual: auth.uid() IS NOT NULL
+
+profile_links
+  "profile links are readable when signed in"  roles={public}
+  qual: auth.uid() IS NOT NULL
+
+profiles  (TWO overlapping SELECT policies — see migration b)
+  "Profiles are visible to everyone"  roles={public}
+  qual: true   <-- unconditional, no auth check at all
+
+  "profiles are readable when signed in"  roles={public}
+  qual: auth.uid() IS NOT NULL
+
+pursuits  (TWO overlapping SELECT policies — see migration b)
+  "you see your own pursuits"  roles={public}
+  qual: auth.uid() = user_id
+
+  "you see your own pursuits, others see only shared ones"  roles={public}
+  qual: (auth.uid() = user_id) OR (shared = true)
+
+space_members
+  "you see membership of spaces you are in"  roles={public}
+  qual: (user_id = auth.uid()) OR private.is_space_member(space_id, auth.uid())
+        OR private.owns_space(space_id, auth.uid())
+
+spaces
+  "spaces are visible to members and by invitation"  roles={public}
+  qual: (visibility = 'open') OR (owner = auth.uid()) OR private.knows_space(id, auth.uid())
+
+thoughts
+  "thoughts follow the moment's setting"  roles={public}
+  qual: (auth.uid() = user_id)
+        OR EXISTS (SELECT 1 FROM posts p WHERE p.id = thoughts.post_id
+             AND (p.thoughts_private = false OR p.user_id = auth.uid()))
+  Note: this policy's EXISTS subquery against posts is itself subject to
+  posts' own RLS at query time, so once posts becomes pause-aware (migration
+  b), a paused user's post being invisible to someone also makes the
+  comments on it invisible to that same someone, with no change needed here.
+
+======================== posts.visibility constraint =========================
+
+posts_visibility_check: CHECK (visibility = ANY (ARRAY['public','friends','circle']))
+
+============================ live data at snapshot time =======================
+
+auth.users: 10 rows
+profiles: 10 rows
+posts: 26 rows, all visibility='public' (0 friends, 0 circle)
+pursuits: 9 rows
+connections: 3 rows
+
+Full row-for-row copies of profiles, posts, pursuits and connections as they
+stood at this moment are in schema backup_20260919 (not exposed to the API —
+verified via has_schema_privilege('anon'/'authenticated', ..., 'USAGE') = false).

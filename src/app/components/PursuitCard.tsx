@@ -1,0 +1,284 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
+import { Check, Lock, Share2, Sparkles, Target } from "lucide-react";
+import { getHobby } from "../data/hobbies";
+import { Post } from "../data/posts";
+import {
+  Project,
+  setProjectShared,
+  projectProgress,
+  useJournalSlice,
+  markGoalReached,
+  goalProgressText,
+  goalDeadlineText,
+} from "../lib/journal";
+import { mirrorPursuit } from "../lib/pursuitsRemote";
+import { useAuth } from "../context/AuthContext";
+import { useContent } from "../context/ContentContext";
+import { GeneratedArt } from "./GeneratedArt";
+import { PostMedia } from "./PostMedia";
+import { GoalDialog } from "./GoalDialog";
+import { EndingDialog } from "./EndingDialog";
+import { GoalProgressTap } from "./GoalProgressTap";
+
+function timeAgo(ts: number) {
+  const days = Math.floor((Date.now() - ts) / 86_400_000);
+  if (days < 1) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30.44);
+  return `${months} ${months === 1 ? "month" : "months"} ago`;
+}
+
+
+/** What a Pursuit card actually needs — either the owner's own live Project
+ * (with edit actions) or someone else's shared row (read-only). */
+export type PursuitLike = {
+  id: string;
+  title: string;
+  hobbySlug?: string;
+  interest?: string;
+  customSpace?: string;
+  startedAt: number;
+  finishedAt?: number;
+};
+
+/**
+ * One Pursuit, as a card someone would actually want to look at: its own
+ * inspiration image when it has one (a real photo if the maker uploaded
+ * one, the same illustrated fallback as everywhere else in Sushii
+ * otherwise), the Space and Interest as quiet metadata rather than a
+ * taxonomy to fill in, and a status worked out from what's actually
+ * happened rather than a field someone has to remember to update.
+ */
+export function PursuitCard({
+  pursuit,
+  inspirationPost,
+  owner = false,
+  className = "",
+}: {
+  pursuit: PursuitLike;
+  inspirationPost?: Post;
+  /** Only the owner's own view gets the share toggle and "Mark complete". */
+  owner?: boolean;
+  className?: string;
+}) {
+  const { user, profile } = useAuth();
+  const { posts } = useContent();
+  const entryProject = useJournalSlice((s) => s.entryProject);
+  const [goalOpen, setGoalOpen] = useState(false);
+  const [endingOpen, setEndingOpen] = useState(false);
+  const [justCopied, setJustCopied] = useState(false);
+  // Only the owner's own card is ever backed by a full Project (with a
+  // `shared` flag and edit actions) — a friend's view only ever gets the
+  // read-only PursuitLike shape, so this cast is safe exactly when owner is.
+  const asProject = owner ? (pursuit as Project) : null;
+  const shared = !!asProject?.shared;
+
+  const { count, lastUpdatedAt } = owner
+    ? projectProgress(entryProject, posts, pursuit.id)
+    : { count: 0, lastUpdatedAt: undefined };
+
+  const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
+  const spaceLabel = space?.shortName ?? pursuit.customSpace;
+  const status = pursuit.finishedAt ? "Completed" : count > 0 ? "In progress" : "Just started";
+  const moved = pursuit.finishedAt ?? lastUpdatedAt ?? pursuit.startedAt;
+
+  const toggleShare = async () => {
+    if (!asProject) return;
+    const next = !shared;
+    setProjectShared(pursuit.id, next);
+    if (user) void mirrorPursuit(user.id, { ...asProject, shared: next });
+
+    // Turning sharing on is the moment someone actually wants a link to
+    // hand to someone — do that copy right here instead of leaving them to
+    // hunt for a separate "share" action afterward, which is what made this
+    // button feel like it didn't do anything.
+    if (next) {
+      const url = profile?.username
+        ? `${window.location.origin}${window.location.pathname}#/u/${profile.username}`
+        : window.location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        setJustCopied(true);
+        setTimeout(() => setJustCopied(false), 2000);
+      } catch {
+        // Clipboard can be unavailable (permissions, non-secure context) —
+        // the Pursuit is still shared either way, just without the copy.
+      }
+    }
+  };
+
+  // Completing goes through the ending question, same as the Pursuit page.
+  const markDone = () => {
+    if (!asProject) return;
+    setEndingOpen(true);
+  };
+
+
+  const goal = asProject?.goal;
+  const goalText = goal
+    ? goal.shape === "number"
+      ? goalProgressText(goal)
+      : goal.shape === "date"
+        ? goal.label
+        : goal.label
+    : undefined;
+  // Progress toward a numeric goal comes from the goal's own tap-logged
+  // current, not the attached-update count — see GoalProgressTap.tsx and
+  // journal.ts's logProgress. Those are two honest, separate signals
+  // (how many times you tapped +1 vs. how many narrative updates you wrote)
+  // that used to quietly disagree when both were read as "progress."
+
+  const reachIt = () => {
+    if (!asProject) return;
+    markGoalReached(pursuit.id);
+  };
+
+  return (
+    <div
+      className={`group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors duration-200 hover:border-[var(--coral-deep)] ${className}`}
+    >
+      <div className="relative aspect-[4/5] w-full overflow-hidden">
+        <Link to={`/pursuit/${pursuit.id}`} className="absolute inset-0 block" aria-label={`Open ${pursuit.title}`}>
+          {inspirationPost ? (
+            <PostMedia
+              media={inspirationPost.media}
+              type={inspirationPost.type}
+              hobbySlug={inspirationPost.hobbySlug}
+              seed={inspirationPost.id}
+              preview
+              className="h-full w-full"
+            />
+          ) : (
+            <GeneratedArt
+              hobbySlug={pursuit.hobbySlug ?? "crafts-making"}
+              seed={pursuit.id}
+              className="h-full w-full"
+            />
+          )}
+          <span
+            className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-md ${
+              pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-[var(--void)]/55"
+            }`}
+          >
+            {status}
+          </span>
+        </Link>
+        {owner && (
+          <button
+            type="button"
+            onClick={toggleShare}
+            title={
+              justCopied
+                ? "Link copied"
+                : shared
+                  ? "Shared on your profile (tap to make private)"
+                  : "Private (tap to share and copy a link)"
+            }
+            aria-pressed={shared}
+            className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-full bg-[var(--void)]/55 px-2.5 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
+          >
+            {justCopied ? (
+              <span className="text-[10px] font-medium text-white">Copied!</span>
+            ) : shared ? (
+              <Share2 className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
+            ) : (
+              <Lock className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
+            )}
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        <Link to={`/pursuit/${pursuit.id}`} className="block">
+          <p className="text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+            {pursuit.title}
+          </p>
+          {(pursuit.interest || spaceLabel) && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {pursuit.finishedAt ? `Finished ${timeAgo(moved)}` : `Updated ${timeAgo(moved)}`}
+          </p>
+        </Link>
+
+        {owner && (
+          <div className="mt-2.5 flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setGoalOpen(true)}
+              className={`flex w-fit min-w-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                goal
+                  ? goal.reachedAt
+                    ? "border-border bg-surface-muted text-muted-foreground"
+                    : "border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] text-foreground hover:border-[var(--coral-deep)]"
+                  : "border-dashed border-border text-muted-foreground hover:border-[var(--coral-deep)] hover:text-foreground"
+              }`}
+            >
+              <Target className="size-4 shrink-0" strokeWidth={1.8} />
+              <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`}>
+                {goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Logging a count and writing a narrative update are two different
+            things someone might or might not both want to do — this sits
+            beside "Add a Moment" below, not instead of it. */}
+        {owner && asProject && goal?.shape === "number" && !goal.reachedAt && (
+          <div className="mt-2.5">
+            {goalDeadlineText(goal) && (
+              <p className="mb-1.5 text-right text-xs text-muted-foreground">{goalDeadlineText(goal)}</p>
+            )}
+            <GoalProgressTap project={asProject} goal={goal} fullWidth />
+          </div>
+        )}
+
+        {owner && (
+          <div className="mt-3 flex items-center gap-2">
+            <Link
+              to={`/pursuit/${pursuit.id}/moment`}
+              className="flex-1 rounded-full border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
+            >
+              Add a Moment
+            </Link>
+            {goal && !goal.reachedAt && (
+              <button
+                type="button"
+                onClick={reachIt}
+                title="Reached it"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+              >
+                <Target className="size-3.5" strokeWidth={2} />
+              </button>
+            )}
+            {!pursuit.finishedAt && (
+              <button
+                type="button"
+                onClick={markDone}
+                title="Mark complete"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+              >
+                <Check className="size-3.5" strokeWidth={2} />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {owner && asProject && (
+        <>
+          <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={asProject} />
+          <EndingDialog open={endingOpen} onOpenChange={setEndingOpen} project={asProject} />
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Icon used for empty-state "start one" prompts around Pursuits. */
+export const PursuitIcon = Sparkles;
