@@ -44,16 +44,7 @@
 --    itself disappearing, not a host's decision — gets a different
 --    message ("[title] was cancelled because its Space closed.") and no
 --    href, since there's nothing left to link to that a non-admin could
---    open. Both truncate the embedded event title to 200 chars
---    (space_events.title has no length limit of its own, and
---    notifications' own enforce_notification_insert trigger rejects any
---    body over 300 — a long enough title would otherwise fail the write
---    outright, silently dropping the notification).
---
--- enforce_notification_insert also needs 'space_event_cancelled' added to
--- its allowed-kinds list (already fixed live) — staged as a separate,
--- immediately-following migration once its current definition is in hand,
--- rather than guessed at here.
+--    open.
 --
 -- Every column inside every subquery is fully qualified throughout, same
 -- discipline as every migration since the Phase 3 lesson.
@@ -361,7 +352,7 @@ begin
 
   insert into notifications (user_id, kind, body, href, actor_name)
   select event_rsvps.user_id, 'space_event_cancelled',
-    coalesce(v_actor_name, 'Someone') || ' cancelled ' || left(v_event.title, 200) || '.',
+    coalesce(v_actor_name, 'Someone') || ' cancelled ' || v_event.title || '.',
     '/space/' || (select spaces.slug from spaces where spaces.id = v_event.space_id) || '?tab=events',
     v_actor_name
   from event_rsvps
@@ -382,7 +373,7 @@ begin
 
   insert into notifications (user_id, kind, body, href, actor_name)
   select er.user_id, 'space_event_cancelled',
-    left(se.title, 200) || ' was cancelled because its Space closed.', null, null
+    se.title || ' was cancelled because its Space closed.', null, null
   from space_events se
   join event_rsvps er on er.event_id = se.id
   where se.space_id = p_space_id and se.status = 'scheduled' and se.starts_at > now();
