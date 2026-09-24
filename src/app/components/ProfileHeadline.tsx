@@ -1,50 +1,43 @@
 import { useContent } from "../context/ContentContext";
-import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { subHobbyLabel } from "../data/hobbies";
 
 const DAY = 24 * 60 * 60 * 1000;
 
 /**
  * Works out what you're actually into and how long you've been at it: the
- * hobby you've logged the most, and the date you first logged it. Sub-hobbies
- * win over spaces, because "3 months into pottery" says far more than
- * "3 months into The Workbench".
+ * Corner you've logged the most, and the date you first logged it. Category
+ * never appears here — spec change ("Corners carry discovery"): Category is
+ * internal-only, so an untagged Moment can no longer stand in for one
+ * ("3 months into The Workbench" is gone, not just deprioritized). A post
+ * with no Corner simply doesn't enter the tally; `label` comes back null
+ * when nothing ever has, but `firstActivityAt` still reflects the earliest
+ * post overall, so "Started N days ago" (see milestoneText) has a real date
+ * to work from even then.
  */
 export function pickPrimaryHobby(
   myPosts: { hobbySlug: string; subHobby?: string; createdAt: number }[],
-): { label: string; firstActivityAt: number } | null {
+): { label: string | null; firstActivityAt: number } | null {
   if (myPosts.length === 0) return null;
 
-  // Count by sub-hobby first; fall back to the space for untagged posts, so
-  // someone who never tags a hobby still gets a real headline.
-  const tally = new Map<
-    string,
-    { count: number; first: number; label: string; tagged: boolean }
-  >();
+  const firstActivityAt = Math.min(...myPosts.map((p) => p.createdAt));
 
+  const tally = new Map<string, { count: number; first: number; label: string }>();
   for (const post of myPosts) {
-    const key = post.subHobby ?? `space:${post.hobbySlug}`;
-    const label = post.subHobby
-      ? subHobbyLabel(post.subHobby) ?? post.subHobby
-      : getHobby(post.hobbySlug)?.shortName ?? post.hobbySlug;
-
-    const existing = tally.get(key);
+    if (!post.subHobby) continue;
+    const label = subHobbyLabel(post.subHobby) ?? post.subHobby;
+    const existing = tally.get(post.subHobby);
     if (existing) {
       existing.count += 1;
       existing.first = Math.min(existing.first, post.createdAt);
     } else {
-      tally.set(key, { count: 1, first: post.createdAt, label, tagged: !!post.subHobby });
+      tally.set(post.subHobby, { count: 1, first: post.createdAt, label });
     }
   }
 
-  // Most-logged wins. On a tie, a named hobby beats a whole space ("3 months
-  // into baking" reads better than "into kitchen table"), then earliest start.
-  const winner = [...tally.values()].sort(
-    (a, b) =>
-      b.count - a.count ||
-      Number(b.tagged) - Number(a.tagged) ||
-      a.first - b.first,
-  )[0];
+  if (tally.size === 0) return { label: null, firstActivityAt };
 
+  // Most-logged Corner wins; a tie goes to whichever started earlier.
+  const winner = [...tally.values()].sort((a, b) => b.count - a.count || a.first - b.first)[0];
   return { label: winner.label.toLowerCase(), firstActivityAt: winner.first };
 }
 
@@ -57,10 +50,18 @@ export function usePrimaryHobby() {
 /**
  * "3 months into pottery" — how long you've been at the thing, not what tier
  * the platform has sorted you into. Deliberately not a level: the milestone
- * belongs to the hobby, not to Sushii.
+ * belongs to the Corner, not to Sushii. `label: null` (no Corner-tagged
+ * Moment yet — see pickPrimaryHobby) drops the "into X" entirely rather
+ * than naming a Category: "Started 3 days ago", never "3 days into travel &
+ * adventure".
  */
-export function milestoneText(label: string, firstActivityAt: number, now = Date.now()) {
+export function milestoneText(label: string | null, firstActivityAt: number, now = Date.now()) {
   const days = Math.floor((now - firstActivityAt) / DAY);
+
+  if (label === null) {
+    if (days < 1) return "Started today";
+    return `Started ${days} ${days === 1 ? "day" : "days"} ago`;
+  }
 
   if (days < 1) return `Day one of ${label}`;
   if (days < 30) return `${days} ${days === 1 ? "day" : "days"} into ${label}`;
@@ -96,11 +97,15 @@ export function ProfileHeadline({
 }) {
   const derived = usePrimaryHobby();
 
-  const label = hobbyLabel ?? derived?.label;
+  // hobbyLabel/firstActivityAt (explicit props) always win when passed —
+  // `derived?.label` can be legitimately null (posts exist, none tagged
+  // with a Corner yet), which is a real, renderable state ("Started N days
+  // ago"), not "nothing to show" the way `derived` itself being null is
+  // (no posts at all).
+  const label = hobbyLabel !== undefined ? hobbyLabel : derived?.label ?? null;
   const startedAt = firstActivityAt ?? derived?.firstActivityAt;
 
-  const headline =
-    label && startedAt ? milestoneText(label, startedAt) : "Just getting started";
+  const headline = startedAt !== undefined ? milestoneText(label, startedAt) : "Just getting started";
 
   if (variant === "quiet") {
     return (

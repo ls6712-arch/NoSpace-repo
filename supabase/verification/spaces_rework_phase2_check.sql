@@ -1,8 +1,9 @@
 -- Sushii: Spaces Rework Phase 2 — before/after verification.
 --
 -- Not a migration — nothing here alters the schema. Run the BEFORE block,
--- run the five Phase 2 migrations in order (20260924090000_export,
+-- run the seven Phase 2 migrations in order (20260924090000_export,
 -- 20260924095000_cleanup, 20260924097000_categories,
+-- 20260924098000_app_config, 20260924099000_corners,
 -- 20260924100000_visibility, 20260924110000_schema), then run the AFTER
 -- block and diff the two.
 --
@@ -29,10 +30,11 @@
 --      POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15`) and restore:
 --      `psql postgresql://postgres:postgres@localhost:5432/postgres < sushii_snapshot.sql`
 --   3. Run the BEFORE block below against that local database.
---   4. Run the five Phase 2 migrations, in order, against it.
+--   4. Run the seven Phase 2 migrations, in order, against it.
 --   5. Run the AFTER block; diff against BEFORE.
 --   6. Run the rollbacks in REVERSE order — rollback_...110000_schema,
---      rollback_...100000_visibility, rollback_...097000_categories,
+--      rollback_...100000_visibility, rollback_...099000_corners,
+--      rollback_...098000_app_config, rollback_...097000_categories,
 --      rollback_...095000_cleanup, rollback_...090000_export — then re-run
 --      the BEFORE block one more time and confirm it matches the very
 --      first BEFORE output exactly (this is what actually proves the
@@ -192,3 +194,34 @@ order by policyname;
 select public.is_reserved_space_slug('food-cooking') as expect_true,
        public.is_reserved_space_slug('workbench') as expect_true_too,
        public.is_reserved_space_slug('brand-new-space-name') as expect_false;
+
+-- app_config seeded correctly:
+select key, value from public.app_config order by key;
+-- expect 3 rows: corner_min_moments_30d (3), space_creation_limit
+-- ({new_account:1, established:5, established_after_days:30}),
+-- trademark_blocklist (["lego"])
+
+select public.is_blocklisted_name('LEGO Masters Club') as expect_true,
+       public.is_blocklisted_name('Pottery') as expect_false;
+
+-- Corners: hidden column and blocklist constraint exist:
+select column_name from information_schema.columns
+where table_schema = 'public' and table_name = 'corners' and column_name = 'hidden';
+-- expect 1 row
+
+-- Should fail with a constraint violation (that's the expected/correct
+-- outcome — do not "fix" this by relaxing the check):
+-- insert into public.corners (space_slug, slug, name) values ('crafts-making', 'lego-test', 'LEGO Test');
+
+select * from public.corner_activity_30d() order by moments_30d desc limit 10;
+
+-- space_corners exists, capped at 3, and syncs spaces.category_slug —
+-- meaningful once there's a real Space + Corner to link (Phase 5); for
+-- now just confirms the table/trigger are live:
+select column_name, data_type from information_schema.columns
+where table_schema = 'public' and table_name = 'space_corners';
+
+-- admin_merge_corners/admin_rename_corner/admin_hide_corner exist and are
+-- admin-gated (should error "Only an admin can do that." for a non-admin
+-- caller, not a missing-function error):
+-- select public.admin_hide_corner(1, true);

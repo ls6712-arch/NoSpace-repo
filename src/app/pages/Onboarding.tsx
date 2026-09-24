@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Check } from "lucide-react";
-import { findSpaceForInterest, hobbies } from "../data/hobbies";
+import { hobbies } from "../data/hobbies";
 import { MediaAttachPicker } from "../components/MediaAttachPicker";
 import { TagsField } from "../components/TagsField";
 import { AvatarPicker } from "../components/AvatarPicker";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useContent } from "../context/ContentContext";
+import { useCorners } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 
@@ -67,6 +68,7 @@ function MomentCard({
 }) {
   const { addPost } = useContent();
   const { profile } = useAuth();
+  const { resolveInterest } = useCorners();
   const [body, setBody] = useState("");
   const [media, setMedia] = useState<File | null>(null);
   const [posting, setPosting] = useState(false);
@@ -101,18 +103,17 @@ function MomentCard({
     if (!canSubmit) return;
     setPosting(true);
     try {
-      // An exact match resolves the tag to the real Space/sub-hobby it
-      // names (findSpaceForInterest) — never a fuzzy guess. Nothing to
-      // resolve to just means a plain, freeform tag with no Space behind
-      // it, same as the composer already allows; hobbySlug still needs
-      // *some* value (posts.hobby_slug is required in the schema), so it
-      // falls back to the same technical default the main composer uses.
-      // That default never surfaces anywhere — the tag is what every
+      // Resolves the tag to a real Corner — an existing one (exact or a
+      // near-duplicate match) or a brand-new one, created here the same
+      // way tagging-into-existence always has (see CornersContext's
+      // resolveInterest). hobbySlug/subHobby are Category/Corner
+      // plumbing the schema still requires; the tag itself is what every
       // caption, pill, and label on this Moment actually reads.
-      const match = findSpaceForInterest(tag);
+      const match = await resolveInterest(tag);
       await addPost({
-        hobbySlug: match?.hobbySlug ?? hobbies[0].slug,
+        hobbySlug: match?.spaceSlug ?? hobbies[0].slug,
         subHobby: match?.slug,
+        corner: match?.slug,
         tags: [tag],
         type: media?.type.startsWith("video/") ? "video" : "photo",
         files: media ? [media] : undefined,
@@ -174,6 +175,7 @@ export function Onboarding() {
   const { profile, updateProfile } = useAuth();
   const social = useSocial();
   const { refetchActiveHobbies } = useContent();
+  const { resolveInterest } = useCorners();
   const reduceMotion = !!useReducedMotion();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -216,14 +218,17 @@ export function Onboarding() {
     setFinishError(null);
     try {
       // Follows are derived from the open tags now, not written as each one
-      // is picked — an exact Space/sub-hobby match gets followed; a
-      // freeform tag with no such match just stays a tag, nothing to
-      // follow. Only the ones not already followed do any writing.
+      // is picked — private Interests, Corner by Corner (spec change:
+      // "Corners carry discovery" — nobody follows a whole Category
+      // anymore). resolveInterest matches an existing Corner or creates
+      // one (see CornersContext), so every real tag ends up followed, not
+      // just the ones that happened to already be in the curated baseline.
+      // Only the ones not already followed do any writing.
       for (const tag of tags) {
-        const match = findSpaceForInterest(tag);
+        const match = await resolveInterest(tag);
         if (!match) continue;
         if (!social.isFollowingHobby(match.slug)) {
-          void social.toggleHobbyFollow(match.slug, match.label);
+          void social.toggleHobbyFollow(match.slug, match.name);
         }
       }
       // Picked up by Root.tsx's guard and everywhere else that reads

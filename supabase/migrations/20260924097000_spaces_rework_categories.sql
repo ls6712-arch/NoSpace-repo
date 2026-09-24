@@ -18,11 +18,18 @@
 --   2. All 15 built-in category rows currently have active=false, which
 --      hobbies.ts's applySpaceRows() (hidden: r.active === false) turns
 --      into `hidden: true`, and visibleSpaces() filters hidden ones out of
---      every browsable list — so right now Discover shows ZERO of the 15
---      real categories and only "the-lego-makers". Whatever caused that
---      (looks like bulk admin-panel testing, not an intentional launch
---      state), this rework needs all 15 visible going forward. Fixed by
---      setting active=true on all 15.
+--      every browsable list. Fixed by setting active=true on all 15.
+--
+--      Spec change, after this file was first written: Categories are now
+--      internal-only — nobody ever sees or picks one directly, so this fix
+--      no longer restores 15 visible Discover chips (that whole surface is
+--      removed). It still matters: `hidden`/`active` still gates whether
+--      guessCornerCategory()-style keyword matching and any other internal
+--      ranking machinery considers a Category, and AdminSpaces.tsx (rename/
+--      hide/reset) still reads it. Whatever caused all 15 to be off (looks
+--      like bulk admin-panel testing, not an intentional launch state)
+--      shouldn't leave built-in Category plumbing silently disabled either
+--      way, so the fix stands unchanged.
 --
 --   3. "Suggest a Space" is disabled: category_suggestions can no longer
 --      be inserted by anyone (there was no live UI entry point for this

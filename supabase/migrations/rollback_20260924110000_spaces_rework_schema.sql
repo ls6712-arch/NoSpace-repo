@@ -11,6 +11,14 @@
 alter table if exists public.spaces drop constraint if exists spaces_slug_not_reserved;
 drop function if exists public.is_reserved_space_slug(text);
 
+drop trigger if exists space_corners_sync_category on public.space_corners;
+drop function if exists public.sync_space_category_from_corner();
+drop trigger if exists space_corners_limit on public.space_corners;
+drop function if exists public.check_space_corners_limit();
+drop policy if exists "hosts manage their space's corners" on public.space_corners;
+drop policy if exists "space corners are as visible as the space" on public.space_corners;
+drop table if exists public.space_corners;
+
 drop policy if exists "hosts or the poster delete the link" on public.space_moments;
 drop policy if exists "hosts feature or remove, the poster unlinks their own" on public.space_moments;
 drop policy if exists "the poster or a host links/unlinks a moment" on public.space_moments;

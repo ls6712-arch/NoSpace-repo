@@ -8,7 +8,9 @@
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --   Run AFTER 20260924090000_spaces_rework_export.sql,
---   20260924095000_spaces_rework_cleanup.sql, and
+--   20260924095000_spaces_rework_cleanup.sql,
+--   20260924098000_spaces_rework_app_config.sql (section 6 below reads
+--   public.is_blocklisted_name(), defined there), and
 --   20260924100000_spaces_rework_visibility.sql — in that order. The
 --   cleanup step is not optional: this database already has an unrelated,
 --   never-wired-into-any-UI `spaces`/`space_members`/`is_space_member`
@@ -16,6 +18,17 @@
 --   creates. If those old objects are still around, this file's
 --   `create table if not exists public.spaces (...)` silently no-ops
 --   instead of creating the new table.
+--
+-- Spec change (Categories internal-only, Corners carry discovery): a
+-- Space's category is now derived from its Corners, not picked directly —
+-- see section 6 (space_corners) below. `category_slug` is nullable for
+-- that reason: it's set by a trigger once the Space's primary Corner is
+-- linked, not at the moment the Space row itself is inserted (Create
+-- Space's own flow, Phase 5, creates the space row and its space_corners
+-- rows as separate statements — there's a brief in-between where a Space
+-- exists with no category yet, same as it briefly has zero Corners; both
+-- are the app's responsibility to close in the same flow, not something
+-- this schema can enforce synchronously across two separate inserts).
 --
 -- Purely additive: new tables only, nothing existing is altered. Safe to
 -- re-run.
@@ -26,13 +39,18 @@
 create table if not exists public.spaces (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
-  name text not null check (char_length(name) between 1 and 80),
+  name text not null check (char_length(name) between 1 and 80)
+    check (not public.is_blocklisted_name(name)),
   description text not null check (char_length(description) <= 100),
   cover_image text not null,
-  -- References the unified Category/Space model (src/app/data/hobbies.ts's
+  -- References the unified Category model (src/app/data/hobbies.ts's
   -- `hobbies` array, admin-extended via public.categories) by slug — never
   -- a hard FK, since the built-in fifteen aren't rows in this database.
-  category_slug text not null,
+  -- Nullable and derived, not chosen: set by sync_space_category_from_
+  -- corner() (section 6) from this Space's primary Corner, once one is
+  -- linked via space_corners. Categories are internal-only now — nobody
+  -- picks this directly.
+  category_slug text,
   meets text not null check (meets in ('in_person', 'online', 'both')),
   -- Public location: neighborhood + city only. The exact address is never
   -- stored here — RLS is row-level and can't hide one column from part of
@@ -360,7 +378,112 @@ create policy "hosts or the poster delete the link"
   );
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 6. Reserved slugs — the 15 Category slugs and the 8 legacy Space slugs
+-- 6. Space <-> Corner link. Corners are the only browse/tag label a user
+--    ever picks; a Space's Category is derived from these, never chosen
+--    directly (spec change: Categories are internal-only). Create Space
+--    (Phase 5) requires 1-3 Corners, at least 1 of them primary. The
+--    "at least 1" half of that isn't enforceable synchronously here (see
+--    the header note on category_slug) — Phase 5's Create Space flow is
+--    responsible for always linking a Corner in the same user action that
+--    creates the Space. The "at most 3" half is enforced below.
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists public.space_corners (
+  space_id uuid not null references public.spaces (id) on delete cascade,
+  corner_id bigint not null references public.corners (id) on delete cascade,
+  -- Exactly one true per Space — the Corner spaces.category_slug is
+  -- derived from. Phase 5's Create Space form sets this on whichever
+  -- Corner is listed first; admin Corner merges (sql/corners-admin.sql,
+  -- Phase 3-ish) may need to re-point this if the primary Corner itself
+  -- gets merged away.
+  is_primary boolean not null default false,
+  added_at timestamptz not null default now(),
+  primary key (space_id, corner_id)
+);
+create unique index if not exists space_corners_one_primary
+  on public.space_corners (space_id) where is_primary;
+create index if not exists space_corners_corner_idx on public.space_corners (corner_id);
+
+alter table public.space_corners enable row level security;
+
+drop policy if exists "space corners are as visible as the space" on public.space_corners;
+create policy "space corners are as visible as the space"
+  on public.space_corners for select
+  using (exists (select 1 from spaces s where s.id = space_id and s.status <> 'deleted'));
+
+drop policy if exists "hosts manage their space's corners" on public.space_corners;
+create policy "hosts manage their space's corners"
+  on public.space_corners for all to authenticated
+  using (public.is_space_host(space_id, auth.uid()))
+  with check (public.is_space_host(space_id, auth.uid()));
+
+-- At most 3 Corners per Space.
+create or replace function public.check_space_corners_limit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if (select count(*) from space_corners where space_id = new.space_id) >= 3 then
+    raise exception 'A Space can have at most 3 Corners.';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists space_corners_limit on public.space_corners;
+create trigger space_corners_limit
+  before insert on public.space_corners
+  for each row execute function public.check_space_corners_limit();
+
+-- Keep spaces.category_slug in sync with the primary Corner's own
+-- category (corners.space_slug — that column already means "category
+-- slug" in the merged model; see Q3 of this rework's own decisions for
+-- why it isn't renamed).
+create or replace function public.sync_space_category_from_corner()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_space_id uuid;
+  v_category text;
+begin
+  v_space_id := coalesce(new.space_id, old.space_id);
+
+  if tg_op <> 'DELETE' and new.is_primary then
+    -- This row is (now) the primary Corner — derive straight from it.
+    -- A non-primary insert/update (the 2nd or 3rd Corner on a Space)
+    -- falls through and leaves category_slug untouched, on purpose.
+    select c.space_slug into v_category from corners c where c.id = new.corner_id;
+    update spaces set category_slug = v_category where id = v_space_id;
+  elsif (tg_op = 'DELETE' and old.is_primary)
+     or (tg_op = 'UPDATE' and old.is_primary and not new.is_primary) then
+    -- The primary Corner was unlinked or demoted with no replacement in
+    -- this same row. Fall back to another linked Corner if one exists;
+    -- otherwise the Space is left without a category until a new primary
+    -- is set — the app's job is to always pair "unset the old primary"
+    -- with "set a new one" in the same flow, same as it must always keep
+    -- at least 1 Corner linked in the first place (see this section's
+    -- header note).
+    select c.space_slug into v_category
+    from space_corners sc join corners c on c.id = sc.corner_id
+    where sc.space_id = v_space_id and sc.corner_id <> old.corner_id
+    order by sc.added_at
+    limit 1;
+    update spaces set category_slug = v_category where id = v_space_id;
+  end if;
+
+  return coalesce(new, old);
+end;
+$$;
+drop trigger if exists space_corners_sync_category on public.space_corners;
+create trigger space_corners_sync_category
+  after insert or update or delete on public.space_corners
+  for each row execute function public.sync_space_category_from_corner();
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 7. Reserved slugs — the 15 Category slugs and the 8 legacy Space slugs
 --    (src/app/data/hobbies.ts's LEGACY_SPACES) can never be taken by a new
 --    Space, since /space/:slug now routes to a real Space and those slugs
 --    already redirect to Discover. Checked at creation time by the app

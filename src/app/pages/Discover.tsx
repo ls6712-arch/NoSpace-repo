@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
-  ChevronLeft,
-  ChevronRight,
   Compass,
   LayoutGrid,
   PenLine,
@@ -14,24 +12,21 @@ import {
 } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { spacePhoto } from "../data/hobbyPhotos";
-import { categoryIcon } from "../data/categoryIcons";
 import { circles } from "../data/circles";
 import { Post, postCorner } from "../data/posts";
 import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
-import { useCorners, isDiscoverable } from "../context/CornersContext";
+import { useCorners, isBrowsableOnDiscover } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
 import { deriveProjects } from "../lib/journal";
-import { hobbyMatchesQuery } from "../lib/search";
 import { MomentCard } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { Button } from "../components/ui/button";
-import { CirclesBrowser } from "./Circles";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
 
@@ -58,16 +53,31 @@ const BASE_CHIPS: Chip[] = [
   { id: "progress", label: "Pursuits in progress" },
 ];
 
-/** Spaces / Circles / People — Discover's own front door, kept in ?tab= so
- * it's shareable and survives a back button, same as any other page state. */
+/** Corners / Spaces / People / Marketplace — Discover's own front door, kept
+ * in ?tab= so it's shareable and survives a back button, same as any other
+ * page state.
+ *
+ * Spec change ("Corners carry discovery"): Corners is default now, not
+ * Spaces — Categories (what the old "Spaces" tab actually browsed) are
+ * internal-only, nobody picks one directly. Circle browsing is dropped
+ * from Discover's front door entirely: the one real Circle this rework
+ * found was deleted along with the rest of Circles' data (see
+ * 20260924095000_spaces_rework_cleanup.sql), so there's nothing left to
+ * browse here — the demo/seed Circle list is empty too (circles.ts). The
+ * `/circles` page itself and CircleBoard aren't touched; this only drops
+ * Discover's own tab into them, ahead of their full removal in Phase 6.
+ * `spaces` stays in the enum with `hidden: true` — a real "Spaces" tab for
+ * host-created communities is Phase 5's job, once Create Space exists;
+ * `hidden` keeps it out of both the rendered tab bar and ?tab= validation
+ * until then, so there's nothing to flip on except deleting this flag. */
 const DISCOVER_TABS = [
-  { id: "spaces", label: "Spaces", icon: LayoutGrid },
-  { id: "people", label: "People", icon: UserRound },
-  { id: "corners", label: "Corner", icon: Compass },
-  { id: "circles", label: "Circle", icon: Users },
-  { id: "marketplace", label: "Marketplace", icon: ShoppingBag },
+  { id: "corners", label: "Corners", icon: Compass, hidden: false },
+  { id: "spaces", label: "Spaces", icon: LayoutGrid, hidden: true },
+  { id: "people", label: "People", icon: UserRound, hidden: false },
+  { id: "marketplace", label: "Marketplace", icon: ShoppingBag, hidden: false },
 ] as const;
 type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
+const VISIBLE_DISCOVER_TABS = DISCOVER_TABS.filter((t) => !t.hidden);
 
 const FEED_TABS = [
   { id: "forYou", label: "For You" },
@@ -162,100 +172,6 @@ function rankFeatured(posts: Post[], followedHobbies: string[], take: number): P
   return picked;
 }
 
-/** One tile in the Explore Spaces row — image-forward, same shape as a
- * ContentCard Moments tile: a full-width photo on top (the same
- * photo-or-GeneratedArt source every other Space card uses, via
- * DiscoverSpaceArt — the same images the landing page's HobbyCategoryCard
- * shows for this Space) with its category glyph as a badge over the photo's
- * corner, and the label in a padded strip below. */
-function SpaceTile({
-  to,
-  label,
-  icon: Icon,
-  hobbySlug,
-}: {
-  to: string;
-  label: string;
-  icon: typeof LayoutGrid;
-  hobbySlug?: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="group flex w-40 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
-    >
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
-        {hobbySlug ? (
-          <DiscoverSpaceArt
-            hobbySlug={hobbySlug}
-            seed={hobbySlug}
-            className="transition-transform duration-500 ease-out group-hover:scale-110"
-          />
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center"
-            style={{ backgroundColor: "color-mix(in srgb, var(--pastel-sky) 42%, var(--surface-elevated))" }}
-          >
-            <Icon className="size-8 text-foreground" strokeWidth={1.7} />
-          </div>
-        )}
-        {hobbySlug && (
-          <span
-            className="absolute bottom-2 right-2 flex size-7 items-center justify-center rounded-full border-2 border-card transition-transform duration-300 ease-out group-hover:scale-110"
-            style={{ backgroundColor: "var(--coral-deep)" }}
-          >
-            <Icon className="size-4 text-white" strokeWidth={2} />
-          </span>
-        )}
-      </div>
-      <div className="px-3 py-2.5">
-        <span className="block text-sm leading-tight text-foreground">{label}</span>
-      </div>
-    </Link>
-  );
-}
-
-/** Wraps the Explore Spaces tiles in a snap-scrolling track with a hidden
- * scrollbar (same technique PostMediaCarousel.tsx uses for post photos) and
- * two round paging buttons — desktop/mouse only, since touch already scrolls
- * fine by drag. */
-function SpacesRow({ children }: { children: React.ReactNode }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-
-  const page = (dir: 1 | -1) => {
-    const el = trackRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
-  };
-
-  return (
-    <div className="relative">
-      <div
-        ref={trackRef}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {children}
-      </div>
-      <button
-        type="button"
-        aria-label="Scroll spaces left"
-        onClick={() => page(-1)}
-        className="absolute left-0 top-[calc(50%-1rem)] hidden size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card shadow-md hover:border-[var(--coral-deep)] md:flex"
-      >
-        <ChevronLeft className="size-4" />
-      </button>
-      <button
-        type="button"
-        aria-label="Scroll spaces right"
-        onClick={() => page(1)}
-        className="absolute right-0 top-[calc(50%-1rem)] hidden size-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-border bg-card shadow-md hover:border-[var(--coral-deep)] md:flex"
-      >
-        <ChevronRight className="size-4" />
-      </button>
-    </div>
-  );
-}
-
 /**
  * Discover's own Marketplace tab — the one place, alongside a Space's own
  * Marketplace tab, where product listings are actually browsable rather
@@ -322,25 +238,25 @@ function MarketplaceTab({ query }: { query: string }) {
 }
 
 /**
- * Corners tab — every Corner across every Space, flat (not grouped by
- * Space), photo + name per tile, same discoverability rule Space pages
- * already use (isDiscoverable: curated corners always show; tagged-into-
- * existence corners need at least one public Moment).
+ * Corners tab — every Corner across every (internal) Category, flat, photo +
+ * name per tile. Discover's own rule: no empty Corner is ever shown, curated
+ * or not (isBrowsableOnDiscover) — a threshold of recent Moments or an
+ * active Space, never a bypass for editorial signage. Ordered by 30-day
+ * activity, never by follower/member counts. Category is internal-only now,
+ * so nothing here names one — just the Corner.
  */
 function AllCornersBrowser({ query }: { query: string }) {
-  const { cornersFor } = useCorners();
+  const { cornersFor, cornerThreshold } = useCorners();
   useCategories();
   const q = query.trim().toLowerCase();
 
-  const allCorners = hobbies.filter((h) => !h.hidden).flatMap((hobby) =>
-    cornersFor(hobby.slug)
-      .filter(isDiscoverable)
-      .map((c) => ({ ...c, spaceSlug: hobby.slug, spaceName: hobby.shortName })),
-  );
+  const allCorners = hobbies
+    .filter((h) => !h.hidden)
+    .flatMap((hobby) => cornersFor(hobby.slug).map((c) => ({ ...c, spaceSlug: hobby.slug })));
 
-  const matching = q
-    ? allCorners.filter((c) => c.name.toLowerCase().includes(q))
-    : allCorners;
+  const matching = (q ? allCorners.filter((c) => c.name.toLowerCase().includes(q)) : allCorners)
+    .filter((c) => isBrowsableOnDiscover(c, cornerThreshold))
+    .sort((a, b) => b.momentCount30d - a.momentCount30d);
 
   if (matching.length === 0) {
     return (
@@ -351,7 +267,7 @@ function AllCornersBrowser({ query }: { query: string }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <div className="mb-14 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {matching.map((c) => (
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
@@ -367,7 +283,6 @@ function AllCornersBrowser({ query }: { query: string }) {
           </div>
           <div className="px-3 py-2.5">
             <span className="block text-sm leading-tight text-foreground">{c.name}</span>
-            <span className="block text-xs text-muted-foreground">{c.spaceName}</span>
           </div>
         </Link>
       ))}
@@ -381,7 +296,7 @@ export function Discover() {
   // Subscribing re-renders this page when admin Space changes load.
   const { spaceRows } = useCategories();
   const social = useSocial();
-  const { cornersFor } = useCorners();
+  const { cornersFor, cornerThreshold } = useCorners();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("about") ?? "");
   // Opening a Featured Moment is how you react to it or leave a thought —
@@ -397,13 +312,13 @@ export function Discover() {
 
   const tab: DiscoverTab =
     (searchParams.get("tab") as DiscoverTab | null) &&
-    DISCOVER_TABS.some((t) => t.id === searchParams.get("tab"))
+    VISIBLE_DISCOVER_TABS.some((t) => t.id === searchParams.get("tab"))
       ? (searchParams.get("tab") as DiscoverTab)
-      : "spaces";
+      : "corners";
 
   function setTab(next: DiscoverTab) {
     const params = new URLSearchParams(searchParams);
-    if (next === "spaces") params.delete("tab");
+    if (next === "corners") params.delete("tab");
     else params.set("tab", next);
     setSearchParams(params, { replace: true });
   }
@@ -411,13 +326,10 @@ export function Discover() {
   const [feedTab, setFeedTab] = useState<FeedTab>("forYou");
   const [chip, setChip] = useState("all");
   const [shown, setShown] = useState(PAGE_SIZE);
-  // Corners are scoped to one Space (context.CornersContext's cornersFor
-  // takes a single spaceSlug), so a Corner filter only means something once
-  // a Space is chosen — hence the two live together, and picking a new
-  // Space (or clearing it) always clears whatever Corner was chosen inside
-  // the last one.
-  const [spaceFilter, setSpaceFilter] = useState("");
-  const [cornerFilter, setCornerFilter] = useState("");
+  // Flat now, not nested under a Space filter — Corners are the top-level
+  // browse/filter unit (spec change: "Corners carry discovery"). Synced to
+  // ?corner= so a filtered view is shareable, same as ?tab=.
+  const [cornerFilter, setCornerFilter] = useState(searchParams.get("corner") ?? "");
   const [mediaFilter, setMediaFilter] = useState<MediaFilter>("all");
 
   const q = query.trim().toLowerCase();
@@ -438,23 +350,32 @@ export function Discover() {
     [publicFeed, social.followedHobbies],
   );
 
+  // Category is internal-only now (never shown), but its name/keywords
+  // still feed search matching — see spaceScoped's own text match below.
   const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), [spaceRows]);
 
-  // The search box promises hobbies and spaces, not just post captions, so a
-  // Space's own name and tagline count as a match too — and so does any of
-  // its Corners (curated or tagged-into-existence): "pottery" is a Corner
-  // inside Crafts & Making, not a Space name on its own, and searching it
-  // used to turn up nothing here at all.
-  const filteredHobbies = useMemo(() => {
-    const visible = hobbies.filter((h) => !h.hidden);
-    if (!q) return visible;
-    return visible.filter((h) => {
-      const cornerNames = cornersFor(h.slug)
-        .filter(isDiscoverable)
-        .map((c) => c.name);
-      return hobbyMatchesQuery(h, cornerNames, q);
-    });
-  }, [q, cornersFor, spaceRows]);
+  // Every Corner across every (internal) Category, flat — Corners are the
+  // one browse/filter unit Discover shows now. Query-matched by name, same
+  // promise the search box always made ("pottery" should find Pottery).
+  const allCorners = useMemo(
+    () => hobbies.filter((h) => !h.hidden).flatMap((h) => cornersFor(h.slug)),
+    [cornersFor, spaceRows],
+  );
+  const matchingCorners = useMemo(() => {
+    if (!q) return allCorners;
+    return allCorners.filter((c) => c.name.toLowerCase().includes(q));
+  }, [allCorners, q]);
+  // What Discover actually shows: no empty Corner, curated or not — at
+  // least `cornerThreshold` Moments in the last 30 days, or an active
+  // Space. Ordered by that same 30-day activity, never by follower/member
+  // counts (per this rework's own instruction).
+  const browsableCorners = useMemo(
+    () =>
+      matchingCorners
+        .filter((c) => isBrowsableOnDiscover(c, cornerThreshold))
+        .sort((a, b) => b.momentCount30d - a.momentCount30d),
+    [matchingCorners, cornerThreshold],
+  );
 
   const feedBase = useMemo(() => {
     if (feedTab === "recent") return [...publicFeed].sort((a, b) => b.createdAt - a.createdAt);
@@ -470,11 +391,10 @@ export function Discover() {
   // Space-scoped, but not yet narrowed by Corner or media type — this is
   // what the Corner filter row's own live counts are measured against, so
   // picking a Corner doesn't make every other Corner's count collapse to 0.
-  const spaceScoped = useMemo(() => {
+  const chipScoped = useMemo(() => {
     let list = feedBase;
     if (chip === "new") list = list.filter((p) => Date.now() - p.createdAt < DAY);
     else if (chip === "progress") list = list.filter((p) => inProgressIds.has(p.id));
-    if (spaceFilter) list = list.filter((p) => p.hobbySlug === spaceFilter);
 
     if (q) {
       list = list.filter((p) => {
@@ -489,21 +409,24 @@ export function Discover() {
       });
     }
     return list;
-  }, [feedBase, chip, spaceFilter, q, inProgressIds, hobbyBySlug]);
+  }, [feedBase, chip, q, inProgressIds, hobbyBySlug]);
 
+  // Live counts for the flat Corner-filter row below, measured against the
+  // chip/query-scoped feed so picking a Corner doesn't collapse every
+  // other Corner's count to 0.
   const cornerCounts = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const p of spaceScoped) {
+    for (const p of chipScoped) {
       const slug = postCorner(p);
       if (!slug) continue;
       counts.set(slug, (counts.get(slug) ?? 0) + 1);
     }
     return counts;
-  }, [spaceScoped]);
+  }, [chipScoped]);
 
   const scoped = useMemo(
-    () => (cornerFilter ? spaceScoped.filter((p) => postCorner(p) === cornerFilter) : spaceScoped),
-    [spaceScoped, cornerFilter],
+    () => (cornerFilter ? chipScoped.filter((p) => postCorner(p) === cornerFilter) : chipScoped),
+    [chipScoped, cornerFilter],
   );
 
   const mediaCounts = useMemo(
@@ -521,23 +444,14 @@ export function Discover() {
     [scoped, mediaFilter],
   );
 
-  // A Space's Corners (context.CornersContext), for the filter row below —
-  // the exact same source /space/:slug's own "Follow a Corner" grid reads
-  // (see CategoryFeed.tsx), not a second copy of Corner data.
-  const spaceCorners = useMemo(
-    () => (spaceFilter ? cornersFor(spaceFilter).filter(isDiscoverable) : []),
-    [spaceFilter, cornersFor],
-  );
-
-  function selectSpace(slug: string) {
-    setSpaceFilter((prev) => (prev === slug ? "" : slug));
-    setCornerFilter("");
-    setShown(PAGE_SIZE);
-  }
-
   function selectCorner(slug: string) {
-    setCornerFilter((prev) => (prev === slug ? "" : slug));
+    const next = cornerFilter === slug ? "" : slug;
+    setCornerFilter(next);
     setShown(PAGE_SIZE);
+    const params = new URLSearchParams(searchParams);
+    if (next) params.set("corner", next);
+    else params.delete("corner");
+    setSearchParams(params, { replace: true });
   }
 
   const visible = filtered.slice(0, shown);
@@ -583,7 +497,7 @@ export function Discover() {
               second, layout-shifting row. */}
           <div className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
             <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
-              {DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
+              {VISIBLE_DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
                 const active = tab === id;
                 return (
                   <button
@@ -602,49 +516,12 @@ export function Discover() {
             </div>
           </div>
 
-          {tab === "circles" && <CirclesBrowser query={query} />}
           {tab === "people" && <PeopleBrowser query={query} />}
-          {tab === "corners" && <AllCornersBrowser query={query} />}
           {tab === "marketplace" && <MarketplaceTab query={query} />}
 
-          {tab === "spaces" && (
+          {tab === "corners" && (
             <>
-              {/* Explore Spaces — the real, built-out Spaces (data/hobbies.ts,
-                  the same list /space/:slug resolves against), not the wider
-                  category taxonomy. CategoriesContext's `categories` can grow
-                  with admin-approved suggestions that don't have a Space built
-                  for them yet; showing those here as clickable Spaces would be
-                  promising a place that isn't actually there. Suggesting a new
-                  one is still offered, honestly, as a suggestion. */}
-              <section className="mb-14">
-                <div className="mb-5 flex items-end justify-between gap-4">
-                  <div>
-                    <div className="ns-section-kicker mb-2">CHOOSE YOUR NEXT CORNER</div>
-                    <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Explore Spaces</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {q ? `Spaces matching "${query}".` : "Browse all hobby spaces."}
-                    </p>
-                  </div>
-                </div>
-                {q && filteredHobbies.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
-                    No spaces match that yet.
-                  </div>
-                ) : (
-                  <SpacesRow>
-                    {!q && <SpaceTile to="/discover" label="All Spaces" icon={LayoutGrid} />}
-                    {filteredHobbies.map((hobby) => (
-                      <SpaceTile
-                        key={hobby.slug}
-                        to={`/space/${hobby.slug}`}
-                        label={hobby.shortName}
-                        icon={categoryIcon(hobby.slug)}
-                        hobbySlug={hobby.slug}
-                      />
-                    ))}
-                  </SpacesRow>
-                )}
-              </section>
+              <AllCornersBrowser query={query} />
 
               {/* Featured Moments */}
               {featured.length > 0 && (
@@ -743,41 +620,19 @@ export function Discover() {
                 })}
               </ul>
 
-              {/* Space filter — same coral-deep pill language as the chips
-                  above, scoped to Explore Spaces' own Space list. Picking one
-                  narrows the feed to that Space and, below, opens its own
-                  Corner row — the same "Follow a Corner" data /space/:slug
-                  shows, filtered to this one Space, since a Corner never
-                  means anything across more than one Space at once. */}
-              <ul className="mb-3 flex flex-wrap gap-2">
-                {filteredHobbies.map((hobby) => {
-                  const active = spaceFilter === hobby.slug;
-                  return (
-                    <li key={hobby.slug}>
-                      <button
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => selectSpace(hobby.slug)}
-                        className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                          active
-                            ? "border-transparent text-white [background-color:var(--coral-deep)]"
-                            : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
-                        }`}
-                      >
-                        {hobby.shortName}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {spaceFilter && spaceCorners.length > 0 && (
-                <ul className="mb-4 flex flex-wrap items-center gap-5 pl-4">
-                  {spaceCorners.map((c) => {
+              {/* Corner filter — flat now, not a Space-then-Corner drill-down:
+                  Corners are Discover's one browse/filter unit (spec change,
+                  "Corners carry discovery"). Same no-empty-Corner set
+                  browsableCorners already filters for the grid above,
+                  ordered by 30-day activity — never by follower/member
+                  counts. */}
+              {browsableCorners.length > 0 && (
+                <ul className="mb-4 flex flex-wrap items-center gap-5">
+                  {browsableCorners.map((c) => {
                     const active = cornerFilter === c.slug;
                     const count = cornerCounts.get(c.slug) ?? 0;
                     return (
-                      <li key={c.slug}>
+                      <li key={`${c.spaceSlug}-${c.slug}`}>
                         <button
                           type="button"
                           aria-pressed={active}
@@ -853,7 +708,7 @@ export function Discover() {
               ) : visible.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
                   {feedTab === "following"
-                    ? "Nothing from hobbies you follow yet. Follow a Space from Explore Spaces above to fill this in."
+                    ? "Nothing from your Interests yet. Tag a Moment with a Corner to start building your list."
                     : "Nothing matches that yet. Try a broader word or a different filter."}
                 </div>
               ) : (

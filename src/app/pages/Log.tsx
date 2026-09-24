@@ -22,7 +22,7 @@ import {
 import { hobbies, subHobbyLabel, findSpaceForInterest, defaultSpaceSlug } from "../data/hobbies";
 import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
-import { Visibility } from "../data/posts";
+import { Visibility, postCorner } from "../data/posts";
 import { classifyMomentType } from "../lib/momentType";
 import { convertHeicFiles, convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { circlesByHobby } from "../data/circles";
@@ -225,7 +225,7 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
 
 export function Log() {
   const [searchParams] = useSearchParams();
-  const { addPost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
+  const { addPost, myPosts, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const { defaultVisibility, defaultVisibilityLoaded } = useSettings();
   const rewards = useRewards();
@@ -280,9 +280,19 @@ export function Log() {
   const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
   // Independent of subHobby — a Moment can be tagged Woodwork (subHobby,
   // still set above via TagsField's Corner-name matching) and filed under
-  // the Gift-making Corner (this) at once. Never derived from subHobby;
-  // left "" means the composer simply didn't set one.
-  const [corner, setCorner] = useState<string>("");
+  // the Gift-making Corner (this) at once.
+  //
+  // Required now (spec change: "Corners carry discovery" — a Moment always
+  // needs one), but with a smart default so picking one is usually zero
+  // taps: inside a Pursuit, its own Corner; otherwise whichever Corner this
+  // person's most recent Moment used. Either way it's just a starting
+  // point — CornerTagField below still lets them change it. Existing
+  // Moments are never retroactively tagged; this only ever seeds a new one.
+  const [corner, setCorner] = useState<string>(() => {
+    if (initialPursuit?.subHobby) return initialPursuit.subHobby;
+    const lastTagged = [...myPosts].sort((a, b) => b.createdAt - a.createdAt).find((p) => postCorner(p));
+    return lastTagged ? (postCorner(lastTagged) ?? "") : "";
+  });
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
   // The type actually sent to addPost is computed at publish time from
@@ -776,6 +786,10 @@ export function Log() {
     if (saving) return;
     if (audience === "private") {
       await saveAsPrivateLog();
+      return;
+    }
+    if (!corner) {
+      setError("Pick a Corner for this Moment.");
       return;
     }
     setSaving(true);
@@ -1373,15 +1387,17 @@ export function Log() {
               can be tagged Woodwork (whichever tag above matched a Corner
               name, setting subHobby) and filed under the Gift-making Corner
               here at the same time — one is what it's made of, this is
-              which Corner it's filed under for Discover/Space browsing.
-              Optional either way; leaving it blank just files nothing. */}
+              which Corner it's filed under for Discover browsing.
+              Required now (spec change: "Corners carry discovery"), but
+              pre-filled above (Pursuit's Corner, or your last one) so
+              picking one is usually zero taps — see the corner state's own
+              comment. Category never appears in this copy: it's internal
+              plumbing now, derived from whichever Corner is picked. */}
           <div>
             <h2 className="mb-1 text-sm">
               <label htmlFor="corner">Which Corner?</label>
             </h2>
-            <p className="mb-2 text-xs text-muted-foreground">
-              Where this shows up when someone browses {hobbies.find((h) => h.slug === hobbySlug)?.shortName ?? "this Space"} by Corner.
-            </p>
+            <p className="mb-2 text-xs text-muted-foreground">Where this shows up when someone browses by Corner.</p>
             <CornerTagField spaceSlug={hobbySlug} value={corner} onChange={(slug) => setCorner(slug)} />
           </div>
 
