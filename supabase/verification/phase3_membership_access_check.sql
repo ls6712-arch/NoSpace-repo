@@ -15,6 +15,19 @@
 -- project's auth.users needs a column this script doesn't set), that
 -- error surfaces exactly the same way, in the same place.
 --
+-- Checks 13-18 and 27 attempt a direct write that should be blocked. Each
+-- is its own begin...exception...end sub-block, so one failing attempt
+-- can't abort the rest, and each classifies what it caught rather than
+-- treating any error as a pass: PASS only for insufficient_privilege
+-- (SQLSTATE 42501, an RLS policy blocking the write) or raise_exception
+-- (P0001, one of our own RPCs' raised errors — not reachable from these
+-- particular raw-statement checks today, but handled the same way for one
+-- consistent rule) — or, for an UPDATE/DELETE, affecting 0 rows with no
+-- error at all, which is the normal outcome when RLS's USING clause
+-- excludes every row rather than raising. Anything else shows up in the
+-- results as 'N ERROR <sqlstate>: <message>', not PASS — a broken fixture
+-- or an unrelated bug must never read as a security win.
+--
 -- Fixed ids throughout, so the whole script can reference them as literals
 -- with no need to look anything up mid-script:
 --   host                          00000000-0000-4000-8000-000000000001
@@ -159,7 +172,12 @@ begin
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
 
   -- 13. Pending member tries to self-approve via a direct UPDATE — must
-  -- affect 0 rows, or error; either counts as PASS.
+  -- affect 0 rows, or fail with an RLS/permission error, or fail with one
+  -- of our own RPC's raised exceptions (not applicable here since this is
+  -- a raw statement, but handled the same way as every other attempt
+  -- below for one consistent rule). Any OTHER error (a broken fixture, a
+  -- typo, a connection hiccup) is recorded as an ERROR, not a silent PASS
+  -- — a real bug here must never masquerade as a security win.
   perform set_config('role', 'authenticated', true);
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000000003"}', true);
   v_i := v_i + 1;
@@ -168,8 +186,13 @@ begin
     where space_id = '00000000-0000-4000-8000-0000000000a1' and user_id = '00000000-0000-4000-8000-000000000003';
     get diagnostics v_n = row_count;
     results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
-  exception when others then
-    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when insufficient_privilege then
+      results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
 
   -- 14-15. Banned member tries delete-and-rejoin — both must fail.
@@ -181,16 +204,26 @@ begin
     where space_id = '00000000-0000-4000-8000-0000000000a1' and user_id = '00000000-0000-4000-8000-000000000004';
     get diagnostics v_n = row_count;
     results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
-  exception when others then
-    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when insufficient_privilege then
+      results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
   v_i := v_i + 1;
   begin
     insert into public.space_members (space_id, user_id, role, status)
     values ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-000000000004', 'member', 'active');
     results := array_append(results, format('%s FAIL', v_i));
-  exception when others then
-    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when insufficient_privilege then
+      results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
 
   -- 16-17. Non-member tries to INSERT themselves as active, then as host —
@@ -202,16 +235,26 @@ begin
     insert into public.space_members (space_id, user_id, role, status)
     values ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-000000000006', 'member', 'active');
     results := array_append(results, format('%s FAIL', v_i));
-  exception when others then
-    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when insufficient_privilege then
+      results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
   v_i := v_i + 1;
   begin
     insert into public.space_members (space_id, user_id, role, status)
     values ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-000000000006', 'host', 'active');
     results := array_append(results, format('%s FAIL', v_i));
-  exception when others then
-    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when insufficient_privilege then
+      results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
 
   -- 18. Non-member tries to link their own Moment into the Closed Space —
@@ -221,8 +264,13 @@ begin
     insert into public.space_moments (space_id, post_id)
     values ('00000000-0000-4000-8000-0000000000a1', 900000002);
     results := array_append(results, format('%s FAIL', v_i));
-  exception when others then
-    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when insufficient_privilege then
+      results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
 
   -- 19-20. Open Space (B): non-member CAN read Moments (not over-
@@ -275,8 +323,13 @@ begin
     where space_id = '00000000-0000-4000-8000-0000000000a1' and post_id = 900000001;
     get diagnostics v_n = row_count;
     results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
-  exception when others then
-    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when insufficient_privilege then
+      results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
 
   -- ───────────────────────────────────────────────────────────────────────
