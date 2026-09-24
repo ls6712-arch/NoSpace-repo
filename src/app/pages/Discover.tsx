@@ -18,7 +18,7 @@ import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
-import { useCorners, isBrowsableOnDiscover } from "../context/CornersContext";
+import { useCorners, isBrowsableOnDiscover, cornerFollowKey } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
 import { deriveProjects } from "../lib/journal";
 import { MomentCard } from "../components/MomentCard";
@@ -365,16 +365,33 @@ export function Discover() {
     if (!q) return allCorners;
     return allCorners.filter((c) => c.name.toLowerCase().includes(q));
   }, [allCorners, q]);
+  // Private Interests (hobby_follows, Corner-level — see CornersContext's
+  // cornerFollowKey) get first billing here, the one place this rework
+  // wires them into anything: your own Interest Corners that clear the
+  // same Discover threshold as everyone else (no exemption — an Interest
+  // nobody's posted in lately still doesn't show), then everything else.
+  // No other ranking changes; this is deliberately the only place Interests
+  // touch Discover right now.
+  const myInterestCorners = useMemo(
+    () => new Set(social.followedHobbies.filter((k) => k.includes(":") && !k.startsWith("space:"))),
+    [social.followedHobbies],
+  );
+
   // What Discover actually shows: no empty Corner, curated or not — at
   // least `cornerThreshold` Moments in the last 30 days, or an active
-  // Space. Ordered by that same 30-day activity, never by follower/member
-  // counts (per this rework's own instruction).
+  // Space. Ordered by that same 30-day activity within each group, never
+  // by follower/member counts (per this rework's own instruction).
   const browsableCorners = useMemo(
     () =>
       matchingCorners
         .filter((c) => isBrowsableOnDiscover(c, cornerThreshold))
-        .sort((a, b) => b.momentCount30d - a.momentCount30d),
-    [matchingCorners, cornerThreshold],
+        .sort((a, b) => {
+          const aMine = myInterestCorners.has(cornerFollowKey(a.spaceSlug, a.slug));
+          const bMine = myInterestCorners.has(cornerFollowKey(b.spaceSlug, b.slug));
+          if (aMine !== bMine) return aMine ? -1 : 1;
+          return b.momentCount30d - a.momentCount30d;
+        }),
+    [matchingCorners, cornerThreshold, myInterestCorners],
   );
 
   const feedBase = useMemo(() => {

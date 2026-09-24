@@ -1,11 +1,11 @@
 -- Sushii: Spaces Rework Phase 2 — before/after verification.
 --
 -- Not a migration — nothing here alters the schema. Run the BEFORE block,
--- run the seven Phase 2 migrations in order (20260924090000_export,
+-- run the eight Phase 2 migrations in order (20260924090000_export,
 -- 20260924095000_cleanup, 20260924097000_categories,
 -- 20260924098000_app_config, 20260924099000_corners,
--- 20260924100000_visibility, 20260924110000_schema), then run the AFTER
--- block and diff the two.
+-- 20260924099500_follow_migration, 20260924100000_visibility,
+-- 20260924110000_schema), then run the AFTER block and diff the two.
 --
 -- The two numbers that must be identical before and after are
 -- total_moments and total_pursuits — nothing in this phase is supposed to
@@ -30,13 +30,13 @@
 --      POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15`) and restore:
 --      `psql postgresql://postgres:postgres@localhost:5432/postgres < sushii_snapshot.sql`
 --   3. Run the BEFORE block below against that local database.
---   4. Run the seven Phase 2 migrations, in order, against it.
+--   4. Run the eight Phase 2 migrations, in order, against it.
 --   5. Run the AFTER block; diff against BEFORE.
 --   6. Run the rollbacks in REVERSE order — rollback_...110000_schema,
---      rollback_...100000_visibility, rollback_...099000_corners,
---      rollback_...098000_app_config, rollback_...097000_categories,
---      rollback_...095000_cleanup, rollback_...090000_export — then re-run
---      the BEFORE block one more time and confirm it matches the very
+--      rollback_...100000_visibility, rollback_...099500_follow_migration,
+--      rollback_...099000_corners, rollback_...098000_app_config,
+--      rollback_...097000_categories, rollback_...095000_cleanup,
+--      rollback_...090000_export — then re-run the BEFORE block one more time and confirm it matches the very
 --      first BEFORE output exactly (this is what actually proves the
 --      rollbacks are real, not just that they run without erroring).
 --   7. Discard the local database. Nothing here ever touches production.
@@ -74,6 +74,18 @@ select
 from public.posts where circle_id is not null;
 select count(*) as old_style_spaces from public.spaces;
 select count(*) as old_style_space_members from public.space_members;
+
+-- Corner-level Interests still on the bare-slug key — 20260924099500
+-- converts the unambiguous ones and reports the rest (ambiguous/no-match)
+-- in its own output when you run it. Save these two numbers.
+select count(*) as bare_slug_candidates
+from public.hobby_follows where hobby_key not like '%:%';
+select count(*) as bare_slug_ambiguous_or_unmatched
+from public.hobby_follows hf
+where hf.hobby_key not like '%:%'
+  and (
+    (select count(distinct c.space_slug) from public.corners c where c.slug = hf.hobby_key) <> 1
+  );
 
 -- Categories: should show 16 rows today (15 built-ins, all active=false,
 -- plus the-lego-makers active=true), and 2 posts tagged the-lego-makers.
@@ -137,6 +149,15 @@ where table_schema = 'public' and table_name in ('spaces', 'space_members');
 -- — just cross-check the new tables' column types (uuid, not bigint) via:
 -- select column_name, data_type from information_schema.columns where table_name = 'spaces' and column_name = 'id';
 
+-- Corner-level Interests: remaining bare-slug rows should be exactly the
+-- ambiguous/no-match ones 20260924099500 reported when you ran it — i.e.
+-- this count should equal the BEFORE block's bare_slug_ambiguous_or_
+-- unmatched, not bare_slug_candidates. If it's higher than that, something
+-- besides the migration wrote a new bare-slug follow in between (or the
+-- migration didn't run) — worth checking before trusting this is done.
+select count(*) as bare_slug_remaining
+from public.hobby_follows where hobby_key not like '%:%';
+
 -- Categories: should be 15 rows now (the-lego-makers gone), all active=true:
 select slug, active from public.categories order by slug;
 -- expect 15 rows, active = true for every one
@@ -173,7 +194,12 @@ select 'old_space_members', count(*) from archive.old_space_members_20260924
 union all
 select 'circle_linked_posts', count(*) from archive.circle_linked_posts_20260924
 union all
-select 'categories', count(*) from archive.categories_20260924;
+select 'categories', count(*) from archive.categories_20260924
+union all
+select 'hobby_follows_bare_slug', count(*) from archive.hobby_follows_bare_slug_20260924;
+-- hobby_follows_bare_slug should equal the BEFORE block's
+-- bare_slug_candidates — every bare-slug row that existed pre-migration,
+-- converted or not, was backed up before anything touched it.
 -- categories should be 16 — the full pre-migration table, including
 -- the-lego-makers
 
