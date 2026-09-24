@@ -14,6 +14,7 @@ import { hobbies, titleCaseSlug } from "../data/hobbies";
 import { postCorner } from "../data/posts";
 import { bestMatch } from "../lib/tagMatching";
 import { guessSpace } from "../lib/pursuitProgress";
+import { isBlocklistedName } from "../lib/blocklist";
 
 /**
  * Corners, created by tagging rather than suggest-and-approve (sql/corners.sql):
@@ -77,6 +78,21 @@ export interface Corner {
  */
 export function isDiscoverable(c: Corner) {
   return !c.hidden && (c.isCurated || c.momentCount > 0);
+}
+
+/**
+ * hobby_follows.hobby_key for a Corner-level follow. corners.slug is only
+ * unique within one Category (sql/corners.sql: `unique (space_slug, slug)`
+ * — two different Categories can each have a Corner slugged "beginners"),
+ * so a bare slug is ambiguous there and can't be used as this key on its
+ * own. Composite, same "kind:value" shape social.sql's own whole-Category
+ * key already uses ("space:<slug>") — a Category slug is never literally
+ * "space", so the two forms never collide. Every writer and reader of a
+ * Corner-level follow (Onboarding's resolveInterest calls, BePart.tsx,
+ * admin_merge_corners) must go through this, not build the string by hand.
+ */
+export function cornerFollowKey(spaceSlug: string, slug: string): string {
+  return `${spaceSlug}:${slug}`;
 }
 
 /**
@@ -234,22 +250,6 @@ const DEFAULT_CORNER_THRESHOLD = 3;
 // check below still catches the obvious case before that table has ever
 // loaded, or if it's unreachable.
 const DEFAULT_BLOCKLIST = ["lego"];
-
-/** Same fold sql's is_blocklisted_name() uses: lowercase, strip everything
- * but letters/digits, then substring-match — so "LEGO Technic", "Legos"
- * and "lego-builds" are all caught by the term "lego". Client-side mirror
- * so Onboarding/the composer can show a friendly message before ever
- * attempting the write the database would reject anyway (defense in
- * depth, not the actual enforcement boundary — that's the CHECK
- * constraint, which is what actually stops a direct API call). */
-export function isBlocklistedName(candidate: string, blocklist: string[]): boolean {
-  const fold = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const c = fold(candidate);
-  return blocklist.some((term) => {
-    const t = fold(term);
-    return t.length > 0 && c.includes(t);
-  });
-}
 
 export function CornersProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();

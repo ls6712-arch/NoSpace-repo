@@ -4,6 +4,7 @@ import { BookOpen, Check, ChevronDown, ChevronRight, Hammer, Sprout, Users } fro
 import { intentsFor } from "../data/participation";
 import { subHobbyLabel, getHobby } from "../data/hobbies";
 import { useSocial } from "../context/SocialContext";
+import { cornerFollowKey } from "../context/CornersContext";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -126,7 +127,9 @@ export function BePart({
     }
   }, [open, initialPane]);
 
-  const hobbyKey = subSlug ?? `space:${hobbySlug}`;
+  // corners.slug is only unique within one Category (sql/corners.sql), so
+  // a bare subSlug is ambiguous on its own — see cornerFollowKey.
+  const hobbyKey = subSlug ? cornerFollowKey(hobbySlug, subSlug) : `space:${hobbySlug}`;
   const hobbyLabel = (
     (subSlug ? subHobbyLabel(subSlug) : undefined) ??
     getHobby(hobbySlug)?.shortName ??

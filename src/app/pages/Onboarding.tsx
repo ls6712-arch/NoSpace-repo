@@ -9,7 +9,7 @@ import { AvatarPicker } from "../components/AvatarPicker";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useContent } from "../context/ContentContext";
-import { useCorners } from "../context/CornersContext";
+import { useCorners, cornerFollowKey } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 
@@ -239,8 +239,9 @@ export function Onboarding() {
         // silently skip the follow. The tag itself still exists as
         // freeform text on whatever Moment it was attached to.
         if (!match || "blocked" in match) continue;
-        if (!social.isFollowingHobby(match.slug)) {
-          void social.toggleHobbyFollow(match.slug, match.name);
+        const key = cornerFollowKey(match.spaceSlug, match.slug);
+        if (!social.isFollowingHobby(key)) {
+          void social.toggleHobbyFollow(key, match.name);
         }
       }
       // Picked up by Root.tsx's guard and everywhere else that reads

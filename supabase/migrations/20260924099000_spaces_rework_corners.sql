@@ -180,17 +180,21 @@ begin
   get diagnostics n_spaces = row_count;
   delete from public.space_corners where corner_id = v_from.id;
 
-  -- Interests (hobby_follows) — a user might already follow both spellings;
-  -- keep one row per user.
+  -- Interests (hobby_follows) — a Corner-level key is "space_slug:slug"
+  -- (src/app/context/CornersContext.tsx's cornerFollowKey), not a bare
+  -- slug: corners.slug is only unique within one Category (the unique
+  -- constraint above is (space_slug, slug)), so a bare slug can't tell two
+  -- same-spelled Corners in different Categories apart. A user might
+  -- already follow both spellings; keep one row per user.
   update public.hobby_follows hf
-     set hobby_key = v_into.slug
-   where hf.hobby_key = v_from.slug
+     set hobby_key = v_into.space_slug || ':' || v_into.slug
+   where hf.hobby_key = v_from.space_slug || ':' || v_from.slug
      and not exists (
        select 1 from public.hobby_follows x
-       where x.user_id = hf.user_id and x.hobby_key = v_into.slug
+       where x.user_id = hf.user_id and x.hobby_key = v_into.space_slug || ':' || v_into.slug
      );
   get diagnostics n_interests = row_count;
-  delete from public.hobby_follows where hobby_key = v_from.slug;
+  delete from public.hobby_follows where hobby_key = v_from.space_slug || ':' || v_from.slug;
 
   delete from public.corners where id = v_from.id;
 

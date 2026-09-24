@@ -55,14 +55,20 @@ on conflict (key) do nothing;
 -- alone would already allow for any signed-in caller, but this keeps the
 -- check self-contained and independent of RLS on app_config ever changing.
 -- ─────────────────────────────────────────────────────────────────────────
--- Case-insensitive, substring, and punctuation/whitespace-insensitive:
--- normalizes both the candidate and each blocklist term down to bare
--- lowercase alphanumerics before matching, so "LEGO Technic", "Legos",
--- and "lego-builds" are all caught by the term "lego" — same normalize()
--- idea src/app/lib/tagMatching.ts already uses for dedupe, just case/
--- punctuation-folding here rather than also handling typos. Uses
--- position(), not LIKE, so a term containing a literal % or _ can never
--- be misread as a wildcard.
+-- Word-token match, not substring: candidate is split on anything that
+-- isn't a letter/digit into lowercase tokens, and a term matches only when
+-- some token equals it exactly (or its simple plural, term + "s") — not
+-- when the term merely appears inside a longer word. Substring matching
+-- (an earlier version of this function) false-positived on "leg of lamb"
+-- (-> "legoflamb"), "allegory", "legolas", and "bootleg orchestra" all
+-- containing "lego" as a run of letters; token matching passes all four
+-- while still catching "LEGO Technic" (token "lego") and "Legos" (token
+-- "legos", the plural form). Each blocklist term is itself folded the same
+-- way (lowercased, non-alphanumerics stripped) before comparing, so a term
+-- like "Lego" and a candidate token "lego" always compare equal regardless
+-- of source casing. A multi-word term (none exist in the seed list) would
+-- need to match a single token exactly, the same limitation as any
+-- word-token scheme — worth knowing before adding one.
 create or replace function public.is_blocklisted_name(candidate text)
 returns boolean
 language sql
@@ -74,12 +80,14 @@ as $$
     select 1
     from jsonb_array_elements_text(
       coalesce((select value from public.app_config where key = 'trademark_blocklist'), '[]'::jsonb)
-    ) as term
-    where length(regexp_replace(lower(term), '[^a-z0-9]', '', 'g')) > 0
-      and position(
-        regexp_replace(lower(term), '[^a-z0-9]', '', 'g')
-        in regexp_replace(lower(candidate), '[^a-z0-9]', '', 'g')
-      ) > 0
+    ) as term,
+    regexp_split_to_table(lower(candidate), '[^a-z0-9]+') as token
+    where token <> ''
+      and length(regexp_replace(lower(term), '[^a-z0-9]', '', 'g')) > 0
+      and (
+        token = regexp_replace(lower(term), '[^a-z0-9]', '', 'g')
+        or token = regexp_replace(lower(term), '[^a-z0-9]', '', 'g') || 's'
+      )
   );
 $$;
 revoke all on function public.is_blocklisted_name(text) from public;
@@ -93,4 +101,8 @@ grant execute on function public.is_blocklisted_name(text) to authenticated, ano
 --        public.is_blocklisted_name('LEGO Technic') as expect_true_too,
 --        public.is_blocklisted_name('Legos') as expect_true_also,
 --        public.is_blocklisted_name('lego-builds') as expect_true_again,
---        public.is_blocklisted_name('Pottery') as expect_false;
+--        public.is_blocklisted_name('Pottery') as expect_false,
+--        public.is_blocklisted_name('Leg of lamb') as expect_false_too,
+--        public.is_blocklisted_name('Allegory') as expect_false_also,
+--        public.is_blocklisted_name('Legolas') as expect_false_again,
+--        public.is_blocklisted_name('Bootleg Orchestra') as expect_false_again_too;
