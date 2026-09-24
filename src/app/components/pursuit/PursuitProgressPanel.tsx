@@ -9,6 +9,7 @@ import {
   PursuitInvite,
   answerInvite,
   fetchMyInvites,
+  fetchActiveInviteLink,
   fetchPursuitAsProject,
   getOrCreateInviteLink,
   inviteUrl,
@@ -52,6 +53,8 @@ export function PursuitProgressPanel({
   const members = usePursuitMembers(project, ownerFallback, membersVersion);
   if (!hasMeasure(project)) return null;
   const measure = project.measure;
+  const joinedMembers = members.filter((m) => m.status === "joined");
+  const pendingMembers = members.filter((m) => m.status === "invited");
   const mode = project.mode ?? "solo";
 
   const entriesOf = (m: PursuitMember) =>
@@ -96,8 +99,17 @@ export function PursuitProgressPanel({
     return (
       <section className="mb-6">
         <p className="mb-3 text-sm text-muted-foreground">Everyone has their own goal and journey.</p>
-        <div className="grid grid-cols-2 gap-4">
-          {members.map((m) => {
+        {/* Only people who've joined get a column. Pending invites used to
+            take one too, which pushed the second person who actually joined
+            onto a new row. */}
+        <div
+          className={
+            joinedMembers.length > 2
+              ? "-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 [&>*]:w-[44%] [&>*]:shrink-0 [&>*]:snap-start"
+              : "grid grid-cols-2 gap-4"
+          }
+        >
+          {joinedMembers.map((m) => {
             const mine = entriesOf(m);
             const s = summarize(measure, mine, m.role === "owner");
             const pieces = mine.filter((e) => e.image).slice(-3);
@@ -131,6 +143,11 @@ export function PursuitProgressPanel({
             );
           })}
         </div>
+        {pendingMembers.length > 0 && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Invited, not joined yet: {pendingMembers.map((m) => m.displayName).join(", ")}
+          </p>
+        )}
         {actions}
         <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} onInvited={() => setMembersVersion((v) => v + 1)} />
       </section>
@@ -308,6 +325,19 @@ export function InviteDialog({
   const [link, setLink] = useState<string | null>(null);
   const [linkState, setLinkState] = useState<"idle" | "making" | "copied" | "error">("idle");
 
+  // Show a link that's already on as soon as the dialog opens, with its
+  // Turn off option — not only after Copy is clicked again.
+  useEffect(() => {
+    if (!open) return;
+    setLinkState("idle");
+    setStatus(null);
+    let cancelled = false;
+    fetchActiveInviteLink(project.id).then((t) => !cancelled && setLink(t ? inviteUrl(t) : null));
+    return () => {
+      cancelled = true;
+    };
+  }, [open, project.id]);
+
   // Inviting anyone into a solo Pursuit makes it side by side.
   const ensureShared = () => {
     if ((project.mode ?? "solo") !== "solo") return;
@@ -376,6 +406,7 @@ export function InviteDialog({
           {link ? (
             <>
               <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-lg border border-border bg-card px-2 text-xs" />
+              <p className="mt-1.5 text-[11px] text-muted-foreground">This link is on. Anyone who has it can join.</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button variant="coral" size="sm" onClick={makeLink}>
                   <Copy className="size-3.5" /> {linkState === "copied" ? "Copied" : "Copy"}

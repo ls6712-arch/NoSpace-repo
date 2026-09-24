@@ -446,6 +446,23 @@ export function inviteUrl(token: string): string {
   return `${base}#/join/${token}`;
 }
 
+/** The Pursuit's active link, if one exists — without making a new one. */
+export async function fetchActiveInviteLink(pursuitId: string): Promise<string | null> {
+  if (!supabase) return null;
+  try {
+    const { data } = await supabase
+      .from("pursuit_invite_links")
+      .select("token")
+      .eq("pursuit_id", pursuitId)
+      .is("revoked_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    return data?.[0]?.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Reuses the Pursuit's active link if there is one, otherwise makes one. */
 export async function getOrCreateInviteLink(pursuitId: string, userId: string): Promise<{ token?: string; error?: string }> {
   if (!supabase) return { error: "Invite links need an account." };
