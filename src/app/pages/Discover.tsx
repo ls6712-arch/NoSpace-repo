@@ -21,7 +21,7 @@ import { useSocial } from "../context/SocialContext";
 import { useCorners, isBrowsableOnDiscover, cornerFollowKey } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
 import { deriveProjects } from "../lib/journal";
-import { MomentCard } from "../components/MomentCard";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
@@ -734,7 +734,7 @@ export function Discover() {
                     : "Nothing matches that yet. Try a broader word or a different filter."}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className={MOMENT_GRID}>
                   {visible.map((post) => (
                     <MomentCard
                       key={post.id}
