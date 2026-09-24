@@ -41,10 +41,22 @@ select a.* from archive.circle_linked_posts_20260924 a
 where not exists (select 1 from public.posts p where p.id = a.id);
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 2. sql/connections.sql's spaces/space_members/is_space_member, and the
---    messages columns/policies — these WERE schema-dropped, so recreate
---    them (copied from sql/connections.sql).
--- ─────────────────────────────────────────────────────────────────────────
+-- 2. sql/connections.sql's spaces/space_members, and the messages.space_id
+--    column — these WERE schema-dropped, so recreate them. NOT
+--    is_space_member(bigint, uuid) or any messages policy — live-database
+--    correction (found while actually running the forward migration,
+--    2026-09-24): neither ever existed in `public` to begin with
+--    (is_space_member(bigint, uuid) turned out to live in a `private`
+--    schema, untouched by the forward migration either way, and the live
+--    messages policies were never connections-based — still the original
+--    participations-based ones, never dropped), so there's nothing to
+--    restore for either. See the forward migration's own corrected notes.
+--
+--    The `spaces` columns below include cover_image_url, which
+--    sql/connections.sql's own CREATE TABLE doesn't mention — the live
+--    table had it anyway (found the same way, comparing against the real
+--    schema before writing this fix). Without it, restoring from the
+--    archive below would fail on a column-count mismatch.
 create table if not exists public.spaces (
   id bigint generated always as identity primary key,
   owner uuid not null references auth.users (id) on delete cascade,
@@ -53,7 +65,8 @@ create table if not exists public.spaces (
   hobby_slug text,
   interest text,
   visibility text not null default 'invite' check (visibility in ('invite', 'open')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  cover_image_url text
 );
 alter table public.spaces enable row level security;
 
@@ -139,28 +152,9 @@ create policy "you can leave, the owner can remove"
     or exists (select 1 from public.spaces s where s.id = space_id and s.owner = auth.uid())
   );
 
+-- messages.space_id only — no policy to restore here (see this file's
+-- section 2 header: the live messages policies were never touched by the
+-- forward migration in the first place, since they were never actually
+-- connections-based to begin with).
 alter table public.messages add column if not exists space_id bigint references public.spaces (id) on delete cascade;
 create index if not exists messages_space_idx on public.messages (space_id, created_at);
-
-drop policy if exists "you read messages meant for you" on public.messages;
-create policy "you read messages meant for you"
-  on public.messages for select
-  using (
-    (
-      to_user is not null
-      and (auth.uid() = from_user or auth.uid() = to_user)
-      and public.are_connected(from_user, to_user)
-    )
-    or (space_id is not null and public.is_space_member(space_id, auth.uid()))
-  );
-
-drop policy if exists "you write to connections and your spaces" on public.messages;
-create policy "you write to connections and your spaces"
-  on public.messages for insert to authenticated
-  with check (
-    auth.uid() = from_user
-    and (
-      (to_user is not null and public.are_connected(auth.uid(), to_user))
-      or (space_id is not null and public.is_space_member(space_id, auth.uid()))
-    )
-  );

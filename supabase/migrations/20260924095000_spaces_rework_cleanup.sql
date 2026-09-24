@@ -14,8 +14,14 @@
 --      `is_space_member(bigint, uuid)` — confirmed by grep unreachable
 --      from any current page (nothing in src/ references `.from('spaces')`,
 --      `.from('space_members')`, or that RPC). Safe to drop the tables,
---      function, and the messages.space_id column/policies built on top of
---      them entirely — no live code queries any of it.
+--      function (if it even exists in `public` — see the live-database
+--      correction in section 1 below; `drop function if exists` makes
+--      this harmless either way), and the messages.space_id column. No
+--      messages *policy* needs touching: confirmed against the live
+--      database that connections.sql's section 4 (connections-based
+--      messaging policies) was never actually applied here — the real,
+--      live messages policies are still participations-based and don't
+--      reference space_id at all. See that section's own note.
 --
 --   2. Circles (sql/circles.sql: `circles`, `circle_members`, and the
 --      Circle-thread columns sql/circle-threads.sql added to `posts`).
@@ -61,29 +67,30 @@
 --    schema-dropped outright.
 -- ─────────────────────────────────────────────────────────────────────────
 
--- Narrow the two messaging policies back to connections-only before the
--- column they reference is gone, so `messages` is never left without a
--- working SELECT/INSERT policy mid-migration.
-drop policy if exists "you read messages meant for you" on public.messages;
-create policy "you read messages meant for you"
-  on public.messages for select
-  using (
-    to_user is not null
-    and (auth.uid() = from_user or auth.uid() = to_user)
-    and public.are_connected(from_user, to_user)
-  );
-
-drop policy if exists "you write to connections and your spaces" on public.messages;
-create policy "you write to connections and your spaces"
-  on public.messages for insert to authenticated
-  with check (
-    auth.uid() = from_user
-    and to_user is not null
-    and public.are_connected(auth.uid(), to_user)
-  );
-
--- Drops messages_space_idx and the space_id -> spaces(id) FK along with the
--- column itself.
+-- Live-database correction (found while actually running this migration,
+-- 2026-09-24): this file originally rewrote two `messages` RLS policies
+-- here, on the assumption that connections.sql's section 4 (connections-
+-- based messaging, using to_user/from_user/are_connected) was the live
+-- policy set, and needed narrowing now that space_id's table is going
+-- away. That assumption was wrong. On this database, connections.sql was
+-- only ever partially applied: its columns exist (messages.to_user,
+-- from_user, space_id all present), and its are_connected(uuid, uuid)
+-- function exists too — but in a `private` schema, not `public`, so
+-- `public.are_connected(...)` genuinely doesn't exist. More importantly,
+-- the actual LIVE messages policies ("messages need an accepted
+-- participation" / "you can write in an accepted thread") were never
+-- replaced — they still gate on the older participations table
+-- (participation_id, kind in ('make_together','explore_together',
+-- 'direct_message'), status='accepted'), not on to_user/from_user/
+-- are_connected/space_id at all. Rewriting them here would have been
+-- solving a problem this database doesn't have, using a function in the
+-- wrong schema on top of that. Nothing needs to change about them: they
+-- don't reference space_id, so dropping that column below doesn't touch
+-- what they enforce.
+--
+-- Drops messages_space_idx and the space_id -> spaces(id) FK along with
+-- the column itself — still needed, so DROP TABLE public.spaces below
+-- doesn't fail on the FK. No live policy references this column.
 alter table public.messages drop column if exists space_id;
 
 drop policy if exists "you can leave, the owner can remove" on public.space_members;
