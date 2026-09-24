@@ -1,0 +1,307 @@
+import {
+  ArrowDown,
+  ArrowUpRight,
+  Camera,
+  ChevronRight,
+  Circle,
+  Compass,
+  Grid2X2,
+  Heart,
+  Menu,
+  MoveUpRight,
+  Plus,
+  Search,
+  Bell,
+  Sparkles,
+  UsersRound,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+
+const imagery = {
+  hero: "/manus-storage/sushii-multi-interest-hero_76ba0381.png",
+  identity: "/manus-storage/sushii-identity-brand_35962dc6.jpg",
+  ceramics: "/manus-storage/sushii-ceramics_0c673685.jpg",
+  garden: "/manus-storage/sushii-garden_91fc05a6.jpg",
+  reading: "/manus-storage/sushii-reading_4ff1bf6d.jpg",
+};
+
+const moments = [
+  { label: "A softer blue", type: "Studio notes", image: imagery.ceramics, tint: "orange" },
+  { label: "First tomatoes", type: "Garden", image: imagery.garden, tint: "green" },
+  { label: "Margin notes", type: "Reading", image: imagery.reading, tint: "plum" },
+];
+
+const showcaseMoments = [
+  { label: "A softer blue", type: "Making", image: imagery.ceramics, date: "2026-10-02", position: "one" },
+  { label: "First tomatoes", type: "Outdoors", image: imagery.garden, date: "2026-10-05", position: "two" },
+  { label: "Margin notes", type: "Reading", image: imagery.reading, date: "2026-10-08", position: "three" },
+  { label: "A quiet table", type: "Learning", image: imagery.identity, date: "2026-10-11", position: "four" },
+  { label: "A new direction", type: "Exploring", image: imagery.hero, date: "2026-10-14", position: "five" },
+];
+
+const latestShowcaseDate = showcaseMoments.reduce((latest, moment) => moment.date > latest ? moment.date : latest, showcaseMoments[0]?.date ?? "");
+const latestShowcaseMonth = latestShowcaseDate ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(new Date(`${latestShowcaseDate}T12:00:00`)) : "";
+const showcaseCount = showcaseMoments.filter((moment) => moment.date.startsWith(latestShowcaseDate.slice(0, 7))).length;
+
+function MiniAvatar({ name, color }: { name: string; color: string }) {
+  return <span className="mini-avatar" style={{ background: color }}>{name}</span>;
+}
+
+function ActionLink({ children, dark = false, href = "https://www.trynospace.com" }: { children: React.ReactNode; dark?: boolean; href?: string }) {
+  return (
+    <a className={`button-link ${dark ? "button-link-dark" : ""}`} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
+      <span>{children}</span><ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.8} />
+    </a>
+  );
+}
+
+function ProductTopbar({ active = "My Space" }: { active?: string }) {
+  return (
+    <div className="product-topbar">
+      <div className="product-mark"><span className="mark-dot" />Sushii</div>
+      <div className="product-tabs">
+        {['Discover', 'My Space', 'Circles'].map((tab) => <span className={tab === active ? "is-active" : ""} key={tab}>{tab}</span>)}
+      </div>
+      <div className="product-avatar">MA</div>
+    </div>
+  );
+}
+
+function SpaceScreen({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`product-frame space-screen ${compact ? "is-compact" : ""}`}>
+      <ProductTopbar />
+      <div className="space-body">
+        <aside className="product-rail" aria-hidden="true">
+          <div className="rail-icon active"><Grid2X2 size={15} /></div>
+          <div className="rail-icon"><Compass size={15} /></div>
+          <div className="rail-icon"><UsersRound size={15} /></div>
+          <div className="rail-rule" />
+          <div className="rail-icon"><Plus size={15} /></div>
+        </aside>
+        <main className="space-main">
+          <div className="space-heading">
+            <div>
+              <p className="product-kicker">MY SPACE</p>
+              <h3>Marin’s Space</h3>
+              <p className="space-subline">Little records of a life in progress.</p>
+            </div>
+            <button className="moment-add" type="button"><Plus size={14} /> Add a moment</button>
+          </div>
+          <div className="space-feature">
+            <div className="feature-copy">
+              <span className="feature-date">SEPTEMBER · 12 MOMENTS</span>
+              <h4>Making room<br />for the good stuff.</h4>
+              <span className="feature-tag">{compact ? "Ceramics" : "This week"}</span>
+            </div>
+            <img src={imagery.ceramics} alt="Pottery moment" />
+          </div>
+          <div className="moment-intro"><span>RECENT MOMENTS</span><button type="button">View all <ChevronRight size={13} /></button></div>
+          <div className="moment-row">
+            {moments.map((moment) => (
+              <article className={`moment-card ${moment.tint}`} key={moment.label}>
+                <img src={moment.image} alt="" />
+                <div><small>{moment.type}</small><strong>{moment.label}</strong></div>
+              </article>
+            ))}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function MomentScreen() {
+  return (
+    <div className="product-frame moment-screen">
+      <ProductTopbar active="My Space" />
+      <div className="moment-layout">
+        <div className="moment-page-copy">
+          <button className="back-link" type="button">← My Space</button>
+          <p className="product-kicker">MOMENT · SEPTEMBER 14</p>
+          <h3>First tomatoes</h3>
+          <p>They finally went red overnight. Ate two straight from the garden, still warm from the sun.</p>
+          <div className="tag-list"><span>Garden</span><span>Small win</span></div>
+          <div className="moment-byline"><MiniAvatar name="M" color="#d98661" /><span>Added to Marin’s Space</span></div>
+        </div>
+        <img className="moment-photo" src={imagery.garden} alt="Garden harvest" />
+      </div>
+      <div className="moment-footer">
+        <span><Heart size={14} /> A thing worth keeping</span>
+        <span>11:42 AM</span>
+      </div>
+    </div>
+  );
+}
+
+function PursuitScreen() {
+  const steps = [
+    ["1", "Begin", "Make a place for the thing you want to do."],
+    ["2", "Keep going", "Add a moment every time you return to it."],
+    ["3", "Look back", "See what the practice became."],
+  ];
+  return (
+    <div className="product-frame pursuit-screen">
+      <ProductTopbar active="My Space" />
+      <div className="pursuit-layout">
+        <div className="pursuit-intro">
+          <p className="product-kicker">PURSUIT</p>
+          <h3>Throwing<br />a better cup.</h3>
+          <div className="pursuit-progress"><span /><span /><span className="waiting" /><span className="waiting" /></div>
+          <p>7 sessions · Started in May</p>
+          <button type="button" className="quiet-button"><Plus size={14} /> Add progress</button>
+        </div>
+        <div className="pursuit-story">
+          {steps.map(([number, title, copy], index) => (
+            <div className={`story-step ${index === 2 ? "faded" : ""}`} key={number}>
+              <span className="story-number">{number}</span>
+              <div><strong>{title}</strong><p>{copy}</p></div>
+              {index === 1 && <img src={imagery.ceramics} alt="" />}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CirclesScreen() {
+  return (
+    <div className="product-frame circles-screen">
+      <ProductTopbar active="Circles" />
+      <div className="circle-header">
+        <div><p className="product-kicker">CIRCLES</p><h3>People making<br />things slowly.</h3></div>
+        <button type="button" className="quiet-button"><Plus size={14} /> Find a circle</button>
+      </div>
+      <div className="circle-content">
+        <article className="circle-card circle-card-feature">
+          <div className="circle-card-art"><img src={imagery.reading} alt="" /></div>
+          <div className="circle-card-info"><span className="circle-count">42 people</span><h4>Books in the margins</h4><p>For the passages that followed you around all day.</p><div className="avatar-stack"><MiniAvatar name="A" color="#B58668" /><MiniAvatar name="L" color="#808B70" /><MiniAvatar name="P" color="#7B5766" /><span>+39</span></div></div>
+        </article>
+        <div className="circle-notes">
+          <div className="note-card"><MiniAvatar name="R" color="#B06D55" /><p>The book chose me in a thrift shop. The first page had a grocery list tucked inside.</p><small>Rae · 16m</small></div>
+          <div className="note-card peach"><MiniAvatar name="S" color="#567969" /><p>New to watercolors. The tiny orange is my eighth try.</p><small>Simon · 1h</small></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SocialProof() {
+  return (
+    <div className="proof-line">
+      <div className="proof-avatars"><MiniAvatar name="M" color="#D38C6B" /><MiniAvatar name="A" color="#7B8D6B" /><MiniAvatar name="R" color="#917184" /></div>
+      <span>For the many ways to be a person.</span>
+    </div>
+  );
+}
+
+export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const steps = Array.from(document.querySelectorAll<HTMLElement>(".workflow-step"));
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      steps.forEach((step) => step.classList.add("is-visible"));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18, rootMargin: "0px 0px -8% 0px" });
+    steps.forEach((step) => observer.observe(step));
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="site-shell">
+      <header className="site-nav">
+        <a className="brand" href="#top" aria-label="Sushii home"><span className="brand-orbit" />Sushii</a>
+        <nav className={menuOpen ? "mobile-open" : ""} aria-label="Primary navigation">
+          <a href="#discover" onClick={() => setMenuOpen(false)}>Discover</a>
+          <a href="#space" onClick={() => setMenuOpen(false)}>My Space</a>
+          <a href="#circles" onClick={() => setMenuOpen(false)}>Circles</a>
+        </nav>
+        <div className="nav-cta reference-nav-actions"><a className="start-log-link" href="#discover" onClick={() => setMenuOpen(false)}><Plus size={14} /> Start your log</a><label className="nav-search"><Search size={14} /><input aria-label="Search hobbies, people, or spaces" placeholder="Search hobbies, people, or spaces" /></label><button className="nav-icon-button" type="button" aria-label="Notifications"><Bell size={16} /></button><a className="login-link" href="https://www.trynospace.com" target="_blank" rel="noreferrer">Log in</a></div>
+        <button className="menu-toggle" type="button" aria-label="Toggle navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
+      </header>
+
+      <main id="top">
+        <section className="hero reference-hero" id="discover">
+          <div className="reference-hero-image"><img src={imagery.hero} alt="Different activities and interests coming together" /></div>
+          <div className="reference-hero-wash" aria-hidden="true" />
+          <div className="reference-hero-content">
+            <p className="eyebrow"><span /> A SPACE FOR MORE OF YOU</p>
+            <h1>Your interests are <em>part of</em> your story.</h1>
+            <p className="hero-copy">Keep track of what you are into, what you are learning, making, exploring, and doing.</p>
+            <div className="hero-actions"><ActionLink dark href="#moments">Start exploring</ActionLink><a href="#how-it-works" className="text-link">See how it works <ArrowDown size={15} /></a></div>
+          </div>
+        </section>
+
+        <section className="moments-section section-wrap" id="moments">
+          <div className="section-label"><span>02</span><p>MOMENTS</p></div>
+          <div className="split-heading"><h2>Keep the moments<br />that make up <em>your story.</em></h2><p>Photos, discoveries, little projects, places, meals, books, experiments, and everything in between.</p></div>
+          <div className="moment-product-stage"><div className="stage-side-note"><Camera size={17} /><span>A place for<br />what happened.</span></div><MomentScreen /><div className="stage-date"><span>SEPT</span><strong>14</strong><i>2026</i></div></div>
+        </section>
+
+        <section className="pursuits-section section-wrap" id="pursuits">
+          <div className="pursuit-copy-block"><div className="section-label"><span>03</span><p>PURSUITS</p></div><h2>Turn interests into things you <em>actually do.</em></h2><p>Create Pursuits for the things you are learning, making, practicing, or working toward. Add moments as you go.</p><div className="pursuit-pullquote"><p>Every return is part of the work.</p></div></div>
+          <div className="pursuit-product-stage"><PursuitScreen /><div className="scrap-label">small<br />progress<br />counts <MoveUpRight size={15} /></div></div>
+        </section>
+
+        <section className="circles-section section-wrap" id="circles">
+          <div className="circles-text"><div className="section-label"><span>04</span><p>CIRCLES</p></div><h2>Find people who are doing the <em>same things.</em></h2><p>Circles are smaller communities built around shared interests and actually doing things together.</p><a href="https://www.trynospace.com" target="_blank" rel="noreferrer" className="text-link">Meet the circles <ArrowUpRight size={15} /></a></div>
+          <div className="circles-product-stage"><CirclesScreen /></div>
+        </section>
+
+        <section className="core-idea section-wrap" id="space">
+          <div className="section-label"><span>01</span><p>YOUR SPACE</p></div>
+          <div className="core-copy"><div><h2>Bring it all together.<br /><em>Make room for your story.</em></h2><a className="text-link space-secondary-link" href="https://www.trynospace.com" target="_blank" rel="noreferrer">Make a Space <ArrowUpRight size={15} /></a></div><p>Your Space brings your Moments and Pursuits together in one place. See the things you care about begin to feel like a life.</p></div>
+          <div className="archive-scene">
+            <div className="archive-caption"><span>MARIN’S SPACE</span><strong>{latestShowcaseMonth}, so far</strong><p>{showcaseCount} small things, kept close.</p></div>
+            {showcaseMoments.map((moment) => <div className={`archive-polaroid is-${moment.position}`} key={moment.label}><img src={moment.image} alt={`${moment.type} moment: ${moment.label}`} /><span>{moment.label}</span></div>)}
+            <div className="archive-mark"><Sparkles size={18} /> <span>KEEP BECOMING</span></div>
+          </div>
+        </section>
+
+        <section className="difference-section" id="how-it-works">
+          <div className="brand-statement section-wrap">
+            <div className="brand-statement-image"><img src={imagery.identity} alt="A table of many interests and creative practices" /></div>
+            <div className="brand-statement-copy"><p className="eyebrow"><span /> A WIDER WAY TO BE A PERSON</p><h2>Your interests do not have to fit <em>one identity.</em></h2><p>You can be a gardener and a reader, a beginner and an expert, a maker and a wanderer.</p><p>Sushii gives all the things you are curious about a place to grow.</p></div>
+          </div>
+        </section>
+
+        <section className="montage-section workflow-section" id="workflow">
+          <div className="montage-heading workflow-heading"><div><p className="eyebrow"><span /> THE SUSHII WORKFLOW</p><h2>Create moments.<br />Follow your interests.<br /><em>Keep going.</em></h2></div><p>Sushii gives the things you care about a place to grow.</p></div>
+          <div className="workflow-steps">
+            <article className="workflow-step workflow-moment">
+              <div className="workflow-image"><MomentScreen /></div>
+              <div className="workflow-caption"><span>01</span><div><small className="workflow-screen-label">Create Moment · My Space</small><h3>Create a Moment</h3><p>Something happened. Keep it.</p><small className="workflow-detail-copy">Capture something worth keeping: a photo, thought, discovery, small win, or something you want to remember.</small></div></div>
+            </article>
+            <article className="workflow-step workflow-pursuit">
+              <div className="workflow-image"><PursuitScreen /></div>
+              <div className="workflow-caption"><span>02</span><div><small className="workflow-screen-label">Pursuit detail · My Space</small><h3>Start a Pursuit</h3><p>Want to keep doing it? Make it a Pursuit.</p><small className="workflow-detail-copy">Do it yourself or invite friends.</small></div></div>
+            </article>
+            <article className="workflow-step workflow-keepgoing">
+              <div className="workflow-image"><PursuitScreen /></div>
+              <div className="workflow-caption"><span>03</span><div><small className="workflow-screen-label">Pursuit progress · My Space</small><h3>Keep Going</h3><p>Come back to it. Add another Moment.</p><small className="workflow-detail-copy">Your Moments become the record of the thing you are doing.</small></div></div>
+            </article>
+          </div>
+          <p className="workflow-footer">Your interests are part of your story.</p>
+        </section>
+
+        <section className="final-cta section-wrap">
+          <div className="final-orbit orbit-a" /><div className="final-orbit orbit-b" />
+          <div className="cta-content"><p className="eyebrow"><span /> KEEP EXPLORING</p><h2>Explore the things<br />that make <em>you.</em></h2><p>Start keeping track of what you’re into, one Moment at a time.</p><ActionLink dark href="#moments">Explore Sushii</ActionLink><a className="text-link cta-secondary-link" href="https://www.trynospace.com" target="_blank" rel="noreferrer">Make a Space <ArrowUpRight size={15} /></a><small>Free to begin. Kept private unless you choose otherwise.</small></div>
+        </section>
+      </main>
+
+      <footer className="site-footer section-wrap"><a className="brand" href="#top"><span className="brand-orbit" />Sushii</a><p>A personal space for the things that make you, you.</p><div><a href="#space">My Space</a><a href="#circles">Circles</a><a href="https://www.trynospace.com" target="_blank" rel="noreferrer">Create your Space</a></div></footer>
+    </div>
+  );
+}
