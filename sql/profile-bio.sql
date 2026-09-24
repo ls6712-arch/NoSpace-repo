@@ -1,0 +1,13 @@
+-- Sushii: profile bio — a short "what got you into this" line under the
+-- name, on your own Shelf and on your public profile.
+--
+--   Supabase → SQL Editor → New query → paste → Run
+--
+-- Safe to re-run.
+--
+-- Nullable, no length constraint here — kept short by the UI's own
+-- convention, not by a database ceiling. Readable by anyone already covered
+-- by "profiles are readable when signed in" (sql/people.sql); editable only
+-- by "you edit your own profile", the same blanket per-row policy every
+-- other profile field already goes through, so no new RLS is needed here.
+alter table public.profiles add column if not exists bio text;

@@ -1,0 +1,1599 @@
+:root {
+  color-scheme: light;
+  --font-size: 16px;
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* Warm high-contrast serif — used for the wordmark, people's names, and
+     hobby titles, where the app should feel like a well-made object rather
+     than a dashboard. Everything else stays on the sans stack. */
+  --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  /* A single casual script, used only for the small marginal notes on
+     profile pages (the "someone actually wrote this" touch) — never for
+     anything that has to be read quickly or at length. */
+  --font-hand: 'Caveat', cursive;
+
+  /* Soft pastels for the quiet milestones and circle cards. Deliberately
+     desaturated so they read as chalky and calm against the navy, never as
+     status colours competing with the brand gradient. */
+  --pastel-sage: #A9C3A0;
+  --pastel-clay: #D2A18A;
+  --pastel-stone: #AEB4C4;
+  --pastel-wheat: #DCC79A;
+  --pastel-sky: #A3BDD6;
+  --pastel-rose: #D6ADB2;
+
+  /* The shelf the hobbies stand on. */
+  --wood-dark: #4A3728;
+  --wood: #6B4E35;
+  --wood-light: #8A6A49;
+
+  /* ── Sushii warm-editorial palette ───────────────────────────────────────
+     Replaces the dark-purple/void identity (preserved at git tag
+     violet-void-final and commit b4746ca if it's ever needed back). Sushii
+     now reads as a warm, physical object — paper and ink in light, warm
+     charcoal (never purple or blue-black) in dark — with a single terracotta
+     accent and a gold used only as a tiny decorative detail, never for body
+     text (gold fails AA text-contrast against the light background — see
+     the contrast notes below). No neon, no violet glow: gradients are
+     limited to soft image overlays, applied per screen as Task B visits it.
+
+     Contrast (WCAG AA — 4.5:1 body text, 3:1 large text/UI/non-text boundary):
+       LIGHT  foreground/background   13.30:1 ✓✓   muted-foreground/background 5.30:1 ✓
+              accent/background        5.48:1 ✓    accent-foreground/accent    5.82:1 ✓
+              destructive/background   5.90:1 ✓    destructive-foreground/destructive 6.27:1 ✓
+              gold/background          2.76:1 ✗ (decorative only — never as text/label color)
+              gold/card                 2.93:1 ✗ (same — decorative only)
+              gold-text/background      4.91:1 ✓    gold-text/card               5.21:1 ✓
+              input-border/background   3.50:1 ✓    input-border/card            3.72:1 ✓
+       DARK   foreground/background   14.46:1 ✓✓   muted-foreground/background 6.20:1 ✓
+              accent/background        4.62:1 ✓    accent-foreground/accent    4.62:1 ✓
+              destructive/background   5.70:1 ✓    destructive-foreground/destructive 5.70:1 ✓
+              gold/background          7.58:1 ✓    gold/card                    6.85:1 ✓
+              gold-text/background      7.58:1 ✓    gold-text/card                6.85:1 ✓ (= --gold; already clears AA text contrast, so gold-text just reuses it)
+              input-border/background   3.91:1 ✓    input-border/card            3.53:1 ✓
+     --gold stays decorative-only (icons, small dividers, non-text detail) —
+     it still fails AA text contrast in light. --gold-text is a separate,
+     darker-in-light token for any place gold is used as *text* (a label,
+     a link, a value) — same hue/saturation as --gold, just darkened enough
+     to clear 4.5:1 against both --background and --card, the two surfaces
+     it's ever likely to sit on. In dark, --gold already clears AA as text,
+     so --gold-text there is the same color as --gold.
+
+     --border stays the soft, low-contrast hairline for plain dividers
+     (1.32:1 light / 1.42:1 dark vs background — unchanged, deliberately
+     faint, never a control's sole boundary). --input-border is a separate,
+     higher-contrast token (≥3:1 against --card, which --input-background
+     resolves to) used only for input/textarea/select-trigger/unselected-
+     radio boundaries — the places WCAG 1.4.11 (non-text contrast) actually
+     applies, which a soft hairline was never enough for on its own (the
+     focus ring only appears once focused, not as a resting-state boundary).
+     --input is repointed at --input-border below (was --border) so every
+     component already reading --input/`border-input` — Input, Textarea,
+     Select's trigger, RadioGroupItem, the button outline variant — picks
+     this up automatically. */
+  --background: #F6F1E7;
+  --card: #FBF8F1;
+  --foreground: #2B2622;
+  --muted-foreground: #6B6259;
+  --border: #DDD3C0;
+  --accent: #9A4A34;
+  --accent-foreground: #FBF8F1;
+  --gold: #B08D4A;
+  --gold-text: #7E6535;
+  --input-border: #957D50;
+  --destructive: #A13A2E;
+  --destructive-foreground: #FBF8F1;
+
+  /* ── Derived semantic tokens ──────────────────────────────────────────── */
+  --surface: var(--card);
+  --surface-elevated: #FFFFFF;
+  --surface-muted: color-mix(in srgb, var(--background) 55%, var(--card));
+  --foreground-muted: var(--muted-foreground);
+  --hairline: var(--border);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-foreground);
+  --on-forest: var(--foreground);
+  --on-forest-muted: var(--muted-foreground);
+
+  /* ── Legacy void/violet aliases ───────────────────────────────────────────
+     Every name below drove the retired dark-purple theme directly. Pointing
+     them at the new tokens means every screen that still reads them (all of
+     Task B's remaining work) already renders in the new palette without a
+     per-component edit; Task B replaces each direct reference with the
+     semantic name itself and these aliases get deleted once nothing points
+     at them anymore. */
+  --void: var(--background);
+  --void-deep: var(--background);
+  --night-purple: var(--surface);
+  --night-purple-2: var(--surface-muted);
+  --plum-night: var(--surface);
+  --plum-night-2: var(--surface-elevated);
+  --night-green: var(--surface);
+  --night-wine: var(--surface);
+  --violet-soft: var(--accent);
+  --violet-electric: var(--accent);
+  --violet-electric-bright: var(--accent);
+  --violet-electric-mid: var(--accent);
+  --violet-electric-deep: var(--accent);
+  --ink-on-violet: var(--accent-foreground);
+  --offwhite: var(--foreground);
+  --lavender-muted: var(--muted-foreground);
+  --lavender-faint: var(--muted-foreground);
+
+  /* MomentCard's rotating text-only tile (docs/moment-card-and-reactions-
+     spec.md §2.1: "accent, a moss/green token, an ink token"). Global, not
+     paper-theme-scoped — a Moment card needs to look identical on My Space
+     and Discover (the void/plum world) as on You (.ns-paper-theme), and
+     .ns-paper-theme's own --moss/--ink only exist inside that scope. The
+     accent leg of the rotation reuses --accent/--accent-foreground directly;
+     these two are the moss and ink legs. */
+  --moment-tile-moss: #5B6B4E;
+  --moment-tile-moss-foreground: #FBF8F1;
+  --moment-tile-ink: #2A241D;
+  --moment-tile-ink-foreground: #FBF8F1;
+
+  /* Warm hues, untouched for now — Task B retires the ones that turn out to
+     be glow/gradient ingredients (atmo-*, gradient-brand, etc.) screen by
+     screen; the rest (coral, yellow/gold's sibling accents, forest) may
+     still earn a place as selective illustration accents. */
+  --sky: #5DA8D8;
+  --sky-deep: #2F76A8;
+  --forest: #0E4D3A;
+  --forest-ink: #0B3E2E;
+  --coral: #FF6B4A;
+  --coral-deep: #C43F22;
+  --coral-text: #FF8B6E;
+  --yellow: #F5C542;
+  --mustard: var(--yellow);
+  --cream: #F8F4EB;
+  --plum: #5B3454;
+  --plum-deep: #40243C;
+  --peach: #F4B892;
+  --error: #FF5470;
+  --error-deep: #C22F4F;
+  --success: #4ADE80;
+  --warning: var(--yellow);
+
+  /* ── GeneratedArt.tsx illustration palette ───────────────────────────────
+     The flat-vector hobby illustrations' own colors — deliberately a
+     separate family from the UI tokens above (illustrations read as warm,
+     hand-made objects regardless of what's fashionable in the chrome around
+     them). Dark values are hand-tuned, not derived: paper/cream (the
+     illustration's own light backdrop and highlight) get real dark
+     equivalents so they don't sit on the page as a glowing rectangle, ink
+     flips light-on-dark so outlines stay visible against charcoal, and the
+     five prop/figure colors are each deepened slightly for the same
+     reason. Skin and hair tones don't get a dark variant — a person's skin
+     tone isn't a UI surface. */
+  --gen-art-ink: #3A2A1F;
+  --gen-art-paper: #F1E3C8;
+  --gen-art-paper-dark: #E8D5AC;
+  --gen-art-terracotta: #C96F49;
+  --gen-art-rust: #A8492F;
+  --gen-art-mustard: #E3A83E;
+  --gen-art-mustard-light: #F0C572;
+  --gen-art-olive: #7C8A54;
+  --gen-art-sage: #A9B98C;
+  --gen-art-denim: #5C7C97;
+  --gen-art-blush: #D98A82;
+  --gen-art-cream: #FBF3E2;
+  --gen-art-skin-1: #E8B98C;
+  --gen-art-skin-2: #C68A5E;
+  --gen-art-skin-3: #8B5A3C;
+  --gen-art-skin-4: #F0C9A0;
+  --gen-art-hair-1: #3A2A1F;
+  --gen-art-hair-2: #6B4226;
+  --gen-art-hair-3: #1E1512;
+  --gen-art-hair-4: #8A5A32;
+
+  /* ── shadcn/ui mappings ───────────────────────────────────────────────────
+     The ui/ primitives consume these names, so pointing them at the semantic
+     tokens above converts every button, dialog, select, tab and input at once
+     without touching those files. */
+  --card-foreground: var(--foreground);
+  --popover: var(--surface-elevated);
+  --popover-foreground: var(--foreground);
+  --primary-fg: var(--primary-foreground);
+  --secondary: var(--surface-muted);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-muted);
+  --input: var(--input-border);
+  --input-background: var(--card);
+  --switch-background: color-mix(in srgb, var(--muted-foreground) 22%, transparent);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: var(--accent);
+  --chart-1: var(--accent);
+  --chart-2: var(--coral);
+  --chart-3: var(--sky-deep);
+  --chart-4: var(--mustard);
+  --chart-5: var(--forest);
+  --radius: 0.875rem;
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--surface-muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Used for filled CTAs, where white text sits on top. Deliberately a
+     narrow band of the violet range (deep → mid, not all the way to
+     electric) — white only clears AA up to ~8A55E0; past that the button
+     would need ink-on-violet instead, like the plain primary button does. */
+  --gradient-brand: linear-gradient(120deg, var(--violet-electric-deep) 0%, var(--violet-electric-mid) 100%);
+  --gradient-brand-soft: linear-gradient(120deg, rgba(166,108,255,0.16) 0%, rgba(255,107,74,0.10) 55%, rgba(74,159,216,0.10) 100%);
+  /* For gradient *text*, which needs to stay legible on the dark ground. */
+  --gradient-ink: linear-gradient(105deg, var(--violet-electric-bright) 0%, var(--offwhite) 72%);
+
+  /* Atmospheric backgrounds — layered radial glows rather than flat fills,
+     so a dark section reads as an environment. Each is a distinct "world"
+     within the same system: purple, near-black, plum, and (sparingly) a
+     very dark green, per the brand brief's "moves through different
+     worlds" instruction. Sized/positioned to feel like light falling into
+     a room, not a spotlight aimed at the viewer. */
+  --atmo-purple:
+    radial-gradient(ellipse 70% 55% at 18% -10%, color-mix(in srgb, var(--violet-electric) 22%, transparent), transparent),
+    radial-gradient(ellipse 60% 50% at 92% 100%, color-mix(in srgb, var(--violet-electric-deep) 26%, transparent), transparent),
+    var(--night-purple);
+  --atmo-void:
+    radial-gradient(ellipse 55% 45% at 85% 0%, color-mix(in srgb, var(--violet-electric) 14%, transparent), transparent),
+    radial-gradient(ellipse 50% 40% at 8% 100%, color-mix(in srgb, var(--coral) 8%, transparent), transparent),
+    var(--void);
+  --atmo-plum:
+    radial-gradient(ellipse 65% 55% at 12% 0%, color-mix(in srgb, var(--violet-electric-bright) 16%, transparent), transparent),
+    radial-gradient(ellipse 55% 45% at 95% 100%, color-mix(in srgb, var(--plum) 55%, transparent), transparent),
+    var(--plum-night);
+  --atmo-green:
+    radial-gradient(ellipse 60% 50% at 15% 0%, color-mix(in srgb, var(--success) 10%, transparent), transparent),
+    radial-gradient(ellipse 55% 45% at 90% 100%, color-mix(in srgb, var(--violet-electric) 14%, transparent), transparent),
+    var(--night-green);
+  --atmo-wine:
+    radial-gradient(ellipse 65% 55% at 85% -5%, color-mix(in srgb, var(--coral) 10%, transparent), transparent),
+    radial-gradient(ellipse 55% 45% at 10% 100%, color-mix(in srgb, var(--violet-electric) 16%, transparent), transparent),
+    var(--night-wine);
+}
+
+/* ── Dark theme — warm charcoal, never purple or blue-black ──────────────
+   Only what genuinely differs from :root needs restating; every derived and
+   legacy-alias token above resolves through these automatically since custom
+   properties resolve against the final cascaded value at use time. */
+.dark {
+  color-scheme: dark;
+  --background: #1C1816;
+  --card: #26211D;
+  --foreground: #EFE8DA;
+  --muted-foreground: #A39885;
+  --border: #3A332B;
+  --accent: #C8674D;
+  --accent-foreground: #1C1816;
+  --gold: #C9A55E;
+  --gold-text: #C9A55E;
+  --input-border: #847462;
+  --destructive: #D9776A;
+  --destructive-foreground: #1C1816;
+  --surface-elevated: #2E2822;
+
+  /* Lightened from the light-theme value so the "ink" tile still reads as
+     its own block against the dark background (#1C1816) instead of nearly
+     disappearing into it. Moss keeps its light-theme value — already
+     visibly distinct from both dark surfaces. */
+  --moment-tile-ink: #332B22;
+
+  --gen-art-ink: #D9C7A8;
+  --gen-art-paper: #4A3F2E;
+  --gen-art-paper-dark: #3D3325;
+  --gen-art-terracotta: #A85A3A;
+  --gen-art-rust: #8A3B26;
+  --gen-art-mustard: #C08F35;
+  --gen-art-mustard-light: #C9A25E;
+  --gen-art-olive: #6B7847;
+  --gen-art-sage: #8FA173;
+  --gen-art-denim: #4D6980;
+  --gen-art-blush: #B8746D;
+  --gen-art-cream: #6B5C45;
+}
+
+/* ── The paper world — the Shelf, the click-to-feed overlay, the cover
+   editor, and the paginated studio view ──────────────────────────────────
+   A deliberate, scoped exception to the app's dark-void atmosphere above,
+   the same reasoning WorkGrid's own cream cards already established: the
+   portfolio/profile experience reads as a warm, physical object (paper,
+   ink, a shelf) rather than a dashboard. Nothing outside .ns-paper-theme
+   reads these — the rest of the app (Header, nav, Discover, Circles) stays
+   on the void/plum system untouched. Accent is the app's own existing
+   chosen color (--coral-deep), not a new one — "exaggerated," not
+   "different." */
+.ns-paper-theme {
+  --paper: #EFE7D8;
+  --paper-raised: #F8F2E5;
+  --ink: #2A241D;
+  --ink-soft: #726657;
+  --ink-faint: #A79A86;
+  --line: #DCD0B8;
+  --moss: #5B6B4E;
+
+  /* Re-point the semantic layer (not the raw palette) at the paper world,
+     so every existing component that already reads --surface/--foreground/
+     --border/etc. — instead of a raw dark-purple hex — adapts here for
+     free, with no per-component rewrite. Only things that hardcode a raw
+     token (--yellow, --plum-night, ...) need their own override below. */
+  --background: var(--paper);
+  --surface: var(--paper-raised);
+  --surface-elevated: #FFFFFF;
+  --surface-muted: color-mix(in srgb, var(--paper) 55%, var(--paper-raised));
+  --foreground: var(--ink);
+  --foreground-muted: var(--ink-soft);
+  --muted-foreground: var(--ink-soft);
+  --border: var(--line);
+  --hairline: var(--line);
+  --card: var(--paper-raised);
+  --card-foreground: var(--ink);
+  --popover: var(--paper-raised);
+  --popover-foreground: var(--ink);
+  --cream: var(--paper-raised);
+  --input-border: #967D4A; /* ≥3:1 vs --paper-raised, same hue/sat family as --line */
+  --input: var(--input-border);
+  --input-background: var(--paper-raised);
+
+  color: var(--ink);
+  background: var(--paper);
+  font-family: 'Work Sans', sans-serif;
+}
+
+/* The one dark-theme flourish that leaks through the semantic layer above —
+   a literal --yellow border accent, not a token that repoints itself. */
+.ns-paper-theme .ns-you-profile-card {
+  border-top-color: var(--line);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-input-border: var(--input-border);
+  --color-gold: var(--gold);
+  --color-gold-text: var(--gold-text);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-hairline: var(--hairline);
+  --color-coral: var(--coral);
+  --color-coral-deep: var(--coral-deep);
+  --color-coral-text: var(--coral-text);
+  --color-sky: var(--sky);
+  --color-sky-deep: var(--sky-deep);
+  --color-forest: var(--forest);
+  --color-mustard: var(--mustard);
+  --color-cream: var(--cream);
+  --color-yellow: var(--yellow);
+  --color-plum: var(--plum);
+  --color-plum-deep: var(--plum-deep);
+  --color-peach: var(--peach);
+  --color-forest-ink: var(--forest-ink);
+  --color-on-forest: var(--on-forest);
+  --color-on-forest-muted: var(--on-forest-muted);
+  --color-void: var(--void);
+  --color-void-deep: var(--void-deep);
+  --color-night-purple: var(--night-purple);
+  --color-night-green: var(--night-green);
+  --color-night-wine: var(--night-wine);
+  --color-violet-soft: var(--violet-soft);
+  --color-violet-electric: var(--violet-electric);
+  --color-violet-electric-bright: var(--violet-electric-bright);
+  --color-violet-electric-deep: var(--violet-electric-deep);
+  --color-ink-on-violet: var(--ink-on-violet);
+  --color-offwhite: var(--offwhite);
+  --color-lavender-muted: var(--lavender-muted);
+  --color-lavender-faint: var(--lavender-faint);
+  --color-error: var(--error);
+  --color-error-deep: var(--error-deep);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  /* Redesign-brief scale (docs/CLAUDE-redesign-brief.md §1: "Radius 12px
+     cards, 8px buttons and inputs. Retire pill buttons and rounded-2xl/3xl")
+     — named tokens rather than retuning --radius itself, since that base
+     scale still drives every not-yet-restyled screen; retuning it directly
+     would ripple past this primitives pass into every rounded-xl/2xl/3xl
+     usage app-wide. Primitives restyled under Task B opt into these
+     explicitly (rounded-btn, rounded-card) instead. */
+  --radius-btn: 8px;
+  --radius-card: 12px;
+  /* MomentCard's own media radius (docs/moment-card-and-reactions-spec.md
+     §2.1: "radius 22px, define one radius token, do not scatter values"). */
+  --radius-moment: 22px;
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  /* Paper-grain — a faint physical texture over the whole app, not a
+     gradient. Fixed so it doesn't scroll with content; pointer-events: none
+     so it never intercepts a click. Same SVG turbulence noise in both
+     themes, just a lower opacity in dark (2% vs 3.5%) since it reads more
+     visibly against a darker fill. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.035;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  .dark body::before {
+    opacity: 0.02;
+  }
+
+  /* Everything that isn't the grain layer itself needs to paint above it,
+     since body::before otherwise sits first in body's own stacking order. */
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Theme changes cross-fade rather than snap — toggled for ~400ms by
+     ThemeContext.tsx around a preference/OS change, never on first paint. */
+  .theme-transition,
+  .theme-transition * {
+    transition: background-color 400ms ease-out, color 400ms ease-out,
+      border-color 400ms ease-out, fill 400ms ease-out, stroke 400ms ease-out !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-transition,
+    .theme-transition * {
+      transition: none !important;
+    }
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}
+
+@layer components {
+  .text-gradient-brand {
+    background-image: var(--gradient-ink);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .glass-panel {
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+  }
+
+  .ns-home-hero {
+    background: var(--atmo-purple);
+  }
+
+  .ns-hero-eyebrow,
+  .ns-section-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .ns-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    border-block: 1px solid var(--hairline);
+    padding-block: 0.55rem;
+    color: var(--lavender-muted);
+  }
+
+  .ns-hero-claims {
+    gap: 0;
+  }
+
+  .ns-hero-claims li {
+    display: inline-flex;
+    align-items: center;
+    margin: 0.2rem 0.2rem 0.2rem 0;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--violet-electric) 12%, transparent);
+    padding: 0.35rem 0.65rem;
+    color: var(--offwhite);
+    font-size: 0.72rem;
+  }
+
+  /* Secondary action: dark/transparent with a quiet border, brightening on
+     hover rather than filling in — the primary action is the only one that
+     gets a violet fill and glow. */
+  .ns-hero-secondary-link {
+    display: inline-flex;
+    height: 2.75rem;
+    align-items: center;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--void) 45%, transparent);
+    padding: 0 1rem;
+    color: var(--offwhite);
+    font-size: 0.75rem;
+    transition: border-color 180ms ease, transform 180ms ease;
+  }
+
+  .ns-hero-secondary-link:hover { border-color: var(--violet-electric); transform: translateY(-1px); }
+
+  /* The hero's single large illustration — a real image now
+     (src/assets/hero-worlds.png), a big generously-rounded window rather
+     than a banner filling edge to edge. Replaced an earlier 3-photo-card
+     collage and, before that, an SVG approximation of the same composition
+     (both now removed along with their now-dead CSS below this rule). A
+     soft violet glow rather than a dark drop-shadow, so it reads as lit
+     from within the purple environment rather than sitting on top of it. */
+  .ns-hero-worlds-art {
+    border-radius: 1.75rem;
+    box-shadow:
+      0 30px 70px -25px color-mix(in srgb, var(--violet-electric) 40%, transparent),
+      0 45px 90px -35px rgba(0, 0, 0, 0.55);
+  }
+
+  .ns-text-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 0.16rem;
+    color: var(--violet-electric-bright);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: color 180ms ease, gap 180ms ease;
+  }
+
+  .ns-text-link:hover { gap: 0.65rem; color: var(--offwhite); }
+
+  .ns-paper-panel {
+    position: relative;
+    border: 1px solid var(--border);
+    background-color: var(--surface-elevated);
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, color-mix(in srgb, var(--violet-electric) 5%, transparent) 28px);
+    box-shadow: 0 20px 40px -24px color-mix(in srgb, var(--violet-electric) 30%, transparent);
+  }
+
+  .ns-process-panel { padding: 0.45rem 1.5rem; }
+
+  .ns-process-step {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--hairline);
+    padding: 1.25rem 0;
+  }
+
+  .ns-process-step:last-child { border-bottom: 0; }
+
+  .ns-circle-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 35%, transparent); }
+
+  .ns-circle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--hairline);
+    padding: 1rem 0;
+  }
+
+  .ns-circle-row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+  .ns-portfolio-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 26%, transparent); }
+
+  /* ── Value cards — "Create moments / Document / Explore," right below the
+     hero. Dark-plum elevated surfaces with a soft violet-tinted shadow, and
+     a hover lift restrained enough to still read as premium rather than
+     playful. ── */
+  .ns-value-card {
+    position: relative;
+    border: 1px solid var(--hairline);
+    background: var(--surface-elevated);
+    box-shadow: 0 16px 32px -22px rgba(0, 0, 0, 0.6);
+    transition: transform 280ms cubic-bezier(.22,.61,.36,1), box-shadow 280ms ease, border-color 280ms ease;
+  }
+
+  .ns-value-card:hover,
+  .ns-value-card:focus-within {
+    transform: translate(0, -4px);
+    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
+    box-shadow: 0 22px 40px -18px color-mix(in srgb, var(--violet-electric) 35%, transparent);
+  }
+
+  .ns-value-card-icon {
+    transition: transform 280ms cubic-bezier(.22,.61,.36,1);
+  }
+
+  .ns-value-card:hover .ns-value-card-icon,
+  .ns-value-card:focus-within .ns-value-card-icon {
+    transform: translateY(-3px) rotate(-4deg);
+  }
+
+  /* ── Whatever pulls you in — the Worlds section ─────────────────────────
+     A row of small illustrated worlds. `data-driven` is set by JS
+     (useWorldsScroll in WorldsSection.tsx) once it's confirmed both a wide
+     viewport AND no prefers-reduced-motion — the same two-part guard
+     useHeroParallax already uses — so everything below keys off that one
+     attribute rather than a duplicate width media query. When it's false
+     (narrow viewport, or reduced motion at any width), this collapses to a
+     plain native horizontal scroller: shorter, snap-scrolled, no sticky
+     math, exactly the "simplify" the section calls for either way. */
+  .ns-worlds-section {
+    position: relative;
+  }
+
+  .ns-worlds-section[data-driven="true"] {
+    height: 260vh;
+  }
+
+  .ns-worlds-sticky {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ns-worlds-section[data-driven="true"] .ns-worlds-sticky {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100vh;
+    align-items: center;
+    /* Stays hidden (inherited from the base rule above) — this is the
+       viewport-width "window" the track's translateX moves the cards
+       through. It has to actually clip, both so the track's un-translated
+       content can't create a horizontal page scrollbar, and so its own
+       clientWidth (what the scroll math treats as "visible width") means
+       something — with overflow: visible here (an earlier draft), the
+       track could render at its full natural width with nothing
+       constraining it, so scrollWidth - clientWidth came out to ~0 and the
+       whole translateX computation had nowhere to go. */
+  }
+
+  .ns-worlds-track {
+    display: flex;
+    gap: clamp(1.25rem, 3vw, 2.25rem);
+    padding-inline: 5vw;
+    will-change: transform;
+  }
+
+  .ns-worlds-section:not([data-driven="true"]) .ns-worlds-track {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-block: 0.5rem;
+  }
+
+  .ns-worlds-section:not([data-driven="true"]) .ns-worlds-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ns-worlds-section:not([data-driven="true"]) .ns-world-card {
+    scroll-snap-align: center;
+  }
+
+  .ns-worlds-path {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .ns-worlds-path path {
+    fill: none;
+    stroke: color-mix(in srgb, var(--coral) 55%, var(--yellow) 45%);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1 15;
+    opacity: 0.5;
+    animation: ns-flow 26s linear infinite;
+  }
+
+  .ns-world-card {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    width: clamp(14.5rem, 19vw, 18.5rem);
+    scroll-margin-inline: 5vw;
+    border-radius: 1.75rem;
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+    background: var(--surface-elevated);
+    box-shadow: 0 16px 30px -18px rgba(0, 0, 0, 0.55);
+    transition: transform 340ms cubic-bezier(.22,.61,.36,1), box-shadow 340ms ease;
+  }
+
+  .ns-world-card:hover,
+  .ns-world-card:focus-within {
+    transform: translateY(-10px) scale(1.015);
+    box-shadow: 10px 18px 0 color-mix(in srgb, var(--world-accent, var(--coral)) 48%, transparent);
+  }
+
+  .ns-world-card:hover .ns-world-card-life,
+  .ns-world-card:focus-within .ns-world-card-life {
+    animation-duration: 1.6s;
+  }
+
+  /* Real photo cards get the same gentle push-in HobbyCategoryCard's Space
+     photos use, instead of the illustrated fallback's idle breathe/sway. */
+  .ns-world-card:hover img,
+  .ns-world-card:focus-within img {
+    transform: scale(1.06);
+  }
+
+  .ns-world-card-label {
+    padding: 1rem 1.15rem 1.25rem;
+  }
+
+  .ns-world-card-dot {
+    display: inline-block;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--world-accent, var(--coral));
+  }
+
+  .ns-space-card {
+    background: var(--surface-elevated);
+    transition: transform 300ms ease, box-shadow 300ms ease;
+  }
+
+  .group:hover .ns-space-card,
+  .group:focus-visible .ns-space-card {
+    box-shadow: 0 18px 34px -16px color-mix(in srgb, var(--violet-electric) 55%, transparent);
+    transform: translate(-3px, -3px);
+  }
+
+  .ns-space-card-index {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    border: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--void) 78%, transparent);
+    padding: 0.28rem 0.4rem;
+    color: var(--offwhite);
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+  }
+
+  .ns-maker-notes {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ns-maker-notes::before {
+    position: absolute;
+    top: -3rem;
+    left: -1rem;
+    content: "✦  ✦  ✦  ✦  ✦";
+    color: var(--yellow);
+    font-size: 2rem;
+    letter-spacing: 3rem;
+    opacity: 0.2;
+    transform: rotate(-8deg);
+  }
+
+  .ns-maker-note {
+    border: 1px solid color-mix(in srgb, var(--violet-electric) 20%, transparent);
+    background: var(--surface-elevated);
+    padding: 1.5rem;
+    box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--violet-electric) 35%, transparent);
+  }
+
+  .ns-maker-note:nth-child(even) { transform: rotate(0.45deg); }
+  .ns-maker-note:nth-child(odd) { transform: rotate(-0.25deg); }
+
+  .ns-principle { background: color-mix(in srgb, var(--surface-elevated) 84%, transparent); }
+  .ns-principle:nth-child(2) { background: color-mix(in srgb, var(--surface-elevated) 60%, transparent); }
+
+  .ns-invitation {
+    position: relative;
+    border-block: 1px solid var(--hairline);
+    padding: clamp(3.5rem, 8vw, 6.5rem) 1rem;
+  }
+
+  .ns-invitation-spark {
+    position: absolute;
+    top: -1.1rem;
+    left: 50%;
+    display: grid;
+    width: 2.2rem;
+    height: 2.2rem;
+    place-items: center;
+    background: var(--surface-elevated);
+    color: var(--violet-electric-bright);
+    font-size: 1.6rem;
+    transform: translateX(-50%);
+    box-shadow: 0 0 0 1px var(--hairline), 0 8px 20px -8px color-mix(in srgb, var(--violet-electric) 45%, transparent);
+  }
+
+  .ns-myspace-page {
+    background-image:
+      radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px),
+      linear-gradient(90deg, transparent 0 8%, color-mix(in srgb, var(--violet-electric) 5%, transparent) 8.1% 8.2%, transparent 8.3% 100%),
+      radial-gradient(ellipse 60% 45% at 90% 0%, color-mix(in srgb, var(--violet-electric-bright) 14%, transparent), transparent),
+      radial-gradient(ellipse 55% 40% at 5% 100%, color-mix(in srgb, var(--plum) 45%, transparent), transparent);
+    background-size: 26px 26px, 100% 100%, auto, auto;
+    background-color: var(--plum-night);
+  }
+
+  .ns-myspace-masthead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 1.4rem;
+  }
+
+  .ns-myspace-mark {
+    border-left: 1px solid var(--violet-electric);
+    padding-left: 0.7rem;
+    color: var(--lavender-muted);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
+    text-align: right;
+  }
+
+  .ns-myspace-mark span { color: var(--violet-electric-bright); }
+
+  .ns-myspace-today {
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .ns-myspace-feed > .group {
+    border-color: var(--hairline);
+    border-radius: 0.25rem;
+    box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 30%, transparent);
+  }
+
+  .ns-myspace-projects a,
+  .ns-myspace-circle-links a {
+    border-radius: 0;
+    border-color: var(--border);
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    box-shadow: 0 12px 22px -14px color-mix(in srgb, var(--violet-electric) 26%, transparent);
+  }
+
+  .ns-public-profile {
+    background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px);
+    background-size: 24px 24px;
+    background-color: var(--void);
+  }
+
+  .ns-profile-header {
+    border-block: 1px solid var(--hairline);
+    padding-block: 1.25rem;
+  }
+
+  .ns-profile-shelf {
+    border-top: 1px solid var(--hairline);
+    padding-top: 1.25rem;
+  }
+
+  .ns-profile-grid {
+    grid-auto-rows: clamp(8rem, 20vw, 13rem);
+  }
+
+  .ns-profile-tile {
+    min-height: 0;
+    border: 1px solid var(--hairline);
+    background: var(--surface-muted);
+  }
+
+  .ns-profile-feature { grid-row: span 2; }
+
+  .ns-profile-cta {
+    border-color: var(--border);
+    background: var(--surface-muted);
+    box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--violet-electric) 32%, transparent);
+  }
+
+  .ns-discover-search {
+    border-bottom: 2px solid var(--violet-electric);
+    background: color-mix(in srgb, var(--void) 45%, transparent);
+  }
+
+  .ns-discover-space-card {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface-elevated);
+    box-shadow: 0 16px 30px -20px rgba(0, 0, 0, 0.55);
+    transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+  }
+
+  .ns-discover-space-card:hover,
+  .ns-discover-space-card:focus-visible {
+    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
+    box-shadow: 0 22px 40px -18px color-mix(in srgb, var(--violet-electric) 38%, transparent);
+    transform: translate(-3px, -3px);
+  }
+
+  .ns-discover-space-art {
+    position: relative;
+    aspect-ratio: 1.55;
+    overflow: hidden;
+    background: var(--surface-muted);
+  }
+
+  .ns-discover-space-number {
+    position: absolute;
+    top: 0.8rem;
+    left: 0.8rem;
+    border: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--void) 70%, transparent);
+    padding: 0.25rem 0.38rem;
+    color: var(--offwhite);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+  }
+
+  .ns-discover-space-copy {
+    display: flex;
+    min-height: 7.2rem;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem 1.15rem;
+  }
+
+  .ns-discover-open {
+    flex-shrink: 0;
+    color: var(--violet-electric-bright);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: transform 180ms ease;
+  }
+
+  .ns-discover-space-card:hover .ns-discover-open { transform: translate(2px, -2px); }
+
+  .ns-discover-wayfinder {
+    box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 28%, transparent);
+  }
+
+  .ns-discover-filters button {
+    border-radius: 0;
+    border-color: var(--border);
+    background: transparent;
+  }
+
+  /* The one active/selected-filter indicator on Discover — violet, not
+     coral, so there's a single unambiguous "this is selected/active" color
+     across the whole app (see also Header's nav underline). */
+  .ns-discover-filters button[aria-pressed="true"] {
+    border-color: var(--violet-electric);
+    background: var(--violet-electric);
+    color: var(--ink-on-violet);
+  }
+
+  .ns-space-hero {
+    background: var(--atmo-green);
+    isolation: isolate;
+  }
+
+  .ns-space-hero-grid {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--violet-electric) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--violet-electric) 8%, transparent) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(90deg, black, transparent 85%);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .ns-space-hero-art {
+    position: relative;
+    border: 1px solid var(--hairline);
+    background: var(--surface-muted);
+    box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--violet-electric) 35%, transparent);
+    transform: rotate(2deg);
+  }
+
+  .ns-space-hero-art::before {
+    position: absolute;
+    inset: 0.8rem;
+    border: 1px dashed color-mix(in srgb, var(--violet-electric) 32%, transparent);
+    content: "";
+    pointer-events: none;
+  }
+
+  .ns-space-hero-caption {
+    position: absolute;
+    right: -0.7rem;
+    bottom: -1.1rem;
+    border: 1px solid var(--hairline);
+    background: var(--surface-elevated);
+    padding: 0.45rem 0.6rem;
+    color: var(--offwhite);
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    line-height: 1.35;
+    transform: rotate(-4deg);
+  }
+
+  .ns-space-corner-grid > * {
+    min-width: 0;
+  }
+
+  .ns-you-profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 1.4rem 1.6rem;
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--yellow);
+    background: var(--surface);
+    /* was: box-shadow: 8px 8px 0 ...; drop the hard-shadow, it's what reads as "loud" */
+  }
+
+  .ns-you-profile-card--compact {
+    gap: 0.75rem;
+    padding: 1rem 1.15rem;
+  }
+
+  .ns-you-profile-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .ns-you-profile-identity {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+
+  .ns-you-avatar-compact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .ns-you-avatar-icon-row {
+    display: flex;
+    gap: 0.3rem;
+  }
+
+  .ns-you-avatar-icon-row button {
+    display: flex;
+    height: 1.6rem;
+    width: 1.6rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--muted-foreground);
+  }
+
+  .ns-you-avatar-icon-row button:hover {
+    border-color: var(--foreground);
+    color: var(--foreground);
+  }
+
+  .ns-you-sprout { color: var(--coral-deep); font-size: 0.85rem; }
+
+  .ns-you-tags {
+    /* now lives directly under the card, not in its own panel */
+    margin-top: -0.25rem;
+  }
+
+  .ns-you-tags a,
+  .ns-you-tags button {
+    border-radius: 999px;
+    border-color: var(--hairline);
+    background: transparent;
+    color: var(--foreground);
+  }
+
+  /* One neutral pill style, not a per-tag rainbow — a tag is a fact about
+     the Moment, not a category with its own color to defend. The single
+     accent (--coral-deep) is reserved for the one pill actually narrowing
+     the grid right now (.ns-pill--active below), so it still means
+     something when it shows up. Scoped under the modifier class (not a
+     bare .ns-pill) so this beats the plain `.ns-you-tags a` rule above on
+     specificity instead of being silently overridden by it. */
+  .ns-you-tags--pills .ns-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--line, var(--hairline));
+    background: var(--paper-raised, var(--cream));
+    padding: 0.32rem 0.75rem;
+    font-size: 0.72rem;
+    font-family: var(--font-serif);
+    color: var(--ink, var(--forest-ink));
+    transition: border-color 150ms ease;
+  }
+
+  .ns-you-tags--pills .ns-pill:hover {
+    border-color: color-mix(in srgb, var(--coral-deep) 45%, var(--line, var(--hairline)));
+  }
+
+  /* Same specificity as the base rule above (two classes) — defined after
+     it so source order breaks the tie in its favor. */
+  .ns-you-tags--pills .ns-pill.ns-pill--ghost {
+    background: transparent;
+    border: 1px dashed var(--line, var(--hairline));
+    color: var(--ink-faint, var(--muted-foreground));
+  }
+
+  /* The tag currently narrowing Your Moments below — the one place this
+     row spends the single accent. */
+  .ns-you-tags--pills .ns-pill.ns-pill--active {
+    background: var(--coral-deep);
+    border-color: var(--coral-deep);
+    color: white;
+  }
+
+  .ns-you-links-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid var(--hairline);
+    padding-top: 0.9rem;
+  }
+
+  .ns-you-links-row input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+  }
+
+  .ns-you-links-row input:focus {
+    outline: none;
+  }
+
+  .ns-you-links-row button {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--coral-text);
+  }
+
+  .ns-you-tabs [data-slot="tabs-trigger"] {
+    border-radius: 0;
+    border-bottom: 1px solid var(--hairline);
+    padding-inline: 0.75rem;
+    color: var(--muted-foreground);
+  }
+
+  .ns-you-tabs [data-slot="tabs-trigger"][data-state="active"] {
+    border-bottom-color: var(--violet-electric);
+    background: transparent;
+    color: var(--foreground);
+  }
+
+  @media (max-width: 639px) {
+    .ns-discover-space-copy { display: block; min-height: 8.5rem; }
+    .ns-discover-open { display: block; margin-top: 0.9rem; }
+    .ns-space-hero-art { width: calc(100% - 1rem); margin-right: 0.5rem; }
+    .ns-space-hero-caption { right: -0.35rem; }
+  }
+
+  .ns-marquee {
+    border-block: 1px solid var(--hairline);
+    background: var(--surface);
+    mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent);
+  }
+
+  .ns-marquee-art {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  .ns-marquee-hobby {
+    position: absolute;
+    width: 9rem;
+    height: 5.7rem;
+    overflow: hidden;
+    border: 3px solid var(--surface-elevated);
+    box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--violet-electric) 30%, transparent);
+    mix-blend-mode: normal;
+    animation: ns-marquee-float 8s ease-in-out infinite;
+  }
+
+  .ns-marquee-hobby-one { top: -1.5rem; left: 7%; transform: rotate(-8deg); }
+  .ns-marquee-hobby-two { right: 24%; bottom: -1.8rem; transform: rotate(6deg); animation-delay: -2s; }
+  .ns-marquee-hobby-three { top: -1.8rem; right: 7%; transform: rotate(4deg); animation-delay: -4s; }
+  .ns-marquee-hobby-four { bottom: -1.6rem; left: 34%; transform: rotate(-5deg); animation-delay: -6s; }
+
+  .ns-marquee .animate-marquee {
+    align-items: center;
+    will-change: transform;
+  }
+
+  .ns-marquee-mark {
+    display: inline-block;
+    color: var(--violet-electric-bright);
+    animation: ns-twinkle 3.4s ease-in-out infinite;
+    text-shadow: 0 0 0 var(--violet-electric-bright), 0 0 15px color-mix(in srgb, var(--violet-electric) 55%, transparent);
+  }
+
+  .ns-site-header {
+    background-color: color-mix(in srgb, var(--void) 86%, transparent);
+    background-image: linear-gradient(180deg, color-mix(in srgb, var(--violet-electric) 7%, transparent), transparent 70%);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .ns-wordmark-mark {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 2px solid var(--coral-deep);
+    border-radius: 50% 45% 50% 40%;
+    transform: rotate(-12deg);
+  }
+
+  .ns-wordmark:hover .ns-wordmark-mark { background: var(--coral-deep); }
+
+  /* Names kept so existing markup keeps working; all three now read as a soft
+     lift off the page rather than a neon rim. */
+  .glow-violet {
+    box-shadow: 0 0 0 1px rgba(27, 67, 50, 0.10), 0 10px 30px -12px rgba(27, 67, 50, 0.22);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 0 1px rgba(47, 118, 168, 0.16), 0 10px 30px -12px rgba(47, 118, 168, 0.26);
+  }
+
+  .glow-magenta {
+    box-shadow: 0 0 0 1px rgba(196, 63, 34, 0.16), 0 10px 30px -12px rgba(196, 63, 34, 0.24);
+  }
+
+  .font-hud {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+
+  .text-gradient-animated {
+    background-image: var(--gradient-ink);
+    background-size: 200% 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: gradient-shift 12s ease infinite;
+  }
+
+  .animate-float-slow {
+    animation: float 16s ease-in-out infinite;
+  }
+
+  .animate-float-slower {
+    animation: float 22s ease-in-out infinite reverse;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 3.2s ease-in-out infinite;
+  }
+
+  .generated-art-float {
+    animation: generated-art-float 5s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  /* Applied to groups inside hero illustrations. transform-box keeps the
+     transform origin on the shape itself rather than the whole SVG canvas. */
+  .ns-breathe, .ns-sway, .ns-drift, .ns-twinkle {
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform;
+  }
+  .ns-breathe { animation: ns-breathe 6.5s ease-in-out infinite; }
+  .ns-sway    { transform-origin: bottom center; animation: ns-sway 7.5s ease-in-out infinite; }
+  .ns-drift   { animation: ns-drift 34s ease-in-out infinite alternate; }
+  .ns-twinkle { animation: ns-twinkle 3.4s ease-in-out infinite; }
+
+  /* Hero entrance: headline, copy, CTA, then the illustration. Each step
+     starts from a visible resting state on the last frame, so nothing is
+     left parked at opacity 0 if animations never run. */
+  .ns-enter {
+    opacity: 0;
+    animation: ns-rise .62s cubic-bezier(.22,.61,.36,1) forwards;
+  }
+  .ns-enter-1 { animation-delay: .05s; }
+  .ns-enter-2 { animation-delay: .16s; }
+  .ns-enter-3 { animation-delay: .27s; }
+  .ns-enter-4 { animation-delay: .38s; }
+
+  /* Scroll-triggered reveal for everything below the hero (see
+     useScrollReveal.ts) — the same rise as ns-enter, but fired by an
+     IntersectionObserver instead of on a fixed delay, so the page reads as
+     one continuous unfolding story rather than five separately-loaded
+     sections. Starts from its resting state so a section already in view
+     on load (a short page, a tall viewport) never gets stuck invisible. */
+  .ns-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+  }
+  .ns-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .generated-art-sparkle {
+    animation: generated-art-twinkle 2.4s ease-in-out infinite;
+    transform-origin: center;
+  }
+}
+
+/* ── Illustration motion ───────────────────────────────────────────────────
+   Slow enough to read as "alive", not as an advertisement. Characters
+   breathe, plants sway, clouds drift, sparkles pulse — each on a different
+   period so the scene never falls into lockstep. All of it is switched off
+   wholesale under prefers-reduced-motion at the bottom of this file. */
+@keyframes ns-marquee-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(7px) rotate(4deg); }
+}
+@keyframes ns-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes ns-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-1.5px) scale(1.012); }
+}
+@keyframes ns-sway {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50%      { transform: rotate(1.6deg); }
+}
+@keyframes ns-drift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(26px); }
+}
+@keyframes ns-twinkle {
+  0%, 100% { opacity: .45; transform: scale(.86); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+@keyframes ns-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* The soft dashed line drawn behind the Worlds section — a sense of travel
+   between the little worlds, not a network diagram. */
+@keyframes ns-flow {
+  to { stroke-dashoffset: -420; }
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(10px, -14px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes generated-art-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes generated-art-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-gradient-animated,
+  .animate-float-slow,
+  .animate-float-slower,
+  .animate-pulse-soft,
+  .generated-art-float,
+  .generated-art-sparkle,
+  .animate-marquee {
+    animation: none;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 24s linear infinite;
+}
+
+/*
+ * Hard override, deliberately OUTSIDE any @layer.
+ * The artifact host wraps this page in a skeleton that sets its own
+ * unlayered `body { background: <light color> }` reset. Per the CSS cascade
+ * layers spec, ANY unlayered rule beats ANY rule inside a @layer — no matter
+ * specificity or source order — so the app's real background (declared
+ * inside `@layer base` above) was silently losing to that light default.
+ * This plain, unlayered rule is what actually wins.
+ */
+html,
+body,
+#root {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* One visible keyboard focus ring for the whole app, deliberately unlayered
+   so it beats the utility `outline-none` that ships on the shadcn primitives.
+   :where() keeps specificity at zero, so a component that genuinely needs its
+   own focus treatment can still opt out. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--violet-electric) !important;
+  outline-offset: 2px !important;
+}
+
+/* Honour the OS setting: no continuous loops, no parallax, no entrance
+   offsets — everything simply present. */
+@media (prefers-reduced-motion: reduce) {
+  .ns-breathe, .ns-sway, .ns-drift, .ns-twinkle,
+  .generated-art-float, .generated-art-sparkle,
+  .animate-float-slow, .animate-float-slower, .animate-pulse-soft,
+  .animate-marquee, .animate-in, .animate-spin,
+  .text-gradient-animated, .ns-marquee-mark,
+  .ns-marquee-hobby {
+    animation: none !important;
+  }
+  .ns-enter {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .ns-parallax { transform: none !important; }
+  .ns-maker-note { transform: none !important; }
+  .ns-worlds-path path { animation: none !important; }
+  .ns-worlds-track { transform: none !important; }
+  .ns-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

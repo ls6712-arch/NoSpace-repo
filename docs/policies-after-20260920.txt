@@ -1,0 +1,213 @@
+Fresh full pg_policies dump — every public-schema table plus storage.objects
+(post-media bucket) — taken 2026-09-20 on project eyzokuhhbyidvmuqfmwm, after
+migrations (a) pause_deletion_foundation, (b) consolidate_visibility_policies,
+(b2) pause_visibility_b2, (c) posts_visibility_private,
+(d) reactions_and_bookmarks, and storage close_post_media_listing.
+
+This is the single "after" snapshot for this work — an earlier, less
+complete public-schema-only dump (previously also named
+policies-after-20260920.txt) was superseded by this one and removed rather
+than kept alongside it.
+
+Query:
+  select 'public' as schema, tablename, policyname, roles, cmd, qual, with_check
+  from pg_policies where schemaname='public'
+  union all
+  select 'storage', tablename, policyname, roles, cmd, qual, with_check
+  from pg_policies where schemaname='storage' and tablename='objects'
+  order by schema, tablename, cmd, policyname;
+
+===============================================================================
+PUBLIC SCHEMA
+===============================================================================
+
+bookmarks
+  ALL "you manage your own bookmarks"  roles={public}
+    qual/with_check: (select auth.uid()) = user_id
+
+categories
+  ALL "reviewers manage categories"  roles={public}
+    qual/with_check: private.is_admin(auth.uid())
+  SELECT "categories are readable by anyone"  roles={public}
+    qual: true
+
+category_suggestions
+  DELETE "you can withdraw your own suggestion"  roles={public}
+    qual: (suggested_by = auth.uid()) OR private.is_admin(auth.uid())
+  INSERT "anyone signed in can suggest"  roles={authenticated}
+    with_check: suggested_by = auth.uid()
+  SELECT "you see your own suggestions"  roles={public}
+    qual: (suggested_by = auth.uid()) OR private.is_admin(auth.uid())
+  UPDATE "reviewers decide"  roles={public}
+    qual/with_check: private.is_admin(auth.uid())
+
+circle_members  -- unchanged (decision: no change)
+  DELETE "you can leave a circle"  roles={public}
+    qual: user_id = auth.uid()
+  INSERT "you can join a circle yourself"  roles={authenticated}
+    with_check: (user_id=auth.uid()) AND (role='member' OR private.owns_circle(circle_id, auth.uid()))
+  SELECT "you see the roster of a circle you're in"  roles={public}
+    qual: (user_id=auth.uid()) OR private.is_circle_member(circle_id, auth.uid()) OR private.owns_circle(circle_id, auth.uid())
+
+circles
+  INSERT "you create your own circle"  roles={authenticated}
+    with_check: owner = auth.uid()
+  SELECT "circles are readable when signed in"  roles={public}
+    qual: auth.uid() IS NOT NULL
+  UPDATE "the owner edits their own circle"  roles={public}
+    qual/with_check: owner = auth.uid()
+
+connections  -- unchanged (decision: retired feature, no change)
+  DELETE "either side can withdraw or disconnect"  roles={public}
+  INSERT "you can ask to connect"  roles={authenticated}
+  SELECT "you see your own connections"  roles={public}
+  UPDATE "only the addressee answers"  roles={public}
+  (qual text unchanged from docs/policies-before-20260919.txt)
+
+corners
+  INSERT "anyone signed in can create a corner"  roles={authenticated}
+  INSERT "space members can create a corner"  roles={authenticated}
+  SELECT "corners are readable when signed in"  roles={public}
+    qual: auth.uid() IS NOT NULL
+
+hobby_follows  -- UPDATED (b2)
+  ALL "you manage your own hobby follows"  roles={public}
+    qual/with_check: auth.uid() = user_id
+  SELECT "hobby follows are readable"  roles={public}
+    qual: (select auth.uid()) IS NOT NULL AND is_visible_profile(user_id)
+
+messages  -- unchanged (decision: retired feature, no change)
+  INSERT "you can write in an accepted thread"  roles={authenticated}
+  INSERT "you write to connections and your spaces"  roles={authenticated}
+  SELECT "messages need an accepted participation"  roles={public}
+  SELECT "you read messages meant for you"  roles={public}
+
+moment_drafts
+  DELETE/INSERT/SELECT/UPDATE all owner-only: auth.uid() = user_id
+
+notifications
+  INSERT "signed-in users can notify"  roles={authenticated}  with_check: true
+  SELECT/UPDATE owner-only: auth.uid() = user_id
+
+participations  -- unchanged (decision: retired feature, no change)
+  DELETE/INSERT/UPDATE owner-scoped
+  SELECT "you see participations you are part of"  roles={public}
+    qual: (auth.uid()=from_user) OR (auth.uid()=to_user) OR (to_user IS NULL)  -- still the wide-open branch, unchanged
+
+post_likes  -- UPDATED (b2)
+  ALL "you manage your own likes"  roles={public}
+    qual/with_check: auth.uid() = user_id
+  SELECT "post likes are readable"  roles={public}
+    qual: (select auth.uid()) IS NOT NULL AND is_visible_profile(user_id)
+
+posts  -- UPDATED (b): SELECT consolidated to one policy.
+       -- INSERT/UPDATE deliberately unchanged (write-side check is drafted,
+       -- not applied — see supabase/migrations/20260920000000_pause_write_checks.sql)
+  DELETE "You can delete your own posts"  roles={public}
+  DELETE "you delete your own moments"  roles={public}
+  INSERT "You can post as yourself"  roles={public}
+  INSERT "you post your own moments"  roles={authenticated}
+  SELECT "posts are readable by their audience"  roles={public}  <-- only SELECT policy now
+    qual: (select auth.uid())=user_id
+        OR (visibility='public' AND is_visible_profile(user_id))
+        OR (visibility='circle' AND circle_id IS NOT NULL AND (select auth.uid()) IS NOT NULL
+            AND is_visible_profile(user_id)
+            AND exists(select 1 from circles c where c.id=(posts.circle_id-1000000)
+                and (c.visibility = any(array['open_to_read','Open to read'])
+                     or c.owner=(select auth.uid())
+                     or private.is_circle_member(c.id,(select auth.uid())))))
+  UPDATE "You can edit or delete your own posts"  roles={public}
+  UPDATE "own posts are editable"  roles={public}
+
+private_logs  -- unchanged, owner-only on every command (re-confirmed)
+  DELETE/INSERT/SELECT/UPDATE all: auth.uid() = user_id
+
+profile_follows  -- UPDATED (b2)
+  DELETE "either side can end a follow"  roles={public}
+  INSERT "you follow people as yourself"  roles={authenticated}
+  SELECT "profile follows are readable when signed in"  roles={public}
+    qual: (select auth.uid()) IS NOT NULL
+        AND is_visible_profile(follower_id) AND is_visible_profile(followed_id)
+  UPDATE "only the followed person answers"  roles={public}
+
+profile_links  -- UPDATED (b2)
+  DELETE/INSERT/UPDATE owner-only, unchanged
+  SELECT "profile links are readable when signed in"  roles={public}
+    qual: (select auth.uid()) IS NOT NULL AND is_visible_profile(user_id)
+
+profile_settings  -- NEW (a)
+  INSERT/SELECT/UPDATE all owner-only: auth.uid() = user_id
+
+profiles  -- UPDATED (b): SELECT consolidated to one policy
+  INSERT "you can create your own profile"  roles={authenticated}
+  SELECT "profiles are visible unless paused or deleting"  roles={public}  <-- only SELECT policy now
+    qual: (paused_at IS NULL AND deletion_requested_at IS NULL) OR (select auth.uid())=id
+  UPDATE "You can update your own profile"  roles={public}
+
+pursuits  -- UPDATED (b): SELECT consolidated. INSERT/UPDATE deliberately
+          -- unchanged (write-side check drafted, not applied).
+  DELETE "you can delete your own pursuit"  roles={authenticated}
+  DELETE "you delete your own pursuits"  roles={public}
+  INSERT "you can start a pursuit"  roles={authenticated}
+  INSERT "you create your own pursuits"  roles={authenticated}
+  SELECT "you see your own pursuits, others see only shared ones"  roles={public}  <-- only SELECT policy now
+    qual: (select auth.uid())=user_id OR (shared=true AND is_visible_profile(user_id))
+  UPDATE "you can update your own pursuit"  roles={authenticated}
+  UPDATE "you edit your own pursuits"  roles={public}
+
+reactions  -- NEW (d)
+  DELETE "you remove your own reaction"  roles={public}
+    qual: (select auth.uid()) = user_id
+  INSERT "you react as yourself"  roles={public}
+    with_check: (select auth.uid()) = user_id
+  SELECT "the reactor and the post's author can see a reaction"  roles={public}
+    qual: (select auth.uid())=user_id
+        OR (select auth.uid()) = (select p.user_id from posts p where p.id=reactions.post_id)
+
+space_members / spaces  -- unchanged (decision: retired feature, no change)
+  (qual text unchanged from docs/policies-before-20260919.txt)
+
+thoughts  -- UPDATED (b2)
+  DELETE "you can remove your own thought"  roles={public}
+  INSERT "anyone signed in can add a thought"  roles={authenticated}
+  SELECT "thoughts follow the moment's setting"  roles={public}
+    qual: (select auth.uid())=user_id
+        OR (is_visible_profile(user_id)
+            AND exists(select 1 from posts p where p.id=thoughts.post_id
+                and (p.thoughts_private=false or p.user_id=(select auth.uid()))))
+
+===============================================================================
+STORAGE SCHEMA — storage.objects, post-media bucket
+===============================================================================
+
+DELETE "You can delete your own uploads"  roles={public}
+  qual: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+DELETE "you delete your own post-media files"  roles={authenticated}
+  qual: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+INSERT "You can upload into your own folder"  roles={public}
+  with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+INSERT "signed-in users can upload their own media"  roles={authenticated}
+  with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+INSERT "you upload into your own post-media folder"  roles={authenticated}
+  with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+SELECT "you see your own post-media files"  roles={public}  -- UPDATED (storage migration)
+  qual: bucket_id='post-media' AND (storage.foldername(name))[1] = (select auth.uid())::text
+  (replaces the old unconditional "post-media files are publicly readable")
+UPDATE "you replace your own post-media files"  roles={authenticated}
+  qual/with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+
+Note: three near-duplicate INSERT policies and two near-duplicate DELETE
+policies pre-date this work and were left as-is — not touched by anything in
+this session, listed here only because the query pulls every policy on the
+table.
+
+===============================================================================
+Live data, end of session
+
+auth.users: 10 rows (unchanged throughout)
+profiles: 10 rows
+posts: 26 rows, all visibility='public'
+pursuits: 9 rows
+connections: 3 rows
+reactions: 0 rows (new table)
+bookmarks: 0 rows (new table)

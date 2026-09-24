@@ -1,0 +1,40 @@
+-- PROPOSAL ONLY — not requested for this round, not applied. Companion to
+-- supabase/migrations/20260920000000_pause_write_checks.sql: extends the
+-- same public.write_blocked() check to post-media uploads, so a paused or
+-- pending-deletion account can't add new media to storage even though its
+-- posts/pursuits/thoughts writes are already blocked at the table level.
+--
+-- Current post-media INSERT policies (live pg_policies read, 2026-09-20;
+-- also see docs/policies-after-20260919.txt), three functionally identical
+-- policies that pre-date this work:
+--   INSERT "You can upload into your own folder"          roles={public}
+--     with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+--   INSERT "signed-in users can upload their own media"    roles={authenticated}
+--     with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+--   INSERT "you upload into your own post-media folder"    roles={authenticated}
+--     with_check: bucket_id='post-media' AND (storage.foldername(name))[1] = auth.uid()::text
+--
+-- This collapses the three into one (same consolidation approach as
+-- migration (b) and the sibling write-checks migration) and adds the
+-- pause/deletion check. DELETE and UPDATE (replace-own-file) policies on
+-- storage.objects are untouched — same reasoning as posts/pursuits DELETE:
+-- removing your own already-uploaded media isn't a write that needs
+-- blocking, only adding new media is.
+--
+-- Needs a decision before this is drafted for real: should an in-progress
+-- upload that started just before pausing be allowed to finish, or should
+-- this apply retroactively to any INSERT the instant paused_at is set?
+-- The check below is instant (no grace window) — flag if that's not
+-- wanted.
+
+-- drop policy if exists "You can upload into your own folder" on storage.objects;
+-- drop policy if exists "signed-in users can upload their own media" on storage.objects;
+-- drop policy if exists "you upload into your own post-media folder" on storage.objects;
+-- create policy "you upload into your own post-media folder"
+--   on storage.objects for insert
+--   to authenticated
+--   with check (
+--     bucket_id = 'post-media'
+--     and (storage.foldername(name))[1] = (select auth.uid())::text
+--     and not public.write_blocked()
+--   );
