@@ -129,8 +129,14 @@ function VisibilityDialog({
 }) {
   const { updatePost } = useContent();
   const { circles } = useCircles();
-  const [value, setValue] = useState<"private" | "circle" | "public">(
-    isOnlyYou(post) ? "private" : post.visibility === "circle" ? "circle" : "public",
+  const [value, setValue] = useState<"just_me" | "followers" | "circle" | "public">(
+    isOnlyYou(post)
+      ? "just_me"
+      : post.visibility === "circle"
+        ? "circle"
+        : post.visibility === "followers"
+          ? "followers"
+          : "public",
   );
   const [circleId, setCircleId] = useState<number | undefined>(post.circleId);
   const [saving, setSaving] = useState(false);
