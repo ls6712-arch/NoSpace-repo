@@ -71,7 +71,8 @@ export function NotificationsMenu() {
     (p) =>
       p.status === "pending" &&
       (p.kind === "make_together" || p.kind === "explore_together") &&
-      (user ? p.toUser === user.id : false),
+      (user ? p.toUser === user.id : false) &&
+      !social.blockedIds.includes(p.fromUser),
   );
 
   // A pending follow request lives in profile_follows, not SocialContext —

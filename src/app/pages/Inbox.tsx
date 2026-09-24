@@ -18,8 +18,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
  *   Requests   follow requests and Circle invitations, waiting on you
  *   Activity   everything else that happened — thoughts, accepts, invites
  *
- * Direct messaging and person-to-person connections (PersonActions'
- * Connect/Invite) were retired together — see ConnectionsContext.tsx. Follow
+ * Direct messaging is very much alive (SocialContext.tsx's
+ * startDirectMessage/Messages.tsx) — only the old person-to-person
+ * connections system (PersonActions' Connect/Invite) was retired; see
+ * ConnectionsContext.tsx. Messages, including a stranger's first message
+ * waiting to be accepted or ignored, live only in Messages, never here —
+ * see docs/communication-strategy.md's Phase 1 decisions on why message
+ * requests and follow requests stay in separate places. Follow
  * (sql/profile-follows.sql) is a separate, accept-based relationship: it
  * doesn't unlock messaging, just decides whether a request counts toward
  * someone's follower count.
