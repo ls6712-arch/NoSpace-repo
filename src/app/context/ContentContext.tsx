@@ -144,7 +144,7 @@ const isMissingCountColumn = (error: { message?: string; code?: string } | null)
  * Never sets `reflection` — that comes from a separate, owner-only fetch
  * (see refetchRealPosts) merged in afterward, only for the signed-in
  * user's own rows. */
-function rowToPost(row: any, creatorName: string): Post {
+export function rowToPost(row: any, creatorName: string): Post {
   return {
     id: row.id,
     // An older post stored one of the eight original Space slugs. Nothing was
