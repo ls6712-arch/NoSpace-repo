@@ -4,7 +4,7 @@ import { ArrowRight, Camera, Compass, NotebookPen, Quote, Sparkles } from "lucid
 import { hobbies } from "../data/hobbies";
 import { seedPosts } from "../data/posts";
 import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
-import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
+import { ContentCard } from "../components/ContentCard";
 import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
@@ -235,9 +235,9 @@ export function Home() {
                   real Moments from Sushii's sample content.
                 </p>
               </div>
-              <div className={MOMENT_GRID}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {cornerMoments.map((post) => (
-                  <MomentCard key={post.id} post={post} surface="feed" />
+                  <ContentCard key={post.id} post={post} compact />
                 ))}
               </div>
             </div>

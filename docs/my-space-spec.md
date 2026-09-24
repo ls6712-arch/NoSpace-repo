@@ -15,7 +15,7 @@ If a mockup is missing, stop and ask. Do not guess pixel values. Where the mocku
 
 **First, inspect** the schema and existing queries for Moments, Pursuits, Updates, follows, reactions, bookmarks and the Shelf. Reuse what exists. Don't invent tables. Report anything missing before adding it.
 
-**Rules (from the brief):** tokens only (no raw hex, no `text-white`), product name `Sushii` via `APP_NAME`, vocabulary as in the glossary (Moment, Pursuit, Space, Corner, Circle, Shelf, Reflection; no Clan; reactions are Love this / Count me in / Add a thought, icon-only, three across; Love this/Count me in counts are **public** as of Sept 24, 2026 — see `docs/moment-card-and-reactions-spec.md`'s STATUS block — Thoughts is the one count that stays maker-only; Bookmark is separate). No streaks, percentages, confetti, leaderboards or numeric badges. Accent only for primary actions and active states; gold only for tiny details (`--gold-text` for any gold text). See `docs/moment-card-and-reactions-spec.md` for the full reactions/counts model.
+**Rules (from the brief):** tokens only (no raw hex, no `text-white`), product name `Sushii` via `APP_NAME`, vocabulary as in the glossary (Moment, Pursuit, Space, Corner, Circle, Shelf, Reflection; no Clan; reactions are Love this / Count me in / Add a thought, icon-only, three across; counts are maker-only — nobody but a Moment's own maker ever sees a number, and only on their own Moment; Bookmark is separate). No streaks, percentages, confetti, leaderboards or numeric badges. Accent only for primary actions and active states; gold only for tiny details (`--gold-text` for any gold text). See `docs/moment-card-and-reactions-spec.md` for the full reactions/counts model.
 
 ## 1. Layout
 
@@ -80,7 +80,7 @@ If a mockup is missing, stop and ask. Do not guess pixel values. Where the mocku
 - Header: maker avatar, serif name, `{Pursuit} . {Corner}` (each links to its page). Right side: visibility label (PUBLIC or the Circle's name) and time.
 - Media: full-width image, aspect 4/3 on phone, 3/2 on tablet, mockup ratio on xl. `object-cover`, radius 12px, max height 70dvh. **Text-only Moments:** the text as a large Fraunces italic pull-quote (scales with `clamp()`, left-aligned on phone).
 - Italic serif caption under the media.
-- Action row: Love this / Count me in / Add a thought (three icon buttons; Love this and Count me in show their public totals even on someone else's Moment — Sept 24, 2026 amendment), Bookmark icon, OPEN. Hover, pressed and active (accent) states; at least 44px touch targets.
+- Action row: Love this / Count me in / Add a thought (three icon buttons, no counts — this is someone else's Moment, and counts are maker-only), Bookmark icon, OPEN. Hover, pressed and active (accent) states; at least 44px touch targets.
 - Phone: three equal-width reaction buttons on the first row, Bookmark and OPEN on a second row.
 
 ## 4. Right rail

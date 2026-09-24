@@ -4,29 +4,6 @@ Save as `docs/moment-card-and-reactions-spec.md`. Read `docs/CLAUDE-redesign-bri
 
 ## STATUS (keep this current — survives context compaction)
 
-**Amended Sept 24, 2026 (branch `feat/even-moment-cards`). Supersedes §4 where they disagree:**
-- **Counts are public now**, reversing §4's maker-only rule, per Sid. Love this and Count me in totals show to anyone who can see the Moment, via `posts.love_count` / `posts.in_count`, which a trigger on `public.reactions` keeps up to date (`supabase/migrations/20260924100000_post_reaction_counts.sql`). Who reacted stays private; the reactions select policy is unchanged. The Thoughts count stays maker-only.
-- **One card shape**: every MomentCard's media is a square (`MOMENT_MEDIA`), not a per-size pixel height, and every Moment list uses `MOMENT_GRID` (2 columns on phones, 3 from `lg`). `size` is still accepted but no longer changes the card. My Space's board-4 lead plus mixed rows became one even, numbered grid.
-- **Save (Try This) sits on the media** top-right as a bare icon (`BookmarkOverlay`), not in the action row.
-- **One action row**, `MomentActions`, shared by MomentCard and MomentDetail: icon plus number, no bordered pills.
-- **By Corner tiles** (HobbyShelf `CornerTile`) use the same square, rounding and tag pill.
-
-**Branch `feat/even-moment-cards`, off `main` (post-`redesign/moment-card` merge). Commits, oldest first:**
-- `014f1ef` — the patch itself: square media everywhere (`MOMENT_MEDIA`/`MOMENT_GRID`), `BookmarkOverlay` on the media, shared `MomentActions` row, public `love_count`/`in_count` (client falls back to 0 until the migration below is applied), By Corner tiles matched to MomentCard, this amendment note
-- `b80d8d6` — Discover's All Moments grid and Home's "This Corner" showcase moved to MomentCard/`MOMENT_GRID`; `ContentCard.tsx`/`PostBookmark.tsx`/the `PostReactions` component deleted (confirmed zero importers once these two moved); `useReactionState` now lives in `src/app/lib/reactionState.ts`; the no-op `InlineBookmark` export removed; `size` documented as intentionally ignored
-- `08843bd` — `.env` untracked (`.gitignore` only — the removal from git itself landed in `b80d8d6`); held only the public Supabase URL and anon key, no rotation needed
-- `e873b83` — `ownCounts` reduced to Thoughts only; `refetchOwnCounts` no longer queries `reactions` now that love/in read straight off the post row
-- `915ecc8` — `docs/CLAUDE-redesign-brief.md` and `docs/my-space-spec.md`'s maker-only counts language marked superseded (pointing here); `docs/backend-state-20260924.md` added, flagging that `list_migrations` under-reports what's actually live (the four Sept 23 Pursuit migrations aren't in its history but are confirmed applied against the real schema)
-
-**Not yet done — needs a human decision before merging:**
-1. `supabase/migrations/20260924100000_post_reaction_counts.sql` (adds `posts.love_count`/`in_count`, a trigger on `reactions` to keep them in sync, one-time backfill) is staged, reviewed, **not applied** — needs approval first (see the PR).
-2. Once applied: confirm `love_count`/`in_count` match `count(*)` on `reactions` for a handful of real posts, then flip `ContentContext.tsx`'s `POST_COLUMNS` fallback isn't silently masking a real problem (it should stop needing the retry once the columns exist).
-
-**Known follow-ups, out of scope for this branch (listed in the PR):**
-- Moments filed under a Space with no Corner still surface the Space itself as a pseudo-Corner (e.g. "Food & Cooking") in By Corner — needs a product decision, not a bug fix.
-- Individual Moments tagged to the wrong Space (a pre-existing data-quality issue, not something this branch's code touches).
-- Onboarding's own local MomentCard-like component in `Onboarding.tsx` was never migrated to the shared one.
-
 Branch `redesign/moment-card`, off `main`. Commits below are oldest first.
 
 **Done:**
