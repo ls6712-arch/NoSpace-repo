@@ -11,37 +11,81 @@
 -- in the app client — the app is not a trust boundary; someone calling the
 -- database directly with their own login must hit the same walls.
 --
+-- ── Changes from the first draft, per review ─────────────────────────────
+--
+-- 1. "you can ask" only ever checked `from_user`/block — a client could
+--    insert a make_together/explore_together already `status = 'accepted'`
+--    and open a message thread with anyone, no request step, no message
+--    request. The insert trigger (section 6a, now covering all three
+--    "ask" kinds, not just direct_message) forces `pending` for both,
+--    server-side. `join_in` is untouched — it's `accepted` on insert by
+--    design (src/app/context/SocialContext.tsx's joinIn()).
+-- 2. `notifications`' insert policy was `with check (true)` to `{public}`
+--    — even signed OUT, anyone could write into anyone's inbox: forge
+--    `body`/`actor_name`/`href`, or notify past a block. Section 8 below
+--    adds a real `actor_id` (server-set, never the client's), rejects a
+--    blocked-between actor (silently — see that section for why not an
+--    error), constrains `href` to an in-app path, and caps `body` length.
+--    The kind allowlist covers every kind any current code path — client
+--    or the existing SECURITY DEFINER pursuit-notification triggers —
+--    actually inserts (checked against every `notify()` call site and
+--    every `insert into notifications` in supabase/migrations/), plus
+--    `message_request` for Part B. Self-notification is deliberately left
+--    alone: `hobby_follow`'s "You're exploring X" is a real note-to-self
+--    the app relies on.
+-- 3. `is_blocked_between` moved from `public` to `private` (matching
+--    `private.is_admin`'s schema — PostgREST doesn't expose `private` at
+--    all, which is the actual reason `is_admin` isn't callable over the
+--    API despite its own EXECUTE grants; this now works the same way).
+--    Kept SECURITY DEFINER, unlike `is_admin` — it has to be, or its own
+--    read of `blocks` would be subject to the *caller's* RLS on that
+--    table (`blocker_id = auth.uid()` only), meaning a blocked person
+--    checking themselves against the person who blocked them would see
+--    no row and the whole check would silently pass. EXECUTE is still
+--    revoked from anon/public and granted only to `authenticated`, same
+--    as before, on top of the schema no longer being reachable at all.
+-- 4. "you can withdraw" let a sender delete a declined (or still-pending)
+--    direct_message and immediately open a new one — Ignore didn't stick.
+--    direct_message can no longer be deleted at all; join_in (the only
+--    kind anything in the app actually deletes today — leaveActivity())
+--    and make_together/explore_together withdrawal are untouched.
+-- 5. The "one direct_message per pair" rule was trigger-only, so two
+--    concurrent inserts could race past the `exists` check. Backed now by
+--    a real unique index. Checked live (2026-09-24): zero existing
+--    duplicate pairs, so this creates cleanly.
+--
 -- ── What this migration does, in plain language ─────────────────────────
 --
 -- 1. A new `blocks` table. Blocking someone is one-directional (you did it),
 --    but its effect is mutual: neither of you can reach the other any more.
 --    The blocked person can never read the blocks table — they're not told.
 --
--- 2. `is_blocked_between(a, b)`: true if either has blocked the other. This
---    is the one function every other rule below calls, so "full block"
---    means the same thing everywhere.
+-- 2. `private.is_blocked_between(a, b)`: true if either has blocked the
+--    other. This is the one function every other rule below calls, so
+--    "full block" means the same thing everywhere.
 --
 -- 3. Blocking someone instantly deletes any follow between you, both ways.
 --
 -- 4. The block is enforced at the point of every write it should stop
---    (messaging, requesting, following, reacting, commenting) and by
---    hiding rows on read (profiles, posts, thoughts — and, as a natural
---    side effect of reusing the same profile-visibility helper, hobby
---    follows, post likes and profile links too — a blocked-between person's
---    activity disappears from view in both directions, not just the parts
---    explicitly called out).
+--    (messaging, requesting, following, reacting, commenting, notifying)
+--    and by hiding rows on read (profiles, posts, thoughts — and, as a
+--    natural side effect of reusing the same profile-visibility helper,
+--    hobby follows, post likes and profile links too — a blocked-between
+--    person's activity disappears from view in both directions, not just
+--    the parts explicitly called out).
 --
 -- 5. Message requests. Today every direct_message participation is inserted
 --    already `status = 'accepted'` by the client — this migration makes the
 --    database decide instead: accepted immediately if the recipient already
---    follows the sender, pending otherwise. It also closes a real hole —
---    the existing "the recipient answers" policy let EITHER side of a
---    request update its status, so a sender could accept their own ask.
---    Only the recipient may now change a request's status, and only along
---    pending→accepted, pending→declined, declined→accepted. A pending
---    direct_message thread allows exactly one message from the sender (a
---    preview the recipient can read before deciding) and nothing from the
---    recipient until they accept.
+--    follows the sender, pending otherwise. Make together / Explore
+--    together are also forced to `pending` on insert now (see change 1
+--    above). It also closes a real hole — the existing "the recipient
+--    answers" policy let EITHER side of a request update its status, so a
+--    sender could accept their own ask. Only the recipient may now change a
+--    request's status, and only along pending→accepted, pending→declined,
+--    declined→accepted. A pending direct_message thread allows exactly one
+--    message from the sender (a preview the recipient can read before
+--    deciding) and nothing from the recipient until they accept.
 --
 -- 6. A `reports` table: report a profile, message, Moment or Thought.
 --    Reporters see only their own reports; `private.is_admin` accounts see
@@ -49,7 +93,9 @@
 --
 -- 7. Every new function pins `search_path` and has EXECUTE revoked from
 --    anon unless a currently-anon-reachable policy needs it internally
---    (see the `is_blocked_between` grants note below).
+--    (see the `is_blocked_between` grants note in section 2).
+--
+-- 8. `notifications` is hardened per change 2 above.
 --
 -- Safe to re-run: every object is created with IF NOT EXISTS / OR REPLACE /
 -- DROP POLICY IF EXISTS, then re-added.
@@ -90,20 +136,30 @@ create policy "you unblock as yourself"
   using (auth.uid() = blocker_id);
 
 -- ═══════════════════════════════════════════════════════════════════════
--- 2. is_blocked_between(a, b) — the one source of truth every rule below
---    (and the app) calls.
+-- 2. private.is_blocked_between(a, b) — the one source of truth every rule
+--    below (and the app) calls.
 --
---    EXECUTE is revoked from anon and granted only to authenticated — the
---    handful of policies that need to call it directly are all
---    authenticated-only writes. profiles/posts/thoughts SELECT (which do
---    need to work for anon) reach it *indirectly*, through
---    is_visible_profile() below: that function is itself SECURITY DEFINER,
---    so its internal call to is_blocked_between runs as the function
---    owner, not the connecting role — anon's lack of direct EXECUTE here
---    never blocks that path.
+--    Lives in `private`, not `public` — PostgREST doesn't expose that
+--    schema at all (the same reason `private.is_admin` isn't reachable
+--    over the API despite its own grants), so this is uncallable from the
+--    client regardless of the EXECUTE grants below. Those grants are kept
+--    tight anyway, for the same defense-in-depth reason `is_admin`'s are:
+--    revoked from anon/public, granted only to `authenticated` — the
+--    handful of policies that call it directly are all authenticated-only
+--    writes. profiles/posts/thoughts SELECT (which do need to work for
+--    anon) reach it *indirectly*, through is_visible_profile() below: that
+--    function is itself SECURITY DEFINER, so its internal call runs as the
+--    function owner, not the connecting role — anon's lack of direct
+--    EXECUTE here never blocks that path.
+--
+--    Kept SECURITY DEFINER (unlike is_admin, which doesn't need it): its
+--    own read of `blocks` must bypass the caller's RLS on that table
+--    (`blocker_id = auth.uid()` only), or a blocked person checking
+--    themselves against their own blocker would see no row and this would
+--    silently return false for the one case it most needs to catch.
 -- ═══════════════════════════════════════════════════════════════════════
 
-create or replace function public.is_blocked_between(a uuid, b uuid)
+create or replace function private.is_blocked_between(a uuid, b uuid)
 returns boolean
 language sql
 stable
@@ -117,9 +173,9 @@ as $$
   );
 $$;
 
-revoke execute on function public.is_blocked_between(uuid, uuid) from public;
-revoke execute on function public.is_blocked_between(uuid, uuid) from anon;
-grant execute on function public.is_blocked_between(uuid, uuid) to authenticated;
+revoke execute on function private.is_blocked_between(uuid, uuid) from public;
+revoke execute on function private.is_blocked_between(uuid, uuid) from anon;
+grant execute on function private.is_blocked_between(uuid, uuid) to authenticated;
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 3. Blocking removes any existing follow, both directions.
@@ -180,7 +236,7 @@ as $$
     and not (
       auth.uid() is not null
       and uid <> auth.uid()
-      and public.is_blocked_between(auth.uid(), uid)
+      and private.is_blocked_between(auth.uid(), uid)
     );
 $$;
 
@@ -202,7 +258,7 @@ create policy "you can ask"
   to authenticated
   with check (
     auth.uid() = from_user
-    and (to_user is null or not public.is_blocked_between(auth.uid(), to_user))
+    and (to_user is null or not private.is_blocked_between(auth.uid(), to_user))
   );
 
 -- profile_follows: refuse a new follow once blocked-between. (An existing
@@ -215,22 +271,21 @@ create policy "you follow people as yourself"
   with check (
     auth.uid() = follower_id
     and status = 'pending'
-    and not public.is_blocked_between(auth.uid(), followed_id)
+    and not private.is_blocked_between(auth.uid(), followed_id)
   );
 
 -- reactions: tightened from `{public}` to `to authenticated` as part of
 -- this change — anon could never satisfy `auth.uid() = user_id` anyway
 -- (auth.uid() is null for anon), so this changes no real capability, but
 -- it keeps every insert path that calls is_blocked_between() on an
--- authenticated-only policy, matching every other policy below and
--- avoiding a same-role EXECUTE check against the anon revoke in section 2.
+-- authenticated-only policy, matching every other policy below.
 drop policy if exists "you react as yourself" on public.reactions;
 create policy "you react as yourself"
   on public.reactions for insert
   to authenticated
   with check (
     auth.uid() = user_id
-    and not public.is_blocked_between(
+    and not private.is_blocked_between(
       auth.uid(),
       (select p.user_id from public.posts p where p.id = reactions.post_id)
     )
@@ -245,7 +300,7 @@ create policy "anyone signed in can add a thought"
   with check (
     (select auth.uid()) = user_id
     and not (select public.write_blocked())
-    and not public.is_blocked_between(
+    and not private.is_blocked_between(
       auth.uid(),
       (select p.user_id from public.posts p where p.id = thoughts.post_id)
     )
@@ -255,20 +310,38 @@ create policy "anyone signed in can add a thought"
 -- 6. Message requests
 -- ═══════════════════════════════════════════════════════════════════════
 
--- 6a. The database decides a direct_message's status — never the client.
+-- 6a. The database decides an "ask" participation's status on insert —
+-- never the client. join_in is untouched (accepted on insert, by design).
+-- make_together/explore_together are forced to pending (change 1 above).
+-- direct_message keeps its own accepted-if-known-sender / pending / reject
+-- logic.
 drop trigger if exists participations_set_direct_message_status on public.participations;
 drop function if exists public.set_direct_message_status();
+drop trigger if exists participations_set_insert_status on public.participations;
+drop function if exists public.set_participation_insert_status();
 
-create or replace function public.set_direct_message_status()
+create or replace function public.set_participation_insert_status()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
 begin
-  if new.kind <> 'direct_message' then
+  if new.kind = 'join_in' then
     return new;
   end if;
+
+  if new.kind in ('make_together', 'explore_together') then
+    -- The client used to be trusted to send 'pending' itself. A direct API
+    -- call asking for 'accepted' would open a message thread with no
+    -- request step and no message-request review at all.
+    new.status := 'pending';
+    new.responded_at := null;
+    return new;
+  end if;
+
+  -- kind = 'direct_message' from here on (the only remaining value
+  -- participations_kind_check allows).
 
   if new.to_user is null then
     raise exception 'A direct message needs a recipient.';
@@ -276,7 +349,7 @@ begin
 
   -- Same wording as any other failure — the app must not let a rejection
   -- here reveal that a block exists.
-  if public.is_blocked_between(new.from_user, new.to_user) then
+  if private.is_blocked_between(new.from_user, new.to_user) then
     raise exception 'You can''t start a conversation with this person.';
   end if;
 
@@ -304,9 +377,9 @@ begin
 end;
 $$;
 
-create trigger participations_set_direct_message_status
+create trigger participations_set_insert_status
   before insert on public.participations
-  for each row execute function public.set_direct_message_status();
+  for each row execute function public.set_participation_insert_status();
 
 -- 6b. Close the update hole: only the recipient (to_user) may change a
 -- participation's status at all, and only along the allowed path. This is
@@ -366,6 +439,26 @@ create trigger participations_enforce_status_transition
   before update on public.participations
   for each row execute function public.enforce_participation_status_transition();
 
+-- 6b-2. A direct_message can't be deleted at all — the old policy let a
+-- sender delete a declined (or still-pending) thread and immediately open
+-- a fresh one, defeating Ignore/Decline entirely. join_in (the only kind
+-- anything in the app actually deletes today — SocialContext.tsx's
+-- leaveActivity()) and a make_together/explore_together withdrawal are
+-- untouched. Tightened from `{public}` to `to authenticated` too — same
+-- no-op-for-anon reasoning as reactions/thoughts above.
+drop policy if exists "you can withdraw" on public.participations;
+create policy "you can withdraw"
+  on public.participations for delete
+  to authenticated
+  using (auth.uid() = from_user and kind <> 'direct_message');
+
+-- 6b-3. Back the trigger's "one direct_message per pair" check with a real
+-- constraint, so two concurrent inserts can't both slip past it. Checked
+-- live (2026-09-24): zero existing duplicate pairs.
+create unique index if not exists participations_one_direct_message_per_pair
+  on public.participations (least(from_user, to_user), greatest(from_user, to_user))
+  where kind = 'direct_message';
+
 -- 6c. messages: insert. Today's rule for an accepted thread, unchanged,
 -- plus exactly one message from the sender into a pending direct_message —
 -- the request's preview. The recipient can't send until they accept, and
@@ -380,7 +473,7 @@ create policy "you can write in an accepted thread"
       select 1 from public.participations p
       where p.id = messages.participation_id
         and p.kind in ('make_together', 'explore_together', 'direct_message')
-        and not public.is_blocked_between(p.from_user, p.to_user)
+        and not private.is_blocked_between(p.from_user, p.to_user)
         and (
           (p.status = 'accepted' and (auth.uid() = p.from_user or auth.uid() = p.to_user))
           or (
@@ -405,7 +498,7 @@ create policy "messages need an accepted participation"
       select 1 from public.participations p
       where p.id = messages.participation_id
         and p.kind in ('make_together', 'explore_together', 'direct_message')
-        and not public.is_blocked_between(p.from_user, p.to_user)
+        and not private.is_blocked_between(p.from_user, p.to_user)
         and (
           (p.status = 'accepted' and (auth.uid() = p.from_user or auth.uid() = p.to_user))
           or (p.status = 'pending' and (auth.uid() = p.from_user or auth.uid() = p.to_user))
@@ -510,3 +603,87 @@ $$;
 drop trigger if exists rl_reports_insert on public.reports;
 create trigger rl_reports_insert before insert on public.reports
   for each row execute function public.rl_reports();
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 8. notifications hardening
+--
+--    The live INSERT policy was `with check (true)` to `{public}` —
+--    reachable even signed OUT. A direct API call could forge body,
+--    actor_name and href, or keep notifying someone past a block.
+--
+--    Fixed with a real actor_id (server-set below, never the client's)
+--    plus a BEFORE INSERT trigger, rather than only a tighter WITH CHECK:
+--    a trigger can rewrite NEW (actor_id) and can *silently drop* a row
+--    (RETURN NULL) rather than erroring — which matters here because the
+--    existing SECURITY DEFINER pursuit-notification triggers
+--    (notify_pursuit_membership / notify_pursuit_progress,
+--    20260923120000_pursuit_invite_links_and_notifications.sql) insert
+--    for several recipients in one statement; raising on a single
+--    blocked-between recipient would abort that whole batch and lose
+--    every other participant's notification too. Table triggers always
+--    fire regardless of who's writing (unlike RLS, which those two
+--    functions bypass entirely as SECURITY DEFINER) — so this applies
+--    uniformly to the client path and both existing internal paths, and
+--    the kind allowlist below had to include every kind either one uses.
+-- ═══════════════════════════════════════════════════════════════════════
+
+alter table public.notifications add column if not exists actor_id uuid references auth.users (id) on delete set null;
+
+drop policy if exists "signed-in users can notify" on public.notifications;
+create policy "signed-in users can notify"
+  on public.notifications for insert
+  to authenticated
+  with check (true);
+
+create or replace function public.enforce_notification_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Who actually ran this INSERT — never whatever the client sent.
+  new.actor_id := auth.uid();
+
+  -- Every kind any current code path inserts: the six from notify()'s own
+  -- call sites in SocialContext.tsx (hobby_follow, joined, make_together,
+  -- explore_together, thought, message), "accepted" from respond(),
+  -- "circle_invite" from ConnectionsContext.tsx, "message_request" for
+  -- Part B's pending-DM notice, and the three from the pursuit triggers
+  -- this table trigger also has to let through: pursuit_invite,
+  -- pursuit_joined, pursuit_progress.
+  if new.kind not in (
+    'hobby_follow', 'joined', 'make_together', 'explore_together', 'thought',
+    'message', 'accepted', 'circle_invite', 'message_request',
+    'pursuit_invite', 'pursuit_joined', 'pursuit_progress'
+  ) then
+    raise exception 'Not a recognized notification kind: %', new.kind;
+  end if;
+
+  if new.href is not null and (new.href !~ '^/' or new.href like '//%') then
+    raise exception 'A notification link must be an in-app path.';
+  end if;
+
+  if char_length(new.body) > 300 then
+    raise exception 'A notification is too long.';
+  end if;
+
+  -- Silently dropped, not rejected with an error — see this section's
+  -- header comment for why. Self-notification is deliberately left alone:
+  -- hobby_follow's "You're exploring X" is a real note-to-self the app
+  -- relies on, and is_blocked_between(x, x) is false anyway (no self-block
+  -- can exist), so this never touches that case.
+  if new.actor_id is not null
+     and new.actor_id <> new.user_id
+     and private.is_blocked_between(new.actor_id, new.user_id) then
+    return null;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists notifications_enforce_insert on public.notifications;
+create trigger notifications_enforce_insert
+  before insert on public.notifications
+  for each row execute function public.enforce_notification_insert();

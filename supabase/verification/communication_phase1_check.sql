@@ -34,13 +34,17 @@
 --                                             the admin who reviews
 --                                             reports)
 --
--- Checks 3, 4, 9, 24-28, 32 and 41 attempt a write that must be rejected.
--- Each is its own begin...exception...end sub-block, so one failing
--- attempt can't abort the rest, and each classifies what it caught rather
--- than treating any error as a pass: PASS only for insufficient_privilege
--- (42501, an RLS policy) or raise_exception (P0001, one of this
--- migration's own trigger-raised errors) — or, for an UPDATE, affecting 0
--- rows with no error at all. Anything else is recorded as
+-- Every check that attempts a write expected to be rejected is its own
+-- begin...exception...end sub-block, so one failing attempt can't abort
+-- the rest, and each classifies what it caught rather than treating any
+-- error as a pass: PASS only for insufficient_privilege (42501, an RLS
+-- policy), raise_exception (P0001, one of this migration's own
+-- trigger-raised errors), undefined_function (42883, used for the one
+-- check that a dropped function is actually gone) — or, for an
+-- UPDATE/DELETE, affecting 0 rows with no error at all. A silently
+-- dropped INSERT (the notifications trigger's RETURN NULL path) isn't
+-- wrapped this way since it raises nothing to catch — those checks just
+-- count rows afterward instead. Anything else is recorded as
 -- 'N ERROR <sqlstate>: <message>', not PASS — a broken fixture or an
 -- unrelated bug must never read as a security win.
 
@@ -147,9 +151,24 @@ begin
   select count(*) into v_n from public.messages where participation_id = v_thread_ca;
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
 
-  -- 9. C can't open a second direct_message thread to A — must reuse
-  -- the existing (declined) one instead.
+  -- 9. Fix 4: C can't delete their declined DM to A either — the old
+  -- policy let a sender delete a declined (or still-pending) thread and
+  -- immediately open a new one, defeating Ignore/Decline entirely.
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_c), true);
+  v_i := v_i + 1;
+  begin
+    delete from public.participations where id = v_thread_ca;
+    get diagnostics v_n = row_count;
+    results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then results := array_append(results, format('%s PASS', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- 10. C can't open a second direct_message thread to A — must reuse
+  -- the existing (declined, still there since the delete above failed)
+  -- one instead.
   v_i := v_i + 1;
   begin
     insert into public.participations (kind, from_user, to_user) values ('direct_message', v_c, v_a);
@@ -160,7 +179,7 @@ begin
     when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
 
-  -- 10. A reverses the decline — declined -> accepted is an allowed
+  -- 11. A reverses the decline — declined -> accepted is an allowed
   -- transition (someone can change their mind).
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_a), true);
   update public.participations set status = 'accepted' where id = v_thread_ca;
@@ -193,14 +212,31 @@ begin
   v_i := v_i + 1; results := array_append(results, format('%s PASS', v_i));
 
   -- ───────────────────────────────────────────────────────────────────────
-  -- 16-19. Make together, unchanged: still a request the recipient
-  -- accepts, then either side can message.
+  -- 16-21. Make together. Fix 1: the client lies and asks for
+  -- status='accepted' up front (the bypass that used to open a message
+  -- thread with no request step at all) — the server must force 'pending'
+  -- regardless, and C must not be able to message until A actually
+  -- accepts. Then the normal accept-and-message flow, unchanged.
   -- ───────────────────────────────────────────────────────────────────────
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_c), true);
   insert into public.participations (kind, from_user, to_user, status, intent)
-  values ('make_together', v_c, v_a, 'pending', 'Sourdough starter swap')
+  values ('make_together', v_c, v_a, 'accepted', 'Sourdough starter swap')
   returning id into v_thread_mt;
-  v_i := v_i + 1; results := array_append(results, format('%s PASS', v_i));
+  v_i := v_i + 1;
+  results := array_append(results, format('%s %s', v_i,
+    case when (select status from public.participations where id = v_thread_mt) = 'pending' then 'PASS' else 'FAIL' end));
+
+  -- 17. Still pending: C can't message into it yet (unlike direct_message,
+  -- make_together/explore_together get no pending-preview allowance).
+  v_i := v_i + 1;
+  begin
+    insert into public.messages (participation_id, from_user, body) values (v_thread_mt, v_c, 'Hi! Sourdough time?');
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then results := array_append(results, format('%s PASS', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
 
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_a), true);
   update public.participations set status = 'accepted' where id = v_thread_mt;
@@ -367,6 +403,92 @@ begin
       select status = 'reviewed' and reviewed_by = v_c and reviewed_at is not null
       from public.reports where id = v_report_bt
     ) then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 40-44. Fix 2: notifications hardening.
+  -- ───────────────────────────────────────────────────────────────────────
+
+  -- 40. Blocked B still can't notify A — silently dropped, not an error
+  -- (see the migration's section 8 header for why silent rather than
+  -- raised: the same trigger also has to let a multi-recipient pursuit
+  -- notification batch continue for everyone else).
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_b), true);
+  insert into public.notifications (user_id, kind, body, href)
+  values (v_a, 'message', 'Phase1 verify: blocked-notify marker', '/messages');
+  v_i := v_i + 1;
+  select count(*) into v_n from public.notifications
+  where user_id = v_a and body = 'Phase1 verify: blocked-notify marker';
+  results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
+
+  -- 41. An absolute URL href is rejected.
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_c), true);
+  v_i := v_i + 1;
+  begin
+    insert into public.notifications (user_id, kind, body, href) values (v_c, 'message', 'test', 'https://evil.example');
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then results := array_append(results, format('%s PASS', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- 42. A protocol-relative href ('//host/...') is rejected too — it's
+  -- still an off-app destination in a browser, not an in-app path.
+  v_i := v_i + 1;
+  begin
+    insert into public.notifications (user_id, kind, body, href) values (v_c, 'message', 'test', '//evil.example');
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then results := array_append(results, format('%s PASS', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- 43. An unrecognized kind is rejected.
+  v_i := v_i + 1;
+  begin
+    insert into public.notifications (user_id, kind, body) values (v_c, 'not_a_real_kind', 'test');
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then results := array_append(results, format('%s PASS', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- 44. actor_id can't be spoofed — C inserts claiming to be A; the server
+  -- must stamp C's own id regardless of what the client sent.
+  insert into public.notifications (user_id, kind, body, actor_id)
+  values (v_c, 'message', 'Phase1 verify: actor_id marker', v_a);
+  v_i := v_i + 1;
+  select count(*) into v_n from public.notifications
+  where user_id = v_c and body = 'Phase1 verify: actor_id marker' and actor_id = v_c;
+  results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 45. Fix 3: is_blocked_between is no longer reachable in `public` at
+  -- all (moved to `private`, which PostgREST doesn't expose) — calling it
+  -- the old way must fail as an unknown function, proving it's actually
+  -- gone from there rather than merely hidden behind a revoked grant.
+  -- ───────────────────────────────────────────────────────────────────────
+  v_i := v_i + 1;
+  begin
+    perform public.is_blocked_between(v_a, v_b);
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when undefined_function then results := array_append(results, format('%s PASS', v_i));
+    when insufficient_privilege then results := array_append(results, format('%s PASS', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 46. Fix 5: the one-direct_message-per-pair rule is backed by a real
+  -- unique index now, not just the trigger's own `exists` check — a
+  -- structural check, since actually racing two concurrent inserts isn't
+  -- something one serial script can simulate.
+  -- ───────────────────────────────────────────────────────────────────────
+  select count(*) into v_n from pg_indexes
+  where schemaname = 'public' and indexname = 'participations_one_direct_message_per_pair';
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
 
   -- ───────────────────────────────────────────────────────────────────────
   -- Done. This is the ONLY way this block ends — the exception aborts the

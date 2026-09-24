@@ -7,6 +7,20 @@
 -- Run this top-to-bottom in one go. Safe to re-run.
 
 -- ═══════════════════════════════════════════════════════════════════════
+-- 8. notifications — restore the original (unhardened) INSERT policy and
+--    drop everything added.
+-- ═══════════════════════════════════════════════════════════════════════
+
+drop trigger if exists notifications_enforce_insert on public.notifications;
+drop function if exists public.enforce_notification_insert();
+alter table public.notifications drop column if exists actor_id;
+
+drop policy if exists "signed-in users can notify" on public.notifications;
+create policy "signed-in users can notify"
+  on public.notifications for insert
+  with check (true);
+
+-- ═══════════════════════════════════════════════════════════════════════
 -- 7. reports — drop entirely (nothing pre-existing to restore)
 -- ═══════════════════════════════════════════════════════════════════════
 
@@ -49,9 +63,20 @@ create policy "you can write in an accepted thread"
     )
   );
 
+drop index if exists public.participations_one_direct_message_per_pair;
+
+drop policy if exists "you can withdraw" on public.participations;
+create policy "you can withdraw"
+  on public.participations for delete
+  using (auth.uid() = from_user);
+
 drop trigger if exists participations_enforce_status_transition on public.participations;
 drop function if exists public.enforce_participation_status_transition();
 
+drop trigger if exists participations_set_insert_status on public.participations;
+drop function if exists public.set_participation_insert_status();
+-- (older draft names, in case a partial apply of an earlier version of
+-- this migration ever ran)
 drop trigger if exists participations_set_direct_message_status on public.participations;
 drop function if exists public.set_direct_message_status();
 
@@ -120,10 +145,14 @@ $$;
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 3 & 2 & 1. Drop everything net-new: the follow-removal trigger,
---    is_blocked_between(), and the blocks table itself.
+--    is_blocked_between() (in whichever schema it ended up in), and the
+--    blocks table itself.
 -- ═══════════════════════════════════════════════════════════════════════
 
 drop trigger if exists blocks_remove_follows on public.blocks;
 drop function if exists public.on_block_remove_follows();
+drop function if exists private.is_blocked_between(uuid, uuid);
+-- (older draft location, in case a partial apply of an earlier version of
+-- this migration ever ran)
 drop function if exists public.is_blocked_between(uuid, uuid);
 drop table if exists public.blocks;
