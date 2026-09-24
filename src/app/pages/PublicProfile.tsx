@@ -26,6 +26,7 @@ import { ProfileLinksRow } from "../components/ProfileLinks";
 import { useFollowerCount } from "../lib/useFollowerCount";
 import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/profileFollows";
 import { FollowListDialog } from "../components/FollowListDialog";
+import { PersonActionsMenu } from "../components/PersonActionsMenu";
 
 /** Whichever Space shows up most in their posts — used to pick a Circles
  * suggestion and the closing banner's illustration, not to claim membership
@@ -93,6 +94,9 @@ export function PublicProfile() {
   const [followBusy, setFollowBusy] = useState(false);
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
   const [messageBusy, setMessageBusy] = useState(false);
+  // Same wording whatever the actual cause — a block, a rate limit, a
+  // network error — so this can never reveal that a block exists.
+  const [messageError, setMessageError] = useState<string | null>(null);
   const [followListOpen, setFollowListOpen] = useState(false);
   const followerCount = useFollowerCount(
     state.status === "ready" ? state.personId : undefined,
@@ -427,9 +431,11 @@ export function PublicProfile() {
                     disabled={messageBusy}
                     onClick={async () => {
                       setMessageBusy(true);
+                      setMessageError(null);
                       const { id, error } = await social.startDirectMessage(personId, displayName);
                       setMessageBusy(false);
                       if (!error && id != null) navigate(`/messages?thread=${id}`);
+                      else if (error && error !== "self") setMessageError("Couldn't message this person.");
                     }}
                   >
                     <MessageCircle className="size-3.5" />
@@ -437,7 +443,9 @@ export function PublicProfile() {
                   </Button>
                 )}
                 <CopyLinkButton />
+                {!isMe && user && <PersonActionsMenu personId={personId} personName={displayName} onBlocked={() => navigate("/discover")} />}
               </div>
+              {messageError && <p className="mt-2 text-xs text-[var(--coral-text)]">{messageError}</p>}
               <Link
                 to={`/u/${username}/studio`}
                 className="mt-2 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
