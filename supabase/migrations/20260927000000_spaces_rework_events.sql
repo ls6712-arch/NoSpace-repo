@@ -33,11 +33,23 @@
 -- remove_member, ban_member) to drop a departing member's RSVPs to a
 -- Closed Space's upcoming events — spelled out in section 6, not
 -- rebuilding the rest of those functions' bodies — and extends Phase 4's
--- execute_space_deletion to clean up event_private_details the same way
--- it already cleans up space_private_details (section 7). space_events
--- and event_rsvps rows themselves are NOT deleted on Space deletion —
--- kept for history, same precedent as space_members, and already hidden
--- from non-admins by space_events' own status <> 'deleted' gate.
+-- execute_space_deletion to cancel that Space's own upcoming events
+-- (notifying their RSVPs, same as cancel_event) and clean up
+-- event_private_details the same way it already cleans up
+-- space_private_details (section 7). space_events and event_rsvps rows
+-- themselves are NOT deleted on Space deletion — kept for history, same
+-- precedent as space_members, and already hidden from non-admins by
+-- space_events' own status <> 'deleted' gate.
+--
+-- A ban is a safety action, not a teardown one: ban_member drops the
+-- banned user's upcoming RSVPs in that Space regardless of access
+-- (Open included — leave_space/remove_member stay Closed-only, since
+-- those are voluntary/administrative, not a ban), rsvp_to_event refuses
+-- a banned caller everywhere (an Open Space's "anyone signed in" rule was
+-- never meant to readmit a banned person through the events door), and
+-- event_private_details' own RSVP-based visibility independently excludes
+-- a currently-banned user even if a stale RSVP row somehow survives —
+-- belt and suspenders, not relying on ban_member's cleanup alone.
 --
 -- Safe to re-run: table/index/policy creation is idempotent, functions
 -- are create-or-replace.
@@ -123,7 +135,11 @@ create policy "you and the space's members read RSVPs"
 --    query that also returns rows to people who shouldn't see it, so it
 --    lives on its own table with its own, narrower policy. Readable by an
 --    active Space member, or by anyone with a "going" RSVP for that
---    specific event (an Open Space's RSVP'd non-member, in particular).
+--    specific event (an Open Space's RSVP'd non-member, in particular) —
+--    except someone currently banned from that event's Space, even if an
+--    RSVP row of theirs still exists (ban_member deletes it immediately,
+--    but this is a second, independent line of defense rather than
+--    trusting that cleanup alone).
 -- ─────────────────────────────────────────────────────────────────────────
 create table if not exists public.event_private_details (
   event_id bigint primary key references public.space_events (id) on delete cascade,
@@ -143,7 +159,13 @@ create policy "members and going RSVPs read the exact address"
     )
     or exists (
       select 1 from event_rsvps er
-      where er.event_id = event_private_details.event_id and er.user_id = auth.uid()
+      join space_events se2 on se2.id = er.event_id
+      where er.event_id = event_private_details.event_id
+        and er.user_id = auth.uid()
+        and not exists (
+          select 1 from space_members sm
+          where sm.space_id = se2.space_id and sm.user_id = auth.uid() and sm.status = 'banned'
+        )
     )
   );
 
@@ -215,6 +237,11 @@ grant execute on function public.create_event(uuid, text, text, timestamptz, tim
 -- departed creator can no longer edit; only a host can from then on).
 -- Not a teardown action, so it's gated on the Space being active, same as
 -- create_event.
+--
+-- p_exact_address: null means "leave the current address alone" — not
+-- "delete it". Deleting one is explicit, via p_clear_address, so a caller
+-- updating unrelated fields (title, time) can't accidentally wipe the
+-- address just by not passing it.
 create or replace function public.update_event(
   p_event_id bigint,
   p_title text,
@@ -225,7 +252,8 @@ create or replace function public.update_event(
   p_meets text,
   p_neighborhood text,
   p_city text,
-  p_exact_address text default null
+  p_exact_address text default null,
+  p_clear_address boolean default false
 )
 returns void
 language plpgsql
@@ -252,16 +280,16 @@ begin
       timezone = p_timezone, meets = p_meets, neighborhood = p_neighborhood, city = p_city
   where space_events.id = p_event_id;
 
-  if p_exact_address is null then
+  if p_clear_address then
     delete from event_private_details where event_private_details.event_id = p_event_id;
-  else
+  elsif p_exact_address is not null then
     insert into event_private_details (event_id, exact_address) values (p_event_id, p_exact_address)
     on conflict (event_id) do update set exact_address = excluded.exact_address;
   end if;
 end;
 $$;
-revoke all on function public.update_event(bigint, text, text, timestamptz, timestamptz, text, text, text, text, text) from public, anon;
-grant execute on function public.update_event(bigint, text, text, timestamptz, timestamptz, text, text, text, text, text) to authenticated;
+revoke all on function public.update_event(bigint, text, text, timestamptz, timestamptz, text, text, text, text, text, boolean) from public, anon;
+grant execute on function public.update_event(bigint, text, text, timestamptz, timestamptz, text, text, text, text, text, boolean) to authenticated;
 
 -- Host, or the event's own creator while still an active member — same
 -- permission shape as update_event. A teardown action, so NOT gated on
@@ -366,9 +394,12 @@ $$;
 revoke all on function public.unfeature_event(bigint) from public, anon;
 grant execute on function public.unfeature_event(bigint) to authenticated;
 
--- Open Space: any signed-in user. Closed: active members only. Gated on
--- the Space being active (new engagement) and the event still being
--- scheduled.
+-- Open Space: any signed-in user. Closed: active members only. Either
+-- way, a caller banned from the Space is refused regardless of access —
+-- an Open Space's "anyone signed in" rule was never meant to let a banned
+-- person back in through the events door. Also refuses a past event and
+-- one that's no longer scheduled. Gated on the Space being active (new
+-- engagement).
 create or replace function public.rsvp_to_event(p_event_id bigint)
 returns void
 language plpgsql
@@ -385,6 +416,17 @@ begin
   end if;
   if v_event.status <> 'scheduled' then
     raise exception 'This event has been cancelled.';
+  end if;
+  if v_event.starts_at <= now() then
+    raise exception 'This event has already started.';
+  end if;
+  if exists (
+    select 1 from space_members
+    where space_members.space_id = v_event.space_id
+      and space_members.user_id = auth.uid()
+      and space_members.status = 'banned'
+  ) then
+    raise exception 'You can''t RSVP to an event in this Space.';
   end if;
   select spaces.access into v_access from spaces where spaces.id = v_event.space_id;
   if v_access = 'closed' and not public.is_space_member(v_event.space_id, auth.uid()) then
@@ -553,26 +595,33 @@ begin
   delete from space_moments sm
   using posts p
   where sm.space_id = p_space_id and sm.post_id = p.id and p.user_id = p_user_id;
+  -- Unlike leave_space/remove_member (Closed Spaces only), a ban drops
+  -- upcoming RSVPs regardless of access — a banned person shouldn't keep
+  -- an RSVP to an Open Space's event either, since rsvp_to_event now
+  -- refuses a banned caller there too.
   delete from event_rsvps er
   using space_events se
   where er.event_id = se.id
     and se.space_id = p_space_id
     and er.user_id = p_user_id
-    and se.starts_at > now()
-    and exists (select 1 from spaces s where s.id = p_space_id and s.access = 'closed');
+    and se.starts_at > now();
 end;
 $$;
 revoke all on function public.ban_member(uuid, uuid) from public, anon;
 grant execute on function public.ban_member(uuid, uuid) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 7. Deletion cleanup: event_private_details deleted outright on Space
---    deletion, same reasoning as space_private_details ("no history value
---    in a stale exact address"). space_events/event_rsvps rows are
---    deliberately left in place — kept for history, same precedent as
---    space_members, and already hidden from non-admins by space_events'
---    own status <> 'deleted' gate on its parent Space. Full body
---    reproduced from 20260926000000; only the new final DELETE is new.
+-- 7. Deletion cleanup: this Space's own upcoming scheduled events are
+--    cancelled and their RSVPs notified — same notification cancel_event
+--    itself writes — before anything else runs, so the notify query still
+--    sees them as 'scheduled' and event_private_details deleted outright,
+--    same reasoning as space_private_details ("no history value in a
+--    stale exact address"). space_events/event_rsvps rows are otherwise
+--    left in place — kept for history, same precedent as space_members,
+--    and already hidden from non-admins by space_events' own
+--    status <> 'deleted' gate on its parent Space. Full body reproduced
+--    from 20260926000000; everything from the notify insert onward is
+--    new here.
 -- ─────────────────────────────────────────────────────────────────────────
 create or replace function public.execute_space_deletion(p_space_id uuid)
 returns void
@@ -580,8 +629,24 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_actor_name text;
 begin
   update spaces set status = 'deleted' where spaces.id = p_space_id;
+
+  select coalesce(nullif(trim(profiles.display_name), ''), profiles.username, 'Someone')
+    into v_actor_name from profiles where profiles.id = auth.uid();
+
+  insert into notifications (user_id, kind, body, href, actor_name)
+  select er.user_id, 'space_event_cancelled',
+    coalesce(v_actor_name, 'Someone') || ' cancelled ' || se.title || '.', null, v_actor_name
+  from space_events se
+  join event_rsvps er on er.event_id = se.id
+  where se.space_id = p_space_id and se.status = 'scheduled' and se.starts_at > now();
+
+  update space_events set status = 'cancelled', featured = false
+  where space_events.space_id = p_space_id and space_events.status = 'scheduled' and space_events.starts_at > now();
+
   delete from space_moments where space_moments.space_id = p_space_id;
   delete from space_private_details where space_private_details.space_id = p_space_id;
   delete from space_join_requests where space_join_requests.space_id = p_space_id;

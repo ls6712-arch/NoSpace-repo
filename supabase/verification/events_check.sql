@@ -49,6 +49,7 @@ declare
   v_o_event_id bigint;
   v_p_event_id bigint;
   v_p_past_event_id bigint;
+  v_q_event_id bigint;
 begin
   select current_user into v_owner_role;
 
@@ -67,14 +68,18 @@ begin
     ('00000000-0000-4000-8000-000000002007', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5-n-member@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
     ('00000000-0000-4000-8000-000000002008', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5-o-host@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
     ('00000000-0000-4000-8000-000000002009', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5-p-host@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
-    ('00000000-0000-4000-8000-000000002010', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5-p-member@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false);
+    ('00000000-0000-4000-8000-000000002010', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5-p-member@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    ('00000000-0000-4000-8000-000000002011', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5-l-banned@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    ('00000000-0000-4000-8000-000000002012', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5-q-host@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    ('00000000-0000-4000-8000-000000002013', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5-q-member@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false);
 
   insert into public.spaces (id, slug, name, description, cover_image, meets, access, posting_mode, member_cap, created_by, status)
   values
     ('00000000-0000-4000-8000-0000000000d1', 'phase5-test-l', 'Phase 5 Test L', 'Test fixture, rolled back.', 'https://example.invalid/cover.jpg', 'online', 'open', 'immediate', null, '00000000-0000-4000-8000-000000002001', 'active'),
     ('00000000-0000-4000-8000-0000000000d2', 'phase5-test-m', 'Phase 5 Test M', 'Test fixture, rolled back.', 'https://example.invalid/cover.jpg', 'online', 'closed', 'immediate', null, '00000000-0000-4000-8000-000000002003', 'active'),
     ('00000000-0000-4000-8000-0000000000d4', 'phase5-test-o', 'Phase 5 Test O', 'Test fixture, rolled back.', 'https://example.invalid/cover.jpg', 'online', 'closed', 'immediate', null, '00000000-0000-4000-8000-000000002008', 'read_only'),
-    ('00000000-0000-4000-8000-0000000000d5', 'phase5-test-p', 'Phase 5 Test P', 'Test fixture, rolled back.', 'https://example.invalid/cover.jpg', 'online', 'closed', 'immediate', null, '00000000-0000-4000-8000-000000002009', 'active');
+    ('00000000-0000-4000-8000-0000000000d5', 'phase5-test-p', 'Phase 5 Test P', 'Test fixture, rolled back.', 'https://example.invalid/cover.jpg', 'online', 'closed', 'immediate', null, '00000000-0000-4000-8000-000000002009', 'active'),
+    ('00000000-0000-4000-8000-0000000000d6', 'phase5-test-q', 'Phase 5 Test Q', 'Test fixture, rolled back.', 'https://example.invalid/cover.jpg', 'online', 'closed', 'immediate', null, '00000000-0000-4000-8000-000000002012', 'active');
 
   insert into public.spaces (id, slug, name, description, cover_image, meets, access, posting_mode, member_cap, created_by, status, events_created_by)
   values
@@ -88,7 +93,13 @@ begin
     ('00000000-0000-4000-8000-0000000000d3', '00000000-0000-4000-8000-000000002007', 'member', 'active', now() - interval '30 days'),
     ('00000000-0000-4000-8000-0000000000d4', '00000000-0000-4000-8000-000000002008', 'host', 'active', now() - interval '30 days'),
     ('00000000-0000-4000-8000-0000000000d5', '00000000-0000-4000-8000-000000002009', 'host', 'active', now() - interval '30 days'),
-    ('00000000-0000-4000-8000-0000000000d5', '00000000-0000-4000-8000-000000002010', 'member', 'active', now() - interval '30 days');
+    ('00000000-0000-4000-8000-0000000000d5', '00000000-0000-4000-8000-000000002010', 'member', 'active', now() - interval '30 days'),
+    -- Needs a pre-existing row so ban_member (which only sets an existing
+    -- row's status to 'banned') has something to ban — an Open Space
+    -- doesn't otherwise require membership to RSVP.
+    ('00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-000000002011', 'member', 'active', now() - interval '5 days'),
+    ('00000000-0000-4000-8000-0000000000d6', '00000000-0000-4000-8000-000000002012', 'host', 'active', now() - interval '30 days'),
+    ('00000000-0000-4000-8000-0000000000d6', '00000000-0000-4000-8000-000000002013', 'member', 'active', now() - interval '30 days');
 
   -- O's pre-fixtured event — direct insert, since create_event refuses a
   -- read_only Space via assert_space_active.
@@ -338,6 +349,109 @@ begin
   select count(*) into v_n from event_rsvps
   where event_rsvps.event_id = v_p_past_event_id and event_rsvps.user_id = '00000000-0000-4000-8000-000000002010';
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 27-29. A ban, in an Open Space (L): drops the upcoming RSVP
+  --        regardless of access, a stale RSVP row (re-inserted directly,
+  --        simulating one that somehow survived) still can't unlock the
+  --        address, and RSVPing again is refused outright.
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000002011"}', true);
+  perform public.rsvp_to_event(v_l_event_id);
+
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000002001"}', true);
+  perform public.ban_member('00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-000000002011');
+  perform set_config('role', v_owner_role, true);
+  select count(*) into v_n from event_rsvps
+  where event_rsvps.event_id = v_l_event_id and event_rsvps.user_id = '00000000-0000-4000-8000-000000002011';
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
+
+  -- Simulate a stale row that survived the ban (direct insert, owner role,
+  -- bypasses rsvp_to_event's own ban check entirely).
+  insert into event_rsvps (event_id, user_id) values (v_l_event_id, '00000000-0000-4000-8000-000000002011');
+
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000002011"}', true);
+  select count(*) into v_n from event_private_details where event_private_details.event_id = v_l_event_id;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
+
+  v_i := v_i + 1;
+  begin
+    perform public.rsvp_to_event(v_l_event_id);
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  perform set_config('role', v_owner_role, true);
+  delete from event_rsvps
+  where event_rsvps.event_id = v_l_event_id and event_rsvps.user_id = '00000000-0000-4000-8000-000000002011';
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 30-31. update_event's address semantics: a null p_exact_address keeps
+  --        the current address (M's event, renamed in check 22 with a
+  --        null address, should still have the one set when it was
+  --        created); p_clear_address explicitly removes it.
+  -- ───────────────────────────────────────────────────────────────────────
+  select count(*) into v_n from event_private_details where event_private_details.event_id = v_m_event_id;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000002003"}', true);
+  perform public.update_event(v_m_event_id, 'M Event Renamed', null, now() + interval '5 days', null, 'America/New_York', 'online', null, null, null, true);
+  perform set_config('role', v_owner_role, true);
+  select count(*) into v_n from event_private_details where event_private_details.event_id = v_m_event_id;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 32. rsvp_to_event refuses a past event (P's pre-fixtured past event).
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000002009"}', true);
+  v_i := v_i + 1;
+  begin
+    perform public.rsvp_to_event(v_p_past_event_id);
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when raise_exception then
+      results := array_append(results, format('%s PASS', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 33-37. execute_space_deletion (Space Q, sole host): cancels its
+  --        upcoming event, notifies the RSVP, and cleans up the address.
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000002012"}', true);
+  select public.create_event('00000000-0000-4000-8000-0000000000d6', 'Q Event', null, now() + interval '5 days', null, 'America/New_York', 'in_person', 'Eastside', 'Testville', '789 Q Rd, Testville') into v_q_event_id;
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000002013"}', true);
+  perform public.rsvp_to_event(v_q_event_id);
+  perform set_config('role', v_owner_role, true);
+
+  select count(*) into v_n from notifications
+  where notifications.user_id = '00000000-0000-4000-8000-000000002013' and notifications.kind = 'space_event_cancelled';
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
+
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000002012"}', true);
+  select public.request_space_deletion('00000000-0000-4000-8000-0000000000d6') into v_text;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_text = 'deleted' then 'PASS' else 'FAIL' end));
+
+  perform set_config('role', v_owner_role, true);
+  select count(*) into v_n from notifications
+  where notifications.user_id = '00000000-0000-4000-8000-000000002013' and notifications.kind = 'space_event_cancelled';
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  select status into v_text from space_events where space_events.id = v_q_event_id;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_text = 'cancelled' then 'PASS' else 'FAIL' end));
+
+  select count(*) into v_n from event_private_details where event_private_details.event_id = v_q_event_id;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL' end));
 
   -- ───────────────────────────────────────────────────────────────────────
   -- Done. This is the ONLY way this block ends — the exception aborts the

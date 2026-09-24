@@ -13,7 +13,7 @@
 -- cleanup migration did for Circles.
 
 drop function if exists public.create_event(uuid, text, text, timestamptz, timestamptz, text, text, text, text, text);
-drop function if exists public.update_event(bigint, text, text, timestamptz, timestamptz, text, text, text, text, text);
+drop function if exists public.update_event(bigint, text, text, timestamptz, timestamptz, text, text, text, text, text, boolean);
 drop function if exists public.cancel_event(bigint);
 drop function if exists public.feature_event(bigint);
 drop function if exists public.unfeature_event(bigint);
