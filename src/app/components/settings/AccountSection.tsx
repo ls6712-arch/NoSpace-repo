@@ -192,6 +192,7 @@ export function AccountSection() {
           <p className="mb-2 mt-6 text-xs uppercase tracking-[0.08em] text-muted-foreground">Site admin</p>
           <SettingsPanel>
             <AdminLinkRow to="/admin/spaces" label="Manage Spaces" />
+            <AdminLinkRow to="/admin/corners" label="Manage Corners" />
             <AdminLinkRow to="/admin/circles" label="Manage Circles" />
             <AdminLinkRow to="/admin/categories" label="Review category suggestions" badge={pendingCount} />
           </SettingsPanel>

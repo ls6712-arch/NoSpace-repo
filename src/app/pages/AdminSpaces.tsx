@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Check, Copy, Eye, EyeOff, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { Check, Copy, Eye, EyeOff, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCategories } from "../context/CategoriesContext";
 import { builtInSpace, hobbies, isBuiltInSpace, type Hobby } from "../data/hobbies";
@@ -50,10 +50,6 @@ export function AdminSpaces() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const [newName, setNewName] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [newPrompt, setNewPrompt] = useState("");
-
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState({ name: "", description: "", prompt: "" });
 
@@ -97,31 +93,6 @@ export function AdminSpaces() {
     }
     if (ok) setNotice(ok);
     return true;
-  };
-
-  const create = async () => {
-    const name = newName.trim();
-    if (!name) {
-      setError("Give the Space a name.");
-      return;
-    }
-    let createdSlug: string | undefined;
-    const ok = await run("create", async () => {
-      const res = await saveSpace({
-        name,
-        description: newDescription,
-        prompt: newPrompt,
-        active: true,
-      });
-      createdSlug = res.slug;
-      return res;
-    });
-    if (ok) {
-      setNotice(`Created “${name}”. Its link is /#/space/${createdSlug}`);
-      setNewName("");
-      setNewDescription("");
-      setNewPrompt("");
-    }
   };
 
   const startEdit = (h: Hobby) => {
@@ -236,52 +207,10 @@ export function AdminSpaces() {
           </p>
         )}
 
-        <section className="mb-10 rounded-2xl border border-border bg-[var(--surface-elevated)] p-5">
-          <h2 className="mb-4 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-            Create a Space
-          </h2>
-          <div className="space-y-3">
-            <div>
-              <label htmlFor="new-space-name" className="mb-1.5 block text-xs text-muted-foreground">
-                Name
-              </label>
-              <Input
-                id="new-space-name"
-                value={newName}
-                maxLength={60}
-                placeholder="Plants"
-                onChange={(e) => setNewName(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="new-space-desc" className="mb-1.5 block text-xs text-muted-foreground">
-                One line about it
-              </label>
-              <Input
-                id="new-space-desc"
-                value={newDescription}
-                maxLength={300}
-                placeholder="Houseplants, gardens, cuttings, and the ones you're still keeping alive."
-                onChange={(e) => setNewDescription(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="new-space-prompt" className="mb-1.5 block text-xs text-muted-foreground">
-                Prompt shown at the top (an invitation to post)
-              </label>
-              <Input
-                id="new-space-prompt"
-                value={newPrompt}
-                maxLength={120}
-                placeholder="Show us your plant."
-                onChange={(e) => setNewPrompt(e.target.value)}
-              />
-            </div>
-            <Button variant="brand" onClick={create} disabled={busy === "create"}>
-              <Plus className="size-4" />
-              {busy === "create" ? "Creating…" : "Create Space"}
-            </Button>
-          </div>
+        <section className="mb-10 rounded-2xl border border-dashed border-border bg-[var(--surface-elevated)] p-5 text-sm text-muted-foreground">
+          Creating a new Space here is turned off during the Spaces Rework. New
+          communities will be made from the Create Space form instead, once
+          it ships.
         </section>
 
         <h2 className="mb-3 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
