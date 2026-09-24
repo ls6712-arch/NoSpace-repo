@@ -1,16 +1,13 @@
 import {
   ArrowDown,
   ArrowUpRight,
-  BookOpen,
   Camera,
   ChevronRight,
   Circle,
   Compass,
-  Flower2,
   Grid2X2,
   Heart,
   Menu,
-  MessageCircle,
   MoveUpRight,
   Plus,
   Search,
@@ -34,6 +31,18 @@ const moments = [
   { label: "First tomatoes", type: "Garden", image: imagery.garden, tint: "green" },
   { label: "Margin notes", type: "Reading", image: imagery.reading, tint: "plum" },
 ];
+
+const showcaseMoments = [
+  { label: "A softer blue", type: "Making", image: imagery.ceramics, date: "2026-10-02", position: "one" },
+  { label: "First tomatoes", type: "Outdoors", image: imagery.garden, date: "2026-10-05", position: "two" },
+  { label: "Margin notes", type: "Reading", image: imagery.reading, date: "2026-10-08", position: "three" },
+  { label: "A quiet table", type: "Learning", image: imagery.identity, date: "2026-10-11", position: "four" },
+  { label: "A new direction", type: "Exploring", image: imagery.hero, date: "2026-10-14", position: "five" },
+];
+
+const latestShowcaseDate = showcaseMoments.reduce((latest, moment) => moment.date > latest ? moment.date : latest, showcaseMoments[0]?.date ?? "");
+const latestShowcaseMonth = latestShowcaseDate ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(new Date(`${latestShowcaseDate}T12:00:00`)) : "";
+const showcaseCount = showcaseMoments.filter((moment) => moment.date.startsWith(latestShowcaseDate.slice(0, 7))).length;
 
 function MiniAvatar({ name, color }: { name: string; color: string }) {
   return <span className="mini-avatar" style={{ background: color }}>{name}</span>;
@@ -254,10 +263,8 @@ export default function Home() {
           <div className="section-label"><span>01</span><p>YOUR SPACE</p></div>
           <div className="core-copy"><div><h2>Bring it all together.<br /><em>Make room for your story.</em></h2><a className="text-link space-secondary-link" href="https://www.trynospace.com" target="_blank" rel="noreferrer">Make a Space <ArrowUpRight size={15} /></a></div><p>Your Space brings your Moments and Pursuits together in one place. See the things you care about begin to feel like a life.</p></div>
           <div className="archive-scene">
-            <div className="archive-caption"><span>MARIN’S SPACE</span><strong>September, so far</strong><p>12 small things, kept close.</p></div>
-            <div className="archive-polaroid is-one"><img src={imagery.ceramics} alt="A pottery moment" /><span>A softer blue</span></div>
-            <div className="archive-polaroid is-two"><img src={imagery.garden} alt="A garden moment" /><span>First tomatoes</span></div>
-            <div className="archive-polaroid is-three"><img src={imagery.reading} alt="A reading moment" /><span>Margin notes</span></div>
+            <div className="archive-caption"><span>MARIN’S SPACE</span><strong>{latestShowcaseMonth}, so far</strong><p>{showcaseCount} small things, kept close.</p></div>
+            {showcaseMoments.map((moment) => <div className={`archive-polaroid is-${moment.position}`} key={moment.label}><img src={moment.image} alt={`${moment.type} moment: ${moment.label}`} /><span>{moment.label}</span></div>)}
             <div className="archive-mark"><Sparkles size={18} /> <span>KEEP BECOMING</span></div>
           </div>
         </section>
@@ -291,7 +298,6 @@ export default function Home() {
         <section className="final-cta section-wrap">
           <div className="final-orbit orbit-a" /><div className="final-orbit orbit-b" />
           <div className="cta-content"><p className="eyebrow"><span /> KEEP EXPLORING</p><h2>Explore the things<br />that make <em>you.</em></h2><p>Start keeping track of what you’re into, one Moment at a time.</p><ActionLink dark href="#moments">Explore Sushii</ActionLink><a className="text-link cta-secondary-link" href="https://www.trynospace.com" target="_blank" rel="noreferrer">Make a Space <ArrowUpRight size={15} /></a><small>Free to begin. Kept private unless you choose otherwise.</small></div>
-          <div className="cta-moments" aria-hidden="true"><div><Flower2 size={20} /><span>begin anywhere</span></div><div><BookOpen size={20} /><span>keep what matters</span></div><div><MessageCircle size={20} /><span>find your people</span></div></div>
         </section>
       </main>
 
