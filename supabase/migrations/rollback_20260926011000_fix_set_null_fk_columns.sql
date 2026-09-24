@@ -1,0 +1,11 @@
+-- Rollback for 20260926011000_fix_set_null_fk_columns.sql.
+--
+-- Draft only — staged for review, not run.
+--
+-- Not safe to run once any Space's created_by has actually gone NULL
+-- (i.e. once a Space's creator has had their account deleted while the
+-- Space still exists) — restoring NOT NULL at that point fails outright,
+-- and even if it succeeded it would reintroduce the exact contradiction
+-- this migration fixed: the next account deletion for any other Space's
+-- creator would be blocked again the same way.
+alter table public.spaces alter column created_by set not null;
