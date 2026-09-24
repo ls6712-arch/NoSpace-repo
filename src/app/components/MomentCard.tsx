@@ -22,7 +22,7 @@ import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { displayLocation } from "../data/participation";
 import { usePursuitTitle } from "../lib/pursuitTitle";
 import { isOnlyYou, visibilityWord, MOMENT_VISIBILITY_OPTIONS } from "../lib/visibility";
-import { useReactionState } from "./PostReactions";
+import { useReactionState } from "../lib/reactionState";
 import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Thoughts } from "./Thoughts";
 import { BePart } from "./BePart";
@@ -98,6 +98,9 @@ export interface MomentCardProps {
   surface: MomentCardSurface;
   /** "01".."06" — sheet numbering, My Space only. */
   number?: string;
+  /** Ignored since Sept 24, 2026 — every Moment is one even square now
+   * (MOMENT_MEDIA), regardless of size. Kept on the type so existing call
+   * sites don't need to change; a new one doesn't need to pass it. */
   size?: "lead" | "wide" | "standard" | "compact";
   /** Opens MomentDetail at the call site. */
   onOpen?: () => void;
@@ -253,12 +256,6 @@ export function BookmarkOverlay({
       )}
     </div>
   );
-}
-
-/** Kept for any caller still importing the old name; renders nothing
- * inline now that Save lives on the media. */
-export function InlineBookmark(_: { postId: string | number }) {
-  return null;
 }
 
 function formatCount(n: number) {

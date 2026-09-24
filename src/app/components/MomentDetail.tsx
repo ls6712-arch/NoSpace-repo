@@ -18,7 +18,7 @@ import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { useReactionState } from "./PostReactions";
+import { useReactionState } from "../lib/reactionState";
 import {
   BookmarkOverlay,
   CARD_CAPTION,
