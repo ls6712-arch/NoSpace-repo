@@ -613,9 +613,9 @@ create trigger rl_reports_insert before insert on public.reports
 --
 --    Fixed with a real actor_id (server-set below, never the client's)
 --    plus a BEFORE INSERT trigger, rather than only a tighter WITH CHECK:
---    a trigger can rewrite NEW (actor_id) and can *silently drop* a row
---    (RETURN NULL) rather than erroring — which matters here because the
---    existing SECURITY DEFINER pursuit-notification triggers
+--    a trigger can rewrite NEW (actor_id, actor_name) and can *silently
+--    drop* a row (RETURN NULL) rather than erroring — which matters here
+--    because the existing SECURITY DEFINER pursuit-notification triggers
 --    (notify_pursuit_membership / notify_pursuit_progress,
 --    20260923120000_pursuit_invite_links_and_notifications.sql) insert
 --    for several recipients in one statement; raising on a single
@@ -625,6 +625,34 @@ create trigger rl_reports_insert before insert on public.reports
 --    functions bypass entirely as SECURITY DEFINER) — so this applies
 --    uniformly to the client path and both existing internal paths, and
 --    the kind allowlist below had to include every kind either one uses.
+--
+--    Second review, two more fixes:
+--    - actor_name was still whatever the client sent. Checked what the
+--      pursuit triggers write: both compute it via
+--      `public.pursuit_person_name(uid)` — display_name, falling back to
+--      username, falling back to 'Someone' — for whichever person the
+--      notification is actually about (always the same person auth.uid()
+--      resolves to in practice: the pursuit owner sending an invite, or
+--      the member joining/logging progress). Rather than reject a mismatch
+--      (which would misfire on that fallback — someone with no
+--      display_name but a username legitimately writes a name that isn't
+--      their raw profiles.display_name), a mismatch is corrected to
+--      `pursuit_person_name(actor_id)` instead — the same trusted formula,
+--      computed server-side. 'Someone' and 'You' stay as explicit allowed
+--      placeholders (ConnectionsContext.tsx's circle_invite sends
+--      'Someone' as its own fallback).
+--    - href tightened to sql/security-hardening.sql section 4's own
+--      pattern (`^/[a-zA-Z0-9/_?=&-]*$`), kept alongside the explicit
+--      "not protocol-relative" check rather than instead of it — the
+--      character class has no `.`, so today it already rejects a
+--      real-looking host, but the `//`-prefix check stays as an
+--      independent, pattern-independent backstop. Checked every href any
+--      current call site sends (notify()'s own six, circle_invite's
+--      '/inbox', and the pursuit triggers' '/my-space' and
+--      '/pursuit/<id>') — none contain anything outside this pattern.
+--    - 'space_invite' added to the kind allowlist — on the app's intended
+--      list (sql/security-hardening.sql section 4) even though nothing
+--      currently inserts it live.
 -- ═══════════════════════════════════════════════════════════════════════
 
 alter table public.notifications add column if not exists actor_id uuid references auth.users (id) on delete set null;
@@ -649,18 +677,38 @@ begin
   -- call sites in SocialContext.tsx (hobby_follow, joined, make_together,
   -- explore_together, thought, message), "accepted" from respond(),
   -- "circle_invite" from ConnectionsContext.tsx, "message_request" for
-  -- Part B's pending-DM notice, and the three from the pursuit triggers
-  -- this table trigger also has to let through: pursuit_invite,
-  -- pursuit_joined, pursuit_progress.
+  -- Part B's pending-DM notice, "space_invite" (on the app's intended list,
+  -- sql/security-hardening.sql section 4, though nothing inserts it live
+  -- today), and the three from the pursuit triggers this table trigger
+  -- also has to let through: pursuit_invite, pursuit_joined,
+  -- pursuit_progress.
   if new.kind not in (
     'hobby_follow', 'joined', 'make_together', 'explore_together', 'thought',
-    'message', 'accepted', 'circle_invite', 'message_request',
+    'message', 'accepted', 'circle_invite', 'message_request', 'space_invite',
     'pursuit_invite', 'pursuit_joined', 'pursuit_progress'
   ) then
     raise exception 'Not a recognized notification kind: %', new.kind;
   end if;
 
-  if new.href is not null and (new.href !~ '^/' or new.href like '//%') then
+  -- actor_name: never trust the client's claim about who they are.
+  -- 'Someone'/'You' are explicit allowed placeholders (ConnectionsContext's
+  -- own fallback is 'Someone'); anything else must be the actor's own
+  -- current name — corrected to that, not rejected, since that's also
+  -- exactly what a legitimate caller using the fallback formula
+  -- (no display_name, but a username) would otherwise trip on.
+  if new.actor_name is not null
+     and new.actor_name not in ('Someone', 'You')
+     and new.actor_name is distinct from public.pursuit_person_name(new.actor_id)
+  then
+    new.actor_name := public.pursuit_person_name(new.actor_id);
+  end if;
+
+  -- In-app path only: sql/security-hardening.sql section 4's own pattern,
+  -- plus an explicit not-protocol-relative check kept alongside it (see
+  -- this section's header comment for why both).
+  if new.href is not null
+     and (new.href !~ '^/[a-zA-Z0-9/_?=&-]*$' or new.href like '//%')
+  then
     raise exception 'A notification link must be an in-app path.';
   end if;
 

@@ -164,3 +164,6 @@ the phase.
 
 - The bell's `hobby_follow` notifications (29 so far) are the noisiest kind; Phase 5 grouping
   should cover them.
+- The live `notifications` INSERT policy didn't match `sql/security-hardening.sql` (it was still
+  `with check (true)` to `{public}`) — other sections of that file may not be applied live either.
+  Audit live against `sql/security-hardening.sql`, section by section.

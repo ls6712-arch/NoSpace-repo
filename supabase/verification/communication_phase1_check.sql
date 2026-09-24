@@ -444,7 +444,33 @@ begin
     when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
 
-  -- 43. An unrecognized kind is rejected.
+  -- 42b. A backslash isn't in the allowed character class either.
+  v_i := v_i + 1;
+  begin
+    insert into public.notifications (user_id, kind, body, href) values (v_c, 'message', 'test', '/\evil.example');
+    results := array_append(results, format('%s FAIL', v_i));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS', v_i));
+    when raise_exception then results := array_append(results, format('%s PASS', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- 42c. Every href a real call site sends today still passes.
+  insert into public.notifications (user_id, kind, body, href) values
+    (v_c, 'hobby_follow', 'test', '/my-space'),
+    (v_c, 'thought', 'test', '/you'),
+    (v_c, 'message', 'test', '/messages'),
+    (v_c, 'circle_invite', 'test', '/inbox'),
+    (v_c, 'pursuit_joined', 'test', '/pursuit/123');
+  v_i := v_i + 1;
+  select count(*) into v_n from public.notifications
+  where user_id = v_c and body = 'test'
+    and href in ('/my-space', '/you', '/messages', '/inbox', '/pursuit/123');
+  results := array_append(results, format('%s %s', v_i, case when v_n = 5 then 'PASS' else 'FAIL' end));
+
+  -- 43. An unrecognized kind is rejected; 'space_invite' (added this round,
+  -- on the app's intended list even though nothing inserts it live today)
+  -- is accepted.
   v_i := v_i + 1;
   begin
     insert into public.notifications (user_id, kind, body) values (v_c, 'not_a_real_kind', 'test');
@@ -454,6 +480,11 @@ begin
     when raise_exception then results := array_append(results, format('%s PASS', v_i));
     when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
+  insert into public.notifications (user_id, kind, body) values (v_c, 'space_invite', 'Phase1 verify: space_invite marker');
+  v_i := v_i + 1;
+  select count(*) into v_n from public.notifications
+  where user_id = v_c and body = 'Phase1 verify: space_invite marker';
+  results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
 
   -- 44. actor_id can't be spoofed — C inserts claiming to be A; the server
   -- must stamp C's own id regardless of what the client sent.
@@ -462,6 +493,35 @@ begin
   v_i := v_i + 1;
   select count(*) into v_n from public.notifications
   where user_id = v_c and body = 'Phase1 verify: actor_id marker' and actor_id = v_c;
+  results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  -- 44b. actor_name can't be spoofed either — corrected to C's own current
+  -- name (public.pursuit_person_name(v_c)), not rejected.
+  insert into public.notifications (user_id, kind, body, actor_name)
+  values (v_c, 'message', 'Phase1 verify: actor_name spoof marker', 'Definitely Not C');
+  v_i := v_i + 1;
+  select count(*) into v_n from public.notifications
+  where user_id = v_c and body = 'Phase1 verify: actor_name spoof marker'
+    and actor_name = public.pursuit_person_name(v_c)
+    and actor_name <> 'Definitely Not C';
+  results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  -- 44c. The 'Someone' placeholder (ConnectionsContext.tsx's own fallback)
+  -- passes through untouched.
+  insert into public.notifications (user_id, kind, body, actor_name)
+  values (v_c, 'circle_invite', 'Phase1 verify: someone placeholder marker', 'Someone');
+  v_i := v_i + 1;
+  select count(*) into v_n from public.notifications
+  where user_id = v_c and body = 'Phase1 verify: someone placeholder marker' and actor_name = 'Someone';
+  results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
+
+  -- 44d. Sending your own real, current name also passes through untouched
+  -- (no spurious correction of an honest caller).
+  insert into public.notifications (user_id, kind, body, actor_name)
+  values (v_c, 'message', 'Phase1 verify: honest name marker', public.pursuit_person_name(v_c));
+  v_i := v_i + 1;
+  select count(*) into v_n from public.notifications
+  where user_id = v_c and body = 'Phase1 verify: honest name marker' and actor_name = public.pursuit_person_name(v_c);
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL' end));
 
   -- ───────────────────────────────────────────────────────────────────────
