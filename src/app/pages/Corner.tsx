@@ -4,7 +4,7 @@ import { hobbies } from "../data/hobbies";
 import { Post, postCorner } from "../data/posts";
 import { useCorners } from "../context/CornersContext";
 import { useContent } from "../context/ContentContext";
-import { MomentCard } from "../components/MomentCard";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
@@ -75,7 +75,7 @@ export function CornerPage() {
             No {corner.name.toLowerCase()} work yet. Be the first.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={MOMENT_GRID}>
             {posts.map((post) => (
               <MomentCard
                 key={post.id}

@@ -4,6 +4,14 @@ Save as `docs/moment-card-and-reactions-spec.md`. Read `docs/CLAUDE-redesign-bri
 
 ## STATUS (keep this current — survives context compaction)
 
+**Amended Sept 24, 2026 (branch `feat/even-moment-cards`). Supersedes §4 where they disagree:**
+- **Counts are public now**, reversing §4's maker-only rule, per Sid. Love this and Count me in totals show to anyone who can see the Moment, via `posts.love_count` / `posts.in_count`, which a trigger on `public.reactions` keeps up to date (`supabase/migrations/20260924100000_post_reaction_counts.sql`). Who reacted stays private; the reactions select policy is unchanged. The Thoughts count stays maker-only.
+- **One card shape**: every MomentCard's media is a square (`MOMENT_MEDIA`), not a per-size pixel height, and every Moment list uses `MOMENT_GRID` (2 columns on phones, 3 from `lg`). `size` is still accepted but no longer changes the card. My Space's board-4 lead plus mixed rows became one even, numbered grid.
+- **Save (Try This) sits on the media** top-right as a bare icon (`BookmarkOverlay`), not in the action row.
+- **One action row**, `MomentActions`, shared by MomentCard and MomentDetail: icon plus number, no bordered pills.
+- **By Corner tiles** (HobbyShelf `CornerTile`) use the same square, rounding and tag pill.
+
+
 Branch `redesign/moment-card`, off `main`. Commits below are oldest first.
 
 **Done:**

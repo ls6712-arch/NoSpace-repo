@@ -9,7 +9,7 @@ import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal } from "../lib/journal";
 import { setCornerNote, useCornerNote } from "../lib/cornerNotes";
 import { parseArchiveKey, updatedLabel } from "../components/HobbyShelf";
-import { MomentCard } from "../components/MomentCard";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { Button } from "../components/ui/button";
 
@@ -235,7 +235,7 @@ export function HobbyArchive() {
                 {byMonth.map(({ month, items }) => (
                   <section key={month}>
                     <h2 className="mb-3 text-sm text-muted-foreground">{month}</h2>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className={MOMENT_GRID}>
                       {items.map((post) => (
                         <MomentCard
                           key={post.id}

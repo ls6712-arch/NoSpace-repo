@@ -14,7 +14,7 @@ import { CreateCornerDialog } from "../components/CreateCornerDialog";
 import { useContent } from "../context/ContentContext";
 import { useCircles } from "../context/CirclesContext";
 import { useRewards } from "../context/RewardsContext";
-import { MomentCard } from "../components/MomentCard";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
@@ -411,7 +411,7 @@ export function CategoryFeed() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className={MOMENT_GRID}>
                 {posts.map((post) => (
                   <MomentCard
                     key={post.id}

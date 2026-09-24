@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
-import { MomentCard, MomentCardSurface } from "./MomentCard";
+import { MomentCard, MomentCardSurface, MOMENT_GRID } from "./MomentCard";
 import { PostMedia } from "./PostMedia";
 import { Button } from "./ui/button";
 import {
@@ -145,10 +145,18 @@ export function WorkGrid({
 
   return (
     <div>
+      {/* A pinned Moment leads, at the same size as every other card —
+          uneven card sizes were exactly what made the Shelf look clumsy. */}
       {lead && (
-        <div className="mb-8">
-          <MomentCard post={lead} surface={surface} size="wide" onOpen={() => onOpen(lead)} />
-        </div>
+        <section className="mb-8">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="ns-section-kicker text-muted-foreground">Pinned</span>
+            <span className="h-px flex-1 bg-[var(--line,var(--hairline))]" aria-hidden="true" />
+          </div>
+          <div className={MOMENT_GRID}>
+          <MomentCard post={lead} surface={surface} size="standard" onOpen={() => onOpen(lead)} />
+          </div>
+        </section>
       )}
 
       <div className="space-y-8">
@@ -158,7 +166,7 @@ export function WorkGrid({
               <span className="ns-section-kicker text-muted-foreground">{month}</span>
               <span className="h-px flex-1 bg-[var(--line,var(--hairline))]" aria-hidden="true" />
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={MOMENT_GRID}>
               {items.map((post) => (
                 <MomentCard
                   key={post.id}
@@ -177,7 +185,7 @@ export function WorkGrid({
                 <button
                   type="button"
                   onClick={() => setPinPickerOpen(true)}
-                  className="flex h-[220px] flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground sm:h-[320px]"
+                  className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                 >
                   <ImagePlus className="size-5" strokeWidth={1.7} />
                   <span className="text-sm font-medium">Pin a moment</span>
@@ -194,7 +202,7 @@ export function WorkGrid({
           <button
             type="button"
             onClick={() => setPinPickerOpen(true)}
-            className="flex h-[220px] w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground sm:h-[320px]"
+            className="flex aspect-square w-full max-w-xs flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ImagePlus className="size-5" strokeWidth={1.7} />
             <span className="text-sm font-medium">Pin a moment</span>

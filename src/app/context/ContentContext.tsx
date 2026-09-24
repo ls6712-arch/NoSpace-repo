@@ -130,8 +130,15 @@ function loadFromStorage<T>(key: string): T[] {
 // anyone else's browser, even as a field the app's own JS ignores. A
 // wildcard select would put it on the wire regardless of what the mapper
 // below does with it. See docs/moment-card-and-reactions-spec.md's #86.
-const POST_COLUMNS =
+const BASE_POST_COLUMNS =
   "id, user_id, hobby_slug, sub_hobby, corner, interest, type, media_url, media_urls, caption, likes, created_at, visibility, starts_at, location_name, location_privacy, thoughts_private, pursuit_id, circle_id, circle_tab, answered, hidden_from_moments, tags, pinned";
+/** Public reaction totals — only exist once the post_reaction_counts
+ * migration is applied. Until then every posts select below retries
+ * without them (see selectPosts), so the app never breaks on a missing
+ * column; counts just read as 0. */
+let POST_COLUMNS = `${BASE_POST_COLUMNS}, love_count, in_count`;
+const isMissingCountColumn = (error: { message?: string; code?: string } | null) =>
+  !!error && (error.code === "42703" || /love_count|in_count/.test(error.message ?? ""));
 
 /** Maps a row from the real `posts` table into the app's existing Post shape.
  * Never sets `reflection` — that comes from a separate, owner-only fetch
@@ -170,6 +177,8 @@ function rowToPost(row: any, creatorName: string): Post {
     hiddenFromMoments: row.hidden_from_moments ?? false,
     tags: row.tags ?? [],
     pinned: row.pinned ?? false,
+    loveCount: row.love_count ?? 0,
+    inCount: row.in_count ?? 0,
   };
 }
 
@@ -323,10 +332,19 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const refetchRealPosts = async () => {
     if (!supabase) return;
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("posts")
       .select(POST_COLUMNS)
       .order("created_at", { ascending: false });
+    // The reaction-count columns aren't in this database yet — drop them
+    // for this and every later posts select, and try once more.
+    if (isMissingCountColumn(error) && POST_COLUMNS !== BASE_POST_COLUMNS) {
+      POST_COLUMNS = BASE_POST_COLUMNS;
+      ({ data, error } = await supabase
+        .from("posts")
+        .select(POST_COLUMNS)
+        .order("created_at", { ascending: false }));
+    }
     if (error || !data) return;
 
     const userIds = [...new Set(data.map((row: any) => row.user_id as string))];
@@ -439,6 +457,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       reacted ? [...list, type] : list.filter((t) => t !== type);
 
     setMyReactionsByPostId((prev) => ({ ...prev, [postId]: apply(prev[postId] ?? []) }));
+    // The public total moves with your own tap right away; the trigger on
+    // public.reactions makes the same change server-side.
+    const bump = (delta: number) =>
+      setRealPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p;
+          if (type === "love") return { ...p, loveCount: Math.max(0, (p.loveCount ?? 0) + delta) };
+          if (type === "in") return { ...p, inCount: Math.max(0, (p.inCount ?? 0) + delta) };
+          return p;
+        }),
+      );
+    bump(reacted ? -1 : 1);
 
     const write = reacted
       ? supabase.from("reactions").delete().eq("post_id", postId).eq("user_id", user.id).eq("type", type)
@@ -447,6 +477,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     void write.then(({ error }) => {
       if (error) {
         setMyReactionsByPostId((prev) => ({ ...prev, [postId]: revertList(prev[postId] ?? []) }));
+        bump(reacted ? 1 : -1);
       }
     });
   };
