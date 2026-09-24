@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   ReactNode,
 } from "react";
@@ -91,13 +92,41 @@ export function isBrowsableOnDiscover(c: Corner, threshold: number) {
   return !c.hidden && (c.momentCount30d >= threshold || c.hasActiveSpace);
 }
 
+/** Autocomplete matching shared by matchesFor (one Category) and
+ * CornerTagField's global mode (every Category) — exact, substring
+ * either direction, or a shared word prefix ("Pasta" -> "Pasta Making"). */
+export function matchCorners(corners: Corner[], query: string): Corner[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return corners.slice(0, 6);
+  const qWords = q.split(/\s+/);
+  return corners
+    .filter((c) => {
+      const name = c.name.toLowerCase();
+      if (name === q) return true;
+      if (name.includes(q) || q.includes(name)) return true;
+      const nameWords = name.split(/\s+/);
+      return qWords.some((qw) => nameWords.some((nw) => nw.startsWith(qw) || qw.startsWith(nw)));
+    })
+    .slice(0, 6);
+}
+
 interface CornersContextType {
   /** Every Corner known for a Space: the curated baseline plus anything
    * real, sorted most-active first. */
   cornersFor: (spaceSlug: string) => Corner[];
+  /** Every Corner across every non-hidden Category, flat — for
+   * CornerTagField's "no Category chosen yet" mode and anywhere else that
+   * needs to search across all of them at once. */
+  allCorners: Corner[];
   /** Fuzzy matches within a Space, for the tagging autocomplete — close
    * enough to catch "Pasta" -> "Pasta Making" in either direction. */
   matchesFor: (spaceSlug: string, query: string) => Corner[];
+  /** True when a name would be rejected by the trademark-blocklist CHECK
+   * constraint (corners.name, spaces.name) — checked client-side first
+   * against app_config's trademark_blocklist so a caller can show a
+   * friendly message before attempting the write; the constraint itself
+   * is what actually enforces this. */
+  isNameBlocked: (name: string) => boolean;
   /** Resolves a typed name to a Corner slug, creating the row if it's
    * genuinely new. Best-effort and local-first: a signed-out visitor or an
    * unmigrated table still gets a usable slug back, so tagging a Moment
@@ -119,8 +148,15 @@ interface CornersContextType {
    * the same heuristic Pursuits already use), defaulting to the first
    * Category when nothing matches. Never returns null for non-empty text:
    * getOrCreateCorner's own local-first fallback guarantees a usable slug
-   * even signed out or before a real table exists. */
-  resolveInterest: (text: string) => Promise<{ spaceSlug: string; slug: string; name: string } | null>;
+   * even signed out or before a real table exists. Returns
+   * `{ blocked: true }` instead of creating anything when the text hits
+   * app_config's trademark_blocklist (checked client-side first — see
+   * isBlocklistedName — so the caller can show a friendly message rather
+   * than surface the CHECK constraint's raw error; the constraint is the
+   * real enforcement boundary regardless). */
+  resolveInterest: (
+    text: string,
+  ) => Promise<{ spaceSlug: string; slug: string; name: string } | { blocked: true } | null>;
   refresh: () => Promise<void>;
   /** The most recently created real Corners, platform-wide — not scoped to
    * one Space, not filtered by follows (My Space's "Freshly opened this
@@ -194,11 +230,32 @@ function saveLocalCorners(corners: LocalCorner[]) {
 }
 
 const DEFAULT_CORNER_THRESHOLD = 3;
+// Mirrors app_config's seeded default (20260924098000) so the client-side
+// check below still catches the obvious case before that table has ever
+// loaded, or if it's unreachable.
+const DEFAULT_BLOCKLIST = ["lego"];
+
+/** Same fold sql's is_blocklisted_name() uses: lowercase, strip everything
+ * but letters/digits, then substring-match — so "LEGO Technic", "Legos"
+ * and "lego-builds" are all caught by the term "lego". Client-side mirror
+ * so Onboarding/the composer can show a friendly message before ever
+ * attempting the write the database would reject anyway (defense in
+ * depth, not the actual enforcement boundary — that's the CHECK
+ * constraint, which is what actually stops a direct API call). */
+export function isBlocklistedName(candidate: string, blocklist: string[]): boolean {
+  const fold = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const c = fold(candidate);
+  return blocklist.some((term) => {
+    const t = fold(term);
+    return t.length > 0 && c.includes(t);
+  });
+}
 
 export function CornersProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { publicFeed } = useContent();
   const [remote, setRemote] = useState<Corner[]>([]);
+  const [blocklist, setBlocklist] = useState<string[]>(DEFAULT_BLOCKLIST);
   const [local, setLocal] = useState<LocalCorner[]>(loadLocalCorners);
   const [cornerThreshold, setCornerThreshold] = useState(DEFAULT_CORNER_THRESHOLD);
 
@@ -259,6 +316,14 @@ export function CornersProvider({ children }: { children: ReactNode }) {
     } catch {
       // app_config not migrated yet, or the row's missing — keep the
       // built-in default (3), same number the migration seeds it with.
+    }
+
+    try {
+      const { data } = await supabase.from("app_config").select("value").eq("key", "trademark_blocklist").single();
+      if (Array.isArray(data?.value)) setBlocklist(data.value as string[]);
+    } catch {
+      // Keep DEFAULT_BLOCKLIST — the real enforcement is the CHECK
+      // constraint server-side either way.
     }
   }, []);
 
@@ -357,20 +422,16 @@ export function CornersProvider({ children }: { children: ReactNode }) {
   );
 
   const matchesFor = useCallback(
-    (spaceSlug: string, query: string) => {
-      const q = query.trim().toLowerCase();
-      if (!q) return cornersFor(spaceSlug).slice(0, 6);
-      const qWords = q.split(/\s+/);
-      return cornersFor(spaceSlug)
-        .filter((c) => {
-          const name = c.name.toLowerCase();
-          if (name === q) return true;
-          if (name.includes(q) || q.includes(name)) return true;
-          const nameWords = name.split(/\s+/);
-          return qWords.some((qw) => nameWords.some((nw) => nw.startsWith(qw) || qw.startsWith(nw)));
-        })
-        .slice(0, 6);
-    },
+    (spaceSlug: string, query: string) => matchCorners(cornersFor(spaceSlug), query),
+    [cornersFor],
+  );
+
+  // Every Corner across every non-hidden Category, flat — for anywhere
+  // that doesn't (or can't yet) scope to one Category, the same source
+  // Discover's own Corners tab and resolveInterest already build inline.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const allCorners = useMemo(
+    () => hobbies.filter((h) => !h.hidden).flatMap((h) => cornersFor(h.slug)),
     [cornersFor],
   );
 
@@ -434,16 +495,25 @@ export function CornersProvider({ children }: { children: ReactNode }) {
       if (found) return { spaceSlug: found.spaceSlug, slug: found.slug, name: found.name };
     }
 
+    // Only reachable when nothing close already exists — an existing
+    // Corner resolves above regardless of its own name, same as the CHECK
+    // constraint only ever gates a new row, not one already there.
+    if (isBlocklistedName(q, blocklist)) return { blocked: true };
+
     const guessedSpace = guessSpace(q) ?? hobbies[0].slug;
     const created = await getOrCreateCorner(guessedSpace, q);
     return { spaceSlug: guessedSpace, slug: created.slug, name: created.name };
   };
 
+  const isNameBlocked = useCallback((name: string) => isBlocklistedName(name, blocklist), [blocklist]);
+
   return (
     <CornersContext.Provider
       value={{
         cornersFor,
+        allCorners,
         matchesFor,
+        isNameBlocked,
         getOrCreateCorner,
         resolveInterest,
         refresh,

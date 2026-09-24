@@ -1,44 +1,63 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Check, Plus } from "lucide-react";
-import { useCorners } from "../context/CornersContext";
+import { useCorners, matchCorners } from "../context/CornersContext";
+import { hobbies } from "../data/hobbies";
+import { guessSpace } from "../lib/pursuitProgress";
 import { bestMatch, MatchResult } from "../lib/tagMatching";
 import { Input } from "./ui/input";
 
 /**
- * Tags a Moment into a Corner inside one Space. Corners are created by
- * tagging, not suggestion-and-approval (sql/corners.sql): typing a name that
- * doesn't exist yet in this Space and confirming it creates the Corner,
- * right here, no queue.
+ * Tags a Moment (or a Space, once Phase 5 wires it up) into a Corner.
+ * Corners are created by tagging, not suggestion-and-approval
+ * (sql/corners.sql): typing a name that doesn't exist yet and confirming it
+ * creates the Corner, right here, no queue.
  *
- * Existing Corners in the Space show as chips for a one-tap pick. Typing
- * autocompletes toward them first — "Pasta" surfaces "Pasta Making" before
- * offering to create anything new — so near-duplicate spellings converge on
- * one real Corner instead of fragmenting into dead ends.
+ * `spaceSlug` is optional (spec change: Category is internal-only, derived
+ * from the Corner picked — never something the user chooses here). Given
+ * one, this scopes to that Category's Corners, same as always. Left out,
+ * it searches every non-hidden Category's Corners at once; picking an
+ * existing one reports its own Category back via `onChange`'s third
+ * argument, and creating a brand-new one guesses a Category from keywords
+ * (lib/pursuitProgress.ts's guessSpace, same heuristic Pursuits and
+ * CornersContext's resolveInterest already use) — silently, never shown or
+ * asked of the person typing.
+ *
+ * Existing Corners show as chips for a one-tap pick. Typing autocompletes
+ * toward them first — "Pasta" surfaces "Pasta Making" before offering to
+ * create anything new — so near-duplicate spellings converge on one real
+ * Corner instead of fragmenting into dead ends.
  */
 export function CornerTagField({
   spaceSlug,
   value,
   onChange,
 }: {
-  spaceSlug: string;
+  /** Scopes matching/creation to one Category's Corners. Omit to search
+   * and create across all of them — see this component's own doc comment. */
+  spaceSlug?: string;
   /** The selected Corner's slug, or "" for none. */
   value: string;
-  onChange: (slug: string, name: string) => void;
+  /** `resolvedSpaceSlug` is the picked (or newly guessed) Corner's own
+   * Category — always present, even when this field itself was given no
+   * `spaceSlug` to scope to. */
+  onChange: (slug: string, name: string, resolvedSpaceSlug: string) => void;
 }) {
-  const { cornersFor, matchesFor, getOrCreateCorner } = useCorners();
+  const { cornersFor, allCorners, matchesFor, isNameBlocked, getOrCreateCorner } = useCorners();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
   // A close-but-not-identical hit on the about-to-create name — same
   // pattern as CreateCornerDialog.tsx, since this field can mint a Corner
   // too. Confirmed once (via createNew's own guard below), then a second
   // "Create anyway" proceeds.
   const [pendingConfirm, setPendingConfirm] = useState<MatchResult | null>(null);
 
-  const topCorners = cornersFor(spaceSlug).slice(0, 8);
+  const scoped = spaceSlug ? cornersFor(spaceSlug) : allCorners;
+  const topCorners = [...scoped].sort((a, b) => b.momentCount - a.momentCount).slice(0, 8);
   const q = query.trim();
-  const matches = q ? matchesFor(spaceSlug, q) : [];
-  const cornerNames = useMemo(() => cornersFor(spaceSlug).map((c) => c.name), [cornersFor, spaceSlug]);
+  const matches = q ? (spaceSlug ? matchesFor(spaceSlug, q) : matchCorners(allCorners, q)) : [];
+  const cornerNames = scoped.map((c) => c.name);
   // Same "does this already exist?" check every other free-text tag entry
   // point uses (lib/tagMatching.ts) — case, accents, and punctuation all
   // fold together here, a stricter bar than the plain case-fold this used
@@ -46,10 +65,11 @@ export function CornerTagField({
   const tagMatch = q ? bestMatch(q, cornerNames) : null;
   const exact = tagMatch?.kind === "exact";
 
-  function pick(slug: string, name: string) {
-    onChange(slug, name);
+  function pick(slug: string, name: string, resolvedSpaceSlug: string) {
+    onChange(slug, name, resolvedSpaceSlug);
     setQuery("");
     setPendingConfirm(null);
+    setBlockedMessage(null);
     setFocused(false);
   }
 
@@ -59,17 +79,23 @@ export function CornerTagField({
       setPendingConfirm(tagMatch);
       return;
     }
+    if (isNameBlocked(q)) {
+      setBlockedMessage("Try a more general name, like Brick building.");
+      return;
+    }
+    setBlockedMessage(null);
+    const targetSpace = spaceSlug ?? guessSpace(q) ?? hobbies[0].slug;
     setCreating(true);
-    const { slug, name } = await getOrCreateCorner(spaceSlug, q);
+    const { slug, name } = await getOrCreateCorner(targetSpace, q);
     setCreating(false);
     setPendingConfirm(null);
-    pick(slug, name);
+    pick(slug, name, targetSpace);
   }
 
   function useExistingInstead() {
     if (!pendingConfirm) return;
-    const existing = cornersFor(spaceSlug).find((c) => c.name === pendingConfirm.label);
-    if (existing) pick(existing.slug, existing.name);
+    const existing = scoped.find((c) => c.name === pendingConfirm.label);
+    if (existing) pick(existing.slug, existing.name, existing.spaceSlug);
     setPendingConfirm(null);
   }
 
@@ -80,9 +106,9 @@ export function CornerTagField({
           const active = value === c.slug;
           return (
             <button
-              key={c.slug}
+              key={`${c.spaceSlug}-${c.slug}`}
               type="button"
-              onClick={() => pick(active ? "" : c.slug, c.name)}
+              onClick={() => pick(active ? "" : c.slug, c.name, c.spaceSlug)}
               className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                 active
                   ? "border-transparent text-white [background-color:var(--coral-deep)]"
@@ -103,20 +129,23 @@ export function CornerTagField({
           onChange={(e) => {
             setQuery(e.target.value);
             setPendingConfirm(null);
+            setBlockedMessage(null);
           }}
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 150)}
           placeholder="Type a Corner, e.g. Pasta Making"
         />
 
+        {blockedMessage && <p className="mt-1.5 text-[11px] text-[var(--coral-text)]">{blockedMessage}</p>}
+
         {focused && q && (
           <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border border-border bg-popover py-1 shadow-xl">
             {matches.map((c) => (
-              <li key={c.slug}>
+              <li key={`${c.spaceSlug}-${c.slug}`}>
                 <button
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => pick(c.slug, c.name)}
+                  onClick={() => pick(c.slug, c.name, c.spaceSlug)}
                   className="flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
                 >
                   <span>{c.name}</span>

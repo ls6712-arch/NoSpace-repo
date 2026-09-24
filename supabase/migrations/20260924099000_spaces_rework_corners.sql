@@ -21,6 +21,25 @@
 -- ─────────────────────────────────────────────────────────────────────────
 alter table public.corners add column if not exists hidden boolean not null default false;
 
+-- Fails loudly, with the actual list, rather than letting ADD CONSTRAINT
+-- fail with a bare "constraint is violated by some row" that doesn't say
+-- which one. Rename or merge (once this file's admin functions exist) the
+-- listed Corners first, then re-run this migration.
+do $$
+declare
+  violations text;
+begin
+  select string_agg(format('#%s "%s" (%s)', id, name, space_slug), ', ' order by id)
+  into violations
+  from public.corners
+  where public.is_blocklisted_name(name);
+
+  if violations is not null then
+    raise exception 'Blocklist conflict — these existing Corners would violate the new constraint: %. Rename or merge them, then re-run this migration.', violations;
+  end if;
+end
+$$;
+
 alter table public.corners drop constraint if exists corners_name_not_blocklisted;
 alter table public.corners add constraint corners_name_not_blocklisted
   check (not public.is_blocklisted_name(name));

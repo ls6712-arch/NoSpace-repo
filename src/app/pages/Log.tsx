@@ -678,7 +678,6 @@ export function Log() {
     </Dialog>
   );
 
-  const hobby = hobbies.find((h) => h.slug === hobbySlug)!;
   const hobbyCircles = circlesByHobby(hobbySlug);
   // Normally only open Pursuits are offered here — but if we arrived via
   // "Add progress" on a finished one, it needs to still appear as the
@@ -689,12 +688,17 @@ export function Log() {
   );
   // What the post is about, in the person's own words where they gave them —
   // the open tags the person actually typed (TagsField) take priority over
-  // hobby.shortName, which is just whichever Space happens to be selected
-  // and was never itself a claim about what the Moment is about. `null`
-  // (never a hobby-flavored guess) when nothing was actually chosen — the
-  // callers below fall back to a neutral, honest default instead.
+  // the Category, which was never itself a claim about what the Moment is
+  // about (and is internal-only now regardless — see cornerLabel below for
+  // what's actually shown). `null` (never a Category-flavored guess) when
+  // nothing was actually chosen — the callers below fall back to a
+  // neutral, honest default instead.
   const tagLabel: string | null =
     tags[0] || interest.trim() || (subHobby ? (subHobbyLabel(subHobby) ?? subHobby) : null);
+  // The Corner this Moment is actually filed under — Category never
+  // appears in this copy (spec change: "Corners carry discovery"). corner
+  // is required now, so this always has a real value by publish time.
+  const cornerLabel = subHobbyLabel(corner) ?? corner;
 
   /** Whatever the camera screen produced — a live capture, a recent pick, or
    * a single fresh library file — always lands here the same way. */
@@ -1158,7 +1162,7 @@ export function Log() {
             {anySaveError ? "Not saved." : "Saved."}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {interest.trim() ? `${tagLabel} · ${hobby.name}` : hobby.name}
+            {interest.trim() ? `${tagLabel} · ${cornerLabel}` : cornerLabel}
           </p>
           {!anySaveError && (
             <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-sm">
@@ -1392,13 +1396,30 @@ export function Log() {
               pre-filled above (Pursuit's Corner, or your last one) so
               picking one is usually zero taps — see the corner state's own
               comment. Category never appears in this copy: it's internal
-              plumbing now, derived from whichever Corner is picked. */}
+              plumbing now, derived from whichever Corner is picked.
+              Global (no spaceSlug) until spaceSet is true — hobbySlug is
+              still just sitting at its silent technical default at that
+              point (see spaceSet's own comment above), not a Category
+              anyone actually chose, so there's nothing real to scope to
+              yet. Picking a Corner (or the tag match above resolving one)
+              sets both hobbySlug and spaceSet, which then scopes this
+              field the same way it always used to. */}
           <div>
             <h2 className="mb-1 text-sm">
               <label htmlFor="corner">Which Corner?</label>
             </h2>
             <p className="mb-2 text-xs text-muted-foreground">Where this shows up when someone browses by Corner.</p>
-            <CornerTagField spaceSlug={hobbySlug} value={corner} onChange={(slug) => setCorner(slug)} />
+            <CornerTagField
+              spaceSlug={spaceSet ? hobbySlug : undefined}
+              value={corner}
+              onChange={(slug, _name, resolvedSpaceSlug) => {
+                setCorner(slug);
+                if (slug) {
+                  setHobbySlug(resolvedSpaceSlug);
+                  setSpaceSet(true);
+                }
+              }}
+            />
           </div>
 
           {/* Only a thing that happens at a time needs a time. */}
@@ -1548,7 +1569,7 @@ export function Log() {
                 ? "This stays a private log. Nobody else will see it."
                 : `This will appear in ${
                     audience === "public"
-                      ? `${hobby.name}`
+                      ? `${cornerLabel}`
                       : audience === "circle"
                         ? "that Circle"
                         : "My Space for people you've connected with"
@@ -1684,34 +1705,21 @@ export function Log() {
                     )
                   )}
 
-                  <div className="mt-3">
-                    <Label className="mb-2 block text-xs">Space</Label>
-                    <Select
-                      value={hobbySlug}
-                      onValueChange={(v) => {
-                        setHobbySlug(v);
-                        setCircleId(undefined);
-                        setSubHobby("");
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {hobbies.filter((h) => !h.hidden || h.slug === hobbySlug).map((h) => (
-                          <SelectItem key={h.slug} value={h.slug}>
-                            {h.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
+                  {/* No Category picker: Category is internal-only now,
+                      derived silently from whichever Corner is picked
+                      below (spec change — "Corners carry discovery").
+                      Global (no spaceSlug), same as the "Which Corner?"
+                      field above, for the same reason: nothing upstream of
+                      this section has already established a Category to
+                      scope to. */}
                   <div className="mt-3">
                     <CornerTagField
-                      spaceSlug={hobbySlug}
                       value={subHobby}
-                      onChange={(slug) => setSubHobby(slug)}
+                      onChange={(slug, _name, resolvedSpaceSlug) => {
+                        setSubHobby(slug);
+                        setHobbySlug(resolvedSpaceSlug);
+                        setCircleId(undefined);
+                      }}
                     />
                   </div>
                 </section>

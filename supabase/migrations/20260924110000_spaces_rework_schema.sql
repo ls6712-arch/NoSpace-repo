@@ -36,6 +36,12 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. Spaces
 -- ─────────────────────────────────────────────────────────────────────────
+-- No pre-flight blocklist check needed here the way 20260924099000_corners
+-- has one for public.corners: this CREATE TABLE only ever runs against a
+-- table that doesn't exist yet (the old sql/connections.sql `spaces` was
+-- already dropped by 20260924095000_cleanup, and no Space has ever been
+-- created under this new schema) — there's no existing row that could
+-- violate the constraint below.
 create table if not exists public.spaces (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,

@@ -73,6 +73,7 @@ function MomentCard({
   const [media, setMedia] = useState<File | null>(null);
   const [posting, setPosting] = useState(false);
   const [added, setAdded] = useState(false);
+  const [blockedError, setBlockedError] = useState<string | null>(null);
 
   const Chip = reduceMotion ? "span" : motion.span;
   const chipProps = reduceMotion
@@ -102,6 +103,7 @@ function MomentCard({
   const submit = async () => {
     if (!canSubmit) return;
     setPosting(true);
+    setBlockedError(null);
     try {
       // Resolves the tag to a real Corner — an existing one (exact or a
       // near-duplicate match) or a brand-new one, created here the same
@@ -110,6 +112,10 @@ function MomentCard({
       // plumbing the schema still requires; the tag itself is what every
       // caption, pill, and label on this Moment actually reads.
       const match = await resolveInterest(tag);
+      if (match && "blocked" in match) {
+        setBlockedError("Try a more general name, like Brick building.");
+        return;
+      }
       await addPost({
         hobbySlug: match?.spaceSlug ?? hobbies[0].slug,
         subHobby: match?.slug,
@@ -152,6 +158,7 @@ function MomentCard({
           {posting ? "Adding…" : "Add Moment"}
         </Button>
       </div>
+      {blockedError && <p className="mt-2 text-[11px] text-[var(--coral-text)]">{blockedError}</p>}
       {disabled && (
         <p className="mt-2 text-[11px] text-[var(--ink-soft)]">
           You've added {MOMENT_CAP} for now. Add more anytime from Create.
@@ -226,7 +233,12 @@ export function Onboarding() {
       // Only the ones not already followed do any writing.
       for (const tag of tags) {
         const match = await resolveInterest(tag);
-        if (!match) continue;
+        // A blocked tag (trademarked name) already got its own friendly
+        // message on the MomentCard step, if it went through one — here,
+        // finishing onboarding shouldn't stall or error over it, just
+        // silently skip the follow. The tag itself still exists as
+        // freeform text on whatever Moment it was attached to.
+        if (!match || "blocked" in match) continue;
         if (!social.isFollowingHobby(match.slug)) {
           void social.toggleHobbyFollow(match.slug, match.name);
         }

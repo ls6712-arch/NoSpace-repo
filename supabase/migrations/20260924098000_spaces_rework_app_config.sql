@@ -55,6 +55,14 @@ on conflict (key) do nothing;
 -- alone would already allow for any signed-in caller, but this keeps the
 -- check self-contained and independent of RLS on app_config ever changing.
 -- ─────────────────────────────────────────────────────────────────────────
+-- Case-insensitive, substring, and punctuation/whitespace-insensitive:
+-- normalizes both the candidate and each blocklist term down to bare
+-- lowercase alphanumerics before matching, so "LEGO Technic", "Legos",
+-- and "lego-builds" are all caught by the term "lego" — same normalize()
+-- idea src/app/lib/tagMatching.ts already uses for dedupe, just case/
+-- punctuation-folding here rather than also handling typos. Uses
+-- position(), not LIKE, so a term containing a literal % or _ can never
+-- be misread as a wildcard.
 create or replace function public.is_blocklisted_name(candidate text)
 returns boolean
 language sql
@@ -67,7 +75,11 @@ as $$
     from jsonb_array_elements_text(
       coalesce((select value from public.app_config where key = 'trademark_blocklist'), '[]'::jsonb)
     ) as term
-    where lower(candidate) like '%' || lower(term) || '%'
+    where length(regexp_replace(lower(term), '[^a-z0-9]', '', 'g')) > 0
+      and position(
+        regexp_replace(lower(term), '[^a-z0-9]', '', 'g')
+        in regexp_replace(lower(candidate), '[^a-z0-9]', '', 'g')
+      ) > 0
   );
 $$;
 revoke all on function public.is_blocklisted_name(text) from public;
@@ -78,4 +90,7 @@ grant execute on function public.is_blocklisted_name(text) to authenticated, ano
 -- ─────────────────────────────────────────────────────────────────────────
 -- select key, value from public.app_config order by key;
 -- select public.is_blocklisted_name('LEGO Masters Club') as expect_true,
+--        public.is_blocklisted_name('LEGO Technic') as expect_true_too,
+--        public.is_blocklisted_name('Legos') as expect_true_also,
+--        public.is_blocklisted_name('lego-builds') as expect_true_again,
 --        public.is_blocklisted_name('Pottery') as expect_false;
