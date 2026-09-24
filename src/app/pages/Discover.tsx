@@ -26,6 +26,7 @@ import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { GeneratedArt } from "../components/GeneratedArt";
+import { SpacesBrowser } from "../components/SpacesBrowser";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
@@ -66,13 +67,12 @@ const BASE_CHIPS: Chip[] = [
  * browse here — the demo/seed Circle list is empty too (circles.ts). The
  * `/circles` page itself and CircleBoard aren't touched; this only drops
  * Discover's own tab into them, ahead of their full removal in Phase 6.
- * `spaces` stays in the enum with `hidden: true` — a real "Spaces" tab for
- * host-created communities is Phase 5's job, once Create Space exists;
- * `hidden` keeps it out of both the rendered tab bar and ?tab= validation
- * until then, so there's nothing to flip on except deleting this flag. */
+ * `spaces` is real now (Phase 5: Create Space, the Space page,
+ * SpacesBrowser) — host-created communities, unrelated to the old
+ * Category-browsing "Spaces" this same tab id used to mean. */
 const DISCOVER_TABS = [
   { id: "corners", label: "Corners", icon: Compass, hidden: false },
-  { id: "spaces", label: "Spaces", icon: LayoutGrid, hidden: true },
+  { id: "spaces", label: "Spaces", icon: LayoutGrid, hidden: false },
   { id: "people", label: "People", icon: UserRound, hidden: false },
   { id: "marketplace", label: "Marketplace", icon: ShoppingBag, hidden: false },
 ] as const;
@@ -540,6 +540,7 @@ export function Discover() {
 
           {tab === "people" && <PeopleBrowser query={query} />}
           {tab === "marketplace" && <MarketplaceTab query={query} />}
+          {tab === "spaces" && <SpacesBrowser query={query} />}
 
           {tab === "corners" && (
             <>

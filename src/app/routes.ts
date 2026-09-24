@@ -7,8 +7,10 @@
 import { createHashRouter, redirect } from "react-router";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
-import { CategoryFeed } from "./pages/CategoryFeed";
 import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
+import { SpaceRoute } from "./pages/SpaceRoute";
+import { CreateSpace } from "./pages/CreateSpace";
+import { EditSpace } from "./pages/EditSpace";
 import { Discover } from "./pages/Discover";
 import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
@@ -89,7 +91,13 @@ export const router = createHashRouter([
       { path: "inbox", Component: Inbox },
       { path: "messages", Component: Messages },
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
-      { path: "space/:slug", Component: CategoryFeed },
+      // A real Space's own slug renders SpaceRoute's dispatcher; a
+      // reserved (Category) slug redirects to /discover instead —
+      // Categories are internal-only now, never shown to users. See
+      // SpaceRoute.tsx for the reserved-slug check itself.
+      { path: "space/:slug", Component: SpaceRoute },
+      { path: "space/:slug/edit", Component: EditSpace },
+      { path: "create-space", Component: CreateSpace },
       { path: "corner/:slug", Component: CornerPage },
       { path: "pursuits/new", Component: CreatePursuit },
       { path: "join/:token", Component: JoinPursuit },
