@@ -12,9 +12,12 @@ drop policy if exists "reviewers delete categories" on public.categories;
 drop policy if exists "reviewers update categories" on public.categories;
 drop policy if exists "reviewers insert built-in overrides only" on public.categories;
 
+-- Matches the live original (docs/schema-baseline-20260920.sql line 1152):
+-- private.is_admin(uuid), not public — see the forward migration's own
+-- note on this.
 create policy "reviewers manage categories"
   on public.categories for all
-  using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+  using (private.is_admin(auth.uid())) with check (private.is_admin(auth.uid()));
 
 drop policy if exists "anyone signed in can suggest" on public.category_suggestions;
 create policy "anyone signed in can suggest"

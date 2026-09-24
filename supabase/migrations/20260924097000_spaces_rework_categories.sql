@@ -96,10 +96,19 @@ drop policy if exists "anyone signed in can suggest" on public.category_suggesti
 
 drop policy if exists "reviewers manage categories" on public.categories;
 
+-- Live-database correction (caught before running, 2026-09-24, by
+-- cross-checking docs/schema-baseline-20260920.sql before handing this
+-- file off — same shape of bug as the earlier are_connected/is_space_member
+-- ones): is_admin(uuid) lives in the `private` schema on this database, not
+-- `public`. The very policy this migration drops two statements up
+-- ("reviewers manage categories") already called private.is_admin(auth.
+-- uid()) correctly — these three replace it and need to match, or every
+-- CREATE POLICY below fails outright with "function public.is_admin(uuid)
+-- does not exist" (it would fail at CREATE time, not just at use).
 create policy "reviewers insert built-in overrides only"
   on public.categories for insert to authenticated
   with check (
-    public.is_admin(auth.uid())
+    private.is_admin(auth.uid())
     and slug = any (array[
       'food-cooking', 'sports-fitness', 'art-creative', 'crafts-making',
       'books-writing', 'nature-outdoors', 'home-garden', 'gaming-tabletop',
@@ -110,12 +119,12 @@ create policy "reviewers insert built-in overrides only"
 
 create policy "reviewers update categories"
   on public.categories for update to authenticated
-  using (public.is_admin(auth.uid()))
-  with check (public.is_admin(auth.uid()));
+  using (private.is_admin(auth.uid()))
+  with check (private.is_admin(auth.uid()));
 
 create policy "reviewers delete categories"
   on public.categories for delete to authenticated
-  using (public.is_admin(auth.uid()));
+  using (private.is_admin(auth.uid()));
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 4. Check it

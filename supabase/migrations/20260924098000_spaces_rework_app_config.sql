@@ -37,10 +37,13 @@ drop policy if exists "app_config is readable when signed in" on public.app_conf
 create policy "app_config is readable when signed in"
   on public.app_config for select using (auth.uid() is not null);
 
+-- Live-database correction (caught before running, 2026-09-24 — same bug
+-- class as categories/corners in this batch): is_admin(uuid) lives in
+-- `private`, not `public`, on this database.
 drop policy if exists "admins manage app_config" on public.app_config;
 create policy "admins manage app_config"
   on public.app_config for all
-  using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+  using (private.is_admin(auth.uid())) with check (private.is_admin(auth.uid()));
 
 insert into public.app_config (key, value) values
   ('corner_min_moments_30d', '3'::jsonb),

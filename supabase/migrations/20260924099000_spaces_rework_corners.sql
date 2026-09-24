@@ -76,6 +76,19 @@ grant execute on function public.corner_activity_30d() to authenticated, anon;
 -- ─────────────────────────────────────────────────────────────────────────
 -- 3. Admin: rename, hide, merge.
 -- ─────────────────────────────────────────────────────────────────────────
+-- Live-database correction (caught before running, 2026-09-24, by
+-- cross-checking docs/schema-baseline-20260920.sql — same bug class as
+-- categories/app_config in this batch, and as the pre-existing
+-- admin_delete_circle/admin_delete_space/admin_move_space_content/
+-- circle_usage/space_usage functions docs/backend-state-20260920.md
+-- already flags as broken the same way): is_admin(uuid) lives in
+-- `private`, not `public`, on this database. Unlike an RLS policy, a
+-- plpgsql function body isn't validated against this at CREATE time, so
+-- `public.is_admin(...)` here wouldn't fail the migration — it would
+-- silently create three more functions that error "function public.
+-- is_admin(uuid) does not exist" for every caller, admin included, the
+-- same way the five pre-existing ones already do. Fixed at the source
+-- instead of adding a fourth-through-sixth entry to that list.
 create or replace function public.admin_rename_corner(p_corner_id bigint, p_new_name text)
 returns void
 language plpgsql
@@ -83,7 +96,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.is_admin(auth.uid()) then
+  if not private.is_admin(auth.uid()) then
     raise exception 'Only an admin can do that.';
   end if;
   -- The blocklist constraint (section 1) still applies to this UPDATE —
@@ -101,7 +114,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.is_admin(auth.uid()) then
+  if not private.is_admin(auth.uid()) then
     raise exception 'Only an admin can do that.';
   end if;
   update public.corners set hidden = p_hidden where id = p_corner_id;
@@ -131,7 +144,7 @@ declare
   n_spaces int;
   n_interests int;
 begin
-  if not public.is_admin(auth.uid()) then
+  if not private.is_admin(auth.uid()) then
     raise exception 'Only an admin can do that.';
   end if;
   if p_from_id = p_into_id then
