@@ -33,6 +33,8 @@ import { JoinPursuit } from "./pages/JoinPursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
+import { SpacePage } from "./pages/Space";
+import { CreateSpace } from "./pages/CreateSpace";
 import {
   Settings,
   AppearanceSettingsPage,
@@ -88,6 +90,10 @@ export const router = createHashRouter([
       { path: "messages", Component: Messages },
       { path: "you/work/:hobbyKey", Component: HobbyArchive },
       { path: "space/:slug", Component: CategoryFeed },
+      // Authenticated Space surfaces. The existing /space/:slug category route
+      // remains intact for backwards-compatible category links.
+      { path: "spaces/new", Component: CreateSpace },
+      { path: "spaces/:spaceId", Component: SpacePage },
       { path: "corner/:slug", Component: CornerPage },
       { path: "pursuits/new", Component: CreatePursuit },
       { path: "join/:token", Component: JoinPursuit },
