@@ -1,0 +1,39 @@
+-- Sushii: Spaces Rework — fix a NOT NULL / ON DELETE SET NULL contradiction
+-- on public.spaces.created_by.
+--
+--   Supabase → SQL Editor → New query → paste → Run
+--   Run AFTER 20260926010000_phase4_followup_active_space_checks.sql.
+--
+-- Already run directly against production. This migration brings the
+-- repo's migration history back in sync with that.
+--
+-- public.spaces.created_by was declared
+--   created_by uuid not null references auth.users (id) on delete set null
+-- — a real contradiction: when a Space's creator's account is deleted,
+-- the FK's ON DELETE SET NULL action tries to set created_by to NULL to
+-- satisfy the reference, but the NOT NULL constraint on that same column
+-- rejects the write. Postgres enforces the FK action and the column
+-- constraint in the same operation, so the NULL write fails — which
+-- doesn't silently corrupt anything, but it means deleting the account of
+-- anyone who has ever created a Space was blocked outright by this
+-- contradiction, with no clean path around it.
+--
+-- Confirmed before this ran: no code, client or SQL, assumes
+-- spaces.created_by is non-null. It's referenced in exactly two places
+-- in the entire migration history — the column's own declaration, and
+-- "signed-in users create a space"'s WITH CHECK (created_by = auth.uid()),
+-- which only checks the value an authenticated caller is setting at
+-- INSERT time and doesn't depend on it staying non-null afterward. No
+-- Space-page UI exists yet (Phase 5) to have grown a different
+-- assumption.
+--
+-- Safe to re-run: DROP NOT NULL is idempotent (already-nullable is a
+-- no-op, not an error).
+alter table public.spaces alter column created_by drop not null;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- Check it
+-- ─────────────────────────────────────────────────────────────────────────
+-- select is_nullable from information_schema.columns
+-- where table_name = 'spaces' and column_name = 'created_by';
+-- -- expect 'YES'

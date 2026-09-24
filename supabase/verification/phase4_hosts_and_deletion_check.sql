@@ -209,11 +209,9 @@ begin
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000001005"}', true);
   v_i := v_i + 1;
   begin
-    perform public.respond_to_deletion_request(v_e_request_id, 'approved');
-    results := array_append(results, format('%s FAIL', v_i));
+    select public.respond_to_deletion_request(v_e_request_id, 'approved') into v_text;
+    results := array_append(results, format('%s %s', v_i, case when v_text = 'expired' then 'PASS' else 'FAIL' end));
   exception
-    when raise_exception then
-      results := array_append(results, format('%s PASS', v_i));
     when others then
       results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
