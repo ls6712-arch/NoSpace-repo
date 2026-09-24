@@ -261,11 +261,12 @@ function AllCornersBrowser({ query }: { query: string }) {
   if (matching.length === 0) {
     // No active filter (nothing searched) — there's nothing to say "no
     // matches" about, so hide the row entirely rather than show an empty
-    // box with a message that presupposes a search happened.
+    // box with a message that presupposes a search happened. The message
+    // below is only ever seen when a search genuinely comes up empty.
     if (!q) return null;
     return (
       <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
-        Corners appear here once people start making in them.
+        No Corners match that. Try a broader word.
       </div>
     );
   }
