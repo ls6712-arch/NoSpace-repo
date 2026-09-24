@@ -1,192 +1,166 @@
-# Sushii communication strategy
+# Sushii Communication: Build Strategy
 
-How people reach each other on Sushii, in phases. This document is the plan;
-each phase's own PR says what actually shipped.
+Written Sept 24, 2026, from the live code on `main` (`29a33d0`) and the live Supabase database
+(`eyzokuhhbyidvmuqfmwm`). Covers Messages, notifications, and how people reach each other.
+This is the source of truth for the work; each phase updates its STATUS line when it ships.
 
-> **Note on this copy.** The task that kicked off Phase 1 said this file was
-> attached alongside the prompt and should be copied into the repo verbatim.
-> No attachment actually reached this session — only the prompt's own
-> restatement of the plan did. This file is that restatement, reorganized as
-> a standing doc. If a fuller source document exists, it should replace this
-> one; nothing below should be treated as more authoritative than that
-> original.
+## Where we are today
 
-## Phase 1 — Safety: block, report, message requests
+What works:
+- **Direct messages** from any profile, plus threads that open when a Make together or Explore
+  together request is accepted. All of them are rows in `participations` (kind
+  `direct_message`, `make_together`, `explore_together`), and messages hang off a participation.
+- **Security rules on messages**: you can only read and write inside an accepted thread
+  (RLS policies on `messages`), and a **rate limit** trigger (`rl_messages_insert`) caps sends.
+- **Notifications** (the bell) for follows, Pursuit joins and progress, Thoughts and messages.
 
-**Status:** in progress. Database migration
-(`supabase/migrations/20260925020000_communication_phase1_safety.sql`)
-drafted and staged for review — **not yet applied** to the live database.
-App code not yet written. See `docs/backend-state-<date>.md` for the
-migration's applied/verification status once it lands, and the line at the
-bottom of this section once Phase 1 ships.
+What's missing or weak:
+- **No block or report.** Anyone signed in can DM anyone. There's no way to stop an unwanted sender.
+- **Polling, not live.** The Messages page reloads everything every 4 seconds: all participations,
+  400 recent Thoughts, 60 notifications, every profile involved and the full history of every
+  conversation. Realtime isn't enabled on any table.
+- **No history paging.** Every conversation loads in full, every 4 seconds.
+- **Silent failed sends.** The send result isn't checked; a failed message just disappears.
+- **No unread state.** No per-conversation unread, no badge on the Messages icon.
+- **Bell spam.** Every message also creates a bell notification.
+- **Text only.** Thoughts can carry a photo; messages can't. No way to share a Moment or Pursuit.
+- **Messages can't be deleted or unsent.** There's no update or delete rule on `messages`.
+- **Nothing reaches you outside the app.** No email or push.
 
-### Decisions
+Scale today: 10 people, 1 direct-message thread, 5 messages. That's the best time to change the
+data model: there's almost nothing to migrate.
 
-1. **Message requests.** A first direct message from someone the recipient
-   doesn't follow waits in a Message requests tab in Messages, to accept or
-   ignore. "Known" = the recipient follows the sender (a `profile_follows`
-   row with `follower_id = recipient`, `followed_id = sender`,
-   `status = 'accepted'`). Known senders go straight to the inbox. Make
-   together / Explore together threads keep working exactly as today —
-   accepting that request is already consent.
-2. **Messages and follow requests stay separate.** Follow requests and
-   Circle invitations stay in Inbox → Requests and the bell, unchanged.
-   Message requests live only in Messages. Accepting a message request
-   never creates a follow, and accepting a follow never opens a
-   conversation. Never name the new tab just "Requests."
-3. **Full block.** The blocked person can't message you, send you any
-   request, follow you, react to or leave Thoughts on your Moments, and
-   doesn't see your profile or Moments. You stop seeing theirs too.
-   Blocking removes existing follows in both directions. They aren't told.
-   Unblock anytime from Settings (follows are not restored on unblock).
-4. **Reports** go to a Reports list in the admin pages. Reporting a person,
-   message, Moment or Thought also offers to block the person.
+## Decisions needed before building (Sush)
 
-### Facts about the live database (verified 2026-09-24, re-verified live
-before writing the Phase 1 migration)
+**Decided Sept 24, 2026:** 1 = yes, message requests; 2 = full block as recommended; 3 = admin
+Reports list, and reporting offers to block. Decisions 4–7 are still open.
 
-* `participations` (`id, kind, from_user, to_user, post_id, hobby_key,
-  intent, note, status, created_at, responded_at`). `kind` ∈ `join_in |
-  make_together | explore_together | direct_message`. `status` ∈ `pending |
-  accepted | declined`. Trigger: `rl_participations_insert`.
-* Before Phase 1, `startDirectMessage` inserted a `direct_message` with
-  `status: 'accepted'` straight from the client. The server decides the
-  status instead now (see Part A).
-* Hole closed by Phase 1: the `"the recipient answers"` UPDATE policy used
-  to let `from_user` OR `to_user` update a participation, so a sender could
-  mark their own request accepted.
-* `messages` (`id, participation_id, from_user, body, created_at,
-  to_user`). Policies: insert and select only inside an accepted
-  participation of kind `make_together`/`explore_together`/
-  `direct_message` — Phase 1 additionally allows a pending
-  `direct_message`'s first message through, per the Decisions above. Rate
-  limit trigger `rl_messages_insert` = 60 per 10 minutes (kept).
-* `profile_follows` (`follower_id, followed_id, status pending|accepted,
-  created_at, responded_at`).
-* Admin check: `private.is_admin(uuid)`. Every admin-only policy below
-  calls it the same way existing admin policies do.
-* `public.write_blocked()` means "account paused" — unrelated to user
-  blocking. The new helper is named differently: `public.
-  is_blocked_between(a uuid, b uuid)`.
-* Existing data at the time this was written: 10 people, 1 `direct_message`
-  thread (accepted), 5 messages. Existing accepted threads stay accepted —
-  the migration does not touch their status.
+**Messages and follow requests stay separate (Sush, Sept 24).**
+- Follow requests (and Circle invitations) stay where they are: Inbox → Requests, and the bell.
+- Message requests live only in Messages, in a tab named **Message requests** (never just
+  "Requests", to avoid two tabs with the same name).
+- Accepting one never does the other: accepting a follow request doesn't open a conversation,
+  and accepting a message request doesn't make anyone a follower.
+- The only link, confirmed by Sush: "known" = you follow them (accepted follow). A first message
+  from someone you follow goes straight to your inbox; from anyone else it waits in Message
+  requests for you to accept or ignore. Make together / Explore together threads stay as today,
+  since accepting that request is already consent.
 
-### Part A — database
+Each phase lists which of these it depends on. Recommended answer first.
 
-`supabase/migrations/20260925020000_communication_phase1_safety.sql` plus
-`rollback_20260925020000_communication_phase1_safety.sql`. In plain
-language:
+1. **Message requests.** A first message from someone you don't follow lands in a "Requests" tab
+   you accept or ignore. *Recommended: yes.* "Known" = you follow them (accepted follow).
+   Make together / Explore together threads stay as today, since accepting the request is already
+   consent.
+2. **What block does.** *Recommended:* the blocked person can't message you, follow you, react to
+   or leave Thoughts on your Moments, and doesn't see your profile or Moments; you stop seeing
+   theirs. They aren't told. Unblock anytime from Settings.
+3. **Reports go where.** *Recommended:* a Reports list in the existing admin pages; reporting
+   someone also offers to block them.
+4. **"Seen" receipts.** *Recommended: on, with a Settings switch to turn off (off for you means you
+   don't see others' either).*
+5. **Photos in messages must be private.** Today Moment photos live in a public bucket (anyone
+   with the URL can open them). *Recommended:* DM photos go in a new private bucket, readable only
+   by the two people in the conversation. This is the first piece of `docs/private-media-plan.md`.
+6. **Unsend.** *Recommended:* you can delete your own message; it shows "Message deleted" to both.
+   No editing.
+7. **Email and push** (Phase 6 only). Needs an email provider (e.g. Resend) and, for push, the app
+   installable on phones. *Recommended: email first, push later.*
 
-1. A `blocks` table (`blocker_id, blocked_id, created_at`; primary key on
-   the pair; no self-blocks). RLS: you insert/delete/select only rows where
-   you're the blocker. The blocked person can never read who blocked them.
-2. `is_blocked_between(a, b)`: `SECURITY DEFINER`, `STABLE`, pinned
-   `search_path`, true if either has blocked the other. EXECUTE revoked
-   from anon, granted only to `authenticated` — the SELECT policies that
-   need to work for anon (profiles, posts, thoughts) reach it indirectly
-   through `is_visible_profile()`, which stays broadly granted and calls it
-   internally as its own (`SECURITY DEFINER`) owner, not the connecting
-   role.
-3. Blocking (an insert into `blocks`) deletes any `profile_follows` rows
-   between the two people, both directions.
-4. The block is enforced in the database, both directions: on `messages`,
-   `participations` (any kind with a `to_user`), `profile_follows`,
-   `reactions` and `thoughts` inserts; and on `posts`, `profiles` and
-   `thoughts` reads (via `is_visible_profile()`, which every one of those
-   SELECT policies already goes through — so `hobby_follows`, `post_likes`
-   and `profile_links` reads get the same treatment for free, not just the
-   three explicitly named). Your own rows always stay visible to you.
-5. Message requests:
-   * A `BEFORE INSERT` trigger on `participations` for kind
-     `direct_message` ignores whatever status the client asked for and
-     decides: `accepted` if the recipient already follows the sender
-     (accepted follow), `pending` otherwise. Rejects if blocked-between.
-     Rejects a new `direct_message` if one already exists between the pair
-     in either direction, in any status — the app must reuse it.
-   * The update hole is closed twice over: the RLS policy now only lets
-     `to_user` attempt an update at all, and a trigger separately enforces
-     that only `pending → accepted`, `pending → declined` and
-     `declined → accepted` are real changes, sets `responded_at`, and pins
-     every other column so nothing about who a participation is between
-     can be rewritten after the fact.
-   * `messages` insert: today's accepted-thread rule, unchanged, plus
-     exactly one message from the sender into a pending `direct_message`.
-     The recipient can't send until they accept.
-   * `messages` select: both parties can read a pending thread (the
-     recipient needs to preview it). In a declined thread, only the sender
-     still sees their own message.
-6. A `reports` table (`id, reporter_id, target_user_id, target_kind` ∈
-   `profile | message | moment | thought`, `target_id` — null only for
-   `profile` — `reason` ∈ `spam | harassment | inappropriate | other`,
-   `note`, `status` ∈ `open | reviewed | dismissed`, `created_at,
-   reviewed_by, reviewed_at`). RLS: insert only as yourself; reporters see
-   their own reports; admins (`private.is_admin`) read and update all.
-   `reviewed_by`/`reviewed_at` are set by a trigger, not trusted from the
-   client. Rate limit: 20 per hour, via the existing
-   `enforce_rate_limit()` pattern.
-7. Every new function pins `search_path` and has no EXECUTE for anon
-   unless a currently-anon-reachable read needs it internally.
+## Phases
 
-`supabase/verification/communication_phase1_check.sql` proves all of the
-above, entirely inside a transaction that ends in `ROLLBACK`, impersonating
-three real accounts (`A`, `B`, `C`) via `set_config('role', 'authenticated',
-...)` and `set_config('request.jwt.claims', ...)`.
+Each phase is shippable on its own, in this order. Later phases depend on earlier ones.
 
-### Part B — the app
+### Phase 1: Safety (block, report, message requests)
+Depends on decisions 1, 2, 3.
+- **Database:** `blocks` table (who blocked whom) with rules so a block stops messages, follows,
+  reactions and Thoughts in both directions, enforced by the database, not just the app;
+  `reports` table (who, about whom or which message/Moment, reason, status); DM threads get a
+  `pending` state until the recipient accepts, with the sender limited to one message while pending.
+  Follow requests (`profile_follows`) are not changed by this phase.
+- **App:** Block and Report in a "…" menu on profiles and in each conversation; a Message
+  requests tab in Messages (Inbox's Requests tab keeps follow requests and Circle invitations); Blocked people list in Settings with Unblock; Reports list in admin.
+- **Also:** hide blocked people from search, Discover, Circles and "This Corner".
+- **Done when:** with three test accounts, a blocked person can't message, follow, react or
+  comment, even by calling the database directly; a stranger's first message lands in Message
+  requests, not in Inbox or the bell's follow requests; an accepted message request becomes a normal
+  conversation and changes nobody's follow status.
 
-Written to degrade quietly if `blocks`/`reports` don't exist yet (pre-
-migration), never to crash or blank a page.
+### Phase 2: Live and reliable
+No decisions needed.
+- **Database:** turn on Supabase Realtime for `messages` (it respects the same security rules, so
+  people only receive messages they're allowed to read).
+- **App:** subscribe to new messages instead of polling; load the latest 50 messages per
+  conversation and older ones on scroll-up; split the Messages page's data out of the global
+  refresh so opening Messages no longer reloads Thoughts and notifications; a sent message appears
+  instantly, with "Not sent, tap to retry" if it fails.
+- **Done when:** a message appears on the other person's screen within about a second with no
+  polling in the network log; a thread with 500 messages opens fast; turning Wi-Fi off and sending
+  shows the retry state.
 
-1. **SocialContext**: `startDirectMessage` stops sending a status and
-   reuses any existing thread with the person, of any status; a
-   blocked-between rejection surfaces as the same generic "can't message
-   this person" wording as any other failure, never revealing a block
-   exists. `refresh` also loads pending `direct_message` threads. New
-   surface: `messageRequests`, `myPendingRequests`, `acceptRequest`,
-   `ignoreRequest`, `block`, `unblock`, `blockedIds`, `report`.
-   `sendMessage` notifies the recipient once, on the first message into a
-   pending thread, with a new `message_request` notification kind.
-2. **Messages page**: two tabs, Chats and Message requests. A request shows
-   sender, message, and Accept / Ignore / Block / Report. The sender sees
-   "Waiting for `<name>` to accept" with the composer disabled.
-3. **Block and Report entry points**: a "…" menu on public profiles and in
-   a conversation header. Report opens a dialog (reason, optional note, an
-   "Also block" checkbox) and is also reachable from a Moment and from each
-   Thought that isn't your own.
-4. **Settings**: a "Blocked people" section, with Unblock.
-5. **Admin**: a Reports page beside the existing admin pages, same guard.
-6. Blocked people are hidden from search, people lists, conversation lists
-   and notifications app-side too (the database already hides most of it).
-7. **Inbox**: unchanged, except its header comment (which wrongly said
-   direct messaging was retired) is fixed.
-8. Copy stays plain, calm, sentence case.
+### Phase 3: Unread, Seen, and a quieter bell
+Depends on decision 4.
+- **Database:** `conversation_reads` (per person, per conversation, last read time).
+- **App:** bold unread conversations; unread count on the Messages icon in the header; "Seen"
+  under your last message (respecting the Settings switch); **stop creating a bell notification
+  for every message**. The bell announces a new message request once
+  (not each message), and follow requests exactly as today.
+- **Done when:** counts stay right across two devices and two accounts; reading on your phone
+  clears the badge on your laptop.
 
-### Part C — verify
+### Phase 4: Richer conversations
+Depends on decisions 5 and 6.
+- **Database:** private storage bucket for message photos with rules limited to the two people;
+  messages gain optional attachments (a photo, or a shared Moment or Pursuit); a delete rule so
+  you can unsend your own messages.
+- **App:** attach a photo (HEIC converted, same as Moments); share a Moment or Pursuit into a chat
+  as a small card that respects the Moment's own visibility (a private Moment shared in a chat
+  doesn't become visible to the other person); "Message about this" from someone's Moment; unsend.
+- **Done when:** a message photo URL can't be opened by a third account or signed-out; a shared
+  Only-you Moment shows "Not available" to the other person.
 
-`tsc`, unit tests, and `npm run build` before the PR. With the migration
-applied, three real accounts, at 390px/1280px, light/dark: stranger's first
-message lands in requests; known sender lands in Chats; block from a
-profile and from a conversation; report from a profile, message, Moment and
-Thought; Make together still works; follow requests still work.
-Screenshots: Messages (both tabs, a request), the block dialog, the report
-dialog, Settings → Blocked people, admin Reports.
+### Phase 5: Notification center
+No decisions needed beyond Phase 3.
+- **App and database:** group similar notifications ("3 people loved Lego roses"); Mark all read;
+  per-type mute switches in Settings (`notification_prefs`), respected by every place that creates
+  a notification.
+- **Done when:** muting a type stops new ones of that type; grouping never merges different
+  Moments.
 
-### Part D — ship
+### Phase 6: Email (then push)
+Depends on decision 7.
+- An email provider plus a Supabase Edge Function sends a short email for message requests,
+  replies to your Thoughts and people joining your Pursuit, respecting Phase 5's switches, with a
+  daily cap and an unsubscribe link. Push notifications come later, once the app is installable.
 
-Conventional commits; push; open a PR describing the change, the database
-rules in plain language, whether the migration is applied, test results,
-screenshots, and anything deliberately left out. Order: PR merges first;
-then, with explicit approval, the migration is applied right after deploy
-(the app works either way — requests only start once it's applied);
-re-run the verification script live and one end-to-end check.
+## How every phase ships (no loose ends)
 
-### Out of scope for Phase 1 (next phases)
+For each phase, in this order:
+1. **Branch** from current `main`. Never touch Spaces work (being redesigned by a teammate) or
+   `.env` (the Vercel build needs it).
+2. **Migration staged** in `supabase/migrations/` with a matching rollback file. Shown to Sush;
+   applied only after an explicit OK. Then verified with SQL, including a test that tries to break
+   the rules as a blocked or outside user.
+3. **App built** with typecheck, tests and build passing. New rules get tests.
+4. **Checked in the app** at phone and laptop width, light and dark, with at least two test
+   accounts (three for Phase 1).
+5. **Merged by Sush**, then confirmed on the live site after deploy (not just on the branch).
+6. **Docs updated:** this file's STATUS line for the phase, `docs/backend-state-<date>.md` for
+   database changes, and the project memory (`claude/github-updates.md`).
 
-* Replacing the 4-second polling, paging, retry on failed send (Phase 2).
-* Unread counts, Seen, and removing per-message bell notifications
-  (Phase 3).
-* Photos, sharing Moments, unsend (Phase 4). Notification grouping and
-  mute (Phase 5). Email and push (Phase 6).
-* Reaction counts from a blocked person stay in a Moment's totals (the
-  reactions themselves are hidden). Follow-up, not Phase 1.
+Anything found along the way but outside the phase goes on the follow-ups list below, not into
+the phase.
+
+## STATUS
+
+- Phase 1 Safety: in progress: migration under review
+- Phase 2 Live and reliable: not started
+- Phase 3 Unread and quieter bell: not started
+- Phase 4 Richer conversations: not started
+- Phase 5 Notification center: not started
+- Phase 6 Email and push: not started
+
+## Follow-ups (found, not in any phase)
+
+- The bell's `hobby_follow` notifications (29 so far) are the noisiest kind; Phase 5 grouping
+  should cover them.
