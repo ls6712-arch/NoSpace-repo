@@ -263,11 +263,13 @@ interface ContentContextType {
    * back to its own local store in that case, same shape as likedPostIds. */
   myReactionsByPostId: Record<number, ReactionId[]>;
   toggleReaction: (postId: number, type: ReactionId) => void;
-  /** Maker-only counts for your own Moments — docs/moment-card-and-
-   * reactions-spec.md §4: a count is never fetched, stored or shown for
-   * anyone else's Moment. Populated alongside realPosts; empty for a post
-   * id not yet in this map (render sites treat that as all-zero). */
-  ownCounts: Record<number, { love: number; in: number; thoughts: number }>;
+  /** Maker-only Thoughts count for your own Moments. Love this/Count me in
+   * are public now (Sept 24, 2026 amendment to docs/moment-card-and-
+   * reactions-spec.md §4) and read straight off posts.love_count/in_count
+   * instead — only Thoughts stays maker-only, since a thought can be
+   * private (thoughts_private). Populated alongside realPosts; empty for a
+   * post id not yet in this map (render sites treat that as zero). */
+  ownCounts: Record<number, { thoughts: number }>;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -309,11 +311,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // on the context type. Empty when signed out/unconfigured, same shape and
   // same reasoning as likedPostIds above.
   const [myReactionsByPostId, setMyReactionsByPostId] = useState<Record<number, ReactionId[]>>({});
-  // Maker-only counts (docs/moment-card-and-reactions-spec.md §4) — see
-  // ownCounts on the context type.
-  const [ownCounts, setOwnCounts] = useState<
-    Record<number, { love: number; in: number; thoughts: number }>
-  >({});
+  // Maker-only Thoughts count — see ownCounts on the context type.
+  const [ownCounts, setOwnCounts] = useState<Record<number, { thoughts: number }>>({});
   const [mediaError, setMediaError] = useState<string | null>(null);
   /** Set when a post couldn't reach the database, so the flow can say so. */
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -390,30 +389,28 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   };
 
   /**
-   * Maker-only counts (docs/moment-card-and-reactions-spec.md §4.3): "no
-   * new view, no new function" — a plain count per icon, batched once per
-   * page of your own Moments rather than one query per card. Only ever
-   * called with YOUR OWN post ids; a count is never fetched for a Moment
-   * you don't own; the two queries below only ever run as the signed-in
-   * `user`, and RLS on both tables already lets a post's author read every
-   * row on it regardless of who wrote it — this is what makes "the maker's
-   * own view of their own Moment" the one place a true total is correct.
+   * Maker-only Thoughts count (docs/moment-card-and-reactions-spec.md §4.3's
+   * "no new view, no new function" still applies): a plain count, batched
+   * once per page of your own Moments rather than one query per card. Love
+   * this/Count me in are public now and come from posts.love_count/in_count
+   * directly (rowToPost), so this only ever queries thoughts. Only ever
+   * called with YOUR OWN post ids; RLS on `thoughts` already lets a post's
+   * author read every row on it regardless of who wrote it, including a
+   * private one — this is what makes "the maker's own view of their own
+   * Moment" the one place a true total is correct.
    */
   const refetchOwnCounts = async (ownPostIds: number[]) => {
     if (!supabase || !user || ownPostIds.length === 0) {
       setOwnCounts({});
       return;
     }
-    const [{ data: reactionRows }, { data: thoughtRows }] = await Promise.all([
-      supabase.from("reactions").select("post_id, type").in("post_id", ownPostIds),
-      supabase.from("thoughts").select("post_id").in("post_id", ownPostIds),
-    ]);
+    const { data: thoughtRows } = await supabase
+      .from("thoughts")
+      .select("post_id")
+      .in("post_id", ownPostIds);
 
-    const counts: Record<number, { love: number; in: number; thoughts: number }> = {};
-    for (const id of ownPostIds) counts[id] = { love: 0, in: 0, thoughts: 0 };
-    for (const row of (reactionRows ?? []) as { post_id: number; type: string }[]) {
-      if (row.type === "love" || row.type === "in") counts[row.post_id][row.type]++;
-    }
+    const counts: Record<number, { thoughts: number }> = {};
+    for (const id of ownPostIds) counts[id] = { thoughts: 0 };
     for (const row of (thoughtRows ?? []) as { post_id: number }[]) {
       if (counts[row.post_id]) counts[row.post_id].thoughts++;
     }
