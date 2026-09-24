@@ -1,9 +1,10 @@
 -- Sushii: Spaces Rework Phase 2 — before/after verification.
 --
 -- Not a migration — nothing here alters the schema. Run the BEFORE block,
--- run the four Phase 2 migrations in order (20260924090000_export,
--- 20260924095000_cleanup, 20260924100000_visibility,
--- 20260924110000_schema), then run the AFTER block and diff the two.
+-- run the five Phase 2 migrations in order (20260924090000_export,
+-- 20260924095000_cleanup, 20260924097000_categories,
+-- 20260924100000_visibility, 20260924110000_schema), then run the AFTER
+-- block and diff the two.
 --
 -- The two numbers that must be identical before and after are
 -- total_moments and total_pursuits — nothing in this phase is supposed to
@@ -28,14 +29,14 @@
 --      POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15`) and restore:
 --      `psql postgresql://postgres:postgres@localhost:5432/postgres < sushii_snapshot.sql`
 --   3. Run the BEFORE block below against that local database.
---   4. Run the four Phase 2 migrations, in order, against it.
+--   4. Run the five Phase 2 migrations, in order, against it.
 --   5. Run the AFTER block; diff against BEFORE.
 --   6. Run the rollbacks in REVERSE order — rollback_...110000_schema,
---      rollback_...100000_visibility, rollback_...095000_cleanup,
---      rollback_...090000_export — then re-run the BEFORE block one more
---      time and confirm it matches the very first BEFORE output exactly
---      (this is what actually proves the rollbacks are real, not just
---      that they run without erroring).
+--      rollback_...100000_visibility, rollback_...097000_categories,
+--      rollback_...095000_cleanup, rollback_...090000_export — then re-run
+--      the BEFORE block one more time and confirm it matches the very
+--      first BEFORE output exactly (this is what actually proves the
+--      rollbacks are real, not just that they run without erroring).
 --   7. Discard the local database. Nothing here ever touches production.
 
 -- ═══════════════════════════════════════════════════════════════════════
@@ -71,6 +72,20 @@ select
 from public.posts where circle_id is not null;
 select count(*) as old_style_spaces from public.spaces;
 select count(*) as old_style_space_members from public.space_members;
+
+-- Categories: should show 16 rows today (15 built-ins, all active=false,
+-- plus the-lego-makers active=true), and 2 posts tagged the-lego-makers.
+select slug, active from public.categories order by slug;
+select count(*) as posts_outside_the_15
+from public.posts
+where hobby_slug is not null
+  and hobby_slug not in (
+    'food-cooking', 'sports-fitness', 'art-creative', 'crafts-making',
+    'books-writing', 'nature-outdoors', 'home-garden', 'gaming-tabletop',
+    'music', 'photography-film', 'health-wellness', 'fashion-beauty',
+    'tech-building', 'collecting-fandom', 'travel-adventure'
+  );
+-- expect 2 (the-lego-makers' Moments) before, 0 after
 
 -- DM messaging, before — pick two connected users' ids you can test with;
 -- this just confirms the query pattern the app itself uses still returns
@@ -120,6 +135,27 @@ where table_schema = 'public' and table_name in ('spaces', 'space_members');
 -- — just cross-check the new tables' column types (uuid, not bigint) via:
 -- select column_name, data_type from information_schema.columns where table_name = 'spaces' and column_name = 'id';
 
+-- Categories: should be 15 rows now (the-lego-makers gone), all active=true:
+select slug, active from public.categories order by slug;
+-- expect 15 rows, active = true for every one
+
+select count(*) as posts_outside_the_15
+from public.posts
+where hobby_slug is not null
+  and hobby_slug not in (
+    'food-cooking', 'sports-fitness', 'art-creative', 'crafts-making',
+    'books-writing', 'nature-outdoors', 'home-garden', 'gaming-tabletop',
+    'music', 'photography-film', 'health-wellness', 'fashion-beauty',
+    'tech-building', 'collecting-fandom', 'travel-adventure'
+  );
+-- expect 0
+
+-- "Suggest a Space" / new custom category creation should now be blocked
+-- for everyone, admin included — this should error with a policy
+-- violation (that's the expected/correct outcome, not a bug):
+-- insert into public.category_suggestions (suggested_by, name) values (auth.uid(), 'test');
+-- insert into public.categories (slug, name) values ('a-brand-new-slug', 'Test');
+
 select column_name from information_schema.columns
 where table_schema = 'public' and table_name = 'messages' and column_name = 'space_id';
 -- expect 0 rows
@@ -133,7 +169,11 @@ select 'old_spaces', count(*) from archive.old_spaces_20260924
 union all
 select 'old_space_members', count(*) from archive.old_space_members_20260924
 union all
-select 'circle_linked_posts', count(*) from archive.circle_linked_posts_20260924;
+select 'circle_linked_posts', count(*) from archive.circle_linked_posts_20260924
+union all
+select 'categories', count(*) from archive.categories_20260924;
+-- categories should be 16 — the full pre-migration table, including
+-- the-lego-makers
 
 -- DM messaging, after — same query as the BEFORE block, same two ids.
 -- Should return the identical rows.
