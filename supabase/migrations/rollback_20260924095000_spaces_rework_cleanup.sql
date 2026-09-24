@@ -98,6 +98,25 @@ returns boolean language sql stable security definer set search_path = public as
   );
 $$;
 
+-- The forward migration additionally drops this corners policy now (found
+-- on the actual first run, 2026-09-24 — see that file's own note), since
+-- it's a hard dependency that blocks `drop table public.spaces`. Restore
+-- it here for a complete rollback. Uses the real, live private.
+-- is_space_member(bigint, uuid) — untouched by any of this — not the
+-- public one just recreated above (that one only backs this file's own
+-- restored spaces/space_members policies, and was never what this corners
+-- policy actually called).
+drop policy if exists "space members can create a corner" on public.corners;
+create policy "space members can create a corner"
+  on public.corners for insert to authenticated
+  with check (
+    exists (
+      select 1 from public.spaces s
+      where s.hobby_slug = corners.space_slug
+        and (s.owner = auth.uid() or private.is_space_member(s.id, auth.uid()))
+    )
+  );
+
 drop policy if exists "spaces are visible to members and by invitation" on public.spaces;
 create policy "spaces are visible to members and by invitation"
   on public.spaces for select

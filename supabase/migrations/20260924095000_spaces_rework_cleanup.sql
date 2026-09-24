@@ -99,6 +99,28 @@ drop policy if exists "members invite" on public.space_members;
 drop policy if exists "you see membership of spaces you are in" on public.space_members;
 drop table if exists public.space_members;
 
+-- Second live-database correction (found on the actual first run of this
+-- migration, 2026-09-24, then confirmed against docs/schema-baseline-
+-- 20260920.sql — a real pg-introspected dump, not a guess): `corners` has
+-- an INSERT policy, "space members can create a corner", whose WITH CHECK
+-- does `exists (select 1 from spaces s where s.hobby_slug = corners.
+-- space_slug and (s.owner = auth.uid() or private.is_space_member(s.id,
+-- auth.uid())))` — a hard dependency on this table, which blocks
+-- `drop table public.spaces` with "cannot drop table spaces because other
+-- objects depend on it" unless dropped first. Safe to just drop, not
+-- rewrite: corner creation is already covered without it by the sibling
+-- policy "anyone signed in can create a corner" (any signed-in user, for
+-- any of the 15 built-in space_slugs or any existing Category slug) —
+-- the exact same permission surface every live Corner-creation path
+-- (Log.tsx, Onboarding.tsx, CornerTagField) actually uses today. Nothing
+-- could satisfy this policy's own condition anymore anyway, since nothing
+-- creates old-style space_members rows. private.is_space_member(bigint,
+-- uuid) and private.knows_space(bigint, uuid) (the two helper functions
+-- built for this table, per the same baseline dump) become unreferenced
+-- after this — left in place, harmless, Phase 6 cleanup territory like
+-- the rest of this file's dead-code notes.
+drop policy if exists "space members can create a corner" on public.corners;
+
 drop policy if exists "the owner removes the space" on public.spaces;
 drop policy if exists "the owner edits the space" on public.spaces;
 drop policy if exists "you can make a space" on public.spaces;
