@@ -86,28 +86,39 @@ select count(*) as old_style_space_members from public.space_members;
 
 select count(*) as total_posts from public.posts;
 
--- circle_id/hidden_from_moments no longer exist post-migration — every
--- remaining post is a Moment by construction (the ones that weren't got
--- deleted by the cleanup migration), so this is just a row count now.
-select count(*) as total_moments from public.posts;
+-- circle_id/hidden_from_moments still exist post-migration (kept until
+-- Phase 6 — see the cleanup migration's header), just empty/false for
+-- every row now, so the same predicate as BEFORE still applies and should
+-- now just be trivially true for everything.
+select count(*) as total_moments
+from public.posts
+where circle_id is null or hidden_from_moments = false;
 
 select count(*) as total_pursuits from public.pursuits;
 
 select user_id, count(*) as moments
 from public.posts
+where circle_id is null or hidden_from_moments = false
 group by user_id
 order by moments desc;
 
--- Circle/old-Space data and columns should all be gone:
-select count(*) as circles_table_exists
-from information_schema.tables
-where table_schema = 'public' and table_name in ('circles', 'circle_members', 'spaces', 'space_members');
--- expect 0 rows
+-- Circles: table/columns still exist (Phase 6 territory), but should be
+-- empty now:
+select count(*) as circles from public.circles;
+select count(*) as circle_members from public.circle_members;
+select count(*) as circle_linked_posts_remaining from public.posts where circle_id is not null;
+-- expect 0, 0, 0
 
-select column_name from information_schema.columns
-where table_schema = 'public' and table_name = 'posts'
-  and column_name in ('circle_id', 'circle_tab', 'answered', 'hidden_from_moments');
--- expect 0 rows
+-- sql/connections.sql's old spaces/space_members ARE fully schema-dropped:
+select count(*) as old_spaces_table_exists
+from information_schema.tables
+where table_schema = 'public' and table_name in ('spaces', 'space_members');
+-- expect 0 rows — NOTE: this check must run before the schema migration
+-- creates the NEW `spaces`/`space_members` (uuid-keyed), or it'll show 2
+-- and you won't be able to tell which `spaces` it found. Run this AFTER
+-- 20260924095000_cleanup but you can still run it after 110000_schema too
+-- — just cross-check the new tables' column types (uuid, not bigint) via:
+-- select column_name, data_type from information_schema.columns where table_name = 'spaces' and column_name = 'id';
 
 select column_name from information_schema.columns
 where table_schema = 'public' and table_name = 'messages' and column_name = 'space_id';

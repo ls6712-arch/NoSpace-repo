@@ -42,8 +42,13 @@
 -- never wired into any page (nothing in src/ references `.from('spaces')`,
 -- `.from('space_members')`, or the `is_space_member(bigint, uuid)` RPC).
 -- It collides by name with the new Phase 2 schema's `spaces`/
--- `space_members`/`is_space_member(uuid, uuid)`, so it's being retired
--- here too rather than left as confusing, unreachable dead data.
+-- `space_members`/`is_space_member(uuid, uuid)`, so its tables and
+-- function are schema-dropped entirely by the cleanup migration — safe,
+-- since nothing live queries them. The real Circle above is treated more
+-- conservatively: its ROW data is deleted (and archived here first), but
+-- `circles`/`circle_members` and the Circle-thread columns on `posts` stay
+-- in place until Phase 6 — see the cleanup migration's own header for why
+-- (CirclesContext.tsx and the Circle UI it feeds are still live).
 --
 -- Nothing about the 15 old hobby-Spaces (as communities) needs exporting:
 -- their only "membership" data is hobby_follows, which stays (repurposed
