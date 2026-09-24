@@ -32,7 +32,7 @@ import { fetchPursuitById, mirrorPursuit, SharedPursuit } from "../lib/pursuitsR
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { MomentCard } from "../components/MomentCard";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { GoalDialog } from "../components/GoalDialog";
 import { GoalProgressTap } from "../components/GoalProgressTap";
@@ -566,7 +566,7 @@ export function Pursuit() {
             {months.map((month) => (
               <section key={month.key}>
                 <MonthHeader label={month.label} moments={month.moments} />
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className={MOMENT_GRID}>
                   {month.moments.map((m) => {
                     const measure = ownProject && hasMeasure(ownProject) ? ownProject.measure : undefined;
                     const amount = amountByKey.get(m.key);

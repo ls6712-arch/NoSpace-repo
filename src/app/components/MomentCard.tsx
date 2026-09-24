@@ -22,7 +22,7 @@ import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { displayLocation } from "../data/participation";
 import { usePursuitTitle } from "../lib/pursuitTitle";
 import { isOnlyYou, visibilityWord, MOMENT_VISIBILITY_OPTIONS } from "../lib/visibility";
-import { useReactionState } from "./PostReactions";
+import { useReactionState } from "../lib/reactionState";
 import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Thoughts } from "./Thoughts";
 import { BePart } from "./BePart";
@@ -53,23 +53,35 @@ const TILE_TOKENS = [
   { bg: "var(--moment-tile-ink)", fg: "var(--moment-tile-ink-foreground)" },
 ] as const;
 
-export function tileTokenFor(postId: number) {
-  return TILE_TOKENS[Math.abs(postId) % TILE_TOKENS.length];
+export function tileTokenFor(postId: number | string) {
+  const n = typeof postId === "number" ? postId : [...postId].reduce((a, c) => a + c.charCodeAt(0), 0);
+  return TILE_TOKENS[Math.abs(n) % TILE_TOKENS.length];
 }
 
-export const MEDIA_HEIGHT: Record<NonNullable<MomentCardProps["size"]>, string> = {
-  lead: "h-[320px] sm:h-[480px]",
-  wide: "h-[260px] sm:h-[360px]",
-  standard: "h-[220px] sm:h-[320px]",
-  compact: "h-[160px] sm:h-[200px]",
-};
+/**
+ * One shape for every Moment, everywhere (Sept 24, 2026). The old
+ * per-size pixel heights (220/320/480px) made the same card wide on one
+ * page and tall and skinny on the next, depending on column width. A fixed
+ * aspect ratio keeps every card identical in shape on every page, screen
+ * and device; `size` is kept on the props only so existing call sites
+ * don't need to change.
+ */
+export const MOMENT_MEDIA = "aspect-square w-full rounded-[var(--radius-moment)]";
 
-export const CAPTION_SIZE: Record<NonNullable<MomentCardProps["size"]>, string> = {
-  lead: "text-[32px] sm:text-[44px] leading-[1.05]",
-  wide: "text-[26px] leading-[1.2]",
-  standard: "text-[22px] leading-[1.25]",
-  compact: "text-[18px] leading-[1.25]",
-};
+/** The grid every Moment list uses: 2 columns on phones, 3 from large
+ * screens up. Import this instead of writing a grid class at a call site,
+ * so no page drifts out of step again. */
+export const MOMENT_GRID = "grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-3";
+
+/** Caption set into a text-only Moment's colored tile. Scales with the
+ * tile rather than a breakpoint, and clamps so a long note never changes
+ * the tile's shape. */
+export const TILE_CAPTION =
+  "line-clamp-5 text-center italic text-[clamp(15px,4.2cqw+6px,26px)] leading-[1.2]";
+
+/** Caption under every card — same size and always two lines tall, so
+ * cards in a row line up whether the caption is one word or a paragraph. */
+export const CARD_CAPTION = "line-clamp-2 min-h-[2.6em] italic text-[17px] leading-[1.3] sm:text-[19px]";
 
 export type MomentCardSurface =
   | "mySpace"
@@ -86,6 +98,9 @@ export interface MomentCardProps {
   surface: MomentCardSurface;
   /** "01".."06" — sheet numbering, My Space only. */
   number?: string;
+  /** Ignored since Sept 24, 2026 — every Moment is one even square now
+   * (MOMENT_MEDIA), regardless of size. Kept on the type so existing call
+   * sites don't need to change; a new one doesn't need to pass it. */
   size?: "lead" | "wide" | "standard" | "compact";
   /** Opens MomentDetail at the call site. */
   onOpen?: () => void;
@@ -189,83 +204,222 @@ function VisibilityDialog({
   );
 }
 
-/** A maker-only, read-only count beside its icon — docs/moment-card-and-
- * reactions-spec.md §4.4: hidden at zero, capped at "999+", never a
- * toggle. This is never rendered for anyone but the Moment's own maker
- * (the caller only mounts it inside the `mine` branch below). */
-export function OwnCountPill({
-  icon: Icon,
-  label,
-  count,
+/**
+ * Save (Try This), overlaid on the top-right corner of the media as a
+ * bare icon — no chip behind it. A soft drop shadow keeps it readable on
+ * both light and dark photos. `tone` lets a text-only tile draw it in the
+ * tile's own foreground color instead of white.
+ */
+export function BookmarkOverlay({
+  postId,
+  tone = "#fff",
 }: {
-  icon: typeof Heart;
-  label: string;
-  count: number;
+  postId: string | number;
+  tone?: string;
 }) {
-  if (count <= 0) return null;
-  const shown = count > 999 ? "999+" : String(count);
+  const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
+  const [justAdded, setJustAdded] = useState(false);
+
+  const onClick = () => {
+    const wasSaved = saved;
+    toggleSaved(Number(postId));
+    if (!wasSaved) {
+      setJustAdded(true);
+      window.setTimeout(() => setJustAdded(false), 2200);
+    }
+  };
+
   return (
-    <span
-      aria-label={`${label}, ${count}`}
-      title={`${label}, ${count}`}
-      className="flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3.5 text-sm text-muted-foreground"
-    >
-      <Icon className="size-4" strokeWidth={1.9} aria-hidden="true" />
-      <span className="tabular-nums">{shown}</span>
-    </span>
+    <div className="absolute right-1.5 top-1.5 z-[1]">
+      <button
+        type="button"
+        aria-pressed={saved}
+        aria-label={saved ? "Saved to your Space. Tap again to remove it" : "Save to your Space"}
+        title={saved ? "Saved" : "Save"}
+        onClick={onClick}
+        className="flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+      >
+        <Bookmark
+          className="size-[22px] [filter:drop-shadow(0_0_1px_rgb(0_0_0/0.7))_drop-shadow(0_1px_3px_rgb(0_0_0/0.45))]"
+          strokeWidth={2}
+          style={{ color: tone, fill: saved ? tone : "none" }}
+          aria-hidden="true"
+        />
+      </button>
+      {justAdded && (
+        <span
+          role="status"
+          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-full bg-[var(--void)] px-2.5 py-1 text-[11px] text-[var(--offwhite)] shadow-md animate-in fade-in"
+        >
+          Saved to your Space
+        </span>
+      )}
+    </div>
   );
 }
 
-/** Bookmark, inline in the action row rather than overlaid on the media —
- * PostBookmark.tsx is built for the latter (hardcoded `absolute` position),
- * so this reuses its underlying toggleSaved/isSaved state directly instead
- * of fighting that component's own layout assumptions. */
-export function InlineBookmark({ postId }: { postId: string | number }) {
-  const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
+function formatCount(n: number) {
+  if (n >= 10_000) return `${Math.floor(n / 1000)}k`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return String(n);
+}
+
+const ICON_BTN =
+  "flex h-10 shrink-0 min-w-10 items-center justify-center gap-1 rounded-full px-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
+
+/**
+ * The one reaction row — used by every MomentCard and by MomentDetail, so
+ * reactions look and behave the same on every surface. Icons only, no
+ * bordered pills, so the row always fits a two-column phone grid.
+ *
+ * Love this and Count me in totals are public (Sept 24, 2026 — see
+ * supabase/migrations/20260924200000_post_reaction_counts.sql). The
+ * Thoughts total stays maker-only, since thoughts can be private.
+ */
+export function MomentActions({
+  post,
+  mine,
+  onEdit,
+  onVisibility,
+  onThoughts,
+}: {
+  post: Post;
+  mine: boolean;
+  onEdit?: () => void;
+  onVisibility?: () => void;
+  onThoughts?: () => void;
+}) {
+  const { posts, ownCounts } = useContent();
+  const { mine: myReactions, toggle } = useReactionState(post.id);
+  // Read the live row, so a tap updates the number even when the caller
+  // is holding an older copy of the post (MomentDetail does).
+  const live = posts.find((p) => p.id === post.id) ?? post;
+  const love = live.loveCount ?? 0;
+  const inCount = live.inCount ?? 0;
+  const thoughts = mine ? (ownCounts[post.id]?.thoughts ?? 0) : 0;
+  const loved = myReactions.includes("love");
+  const inPressed = myReactions.includes("in");
+
+  const Count = ({ n }: { n: number }) => <span className="tabular-nums">{formatCount(n)}</span>;
+
   return (
-    <button
-      type="button"
-      aria-pressed={saved}
-      aria-label={saved ? "Added to your Space. Try This again to remove it" : "Try This: save it to come back to"}
-      title={saved ? "Added to your Space" : "Try This"}
-      onClick={() => toggleSaved(Number(postId))}
-      className="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+    <div className="-ml-2 flex items-center">
+      {mine ? (
+        <>
+          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Love this, ${love}`} title="Love this">
+            <Heart className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+            <Count n={love} />
+          </span>
+          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Count me in, ${inCount}`} title="Count me in">
+            <Hand className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+            <Count n={inCount} />
+          </span>
+          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Thoughts, ${thoughts}`} title="Thoughts">
+            <MessageCircle className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+            <Count n={thoughts} />
+          </span>
+          <span className="ml-auto flex items-center">
+            {onEdit && (
+              <button type="button" onClick={onEdit} aria-label="Edit" title="Edit" className={`${ICON_BTN} text-foreground hover:bg-surface-muted`}>
+                <Pencil className="size-4 shrink-0" strokeWidth={1.9} />
+              </button>
+            )}
+            {onVisibility && (
+              <button
+                type="button"
+                onClick={onVisibility}
+                aria-label="Change who sees this"
+                title="Change who sees this"
+                className={`${ICON_BTN} -mr-2 text-foreground hover:bg-surface-muted`}
+              >
+                <Eye className="size-4 shrink-0" strokeWidth={1.9} />
+              </button>
+            )}
+          </span>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            aria-pressed={loved}
+            aria-label={`Love this, ${love}${loved ? ", pressed" : ""}`}
+            title="Love this"
+            onClick={() => toggle("love")}
+            className={`${ICON_BTN} hover:bg-surface-muted ${loved ? "text-[var(--coral-deep)]" : "text-foreground"}`}
+          >
+            <Heart className="size-[18px] shrink-0" strokeWidth={1.9} fill={loved ? "currentColor" : "none"} aria-hidden="true" />
+            <Count n={love} />
+          </button>
+          <button
+            type="button"
+            aria-pressed={inPressed}
+            aria-label={`Count me in, ${inCount}${inPressed ? ", pressed" : ""}`}
+            title="Count me in"
+            onClick={() => toggle("in")}
+            className={`${ICON_BTN} hover:bg-surface-muted ${inPressed ? "[color:var(--moment-tile-moss)]" : "text-foreground"}`}
+          >
+            <Hand className="size-[18px] shrink-0" strokeWidth={1.9} fill={inPressed ? "currentColor" : "none"} aria-hidden="true" />
+            <Count n={inCount} />
+          </button>
+          {onThoughts && (
+            <button
+              type="button"
+              aria-label="Add a thought"
+              title="Add a thought"
+              onClick={onThoughts}
+              className={`${ICON_BTN} text-foreground hover:bg-surface-muted`}
+            >
+              <MessageCircle className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** The media square itself — a photo/video carousel, or a colored tile
+ * with the caption set into it. Shared with MomentDetail. */
+export function MomentMedia({ post, className = "" }: { post: Post; className?: string }) {
+  const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
+  return hasRealMedia(post) ? (
+    <PostMediaCarousel
+      media={post.mediaUrls?.length ? post.mediaUrls : [post.media]}
+      type={post.type}
+      hobbySlug={post.hobbySlug}
+      seed={post.id}
+      className={`${MOMENT_MEDIA} object-cover ${className}`}
+    />
+  ) : (
+    <div
+      className={`${MOMENT_MEDIA} flex items-center justify-center overflow-hidden p-[9%] [container-type:inline-size] ${className}`}
+      style={{ background: tile.bg, color: tile.fg }}
     >
-      <Bookmark className="size-4" strokeWidth={1.9} fill={saved ? "currentColor" : "none"} />
-    </button>
+      <p className={TILE_CAPTION} style={{ fontFamily: "var(--font-serif)" }}>
+        {post.caption}
+      </p>
+    </div>
   );
 }
 
 export function MomentCard({
   post,
-  surface,
+  surface: _surface,
   number,
-  size = "standard",
   onOpen,
   canMarkAnswered = false,
 }: MomentCardProps) {
   const { user } = useAuth();
   const { circles } = useCircles();
-  const { ownCounts, setThreadAnswered } = useContent();
+  const { setThreadAnswered } = useContent();
   const social = useSocial();
   const mine = !!user && post.userId === user.id;
-  const [expanded, setExpanded] = useState(false);
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [thoughtsOpen, setThoughtsOpen] = useState(false);
   const [askTogetherOpen, setAskTogetherOpen] = useState(false);
-  const { mine: myReactions, toggle } = useReactionState(post.id);
-  // Maker-only — never fetched or shown for a Moment that isn't yours (see
-  // ContentContext's ownCounts). Missing entry (a page that hasn't loaded
-  // counts yet) reads as all-zero, i.e. hidden, never a stray "0".
-  const counts = ownCounts[post.id] ?? { love: 0, in: 0, thoughts: 0 };
+  const { mine: myReactions } = useReactionState(post.id);
 
-  // A Circle "Questions" thread — post.circleTab and post.answered already
-  // exist on every Post row (sql/circle-threads.sql), so this reads
-  // straight off the post rather than a surface-specific prop.
   const isQuestion = post.circleTab === "questions";
-  // An "activity" moment — a photo walk, a workshop, a Circle event — has a
-  // time attached. Same fields ContentCard.tsx already reads; shown
-  // wherever they're set; not exclusive to Circle threads.
   const isActivity = !!post.startsAt;
   const activityPlace = displayLocation(post.locationName, post.locationPrivacy);
   const goingCount = isActivity ? social.goingCount(post.id) : 0;
@@ -282,66 +436,52 @@ export function MomentCard({
     day: "numeric",
   });
 
-  const mediaBlock = hasRealMedia(post) ? (
-    <PostMediaCarousel
-      media={post.mediaUrls?.length ? post.mediaUrls : [post.media]}
-      type={post.type}
-      hobbySlug={post.hobbySlug}
-      seed={post.id}
-      className={`w-full ${MEDIA_HEIGHT[size]} rounded-[var(--radius-moment)] object-cover`}
-    />
-  ) : (
-    <div
-      className={`flex w-full items-center justify-center rounded-[var(--radius-moment)] p-6 sm:p-8 ${MEDIA_HEIGHT[size]}`}
-      style={{ background: tile.bg, color: tile.fg }}
-    >
-      <p
-        className={`text-center italic ${CAPTION_SIZE[size]}`}
-        style={{ fontFamily: "var(--font-serif)" }}
-      >
-        {post.caption}
-      </p>
-    </div>
-  );
-
   return (
-    <article>
-      <button
-        type="button"
-        onClick={onOpen}
-        aria-label={`Open: ${post.caption.slice(0, 60)}`}
-        className={`relative block w-full overflow-hidden rounded-[var(--radius-moment)] text-left ${
-          onlyYou ? "outline outline-2 outline-offset-[5px] outline-dashed outline-[var(--input-border)]" : ""
-        }`}
-      >
-        {mediaBlock}
-        {number && (
-          <span className="ns-section-kicker absolute left-3.5 top-3.5 rounded-full bg-card px-3 py-1 text-foreground shadow-sm">
-            {number}
-          </span>
-        )}
-      </button>
+    <article className="flex min-w-0 flex-col">
+      {/* The open button and the Save icon are siblings, never nested —
+          a button inside a button isn't valid, and Save must not also
+          open the Moment. */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={`Open: ${post.caption.slice(0, 60)}`}
+          className={`relative block w-full overflow-hidden rounded-[var(--radius-moment)] text-left ${
+            onlyYou ? "outline outline-2 outline-offset-[5px] outline-dashed outline-[var(--input-border)]" : ""
+          }`}
+        >
+          <MomentMedia post={post} />
+          {number && (
+            <span className="ns-section-kicker absolute left-3 top-3 rounded-full bg-card px-2.5 py-1 text-foreground shadow-sm">
+              {number}
+            </span>
+          )}
+        </button>
+        {!mine && <BookmarkOverlay postId={post.id} tone={hasRealMedia(post) ? undefined : tile.fg} />}
+      </div>
 
-      <div className="mt-4">
+      <div className="mt-3 flex min-w-0 flex-1 flex-col">
         {mine ? (
-          <div className="flex items-center justify-between gap-3">
-            <span className="ns-section-kicker text-muted-foreground">{corner ?? space?.shortName}</span>
-            <span className="ns-section-kicker flex items-center gap-1.5 text-muted-foreground">
+          <div className="flex min-h-9 min-w-0 items-center justify-between gap-2">
+            <span className="ns-section-kicker min-w-0 truncate text-muted-foreground">{corner ?? space?.shortName}</span>
+            <span className="ns-section-kicker flex shrink-0 items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
-              {visibilityWord(post, circleName)} · {timeLabel}
+              {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
+              <span className="hidden sm:inline">{visibilityWord(post, circleName)} · </span>
+              {timeLabel}
             </span>
           </div>
         ) : (
-          <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex min-h-9 min-w-0 items-center gap-2">
             <Link to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"} className="shrink-0">
-              <Avatar className="size-9">
-                <AvatarFallback className="text-xs">{initials(post.creator)}</AvatarFallback>
+              <Avatar className="size-8">
+                <AvatarFallback className="text-[11px]">{initials(post.creator)}</AvatarFallback>
               </Avatar>
             </Link>
             <span className="min-w-0">
               <Link
                 to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
-                className="block truncate text-base transition-colors hover:text-[var(--coral-text)]"
+                className="block truncate text-[15px] leading-tight transition-colors hover:text-[var(--coral-text)]"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 {post.creator}
@@ -353,39 +493,16 @@ export function MomentCard({
           </div>
         )}
 
-        <p
-          className={`mt-3 italic ${CAPTION_SIZE[size]} ${
-            size === "compact" ? "line-clamp-3" : !expanded ? "line-clamp-2" : ""
-          }`}
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
+        <p className={`mt-2 ${CARD_CAPTION}`} style={{ fontFamily: "var(--font-serif)" }} title={post.caption}>
           {post.caption}
         </p>
-        {size !== "compact" && !expanded && post.caption.length > 140 && (
-          <button
-            type="button"
-            onClick={() => setExpanded(true)}
-            className="mt-0.5 text-xs text-muted-foreground hover:underline"
-          >
-            more
-          </button>
-        )}
-        {size === "compact" && post.caption.length > 140 && (
-          <button
-            type="button"
-            onClick={onOpen}
-            className="mt-1 text-xs text-[var(--coral-text)] hover:underline"
-          >
-            Open
-          </button>
-        )}
 
         {isActivity && (
-          <div className="mt-3 rounded-xl border border-border bg-surface px-3.5 py-3">
+          <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2.5">
             <div className="flex items-center gap-1.5 text-xs">
               <CalendarDays className="size-3.5 shrink-0 text-foreground" />
               {new Date(post.startsAt!).toLocaleString(undefined, {
-                weekday: "long",
+                weekday: "short",
                 month: "short",
                 day: "numeric",
                 hour: "numeric",
@@ -395,17 +512,17 @@ export function MomentCard({
             {activityPlace && (
               <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <MapPin className="size-3.5 shrink-0" />
-                {activityPlace}
+                <span className="truncate">{activityPlace}</span>
               </div>
             )}
-            <div className="mt-2 text-xs text-muted-foreground">
+            <div className="mt-1.5 text-xs text-muted-foreground">
               {goingCount} {goingCount === 1 ? "person" : "people"} going
             </div>
           </div>
         )}
 
         {isQuestion && (
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <span
               className={`rounded-full px-2 py-0.5 text-[10px] ${
                 post.answered
@@ -428,91 +545,30 @@ export function MomentCard({
           </div>
         )}
 
-        <div className="mt-3.5 flex items-center gap-2">
-          {mine ? (
-            <>
-              <OwnCountPill icon={Heart} label="Love this" count={counts.love} />
-              <OwnCountPill icon={Hand} label="Count me in" count={counts.in} />
-              <OwnCountPill icon={MessageCircle} label="Thoughts" count={counts.thoughts} />
-              <Button variant="outline" size="sm" onClick={onOpen}>
-                <Pencil className="size-3.5" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label="Change who sees this"
-                title="Change who sees this"
-                onClick={() => setVisibilityOpen(true)}
-              >
-                <Eye className="size-4" />
-              </Button>
-              {post.reflection && (
-                <span className="ns-section-kicker inline-flex items-center gap-1.5 rounded-full border border-dashed border-[var(--input-border)] px-3 py-1.5 text-muted-foreground">
-                  <PenLine className="size-3" aria-hidden="true" />
-                  Reflection
-                </span>
-              )}
-              <VisibilityDialog post={post} open={visibilityOpen} onOpenChange={setVisibilityOpen} />
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                aria-pressed={myReactions.includes("love")}
-                aria-label={`Love this${myReactions.includes("love") ? ", pressed" : ""}`}
-                title="Love this"
-                onClick={() => toggle("love")}
-                className={`flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
-                  myReactions.includes("love")
-                    ? "border-transparent bg-accent text-accent-foreground"
-                    : "border-border text-foreground hover:border-[var(--foreground)]/35"
-                }`}
-              >
-                <Heart className="size-4" strokeWidth={1.9} fill={myReactions.includes("love") ? "currentColor" : "none"} />
-              </button>
-              <button
-                type="button"
-                aria-pressed={myReactions.includes("in")}
-                aria-label={`Count me in${myReactions.includes("in") ? ", pressed" : ""}`}
-                title="Count me in"
-                onClick={() => toggle("in")}
-                className={`flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
-                  myReactions.includes("in")
-                    ? "border-transparent [background-color:var(--moment-tile-moss)] [color:var(--moment-tile-moss-foreground)]"
-                    : "border-border text-foreground hover:border-[var(--foreground)]/35"
-                }`}
-              >
-                <Hand className="size-4" strokeWidth={1.9} fill={myReactions.includes("in") ? "currentColor" : "none"} />
-              </button>
-              <button
-                type="button"
-                aria-label="Add a thought"
-                title="Add a thought"
-                onClick={() => setThoughtsOpen(true)}
-                className="flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3.5 text-sm text-foreground transition-colors hover:border-[var(--foreground)]/35"
-              >
-                <MessageCircle className="size-4" strokeWidth={1.9} />
-              </button>
-              <InlineBookmark postId={post.id} />
-            </>
-          )}
+        {/* mt-auto pins the row to the bottom, so reaction rows line up
+            across a grid row even when one card carries an event block. */}
+        <div className="mt-auto pt-1.5">
+          <MomentActions
+            post={post}
+            mine={mine}
+            onEdit={onOpen}
+            onVisibility={() => setVisibilityOpen(true)}
+            onThoughts={() => setThoughtsOpen(true)}
+          />
         </div>
 
-        {/* Count me in keeps its existing behavior; after the first tap
-            this quietly offers the existing make-together request instead
-            of building a second flow — see BePart's initialPane/hideTrigger,
-            docs/moment-card-and-reactions-spec.md §4.4. */}
         {!mine && myReactions.includes("in") && post.userId && (
           <button
             type="button"
             onClick={() => setAskTogetherOpen(true)}
-            className="mt-2 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+            className="mt-1 self-start text-left text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
           >
             Ask {post.creator} to make it together?
           </button>
         )}
       </div>
+
+      {mine && <VisibilityDialog post={post} open={visibilityOpen} onOpenChange={setVisibilityOpen} />}
 
       {!mine && (
         <>
