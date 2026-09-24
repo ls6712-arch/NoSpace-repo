@@ -1,49 +1,47 @@
-import { Globe2, Lock, Users, type LucideIcon } from "lucide-react";
+import { Globe2, Lock, UserRound, type LucideIcon } from "lucide-react";
 
 /**
- * "Only you" — a Moment truly nobody else can see. `private` is a real,
- * independent value here, not a stand-in for anything else. Structurally
- * typed (not `Post["visibility"]`, which doesn't carry a literal `"private"`
- * member) so this keeps working regardless of whether the type it's checking
- * against has caught up to include it.
+ * "Only you" — a Moment truly nobody else can see. Spaces Rework: real
+ * (Supabase-backed) posts are migrated to `just_me`, the new name for what
+ * used to be `private`. `private` stays checked here too — private-log
+ * stand-ins (You.tsx's `privateLogsAsPosts`) hardcode `visibility: "private"`
+ * client-side and never touch the database, so the migration can't reach
+ * them. Structurally typed (not `Post["visibility"]`) so this keeps working
+ * regardless of whether the type it's checking against has caught up.
  */
 export function isOnlyYou(post: { visibility: string }): boolean {
-  return post.visibility === "private";
+  return post.visibility === "just_me" || post.visibility === "private";
 }
 
-type VisibilityPost = { visibility: string; circleId?: number };
+type VisibilityPost = { visibility: string };
 
 /**
- * The three audiences a Moment can be switched to *after* it's posted —
- * deliberately narrower than Log.tsx's own four-way creation-time picker
- * (which also offers "followers", a real, independent tier this switcher
- * doesn't expose). Matches the three-way vocabulary Settings > Privacy's
- * "Default visibility for new Moments" already uses (`private|circle|public`),
- * so a Moment's own visibility control and the account-wide default speak
- * the same three words.
+ * The audiences a Moment can be switched to after it's posted. `space` isn't
+ * offered here yet — real Space membership (and picking *which* Space)
+ * lands in a later phase; until then there's nothing coherent to switch a
+ * Moment's audience to that a Space membership check could enforce.
  */
 export const MOMENT_VISIBILITY_OPTIONS: {
-  value: "private" | "circle" | "public";
+  value: "just_me" | "followers" | "public";
   label: string;
   icon: LucideIcon;
 }[] = [
-  { value: "private", label: "Only you", icon: Lock },
-  { value: "circle", label: "A Circle", icon: Users },
+  { value: "just_me", label: "Only you", icon: Lock },
+  { value: "followers", label: "Followers", icon: UserRound },
   { value: "public", label: "Everyone", icon: Globe2 },
 ];
 
 /**
- * "Your Moments" meta-row word (MomentCard §2.1.2): `PUBLIC`, `ONLY YOU`, or
- * the Circle's own name — small-caps ready, uppercase already applied where
- * that's not a proper name. `circleName` is resolved by the caller (real
- * Circles are Supabase-backed and live in CirclesContext's own `useCircles()`
- * now — data/circles.ts's static `circles` array they used to live in is
- * empty since the seed Circles were retired, so a lookup against it here
- * would silently always miss).
+ * "Your Moments" meta-row word (MomentCard §2.1.2): `PUBLIC`, `ONLY YOU`,
+ * `FOLLOWERS` — small-caps ready, uppercase already applied. `spaceName` is
+ * accepted for call-site compatibility with the old `circleName` parameter
+ * (kept until MomentCard.tsx/MomentDetail.tsx are updated to stop passing a
+ * Circle's name, in a later phase) but unused until a post can actually
+ * carry `visibility: "space"`.
  */
-export function visibilityWord(post: VisibilityPost, circleName?: string): string {
+export function visibilityWord(post: VisibilityPost, spaceName?: string): string {
   if (isOnlyYou(post)) return "ONLY YOU";
-  if (post.visibility === "circle") return circleName ?? "A Circle";
+  if (post.visibility === "space") return spaceName ?? "A Space";
   if (post.visibility === "followers") return "FOLLOWERS";
   return "PUBLIC";
 }

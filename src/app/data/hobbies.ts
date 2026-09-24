@@ -23,6 +23,21 @@ const sub = (label: string, slug?: string): SubHobby => ({
       .replace(/^-+|-+$/g, ""),
 });
 
+/**
+ * Spaces Rework (see spec): this is now the unified Category model — the
+ * fifteen browse labels, merged with what used to be a second, independent
+ * `Category` type in categories.ts (same 15 slugs, its own `examples` and
+ * `keywords`, kept only for Discover's keyword-matching). The two had
+ * drifted into parallel, occasionally-inconsistent lists of "the same fifteen
+ * things"; this merges them into one source of truth. `posts.hobbySlug`
+ * references this by slug directly now, not by keyword-matched free text.
+ *
+ * The type/variable names (`Hobby`, `hobbies`, `getHobby`, ...) are
+ * deliberately NOT renamed to `Category`/`categories`/`getCategory` here —
+ * that's a terminology change, not a data-model one, and lands in Phase 6
+ * alongside the rest of this rework's renames (Circle removal, Work→Moments,
+ * etc.) rather than mixed into this phase's schema/migration work.
+ */
 export interface Hobby {
   slug: string;
   /** Full Space name, e.g. "Crafts & Making". */
@@ -49,6 +64,15 @@ export interface Hobby {
   hidden?: boolean;
   custom?: boolean;
   prompt?: string;
+  /** From the former categories.ts: the person's-own-vocabulary examples
+   * shown under the name on Discover, and the keywords a freeform interest
+   * or sub-hobby label is matched against for `categoriesFor`/`primaryCategory`
+   * (categories.ts). Optional so a database-only custom Space (no keywords
+   * of its own yet) still type-checks. */
+  examples?: string[];
+  keywords?: string[];
+  /** Soft tint used on Discover's category chips (was categories.ts's `tint`). */
+  tint?: string;
 }
 
 /**
@@ -83,6 +107,15 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Cooking", "Baking", "Sourdough", "Coffee", "Fermentation", "BBQ"],
+    keywords: [
+      "cooking", "baking", "sourdough", "bread", "fermentation", "bbq", "barbecue",
+      "grilling", "home coffee", "coffee", "espresso", "tea", "home brewing",
+      "brewing", "kombucha", "cocktail", "cocktail-making", "supper clubs",
+      "food photography", "pasta", "pastry", "cheese", "canning", "pickling",
+      "meal prep", "vegan cooking", "baking bread",
+    ],
+    tint: "var(--pastel-clay)",
   },
   {
     slug: "sports-fitness",
@@ -101,6 +134,15 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1571008887538-b36bb32f4571?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Running", "Climbing", "Cycling", "Tennis", "Swimming", "Strength training"],
+    keywords: [
+      "running", "run clubs", "gym", "cycling", "climbing", "bouldering", "tennis",
+      "swimming", "strength training", "weightlifting", "martial arts", "boxing",
+      "basketball", "soccer", "football", "volleyball", "pickleball", "padel",
+      "dance", "rowing", "triathlon", "marathon", "crossfit", "skateboarding",
+      "surfing", "golf", "cricket", "badminton",
+    ],
+    tint: "var(--pastel-sky)",
   },
   {
     slug: "art-creative",
@@ -117,6 +159,13 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1513364776144-60967b0f800f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Drawing", "Painting", "Illustration", "Ceramics", "Sculpture"],
+    keywords: [
+      "drawing", "painting", "illustration", "ceramics", "sculpture", "watercolor",
+      "calligraphy", "theater", "printmaking", "collage", "animation", "comics",
+      "sketching", "digital art", "portrait", "life drawing", "graphic design",
+    ],
+    tint: "var(--pastel-rose)",
   },
   {
     slug: "crafts-making",
@@ -135,6 +184,15 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Pottery", "Knitting", "Sewing", "Woodworking", "Jewelry-making"],
+    keywords: [
+      "sewing", "knitting", "crochet", "pottery", "woodworking", "jewelry",
+      "jewelry-making", "embroidery", "quilting", "weaving", "candle-making",
+      "soap-making", "paper crafts", "zines", "scrapbooking", "bookbinding",
+      "model-making", "miniatures", "makerspaces", "leatherwork", "macrame",
+      "upcycling", "resin", "glassblowing",
+    ],
+    tint: "var(--pastel-sage)",
   },
   {
     slug: "books-writing",
@@ -152,6 +210,13 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1512820790803-83ca734da794?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Reading", "Book clubs", "Poetry", "Journaling", "Creative writing"],
+    keywords: [
+      "reading", "books", "book clubs", "poetry", "journaling", "creative writing",
+      "writing", "fiction", "essays", "screenwriting", "blogging", "language learning",
+      "storytelling", "zine writing", "literature",
+    ],
+    tint: "var(--pastel-wheat)",
   },
   {
     slug: "nature-outdoors",
@@ -168,6 +233,14 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1551632811-561732d1e306?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Hiking", "Camping", "Birdwatching", "Fishing", "Foraging"],
+    keywords: [
+      "hiking", "camping", "birding", "birdwatching", "fishing", "foraging",
+      "outdoor photography", "nature journaling", "wild swimming", "kayaking",
+      "canoeing", "trail running", "mushroom hunting", "stargazing", "rockpooling",
+      "walking", "mountaineering",
+    ],
+    tint: "var(--pastel-sage)",
   },
   {
     slug: "home-garden",
@@ -185,6 +258,14 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Gardening", "Houseplants", "Interior design", "DIY", "Restoration"],
+    keywords: [
+      "gardening", "plants", "houseplants", "vegetable gardens", "native plants",
+      "composting", "indoor growing", "interior design", "diy", "restoration",
+      "furniture flipping", "home renovation", "decorating", "bonsai", "propagation",
+      "allotment",
+    ],
+    tint: "var(--pastel-sage)",
   },
   {
     slug: "gaming-tabletop",
@@ -201,6 +282,13 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Board games", "D&D", "Video games", "Chess", "Puzzles"],
+    keywords: [
+      "video games", "gaming", "board games", "d&d", "dungeons and dragons",
+      "tabletop rpgs", "rpgs", "cards", "playing cards", "puzzles", "chess",
+      "warhammer", "speedrunning", "game nights", "jigsaw",
+    ],
+    tint: "var(--pastel-stone)",
   },
   {
     slug: "music",
@@ -217,6 +305,13 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Guitar", "Singing", "Songwriting", "DJing", "Music production"],
+    keywords: [
+      "music", "music production", "singing", "songwriting", "djing", "dj",
+      "guitar", "piano", "drums", "bass", "violin", "ukulele", "choir", "band",
+      "producing", "synths", "recording",
+    ],
+    tint: "var(--pastel-rose)",
   },
   {
     slug: "photography-film",
@@ -233,6 +328,13 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Photography", "Film photography", "Filmmaking", "Video"],
+    keywords: [
+      "photography", "film photography", "filmmaking", "video", "cinematography",
+      "darkroom", "street photography", "portrait photography", "food photography",
+      "outdoor photography", "editing", "documentary",
+    ],
+    tint: "var(--pastel-stone)",
   },
   {
     slug: "health-wellness",
@@ -249,6 +351,12 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1506126613408-eca07ce68773?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Yoga", "Pilates", "Meditation", "Mindfulness", "Breathwork"],
+    keywords: [
+      "yoga", "pilates", "meditation", "mindfulness", "breathwork", "stretching",
+      "mobility", "sleep", "journalling for wellbeing", "tai chi", "qigong",
+    ],
+    tint: "var(--pastel-sage)",
   },
   {
     slug: "fashion-beauty",
@@ -265,6 +373,12 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Fashion", "Thrifting", "Makeup", "Nails", "Fragrance"],
+    keywords: [
+      "fashion", "styling", "thrifting", "makeup", "nails", "fragrance", "perfume",
+      "sneakers", "vintage clothing", "tailoring", "skincare", "hair",
+    ],
+    tint: "var(--pastel-rose)",
   },
   {
     slug: "tech-building",
@@ -284,6 +398,15 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1553406830-ef2513450d76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Coding", "Electronics", "Robotics", "3D printing", "AI projects"],
+    keywords: [
+      "coding", "programming", "electronics", "robotics", "3d printing", "ai",
+      "ai projects", "no-code building", "creative coding", "web design",
+      "game development", "data visualization", "ar/vr projects", "smart-home projects",
+      "cybersecurity learning", "cad", "laser cutting", "cnc", "arduino",
+      "raspberry pi", "drones", "product prototyping", "home lab", "self-hosting",
+    ],
+    tint: "var(--pastel-sky)",
   },
   {
     slug: "collecting-fandom",
@@ -293,13 +416,20 @@ export const hobbies: Hobby[] = [
     plainLabel: "Vinyl, cards, books, antiques, toys, memorabilia, anime",
     description: "Vinyl, cards, books, antiques, toys, memorabilia, anime.",
     subItems: [
-      sub("Trading cards"), sub("LEGO"), sub("Vinyl"), sub("Antiques"),
+      sub("Trading cards"), sub("Brick building", "lego"), sub("Vinyl"), sub("Antiques"),
       sub("Toys"), sub("Anime"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Vinyl", "Trading cards", "Antiques", "Toys", "Anime"],
+    keywords: [
+      "collecting", "vinyl", "records", "trading cards", "antiques", "toys",
+      "memorabilia", "anime", "manga", "brick building", "stamps", "coins", "figures",
+      "model trains", "fandom", "cosplay",
+    ],
+    tint: "var(--pastel-wheat)",
   },
   {
     slug: "travel-adventure",
@@ -316,6 +446,12 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
+    examples: ["Travel", "Road trips", "Backpacking", "Skiing", "Exploration"],
+    keywords: [
+      "travel", "road trips", "backpacking", "skiing", "snowboarding", "exploration",
+      "van life", "cycling tours", "sailing", "diving", "urban exploration",
+    ],
+    tint: "var(--pastel-sky)",
   },
 ];
 

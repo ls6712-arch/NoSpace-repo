@@ -1,7 +1,19 @@
 import { CircleTabId } from "./circles";
 import { getHobby, subHobbyLabel } from "./hobbies";
 
-export type Visibility = "public" | "circle" | "followers";
+/**
+ * Spaces Rework: the new vocabulary is `just_me | followers | space | public`.
+ * `circle` and `private` stay in this union as accepted legacy values —
+ * Circle-posting (CircleComposer.tsx, Log.tsx's composer, MomentCard.tsx's
+ * switcher) is still fully live UI through Phase 5 of that rework and can
+ * still write `circle` until Phase 6 actually removes it, so narrowing this
+ * type (or the DB check constraint) before then would break real, shipped
+ * functionality. `private` is the pre-rename spelling of `just_me`; existing
+ * data was already migrated (see supabase/migrations/
+ * 20260924100000_spaces_rework_visibility.sql), but the type stays wide
+ * until every write path is updated to stop producing it.
+ */
+export type Visibility = "public" | "followers" | "space" | "just_me" | "circle" | "private";
 
 export interface Post {
   id: number;
