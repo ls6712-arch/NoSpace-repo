@@ -153,7 +153,8 @@ the phase.
 
 ## STATUS
 
-- Phase 1 Safety: in progress: migration under review
+- Phase 1 Safety: in progress: migration applied to live Supabase and verified (see
+  `docs/backend-state-20260924.md`); app (Part B) not started
 - Phase 2 Live and reliable: not started
 - Phase 3 Unread and quieter bell: not started
 - Phase 4 Richer conversations: not started

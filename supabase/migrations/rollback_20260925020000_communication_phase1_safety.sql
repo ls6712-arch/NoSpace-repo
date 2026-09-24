@@ -65,6 +65,8 @@ create policy "you can write in an accepted thread"
 
 drop index if exists public.participations_one_direct_message_per_pair;
 
+drop function if exists private.participation_has_message(bigint);
+
 drop policy if exists "you can withdraw" on public.participations;
 create policy "you can withdraw"
   on public.participations for delete
@@ -108,6 +110,8 @@ drop policy if exists "you react as yourself" on public.reactions;
 create policy "you react as yourself"
   on public.reactions for insert
   with check ((select auth.uid()) = user_id);
+
+drop function if exists private.post_owner(bigint);
 
 drop policy if exists "you follow people as yourself" on public.profile_follows;
 create policy "you follow people as yourself"

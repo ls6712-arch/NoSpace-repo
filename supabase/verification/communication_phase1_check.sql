@@ -19,20 +19,25 @@
 -- about them persists after the rollback, per the task's instruction to
 -- use existing profile ids rather than inserting fake ones:
 --   A  0a653a11-cb43-40f5-be8e-b21efc57891f  (has Moments; is not admin)
---   B  87220a04-06fc-464a-860d-988713665fe0  (has Moments; is not admin;
---                                             already mutually follows A,
---                                             accepted, live — reused
---                                             below as the "known sender"
---                                             fixture and then as the
---                                             target of A's block)
---   C  38b4d8b3-9502-49d8-9b2f-79d387872127  (is an admin; A's only
---                                             existing follow of C is
---                                             'pending', not accepted, so
---                                             C is "unknown" to A — used
---                                             both as the stranger who
---                                             messages A and, later, as
---                                             the admin who reviews
---                                             reports)
+--   B  87220a04-06fc-464a-860d-988713665fe0  (has Moments; already
+--                                             mutually follows A, accepted,
+--                                             live — reused below as the
+--                                             "known sender" fixture and
+--                                             then as the target of A's
+--                                             block)
+--   C  38b4d8b3-9502-49d8-9b2f-79d387872127  (A's only existing follow of
+--                                             C is 'pending', not
+--                                             accepted, so C is "unknown"
+--                                             to A — used both as the
+--                                             stranger who messages A
+--                                             and, later, as the admin who
+--                                             reviews reports)
+--
+-- B and C's is_admin flags are forced (false / true) in the fixture below
+-- rather than assumed from live data — both changed live, in opposite
+-- directions, between this migration being drafted and this script first
+-- being run, which is real account data this script has no business
+-- depending on for a deterministic result.
 --
 -- Every check that attempts a write expected to be rejected is its own
 -- begin...exception...end sub-block, so one failing attempt can't abort
@@ -86,6 +91,14 @@ begin
   insert into public.thoughts (post_id, user_id, body)
   values (v_a_post, v_a, 'Phase 1 safety check fixture thought — rolled back.')
   returning id into v_thought_a;
+
+  -- Force deterministic admin status for the test identities, regardless
+  -- of live drift — B and C's actual is_admin flags changed live between
+  -- this migration being written and this script first being run, which
+  -- surfaced as spurious failures in the reports section below until this
+  -- was added.
+  update public.profiles set is_admin = false where id in (v_a, v_b);
+  update public.profiles set is_admin = true where id = v_c;
 
   -- ───────────────────────────────────────────────────────────────────────
   -- 1-12. Message request: C (unknown to A) messages A.

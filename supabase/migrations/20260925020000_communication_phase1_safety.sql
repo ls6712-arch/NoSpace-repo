@@ -3,9 +3,24 @@
 --
 --   Supabase → SQL Editor → New query → paste → Run
 --
--- Draft only — staged for review. Do NOT run this against Supabase until
--- it's been approved. See docs/communication-strategy.md for the full plan
--- this implements.
+-- Applied to live Supabase 2026-09-24, in four passes: this file, then
+-- three small follow-up fixes for bugs the verification script itself
+-- caught mid-run (kept inline below, at the point each one applies,
+-- rather than as separate migration files, since nothing had shipped to
+-- users yet):
+--   1. messages' own INSERT policy hit Postgres's RLS self-recursion
+--      guard (42P17) on every insert — fixed via
+--      private.participation_has_message().
+--   2. A blocked person could still react to / comment on the blocker's
+--      Moment: the block check's own "who owns this post" subquery was
+--      itself subject to posts' new block-aware RLS, so it silently
+--      returned NULL (no rows) once the block hid the post, which made
+--      the block check vacuously pass — fixed via private.post_owner().
+--   3. Hygiene: revoked direct EXECUTE (anon/authenticated) on the six
+--      new trigger functions, per the security advisors — not exploitable
+--      either way (Postgres refuses to invoke a RETURNS TRIGGER function
+--      outside trigger context), but free to close.
+-- See docs/communication-strategy.md for the full plan this implements.
 --
 -- Everything here is enforced by RLS policies and triggers, not just hidden
 -- in the app client — the app is not a trust boundary; someone calling the
@@ -200,6 +215,13 @@ create trigger blocks_remove_follows
   after insert on public.blocks
   for each row execute function public.on_block_remove_follows();
 
+-- Trigger functions only, never meant to be called directly — Postgres
+-- refuses to invoke a RETURNS TRIGGER function outside trigger context
+-- regardless of grants (confirmed live), so this is hygiene, not a real
+-- exploit fix, but it's free and quiets the security advisor for every
+-- trigger function this phase adds.
+revoke execute on function public.on_block_remove_follows() from public, anon, authenticated;
+
 -- ═══════════════════════════════════════════════════════════════════════
 -- 4. Hide rows on read: profiles, posts, thoughts (and, as a side effect
 --    of sharing this one helper, hobby_follows / post_likes /
@@ -274,6 +296,32 @@ create policy "you follow people as yourself"
     and not private.is_blocked_between(auth.uid(), followed_id)
   );
 
+-- private.post_owner(pid): resolves a Moment's owner bypassing the
+-- CALLER's own RLS on posts. Without this, `select p.user_id from
+-- public.posts p where p.id = ...` inside a policy runs under the
+-- connecting role's own posts-SELECT policy — which, once someone is
+-- blocked-between with the post's owner, now hides that very post
+-- (section 4 above). The subquery then returns zero rows (NULL), and
+-- `not is_blocked_between(x, null)` is true — silently defeating the
+-- block check it's part of. Found live: a blocked B could still react to
+-- and comment on A's Moment, precisely because A's post had just become
+-- invisible to B. SECURITY DEFINER bypasses that (posts has no FORCE ROW
+-- LEVEL SECURITY, so the table owner — which owns this function too — is
+-- exempt), so the true owner is always resolved regardless of visibility.
+create or replace function private.post_owner(pid bigint)
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select user_id from public.posts where id = pid;
+$$;
+
+revoke execute on function private.post_owner(bigint) from public;
+revoke execute on function private.post_owner(bigint) from anon;
+grant execute on function private.post_owner(bigint) to authenticated;
+
 -- reactions: tightened from `{public}` to `to authenticated` as part of
 -- this change — anon could never satisfy `auth.uid() = user_id` anyway
 -- (auth.uid() is null for anon), so this changes no real capability, but
@@ -285,10 +333,7 @@ create policy "you react as yourself"
   to authenticated
   with check (
     auth.uid() = user_id
-    and not private.is_blocked_between(
-      auth.uid(),
-      (select p.user_id from public.posts p where p.id = reactions.post_id)
-    )
+    and not private.is_blocked_between(auth.uid(), private.post_owner(reactions.post_id))
   );
 
 -- thoughts: same write_blocked() (paused-account) guard as before, plus
@@ -300,10 +345,7 @@ create policy "anyone signed in can add a thought"
   with check (
     (select auth.uid()) = user_id
     and not (select public.write_blocked())
-    and not private.is_blocked_between(
-      auth.uid(),
-      (select p.user_id from public.posts p where p.id = thoughts.post_id)
-    )
+    and not private.is_blocked_between(auth.uid(), private.post_owner(thoughts.post_id))
   );
 
 -- ═══════════════════════════════════════════════════════════════════════
@@ -381,6 +423,8 @@ create trigger participations_set_insert_status
   before insert on public.participations
   for each row execute function public.set_participation_insert_status();
 
+revoke execute on function public.set_participation_insert_status() from public, anon, authenticated;
+
 -- 6b. Close the update hole: only the recipient (to_user) may change a
 -- participation's status at all, and only along the allowed path. This is
 -- enforced twice, deliberately: the RLS policy decides *who* may attempt
@@ -439,6 +483,8 @@ create trigger participations_enforce_status_transition
   before update on public.participations
   for each row execute function public.enforce_participation_status_transition();
 
+revoke execute on function public.enforce_participation_status_transition() from public, anon, authenticated;
+
 -- 6b-2. A direct_message can't be deleted at all — the old policy let a
 -- sender delete a declined (or still-pending) thread and immediately open
 -- a fresh one, defeating Ignore/Decline entirely. join_in (the only kind
@@ -458,6 +504,33 @@ create policy "you can withdraw"
 create unique index if not exists participations_one_direct_message_per_pair
   on public.participations (least(from_user, to_user), greatest(from_user, to_user))
   where kind = 'direct_message';
+
+-- private.participation_has_message(pid): whether any message already
+-- exists for a participation, bypassing the CALLER's own RLS on messages.
+-- Needed because Postgres detects "infinite recursion" (42P17) for ANY
+-- subquery against a table from within that table's own RLS policy, even
+-- one that logically terminates — found live: a plain `not exists (select
+-- 1 from public.messages m2 where m2.participation_id = p.id)` inside
+-- messages' own INSERT policy below raised "infinite recursion detected
+-- in policy for relation messages" on the very first insert attempted.
+-- SECURITY DEFINER sidesteps this entirely: the function's internal query
+-- bypasses RLS (messages has no FORCE ROW LEVEL SECURITY, so the table
+-- owner — which owns this function too — is exempt), so from the outer
+-- policy's perspective there's no longer a direct subquery on messages at
+-- all, only a function call.
+create or replace function private.participation_has_message(pid bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (select 1 from public.messages where participation_id = pid);
+$$;
+
+revoke execute on function private.participation_has_message(bigint) from public;
+revoke execute on function private.participation_has_message(bigint) from anon;
+grant execute on function private.participation_has_message(bigint) to authenticated;
 
 -- 6c. messages: insert. Today's rule for an accepted thread, unchanged,
 -- plus exactly one message from the sender into a pending direct_message —
@@ -480,7 +553,7 @@ create policy "you can write in an accepted thread"
             p.status = 'pending'
             and p.kind = 'direct_message'
             and auth.uid() = p.from_user
-            and not exists (select 1 from public.messages m2 where m2.participation_id = p.id)
+            and not private.participation_has_message(p.id)
           )
         )
     )
@@ -591,6 +664,8 @@ create trigger reports_set_reviewed_meta
   before update on public.reports
   for each row execute function public.set_report_reviewed_meta();
 
+revoke execute on function public.set_report_reviewed_meta() from public, anon, authenticated;
+
 -- Rate limit, same enforce_rate_limit() pattern as every other insert
 -- trigger in sql/security-hardening.sql.
 create or replace function public.rl_reports() returns trigger
@@ -603,6 +678,7 @@ $$;
 drop trigger if exists rl_reports_insert on public.reports;
 create trigger rl_reports_insert before insert on public.reports
   for each row execute function public.rl_reports();
+revoke execute on function public.rl_reports() from public, anon, authenticated;
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 8. notifications hardening
@@ -735,3 +811,4 @@ drop trigger if exists notifications_enforce_insert on public.notifications;
 create trigger notifications_enforce_insert
   before insert on public.notifications
   for each row execute function public.enforce_notification_insert();
+revoke execute on function public.enforce_notification_insert() from public, anon, authenticated;
