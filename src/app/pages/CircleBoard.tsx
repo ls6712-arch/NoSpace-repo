@@ -20,7 +20,7 @@ import { useConnections } from "../context/ConnectionsContext";
 import { useAuth } from "../context/AuthContext";
 import { CircleComposer } from "../components/CircleComposer";
 import { CircleRoster } from "../components/CircleRoster";
-import { MomentCard } from "../components/MomentCard";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { Button } from "../components/ui/button";
 
 const TABS: { id: CircleTabId; label: string; icon: typeof PenLine }[] = [
@@ -170,13 +170,14 @@ export function CircleBoard() {
                   )}
                 </div>
 
-                <div className="mt-4 space-y-6">
+                <div className="mt-4">
                   {threads.length === 0 ? (
                     <p className="rounded-2xl border border-dashed border-border px-5 py-9 text-center text-sm text-muted-foreground">
                       Nothing here yet. Yours would be the first.
                     </p>
                   ) : (
-                    threads.map((thread) => (
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5">
+                    {threads.map((thread) => (
                       <MomentCard
                         key={thread.id}
                         post={thread}
@@ -184,7 +185,8 @@ export function CircleBoard() {
                         size="standard"
                         canMarkAnswered={tab === "questions" && !!user && (user.id === thread.userId || isOwner)}
                       />
-                    ))
+                    ))}
+                    </div>
                   )}
                 </div>
               </>
