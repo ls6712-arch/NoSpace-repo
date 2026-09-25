@@ -13,6 +13,7 @@ import {
   type SpaceEventRow,
 } from "../../lib/spaces";
 import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { CreateEventDialog } from "./CreateEventDialog";
 
 function fmt(iso: string, tz: string) {
@@ -27,7 +28,17 @@ function fmt(iso: string, tz: string) {
   }
 }
 
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 type Teaser = { id: number; title: string; starts_at: string; timezone: string };
+type Attendee = { userId: string; name: string; avatarUrl?: string };
 
 export function SpaceEventsTab({
   space,
@@ -44,6 +55,7 @@ export function SpaceEventsTab({
   const [teasers, setTeasers] = useState<Teaser[] | "loading">("loading");
   const [myRsvps, setMyRsvps] = useState<Set<number>>(new Set());
   const [addressByEventId, setAddressByEventId] = useState<Map<number, string>>(new Map());
+  const [attendeesByEvent, setAttendeesByEvent] = useState<Map<number, Attendee[]>>(new Map());
   const [createOpen, setCreateOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<SpaceEventRow | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -84,12 +96,43 @@ export function SpaceEventsTab({
       const { data: rsvps } = await supabase.from("event_rsvps").select("event_id").eq("user_id", user.id);
       setMyRsvps(new Set((rsvps ?? []).map((r) => r.event_id as number)));
     }
+
+    // event_rsvps' own RLS ("you and the space's members read RSVPs")
+    // only returns every attendee for an active Space member — a
+    // non-member's query here would just come back empty, so this is
+    // gated the same way rather than relying on that silently.
+    if (isActiveMember && rows.length > 0) {
+      const { data: allRsvps } = await supabase
+        .from("event_rsvps")
+        .select("event_id, user_id")
+        .in("event_id", rows.map((r) => r.id));
+      const userIds = [...new Set((allRsvps ?? []).map((r) => r.user_id as string))];
+      const { data: profilesData } = userIds.length
+        ? await supabase.from("profiles").select("id, display_name, avatar_url").in("id", userIds)
+        : { data: [] as { id: string; display_name: string; avatar_url: string | null }[] };
+      const profileById = new Map((profilesData ?? []).map((p) => [p.id, p]));
+      const byEvent = new Map<number, Attendee[]>();
+      for (const r of allRsvps ?? []) {
+        const eventId = r.event_id as number;
+        const profile = profileById.get(r.user_id as string);
+        const list = byEvent.get(eventId) ?? [];
+        list.push({
+          userId: r.user_id as string,
+          name: profile?.display_name || "Someone",
+          avatarUrl: profile?.avatar_url ?? undefined,
+        });
+        byEvent.set(eventId, list);
+      }
+      setAttendeesByEvent(byEvent);
+    } else {
+      setAttendeesByEvent(new Map());
+    }
   };
 
   useEffect(() => {
     refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [space.id, canSeeFull, user?.id]);
+  }, [space.id, canSeeFull, isActiveMember, user?.id]);
 
   const rsvp = async (eventId: number) => {
     setBusyId(eventId);
@@ -231,6 +274,32 @@ export function SpaceEventsTab({
                     </Button>
                   )}
                 </div>
+                {isActiveMember && (() => {
+                  const attendees = attendeesByEvent.get(e.id) ?? [];
+                  return (
+                    <div className="mt-3">
+                      <p className="text-xs text-muted-foreground">
+                        {attendees.length} going
+                      </p>
+                      {attendees.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                          {attendees.slice(0, 8).map((a) => (
+                            <span key={a.userId} className="flex items-center gap-1.5">
+                              <Avatar className="size-6">
+                                {a.avatarUrl && <AvatarImage src={a.avatarUrl} alt="" />}
+                                <AvatarFallback className="text-[9px]">{initials(a.name)}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs text-muted-foreground">{a.name}</span>
+                            </span>
+                          ))}
+                          {attendees.length > 8 && (
+                            <span className="text-xs text-muted-foreground">+{attendees.length - 8} more</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </li>
             );
           })}

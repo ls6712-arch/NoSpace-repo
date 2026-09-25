@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
@@ -9,7 +10,10 @@ import { Button } from "./ui/button";
  * allows this as a direct insert, no RPC needed. Posting mode ('immediate'
  * vs 'approval') is enforced by the table's own before-insert trigger, not
  * here — a linked Moment on an approval Space just lands pending, same as
- * anywhere else that trigger applies. */
+ * anywhere else that trigger applies. With no existing Moments to pick
+ * from, "Log a new Moment" sends the member to the composer instead
+ * (/create?space=<id>) — Log.tsx does that same space_moments insert
+ * itself once the new post exists. */
 export function AddMomentToSpaceDialog({
   spaceId,
   open,
@@ -61,7 +65,12 @@ export function AddMomentToSpaceDialog({
         ) : posts === "loading" ? (
           <div className="py-6" />
         ) : posts.length === 0 ? (
-          <p className="py-4 text-sm text-muted-foreground">You don't have any Moments yet.</p>
+          <div className="py-4 text-center">
+            <p className="text-sm text-muted-foreground">You don't have any Moments yet.</p>
+            <Link to={`/create?space=${spaceId}`} onClick={() => onOpenChange(false)} className="mt-3 inline-block">
+              <Button variant="coral" size="sm">Log a new Moment</Button>
+            </Link>
+          </div>
         ) : (
           <div className="max-h-80 space-y-1 overflow-y-auto">
             {posts.map((p) => (

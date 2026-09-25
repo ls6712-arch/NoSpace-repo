@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Link, useBlocker, useNavigate, useSearchParams } from "react-router";
+import { supabase } from "../../lib/supabase";
 import {
   ArrowLeft,
   Camera,
@@ -240,6 +241,12 @@ export function Log() {
   const initialPursuit = initialPursuitId
     ? journal.projects.find((p) => p.id === initialPursuitId)
     : undefined;
+  // "Log a new Moment" from a Space's own Add Moment dialog (when the
+  // member has no existing Moments to pick from) links here with
+  // ?space=<space id>. No Pursuit-style scoped menu for this one — the
+  // whole rest of the composer stays exactly as it is; only publish()
+  // gains one more side effect once the new post exists.
+  const initialSpaceId = searchParams.get("space") ?? "";
   // True only when this visit came from a specific Pursuit's own "Add
   // progress" button — the Space, Corner, and Pursuit are already known,
   // so the detail form's own picker for all three stays hidden too.
@@ -865,6 +872,14 @@ export function Log() {
         if (targetProject?.finishedAt && user) {
           void mirrorPursuit(user.id, { ...targetProject, finishedAt: undefined });
         }
+      }
+      // Same direct insert AddMomentToSpaceDialog uses for an existing
+      // Moment — space_moments' own "the poster or a host links/unlinks"
+      // policy already allows it, no RPC needed. Best-effort: a brand-new
+      // Moment is still saved either way even if this side link doesn't
+      // land.
+      if (initialSpaceId && supabase) {
+        void supabase.from("space_moments").insert({ space_id: initialSpaceId, post_id: entry.id });
       }
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
