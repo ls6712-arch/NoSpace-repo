@@ -22,6 +22,17 @@
 -- both upload and read — the same idea as post-media's own
 -- uploader-folder scoping, just keyed by thread instead of by uploader,
 -- since a chat photo needs to be readable by TWO people, not one).
+--
+-- Every policy below compares that folder segment as TEXT
+-- (`p.id::text = (storage.foldername(name))[1]`), never by casting the
+-- segment itself to bigint. A storage.objects policy is evaluated against
+-- every row in the table regardless of bucket — Postgres doesn't guarantee
+-- `bucket_id = 'message-media'` short-circuits before the rest of the
+-- clause runs — so a `(storage.foldername(name))[1])::bigint` cast would
+-- blow up with "invalid input syntax for type bigint" on post-media/avatar
+-- paths, whose first folder segment is a uuid, not a number. That would
+-- have broken ordinary Moment and avatar uploads/reads, not just this
+-- bucket. Caught in review before applying.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
@@ -48,7 +59,7 @@ create policy "upload a photo into your own accepted chat"
     bucket_id = 'message-media'
     and exists (
       select 1 from public.participations p
-      where p.id = ((storage.foldername(name))[1])::bigint
+      where p.id::text = (storage.foldername(name))[1]
         and p.status = 'accepted'
         and (auth.uid() = p.from_user or auth.uid() = p.to_user)
         and not private.is_blocked_between(p.from_user, p.to_user)
@@ -71,7 +82,7 @@ create policy "read your chat's photos, or a reported one as admin"
     and (
       exists (
         select 1 from public.participations p
-        where p.id = ((storage.foldername(name))[1])::bigint
+        where p.id::text = (storage.foldername(name))[1]
           and (auth.uid() = p.from_user or auth.uid() = p.to_user)
           and not private.is_blocked_between(p.from_user, p.to_user)
       )
