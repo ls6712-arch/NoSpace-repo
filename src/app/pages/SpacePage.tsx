@@ -1,20 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { MapPin, Star, Users } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { requestOrJoinSpace, cancelJoinRequest, leaveSpace, spaceMomentCount30d, listEventTeasers, type SpaceRow, type SpaceMemberRow } from "../lib/spaces";
 import { capitalizeCornerName } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { AddMomentToSpaceDialog } from "../components/AddMomentToSpaceDialog";
+import { SpaceHomeTab } from "../components/space/SpaceHomeTab";
 import { SpaceMomentsTab } from "../components/space/SpaceMomentsTab";
 import { SpaceEventsTab } from "../components/space/SpaceEventsTab";
 import { SpacePeopleTab } from "../components/space/SpacePeopleTab";
 import { SpaceManageTab } from "../components/space/SpaceManageTab";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
-type HostLite = { id: string; name: string };
+type HostLite = { id: string; name: string; avatarUrl?: string };
+
+function initials(name: string) {
+  return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+}
 /** Just enough to render the featured-event banner — the direct
  * space_events row (members) or a list_event_teasers row (outsiders of a
  * Closed Space, who can't read space_events directly) both satisfy this. */
@@ -28,13 +34,13 @@ function fmt(iso: string, tz: string) {
   }
 }
 
-const TABS = ["moments", "events", "people", "manage"] as const;
+const TABS = ["home", "moments", "events", "people", "manage"] as const;
 
 export function SpacePage({ space }: { space: SpaceRow }) {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get("tab");
-  const tab = (TABS as readonly string[]).includes(rawTab ?? "") ? (rawTab as (typeof TABS)[number]) : "moments";
+  const tab = (TABS as readonly string[]).includes(rawTab ?? "") ? (rawTab as (typeof TABS)[number]) : "home";
 
   const [membership, setMembership] = useState<SpaceMemberRow | null | "loading">("loading");
   const [momentCount, setMomentCount] = useState<number | null>(null);
@@ -129,10 +135,10 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       // PostgREST can embed through, so profiles is a separate lookup.
       const hostIds = (hostRows ?? []).map((r) => r.user_id as string);
       const { data: hostProfiles } = hostIds.length
-        ? await supabase.from("profiles").select("id, display_name").in("id", hostIds)
-        : { data: [] as { id: string; display_name: string }[] };
+        ? await supabase.from("profiles").select("id, display_name, avatar_url").in("id", hostIds)
+        : { data: [] as { id: string; display_name: string; avatar_url: string | null }[] };
       if (cancelled) return;
-      setHosts((hostProfiles ?? []).map((p) => ({ id: p.id, name: p.display_name || "Someone" })));
+      setHosts((hostProfiles ?? []).map((p) => ({ id: p.id, name: p.display_name || "Someone", avatarUrl: p.avatar_url ?? undefined })));
       setMomentCount(count ?? 0);
     }
     load();
@@ -178,15 +184,20 @@ export function SpacePage({ space }: { space: SpaceRow }) {
     await refetchMembership();
   };
 
+  const primaryCorner = corners.find((c) => c.isPrimary) ?? corners[0];
+
   return (
-    <div className="min-h-screen pb-24">
-      <div className="relative aspect-[21/9] w-full max-h-80 overflow-hidden bg-surface-muted sm:aspect-[3/1]">
-        <img src={space.cover_image} alt="" className="size-full object-cover" />
+    <div className="ns-space-theme min-h-screen bg-background pb-24 text-foreground">
+      {/* Inset, compact cover — not edge-to-edge */}
+      <div className="mx-auto w-full max-w-3xl px-4 pt-4">
+        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-2xl bg-surface-muted sm:aspect-[3/1]">
+          <img src={space.cover_image} alt="" className="size-full object-cover" />
+        </div>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl px-4 pt-6">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-5">
         {space.status === "read_only" && (
-          <div className="mb-4 rounded-2xl border border-[var(--coral-deep)]/30 bg-[var(--coral-deep)]/5 px-4 py-3 text-sm">
+          <div className="mb-4 rounded-2xl border border-clay/30 bg-clay-soft px-4 py-3 text-sm">
             This Space is read-only right now — no new members, requests, or events until it's reactivated.
           </div>
         )}
@@ -198,10 +209,15 @@ export function SpacePage({ space }: { space: SpaceRow }) {
 
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>{space.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{space.description}</p>
+            <p className="ns-section-kicker text-clay">
+              Space{primaryCorner ? ` · ${primaryCorner.name}` : ""}
+            </p>
+            <h1 className="mt-1 text-4xl leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+              {space.name}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">{space.description}</p>
           </div>
-          <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">
+          <span className="shrink-0 rounded-full border border-line px-2.5 py-1 text-[11px] text-muted-foreground">
             {space.access === "open" ? "Open" : "Closed"}
           </span>
         </div>
@@ -211,14 +227,14 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             <Link
               key={c.slug}
               to={`/corner/${c.slug}`}
-              className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:border-foreground/30"
+              className="rounded-full border border-line px-2.5 py-1 text-[11px] text-muted-foreground hover:border-foreground/30"
             >
               {c.name}
             </Link>
           ))}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
           {(space.neighborhood || space.city) && (
             <span className="flex items-center gap-1">
               <MapPin className="size-3.5" />
@@ -226,17 +242,32 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             </span>
           )}
           {hosts.length > 0 && (
-            <span className="flex items-center gap-1">
-              <Users className="size-3.5" />
+            <span className="flex items-center gap-1.5">
+              <span className="flex items-center">
+                {hosts.map((h, i) => (
+                  <Avatar key={h.id} className={`size-6 border-2 border-background ${i > 0 ? "-ml-2" : ""}`}>
+                    {h.avatarUrl && <AvatarImage src={h.avatarUrl} alt="" />}
+                    <AvatarFallback className="text-[9px]">{initials(h.name)}</AvatarFallback>
+                  </Avatar>
+                ))}
+              </span>
               Hosted by {hosts.map((h) => h.name).join(", ")}
             </span>
           )}
-          <span>{momentCount ?? 0} Moment{momentCount === 1 ? "" : "s"} this month</span>
+          {isActiveMember && (
+            <span className="rounded-full bg-clay-soft px-2 py-0.5 text-[10px] font-medium text-clay-dark">
+              {isHost ? "Host" : "Member"}
+            </span>
+          )}
         </div>
+
+        <p className="mt-2 text-xs text-muted-foreground">
+          {momentCount ?? 0} Moment{momentCount === 1 ? "" : "s"} this month
+        </p>
 
         {spaceAddress && (
           <p className="mt-1.5 flex items-center gap-1 text-xs">
-            <MapPin className="size-3.5 text-[var(--coral-deep)]" />
+            <MapPin className="size-3.5 text-clay" />
             {spaceAddress}
           </p>
         )}
@@ -244,9 +275,9 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         {featuredEvent && (
           <Link
             to={`/space/${space.slug}?tab=events`}
-            className="mt-4 flex items-center gap-3 rounded-2xl border border-[var(--coral-deep)]/40 bg-[var(--coral-deep)]/5 px-4 py-3 hover:border-[var(--coral-deep)]"
+            className="mt-4 flex items-center gap-3 rounded-2xl border border-clay/40 bg-clay-soft px-4 py-3 hover:border-clay"
           >
-            <Star className="size-4 shrink-0 fill-current text-[var(--coral-deep)]" />
+            <Star className="size-4 shrink-0 fill-current text-clay" />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{featuredEvent.title}</p>
               <p className="text-xs text-muted-foreground">{fmt(featuredEvent.starts_at, featuredEvent.timezone)}</p>
@@ -260,28 +291,40 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           </Link>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        {/* Actions: Join Space / Request to join / Add Moment — the
+            primary action. Leave and Edit Space stay available (existing,
+            explicitly-required functionality — a host must still be able
+            to leave or edit) but as quieter secondary actions, not
+            competing with the primary one. */}
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           {isBanned ? null : isActiveMember ? (
             <>
+              <Button variant="coral" size="sm" onClick={() => setAddMomentOpen(true)}>Add Moment</Button>
               {isHost && hosts.length <= 1 ? (
                 <p className="text-xs text-muted-foreground">Invite a co-host before leaving.</p>
               ) : (
-                <Button variant="outline" size="sm" disabled={actionBusy} onClick={leave}>Leave</Button>
+                <button
+                  type="button"
+                  onClick={leave}
+                  disabled={actionBusy}
+                  className="text-xs text-muted-foreground underline hover:text-foreground disabled:opacity-50"
+                >
+                  Leave
+                </button>
               )}
-              <Button variant="coral" size="sm" onClick={() => setAddMomentOpen(true)}>Add Moment</Button>
             </>
           ) : isPending ? (
             <Button variant="outline" size="sm" disabled={actionBusy} onClick={cancelRequest}>Requested — cancel</Button>
           ) : space.access === "open" ? (
             <Button variant="coral" size="sm" disabled={actionBusy || !user || space.status !== "active"} onClick={join}>
-              Join
+              Join Space
             </Button>
           ) : (
             <RequestToJoinButton spaceId={space.id} disabled={actionBusy || !user || space.status !== "active"} onDone={refetchMembership} setError={setActionError} />
           )}
           {isHost && (
-            <Link to={`/space/${space.slug}/edit`}>
-              <Button variant="outline" size="sm">Edit Space</Button>
+            <Link to={`/space/${space.slug}/edit`} className="text-xs text-muted-foreground underline hover:text-foreground">
+              Edit Space
             </Link>
           )}
         </div>
@@ -291,19 +334,23 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       <div className="mx-auto w-full max-w-3xl px-4 pt-6">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
+            <TabsTrigger value="home">Home</TabsTrigger>
             <TabsTrigger value="moments">Moments</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="people">People</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
             {canManage && <TabsTrigger value="manage">Manage</TabsTrigger>}
           </TabsList>
+          <TabsContent value="home">
+            <SpaceHomeTab space={space} isActiveMember={!!isActiveMember} hosts={hosts} />
+          </TabsContent>
           <TabsContent value="moments">
             <SpaceMomentsTab space={space} isActiveMember={!!isActiveMember} />
           </TabsContent>
-          <TabsContent value="events">
-            <SpaceEventsTab space={space} isActiveMember={!!isActiveMember} isHost={!!isHost} />
-          </TabsContent>
           <TabsContent value="people">
             <SpacePeopleTab space={space} />
+          </TabsContent>
+          <TabsContent value="events">
+            <SpaceEventsTab space={space} isActiveMember={!!isActiveMember} isHost={!!isHost} />
           </TabsContent>
           {canManage && (
             <TabsContent value="manage">

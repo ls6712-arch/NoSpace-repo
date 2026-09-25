@@ -12,6 +12,12 @@
      profile pages (the "someone actually wrote this" touch) — never for
      anything that has to be read quickly or at length. */
   --font-hand: 'Caveat', cursive;
+  /* Falls back to the app's own serif everywhere except .ns-space-theme
+     (the Space page), which repoints this to Instrument Serif — declared
+     here, not only inside that scope, so a stray var(--font-display)
+     reference elsewhere in the app still resolves to something real
+     instead of nothing. */
+  --font-display: var(--font-serif);
 
   /* Soft pastels for the quiet milestones and circle cards. Deliberately
      desaturated so they read as chalky and calm against the navy, never as
@@ -349,6 +355,86 @@
   border-top-color: var(--line);
 }
 
+/* ── The Space page's own editorial-paper world ───────────────────────────
+   Same scoped-exception pattern as .ns-paper-theme above (You/Studio), a
+   distinct palette that only applies inside this one class, never touching
+   :root or any other screen. Warmer and more saturated than .ns-paper-theme
+   — a Space reads as a place with real texture (bark, clay, moss), not just
+   paper and ink.
+
+   Raw palette first, named exactly as given (cream/paper/sand/line/ink/
+   muted/clay/clay-dark/clay-soft/bark/moss/moss-soft) — several of these
+   names already exist elsewhere (--cream in :root, --ink/--line/--moss
+   inside .ns-paper-theme) with different values; that's fine, custom
+   properties are scoped by DOM nesting, not by name collision, so this
+   block's values only ever apply to elements actually nested inside
+   .ns-space-theme — EXCEPT --muted, deliberately left out of this raw
+   list. --muted (unscoped, --muted: var(--surface-muted)) is a
+   *background* alias shadcn's own TabsList already reads directly
+   (bg-muted text-muted-foreground on the tab bar itself) — overriding it
+   here to the warm-brown "muted text" hex the same way the other raw
+   tokens are declared silently turned the tab bar's own background dark
+   brown, with muted-foreground text (also repointed) on top of it,
+   rendering every inactive tab invisible (caught by actually rendering
+   the page, not just reasoning about the cascade). The muted *text*
+   concept below is set directly on --muted-foreground instead, which is
+   what every part of this app already reads for muted text — no bare
+   "muted" token needed to get that value used. */
+.ns-space-theme {
+  --cream: #F4EEE4;
+  --paper: #FBF8F2;
+  --sand: #EADFCF;
+  --line: #E0D4C3;
+  --ink: #2B211C;
+  --clay: #B4532A;
+  --clay-dark: #93411F;
+  --clay-soft: #F3E0D3;
+  --bark: #5E3B28;
+  --moss: #56613F;
+  --moss-soft: #E4E6D6;
+
+  /* Re-point the semantic layer, same as .ns-paper-theme — every existing
+     component that already reads --surface/--foreground/--border/--card/
+     --accent (Button, Badge, Tabs, Dialog, Avatar...) adapts here for free,
+     no per-component rewrite. Page background is --cream (a hair warmer/
+     more tinted); cards and surfaces sit on --paper (lighter, so they lift
+     off the page); --sand is the secondary/muted surface — --muted itself
+     (the shadcn bg-muted/text-muted alias) is left alone, so it keeps
+     resolving through --surface-muted to --sand, a light surface, not the
+     dark "muted text" color. */
+  --background: var(--cream);
+  --surface: var(--paper);
+  --surface-elevated: var(--paper);
+  --surface-muted: var(--sand);
+  --foreground: var(--ink);
+  --foreground-muted: #6E5E52;
+  --muted-foreground: #6E5E52;
+  --border: var(--line);
+  --hairline: var(--line);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --accent: var(--clay);
+  --accent-foreground: var(--paper);
+  --primary: var(--clay);
+  --primary-foreground: var(--paper);
+  --input-border: var(--clay-dark);
+  --input: var(--input-border);
+  --input-background: var(--paper);
+  --destructive: var(--clay-dark);
+  --destructive-foreground: var(--paper);
+  --ring: var(--clay);
+
+  /* Display font for this page only — the app's own sans stays for body
+     text (--font-body untouched); this only changes what --font-display
+     resolves to, used explicitly on the name and section headings. */
+  --font-display: 'Instrument Serif', 'Fraunces', Georgia, serif;
+
+  color: var(--ink);
+  background: var(--cream);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -387,6 +473,19 @@
   --color-forest: var(--forest);
   --color-mustard: var(--mustard);
   --color-cream: var(--cream);
+  /* Space page palette (.ns-space-theme) — these have no meaningful value
+     outside that scope, same as --color-cream above already didn't before
+     it was scoped there too; only used on Space-page markup. */
+  --color-paper: var(--paper);
+  --color-sand: var(--sand);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-clay: var(--clay);
+  --color-clay-dark: var(--clay-dark);
+  --color-clay-soft: var(--clay-soft);
+  --color-bark: var(--bark);
+  --color-moss: var(--moss);
+  --color-moss-soft: var(--moss-soft);
   --color-yellow: var(--yellow);
   --color-plum: var(--plum);
   --color-plum-deep: var(--plum-deep);
