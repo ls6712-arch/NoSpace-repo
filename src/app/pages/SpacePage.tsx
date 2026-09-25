@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { MapPin, Users } from "lucide-react";
+import { MapPin, Star, Users } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { requestOrJoinSpace, cancelJoinRequest, leaveSpace, spaceMomentCount30d, type SpaceRow, type SpaceMemberRow } from "../lib/spaces";
+import { requestOrJoinSpace, cancelJoinRequest, leaveSpace, spaceMomentCount30d, type SpaceRow, type SpaceMemberRow, type SpaceEventRow } from "../lib/spaces";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { AddMomentToSpaceDialog } from "../components/AddMomentToSpaceDialog";
@@ -14,6 +14,14 @@ import { SpaceManageTab } from "../components/space/SpaceManageTab";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string };
+
+function fmt(iso: string, tz: string) {
+  try {
+    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: tz });
+  } catch {
+    return new Date(iso).toLocaleString();
+  }
+}
 
 const TABS = ["moments", "events", "people", "manage"] as const;
 
@@ -27,6 +35,9 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const [momentCount, setMomentCount] = useState<number | null>(null);
   const [corners, setCorners] = useState<CornerLite[]>([]);
   const [hosts, setHosts] = useState<HostLite[]>([]);
+  const [spaceAddress, setSpaceAddress] = useState<string | null>(null);
+  const [featuredEvent, setFeaturedEvent] = useState<SpaceEventRow | null>(null);
+  const [featuredEventAddress, setFeaturedEventAddress] = useState<string | null>(null);
   const [addMomentOpen, setAddMomentOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
@@ -46,7 +57,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
     let cancelled = false;
     async function load() {
       if (!supabase) return;
-      const [{ data: cornerRows }, { data: hostRows }, momentCountResult] = await Promise.all([
+      const [{ data: cornerRows }, { data: hostRows }, momentCountResult, { data: addressRow }, { data: featuredRows }] = await Promise.all([
         supabase
           .from("space_corners")
           .select("is_primary, added_at, corners(slug, name)")
@@ -60,6 +71,18 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           .eq("role", "host")
           .eq("status", "active"),
         spaceMomentCount30d(space.id),
+        // space_private_details' own RLS ("members read the exact
+        // address") already limits this to an active member — a
+        // non-member's query just returns 0 rows.
+        supabase.from("space_private_details").select("exact_address").eq("space_id", space.id).maybeSingle(),
+        supabase
+          .from("space_events")
+          .select("*")
+          .eq("space_id", space.id)
+          .eq("featured", true)
+          .eq("status", "scheduled")
+          .gt("starts_at", new Date().toISOString())
+          .limit(1),
       ]);
       const count = momentCountResult.data;
       if (cancelled) return;
@@ -68,6 +91,21 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           .map((r: any) => r.corners && { slug: r.corners.slug, name: r.corners.name, isPrimary: r.is_primary })
           .filter(Boolean),
       );
+      setSpaceAddress(addressRow?.exact_address ?? null);
+      const fe = (featuredRows as SpaceEventRow[] | null)?.[0] ?? null;
+      setFeaturedEvent(fe);
+      if (fe) {
+        // Same RLS-decides pattern as the Space's own address — a
+        // "going" RSVP or active membership is what unlocks this row.
+        const { data: feAddress } = await supabase
+          .from("event_private_details")
+          .select("exact_address")
+          .eq("event_id", fe.id)
+          .maybeSingle();
+        if (!cancelled) setFeaturedEventAddress(feAddress?.exact_address ?? null);
+      } else {
+        setFeaturedEventAddress(null);
+      }
       // space_members.user_id references auth.users, not profiles — no FK
       // PostgREST can embed through, so profiles is a separate lookup.
       const hostIds = (hostRows ?? []).map((r) => r.user_id as string);
@@ -177,10 +215,40 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           <span>{momentCount ?? 0} Moment{momentCount === 1 ? "" : "s"} this month</span>
         </div>
 
+        {spaceAddress && (
+          <p className="mt-1.5 flex items-center gap-1 text-xs">
+            <MapPin className="size-3.5 text-[var(--coral-deep)]" />
+            {spaceAddress}
+          </p>
+        )}
+
+        {featuredEvent && (
+          <Link
+            to={`/space/${space.slug}?tab=events`}
+            className="mt-4 flex items-center gap-3 rounded-2xl border border-[var(--coral-deep)]/40 bg-[var(--coral-deep)]/5 px-4 py-3 hover:border-[var(--coral-deep)]"
+          >
+            <Star className="size-4 shrink-0 fill-current text-[var(--coral-deep)]" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{featuredEvent.title}</p>
+              <p className="text-xs text-muted-foreground">{fmt(featuredEvent.starts_at, featuredEvent.timezone)}</p>
+              {featuredEventAddress && (
+                <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="size-3" />
+                  {featuredEventAddress}
+                </p>
+              )}
+            </div>
+          </Link>
+        )}
+
         <div className="mt-4 flex flex-wrap gap-2">
           {isBanned ? null : isActiveMember ? (
             <>
-              <Button variant="outline" size="sm" disabled={actionBusy} onClick={leave}>Leave</Button>
+              {isHost && hosts.length <= 1 ? (
+                <p className="text-xs text-muted-foreground">Invite a co-host before leaving.</p>
+              ) : (
+                <Button variant="outline" size="sm" disabled={actionBusy} onClick={leave}>Leave</Button>
+              )}
               <Button variant="coral" size="sm" onClick={() => setAddMomentOpen(true)}>Add Moment</Button>
             </>
           ) : isPending ? (

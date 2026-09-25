@@ -43,7 +43,9 @@ export function SpaceEventsTab({
   const [events, setEvents] = useState<SpaceEventRow[] | "loading">("loading");
   const [teasers, setTeasers] = useState<Teaser[] | "loading">("loading");
   const [myRsvps, setMyRsvps] = useState<Set<number>>(new Set());
+  const [addressByEventId, setAddressByEventId] = useState<Map<number, string>>(new Map());
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<SpaceEventRow | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,20 +54,35 @@ export function SpaceEventsTab({
 
   const refetch = async () => {
     if (!supabase) return;
-    if (canSeeFull) {
-      const { data } = await supabase
-        .from("space_events")
-        .select("*")
-        .eq("space_id", space.id)
-        .order("starts_at", { ascending: true });
-      setEvents((data as SpaceEventRow[]) ?? []);
-      if (user) {
-        const { data: rsvps } = await supabase.from("event_rsvps").select("event_id").eq("user_id", user.id);
-        setMyRsvps(new Set((rsvps ?? []).map((r) => r.event_id as number)));
-      }
-    } else {
+    if (!canSeeFull) {
       const { data } = await listEventTeasers(space.id);
       setTeasers(data ?? []);
+      return;
+    }
+    const { data } = await supabase
+      .from("space_events")
+      .select("*")
+      .eq("space_id", space.id)
+      .order("starts_at", { ascending: true });
+    const rows = (data as SpaceEventRow[]) ?? [];
+    setEvents(rows);
+
+    // event_private_details' own RLS already limits this to events the
+    // caller is an active Space member for, or has a "going" RSVP on —
+    // a plain select just returns whichever of those actually apply.
+    if (rows.length > 0) {
+      const { data: addressRows } = await supabase
+        .from("event_private_details")
+        .select("event_id, exact_address")
+        .in("event_id", rows.map((r) => r.id));
+      setAddressByEventId(new Map((addressRows ?? []).map((r) => [r.event_id as number, r.exact_address as string])));
+    } else {
+      setAddressByEventId(new Map());
+    }
+
+    if (user) {
+      const { data: rsvps } = await supabase.from("event_rsvps").select("event_id").eq("user_id", user.id);
+      setMyRsvps(new Set((rsvps ?? []).map((r) => r.event_id as number)));
     }
   };
 
@@ -114,7 +131,9 @@ export function SpaceEventsTab({
         <p className="mb-4 text-xs text-muted-foreground">
           Join this Space to see event details and RSVP.
         </p>
-        {teasers === "loading" ? null : teasers.length === 0 ? (
+        {teasers === "loading" ? (
+          <div className="min-h-[20vh]" />
+        ) : teasers.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events.</p>
         ) : (
           <ul className="space-y-2">
@@ -155,7 +174,8 @@ export function SpaceEventsTab({
         <ul className="space-y-3">
           {ordered.map((e) => {
             const going = myRsvps.has(e.id);
-            const canCancel = isHost || e.created_by === user?.id;
+            const canEdit = isHost || e.created_by === user?.id;
+            const address = addressByEventId.get(e.id);
             return (
               <li key={e.id} className="rounded-2xl border border-border p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -169,6 +189,12 @@ export function SpaceEventsTab({
                       <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="size-3" />
                         {[e.neighborhood, e.city].filter(Boolean).join(", ")}
+                      </p>
+                    )}
+                    {address && (
+                      <p className="mt-1 flex items-center gap-1 text-xs">
+                        <MapPin className="size-3 text-[var(--coral-deep)]" />
+                        {address}
                       </p>
                     )}
                     {e.description && <p className="mt-1.5 text-sm">{e.description}</p>}
@@ -194,7 +220,12 @@ export function SpaceEventsTab({
                       {e.featured ? "Unfeature" : "Feature"}
                     </Button>
                   )}
-                  {canCancel && (
+                  {canEdit && (
+                    <Button variant="outline" size="sm" disabled={busyId === e.id} onClick={() => setEditingEvent(e)}>
+                      Edit
+                    </Button>
+                  )}
+                  {canEdit && (
                     <Button variant="outline" size="sm" disabled={busyId === e.id} onClick={() => cancel(e.id)}>
                       Cancel event
                     </Button>
@@ -206,7 +237,17 @@ export function SpaceEventsTab({
         </ul>
       )}
 
-      <CreateEventDialog spaceId={space.id} open={createOpen} onOpenChange={setCreateOpen} onCreated={refetch} />
+      <CreateEventDialog space={space} open={createOpen} onOpenChange={setCreateOpen} onSaved={refetch} />
+      {editingEvent && (
+        <CreateEventDialog
+          space={space}
+          event={editingEvent}
+          eventAddress={addressByEventId.get(editingEvent.id)}
+          open={!!editingEvent}
+          onOpenChange={(o) => !o && setEditingEvent(null)}
+          onSaved={refetch}
+        />
+      )}
     </div>
   );
 }
