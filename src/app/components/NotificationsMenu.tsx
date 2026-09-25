@@ -3,11 +3,14 @@ import { Link } from "react-router";
 import {
   Bell,
   Check,
+  Crown,
+  DoorOpen,
   Handshake,
   MessageCircleQuestion,
   MessagesSquare,
   Sprout,
   Target,
+  UserCheck,
   UserPlus,
   Users,
   X,
@@ -36,6 +39,10 @@ const ICON: Record<string, typeof Bell> = {
   pursuit_invite: UserPlus,
   pursuit_joined: Users,
   pursuit_progress: Target,
+  space_join_request: DoorOpen,
+  space_join_approved: UserCheck,
+  space_join_declined: X,
+  space_host_invite: Crown,
 };
 
 function ago(ts: number) {
