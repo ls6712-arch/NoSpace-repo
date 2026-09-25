@@ -33,7 +33,8 @@ data model: there's almost nothing to migrate.
 ## Decisions needed before building (Sush)
 
 **Decided Sept 24, 2026:** 1 = yes, message requests; 2 = full block as recommended; 3 = admin
-Reports list, and reporting offers to block. Decisions 4–7 are still open.
+Reports list, and reporting offers to block. **Decided Sept 25:** 4 = Seen on by default, with a
+Settings switch that turns it off both ways. Decisions 5–7 are still open.
 
 **Messages and follow requests stay separate (Sush, Sept 24).**
 - Follow requests (and Circle invitations) stay where they are: Inbox → Requests, and the bell.
@@ -181,7 +182,8 @@ the phase.
   (see `docs/verification/communication-phase2/`) — a real two-account live
   check (message delivery latency, live request/accept/block updates, an
   actual offline-Wi-Fi retry) is still needed and listed in that folder's
-  README. PR opened against `main`, not yet merged.
+  README. Merged to `main` in PR #103 on 2026-09-25; live two-account check passed (delivery without
+  reload, request, accept).
 - Phase 3 Unread, Seen, and a quieter bell: database applied to live Supabase and verified (see
   `docs/backend-state-20260925-phase3.md`) — `conversation_reads` table with RLS,
   `mark_conversation_read()`, `profile_settings.read_receipts`, `unread_count` added to
@@ -199,8 +201,10 @@ the phase.
   participations-event filter), and verified with a mocked-network browser pass (see
   `docs/verification/communication-phase3/`) — a real two-account live check (delivery + read +
   Seen timing, read-receipts-off working both ways, a stranger's public activity not refreshing
-  your badge) is still needed and listed in that folder's README. PR opened against `main`, not
-  yet merged.
+  your badge) was listed in that folder's README. Merged to `main` in PR #105 on 2026-09-25.
+  Live two-account check passed after deploy (5:22–5:35 PM ET): 4 messages sent with zero
+  per-message bell notifications, read records written as chats were opened, Seen shown, and
+  read receipts turned off (Nani) with Seen hidden both ways.
 - Phase 4 Richer conversations: not started
 - Phase 5 Notification center: not started
 - Phase 6 Email and push: not started
@@ -212,3 +216,5 @@ the phase.
 - The live `notifications` INSERT policy didn't match `sql/security-hardening.sql` (it was still
   `with check (true)` to `{public}`) — other sections of that file may not be applied live either.
   Audit live against `sql/security-hardening.sql`, section by section.
+- Phase 1: reporting a Moment and a Thought hasn't been checked on the live site yet (profile
+  reports, admin review, block and unblock have).
