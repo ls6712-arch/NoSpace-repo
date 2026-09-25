@@ -195,9 +195,13 @@ grant execute on function public.participation_message_summaries() to authentica
 --
 -- private.other_party_seen_at is the ONLY place in this migration that
 -- reads another user's conversation_reads or profile_settings row —
--- SECURITY DEFINER, bypassing both tables' owner-only RLS on purpose, and
--- locked down to no direct execute (not even authenticated) so it's only
--- reachable through thread_seen_at's own checks below.
+-- SECURITY DEFINER, bypassing both tables' owner-only RLS on purpose.
+-- thread_seen_at below is SECURITY INVOKER, so it runs (and calls this
+-- helper) as the calling user, not as this function's owner — it needs its
+-- own execute grant to authenticated, same as private.is_blocked_between.
+-- Still only reachable through thread_seen_at's own checks in practice:
+-- the `private` schema isn't exposed through PostgREST, so nothing outside
+-- this database can call it directly even with the grant.
 create or replace function private.other_party_seen_at(pid bigint, other_user uuid)
 returns timestamptz
 language sql
@@ -217,7 +221,8 @@ as $$
     ) = true
 $$;
 
-revoke execute on function private.other_party_seen_at(bigint, uuid) from public, anon, authenticated;
+revoke execute on function private.other_party_seen_at(bigint, uuid) from public, anon;
+grant execute on function private.other_party_seen_at(bigint, uuid) to authenticated;
 
 -- security invoker: everything it looks at directly (the participation row,
 -- its own read_receipts) is already visible to the caller under existing

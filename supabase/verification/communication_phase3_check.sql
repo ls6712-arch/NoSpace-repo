@@ -62,6 +62,12 @@ declare
 
   v_pub_tables text[];
 begin
+  -- Set once, for the whole transaction: every thread_seen_at() /
+  -- mark_conversation_read() call below genuinely runs as role
+  -- `authenticated`, not as this session's owner/postgres role — the only
+  -- way this script would have caught private.other_party_seen_at missing
+  -- its own execute grant (a SECURITY INVOKER caller runs as the caller,
+  -- not the function's owner).
   perform set_config('role', 'authenticated', true);
 
   -- Force the settings this script depends on, inside the transaction —
