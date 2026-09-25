@@ -9,7 +9,7 @@ type Row = { user_id: string; role: "host" | "member"; username: string; display
  * itself. Visibility of who's on it at all is entirely RLS's call
  * ("roster visibility follows status and the space's access") — this
  * only ever renders whatever rows come back. */
-export function SpacePeopleTab({ space }: { space: SpaceRow }) {
+export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boolean }) {
   const [rows, setRows] = useState<Row[] | "loading">("loading");
 
   useEffect(() => {
@@ -46,22 +46,30 @@ export function SpacePeopleTab({ space }: { space: SpaceRow }) {
   }, [space.id]);
 
   if (rows === "loading") return <div className="min-h-[30vh]" />;
+
+  const activeHostCount = rows.length === 0 ? 0 : rows.filter((r) => r.role === "host").length;
+
   if (rows.length === 0) {
     return <p className="py-10 text-center text-sm text-muted-foreground">Nobody to show yet.</p>;
   }
 
   return (
-    <ul className="divide-y divide-[var(--hairline)] py-2">
-      {rows.map((r) => (
-        <li key={r.user_id} className="flex items-center justify-between py-2.5">
-          <Link to={`/u/${r.username}`} className="text-sm hover:underline">
-            {r.displayName}
-          </Link>
-          {r.role === "host" && (
-            <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">Host</span>
-          )}
-        </li>
-      ))}
-    </ul>
+    <div className="py-2">
+      {isHost && activeHostCount <= 1 && (
+        <p className="mb-2 text-xs text-muted-foreground">Invite a co-host before leaving.</p>
+      )}
+      <ul className="divide-y divide-[var(--hairline)]">
+        {rows.map((r) => (
+          <li key={r.user_id} className="flex items-center justify-between py-2.5">
+            <Link to={`/u/${r.username}`} className="text-sm hover:underline">
+              {r.displayName}
+            </Link>
+            {r.role === "host" && (
+              <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">Host</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

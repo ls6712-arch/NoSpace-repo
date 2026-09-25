@@ -212,7 +212,10 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             <p className="ns-section-kicker text-clay">
               Space{primaryCorner ? ` · ${primaryCorner.name}` : ""}
             </p>
-            <h1 className="mt-1 text-4xl leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+            <h1
+              className="mt-1 text-[42px] leading-[1.05] sm:text-[48px] lg:text-[76px]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
               {space.name}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">{space.description}</p>
@@ -220,18 +223,6 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           <span className="shrink-0 rounded-full border border-line px-2.5 py-1 text-[11px] text-muted-foreground">
             {space.access === "open" ? "Open" : "Closed"}
           </span>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {corners.map((c) => (
-            <Link
-              key={c.slug}
-              to={`/corner/${c.slug}`}
-              className="rounded-full border border-line px-2.5 py-1 text-[11px] text-muted-foreground hover:border-foreground/30"
-            >
-              {c.name}
-            </Link>
-          ))}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
@@ -300,9 +291,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           {isBanned ? null : isActiveMember ? (
             <>
               <Button variant="coral" size="sm" onClick={() => setAddMomentOpen(true)}>Add Moment</Button>
-              {isHost && hosts.length <= 1 ? (
-                <p className="text-xs text-muted-foreground">Invite a co-host before leaving.</p>
-              ) : (
+              {!(isHost && hosts.length <= 1) && (
                 <button
                   type="button"
                   onClick={leave}
@@ -341,13 +330,19 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             {canManage && <TabsTrigger value="manage">Manage</TabsTrigger>}
           </TabsList>
           <TabsContent value="home">
-            <SpaceHomeTab space={space} isActiveMember={!!isActiveMember} hosts={hosts} />
+            <SpaceHomeTab
+              space={space}
+              isActiveMember={!!isActiveMember}
+              isHost={!!isHost}
+              hosts={hosts}
+              onAddMoment={() => setAddMomentOpen(true)}
+            />
           </TabsContent>
           <TabsContent value="moments">
             <SpaceMomentsTab space={space} isActiveMember={!!isActiveMember} />
           </TabsContent>
           <TabsContent value="people">
-            <SpacePeopleTab space={space} />
+            <SpacePeopleTab space={space} isHost={!!isHost} />
           </TabsContent>
           <TabsContent value="events">
             <SpaceEventsTab space={space} isActiveMember={!!isActiveMember} isHost={!!isHost} />
