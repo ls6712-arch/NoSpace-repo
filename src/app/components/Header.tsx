@@ -9,6 +9,8 @@ import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { NotificationsMenu } from "./NotificationsMenu";
+import { useSocial } from "../context/SocialContext";
+import { formatBadgeCount } from "../lib/messageSync";
 
 function initials(name: string) {
   return name
@@ -20,10 +22,25 @@ function initials(name: string) {
 }
 
 function MessagesLink() {
+  const social = useSocial();
+  const badgeCount = social.chatsUnreadCount + social.messageRequests.length;
+
   return (
-    <Link to="/messages" aria-label="Messages" title="Messages">
-      <Button variant="ghost" size="icon">
+    <Link
+      to="/messages"
+      aria-label={badgeCount > 0 ? `Messages (${badgeCount} unread)` : "Messages"}
+      title="Messages"
+    >
+      <Button variant="ghost" size="icon" className="relative">
         <MessagesSquare className="size-5" />
+        {badgeCount > 0 && (
+          <span
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+            aria-hidden="true"
+          >
+            {formatBadgeCount(badgeCount)}
+          </span>
+        )}
       </Button>
     </Link>
   );

@@ -3,6 +3,7 @@ import {
   applyParticipationDelete,
   canSendInto,
   hasVisibleOtherParty,
+  isRelevantParticipationEvent,
   messageTabFor,
   upsertParticipation,
   visibleParticipations,
@@ -224,5 +225,34 @@ describe("applyParticipationDelete", () => {
   it("ignores a DELETE for a participation not already in local state (e.g. someone else's join_in leave)", () => {
     const list = [{ id: 1 }, { id: 2 }];
     expect(applyParticipationDelete(list, 999)).toEqual(list);
+  });
+});
+
+describe("isRelevantParticipationEvent", () => {
+  const knownIds = new Set(["1", "2"]);
+
+  it("is relevant when I'm the from_user", () => {
+    expect(isRelevantParticipationEvent("INSERT", { id: 99, from_user: ME, to_user: THEM }, ME, knownIds)).toBe(true);
+  });
+
+  it("is relevant when I'm the to_user", () => {
+    expect(isRelevantParticipationEvent("UPDATE", { id: 99, from_user: THEM, to_user: ME }, ME, knownIds)).toBe(true);
+  });
+
+  it("is relevant when the row is already in local state, even if neither party is me", () => {
+    expect(isRelevantParticipationEvent("UPDATE", { id: 1, from_user: THEM, to_user: "other" }, ME, knownIds)).toBe(
+      true,
+    );
+  });
+
+  it("is NOT relevant for a stranger's public join_in I have no stake in — the case that used to trigger a full refresh", () => {
+    expect(
+      isRelevantParticipationEvent("INSERT", { id: 99, from_user: "stranger", to_user: undefined }, ME, knownIds),
+    ).toBe(false);
+  });
+
+  it("DELETE is judged by local state alone, since it carries no from_user/to_user", () => {
+    expect(isRelevantParticipationEvent("DELETE", { id: 1 }, ME, knownIds)).toBe(true);
+    expect(isRelevantParticipationEvent("DELETE", { id: 999 }, ME, knownIds)).toBe(false);
   });
 });

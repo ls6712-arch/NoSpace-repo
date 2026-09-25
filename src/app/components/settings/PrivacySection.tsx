@@ -105,6 +105,24 @@ function DefaultVisibilityRow() {
   );
 }
 
+function ReadReceiptsRow() {
+  const { readReceipts, setReadReceipts, readReceiptsLoaded } = useSettings();
+
+  return (
+    <SettingsRow
+      label="Read receipts"
+      description="If you turn this off, people won't see when you've read their messages, and you won't see when they've read yours."
+    >
+      <Switch
+        checked={readReceipts}
+        onCheckedChange={(next) => setReadReceipts(next)}
+        disabled={!readReceiptsLoaded}
+        aria-label="Read receipts"
+      />
+    </SettingsRow>
+  );
+}
+
 export function PrivacySection() {
   const { circlesVisible, setCirclesVisible } = useSettings();
 
@@ -130,6 +148,7 @@ export function PrivacySection() {
           />
         </SettingsRow>
         <DefaultVisibilityRow />
+        <ReadReceiptsRow />
       </SettingsPanel>
 
       <h2 className="mb-1 mt-8 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
