@@ -42,3 +42,26 @@ export function messageTabFor(p: ParticipationLike, myId: string): MessageTab {
   if (p.fromUser === myId) return "chats";
   return "none";
 }
+
+/**
+ * Whether I may type into this thread's composer right now, given whether
+ * it already has any messages in it.
+ *
+ * An accepted thread (Make/Explore together or direct_message) is always
+ * open. Before that, only a still-pending direct_message has anything to
+ * send into at all, and only its sender, and only until their one allowed
+ * message has landed — a participation row is never created without a
+ * message riding along with it (see SocialContext.tsx's
+ * startAndSendDirectMessage), so `hasMessages` should only ever be false
+ * here for a legacy row from before that was true, or a retry after the
+ * message half of that insert failed. The recipient of a pending request
+ * never gets a composer at all — they see it in Message requests with
+ * Accept/Ignore, not a conversation to reply into.
+ */
+export function canSendInto(p: ParticipationLike, myId: string, hasMessages: boolean): boolean {
+  if (p.status === "accepted") {
+    return p.kind === "make_together" || p.kind === "explore_together" || p.kind === "direct_message";
+  }
+  if (p.kind !== "direct_message" || p.status !== "pending") return false;
+  return p.fromUser === myId && !hasMessages;
+}
