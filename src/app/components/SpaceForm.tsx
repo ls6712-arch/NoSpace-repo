@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { Camera, ImagePlus, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { createSpace, updateSpace, type SpaceRow } from "../lib/spaces";
+import { createSpace, updateSpace, setSpaceCorners, type SpaceRow } from "../lib/spaces";
 import { CornerTagField } from "./CornerTagField";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -28,10 +28,13 @@ function slugify(name: string) {
 
 type CornerPick = { spaceSlug: string; slug: string; name: string } | null;
 
-/** Shared by CreateSpace and EditSpace. Corners and slug are create-only —
- * space_corners has its own host-only policy for direct edits, and a
- * slug is a stable identifier once a Space exists (update_space doesn't
- * take one at all). */
+/** Shared by CreateSpace and EditSpace. The slug is create-only — a stable
+ * identifier once a Space exists (update_space doesn't take one at all) —
+ * but Corners are editable in both modes: create_space links them at
+ * creation, and an edit-mode save calls set_space_corners (host-only,
+ * 1-3 ids, delete+insert in one transaction) rather than writing
+ * space_corners directly — that table has no client-writable policy of
+ * its own anymore. */
 export function SpaceForm({
   mode,
   space,
@@ -72,8 +75,10 @@ export function SpaceForm({
   const [cornerSlots, setCornerSlots] = useState(Math.max(1, initialCorners?.length ?? 1));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; cover?: string; location?: string; corners?: string }>({});
 
   const needsLocation = meets === "in_person" || meets === "both";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   const uploadCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,26 +121,39 @@ export function SpaceForm({
     return ids;
   }
 
+  // A blocklisted name is worded the same everywhere this class of error
+  // can surface, regardless of which RPC raised it.
+  function friendlyError(message: string) {
+    return message === "That name isn't available." ? "That name isn't allowed." : message;
+  }
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saving) return;
     setError(null);
 
-    if (!name.trim()) return setError("Give your Space a name.");
-    if (!coverImage) return setError("Add a cover photo.");
+    const errors: typeof fieldErrors = {};
+    if (!name.trim()) errors.name = "Give your Space a name.";
+    if (!coverImage) errors.cover = "Add a cover photo.";
     if (needsLocation && (!neighborhood.trim() || !city.trim())) {
-      return setError("An in-person Space needs a neighborhood and city.");
+      errors.location = "Needed for an in-person Space.";
     }
+    if (corners.slice(0, cornerSlots).filter(Boolean).length === 0) {
+      errors.corners = "Pick 1-3 Corners.";
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setSaving(true);
     const cap = memberCap.trim() ? Number(memberCap) : undefined;
 
+    const cornerIds = await resolveCornerIds();
+    if (cornerIds === null) {
+      setSaving(false);
+      return;
+    }
+
     if (mode === "create") {
-      const cornerIds = await resolveCornerIds();
-      if (cornerIds === null) {
-        setSaving(false);
-        return;
-      }
       const finalSlug = slug.trim() || slugify(name);
       const { error: err } = await createSpace({
         slug: finalSlug,
@@ -154,7 +172,7 @@ export function SpaceForm({
         exactAddress: exactAddress.trim() || undefined,
       });
       setSaving(false);
-      if (err) return setError(err);
+      if (err) return setError(friendlyError(err));
       navigate(`/space/${finalSlug}`);
     } else {
       if (!space) return;
@@ -174,8 +192,13 @@ export function SpaceForm({
         exactAddress: exactAddress.trim() || undefined,
         clearAddress: !exactAddress.trim() && !!initialAddress,
       });
+      if (err) {
+        setSaving(false);
+        return setError(friendlyError(err));
+      }
+      const { error: cornersErr } = await setSpaceCorners(space.id, cornerIds);
       setSaving(false);
-      if (err) return setError(err);
+      if (cornersErr) return setError(`Space saved, but Corners couldn't be updated: ${cornersErr}`);
       navigate(`/space/${space.slug}`);
     }
   };
@@ -187,7 +210,7 @@ export function SpaceForm({
       </h1>
 
       <div>
-        <Label>Cover photo</Label>
+        <Label>Cover photo <span className="text-destructive">*</span></Label>
         <div className="mt-2">
           {coverImage ? (
             <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border">
@@ -218,10 +241,11 @@ export function SpaceForm({
           )}
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadCover} />
         </div>
+        {fieldErrors.cover && <p className="mt-1 text-xs text-destructive">{fieldErrors.cover}</p>}
       </div>
 
       <div>
-        <Label htmlFor="space-name">Name</Label>
+        <Label htmlFor="space-name">Name <span className="text-destructive">*</span></Label>
         <Input
           id="space-name"
           value={name}
@@ -232,13 +256,14 @@ export function SpaceForm({
           }}
           placeholder="The Clay Collective"
         />
+        {fieldErrors.name && <p className="mt-1 text-xs text-destructive">{fieldErrors.name}</p>}
       </div>
 
       {mode === "create" && (
         <div>
           <Label htmlFor="space-slug">URL</Label>
           <div className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <span>sushii.app/space/</span>
+            <span className="truncate">{origin}/#/space/</span>
             <Input
               id="space-slug"
               value={slug}
@@ -264,58 +289,57 @@ export function SpaceForm({
         />
       </div>
 
-      {mode === "create" && (
-        <div>
-          <Label>Corners (1-3)</Label>
-          <div className="mt-2 space-y-3">
-            {Array.from({ length: cornerSlots }).map((_, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <div className="flex-1">
-                  <CornerTagField
-                    value={corners[i]?.slug ?? ""}
-                    onChange={(pickedSlug, pickedName, resolvedSpaceSlug) => {
-                      setCorners((prev) => {
-                        const next = [...prev] as typeof prev;
-                        next[i] = pickedSlug ? { slug: pickedSlug, name: pickedName, spaceSlug: resolvedSpaceSlug } : null;
-                        return next;
-                      });
-                    }}
-                  />
-                </div>
-                {i > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCorners((prev) => {
-                        const next = [...prev] as typeof prev;
-                        next[i] = null;
-                        return next;
-                      });
-                      setCornerSlots((n) => Math.max(1, n - 1));
-                    }}
-                    className="mt-2 text-muted-foreground hover:text-foreground"
-                    aria-label="Remove this Corner"
-                  >
-                    <X className="size-4" />
-                  </button>
-                )}
+      <div>
+        <Label>Corners (1-3) <span className="text-destructive">*</span></Label>
+        <div className="mt-2 space-y-3">
+          {Array.from({ length: cornerSlots }).map((_, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="flex-1">
+                <CornerTagField
+                  value={corners[i]?.slug ?? ""}
+                  onChange={(pickedSlug, pickedName, resolvedSpaceSlug) => {
+                    setCorners((prev) => {
+                      const next = [...prev] as typeof prev;
+                      next[i] = pickedSlug ? { slug: pickedSlug, name: pickedName, spaceSlug: resolvedSpaceSlug } : null;
+                      return next;
+                    });
+                  }}
+                />
               </div>
-            ))}
-          </div>
-          {cornerSlots < 3 && (
-            <button
-              type="button"
-              onClick={() => setCornerSlots((n) => Math.min(3, n + 1))}
-              className="mt-2 text-xs text-[var(--coral-text)]"
-            >
-              + Add another Corner
-            </button>
-          )}
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            The first Corner is this Space's primary one.
-          </p>
+              {i > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCorners((prev) => {
+                      const next = [...prev] as typeof prev;
+                      next[i] = null;
+                      return next;
+                    });
+                    setCornerSlots((n) => Math.max(1, n - 1));
+                  }}
+                  className="mt-2 text-muted-foreground hover:text-foreground"
+                  aria-label="Remove this Corner"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+          ))}
         </div>
-      )}
+        {cornerSlots < 3 && (
+          <button
+            type="button"
+            onClick={() => setCornerSlots((n) => Math.min(3, n + 1))}
+            className="mt-2 text-xs text-[var(--coral-text)]"
+          >
+            + Add another Corner
+          </button>
+        )}
+        {fieldErrors.corners && <p className="mt-1 text-xs text-destructive">{fieldErrors.corners}</p>}
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          The first Corner is this Space's primary one.
+        </p>
+      </div>
 
       <div>
         <Label>Meets</Label>
@@ -330,15 +354,18 @@ export function SpaceForm({
       </div>
 
       {needsLocation && (
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="space-neighborhood">Neighborhood</Label>
-            <Input id="space-neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
+        <div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="space-neighborhood">Neighborhood <span className="text-destructive">*</span></Label>
+              <Input id="space-neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="space-city">City <span className="text-destructive">*</span></Label>
+              <Input id="space-city" value={city} onChange={(e) => setCity(e.target.value)} />
+            </div>
           </div>
-          <div>
-            <Label htmlFor="space-city">City</Label>
-            <Input id="space-city" value={city} onChange={(e) => setCity(e.target.value)} />
-          </div>
+          {fieldErrors.location && <p className="mt-1 text-xs text-destructive">{fieldErrors.location}</p>}
         </div>
       )}
 

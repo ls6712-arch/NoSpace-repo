@@ -137,6 +137,13 @@ export function updateSpace(input: {
   });
 }
 
+/** Replaces a Space's linked Corners in one transaction (1-3 ids, first
+ * primary) — space_corners has no client-writable policy of its own
+ * anymore, so this is the only way to change them post-creation. */
+export function setSpaceCorners(spaceId: string, cornerIds: number[]) {
+  return call("set_space_corners", { p_space_id: spaceId, p_corner_ids: cornerIds });
+}
+
 export function spaceMomentCount30d(spaceId: string) {
   return call<number>("space_moment_count_30d", { p_space_id: spaceId });
 }

@@ -197,6 +197,19 @@ export function slugifyCorner(name: string) {
     .slice(0, 60);
 }
 
+/** Corner names are free-text (tagged into existence, not curated), so
+ * whatever case someone typed — "photography" as easily as "Photography" —
+ * is what would otherwise get stored and shown verbatim. This only touches
+ * the first character, not full title-case (which would mangle a
+ * deliberately-cased multi-word name), and never touches the slug — dedupe
+ * and the unique constraint key off slugifyCorner's already-lowercased
+ * output, so this is purely cosmetic. Applied both at creation time (so new
+ * rows are stored capitalized) and at every display site (so a Corner
+ * already stored lowercase still renders correctly). */
+export function capitalizeCornerName(name: string) {
+  return name.length > 0 ? name[0].toUpperCase() + name.slice(1) : name;
+}
+
 const BASELINE: Corner[] = hobbies.flatMap((h) =>
   h.subItems.map((s) => ({
     spaceSlug: h.slug,
@@ -296,7 +309,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
         ((cornersRes.data ?? []) as any[]).map((r) => ({
           spaceSlug: r.space_slug,
           slug: r.slug,
-          name: r.name,
+          name: capitalizeCornerName(r.name),
           momentCount: r.moment_count ?? 0,
           momentCount30d: activity30d.get(`${r.space_slug}::${r.slug}`) ?? 0,
           hasActiveSpace: r.id != null && activeSpaceCornerIds.has(r.id),
@@ -382,7 +395,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
             : {
                 spaceSlug,
                 slug: c.slug,
-                name: c.name,
+                name: capitalizeCornerName(c.name),
                 momentCount: 0,
                 momentCount30d: 0,
                 hasActiveSpace: false,
@@ -445,7 +458,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
   );
 
   const getOrCreateCorner: CornersContextType["getOrCreateCorner"] = async (spaceSlug, rawName, description) => {
-    const name = rawName.trim().slice(0, 60);
+    const name = capitalizeCornerName(rawName.trim().slice(0, 60));
     const slug = slugifyCorner(name);
     const trimmedDescription = description?.trim().slice(0, 140) || undefined;
 

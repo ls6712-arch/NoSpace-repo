@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { SpaceForm } from "../components/SpaceForm";
 import { Button } from "../components/ui/button";
 import type { SpaceRow } from "../lib/spaces";
+import { capitalizeCornerName } from "../context/CornersContext";
 
 export function EditSpace() {
   const { slug = "" } = useParams();
@@ -43,7 +44,7 @@ export function EditSpace() {
         .order("is_primary", { ascending: false })
         .order("added_at", { ascending: true });
       const corners = (cornerRows ?? [])
-        .map((r: any) => r.corners && { spaceSlug: r.corners.space_slug, slug: r.corners.slug, name: r.corners.name })
+        .map((r: any) => r.corners && { spaceSlug: r.corners.space_slug, slug: r.corners.slug, name: capitalizeCornerName(r.corners.name) })
         .filter(Boolean);
 
       const { data: details } = await supabase
