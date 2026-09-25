@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import { ParticipationKind } from "../data/participation";
-import { canSendInto, messageTabFor } from "../lib/messageTabs";
+import { canSendInto, messageTabFor, visibleParticipations } from "../lib/messageTabs";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -319,9 +319,9 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     }
     for (const t of thoughts.data ?? []) ids.add(t.user_id);
     for (const b of blocks.data ?? []) ids.add(b.blocked_id);
-    const { data: people } = ids.size
+    const { data: people, error: peopleError } = ids.size
       ? await supabase.from("profiles").select("id, display_name, avatar_url").in("id", [...ids])
-      : { data: [] as any[] };
+      : { data: [] as any[], error: null };
     const byId = new Map((people ?? []).map((p: any) => [p.id, p]));
     const nameOf = (id?: string) => (id ? byId.get(id)?.display_name ?? "Someone" : undefined);
 
@@ -333,7 +333,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       })),
     );
 
-    const participations: Participation[] = (parts.data ?? []).map((p: any) => ({
+    const mappedParticipations: Participation[] = (parts.data ?? []).map((p: any) => ({
       id: p.id,
       kind: p.kind,
       fromUser: p.from_user,
@@ -347,6 +347,21 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       status: p.status,
       createdAt: new Date(p.created_at).getTime(),
     }));
+    // A participation whose other party's profile didn't resolve — blocked
+    // and hidden by is_visible_profile(), deleted, or paused, all look
+    // identical here — is dropped before it ever reaches state. There's no
+    // one there to show or to message, and showing it anyway (a "Someone"
+    // thread with an open composer, as happened live) would both be
+    // useless and risk revealing that a block is the reason.
+    //
+    // But only when the profiles lookup itself actually succeeded — on its
+    // own failure, byId (and so resolvedProfileIds) is empty for a reason
+    // that has nothing to do with any of these other parties, which looks
+    // identical to "everyone got blocked": filtering on it would wipe every
+    // chat out of state and then have startAndSendDirectMessage hit the
+    // unique index trying to "start" a thread that already exists.
+    const resolvedProfileIds = new Set(byId.keys());
+    const participations = visibleParticipations(mappedParticipations, user.id, resolvedProfileIds, !peopleError);
 
     // Messages for the threads that are actually open, plus any pending or
     // declined direct_message thread I'm party to — the recipient needs to
@@ -773,7 +788,12 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       reason: input.reason,
       note: input.note?.trim() || null,
     });
-    if (error) return { error: "failed" };
+    // 23505 (unique_violation) here means the one-open-report-per-target
+    // index rejected it: this exact report is already open. That's not a
+    // failure from the reporter's point of view — it's already been told —
+    // so it gets the same success response as a fresh insert, never a
+    // "couldn't send that" that would prompt a retry into the same wall.
+    if (error && error.code !== "23505") return { error: "failed" };
     return { error: null };
   };
 

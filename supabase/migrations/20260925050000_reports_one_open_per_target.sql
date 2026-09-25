@@ -1,0 +1,37 @@
+-- Sushii: one open report per (reporter, target) on public.reports.
+--
+--   Supabase → SQL Editor → New query → paste → Run
+--
+-- STAGED — NOT YET APPLIED. Shown for review before running, per Sush's
+-- request.
+--
+-- Found in live testing of Phase 1's report flow: a fast double-click on
+-- the Report dialog's "Send report" button could fire two inserts before
+-- React re-rendered with the button disabled, producing two identical open
+-- reports (ids 8 and 9: Nani -> Sushmitha, profile, 'other', 43 seconds
+-- apart). The app side is now hardened against this directly
+-- (ReportDialog.tsx's submittingRef is a plain ref checked and set
+-- synchronously, before any state update or await — a state-based
+-- `disabled` alone isn't enough, since the browser can dispatch a second
+-- click before the first render lands). This migration is the belt to that
+-- suspenders: even an insert that reaches the database twice — a retried
+-- request, a second tab, a client that skips the guard entirely — is
+-- rejected here instead. On the app side, SocialContext.tsx's report()
+-- already treats this index's 23505 (unique_violation) as success rather
+-- than an error: the reporter already has an open report on this exact
+-- target, so "Report sent. Thanks for telling us." is the honest thing to
+-- show, not a retry-inviting failure.
+--
+-- ⚠ Applying this as written will fail right now: reports 8 and 9 already
+-- violate it (identical reporter_id/target_kind/target_user_id/target_id,
+-- both still status = 'open') — Postgres refuses to build a unique index
+-- over data that already breaks its uniqueness. Per instruction, this
+-- migration does not touch those two rows. Before running this, either
+-- review/dismiss one of them (moves it out of status = 'open', which is
+-- all this index constrains) via the admin Reports page, or accept that
+-- the CREATE UNIQUE INDEX statement below will error out until then — it
+-- is not this file's place to decide which of two identical reports to
+-- resolve.
+create unique index if not exists reports_one_open_per_target
+  on public.reports (reporter_id, target_kind, target_user_id, coalesce(target_id, 0))
+  where status = 'open';
