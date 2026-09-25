@@ -3,15 +3,20 @@
 -- Draft only — staged for review, not run.
 --
 -- Restores enforce_notification_insert to its pre-fix allowed-kinds list
--- (verbatim 20260929000000, without the four new kinds) and
+-- (verbatim 20260929000000, without the four new kinds),
 -- request_or_join_space/approve_join_request/decline_join_request/
--- invite_host to their bodies before this migration — no notification
--- writes.
+-- invite_host to their bodies before this migration (no notification
+-- writes), and cancel_event to its 20260929000000 body (actor name
+-- uncapped in the notification body again).
 --
 -- Not a recommendation: rolling this back reintroduces the gap this
 -- migration closes (a host never finds out a Closed-Space request is
 -- waiting short of checking the Manage tab themselves; a requester or
--- invitee never finds out what happened to them at all).
+-- invitee never finds out what happened to them at all) and the bug this
+-- migration's follow-up fix closed (a long enough display name on the
+-- acting user makes request_or_join_space/invite_host/cancel_event fail
+-- outright, since the notification body they build would exceed
+-- enforce_notification_insert's 300-char cap).
 
 create or replace function public.enforce_notification_insert()
 returns trigger
@@ -193,3 +198,44 @@ end;
 $$;
 revoke all on function public.invite_host(uuid, uuid) from public, anon;
 grant execute on function public.invite_host(uuid, uuid) to authenticated;
+
+create or replace function public.cancel_event(p_event_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event record;
+  v_actor_name text;
+begin
+  select * into v_event from space_events where space_events.id = p_event_id;
+  if v_event.id is null then
+    raise exception 'That event doesn''t exist.';
+  end if;
+  if not (
+    public.is_space_host(v_event.space_id, auth.uid())
+    or (v_event.created_by = auth.uid() and public.is_space_member(v_event.space_id, auth.uid()))
+  ) then
+    raise exception 'Only a host or this event''s creator can cancel it.';
+  end if;
+  if v_event.status = 'cancelled' then
+    raise exception 'This event is already cancelled.';
+  end if;
+
+  update space_events set status = 'cancelled', featured = false where space_events.id = p_event_id;
+
+  select coalesce(nullif(trim(profiles.display_name), ''), profiles.username, 'Someone')
+    into v_actor_name from profiles where profiles.id = auth.uid();
+
+  insert into notifications (user_id, kind, body, href, actor_name)
+  select event_rsvps.user_id, 'space_event_cancelled',
+    coalesce(v_actor_name, 'Someone') || ' cancelled ' || left(v_event.title, 200) || '.',
+    '/space/' || (select spaces.slug from spaces where spaces.id = v_event.space_id) || '?tab=events',
+    v_actor_name
+  from event_rsvps
+  where event_rsvps.event_id = p_event_id;
+end;
+$$;
+revoke all on function public.cancel_event(bigint) from public, anon;
+grant execute on function public.cancel_event(bigint) to authenticated;

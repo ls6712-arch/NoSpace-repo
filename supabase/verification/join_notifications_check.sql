@@ -9,7 +9,8 @@
 -- regardless of outcome. Checks that reference a notification's actual
 -- wording use `like` around the Space name rather than hardcoding the
 -- actor name, since handle_new_user's own default profile fields aren't
--- under test here.
+-- under test here — except the long-display-name check (11-12), which
+-- sets display_name explicitly and checks the exact resulting body.
 --
 -- Fixed ids, a distinct block from every earlier script's own range:
 --   HOST1 …6001, HOST2 …6002 — Space CLOSED (Closed) …0000000000f5
@@ -18,6 +19,8 @@
 --   REQUESTER_DECLINE …6005 — requests to join CLOSED, later declined
 --   HOST_OPEN …6006 — Space OPEN (Open) …0000000000f4
 --   REQUESTER_OPEN …6007 — instant-joins OPEN
+--   REQUESTER_LONGNAME …6008 — 200-char display_name, requests to join
+--     CLOSED (the actor-name-truncation regression check)
 
 begin;
 
@@ -46,7 +49,13 @@ begin
     ('00000000-0000-4000-8000-000000006004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5f-requester@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
     ('00000000-0000-4000-8000-000000006005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5f-decline@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
     ('00000000-0000-4000-8000-000000006006', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5f-hostopen@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
-    ('00000000-0000-4000-8000-000000006007', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5f-reqopen@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false);
+    ('00000000-0000-4000-8000-000000006007', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5f-reqopen@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    ('00000000-0000-4000-8000-000000006008', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'phase5f-longname@phase5-test.invalid', '', now(), now(), now(), '{}', '{}', false);
+
+  -- handle_new_user already created this row on the insert above —
+  -- overwrite its display_name to exercise the truncation fix.
+  update public.profiles set display_name = repeat('A', 200)
+  where id = '00000000-0000-4000-8000-000000006008';
 
   insert into public.spaces (id, slug, name, description, cover_image, meets, access, posting_mode, member_cap, created_by, status)
   values
@@ -160,6 +169,31 @@ begin
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i,
     case when v_body like '%invited you to co-host Phase 5f Closed Space%' and v_href = '/space/phase5f-closed'
     then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 11-12. A 200-char display_name doesn't break request_or_join_space —
+  --        before the left(actor name, 60) fix, this body would have been
+  --        ~239 chars just from the uncapped name, and enforce_
+  --        notification_insert's 300-char cap would've rejected the
+  --        insert outright, failing the whole RPC.
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000006008"}', true);
+  v_i := v_i + 1;
+  begin
+    perform public.request_or_join_space(v_space_closed_id);
+    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  perform set_config('role', v_owner_role, true);
+  select notifications.body into v_body from notifications
+  where notifications.user_id = '00000000-0000-4000-8000-000000006001' and notifications.kind = 'space_join_request'
+    and notifications.body = repeat('A', 60) || ' asked to join Phase 5f Closed Space.';
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i,
+    case when v_body is not null and char_length(v_body) <= 300 then 'PASS' else 'FAIL' end));
 
   -- ───────────────────────────────────────────────────────────────────────
   -- Done. This is the ONLY way this block ends — the exception aborts the

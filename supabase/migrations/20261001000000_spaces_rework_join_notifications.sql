@@ -33,6 +33,20 @@
 -- trigger-level invariant that shouldn't depend on a separate table's
 -- CHECK constraint never changing out from under it.
 --
+-- Found in review (before this migration ever ran): request_or_join_space
+-- and invite_host both embed the acting user's display name in the body
+-- uncapped — profiles.display_name has no length constraint of its own,
+-- so a long enough one would push the body over enforce_notification_
+-- insert's 300-char cap and fail the whole RPC (a long-named person
+-- literally couldn't request to join a Space). Both now wrap it in
+-- left(coalesce(v_actor_name, 'Someone'), 60); the actor_name column
+-- itself (separate from the body text) is left uncapped, same as
+-- everywhere else — this is purely about what gets concatenated into the
+-- 300-char-limited body. cancel_event has the identical shape (actor name
+-- + title in one body) and gets the same fix here, redefined again from
+-- its 20260929000000 body — that migration already ran live, so this is
+-- a new redefinition, not an edit to it.
+--
 -- enforce_notification_insert gets all four kinds added to its
 -- allowed-kinds list — reproduced verbatim from 20260929000000 (which
 -- was itself the verbatim live definition) plus this addition, same
@@ -154,7 +168,7 @@ begin
 
     insert into notifications (user_id, kind, body, href, actor_name)
     select space_members.user_id, 'space_join_request',
-      coalesce(v_actor_name, 'Someone') || ' asked to join ' || left(v_space.name, 150) || '.',
+      left(coalesce(v_actor_name, 'Someone'), 60) || ' asked to join ' || left(v_space.name, 150) || '.',
       '/space/' || v_space.slug || '?tab=manage',
       v_actor_name
     from space_members
@@ -282,10 +296,59 @@ begin
   insert into notifications (user_id, kind, body, href, actor_name)
   values (
     p_invited_user_id, 'space_host_invite',
-    coalesce(v_actor_name, 'Someone') || ' invited you to co-host ' || left(v_space_name, 150) || '.',
+    left(coalesce(v_actor_name, 'Someone'), 60) || ' invited you to co-host ' || left(v_space_name, 150) || '.',
     '/space/' || v_space_slug, v_actor_name
   );
 end;
 $$;
 revoke all on function public.invite_host(uuid, uuid) from public, anon;
 grant execute on function public.invite_host(uuid, uuid) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 6. cancel_event — full body reproduced from 20260929000000 (already
+--    live), with the same left(actor name, 60) cap applied to its body
+--    (actor name + event title, the same two-uncapped-strings shape as
+--    request_or_join_space/invite_host above). execute_space_deletion's
+--    own notification never embeds an actor name (href/actor_name are
+--    both null there) so it's untouched and not redefined here.
+-- ─────────────────────────────────────────────────────────────────────────
+create or replace function public.cancel_event(p_event_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_event record;
+  v_actor_name text;
+begin
+  select * into v_event from space_events where space_events.id = p_event_id;
+  if v_event.id is null then
+    raise exception 'That event doesn''t exist.';
+  end if;
+  if not (
+    public.is_space_host(v_event.space_id, auth.uid())
+    or (v_event.created_by = auth.uid() and public.is_space_member(v_event.space_id, auth.uid()))
+  ) then
+    raise exception 'Only a host or this event''s creator can cancel it.';
+  end if;
+  if v_event.status = 'cancelled' then
+    raise exception 'This event is already cancelled.';
+  end if;
+
+  update space_events set status = 'cancelled', featured = false where space_events.id = p_event_id;
+
+  select coalesce(nullif(trim(profiles.display_name), ''), profiles.username, 'Someone')
+    into v_actor_name from profiles where profiles.id = auth.uid();
+
+  insert into notifications (user_id, kind, body, href, actor_name)
+  select event_rsvps.user_id, 'space_event_cancelled',
+    left(coalesce(v_actor_name, 'Someone'), 60) || ' cancelled ' || left(v_event.title, 200) || '.',
+    '/space/' || (select spaces.slug from spaces where spaces.id = v_event.space_id) || '?tab=events',
+    v_actor_name
+  from event_rsvps
+  where event_rsvps.event_id = p_event_id;
+end;
+$$;
+revoke all on function public.cancel_event(bigint) from public, anon;
+grant execute on function public.cancel_event(bigint) to authenticated;
