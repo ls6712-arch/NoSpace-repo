@@ -181,7 +181,10 @@ the phase.
   (see `docs/verification/communication-phase2/`) — a real two-account live
   check (message delivery latency, live request/accept/block updates, an
   actual offline-Wi-Fi retry) is still needed and listed in that folder's
-  README. PR opened against `main`, not yet merged.
+  README. Merged to `main` in PR #103 on 2026-09-25. A two-account live check that day (on the
+  Phase 1 build, just before the merge deployed) confirmed a live message request + accept and
+  clean, duplicate-free delivery; the Phase 2-specific checks (sub-second delivery without
+  reload, Wi-Fi-off "Not sent · Tap to retry") still need one pass on the deployed build.
 - Phase 3 Unread and quieter bell: not started
 - Phase 4 Richer conversations: not started
 - Phase 5 Notification center: not started
@@ -194,3 +197,9 @@ the phase.
 - The live `notifications` INSERT policy didn't match `sql/security-hardening.sql` (it was still
   `with check (true)` to `{public}`) — other sections of that file may not be applied live either.
   Audit live against `sql/security-hardening.sql`, section by section.
+- Phase 2's Realtime handlers call a full `refresh()` on every participations INSERT/UPDATE/DELETE
+  the user can see, including anyone's public `join_in` (to_user null). Fine at 10 users; before
+  growth, only refresh for rows where I'm from_user/to_user or that are already in local state.
+  Do this in Phase 3.
+- Phase 1: reporting a Moment and a Thought hasn't been checked on the live site yet (profile
+  reports, admin review, block and unblock have).
