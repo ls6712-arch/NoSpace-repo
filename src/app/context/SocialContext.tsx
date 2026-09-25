@@ -1,9 +1,26 @@
-import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import { ParticipationKind } from "../data/participation";
-import { canSendInto, messageTabFor, visibleParticipations } from "../lib/messageTabs";
+import {
+  applyParticipationDelete,
+  canSendInto,
+  messageTabFor,
+  upsertParticipation,
+  visibleParticipations,
+} from "../lib/messageTabs";
+import {
+  combineHistoryAndPending,
+  markPendingFailed,
+  mergeMessage,
+  patchSummaryWithNewMessage,
+  PendingMessage,
+  prependOlderPage,
+  reconcilePendingAfterIncoming,
+  removePendingByClientId,
+  ThreadSummary,
+} from "../lib/messageSync";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -69,6 +86,13 @@ export interface Message {
   fromUser: string;
   body: string;
   createdAt: number;
+  /** Only set for a not-yet-confirmed local send (Phase 2) — never present
+   * on a message actually loaded from the database. "sending" while the
+   * insert is in flight; "failed" if it came back with an error, with
+   * clientId identifying it for a retry that reuses the same text instead
+   * of creating a second row. */
+  status?: "sending" | "failed";
+  clientId?: string;
 }
 
 export interface BlockedPerson {
@@ -188,13 +212,48 @@ interface SocialContextType {
   unreadCount: number;
   markAllRead: () => Promise<void>;
 
+  /**
+   * For the currently open conversation (see openConversation below), the
+   * real, paginated history plus anything still pending. For any other
+   * thread, a lightweight one-message preview built from its summary (or,
+   * if participation_message_summaries() isn't available yet, from the
+   * Phase 1 full-history fallback) — enough for message_count/first-message
+   * checks without ever having fetched that thread's full history.
+   */
   messagesFor: (participationId: number | string) => Message[];
   /** Returns "failed" for any rejection — a block, a duplicate, a rate
    * limit — so the UI can show one neutral line and never the database's
-   * own message (which could otherwise reveal a block exists). */
+   * own message (which could otherwise reveal a block exists). A sent
+   * message appears immediately (status "sending") via messagesFor while
+   * this is in flight; on failure it stays in place as "failed" for
+   * retryMessage rather than disappearing. */
   sendMessage: (participationId: number | string, body: string) => Promise<{ error: "failed" | null }>;
+  /** Retries a specific failed pending message, reusing its exact text and
+   * never creating a second request row. No-ops if that pending entry is
+   * gone (e.g. already retried successfully from another render). */
+  retryMessage: (participationId: number | string, clientId: string) => Promise<void>;
+
+  /**
+   * Marks a thread as "the one currently on screen": messagesFor(id) then
+   * returns its real, paginated history (latest 50, kept live by Realtime)
+   * instead of the lightweight preview every other thread gets. Call with
+   * null/closeConversation() when leaving it, so a background thread stops
+   * paying for a full history load.
+   */
+  openConversation: (participationId: number | string) => void;
+  closeConversation: () => void;
+  hasMoreOlderMessages: boolean;
+  loadingOlderMessages: boolean;
+  /** Loads the next-older page of 50 (keyset on created_at, id) and
+   * prepends it, in order, ahead of what's already loaded. No-ops if
+   * there's nothing more or a load is already in flight. */
+  loadOlderMessages: () => Promise<void>;
 
   refresh: () => Promise<void>;
+  /** Re-fetches participations/summaries and the open conversation, without
+   * the rest of refresh()'s work — the safety net Messages.tsx runs on a
+   * 60-second interval while it's open, and on regaining focus. */
+  refreshMessagesSafetyNet: () => Promise<void>;
 }
 
 const SocialContext = createContext<SocialContextType | undefined>(undefined);
@@ -214,7 +273,20 @@ interface LocalState {
   participations: Participation[];
   thoughts: Thought[];
   notifications: Notification[];
+  /** Local (signed-out) mode's full message store, and the Phase 1
+   * fallback used when participation_message_summaries() isn't available
+   * (migration not applied yet) — every message of every messageable
+   * thread, same as before Phase 2. Ignored by messagesFor whenever
+   * summariesAvailable is true; summaries is the source of truth then. */
   messages: Message[];
+  /** One row per thread from participation_message_summaries() — empty and
+   * unused in local mode or while summariesAvailable is false. */
+  summaries: ThreadSummary[];
+  /** False only when the RPC itself failed (migration not applied, or some
+   * other error) — triggers the full-history fallback above instead of an
+   * empty Messages page. Starts true (nothing to fall back from yet, and
+   * nothing has failed either). */
+  summariesAvailable: boolean;
 }
 
 const EMPTY: LocalState = {
@@ -223,6 +295,8 @@ const EMPTY: LocalState = {
   thoughts: [],
   notifications: [],
   messages: [],
+  summaries: [],
+  summariesAvailable: true,
 };
 
 function loadLocal(): LocalState {
@@ -244,6 +318,20 @@ function saveLocal(state: LocalState) {
 }
 
 const localId = () => `l-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+function mapMessageRow(m: any): Message {
+  return {
+    id: m.id,
+    participationId: m.participation_id,
+    fromUser: m.from_user,
+    body: m.body,
+    createdAt: new Date(m.created_at).getTime(),
+  };
+}
+
+/** How many pages of history to fetch at once, everywhere — the latest
+ * page on opening a conversation, and each older page on scroll-up. */
+const MESSAGE_PAGE_SIZE = 50;
 
 /** Signing out empties the browser's copy of all of this. */
 function clearLocal() {
@@ -274,6 +362,25 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   // person, one browser, nobody else to block. Kept outside `state`/
   // `LocalState` since it never has a local-fallback shape to fall back to.
   const [blockedPeople, setBlockedPeople] = useState<BlockedPerson[]>([]);
+
+  /* ── Phase 2: the one open conversation's real, paginated history ─────
+   * Only the thread on screen ever gets its full history loaded — every
+   * other thread relies on state.summaries (or, as a fallback,
+   * state.messages) for its one-message preview. openThreadIdRef mirrors
+   * openThreadId synchronously (state updates are async) so an in-flight
+   * fetch for a thread the user has since navigated away from can detect
+   * it's stale and drop its result instead of clobbering the new thread's.
+   */
+  const [openThreadId, setOpenThreadId] = useState<number | string | null>(null);
+  const openThreadIdRef = useRef<number | string | null>(null);
+  const [openMessages, setOpenMessages] = useState<Message[]>([]);
+  const [hasMoreOlderMessages, setHasMoreOlderMessages] = useState(false);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
+  // Failed/in-flight sends, keyed by participation id (stringified) — kept
+  // here rather than per-conversation-component state so they survive a
+  // thread switch, per the "keep failed messages across a thread switch"
+  // requirement.
+  const [pendingByThread, setPendingByThread] = useState<Record<string, PendingMessage[]>>({});
 
   const myName = profile?.display_name || "You";
   const myId = user?.id ?? "local-user";
@@ -363,26 +470,50 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     const resolvedProfileIds = new Set(byId.keys());
     const participations = visibleParticipations(mappedParticipations, user.id, resolvedProfileIds, !peopleError);
 
-    // Messages for the threads that are actually open, plus any pending or
-    // declined direct_message thread I'm party to — the recipient needs to
-    // preview a pending request, and the sender still sees their own
-    // message in one that got declined. (The database's own SELECT policy
-    // enforces exactly who sees what here; this just widens which
-    // participations are worth asking about at all.)
-    const messageableIds = participations
-      .filter(
-        (p) =>
-          (p.status === "accepted" && p.kind !== "join_in") ||
-          (p.kind === "direct_message" && (p.status === "pending" || p.status === "declined")),
-      )
-      .map((p) => p.id);
-    const { data: msgs } = messageableIds.length
-      ? await supabase
-          .from("messages")
-          .select("*")
-          .in("participation_id", messageableIds as number[])
-          .order("created_at", { ascending: true })
-      : { data: [] as any[] };
+    // Phase 2: one row per thread (count + latest message) feeds the
+    // conversation list preview, the Message requests preview, and the
+    // composer's one-message-while-pending rule, without loading every
+    // thread's full history on every refresh. Falls back quietly to Phase
+    // 1's own behavior — fetching full history for every messageable
+    // thread — if the migration that adds this function isn't applied yet
+    // in whatever environment this is running in (never a blank page).
+    const { data: summaryRows, error: summaryError } = await supabase.rpc("participation_message_summaries");
+
+    let summaries: ThreadSummary[] = [];
+    let summariesAvailable = false;
+    let fallbackMessages: Message[] = [];
+
+    if (!summaryError && summaryRows) {
+      summariesAvailable = true;
+      summaries = (summaryRows as any[]).map((s) => ({
+        participationId: s.participation_id,
+        messageCount: s.message_count,
+        lastMessageId: s.last_message_id,
+        lastMessageFromUser: s.last_message_from_user,
+        lastMessageBody: s.last_message_body,
+        lastMessageCreatedAt: s.last_message_created_at ? new Date(s.last_message_created_at).getTime() : null,
+      }));
+    } else {
+      // Same subset and shape as before Phase 2: any accepted thread, plus
+      // a pending or declined direct_message I'm party to (the recipient
+      // needs to preview a pending request; the sender still sees their
+      // own message in one that got declined).
+      const messageableIds = participations
+        .filter(
+          (p) =>
+            (p.status === "accepted" && p.kind !== "join_in") ||
+            (p.kind === "direct_message" && (p.status === "pending" || p.status === "declined")),
+        )
+        .map((p) => p.id);
+      const { data: msgs } = messageableIds.length
+        ? await supabase
+            .from("messages")
+            .select("*")
+            .in("participation_id", messageableIds as number[])
+            .order("created_at", { ascending: true })
+        : { data: [] as any[] };
+      fallbackMessages = (msgs ?? []).map(mapMessageRow);
+    }
 
     setRemote({
       followedHobbies: (follows.data ?? []).map((f: any) => f.hobby_key),
@@ -408,15 +539,173 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         read: n.read,
         createdAt: new Date(n.created_at).getTime(),
       })),
-      messages: (msgs ?? []).map((m: any) => ({
-        id: m.id,
-        participationId: m.participation_id,
-        fromUser: m.from_user,
-        body: m.body,
-        createdAt: new Date(m.created_at).getTime(),
-      })),
+      messages: fallbackMessages,
+      summaries,
+      summariesAvailable,
     });
   }, [user?.id]);
+
+  /** Re-fetches just the open conversation's latest page and merges it in
+   * (dedup by id) without disturbing already-loaded older pages or
+   * pagination state — the safety net for reconnects/focus/the 60s
+   * interval, cheaper than a full re-open. */
+  const reloadOpenConversation = useCallback(async () => {
+    if (!supabase || !user || openThreadIdRef.current == null) return;
+    const id = openThreadIdRef.current;
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("participation_id", id)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(MESSAGE_PAGE_SIZE);
+    if (openThreadIdRef.current !== id || error || !data) return;
+    const rows = data.slice().reverse().map(mapMessageRow);
+    setOpenMessages((prev) => {
+      let next = prev;
+      for (const row of rows) next = mergeMessage(next, row);
+      return next;
+    });
+  }, [user?.id]);
+
+  const openConversation = useCallback(
+    (participationId: number | string) => {
+      openThreadIdRef.current = participationId;
+      setOpenThreadId(participationId);
+      setOpenMessages([]);
+      setHasMoreOlderMessages(false);
+      if (!supabase || !user) return;
+      (async () => {
+        const { data, error } = await supabase
+          .from("messages")
+          .select("*")
+          .eq("participation_id", participationId)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .limit(MESSAGE_PAGE_SIZE + 1);
+        // The user may have switched threads (or left Messages) while this
+        // was in flight — a stale result must never clobber the thread
+        // that's actually open now.
+        if (openThreadIdRef.current !== participationId || error || !data) return;
+        const page = data.slice(0, MESSAGE_PAGE_SIZE).reverse().map(mapMessageRow);
+        setOpenMessages(page);
+        setHasMoreOlderMessages(data.length > MESSAGE_PAGE_SIZE);
+      })();
+    },
+    [user?.id],
+  );
+
+  const closeConversation = useCallback(() => {
+    openThreadIdRef.current = null;
+    setOpenThreadId(null);
+    setOpenMessages([]);
+    setHasMoreOlderMessages(false);
+    setLoadingOlderMessages(false);
+  }, []);
+
+  const loadOlderMessages = useCallback(async () => {
+    if (!supabase || !user || openThreadId == null || !hasMoreOlderMessages || loadingOlderMessages) return;
+    const oldest = openMessages[0];
+    if (!oldest) return;
+    setLoadingOlderMessages(true);
+    const cursorIso = new Date(oldest.createdAt).toISOString();
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("participation_id", openThreadId)
+      .or(`created_at.lt.${cursorIso},and(created_at.eq.${cursorIso},id.lt.${oldest.id})`)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(MESSAGE_PAGE_SIZE + 1);
+    if (openThreadIdRef.current !== openThreadId) {
+      setLoadingOlderMessages(false);
+      return;
+    }
+    if (error || !data) {
+      setLoadingOlderMessages(false);
+      return;
+    }
+    const page = data.slice(0, MESSAGE_PAGE_SIZE).reverse().map(mapMessageRow);
+    setOpenMessages((prev) => prependOlderPage(prev, page));
+    setHasMoreOlderMessages(data.length > MESSAGE_PAGE_SIZE);
+    setLoadingOlderMessages(false);
+  }, [openThreadId, hasMoreOlderMessages, loadingOlderMessages, openMessages, user?.id]);
+
+  const refreshMessagesSafetyNet = useCallback(async () => {
+    await refresh();
+    await reloadOpenConversation();
+  }, [refresh, reloadOpenConversation]);
+
+  /* ── Phase 2: one Realtime channel per signed-in user ──────────────────
+   * Created once per user, torn down automatically (this effect's own
+   * cleanup) on sign-out or when the user changes. Both tables' own RLS
+   * still applies to what's delivered here — see the migration's own
+   * comment — so this never widens who receives what.
+   */
+  useEffect(() => {
+    if (!supabase || !user) return;
+    const client = supabase;
+
+    const channel = client
+      .channel(`social-updates-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload: any) => {
+        const row = mapMessageRow(payload.new);
+        setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, row) }));
+        if (openThreadIdRef.current != null && String(openThreadIdRef.current) === String(row.participationId)) {
+          setOpenMessages((prev) => mergeMessage(prev, row));
+        }
+        const key = String(row.participationId);
+        setPendingByThread((prev) => {
+          const list = prev[key];
+          if (!list || list.length === 0) return prev;
+          const next = reconcilePendingAfterIncoming(list, row);
+          return next === list ? prev : { ...prev, [key]: next };
+        });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "participations" }, () => {
+        refresh();
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "participations" }, () => {
+        refresh();
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "participations" }, (payload: any) => {
+        // Postgres's default replica identity sends only the deleted row's
+        // id on a DELETE — e.g. someone else's join_in leave, broadcast to
+        // every other subscriber who could see that public row. Applying
+        // it is just a filter: a delete for an id not already in state is
+        // a no-op, nothing to special-case.
+        const deletedId = payload.old?.id;
+        if (deletedId == null) return;
+        setRemote((prev) => ({ ...prev, participations: applyParticipationDelete(prev.participations, deletedId) }));
+        refresh();
+      })
+      .subscribe((status: string) => {
+        // Fires on the initial connect and again after any reconnect —
+        // the safety net for whatever happened while disconnected.
+        if (status === "SUBSCRIBED") {
+          refresh();
+          reloadOpenConversation();
+        }
+      });
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [user?.id, refresh, reloadOpenConversation]);
+
+  // Tab-visibility safety net — the other trigger alongside reconnects and
+  // Messages.tsx's own 60-second interval.
+  useEffect(() => {
+    if (!supabase || !user) return;
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refresh();
+        reloadOpenConversation();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [user?.id, refresh, reloadOpenConversation]);
 
   useEffect(() => {
     refresh();
@@ -635,10 +924,35 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   // Declared here (rather than down in the Messages section below) because
   // messageRequests, just below, needs it already defined — everything in
   // this component body runs once per render, top to bottom.
-  const messagesFor = (participationId: number | string) =>
-    state.messages
+  const messagesFor = (participationId: number | string): Message[] => {
+    // The one open conversation: its real, paginated history plus
+    // whatever's still pending for it, oldest first.
+    if (shared && openThreadId != null && String(participationId) === String(openThreadId)) {
+      const pending = pendingByThread[String(participationId)] ?? [];
+      return combineHistoryAndPending(openMessages, pending);
+    }
+    // Every other thread, once summaries are available: a one-message
+    // preview synthesized from its summary row — never a full history
+    // fetch just to answer "does it have a message" or "what was it".
+    if (shared && state.summariesAvailable) {
+      const s = state.summaries.find((s) => String(s.participationId) === String(participationId));
+      if (!s || s.messageCount <= 0 || s.lastMessageId == null) return [];
+      return [
+        {
+          id: s.lastMessageId,
+          participationId,
+          fromUser: s.lastMessageFromUser ?? "",
+          body: s.lastMessageBody ?? "",
+          createdAt: s.lastMessageCreatedAt ?? 0,
+        },
+      ];
+    }
+    // Local (signed-out) mode, or the Phase 1 fallback when
+    // participation_message_summaries() isn't available yet.
+    return state.messages
       .filter((m) => String(m.participationId) === String(participationId))
       .sort((a, b) => a.createdAt - b.createdAt);
+  };
 
   /** Message requests waiting on me to accept or ignore — never one with no
    * message in it yet (a legacy row from before startAndSendDirectMessage
@@ -719,12 +1033,15 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         status: data.status,
         createdAt: new Date(data.created_at).getTime(),
       };
-      const { error: msgError } = await insertMessage(newThread, body, newThread.status === "pending");
+      const { error: msgError } = await rawInsertMessage(newThread, body, newThread.status === "pending");
+      // Either way, this is a brand-new thread — refresh() once to bring
+      // it (and its summary) into state, rather than the per-message
+      // optimistic patching sendMessage does for an existing conversation.
+      await refresh();
       if (msgError) {
         // The participation row is real even though its message failed —
         // pick it up so a retry lands in the same thread instead of
         // forking a second, unreachable one.
-        await refresh();
         return { id: newThread.id, error: "failed" as const };
       }
       return { id: newThread.id, error: null };
@@ -903,45 +1220,37 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   // Shared by sendMessage (an existing thread) and startAndSendDirectMessage
   // (a thread just now inserted, before it's even in `state` yet) — both
   // just need somewhere to put a message and notify the other person, once
-  // the caller has already decided the send is allowed.
-  const insertMessage = async (
+  // the caller has already decided the send is allowed. Unlike Phase 1's
+  // insertMessage, this never refreshes — callers own updating local state
+  // (optimistically, in sendMessage's case) so a send doesn't cost a full
+  // reload of everything Messages doesn't even show.
+  const rawInsertMessage = async (
     thread: Participation,
     body: string,
     isFirstPendingDm: boolean,
-  ): Promise<{ error: "failed" | null }> => {
-    if (supabase && user) {
-      const { error } = await supabase
-        .from("messages")
-        .insert({ participation_id: thread.id, from_user: user.id, body: body.trim() });
-      // A block, a duplicate, a rate limit — whatever the database's own
-      // reason, the caller gets the same "failed" back either way. See
-      // SocialContextType.sendMessage's own comment for why.
-      if (error) return { error: "failed" as const };
-      const other = thread.fromUser === user.id ? thread.toUser : thread.fromUser;
-      if (isFirstPendingDm) {
-        await notify(other, "message_request", `${myName} wants to message you.`, "/messages?tab=requests");
-      } else {
-        await notify(other, "message", `${myName} sent you a message.`, "/messages");
-      }
-      // Awaited so the sent message (and, for a brand-new thread, the
-      // thread itself) is already in state by the time the caller updates
-      // the screen — otherwise Messages.tsx would flash "No open threads"
-      // for the moment this is still in flight.
-      await refresh();
-      return { error: null };
+  ): Promise<{ data: any; error: "failed" | null }> => {
+    if (!supabase || !user) return { data: null, error: null };
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ participation_id: thread.id, from_user: user.id, body: body.trim() })
+      .select()
+      .single();
+    // A block, a duplicate, a rate limit — whatever the database's own
+    // reason, the caller gets the same "failed" back either way. See
+    // SocialContextType.sendMessage's own comment for why.
+    if (error || !data) return { data: null, error: "failed" as const };
+    const other = thread.fromUser === user.id ? thread.toUser : thread.fromUser;
+    if (isFirstPendingDm) {
+      await notify(other, "message_request", `${myName} wants to message you.`, "/messages?tab=requests");
+    } else {
+      await notify(other, "message", `${myName} sent you a message.`, "/messages");
     }
-    setState({
-      ...state,
-      messages: [
-        ...state.messages,
-        { id: localId(), participationId: thread.id, fromUser: myId, body: body.trim(), createdAt: Date.now() },
-      ],
-    });
-    return { error: null };
+    return { data, error: null };
   };
 
   const sendMessage: SocialContextType["sendMessage"] = async (participationId, body) => {
-    if (!body.trim()) return { error: null };
+    const trimmed = body.trim();
+    if (!trimmed) return { error: null };
     const thread = state.participations.find((p) => String(p.id) === String(participationId));
     if (!thread || thread.kind === "join_in") return { error: "failed" as const };
 
@@ -963,11 +1272,105 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         .update({ status: "accepted", responded_at: new Date().toISOString() })
         .eq("id", thread.id);
       if (error) return { error: "failed" as const };
+      // Reflect the reopen locally right away — the participations
+      // Realtime event (or the next refresh) confirms it, but the composer
+      // shouldn't sit "waiting" for a round trip it just caused itself.
+      setRemote((prev) => ({
+        ...prev,
+        participations: upsertParticipation(prev.participations, { ...thread, status: "accepted" }),
+      }));
     }
 
     const isFirstPendingDm =
       thread.kind === "direct_message" && thread.status === "pending" && thread.fromUser === myId && !hasMessages;
-    return insertMessage(thread, body, isFirstPendingDm);
+
+    if (!supabase || !user) {
+      setState({
+        ...state,
+        messages: [
+          ...state.messages,
+          { id: localId(), participationId: thread.id, fromUser: myId, body: trimmed, createdAt: Date.now() },
+        ],
+      });
+      return { error: null };
+    }
+
+    // Appears immediately, marked "sending" — combineHistoryAndPending (via
+    // messagesFor) puts it straight into the open conversation. Kept in
+    // pendingByThread (not openMessages) so it survives a thread switch and
+    // is never mistaken for confirmed history.
+    const clientId = localId();
+    const key = String(thread.id);
+    setPendingByThread((prev) => ({
+      ...prev,
+      [key]: [
+        ...(prev[key] ?? []),
+        {
+          id: clientId,
+          clientId,
+          participationId: thread.id,
+          fromUser: myId,
+          body: trimmed,
+          createdAt: Date.now(),
+          status: "sending" as const,
+        },
+      ],
+    }));
+
+    const { data, error } = await rawInsertMessage(thread, trimmed, isFirstPendingDm);
+    if (error || !data) {
+      // Left in place as "failed" rather than removed — retryMessage reuses
+      // this exact clientId and body, so a retry can never create a second
+      // request row.
+      setPendingByThread((prev) => ({ ...prev, [key]: markPendingFailed(prev[key] ?? [], clientId) }));
+      return { error: "failed" as const };
+    }
+
+    const real = mapMessageRow(data);
+    setPendingByThread((prev) => ({ ...prev, [key]: removePendingByClientId(prev[key] ?? [], clientId) }));
+    // Dedupes by id against the Realtime echo, whichever arrives first.
+    if (openThreadIdRef.current != null && String(openThreadIdRef.current) === key) {
+      setOpenMessages((prev) => mergeMessage(prev, real));
+    }
+    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real) }));
+    return { error: null };
+  };
+
+  const retryMessage: SocialContextType["retryMessage"] = async (participationId, clientId) => {
+    if (!supabase || !user) return;
+    const key = String(participationId);
+    const entry = (pendingByThread[key] ?? []).find((p) => p.clientId === clientId);
+    if (!entry) return; // already resolved elsewhere — nothing to retry
+    const thread = state.participations.find((p) => String(p.id) === String(participationId));
+    if (!thread) return;
+
+    setPendingByThread((prev) => ({
+      ...prev,
+      [key]: (prev[key] ?? []).map((p) => (p.clientId === clientId ? { ...p, status: "sending" as const } : p)),
+    }));
+
+    // Whether this was the thread's very first message, for which
+    // notification to send — based on confirmed history alone (excluding
+    // the very entry being retried, which would otherwise always count
+    // itself as "already has a message").
+    const hasConfirmedMessages = messagesFor(participationId).some((m) => m.clientId !== clientId);
+    const isFirstPendingDm =
+      thread.kind === "direct_message" &&
+      thread.status === "pending" &&
+      thread.fromUser === myId &&
+      !hasConfirmedMessages;
+
+    const { data, error } = await rawInsertMessage(thread, entry.body, isFirstPendingDm);
+    if (error || !data) {
+      setPendingByThread((prev) => ({ ...prev, [key]: markPendingFailed(prev[key] ?? [], clientId) }));
+      return;
+    }
+    const real = mapMessageRow(data);
+    setPendingByThread((prev) => ({ ...prev, [key]: removePendingByClientId(prev[key] ?? [], clientId) }));
+    if (openThreadIdRef.current != null && String(openThreadIdRef.current) === key) {
+      setOpenMessages((prev) => mergeMessage(prev, real));
+    }
+    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real) }));
   };
 
   return (
@@ -1005,7 +1408,14 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         markAllRead,
         messagesFor,
         sendMessage,
+        retryMessage,
+        openConversation,
+        closeConversation,
+        hasMoreOlderMessages,
+        loadingOlderMessages,
+        loadOlderMessages,
         refresh,
+        refreshMessagesSafetyNet,
       }}
     >
       {children}

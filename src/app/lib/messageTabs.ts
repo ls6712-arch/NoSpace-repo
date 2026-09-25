@@ -130,3 +130,29 @@ export function visibleParticipations<T extends { fromUser: string; toUser?: str
   if (!profileLookupSucceeded) return participations;
   return participations.filter((p) => hasVisibleOtherParty(p, myId, resolvedProfileIds));
 }
+
+/**
+ * Insert or replace a participation by id — used to apply a live Realtime
+ * INSERT/UPDATE event to local state immediately (optimistic; the
+ * authoritative refetch that follows overwrites this either way). New rows
+ * go to the front, same as refresh()'s own newest-first ordering.
+ */
+export function upsertParticipation<T extends { id: number | string }>(list: T[], row: T): T[] {
+  const idx = list.findIndex((p) => String(p.id) === String(row.id));
+  if (idx === -1) return [row, ...list];
+  return [...list.slice(0, idx), row, ...list.slice(idx + 1)];
+}
+
+/**
+ * Remove a participation by id — used for a live Realtime DELETE event,
+ * which (Postgres's default replica identity) carries only the deleted
+ * row's id, nothing else. A DELETE for an id we never had is simply a
+ * no-op: nothing to ignore-with-care, the filter just doesn't match
+ * anything (e.g. someone else's join_in leave, or a duplicate delivery).
+ */
+export function applyParticipationDelete<T extends { id: number | string }>(
+  list: T[],
+  deletedId: number | string,
+): T[] {
+  return list.filter((p) => String(p.id) !== String(deletedId));
+}
