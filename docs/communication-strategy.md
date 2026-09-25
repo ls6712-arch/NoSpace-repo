@@ -170,7 +170,18 @@ the phase.
   duplicate reports, left alone per instruction — needs one of them reviewed/dismissed first).
   Not yet separately confirmed on the live production site after deploy — worth a quick
   click-through once the Vercel production deploy for this merge finishes.
-- Phase 2 Live and reliable: not started
+- Phase 2 Live and reliable: database applied to live Supabase and verified
+  (see `docs/backend-state-20260925-phase2.md`) — Realtime on
+  `messages`/`participations`, plus `participation_message_summaries()` for
+  the conversation-list preview. App built (Realtime channel replacing the
+  4-second poll, paginated conversation loading, optimistic send with
+  retry, scroll-pin/"New messages" pill), typechecked, tested (see
+  `src/app/lib/messageSync.test.ts` and the additions to
+  `messageTabs.test.ts`), and verified with a mocked-network browser pass
+  (see `docs/verification/communication-phase2/`) — a real two-account live
+  check (message delivery latency, live request/accept/block updates, an
+  actual offline-Wi-Fi retry) is still needed and listed in that folder's
+  README. PR opened against `main`, not yet merged.
 - Phase 3 Unread and quieter bell: not started
 - Phase 4 Richer conversations: not started
 - Phase 5 Notification center: not started
