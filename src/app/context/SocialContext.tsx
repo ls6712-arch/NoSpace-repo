@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import { ParticipationKind } from "../data/participation";
-import { canSendInto, hasVisibleOtherParty, messageTabFor } from "../lib/messageTabs";
+import { canSendInto, messageTabFor, visibleParticipations } from "../lib/messageTabs";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -319,9 +319,9 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     }
     for (const t of thoughts.data ?? []) ids.add(t.user_id);
     for (const b of blocks.data ?? []) ids.add(b.blocked_id);
-    const { data: people } = ids.size
+    const { data: people, error: peopleError } = ids.size
       ? await supabase.from("profiles").select("id, display_name, avatar_url").in("id", [...ids])
-      : { data: [] as any[] };
+      : { data: [] as any[], error: null };
     const byId = new Map((people ?? []).map((p: any) => [p.id, p]));
     const nameOf = (id?: string) => (id ? byId.get(id)?.display_name ?? "Someone" : undefined);
 
@@ -333,31 +333,35 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       })),
     );
 
+    const mappedParticipations: Participation[] = (parts.data ?? []).map((p: any) => ({
+      id: p.id,
+      kind: p.kind,
+      fromUser: p.from_user,
+      fromName: nameOf(p.from_user) ?? "Someone",
+      toUser: p.to_user ?? undefined,
+      toName: nameOf(p.to_user),
+      postId: p.post_id ?? undefined,
+      hobbyKey: p.hobby_key ?? undefined,
+      intent: p.intent ?? undefined,
+      note: p.note ?? undefined,
+      status: p.status,
+      createdAt: new Date(p.created_at).getTime(),
+    }));
     // A participation whose other party's profile didn't resolve — blocked
     // and hidden by is_visible_profile(), deleted, or paused, all look
     // identical here — is dropped before it ever reaches state. There's no
     // one there to show or to message, and showing it anyway (a "Someone"
     // thread with an open composer, as happened live) would both be
     // useless and risk revealing that a block is the reason.
+    //
+    // But only when the profiles lookup itself actually succeeded — on its
+    // own failure, byId (and so resolvedProfileIds) is empty for a reason
+    // that has nothing to do with any of these other parties, which looks
+    // identical to "everyone got blocked": filtering on it would wipe every
+    // chat out of state and then have startAndSendDirectMessage hit the
+    // unique index trying to "start" a thread that already exists.
     const resolvedProfileIds = new Set(byId.keys());
-    const participations: Participation[] = (parts.data ?? [])
-      .filter((p: any) =>
-        hasVisibleOtherParty({ fromUser: p.from_user, toUser: p.to_user ?? undefined }, user.id, resolvedProfileIds),
-      )
-      .map((p: any) => ({
-        id: p.id,
-        kind: p.kind,
-        fromUser: p.from_user,
-        fromName: nameOf(p.from_user) ?? "Someone",
-        toUser: p.to_user ?? undefined,
-        toName: nameOf(p.to_user),
-        postId: p.post_id ?? undefined,
-        hobbyKey: p.hobby_key ?? undefined,
-        intent: p.intent ?? undefined,
-        note: p.note ?? undefined,
-        status: p.status,
-        createdAt: new Date(p.created_at).getTime(),
-      }));
+    const participations = visibleParticipations(mappedParticipations, user.id, resolvedProfileIds, !peopleError);
 
     // Messages for the threads that are actually open, plus any pending or
     // declined direct_message thread I'm party to — the recipient needs to

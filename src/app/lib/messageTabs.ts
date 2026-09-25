@@ -109,3 +109,24 @@ export function hasVisibleOtherParty(
   if (!otherId) return true;
   return resolvedProfileIds.has(otherId);
 }
+
+/**
+ * Ghost-thread filtering for a whole participations list — but only when
+ * the profiles lookup that `resolvedProfileIds` came from actually
+ * succeeded. If that lookup itself failed, `resolvedProfileIds` is empty
+ * for a reason that has nothing to do with any of these other parties
+ * being hidden — it looks identical to "everyone got blocked", and
+ * filtering on it would wipe every chat out of state (and then have
+ * startAndSendDirectMessage hit the unique index trying to "start" a
+ * thread that already exists). Safer to show every thread, unfiltered,
+ * than to drop them all over an unrelated fetch failure.
+ */
+export function visibleParticipations<T extends { fromUser: string; toUser?: string }>(
+  participations: T[],
+  myId: string,
+  resolvedProfileIds: ReadonlySet<string>,
+  profileLookupSucceeded: boolean,
+): T[] {
+  if (!profileLookupSucceeded) return participations;
+  return participations.filter((p) => hasVisibleOtherParty(p, myId, resolvedProfileIds));
+}

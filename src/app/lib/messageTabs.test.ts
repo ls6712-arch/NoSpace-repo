@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canSendInto, hasVisibleOtherParty, messageTabFor } from "./messageTabs";
+import { canSendInto, hasVisibleOtherParty, messageTabFor, visibleParticipations } from "./messageTabs";
 
 const ME = "me";
 const THEM = "them";
@@ -148,5 +148,32 @@ describe("hasVisibleOtherParty", () => {
     // Regardless of what's in resolvedProfileIds, the "other" party here is
     // THEM, not ME, so only THEM's presence in the set matters.
     expect(hasVisibleOtherParty({ fromUser: ME, toUser: THEM }, ME, new Set([ME]))).toBe(false);
+  });
+});
+
+describe("visibleParticipations", () => {
+  const ANOTHER = "another";
+  const list = [
+    { fromUser: ME, toUser: THEM },
+    { fromUser: ANOTHER, toUser: ME },
+  ];
+
+  it("drops a participation whose other party didn't resolve, when the lookup succeeded", () => {
+    // Only THEM resolved — ANOTHER didn't, so their thread is dropped.
+    expect(visibleParticipations(list, ME, new Set([THEM]), true)).toEqual([{ fromUser: ME, toUser: THEM }]);
+  });
+
+  it("drops nothing when the profiles lookup itself failed, even with an empty resolved set", () => {
+    // An empty resolvedProfileIds is indistinguishable from "everyone got
+    // blocked" unless we also know whether the lookup that built it
+    // actually ran — this is the case a failed query produces, and it must
+    // never wipe every thread out of state.
+    expect(visibleParticipations(list, ME, new Set(), false)).toEqual(list);
+  });
+
+  it("drops everything when the lookup succeeded but genuinely resolved no one", () => {
+    // Distinguishes "lookup failed" from "lookup succeeded and came back
+    // empty" — the latter really does mean no one here resolved.
+    expect(visibleParticipations(list, ME, new Set(), true)).toEqual([]);
   });
 });
