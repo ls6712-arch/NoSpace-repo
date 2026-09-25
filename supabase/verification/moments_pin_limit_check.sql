@@ -9,7 +9,7 @@
 -- regardless of outcome.
 --
 -- Fixed ids, a distinct block from every earlier script's own range:
---   HOST …6001 — Space (Open) …0000000000f4 — Posts 900006001-900006004
+--   HOST …6001 — Space (Open) …0000000000f4 — Posts 900006001-900006005
 
 begin;
 
@@ -17,6 +17,7 @@ do $$
 declare
   v_i int := 0;
   v_n int;
+  v_bool boolean;
   results text[] := '{}';
 begin
   -- ───────────────────────────────────────────────────────────────────────
@@ -37,13 +38,15 @@ begin
     (900006001, '00000000-0000-4000-8000-000000006001', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Pin limit test Moment 1.', 'public'),
     (900006002, '00000000-0000-4000-8000-000000006001', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Pin limit test Moment 2.', 'public'),
     (900006003, '00000000-0000-4000-8000-000000006001', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Pin limit test Moment 3.', 'public'),
-    (900006004, '00000000-0000-4000-8000-000000006001', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Pin limit test Moment 4.', 'public');
+    (900006004, '00000000-0000-4000-8000-000000006001', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Pin limit test Moment 4.', 'public'),
+    (900006005, '00000000-0000-4000-8000-000000006001', 'crafts-making', 'photo', 'https://example.invalid/photo.jpg', 'Pin limit test Moment 5.', 'public');
 
   insert into public.space_moments (space_id, post_id, featured) values
     ('00000000-0000-4000-8000-0000000000f4', 900006001, false),
     ('00000000-0000-4000-8000-0000000000f4', 900006002, false),
     ('00000000-0000-4000-8000-0000000000f4', 900006003, false),
-    ('00000000-0000-4000-8000-0000000000f4', 900006004, false);
+    ('00000000-0000-4000-8000-0000000000f4', 900006004, false),
+    ('00000000-0000-4000-8000-0000000000f4', 900006005, false);
 
   raise notice '--- fixture ready, running checks ---';
 
@@ -134,6 +137,72 @@ begin
 
   select count(*) into v_n from space_moments
   where space_moments.space_id = '00000000-0000-4000-8000-0000000000f4' and space_moments.featured = true;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 3 then 'PASS' else 'FAIL' end));
+
+  -- Pinned right now: 900006002, 900006003, 900006004. Unpinned: 900006001,
+  -- 900006005 — neither removed.
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 9-10. A host removing a pinned Moment (removed_by_host = true) also
+  --       unpins it in the same write, whatever the caller passed for
+  --       featured.
+  -- ───────────────────────────────────────────────────────────────────────
+  v_i := v_i + 1;
+  begin
+    update public.space_moments set removed_by_host = true where space_id = '00000000-0000-4000-8000-0000000000f4' and post_id = 900006002;
+    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  select space_moments.featured into v_bool from space_moments
+  where space_moments.space_id = '00000000-0000-4000-8000-0000000000f4' and space_moments.post_id = 900006002;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool = false then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 11. A removed Moment no longer counts toward the 3-pin limit — with
+  --     900006002 removed, only 2 remain actually pinned.
+  -- ───────────────────────────────────────────────────────────────────────
+  select count(*) into v_n from space_moments
+  where space_moments.space_id = '00000000-0000-4000-8000-0000000000f4' and space_moments.featured = true;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 2 then 'PASS' else 'FAIL' end));
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 12-14. The count's own removed_by_host = false filter, isolated from
+  --        the auto-unpin above (which already makes a featured+removed
+  --        row impossible through this trigger in normal use): with the
+  --        trigger briefly disabled, force 900006001 into that otherwise
+  --        unreachable state directly (featured = true, removed_by_host =
+  --        true) — an unfiltered count would now see 3 featured rows
+  --        (900006001 fake, 900006003, 900006004) and wrongly refuse a
+  --        genuine 3rd pin. With the filter, the real count is still 2,
+  --        so pinning 900006005 through the normal, trigger-enabled path
+  --        succeeds.
+  -- ───────────────────────────────────────────────────────────────────────
+  alter table public.space_moments disable trigger space_moments_featured_limit;
+  update public.space_moments set featured = true, removed_by_host = true
+  where space_id = '00000000-0000-4000-8000-0000000000f4' and post_id = 900006001;
+  alter table public.space_moments enable trigger space_moments_featured_limit;
+
+  select count(*) into v_n from space_moments
+  where space_moments.space_id = '00000000-0000-4000-8000-0000000000f4' and space_moments.featured = true;
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 3 then 'PASS' else 'FAIL' end));
+
+  v_i := v_i + 1;
+  begin
+    update public.space_moments set featured = true where space_id = '00000000-0000-4000-8000-0000000000f4' and post_id = 900006005;
+    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when raise_exception then
+      results := array_append(results, format('%s FAIL %s', v_i, sqlerrm));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  select count(*) into v_n from space_moments
+  where space_moments.space_id = '00000000-0000-4000-8000-0000000000f4'
+    and space_moments.featured = true and space_moments.removed_by_host = false;
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 3 then 'PASS' else 'FAIL' end));
 
   -- ───────────────────────────────────────────────────────────────────────
