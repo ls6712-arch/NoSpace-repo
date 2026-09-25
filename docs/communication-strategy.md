@@ -156,9 +156,14 @@ the phase.
 - Phase 1 Safety: done. Migration applied to live Supabase and verified (see
   `docs/backend-state-20260924.md`); app built, typechecked, tested, and verified in the browser
   at phone and laptop width, light and dark (see `docs/verification/communication-phase1/`);
-  merged to `main` in PR #96 on 2026-09-25. Not yet separately confirmed on the live production
-  site after deploy — worth a quick click-through once the Vercel production deploy for this
-  merge finishes.
+  merged to `main` in PR #96 on 2026-09-25. Live testing of that PR then found 4 bugs in the
+  Messages UI (the database rules themselves were fine) — a "Message" tap created an empty
+  request before any message was typed, the composer's lock rule didn't account for message
+  count, a declined request's own recipient couldn't reopen it, and some empty-conversation copy
+  could render an empty quote. Fixed and merged in PR #98 on 2026-09-25 (see
+  `docs/verification/communication-phase1-followup/`). Not yet separately confirmed on the live
+  production site after deploy — worth a quick click-through once the Vercel production deploy
+  for this merge finishes.
 - Phase 2 Live and reliable: not started
 - Phase 3 Unread and quieter bell: not started
 - Phase 4 Richer conversations: not started
