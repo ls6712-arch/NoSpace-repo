@@ -286,7 +286,8 @@ export function cancelRsvp(eventId: number) {
   return call("cancel_rsvp", { p_event_id: eventId });
 }
 export function listEventTeasers(spaceId: string) {
-  return call<{ id: number; title: string; starts_at: string; timezone: string }[]>("list_event_teasers", {
-    p_space_id: spaceId,
-  });
+  return call<{ id: number; title: string; starts_at: string; timezone: string; featured: boolean }[]>(
+    "list_event_teasers",
+    { p_space_id: spaceId },
+  );
 }
