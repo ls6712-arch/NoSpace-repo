@@ -28,10 +28,12 @@ function slugify(name: string) {
 
 type CornerPick = { spaceSlug: string; slug: string; name: string } | null;
 
-/** Shared by CreateSpace and EditSpace. Corners and slug are create-only —
- * space_corners has its own host-only policy for direct edits, and a
- * slug is a stable identifier once a Space exists (update_space doesn't
- * take one at all). */
+/** Shared by CreateSpace and EditSpace. The slug is create-only — a stable
+ * identifier once a Space exists (update_space doesn't take one at all) —
+ * but Corners are editable in both modes: space_corners has its own
+ * host-only policy for direct table writes ("hosts manage their space's
+ * corners", using/with check is_space_host), so an edit-mode save just
+ * replaces the Space's space_corners rows directly, no RPC needed. */
 export function SpaceForm({
   mode,
   space,
@@ -72,7 +74,7 @@ export function SpaceForm({
   const [cornerSlots, setCornerSlots] = useState(Math.max(1, initialCorners?.length ?? 1));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{ name?: string; cover?: string; location?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; cover?: string; location?: string; corners?: string }>({});
 
   const needsLocation = meets === "in_person" || meets === "both";
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -118,6 +120,22 @@ export function SpaceForm({
     return ids;
   }
 
+  /** Edit mode's Corners save — there's no RPC for this, so it writes
+   * space_corners directly (its own host-only RLS policy allows it):
+   * clear the Space's current rows and re-insert the picked set, first
+   * slot primary. Simplest correct sync for at most 3 rows; no need to
+   * diff against what was there before. */
+  async function syncSpaceCorners(spaceId: string, cornerIds: number[]): Promise<string | null> {
+    if (!supabase) return "Corners couldn't be saved — try again.";
+    const { error: delErr } = await supabase.from("space_corners").delete().eq("space_id", spaceId);
+    if (delErr) return delErr.message;
+    if (cornerIds.length === 0) return null;
+    const { error: insErr } = await supabase.from("space_corners").insert(
+      cornerIds.map((corner_id, i) => ({ space_id: spaceId, corner_id, is_primary: i === 0 })),
+    );
+    return insErr ? insErr.message : null;
+  }
+
   // A blocklisted name is worded the same everywhere this class of error
   // can surface, regardless of which RPC raised it.
   function friendlyError(message: string) {
@@ -135,18 +153,22 @@ export function SpaceForm({
     if (needsLocation && (!neighborhood.trim() || !city.trim())) {
       errors.location = "Needed for an in-person Space.";
     }
+    if (corners.slice(0, cornerSlots).filter(Boolean).length === 0) {
+      errors.corners = "Pick 1-3 Corners.";
+    }
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
     setSaving(true);
     const cap = memberCap.trim() ? Number(memberCap) : undefined;
 
+    const cornerIds = await resolveCornerIds();
+    if (cornerIds === null) {
+      setSaving(false);
+      return;
+    }
+
     if (mode === "create") {
-      const cornerIds = await resolveCornerIds();
-      if (cornerIds === null) {
-        setSaving(false);
-        return;
-      }
       const finalSlug = slug.trim() || slugify(name);
       const { error: err } = await createSpace({
         slug: finalSlug,
@@ -185,8 +207,13 @@ export function SpaceForm({
         exactAddress: exactAddress.trim() || undefined,
         clearAddress: !exactAddress.trim() && !!initialAddress,
       });
+      if (err) {
+        setSaving(false);
+        return setError(friendlyError(err));
+      }
+      const cornersErr = await syncSpaceCorners(space.id, cornerIds);
       setSaving(false);
-      if (err) return setError(friendlyError(err));
+      if (cornersErr) return setError(`Space saved, but Corners couldn't be updated: ${cornersErr}`);
       navigate(`/space/${space.slug}`);
     }
   };
@@ -277,74 +304,57 @@ export function SpaceForm({
         />
       </div>
 
-      {mode === "create" ? (
-        <div>
-          <Label>Corners (1-3) <span className="text-destructive">*</span></Label>
-          <div className="mt-2 space-y-3">
-            {Array.from({ length: cornerSlots }).map((_, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <div className="flex-1">
-                  <CornerTagField
-                    value={corners[i]?.slug ?? ""}
-                    onChange={(pickedSlug, pickedName, resolvedSpaceSlug) => {
-                      setCorners((prev) => {
-                        const next = [...prev] as typeof prev;
-                        next[i] = pickedSlug ? { slug: pickedSlug, name: pickedName, spaceSlug: resolvedSpaceSlug } : null;
-                        return next;
-                      });
-                    }}
-                  />
-                </div>
-                {i > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCorners((prev) => {
-                        const next = [...prev] as typeof prev;
-                        next[i] = null;
-                        return next;
-                      });
-                      setCornerSlots((n) => Math.max(1, n - 1));
-                    }}
-                    className="mt-2 text-muted-foreground hover:text-foreground"
-                    aria-label="Remove this Corner"
-                  >
-                    <X className="size-4" />
-                  </button>
-                )}
+      <div>
+        <Label>Corners (1-3) <span className="text-destructive">*</span></Label>
+        <div className="mt-2 space-y-3">
+          {Array.from({ length: cornerSlots }).map((_, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="flex-1">
+                <CornerTagField
+                  value={corners[i]?.slug ?? ""}
+                  onChange={(pickedSlug, pickedName, resolvedSpaceSlug) => {
+                    setCorners((prev) => {
+                      const next = [...prev] as typeof prev;
+                      next[i] = pickedSlug ? { slug: pickedSlug, name: pickedName, spaceSlug: resolvedSpaceSlug } : null;
+                      return next;
+                    });
+                  }}
+                />
               </div>
-            ))}
-          </div>
-          {cornerSlots < 3 && (
-            <button
-              type="button"
-              onClick={() => setCornerSlots((n) => Math.min(3, n + 1))}
-              className="mt-2 text-xs text-[var(--coral-text)]"
-            >
-              + Add another Corner
-            </button>
-          )}
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            The first Corner is this Space's primary one.
-          </p>
-        </div>
-      ) : (
-        initialCorners && initialCorners.length > 0 && (
-          <div>
-            <Label>Corners</Label>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {initialCorners.map((c, i) => (
-                <span key={c.slug} className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                  {c.name}{i === 0 ? " (primary)" : ""}
-                </span>
-              ))}
+              {i > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCorners((prev) => {
+                      const next = [...prev] as typeof prev;
+                      next[i] = null;
+                      return next;
+                    });
+                    setCornerSlots((n) => Math.max(1, n - 1));
+                  }}
+                  className="mt-2 text-muted-foreground hover:text-foreground"
+                  aria-label="Remove this Corner"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Corners aren't editable here yet.
-            </p>
-          </div>
-        )
-      )}
+          ))}
+        </div>
+        {cornerSlots < 3 && (
+          <button
+            type="button"
+            onClick={() => setCornerSlots((n) => Math.min(3, n + 1))}
+            className="mt-2 text-xs text-[var(--coral-text)]"
+          >
+            + Add another Corner
+          </button>
+        )}
+        {fieldErrors.corners && <p className="mt-1 text-xs text-destructive">{fieldErrors.corners}</p>}
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          The first Corner is this Space's primary one.
+        </p>
+      </div>
 
       <div>
         <Label>Meets</Label>

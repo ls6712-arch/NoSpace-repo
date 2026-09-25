@@ -4,6 +4,7 @@ import { MapPin, Star, Users } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { requestOrJoinSpace, cancelJoinRequest, leaveSpace, spaceMomentCount30d, type SpaceRow, type SpaceMemberRow, type SpaceEventRow } from "../lib/spaces";
+import { capitalizeCornerName } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { AddMomentToSpaceDialog } from "../components/AddMomentToSpaceDialog";
@@ -88,7 +89,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       if (cancelled) return;
       setCorners(
         (cornerRows ?? [])
-          .map((r: any) => r.corners && { slug: r.corners.slug, name: r.corners.name, isPrimary: r.is_primary })
+          .map((r: any) => r.corners && { slug: r.corners.slug, name: capitalizeCornerName(r.corners.name), isPrimary: r.is_primary })
           .filter(Boolean),
       );
       setSpaceAddress(addressRow?.exact_address ?? null);
