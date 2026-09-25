@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { MapPin, Star, ArrowRight, X } from "lucide-react";
+import { MapPin, Star, ArrowRight, X, Pin, PinOff } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { useJournal } from "../../lib/journal";
@@ -64,19 +64,25 @@ function AvatarRow({ people, max = 4 }: { people: Attendee[]; max?: number }) {
   );
 }
 
-/** The Home tab: the event band, the members-only "Settling in" checklist,
- * the "On the table" Moment grid, the hosts' single featured Moment (space_
- * moments.featured — DB-enforced to at most one per Space, sql/…-schema's
- * space_moments_one_featured), and host badges. Everything here is read
- * from data that already exists — no new tables, no new RPCs. */
+/** The Home tab: the event band, the "Settling in" (members) / "Set up
+ * your Space" (hosts) checklist, and the "On the table" Moment grid — up
+ * to 3 pinned Moments (space_moments.featured, now at most 3 per Space —
+ * see 20261004000000_spaces_rework_moments_pin_limit.sql) grouped first,
+ * then the rest newest-first — plus host badges. Everything here is read
+ * from data that already exists; pin/unpin is a direct write through the
+ * existing "hosts feature or remove" UPDATE policy, no new RPC. */
 export function SpaceHomeTab({
   space,
   isActiveMember,
+  isHost,
   hosts,
+  onAddMoment,
 }: {
   space: SpaceRow;
   isActiveMember: boolean;
+  isHost: boolean;
   hosts: HostLite[];
+  onAddMoment: () => void;
 }) {
   const { user } = useAuth();
   const journal = useJournal();
@@ -90,10 +96,13 @@ export function SpaceHomeTab({
 
   const [moments, setMoments] = useState<SpaceMoment[] | "loading">("loading");
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  const [pinBusyId, setPinBusyId] = useState<number | null>(null);
+  const [pinError, setPinError] = useState<string | null>(null);
 
   const [followsMember, setFollowsMember] = useState(false);
   const [rsvpedHere, setRsvpedHere] = useState(false);
   const [sharedHere, setSharedHere] = useState(false);
+  const [hasEverHadEvent, setHasEverHadEvent] = useState(false);
   const [checklistReady, setChecklistReady] = useState(false);
   // Starts visible — only hidden once localStorage actually confirms a
   // prior dismissal (read in the effect below). Defaulting to true would
@@ -107,7 +116,9 @@ export function SpaceHomeTab({
     [journal.projects, space.category_slug],
   );
 
-  const dismissKey = user ? `sushii.spaces.settlingIn.dismissed.${user.id}.${space.id}` : null;
+  const dismissKey = user
+    ? `sushii.spaces.settlingIn.dismissed.${isHost ? "host" : "member"}.${user.id}.${space.id}`
+    : null;
 
   useEffect(() => {
     if (!dismissKey) return;
@@ -209,7 +220,7 @@ export function SpaceHomeTab({
         .eq("space_id", space.id)
         .order("featured", { ascending: false })
         .order("added_at", { ascending: false })
-        .limit(9);
+        .limit(15);
       if (cancelled) return;
       const rows = (data ?? []).filter((r: any) => r.posts);
       const userIds = [...new Set(rows.map((r: any) => r.posts.user_id as string))];
@@ -230,6 +241,26 @@ export function SpaceHomeTab({
       cancelled = true;
     };
   }, [space.id, user?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadHostChecklistData() {
+      if (!supabase || !isHost) return;
+      // Any event this Space has ever had, scheduled or not — not just an
+      // upcoming one (`upcoming` above only ever holds future, scheduled
+      // rows) — the host checklist's "Plan your first event" just wants
+      // to know one was ever made.
+      const { count } = await supabase
+        .from("space_events")
+        .select("id", { count: "exact", head: true })
+        .eq("space_id", space.id);
+      if (!cancelled) setHasEverHadEvent((count ?? 0) > 0);
+    }
+    loadHostChecklistData();
+    return () => {
+      cancelled = true;
+    };
+  }, [space.id, isHost]);
 
   useEffect(() => {
     let cancelled = false;
@@ -279,19 +310,67 @@ export function SpaceHomeTab({
     ? upcomingList.filter((e) => e.id !== todayEvent.id && new Date(e.starts_at).getTime() - Date.now() <= 7 * 24 * 3600 * 1000).slice(0, 3)
     : [];
 
-  const checklist = [
-    { key: "join", label: "Join the Space", done: isActiveMember },
-    { key: "follow", label: "Follow a fellow member", done: followsMember },
-    { key: "pursuit", label: "Start a Pursuit", done: startedPursuit },
-    { key: "rsvp", label: "RSVP to an event", done: rsvpedHere },
-    { key: "moment", label: "Share a Moment here", done: sharedHere },
+  type ChecklistItem = {
+    key: string;
+    label: string;
+    done: boolean;
+    // The step's "Next: …" action — a Link when `to` is set, an
+    // onClick button (opening a dialog owned by an ancestor, e.g. Add
+    // Moment) otherwise.
+    actionLabel: string;
+    to?: string;
+    onClick?: () => void;
+  };
+
+  const checklist: ChecklistItem[] = [
+    { key: "join", label: "Join the Space", done: isActiveMember, actionLabel: "Join the Space" },
+    { key: "follow", label: "Follow a fellow member", done: followsMember, actionLabel: "Meet people", to: `/space/${space.slug}?tab=people` },
+    { key: "pursuit", label: "Start a Pursuit", done: startedPursuit, actionLabel: "Start a Pursuit", to: "/pursuits/new" },
+    { key: "rsvp", label: "RSVP to an event", done: rsvpedHere, actionLabel: "See events", to: `/space/${space.slug}?tab=events` },
+    { key: "moment", label: "Share a Moment here", done: sharedHere, actionLabel: "Add a Moment", onClick: onAddMoment },
   ];
-  const nextStep = checklist.find((c) => !c.done);
+
+  const hostChecklist: ChecklistItem[] = [
+    { key: "cover", label: "Add a cover photo", done: !!space.cover_image, actionLabel: "Edit Space", to: `/space/${space.slug}/edit` },
+    { key: "rules", label: "Add rules", done: !!space.rules?.trim(), actionLabel: "Edit Space", to: `/space/${space.slug}/edit` },
+    { key: "event", label: "Plan your first event", done: hasEverHadEvent, actionLabel: "Plan an event", to: `/space/${space.slug}?tab=events` },
+    { key: "cohost", label: "Invite a co-host", done: hosts.length > 1, actionLabel: "Invite a co-host", to: `/space/${space.slug}?tab=manage` },
+    { key: "moment", label: "Share the first Moment", done: sharedHere, actionLabel: "Add a Moment", onClick: onAddMoment },
+  ];
+
+  const activeChecklist = isHost ? hostChecklist : checklist;
+  const checklistTitle = isHost ? "Set up your Space" : "Settling in";
+  const nextStep = activeChecklist.find((c) => !c.done);
   const checklistComplete = checklistReady && !nextStep;
 
   const momentsLoaded = moments !== "loading" ? moments : [];
-  const featuredMoment = momentsLoaded.find((m) => m.featured);
-  const tableMoments = momentsLoaded.filter((m) => m.id !== featuredMoment?.id).slice(0, 6);
+  const pinnedMoments = momentsLoaded.filter((m) => m.featured).slice(0, 3);
+  const pinnedIds = new Set(pinnedMoments.map((m) => m.id));
+  const restMoments = momentsLoaded.filter((m) => !pinnedIds.has(m.id)).slice(0, 12);
+  const tableEmpty = pinnedMoments.length === 0 && restMoments.length === 0;
+
+  const togglePin = async (post: SpaceMoment) => {
+    if (!supabase) return;
+    setPinError(null);
+    if (!post.featured && pinnedMoments.length >= 3) {
+      setPinError("Unpin one first.");
+      return;
+    }
+    setPinBusyId(post.id);
+    const { error } = await supabase
+      .from("space_moments")
+      .update({ featured: !post.featured })
+      .eq("space_id", space.id)
+      .eq("post_id", post.id);
+    setPinBusyId(null);
+    if (error) {
+      setPinError(error.message || "Couldn't update that Moment.");
+      return;
+    }
+    setMoments((prev) =>
+      prev === "loading" ? prev : prev.map((m) => (m.id === post.id ? { ...m, featured: !post.featured } : m)),
+    );
+  };
 
   return (
     <div className="space-y-8 py-6">
@@ -346,7 +425,7 @@ export function SpaceHomeTab({
         </Link>
       )}
 
-      {/* ── Settling in ────────────────────────────────────────────────── */}
+      {/* ── Settling in / Set up your Space ───────────────────────────── */}
       {isActiveMember && checklistReady && !checklistComplete && !dismissed && (
         <div className="relative rounded-2xl border border-line bg-paper p-5">
           <button
@@ -357,9 +436,9 @@ export function SpaceHomeTab({
           >
             <X className="size-4" />
           </button>
-          <p className="pr-6 text-lg" style={{ fontFamily: "var(--font-display)" }}>Settling in</p>
+          <p className="pr-6 text-lg" style={{ fontFamily: "var(--font-display)" }}>{checklistTitle}</p>
           <ul className="mt-3 space-y-1.5">
-            {checklist.map((c) => (
+            {activeChecklist.map((c) => (
               <li key={c.key} className="flex items-center gap-2 text-sm">
                 <span
                   className={`flex size-4 shrink-0 items-center justify-center rounded-full border text-[10px] ${
@@ -373,18 +452,18 @@ export function SpaceHomeTab({
             ))}
           </ul>
           {nextStep && (
-            <p className="mt-3 text-xs text-muted-foreground">Next: {nextStep.label}</p>
+            <div className="mt-3">
+              {nextStep.onClick ? (
+                <Button variant="outline" size="sm" onClick={nextStep.onClick}>
+                  Next: {nextStep.actionLabel}
+                </Button>
+              ) : nextStep.to ? (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={nextStep.to}>Next: {nextStep.actionLabel}</Link>
+                </Button>
+              ) : null}
+            </div>
           )}
-        </div>
-      )}
-
-      {/* ── Featured by the hosts ──────────────────────────────────────── */}
-      {featuredMoment && (
-        <div>
-          <p className="ns-section-kicker text-muted-foreground">Featured by the hosts</p>
-          <div className="mt-2 overflow-hidden rounded-2xl border border-line bg-paper">
-            <MomentCard post={featuredMoment} surface="feed" onOpen={() => setOpenPost(featuredMoment)} />
-          </div>
         </div>
       )}
 
@@ -396,20 +475,64 @@ export function SpaceHomeTab({
             See all Moments
           </Link>
         </div>
+        {pinError && <p className="mt-2 text-xs text-destructive">{pinError}</p>}
         {moments === "loading" ? (
           <div className="min-h-[20vh]" />
-        ) : tableMoments.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">The table's clear. Add the first Moment.</p>
-        ) : (
-          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
-            {tableMoments.map((post, i) => (
-              <div key={post.id} className={TILTS[i % TILTS.length]}>
-                <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
-                  <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
-                </div>
-              </div>
-            ))}
+        ) : tableEmpty ? (
+          <div className="py-10 text-center">
+            <p className="text-sm text-muted-foreground">The table's clear.</p>
+            <Button variant="coral" size="sm" className="mt-3" onClick={onAddMoment}>
+              Add the first Moment
+            </Button>
           </div>
+        ) : (
+          <>
+            {pinnedMoments.length > 0 && (
+              <p className="mt-4 ns-section-kicker text-muted-foreground">Pinned by the hosts</p>
+            )}
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+              {pinnedMoments.map((post, i) => (
+                <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
+                  {isHost && (
+                    <button
+                      type="button"
+                      disabled={pinBusyId === post.id}
+                      onClick={() => togglePin(post)}
+                      className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                    >
+                      <PinOff className="size-3" />
+                      Unpin
+                    </button>
+                  )}
+                  <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
+                    <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {restMoments.length > 0 && (
+              <div className={`grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 ${pinnedMoments.length > 0 ? "mt-8" : "mt-3"}`}>
+                {restMoments.map((post, i) => (
+                  <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
+                    {isHost && (
+                      <button
+                        type="button"
+                        disabled={pinBusyId === post.id}
+                        onClick={() => togglePin(post)}
+                        className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                      >
+                        <Pin className="size-3" />
+                        Pin to Home
+                      </button>
+                    )}
+                    <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
+                      <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
