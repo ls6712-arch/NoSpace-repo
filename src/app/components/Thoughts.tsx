@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, Lock, MessageCircleQuestion, Trash2 } from "lucide-react";
+import { ChevronRight, Flag, Lock, MessageCircleQuestion, Trash2 } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
@@ -7,6 +7,7 @@ import { Textarea } from "./ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { MediaAttachPicker } from "./MediaAttachPicker";
+import { ReportDialog } from "./ReportDialog";
 
 /**
  * Thoughts, not comments — short, standalone reflections on a piece of work
@@ -79,6 +80,8 @@ export function Thoughts({
 
   const [failed, setFailed] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | string | null>(null);
+  const [reportThoughtId, setReportThoughtId] = useState<number | string | null>(null);
+  const reportingThought = thoughts.find((t) => t.id === reportThoughtId);
 
   const submit = async () => {
     if (!body.trim() || saving) return;
@@ -222,7 +225,7 @@ export function Thoughts({
                 <span className="text-[11px] text-muted-foreground">
                   {t.authorName} · {ago(t.createdAt)}
                 </span>
-                {user?.id === t.userId && (
+                {user?.id === t.userId ? (
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteId(t.id)}
@@ -230,6 +233,15 @@ export function Thoughts({
                     aria-label="Delete this thought"
                   >
                     <Trash2 className="size-3.5" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setReportThoughtId(t.id)}
+                    className="ml-auto text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Report this thought"
+                  >
+                    <Flag className="size-3.5" />
                   </button>
                 )}
               </div>
@@ -254,6 +266,17 @@ export function Thoughts({
           setConfirmDeleteId(null);
         }}
       />
+
+      {reportingThought && (
+        <ReportDialog
+          open={reportThoughtId !== null}
+          onOpenChange={(o) => !o && setReportThoughtId(null)}
+          targetUserId={reportingThought.userId}
+          targetKind="thought"
+          targetId={reportingThought.id}
+          personName={reportingThought.authorName}
+        />
+      )}
     </div>
   );
 }

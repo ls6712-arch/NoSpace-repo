@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import {
   Check,
   Copy,
+  Flag,
   FolderPlus,
   Globe2,
   Lock,
@@ -31,6 +32,7 @@ import { Thoughts } from "./Thoughts";
 import { BePart } from "./BePart";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { PursuitDialog } from "./PursuitDialog";
+import { ReportDialog } from "./ReportDialog";
 import { attachEntry, startProject, useJournal } from "../lib/journal";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -103,6 +105,7 @@ export function MomentDetail({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [askTogetherOpen, setAskTogetherOpen] = useState(false);
   const [inspiredDialogOpen, setInspiredDialogOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     if (!post) return;
@@ -304,6 +307,17 @@ export function MomentDetail({
               </button>
             )}
 
+            {!owned && post.userId && (
+              <button
+                type="button"
+                onClick={() => setReportOpen(true)}
+                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              >
+                <Flag className="size-3" />
+                Report
+              </button>
+            )}
+
             <Thoughts
               postId={post.id}
               postOwnerId={post.userId}
@@ -331,6 +345,17 @@ export function MomentDetail({
 
         {!owned && (
           <PursuitDialog open={inspiredDialogOpen} onOpenChange={setInspiredDialogOpen} seedPost={post} />
+        )}
+
+        {!owned && post.userId && (
+          <ReportDialog
+            open={reportOpen}
+            onOpenChange={setReportOpen}
+            targetUserId={post.userId}
+            targetKind="moment"
+            targetId={post.id}
+            personName={post.creator}
+          />
         )}
 
         {editing && (

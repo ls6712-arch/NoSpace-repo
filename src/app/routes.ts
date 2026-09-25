@@ -26,6 +26,7 @@ import { AdminCategories } from "./pages/AdminCategories";
 import { AdminSpaces } from "./pages/AdminSpaces";
 import { AdminCircles } from "./pages/AdminCircles";
 import { AdminCorners } from "./pages/AdminCorners";
+import { AdminReports } from "./pages/AdminReports";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Studio } from "./pages/Studio";
@@ -72,6 +73,7 @@ export const router = createHashRouter([
       { path: "admin/spaces", Component: AdminSpaces },
       { path: "admin/circles", Component: AdminCircles },
       { path: "admin/corners", Component: AdminCorners },
+      { path: "admin/reports", Component: AdminReports },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },

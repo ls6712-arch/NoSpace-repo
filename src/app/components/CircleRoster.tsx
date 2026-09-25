@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Circle } from "../data/circles";
 import { useCircles, CircleMember } from "../context/CirclesContext";
+import { useSocial } from "../context/SocialContext";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 function initials(name: string) {
@@ -21,6 +22,7 @@ function initials(name: string) {
  */
 export function CircleRoster({ circle }: { circle: Circle }) {
   const { isRealCircle, fetchRoster } = useCircles();
+  const { blockedIds } = useSocial();
   const [members, setMembers] = useState<CircleMember[] | null>(null);
 
   useEffect(() => {
@@ -30,12 +32,15 @@ export function CircleRoster({ circle }: { circle: Circle }) {
     }
     let cancelled = false;
     fetchRoster(circle.id).then((list) => {
-      if (!cancelled) setMembers(list);
+      // A blocked person's membership row still exists (circle_members
+      // isn't itself block-hidden — only their profile is, which is why
+      // fetchRoster would otherwise show them as a nameless "Someone").
+      if (!cancelled) setMembers(list.filter((m) => !blockedIds.includes(m.userId)));
     });
     return () => {
       cancelled = true;
     };
-  }, [circle.id, isRealCircle, fetchRoster]);
+  }, [circle.id, isRealCircle, fetchRoster, blockedIds]);
 
   if (!isRealCircle(circle.id)) {
     return (

@@ -1,9 +1,61 @@
+import { useState } from "react";
 import { useSettings, type DefaultVisibility } from "../../context/SettingsContext";
+import { useSocial } from "../../context/SocialContext";
 import { SectionHeader } from "../ui/section-header";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { SettingsPanel, SettingsRow, SavedFlash, useSavedFlash } from "./SettingsRow";
+
+function initials(name: string) {
+  return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+}
+
+/** Who you've blocked, with Unblock. Follows (in either direction) are not
+ * restored on unblock, per docs/communication-strategy.md's Phase 1
+ * decisions. */
+function BlockedPeopleSection() {
+  const social = useSocial();
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  if (social.blockedPeople.length === 0) {
+    return (
+      <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground sm:px-5">
+        You haven't blocked anyone.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="divide-y divide-[var(--hairline)]">
+      {social.blockedPeople.map((p) => (
+        <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <Avatar className="size-8 shrink-0">
+              {p.avatarUrl && <AvatarImage src={p.avatarUrl} alt="" />}
+              <AvatarFallback className="text-[10px]">{initials(p.displayName)}</AvatarFallback>
+            </Avatar>
+            <span className="truncate text-sm">{p.displayName}</span>
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={busyId === p.id}
+            onClick={async () => {
+              setBusyId(p.id);
+              await social.unblock(p.id);
+              setBusyId(null);
+            }}
+          >
+            Unblock
+          </Button>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 function DefaultVisibilityRow() {
   const { defaultVisibility, setDefaultVisibility, defaultVisibilityLoaded } = useSettings();
@@ -78,6 +130,17 @@ export function PrivacySection() {
           />
         </SettingsRow>
         <DefaultVisibilityRow />
+      </SettingsPanel>
+
+      <h2 className="mb-1 mt-8 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+        Blocked people
+      </h2>
+      <p className="mb-4 text-xs text-muted-foreground">
+        They can't message you, follow you, react, or comment on your Moments, and don't see your
+        profile. Unblocking doesn't restore a follow.
+      </p>
+      <SettingsPanel>
+        <BlockedPeopleSection />
       </SettingsPanel>
     </section>
   );

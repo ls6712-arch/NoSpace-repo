@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import { ParticipationKind } from "../data/participation";
+import { messageTabFor } from "../lib/messageTabs";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -52,6 +53,12 @@ export interface Notification {
   body: string;
   href?: string;
   actorName?: string;
+  /** Who actually triggered it (server-set — see the notifications
+   * hardening in supabase/migrations/20260925020000_communication_phase1_
+   * safety.sql). Used only to filter out a blocked person's older
+   * notifications client-side; new ones from them are already refused at
+   * insert time. */
+  actorId?: string;
   read: boolean;
   createdAt: number;
 }
@@ -63,6 +70,15 @@ export interface Message {
   body: string;
   createdAt: number;
 }
+
+export interface BlockedPerson {
+  id: string;
+  displayName: string;
+  avatarUrl?: string;
+}
+
+export type ReportTargetKind = "profile" | "message" | "moment" | "thought";
+export type ReportReason = "spam" | "harassment" | "inappropriate" | "other";
 
 interface SocialContextType {
   /** True when this is really shared with other people rather than local-only. */
@@ -108,14 +124,42 @@ interface SocialContextType {
   /**
    * Opens (or reuses) a direct-message thread with someone, no request or
    * acceptance needed — the "Message" button on a profile. Reuses whatever
-   * accepted thread already exists with this person, of any kind, rather
-   * than forking a second parallel one if a make/explore-together match
-   * already unlocked messaging.
+   * thread already exists with this person, of any kind and any status
+   * (accepted, pending, or declined), rather than forking a second parallel
+   * one — the database itself only allows one direct_message row per pair,
+   * regardless of status, and decides the new row's status server-side
+   * (accepted immediately if the recipient already follows the sender,
+   * pending otherwise; rejected, with the same "failed" wording as any
+   * other error, if the two are blocked-between).
    */
   startDirectMessage: (
     personId: string,
     personName: string,
   ) => Promise<{ id: number | string | null; error: "self" | "failed" | null }>;
+
+  /** Pending direct_message requests waiting on you to accept or ignore. */
+  messageRequests: Participation[];
+  /** Your own outgoing direct_message requests still waiting on the other
+   * person — pending, or declined (a decline doesn't free you to open a
+   * second thread; this is the same one, still waiting). */
+  myPendingRequests: Participation[];
+  acceptRequest: (id: number | string) => Promise<void>;
+  ignoreRequest: (id: number | string) => Promise<void>;
+
+  /** Full block: enforced by the database (see supabase/migrations/
+   * 20260925020000_communication_phase1_safety.sql); this list is only
+   * for showing/filtering blocked people in the UI. */
+  blockedIds: string[];
+  blockedPeople: BlockedPerson[];
+  block: (personId: string) => Promise<{ error: string | null }>;
+  unblock: (personId: string) => Promise<{ error: string | null }>;
+  report: (input: {
+    targetUserId: string;
+    targetKind: ReportTargetKind;
+    targetId?: number | string;
+    reason: ReportReason;
+    note?: string;
+  }) => Promise<{ error: string | null }>;
 
   thoughtsFor: (postId: number) => Thought[];
   addThought: (
@@ -133,7 +177,10 @@ interface SocialContextType {
   markAllRead: () => Promise<void>;
 
   messagesFor: (participationId: number | string) => Message[];
-  sendMessage: (participationId: number | string, body: string) => Promise<void>;
+  /** Returns "failed" for any rejection — a block, a duplicate, a rate
+   * limit — so the UI can show one neutral line and never the database's
+   * own message (which could otherwise reveal a block exists). */
+  sendMessage: (participationId: number | string, body: string) => Promise<{ error: "failed" | null }>;
 
   refresh: () => Promise<void>;
 }
@@ -211,6 +258,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const [remote, setRemote] = useState<LocalState>(EMPTY);
   const state = shared ? remote : local;
 
+  // Blocking has no meaning in local (signed-out, no Supabase) mode — one
+  // person, one browser, nobody else to block. Kept outside `state`/
+  // `LocalState` since it never has a local-fallback shape to fall back to.
+  const [blockedPeople, setBlockedPeople] = useState<BlockedPerson[]>([]);
+
   const myName = profile?.display_name || "You";
   const myId = user?.id ?? "local-user";
 
@@ -227,7 +279,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (!supabase || !user) return;
 
-    const [follows, parts, thoughts, notes] = await Promise.all([
+    const [follows, parts, thoughts, notes, blocks] = await Promise.all([
       supabase.from("hobby_follows").select("hobby_key").eq("user_id", user.id),
       supabase
         .from("participations")
@@ -241,6 +293,10 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(60),
+      // Degrades to "no one blocked" if the table isn't there yet — the
+      // Phase 1 migration may not be applied in every environment this
+      // runs in.
+      supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id),
     ]);
 
     // Names for everyone involved, in one go.
@@ -250,11 +306,20 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       if (p.to_user) ids.add(p.to_user);
     }
     for (const t of thoughts.data ?? []) ids.add(t.user_id);
+    for (const b of blocks.data ?? []) ids.add(b.blocked_id);
     const { data: people } = ids.size
       ? await supabase.from("profiles").select("id, display_name, avatar_url").in("id", [...ids])
       : { data: [] as any[] };
     const byId = new Map((people ?? []).map((p: any) => [p.id, p]));
     const nameOf = (id?: string) => (id ? byId.get(id)?.display_name ?? "Someone" : undefined);
+
+    setBlockedPeople(
+      (blocks.data ?? []).map((b: any) => ({
+        id: b.blocked_id,
+        displayName: byId.get(b.blocked_id)?.display_name?.trim() || "Someone",
+        avatarUrl: byId.get(b.blocked_id)?.avatar_url ?? undefined,
+      })),
+    );
 
     const participations: Participation[] = (parts.data ?? []).map((p: any) => ({
       id: p.id,
@@ -271,15 +336,24 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       createdAt: new Date(p.created_at).getTime(),
     }));
 
-    // Messages for the threads that are actually open.
-    const acceptedIds = participations
-      .filter((p) => p.status === "accepted" && p.kind !== "join_in")
+    // Messages for the threads that are actually open, plus any pending or
+    // declined direct_message thread I'm party to — the recipient needs to
+    // preview a pending request, and the sender still sees their own
+    // message in one that got declined. (The database's own SELECT policy
+    // enforces exactly who sees what here; this just widens which
+    // participations are worth asking about at all.)
+    const messageableIds = participations
+      .filter(
+        (p) =>
+          (p.status === "accepted" && p.kind !== "join_in") ||
+          (p.kind === "direct_message" && (p.status === "pending" || p.status === "declined")),
+      )
       .map((p) => p.id);
-    const { data: msgs } = acceptedIds.length
+    const { data: msgs } = messageableIds.length
       ? await supabase
           .from("messages")
           .select("*")
-          .in("participation_id", acceptedIds as number[])
+          .in("participation_id", messageableIds as number[])
           .order("created_at", { ascending: true })
       : { data: [] as any[] };
 
@@ -303,6 +377,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         body: n.body,
         href: n.href ?? undefined,
         actorName: n.actor_name ?? undefined,
+        actorId: n.actor_id ?? undefined,
         read: n.read,
         createdAt: new Date(n.created_at).getTime(),
       })),
@@ -494,14 +569,18 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     // Only the person who was asked gets to answer. The sender withdrawing is
     // a different action (leaveActivity / delete), not an accept.
     if (user && target.toUser && target.toUser !== user.id) return;
-    const label = target.kind === "make_together" ? "Make together" : "Explore together";
 
     if (supabase && user) {
       await supabase
         .from("participations")
         .update({ status: accept ? "accepted" : "declined", responded_at: new Date().toISOString() })
         .eq("id", id);
-      if (accept) {
+      // A message request accepted/ignored gets no "accepted" notification
+      // of its own — the sender simply finds the conversation open (or
+      // doesn't) next time they check Messages. That notification is for
+      // Make together / Explore together, where accepting is the news.
+      if (accept && target.kind !== "direct_message") {
+        const label = target.kind === "make_together" ? "Make together" : "Explore together";
         await notify(
           target.fromUser,
           "accepted",
@@ -520,6 +599,28 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  // A blocked person's older participations/notifications can still be
+  // sitting in already-fetched state (blocking doesn't retroactively wipe
+  // them) — filtered out here rather than trusting every call site to
+  // remember to check blockedIds itself.
+  const isBlocked = (id?: string) => !!id && blockedPeople.some((b) => b.id === id);
+
+  /** Message requests waiting on me to accept or ignore. */
+  const messageRequests = state.participations.filter(
+    (p) => messageTabFor(p, myId) === "requests" && !isBlocked(p.fromUser),
+  );
+  /** My own outgoing requests still waiting — pending, or declined (which
+   * doesn't free me to open a second thread; see startDirectMessage). */
+  const myPendingRequests = state.participations.filter(
+    (p) =>
+      p.kind === "direct_message" &&
+      p.status !== "accepted" &&
+      messageTabFor(p, myId) === "chats" &&
+      !isBlocked(p.toUser),
+  );
+  const acceptRequest = (id: number | string) => respond(id, true);
+  const ignoreRequest = (id: number | string) => respond(id, false);
+
   // Matched by user id: two people can share a display name, and picking the
   // wrong thread would show one person's messages under another's name.
   const threadWith = (personId: string) =>
@@ -535,22 +636,31 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const startDirectMessage: SocialContextType["startDirectMessage"] = async (personId, personName) => {
     if (user && personId === user.id) return { id: null, error: "self" as const };
 
-    // Already have an open thread with this person — of any kind, not just
-    // a prior direct message — so this never forks a second, parallel one.
-    const existing = threadWith(personId);
-    if (existing) return { id: existing.id, error: null };
+    // Already have an accepted thread with this person — of any kind, not
+    // just a prior direct message — so this never forks a second, parallel
+    // one alongside a Make/Explore together match that already unlocked
+    // messaging.
+    const accepted = threadWith(personId);
+    if (accepted) return { id: accepted.id, error: null };
+
+    // Or an existing direct_message specifically, of ANY status — the
+    // database allows only one per pair, ever, regardless of status, so a
+    // pending or declined one must be reused rather than re-inserted (which
+    // the database would reject anyway, but not with a message fit to show
+    // anyone).
+    const existingDm = state.participations.find(
+      (p) => p.kind === "direct_message" && (p.toUser === personId || p.fromUser === personId),
+    );
+    if (existingDm) return { id: existingDm.id, error: null };
 
     if (supabase && user) {
+      // No status sent — the database decides: accepted immediately if
+      // personId already follows me back, pending otherwise, or rejected
+      // (same "failed" as any other error, never revealing a block) if
+      // we're blocked-between.
       const { data, error } = await supabase
         .from("participations")
-        .insert({
-          kind: "direct_message",
-          from_user: user.id,
-          to_user: personId,
-          // Pre-accepted: nobody has to agree to anything for a direct
-          // message to open, unlike make_together/explore_together.
-          status: "accepted",
-        })
+        .insert({ kind: "direct_message", from_user: user.id, to_user: personId })
         .select()
         .single();
       if (error || !data) return { id: null, error: "failed" as const };
@@ -562,6 +672,8 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       return { id: data.id, error: null };
     }
 
+    // Local (signed-out) mode: no server to decide a status, and no one
+    // else in this browser to ask — same as before, pre-accepted.
     const entry: Participation = {
       id: localId(),
       kind: "direct_message",
@@ -574,6 +686,47 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     };
     setState({ ...state, participations: [entry, ...state.participations] });
     return { id: entry.id, error: null };
+  };
+
+  /* ── Blocking and reporting ────────────────────────────────────────────
+   * No local-mode fallback: blocking and reporting only mean something
+   * once there's a real account and a real other person on the other end.
+   */
+
+  const blockedIds = blockedPeople.map((p) => p.id);
+
+  const block = async (personId: string): Promise<{ error: string | null }> => {
+    if (!supabase || !user) return { error: "failed" };
+    const { error } = await supabase.from("blocks").insert({ blocker_id: user.id, blocked_id: personId });
+    if (error) return { error: "failed" };
+    await refresh();
+    return { error: null };
+  };
+
+  const unblock = async (personId: string): Promise<{ error: string | null }> => {
+    if (!supabase || !user) return { error: "failed" };
+    const { error } = await supabase
+      .from("blocks")
+      .delete()
+      .eq("blocker_id", user.id)
+      .eq("blocked_id", personId);
+    if (error) return { error: "failed" };
+    await refresh();
+    return { error: null };
+  };
+
+  const report: SocialContextType["report"] = async (input) => {
+    if (!supabase || !user) return { error: "failed" };
+    const { error } = await supabase.from("reports").insert({
+      reporter_id: user.id,
+      target_user_id: input.targetUserId,
+      target_kind: input.targetKind,
+      target_id: input.targetKind === "profile" ? null : (input.targetId ?? null),
+      reason: input.reason,
+      note: input.note?.trim() || null,
+    });
+    if (error) return { error: "failed" };
+    return { error: null };
   };
 
   /* ── Thoughts ───────────────────────────────────────────────────────── */
@@ -657,7 +810,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
   /* ── Notifications ──────────────────────────────────────────────────── */
 
-  const unreadCount = state.notifications.filter((n) => !n.read).length;
+  // A blocked person's older notifications stay out of both the count and
+  // the list below — new ones from them are already refused at insert
+  // time, but blocking doesn't retroactively erase what's already here.
+  const visibleNotifications = state.notifications.filter((n) => !isBlocked(n.actorId));
+  const unreadCount = visibleNotifications.filter((n) => !n.read).length;
 
   const markAllRead = async () => {
     if (supabase && user) {
@@ -678,21 +835,42 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       .filter((m) => String(m.participationId) === String(participationId))
       .sort((a, b) => a.createdAt - b.createdAt);
 
-  const sendMessage = async (participationId: number | string, body: string) => {
-    if (!body.trim()) return;
+  const sendMessage: SocialContextType["sendMessage"] = async (participationId, body) => {
+    if (!body.trim()) return { error: null };
     const thread = state.participations.find((p) => String(p.id) === String(participationId));
-    // Belt and braces: the database enforces this too, but the UI should never
-    // be the thing that tries.
-    if (!thread || thread.status !== "accepted" || thread.kind === "join_in") return;
+    if (!thread || thread.kind === "join_in") return { error: "failed" as const };
+
+    const isAccepted = thread.status === "accepted";
+    // The one message a pending direct_message allows, from its sender —
+    // checked before inserting, since messagesFor() would otherwise already
+    // include the message this same call is about to send.
+    const isFirstPendingDm =
+      thread.kind === "direct_message" &&
+      thread.status === "pending" &&
+      thread.fromUser === myId &&
+      messagesFor(participationId).length === 0;
+
+    // Belt and braces: the database enforces the exact rule (including the
+    // one-message limit and exactly who may send into what), but the UI
+    // should never be the thing that tries something already known to fail.
+    if (!isAccepted && !isFirstPendingDm) return { error: "failed" as const };
 
     if (supabase && user) {
-      await supabase
+      const { error } = await supabase
         .from("messages")
         .insert({ participation_id: participationId, from_user: user.id, body: body.trim() });
+      // A block, a duplicate, a rate limit — whatever the database's own
+      // reason, the caller gets the same "failed" back either way. See
+      // SocialContextType.sendMessage's own comment for why.
+      if (error) return { error: "failed" as const };
       const other = thread.fromUser === user.id ? thread.toUser : thread.fromUser;
-      await notify(other, "message", `${myName} sent you a message.`, "/messages");
+      if (isFirstPendingDm) {
+        await notify(other, "message_request", `${myName} wants to message you.`, "/messages?tab=requests");
+      } else {
+        await notify(other, "message", `${myName} sent you a message.`, "/messages");
+      }
       refresh();
-      return;
+      return { error: null };
     }
     setState({
       ...state,
@@ -701,6 +879,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         { id: localId(), participationId, fromUser: myId, body: body.trim(), createdAt: Date.now() },
       ],
     });
+    return { error: null };
   };
 
   return (
@@ -720,10 +899,19 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         threadWith,
         canMessage,
         startDirectMessage,
+        messageRequests,
+        myPendingRequests,
+        acceptRequest,
+        ignoreRequest,
+        blockedIds,
+        blockedPeople,
+        block,
+        unblock,
+        report,
         thoughtsFor,
         addThought,
         removeThought,
-        notifications: state.notifications,
+        notifications: visibleNotifications,
         unreadCount,
         markAllRead,
         messagesFor,
