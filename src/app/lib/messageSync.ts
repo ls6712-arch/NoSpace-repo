@@ -1,5 +1,10 @@
 import { Message } from "../context/SocialContext";
 
+/** The four shapes a message row can take (Phase 4). Every existing row is
+ * 'text'; the database's own messages_kind_shape constraint is the real
+ * enforcement — these are just the values the app ever sends or renders. */
+export type MessageKind = "text" | "photo" | "moment" | "pursuit";
+
 /**
  * Pure merge/paging/retry logic for Phase 2's live Messages page — kept
  * framework- and Supabase-free so it's directly testable (see
@@ -15,6 +20,14 @@ import { Message } from "../context/SocialContext";
 export interface PendingMessage extends Message {
   clientId: string;
   status: "sending" | "failed";
+  /** Phase 4, photo sends only: the local (already HEIC-converted) file to
+   * upload, and — once that half succeeds — the path it landed at, so a
+   * retry after the INSERT itself fails reuses the upload instead of
+   * sending the same photo to storage twice. A blob URL for the bubble to
+   * render immediately, revoked once the pending entry is removed. */
+  file?: File;
+  uploadedPath?: string;
+  localPreviewUrl?: string;
 }
 
 /** One row per thread from participation_message_summaries() — feeds the
@@ -116,9 +129,58 @@ export function patchSummaryWithNewMessage(summaries: ThreadSummary[], incoming:
     unreadCount: incoming.fromUser === myId ? existing.unreadCount : existing.unreadCount + 1,
     lastMessageId: incoming.id,
     lastMessageFromUser: incoming.fromUser,
-    lastMessageBody: incoming.body,
+    lastMessageBody: messagePreviewText(incoming),
     lastMessageCreatedAt: incoming.createdAt,
   };
+  return [...summaries.slice(0, idx), patched, ...summaries.slice(idx + 1)];
+}
+
+/** Phase 4: the same kind-aware preview text participation_message_summaries()
+ * computes server-side ("Message deleted" / "Photo" / "Shared a Moment" /
+ * "Shared a Pursuit" / the plain body) — needed client-side too, for a
+ * message just sent/received over Realtime (patchSummaryWithNewMessage,
+ * before the next summaries refetch) and for the Phase 1/2 full-history
+ * fallback path, which never had a server-computed preview to begin with. */
+export function messagePreviewText(m: { kind: MessageKind; deletedAt?: number | null; body: string }): string {
+  if (m.deletedAt != null) return "Message deleted";
+  if (m.kind === "photo") return "Photo";
+  if (m.kind === "moment") return "Shared a Moment";
+  if (m.kind === "pursuit") return "Shared a Pursuit";
+  return m.body;
+}
+
+/** Which of the app's four message kinds a bubble should actually render as
+ * — "deleted" once unsent, regardless of what `kind` still says underneath
+ * (unsend never changes `kind` itself, only clears content — see the
+ * database's own unsend_message()). */
+export type RenderableMessageKind = "deleted" | MessageKind;
+export function renderableMessageKind(m: { kind: MessageKind; deletedAt?: number | null }): RenderableMessageKind {
+  return m.deletedAt != null ? "deleted" : m.kind;
+}
+
+/** Replace one message by id in a loaded history — used when a live
+ * "messages" UPDATE arrives (currently only ever an unsend), on both the
+ * unsender's own screen and the other party's. A row that isn't loaded
+ * (e.g. an older page never fetched) is a no-op, not an error — nothing to
+ * patch in that case. */
+export function applyMessageUpdate(list: Message[], updated: Message): Message[] {
+  const idx = list.findIndex((m) => String(m.id) === String(updated.id));
+  if (idx === -1) return list;
+  return [...list.slice(0, idx), { ...list[idx], ...updated }, ...list.slice(idx + 1)];
+}
+
+/** Mirrors a live "messages" UPDATE into a thread's summary — but only when
+ * the updated row IS that thread's current last message (an unsend of an
+ * older message doesn't change what the list preview shows). */
+export function patchSummaryOnMessageUpdate(
+  summaries: ThreadSummary[],
+  updated: { id: number | string; participationId: number | string; kind: MessageKind; deletedAt?: number | null; body: string },
+): ThreadSummary[] {
+  const idx = summaries.findIndex((s) => String(s.participationId) === String(updated.participationId));
+  if (idx === -1) return summaries;
+  const existing = summaries[idx];
+  if (existing.lastMessageId == null || String(existing.lastMessageId) !== String(updated.id)) return summaries;
+  const patched: ThreadSummary = { ...existing, lastMessageBody: messagePreviewText(updated) };
   return [...summaries.slice(0, idx), patched, ...summaries.slice(idx + 1)];
 }
 

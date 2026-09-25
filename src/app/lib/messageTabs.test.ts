@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyParticipationDelete,
+  canAttachInto,
   canSendInto,
   hasVisibleOtherParty,
   isRelevantParticipationEvent,
@@ -131,6 +132,26 @@ describe("canSendInto", () => {
     expect(
       canSendInto({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME, true),
     ).toBe(true);
+  });
+});
+
+describe("canAttachInto", () => {
+  it("is open for an accepted Make/Explore together or direct_message thread, from either side", () => {
+    for (const kind of ["make_together", "explore_together", "direct_message"]) {
+      expect(canAttachInto({ kind, status: "accepted", fromUser: ME, toUser: THEM })).toBe(true);
+      expect(canAttachInto({ kind, status: "accepted", fromUser: THEM, toUser: ME })).toBe(true);
+    }
+  });
+
+  it("is never open for join_in, whatever its status", () => {
+    expect(canAttachInto({ kind: "join_in", status: "accepted", fromUser: ME })).toBe(false);
+  });
+
+  it("is closed for a pending or declined thread, even the one case canSendInto allows (sender of a pending/declined direct_message)", () => {
+    for (const status of ["pending", "declined"] as const) {
+      expect(canAttachInto({ kind: "direct_message", status, fromUser: ME, toUser: THEM })).toBe(false);
+      expect(canAttachInto({ kind: "direct_message", status, fromUser: THEM, toUser: ME })).toBe(false);
+    }
   });
 });
 

@@ -1,11 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Handshake, MessageCircle, MessagesSquare, Send } from "lucide-react";
+import { Handshake, ImageOff, ImagePlus, MessageCircle, MessagesSquare, Send, Trash2 } from "lucide-react";
 import { useSocial, Participation, Message } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { usePeopleSearch, profilePath } from "../lib/people";
-import { canSendInto, messageTabFor } from "../lib/messageTabs";
-import { formatBadgeCount, isSeenByOther, shouldMarkThreadRead } from "../lib/messageSync";
+import { canAttachInto, canSendInto, messageTabFor } from "../lib/messageTabs";
+import { formatBadgeCount, isSeenByOther, renderableMessageKind, shouldMarkThreadRead } from "../lib/messageSync";
+import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
+import { getMessagePhotoUrl, MESSAGE_MEDIA_URL_TTL_SECONDS } from "../lib/messageMedia";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -14,6 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
 import { BlockConfirmDialog } from "../components/BlockConfirmDialog";
 import { ReportDialog } from "../components/ReportDialog";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { SharedContentCard } from "../components/SharedContentCard";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -63,6 +67,80 @@ function subtitleFor(active: Participation): string {
   return "Direct message";
 }
 
+/**
+ * A chat photo bubble — signed URL only, never a public URL (this bucket
+ * has none). Refreshes itself a little before its signed URL expires, so a
+ * long-open conversation never shows a broken image once one lapses. While
+ * still uploading (sendPhotoMessage's own pending entry), shows the picked
+ * file's local blob preview instead — there's nothing uploaded yet for a
+ * signed URL to point at.
+ */
+function PhotoBubble({
+  mediaPath,
+  localPreviewUrl,
+  uploading,
+}: {
+  mediaPath?: string | null;
+  localPreviewUrl?: string;
+  uploading?: boolean;
+}) {
+  const [url, setUrl] = useState<string | null>(localPreviewUrl ?? null);
+  const [failed, setFailed] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (localPreviewUrl) {
+      setUrl(localPreviewUrl);
+      return;
+    }
+    if (!mediaPath) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const load = async () => {
+      const signed = await getMessagePhotoUrl(mediaPath);
+      if (cancelled) return;
+      if (!signed) {
+        setFailed(true);
+        return;
+      }
+      setUrl(signed);
+      setFailed(false);
+      timer = setTimeout(load, Math.max(30, MESSAGE_MEDIA_URL_TTL_SECONDS - 120) * 1000);
+    };
+    load();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [mediaPath, localPreviewUrl]);
+
+  if (failed) {
+    return (
+      <div className="flex h-32 w-52 items-center justify-center gap-2 rounded-xl bg-surface-muted text-xs text-muted-foreground">
+        <ImageOff className="size-4" /> Photo unavailable
+      </div>
+    );
+  }
+
+  if (!url) {
+    return <div className="h-32 w-52 animate-pulse rounded-xl bg-surface-muted" />;
+  }
+
+  return (
+    <>
+      <button type="button" onClick={() => setLightboxOpen(true)} className="block overflow-hidden rounded-xl">
+        <img src={url} alt="" className={`max-h-64 w-52 object-cover ${uploading ? "opacity-70" : ""}`} />
+      </button>
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-2xl border-none bg-transparent p-0 shadow-none">
+          <DialogTitle className="sr-only">Photo</DialogTitle>
+          <img src={url} alt="" className="max-h-[85vh] w-full rounded-xl object-contain" />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function ConversationPanel({
   person,
   subtitle,
@@ -82,6 +160,9 @@ function ConversationPanel({
   onRetry,
   seenAt,
   onAtBottomChange,
+  onAttachPhoto,
+  attachDisabled,
+  onUnsend,
 }: {
   person: { id: string; name: string };
   subtitle: string;
@@ -106,7 +187,18 @@ function ConversationPanel({
   /** Fires whenever "at the bottom" changes, so the parent can decide when
    * to mark the thread read (Phase 3) without duplicating scroll logic. */
   onAtBottomChange?: (atBottom: boolean) => void;
+  /** Phase 4: sends a picked (already HEIC-converted upstream) photo.
+   * Omitted entirely (no attach button rendered) for a draft thread, which
+   * has no participation row yet to attach anything to. */
+  onAttachPhoto?: (file: File) => void;
+  /** Accepted threads only — a pending request can't carry a photo. */
+  attachDisabled?: boolean;
+  /** Phase 4 unsend — offered only on your own, not-yet-deleted messages. */
+  onUnsend?: (messageId: number | string) => void;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [heicWarning, setHeicWarning] = useState<string | null>(null);
+  const [unsendTargetId, setUnsendTargetId] = useState<number | string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const [atBottom, setAtBottomState] = useState(true);
@@ -204,25 +296,68 @@ function ConversationPanel({
           ) : (
             messages.map((m, i) => {
               const mine = m.fromUser === (myId ?? "local-user");
+              const renderKind = renderableMessageKind(m);
               // "Seen" only ever sits under your own latest message, and
               // only while it's genuinely the last one in the thread — once
-              // they reply, that reply itself is proof enough.
+              // they reply, that reply itself is proof enough. Never for an
+              // unsent message — there's nothing left to have been "seen".
               const isLastMessage = i === messages.length - 1;
               const showSeen =
-                mine && isLastMessage && !m.status && isSeenByOther(m.createdAt, seenAt);
+                mine && isLastMessage && !m.status && renderKind !== "deleted" && isSeenByOther(m.createdAt, seenAt);
+              // Long-press (mobile) has no clean equivalent in a plain
+              // button; a small always-present control that only really
+              // announces itself on hover (desktop) or a tap (mobile, where
+              // :hover doesn't apply) covers both without a gesture library.
+              const canUnsend = mine && renderKind !== "deleted" && !m.status && onUnsend && typeof m.id !== "string";
               return (
-                <div key={m.id} className={mine ? "ml-auto max-w-[80%]" : "max-w-[80%]"}>
-                  <div
-                    className={`rounded-2xl px-3.5 py-2 text-sm ${
-                      m.status === "failed"
-                        ? "border border-dashed border-[var(--coral-text)] bg-surface-muted text-foreground"
-                        : mine
-                          ? `text-white [background-color:var(--coral-deep)] ${m.status === "sending" ? "opacity-60" : ""}`
-                          : "bg-surface-muted"
-                    }`}
-                  >
-                    {m.body}
-                  </div>
+                <div key={m.id} className={`group ${mine ? "ml-auto max-w-[80%]" : "max-w-[80%]"}`}>
+                  {renderKind === "deleted" ? (
+                    <p className="rounded-2xl border border-dashed border-[var(--hairline)] px-3.5 py-2 text-sm italic text-muted-foreground">
+                      Message deleted
+                    </p>
+                  ) : renderKind === "photo" ? (
+                    <div className="relative inline-block">
+                      <PhotoBubble mediaPath={m.mediaPath} localPreviewUrl={m.localPreviewUrl} uploading={m.status === "sending"} />
+                      {canUnsend && (
+                        <button
+                          type="button"
+                          onClick={() => setUnsendTargetId(m.id)}
+                          aria-label="Unsend"
+                          className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                        >
+                          <Trash2 className="size-3" />
+                        </button>
+                      )}
+                    </div>
+                  ) : renderKind === "moment" ? (
+                    <SharedContentCard kind="moment" postId={m.sharedPostId} />
+                  ) : renderKind === "pursuit" ? (
+                    <SharedContentCard kind="pursuit" pursuitId={m.sharedPursuitId} />
+                  ) : (
+                    <div className="relative">
+                      <div
+                        className={`rounded-2xl px-3.5 py-2 text-sm ${
+                          m.status === "failed"
+                            ? "border border-dashed border-[var(--coral-text)] bg-surface-muted text-foreground"
+                            : mine
+                              ? `text-white [background-color:var(--coral-deep)] ${m.status === "sending" ? "opacity-60" : ""}`
+                              : "bg-surface-muted"
+                        }`}
+                      >
+                        {m.body}
+                      </div>
+                      {canUnsend && (
+                        <button
+                          type="button"
+                          onClick={() => setUnsendTargetId(m.id)}
+                          aria-label="Unsend"
+                          className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                        >
+                          <Trash2 className="size-3" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                   {m.status === "failed" && m.clientId && (
                     <button
                       type="button"
@@ -251,6 +386,38 @@ function ConversationPanel({
       </div>
 
       <div className="flex gap-2 border-t border-[var(--hairline)] p-3">
+        {onAttachPhoto && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const picked = e.target.files?.[0] ?? null;
+                e.target.value = "";
+                if (!picked) return;
+                setHeicWarning(null);
+                const converted = await convertHeicIfNeeded(picked);
+                if (isHeicFile(converted)) {
+                  setHeicWarning("That photo couldn't be processed — try a different one.");
+                  return;
+                }
+                onAttachPhoto(converted);
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Attach a photo"
+              disabled={attachDisabled}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <ImagePlus className="size-4" />
+            </Button>
+          </>
+        )}
         <Input
           value={draft}
           onChange={(e) => onDraftChange(e.target.value)}
@@ -268,11 +435,25 @@ function ConversationPanel({
           <Send className="size-4" />
         </Button>
       </div>
+      {heicWarning && (
+        <p className="border-t border-[var(--hairline)] px-4 py-2 text-xs text-[var(--coral-text)]">{heicWarning}</p>
+      )}
       {sendError && (
         <p className="border-t border-[var(--hairline)] px-4 py-2 text-xs text-[var(--coral-text)]">
           {sendError}
         </p>
       )}
+      <ConfirmDialog
+        open={unsendTargetId != null}
+        onOpenChange={(open) => !open && setUnsendTargetId(null)}
+        title="Unsend this message?"
+        description="Both of you will see “Message deleted” in its place. This can't be undone."
+        confirmLabel="Unsend"
+        onConfirm={() => {
+          if (unsendTargetId != null) onUnsend?.(unsendTargetId);
+          setUnsendTargetId(null);
+        }}
+      />
     </div>
   );
 }
@@ -280,7 +461,7 @@ function ConversationPanel({
 export function Messages() {
   const social = useSocial();
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<string>(() => (searchParams.get("tab") === "requests" ? "requests" : "chats"));
   // Set once, from whatever ?thread= arrived with (a "Message" tap on a
   // profile navigates here with an existing thread's id already known) —
@@ -297,6 +478,16 @@ export function Messages() {
     const name = searchParams.get("draftName");
     return id && name ? { id, name } : null;
   });
+  // "Message about this" from a Moment, into a brand-new draft — just
+  // copy, per Phase 1's message-request rule (see the banner below); never
+  // auto-shares once accepted.
+  const aboutMomentId = searchParams.get("aboutMomentId");
+  // "Send to…" via "Message about this" straight into an existing,
+  // reachable chat — shared once the thread is actually open and accepted
+  // (see the effect below), then stripped from the URL so it can't re-fire
+  // on a refresh or a re-render.
+  const shareMomentIdParam = searchParams.get("shareMoment");
+  const sharedMomentRef = useRef<string | null>(null);
   const [draft, setDraft] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -363,6 +554,21 @@ export function Messages() {
     social.openConversation(active.id);
   }, [active?.id]);
   useEffect(() => () => social.closeConversation(), []);
+
+  // "Message about this" landed on an already-reachable chat (?shareMoment=
+  // on an existing thread, rather than a fresh draft) — share it once the
+  // thread is actually open and accepted, then drop the param so it can't
+  // re-fire (a refresh, or picking a different thread and back).
+  useEffect(() => {
+    if (!shareMomentIdParam || !active || active.status !== "accepted") return;
+    if (sharedMomentRef.current === shareMomentIdParam) return;
+    sharedMomentRef.current = shareMomentIdParam;
+    void social.shareMoment(active.id, shareMomentIdParam);
+    const next = new URLSearchParams(searchParams);
+    next.delete("shareMoment");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shareMomentIdParam, active?.id, active?.status]);
 
   const messages = active ? social.messagesFor(active.id) : [];
   const hasMessages = messages.length > 0;
@@ -651,7 +857,16 @@ export function Messages() {
                     messages={[]}
                     myId={user?.id}
                     emptyText={emptyStateFor(null, draftThread.name)}
-                    bannerText={null}
+                    // "Message about this" into a brand-new thread: there's
+                    // no accepted participation yet to attach the Moment
+                    // to, so only the text goes now — this just says so,
+                    // per Phase 1's message-request rule (one plain-text
+                    // message while pending).
+                    bannerText={
+                      aboutMomentId
+                        ? `You can share this Moment with ${draftThread.name} once they accept your message.`
+                        : null
+                    }
                     composerDisabled={false}
                     composerPlaceholder={`Message ${draftThread.name}`}
                     draft={draft}
@@ -685,6 +900,16 @@ export function Messages() {
                       onRetry={handleRetry}
                       seenAt={active.status === "accepted" ? social.seenAt : null}
                       onAtBottomChange={setAtBottom}
+                      onAttachPhoto={
+                        canAttachInto(active)
+                          ? (file) => {
+                              void social.sendPhotoMessage(active.id, file);
+                            }
+                          : undefined
+                      }
+                      onUnsend={(messageId) => {
+                        void social.unsendMessage(active.id, messageId);
+                      }}
                     />
                   )
                 )}

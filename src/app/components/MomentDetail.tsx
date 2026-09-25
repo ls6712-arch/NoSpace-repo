@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   Check,
   Copy,
@@ -7,7 +7,9 @@ import {
   FolderPlus,
   Globe2,
   Lock,
+  MessageCircle,
   Pencil,
+  Send,
   Trash2,
   Users,
   UserRound,
@@ -18,8 +20,11 @@ import { getCircle } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useAuth } from "../context/AuthContext";
+import { useSocial } from "../context/SocialContext";
+import { messageTabFor } from "../lib/messageTabs";
 import { supabase } from "../../lib/supabase";
 import { useReactionState } from "../lib/reactionState";
+import { SendToChatDialog } from "./SendToChatDialog";
 import {
   BookmarkOverlay,
   CARD_CAPTION,
@@ -86,9 +91,12 @@ export function MomentDetail({
   const { updatePost, deletePost } = useContent();
   const { update: updatePrivateLogEntry, remove: removePrivateLogEntry } = usePrivateLogs();
   const { user } = useAuth();
+  const social = useSocial();
+  const navigate = useNavigate();
   const journal = useJournal();
   const { mine: myReactions } = useReactionState(post?.id ?? 0);
 
+  const [sendToOpen, setSendToOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState("");
   const [reflection, setReflection] = useState("");
@@ -307,6 +315,46 @@ export function MomentDetail({
               </button>
             )}
 
+            {/* Send to… — available whether or not you own it (sharing your
+                own Moment into a chat is just as ordinary as sharing
+                someone else's). The card that shows up on the other end
+                reloads it under THEIR permissions, not this viewer's — see
+                docs/communication-strategy.md's Phase 4 "Not available"
+                requirement and SharedContentCard.tsx. */}
+            <button
+              type="button"
+              onClick={() => setSendToOpen(true)}
+              className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+            >
+              <Send className="size-3" />
+              Send to…
+            </button>
+
+            {/* "Message about this" — opens the chat with an attached
+                Moment card if one's already reachable; otherwise (a fresh
+                message request) sends the text alone and says so, since a
+                pending request can't carry an attachment at all (Phase 4's
+                own INSERT rule). */}
+            {!owned && post.userId && (
+              <button
+                type="button"
+                onClick={() => {
+                  const existing = social.findExistingThread(post.userId!);
+                  if (existing && user && messageTabFor(existing, user.id) === "chats") {
+                    navigate(`/messages?thread=${existing.id}&shareMoment=${post.id}`);
+                    return;
+                  }
+                  navigate(
+                    `/messages?draftWith=${encodeURIComponent(post.userId!)}&draftName=${encodeURIComponent(post.creator)}&aboutMomentId=${post.id}`,
+                  );
+                }}
+                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              >
+                <MessageCircle className="size-3" />
+                Message {post.creator} about this
+              </button>
+            )}
+
             {!owned && post.userId && (
               <button
                 type="button"
@@ -317,6 +365,7 @@ export function MomentDetail({
                 Report
               </button>
             )}
+            <SendToChatDialog open={sendToOpen} onOpenChange={setSendToOpen} kind="moment" postId={post.id} />
 
             <Thoughts
               postId={post.id}

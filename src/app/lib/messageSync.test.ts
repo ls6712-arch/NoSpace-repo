@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyMessageUpdate,
   combineHistoryAndPending,
   countUnreadThreads,
   formatBadgeCount,
   isSeenByOther,
   markPendingFailed,
   mergeMessage,
+  messagePreviewText,
+  patchSummaryOnMessageUpdate,
   patchSummaryWithNewMessage,
   PendingMessage,
   prependOlderPage,
   reconcilePendingAfterIncoming,
   removePendingByClientId,
+  renderableMessageKind,
   shouldMarkThreadRead,
   ThreadSummary,
 } from "./messageSync";
@@ -21,6 +25,7 @@ const msg = (id: number | string, createdAt: number, fromUser = "them", body = "
   participationId: 1,
   fromUser,
   body,
+  kind: "text",
   createdAt,
 });
 
@@ -30,6 +35,7 @@ const pending = (clientId: string, createdAt: number, body = "hi", status: "send
   participationId: 1,
   fromUser: "me",
   body,
+  kind: "text",
   createdAt,
   status,
 });
@@ -213,5 +219,99 @@ describe("shouldMarkThreadRead", () => {
     expect(shouldMarkThreadRead({ threadOpen: false, tabVisible: true, atBottom: true })).toBe(false);
     expect(shouldMarkThreadRead({ threadOpen: true, tabVisible: false, atBottom: true })).toBe(false);
     expect(shouldMarkThreadRead({ threadOpen: true, tabVisible: true, atBottom: false })).toBe(false);
+  });
+});
+
+describe("messagePreviewText", () => {
+  it("shows the plain body for a text message", () => {
+    expect(messagePreviewText({ kind: "text", body: "hey there" })).toBe("hey there");
+  });
+
+  it("shows a fixed label for each non-text kind", () => {
+    expect(messagePreviewText({ kind: "photo", body: "" })).toBe("Photo");
+    expect(messagePreviewText({ kind: "moment", body: "" })).toBe("Shared a Moment");
+    expect(messagePreviewText({ kind: "pursuit", body: "" })).toBe("Shared a Pursuit");
+  });
+
+  it("shows 'Message deleted' once unsent, regardless of kind", () => {
+    expect(messagePreviewText({ kind: "text", body: "hey there", deletedAt: 500 })).toBe("Message deleted");
+    expect(messagePreviewText({ kind: "photo", body: "", deletedAt: 500 })).toBe("Message deleted");
+  });
+});
+
+describe("renderableMessageKind", () => {
+  it("passes through the underlying kind when not deleted", () => {
+    expect(renderableMessageKind({ kind: "text" })).toBe("text");
+    expect(renderableMessageKind({ kind: "photo" })).toBe("photo");
+    expect(renderableMessageKind({ kind: "moment" })).toBe("moment");
+    expect(renderableMessageKind({ kind: "pursuit" })).toBe("pursuit");
+  });
+
+  it("reports 'deleted' once unsent, whatever the underlying kind still says", () => {
+    expect(renderableMessageKind({ kind: "text", deletedAt: 500 })).toBe("deleted");
+    expect(renderableMessageKind({ kind: "photo", deletedAt: 500 })).toBe("deleted");
+  });
+});
+
+describe("applyMessageUpdate", () => {
+  it("replaces the matching message by id, merging in the updated fields", () => {
+    const list = [msg(1, 100), msg(2, 200, "them", "hello")];
+    const updated: Message = { ...msg(2, 200, "them", ""), kind: "text", deletedAt: 999 };
+    const result = applyMessageUpdate(list, updated);
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({ id: 2, deletedAt: 999, body: "" });
+  });
+
+  it("is a no-op when the updated row isn't loaded (e.g. an older page never fetched)", () => {
+    const list = [msg(1, 100)];
+    const updated: Message = { ...msg(99, 900), deletedAt: 999 };
+    const result = applyMessageUpdate(list, updated);
+    expect(result).toEqual(list);
+  });
+});
+
+describe("patchSummaryOnMessageUpdate", () => {
+  const summary = (participationId: number, lastMessageId: number | null): ThreadSummary => ({
+    participationId,
+    messageCount: 3,
+    lastMessageId,
+    lastMessageFromUser: "them",
+    lastMessageBody: "hello",
+    lastMessageCreatedAt: 100,
+    unreadCount: 1,
+  });
+
+  it("patches the preview text when the updated row is the thread's current last message", () => {
+    const result = patchSummaryOnMessageUpdate([summary(1, 5)], {
+      id: 5,
+      participationId: 1,
+      kind: "text",
+      deletedAt: 999,
+      body: "",
+    });
+    expect(result[0].lastMessageBody).toBe("Message deleted");
+  });
+
+  it("leaves the summary alone when the updated row is an older message, not the last one", () => {
+    const result = patchSummaryOnMessageUpdate([summary(1, 5)], {
+      id: 2,
+      participationId: 1,
+      kind: "text",
+      deletedAt: 999,
+      body: "",
+    });
+    expect(result[0].lastMessageBody).toBe("hello");
+  });
+
+  it("leaves a thread with no loaded summary alone", () => {
+    const summaries = [summary(1, 5)];
+    const result = patchSummaryOnMessageUpdate(summaries, {
+      id: 1,
+      participationId: 999,
+      kind: "text",
+      deletedAt: 999,
+      body: "",
+    });
+    expect(result).toEqual(summaries);
   });
 });

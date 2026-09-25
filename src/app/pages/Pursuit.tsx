@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
-import { ArrowLeft, ArrowRight, Check, Lock, Moon, PenLine, Play, Plus, Share2, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Lock, Moon, PenLine, Play, Plus, Send, Share2, Target } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import { SendToChatDialog } from "../components/SendToChatDialog";
 import { useContent } from "../context/ContentContext";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { seedPosts, Post } from "../data/posts";
@@ -112,6 +113,7 @@ export function Pursuit() {
   const isNew = searchParams.get("new") === "1";
   const [justCopied, setJustCopied] = useState(false);
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  const [sendToOpen, setSendToOpen] = useState(false);
   const [remote, setRemote] = useState<
     { status: "idle" | "loading" | "not-found" } | { status: "found"; data: SharedPursuit; ownerName: string; ownerAvatar?: string }
   >({ status: "idle" });
@@ -475,6 +477,10 @@ export function Pursuit() {
                   Full form
                 </Button>
               </Link>
+              <Button variant="outline" size="sm" onClick={() => setSendToOpen(true)}>
+                <Send className="size-3.5" />
+                Send to…
+              </Button>
               {isCreator && !hasMeasure(ownProject) && (
                 <Button variant="outline" size="sm" onClick={() => setGoalOpen(true)}>
                   <Target className="size-3.5" />
@@ -554,6 +560,17 @@ export function Pursuit() {
           </>
         )}
 
+        {/* A visitor (not the owner) gets no action row above at all — this
+            is their one chance to share this Pursuit into a chat. */}
+        {!owner && (
+          <div className="mb-4">
+            <Button variant="outline" size="sm" onClick={() => setSendToOpen(true)}>
+              <Send className="size-3.5" />
+              Send to…
+            </Button>
+          </div>
+        )}
+
         {/* ── Timeline, grouped by month, newest first ───────────────── */}
         {moments.length === 0 ? (
           !owner && (
@@ -612,6 +629,8 @@ export function Pursuit() {
         owned={!!user && openPost?.userId === user.id}
         onOpenChange={(o) => !o && setOpenPost(null)}
       />
+
+      <SendToChatDialog open={sendToOpen} onOpenChange={setSendToOpen} kind="pursuit" pursuitId={view.id} />
     </div>
   );
 }

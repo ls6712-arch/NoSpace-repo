@@ -33,6 +33,7 @@ import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
 import { CreatePursuit } from "./pages/CreatePursuit";
 import { AddMoment } from "./pages/AddMoment";
+import { MomentPage } from "./pages/MomentPage";
 import { JoinPursuit } from "./pages/JoinPursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
@@ -105,6 +106,10 @@ export const router = createHashRouter([
       { path: "join/:token", Component: JoinPursuit },
       { path: "pursuit/:id/moment", Component: AddMoment },
       { path: "pursuit/:id", Component: Pursuit },
+      // A Moment shared into a chat (Phase 4) is the first place a Moment
+      // needs a URL of its own — everywhere else it's a dialog opened from
+      // inside whatever grid it's already sitting in.
+      { path: "moment/:id", Component: MomentPage },
       { path: "u/:username", Component: PublicProfile },
       { path: "u/:username/studio", Component: Studio },
       { path: "studio", Component: Studio },
