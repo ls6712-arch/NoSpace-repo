@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import { ParticipationKind } from "../data/participation";
-import { canSendInto, messageTabFor } from "../lib/messageTabs";
+import { canSendInto, hasVisibleOtherParty, messageTabFor } from "../lib/messageTabs";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -333,20 +333,31 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       })),
     );
 
-    const participations: Participation[] = (parts.data ?? []).map((p: any) => ({
-      id: p.id,
-      kind: p.kind,
-      fromUser: p.from_user,
-      fromName: nameOf(p.from_user) ?? "Someone",
-      toUser: p.to_user ?? undefined,
-      toName: nameOf(p.to_user),
-      postId: p.post_id ?? undefined,
-      hobbyKey: p.hobby_key ?? undefined,
-      intent: p.intent ?? undefined,
-      note: p.note ?? undefined,
-      status: p.status,
-      createdAt: new Date(p.created_at).getTime(),
-    }));
+    // A participation whose other party's profile didn't resolve — blocked
+    // and hidden by is_visible_profile(), deleted, or paused, all look
+    // identical here — is dropped before it ever reaches state. There's no
+    // one there to show or to message, and showing it anyway (a "Someone"
+    // thread with an open composer, as happened live) would both be
+    // useless and risk revealing that a block is the reason.
+    const resolvedProfileIds = new Set(byId.keys());
+    const participations: Participation[] = (parts.data ?? [])
+      .filter((p: any) =>
+        hasVisibleOtherParty({ fromUser: p.from_user, toUser: p.to_user ?? undefined }, user.id, resolvedProfileIds),
+      )
+      .map((p: any) => ({
+        id: p.id,
+        kind: p.kind,
+        fromUser: p.from_user,
+        fromName: nameOf(p.from_user) ?? "Someone",
+        toUser: p.to_user ?? undefined,
+        toName: nameOf(p.to_user),
+        postId: p.post_id ?? undefined,
+        hobbyKey: p.hobby_key ?? undefined,
+        intent: p.intent ?? undefined,
+        note: p.note ?? undefined,
+        status: p.status,
+        createdAt: new Date(p.created_at).getTime(),
+      }));
 
     // Messages for the threads that are actually open, plus any pending or
     // declined direct_message thread I'm party to — the recipient needs to
@@ -773,7 +784,12 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       reason: input.reason,
       note: input.note?.trim() || null,
     });
-    if (error) return { error: "failed" };
+    // 23505 (unique_violation) here means the one-open-report-per-target
+    // index rejected it: this exact report is already open. That's not a
+    // failure from the reporter's point of view — it's already been told —
+    // so it gets the same success response as a fresh insert, never a
+    // "couldn't send that" that would prompt a retry into the same wall.
+    if (error && error.code !== "23505") return { error: "failed" };
     return { error: null };
   };
 

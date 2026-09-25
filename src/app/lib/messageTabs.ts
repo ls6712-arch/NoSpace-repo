@@ -83,3 +83,29 @@ export function canSendInto(p: ParticipationLike, myId: string, hasMessages: boo
   if (p.status === "declined") return p.toUser === myId;
   return false;
 }
+
+/**
+ * Whether this participation's other party actually resolved to a visible
+ * profile. A blocked-and-hidden account (RLS's is_visible_profile), a
+ * deleted one, or a paused one all look identical from here: the profiles
+ * fetch simply never returns that row, so `resolvedProfileIds` — the ids
+ * that DID come back — won't contain it.
+ *
+ * A thread whose other party didn't resolve has to be dropped everywhere
+ * (the conversation list, a `?thread=` deep link, the composer) rather
+ * than shown with a "Someone" placeholder and an open composer: there's no
+ * one there to receive a message, and — same rule as everywhere else in
+ * Phase 1 — a block must never be revealed by how it looks different from
+ * an ordinary deleted or paused account.
+ */
+export function hasVisibleOtherParty(
+  p: { fromUser: string; toUser?: string },
+  myId: string,
+  resolvedProfileIds: ReadonlySet<string>,
+): boolean {
+  const otherId = p.fromUser === myId ? p.toUser : p.fromUser;
+  // No specific other person to resolve — e.g. a public join_in ask with no
+  // to_user — so there's nothing here that could go missing.
+  if (!otherId) return true;
+  return resolvedProfileIds.has(otherId);
+}

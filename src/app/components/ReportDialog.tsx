@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSocial, ReportReason, ReportTargetKind } from "../context/SocialContext";
 import { Button } from "./ui/button";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
@@ -40,6 +40,26 @@ export function ReportDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // A plain ref, not just the busy state: a fast double-click can fire this
+  // handler twice before React has committed the re-render that disables
+  // the button, which is exactly how reports 8 and 9 ended up identical.
+  // Checked and set synchronously, before any state update or await.
+  const submittingRef = useRef(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clears any pending auto-close whenever the dialog actually closes —
+  // however that happened (the timer itself, Cancel, Close, Escape, the
+  // backdrop) — so a stale timer can never fire against a since-reopened
+  // dialog, and clears it on unmount too.
+  useEffect(() => {
+    if (!open && closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, [open]);
 
   const reset = () => {
     setReason("spam");
@@ -50,6 +70,8 @@ export function ReportDialog({
   };
 
   const submit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setBusy(true);
     setError(null);
     const { error: reportError } = await social.report({
@@ -60,6 +82,7 @@ export function ReportDialog({
       note: note.trim() || undefined,
     });
     if (reportError) {
+      submittingRef.current = false;
       setBusy(false);
       setError("Couldn't send that. Try again later.");
       return;
@@ -67,8 +90,16 @@ export function ReportDialog({
     if (alsoBlock) {
       await social.block(targetUserId);
     }
+    submittingRef.current = false;
     setBusy(false);
     setSent(true);
+    // Closes on its own rather than waiting on a manual Close tap — the
+    // Close button below still works immediately for anyone who doesn't
+    // want to wait.
+    closeTimerRef.current = setTimeout(() => {
+      onOpenChange(false);
+      reset();
+    }, 1400);
   };
 
   return (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canSendInto, messageTabFor } from "./messageTabs";
+import { canSendInto, hasVisibleOtherParty, messageTabFor } from "./messageTabs";
 
 const ME = "me";
 const THEM = "them";
@@ -123,5 +123,30 @@ describe("canSendInto", () => {
     expect(
       canSendInto({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME, true),
     ).toBe(true);
+  });
+});
+
+describe("hasVisibleOtherParty", () => {
+  const RESOLVED = new Set([THEM]);
+  const NONE_RESOLVED = new Set<string>();
+
+  it("is visible when the other party's profile resolved, whichever side I'm on", () => {
+    expect(hasVisibleOtherParty({ fromUser: ME, toUser: THEM }, ME, RESOLVED)).toBe(true);
+    expect(hasVisibleOtherParty({ fromUser: THEM, toUser: ME }, ME, RESOLVED)).toBe(true);
+  });
+
+  it("is hidden when the other party's profile didn't resolve — blocked, deleted, or paused all look the same", () => {
+    expect(hasVisibleOtherParty({ fromUser: ME, toUser: THEM }, ME, NONE_RESOLVED)).toBe(false);
+    expect(hasVisibleOtherParty({ fromUser: THEM, toUser: ME }, ME, NONE_RESOLVED)).toBe(false);
+  });
+
+  it("is always visible when there's no specific other person to resolve (e.g. a public join_in ask)", () => {
+    expect(hasVisibleOtherParty({ fromUser: ME, toUser: undefined }, ME, NONE_RESOLVED)).toBe(true);
+  });
+
+  it("doesn't confuse my own id with the other party's — I always resolve myself", () => {
+    // Regardless of what's in resolvedProfileIds, the "other" party here is
+    // THEM, not ME, so only THEM's presence in the set matters.
+    expect(hasVisibleOtherParty({ fromUser: ME, toUser: THEM }, ME, new Set([ME]))).toBe(false);
   });
 });
