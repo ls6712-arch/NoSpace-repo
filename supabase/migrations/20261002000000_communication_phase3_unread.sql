@@ -133,7 +133,12 @@ alter table public.profile_settings
 -- doesn't need to know "pending requests count toward Message requests,
 -- not Chats" — that's the app deciding which bucket a thread's number
 -- belongs in, same as it already decides which tab a thread appears in.
-create or replace function public.participation_message_summaries()
+--
+-- Postgres won't let `create or replace` change a set-returning function's
+-- output columns in place (42P13) — drop it first.
+drop function if exists public.participation_message_summaries();
+
+create function public.participation_message_summaries()
 returns table (
   participation_id bigint,
   message_count bigint,

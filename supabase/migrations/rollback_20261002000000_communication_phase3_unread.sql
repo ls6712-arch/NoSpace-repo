@@ -22,8 +22,12 @@ end $$;
 drop function if exists public.thread_seen_at(bigint);
 drop function if exists private.other_party_seen_at(bigint, uuid);
 
--- Back to the Phase 2 shape (no unread_count).
-create or replace function public.participation_message_summaries()
+-- Back to the Phase 2 shape (no unread_count). Postgres won't let
+-- `create or replace` change a set-returning function's output columns in
+-- place (42P13) — drop it first.
+drop function if exists public.participation_message_summaries();
+
+create function public.participation_message_summaries()
 returns table (
   participation_id bigint,
   message_count bigint,

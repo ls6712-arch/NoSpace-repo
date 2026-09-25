@@ -8,24 +8,43 @@
 -- script depends on (profile_settings.read_receipts) is explicitly forced
 -- inside the transaction rather than trusted from live state.
 --
--- Four real accounts already used in Phase 1/2's own verification, each
--- pair picked to have no pre-existing direct_message row between them
--- (confirmed by a plain SELECT before writing this): Sush, Nani, spd0008,
--- Sushmitha.
+-- Three real accounts already used in Phase 1/2's own verification, picked
+-- for a specific reason each: Sush and spd0008 have no pre-existing
+-- direct_message row AND don't already mutually follow each other (so a
+-- fresh direct_message between them genuinely starts 'pending' — verified
+-- live before writing this; Sush and Sushmitha, by contrast, already
+-- mutually follow, which would auto-accept a new thread on insert and
+-- silently skip the "still pending" checks below). Nani and spd0008 have
+-- no pre-existing row either.
+--
+-- Run once already (2026-09-25) with a bug in this script, not the
+-- migration: it used Sush/Sushmitha for the "still pending" checks,
+-- assuming that pair would stay pending like Sush/spd0008 did in Phase 2's
+-- own script. It didn't — Sush and Sushmitha mutually follow each other
+-- (unrelated later activity), which auto-accepts a new direct_message on
+-- insert, so mark_conversation_read() correctly succeeded on an already-
+-- accepted thread instead of being rejected, and thread_seen_at() correctly
+-- returned a real timestamp instead of null. Both were the RIGHT answer for
+-- an accepted thread — the script was asserting the wrong thing. Fixed by
+-- testing the "still pending" behavior on Sush/spd0008's own thread during
+-- the real window before it's accepted, then continuing the SAME thread's
+-- lifecycle into the accepted/unread/Seen checks — one real thread's actual
+-- history, not a second fixture assumed (wrongly) to hold.
 --
 -- Proves:
---   1. Nobody can read or write another person's conversation_reads row —
+--   1. mark_conversation_read() rejects a still-pending thread, even for
+--      its actual recipient — reading a pending request's preview never
+--      produces Seen for its sender.
+--   2. thread_seen_at() returns null for a still-pending thread.
+--   3. Unread counts are right before and after marking a thread read.
+--   4. Nobody can read or write another person's conversation_reads row —
 --      plain RLS ownership, checked directly, not just through the RPCs.
---   2. mark_conversation_read() rejects a bystander who isn't a party.
---   3. mark_conversation_read() rejects a still-pending request — reading
---      a pending request's preview never produces Seen for its sender.
---   4. Unread counts are right before and after marking a thread read.
---   5. thread_seen_at() returns null for: a non-party, a pending thread, a
---      blocked pair (even one with real prior read history), either side
---      having read_receipts off — and a real timestamp once the other
---      party has actually read an accepted thread with receipts on both
---      sides.
---   6. supabase_realtime publishes exactly {messages, participations,
+--   5. mark_conversation_read() rejects a bystander who isn't a party.
+--   6. thread_seen_at() returns null for: a non-party, a blocked pair (even
+--      one with real prior read history), either side having read_receipts
+--      off — and a real timestamp once the other party has actually read
+--      an accepted thread with receipts on both sides.
+--   7. supabase_realtime publishes exactly {messages, participations,
 --      notifications, conversation_reads} — nothing else, nothing missing.
 
 begin;
@@ -35,11 +54,12 @@ declare
   v_sush uuid := '0a653a11-cb43-40f5-be8e-b21efc57891f';
   v_nani uuid := '2410e037-9cb5-4459-a0ca-e70a59b8f2c0';
   v_spd uuid := '38b4d8b3-9502-49d8-9b2f-79d387872127';
-  v_sushmitha uuid := '87220a04-06fc-464a-860d-988713665fe0';
 
-  v_thread_a bigint; -- Sush -> spd0008, accepted: unread + Seen happy path
-  v_thread_c bigint; -- Sush -> Sushmitha, left pending: Seen must stay null
-  v_thread_d bigint; -- Nani -> spd0008, accepted then blocked: Seen must go null
+  v_thread_a bigint; -- Sush -> spd0008: pending, then accepted — one real lifecycle
+  v_thread_blocked bigint; -- Nani -> spd0008, accepted then blocked
+
+  v_pending_mark_rejected boolean;
+  v_seen_pending timestamptz;
 
   v_unread_before bigint;
   v_unread_after bigint;
@@ -54,9 +74,6 @@ declare
   v_cannot_update_others_row boolean;
 
   v_bystander_mark_rejected boolean;
-  v_pending_mark_rejected boolean;
-
-  v_seen_pending timestamptz;
 
   v_seen_blocked_despite_prior_read timestamptz;
 
@@ -65,9 +82,9 @@ begin
   -- Set once, for the whole transaction: every thread_seen_at() /
   -- mark_conversation_read() call below genuinely runs as role
   -- `authenticated`, not as this session's owner/postgres role — the only
-  -- way this script would have caught private.other_party_seen_at missing
-  -- its own execute grant (a SECURITY INVOKER caller runs as the caller,
-  -- not the function's owner).
+  -- way this script would catch private.other_party_seen_at missing its
+  -- own execute grant (a SECURITY INVOKER caller runs as the caller, not
+  -- the function's owner) — exactly the bug the first review round found.
   perform set_config('role', 'authenticated', true);
 
   -- Force the settings this script depends on, inside the transaction —
@@ -79,25 +96,40 @@ begin
   insert into public.profile_settings (user_id, read_receipts) values (v_spd, true)
     on conflict (user_id) do update set read_receipts = true;
 
-  -- ── Thread A: Sush -> spd0008, accepted — unread + Seen happy path ────
+  -- ── Thread A: Sush -> spd0008 — still pending ─────────────────────────
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   insert into public.participations (kind, from_user, to_user)
   values ('direct_message', v_sush, v_spd)
   returning id into v_thread_a;
   insert into public.messages (participation_id, from_user, body) values (v_thread_a, v_sush, 'Hey!');
 
+  -- spd0008 (the actual recipient) tries to mark this still-pending request
+  -- read — must be rejected; reading a preview isn't accepting.
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
+  begin
+    perform public.mark_conversation_read(v_thread_a);
+    v_pending_mark_rejected := false;
+  exception when others then
+    v_pending_mark_rejected := true;
+  end;
+
+  -- Sush checks Seen while it's still pending — must be null.
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
+  select public.thread_seen_at(v_thread_a) into v_seen_pending;
+
+  -- ── Same thread, now accepted — unread + Seen happy path ──────────────
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
   update public.participations set status = 'accepted', responded_at = now() where id = v_thread_a;
 
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   insert into public.messages (participation_id, from_user, body) values (v_thread_a, v_sush, 'You around?');
 
-  -- spd0008 hasn't opened the thread yet — 2 unread from Sush.
+  -- spd0008 still hasn't opened the thread — 2 unread from Sush (the
+  -- pending-phase message counts too; it was never read either).
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
   select unread_count into v_unread_before
     from public.participation_message_summaries() where participation_id = v_thread_a;
 
-  -- Sush checks Seen before spd0008 has read anything — must be null.
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   select public.thread_seen_at(v_thread_a) into v_seen_before_read;
 
@@ -167,43 +199,23 @@ begin
     v_bystander_mark_rejected := true;
   end;
 
-  -- ── Thread C: Sush -> Sushmitha, left pending — Seen must stay null ───
-  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
-  insert into public.participations (kind, from_user, to_user)
-  values ('direct_message', v_sush, v_sushmitha)
-  returning id into v_thread_c;
-  insert into public.messages (participation_id, from_user, body) values (v_thread_c, v_sush, 'Loved your macrame piece!');
-
-  -- Sushmitha (the actual recipient) tries to mark the still-pending
-  -- request read — must be rejected; reading a preview isn't accepting.
-  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sushmitha), true);
-  begin
-    perform public.mark_conversation_read(v_thread_c);
-    v_pending_mark_rejected := false;
-  exception when others then
-    v_pending_mark_rejected := true;
-  end;
-
-  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
-  select public.thread_seen_at(v_thread_c) into v_seen_pending;
-
-  -- ── Thread D: Nani -> spd0008, accepted then blocked — Seen goes null ─
+  -- ── Thread blocked: Nani -> spd0008, accepted then blocked ────────────
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_nani), true);
   insert into public.participations (kind, from_user, to_user)
   values ('direct_message', v_nani, v_spd)
-  returning id into v_thread_d;
-  insert into public.messages (participation_id, from_user, body) values (v_thread_d, v_nani, 'Working Saturday?');
+  returning id into v_thread_blocked;
+  insert into public.messages (participation_id, from_user, body) values (v_thread_blocked, v_nani, 'Working Saturday?');
 
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
-  update public.participations set status = 'accepted', responded_at = now() where id = v_thread_d;
+  update public.participations set status = 'accepted', responded_at = now() where id = v_thread_blocked;
   -- spd0008 genuinely reads it before any block exists.
-  perform public.mark_conversation_read(v_thread_d);
+  perform public.mark_conversation_read(v_thread_blocked);
 
   -- Now Nani blocks spd0008 — real prior read history or not, Seen must
   -- go null for a blocked pair.
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_nani), true);
   insert into public.blocks (blocker_id, blocked_id) values (v_nani, v_spd);
-  select public.thread_seen_at(v_thread_d) into v_seen_blocked_despite_prior_read;
+  select public.thread_seen_at(v_thread_blocked) into v_seen_blocked_despite_prior_read;
 
   -- ── Publication contains exactly the four tables ──────────────────────
   select coalesce(array_agg(tablename order by tablename), array[]::text[])
@@ -211,13 +223,14 @@ begin
     from pg_publication_tables
     where pubname = 'supabase_realtime' and schemaname = 'public';
 
-  raise exception 'RESULTS: unread_before=% unread_after=% seen_before_read_is_null=% seen_after_read_is_not_null=% seen_other_receipts_off_is_null=% seen_my_receipts_off_is_null=% cannot_select_others_row=% cannot_insert_others_row=% cannot_update_others_row=% bystander_mark_rejected=% pending_mark_rejected=% seen_pending_is_null=% seen_blocked_despite_prior_read_is_null=% publication_tables=%',
+  raise exception 'RESULTS: pending_mark_rejected=% seen_pending_is_null=% unread_before=% unread_after=% seen_before_read_is_null=% seen_after_read_is_not_null=% seen_other_receipts_off_is_null=% seen_my_receipts_off_is_null=% cannot_select_others_row=% cannot_insert_others_row=% cannot_update_others_row=% bystander_mark_rejected=% seen_blocked_despite_prior_read_is_null=% publication_tables=%',
+    v_pending_mark_rejected, (v_seen_pending is null),
     v_unread_before, v_unread_after,
     (v_seen_before_read is null), (v_seen_after_read is not null),
     (v_seen_other_receipts_off is null), (v_seen_my_receipts_off is null),
     v_cannot_select_others_row, v_cannot_insert_others_row, v_cannot_update_others_row,
-    v_bystander_mark_rejected, v_pending_mark_rejected,
-    (v_seen_pending is null), (v_seen_blocked_despite_prior_read is null),
+    v_bystander_mark_rejected,
+    (v_seen_blocked_despite_prior_read is null),
     v_pub_tables;
 end $$;
 
