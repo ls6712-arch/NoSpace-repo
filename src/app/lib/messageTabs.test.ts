@@ -50,10 +50,10 @@ describe("messageTabFor", () => {
     ).toBe("chats");
   });
 
-  it("puts a declined direct_message someone sent me nowhere — I already answered it", () => {
+  it("puts a declined direct_message someone sent me in chats too — I can still message them to un-decline it", () => {
     expect(
       messageTabFor({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME),
-    ).toBe("none");
+    ).toBe("chats");
   });
 });
 
@@ -99,15 +99,21 @@ describe("canSendInto", () => {
     ).toBe(false);
   });
 
-  it("stays closed for a declined direct_message on either side, whatever its message count", () => {
+  it("stays closed for the SENDER of a declined direct_message, whatever its message count", () => {
     expect(
       canSendInto({ kind: "direct_message", status: "declined", fromUser: ME, toUser: THEM }, ME, false),
     ).toBe(false);
     expect(
       canSendInto({ kind: "direct_message", status: "declined", fromUser: ME, toUser: THEM }, ME, true),
     ).toBe(false);
+  });
+
+  it("opens the composer for the RECIPIENT of a declined direct_message — sending un-declines it", () => {
     expect(
       canSendInto({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME, false),
-    ).toBe(false);
+    ).toBe(true);
+    expect(
+      canSendInto({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME, true),
+    ).toBe(true);
   });
 });

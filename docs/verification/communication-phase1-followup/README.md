@@ -11,6 +11,22 @@ same call (`SocialContext.tsx`'s `startAndSendDirectMessage`), a `canSendInto`
 rule in `messageTabs.ts` that accounts for message count, and per-kind
 empty-state/subtitle copy in `Messages.tsx` (`emptyStateFor`/`subtitleFor`).
 
+## Follow-up: a declined request's recipient was permanently locked out
+
+Found in PR #98's own review: `canSendInto` closed the composer for *both*
+sides of a declined direct_message, and the unique one-DM-per-pair index
+meant its recipient could never open a fresh thread either — messaging that
+person again from their profile just failed forever, even though the
+database always allowed the recipient to move `declined -> accepted` (the
+same move Accept makes on a still-pending request).
+
+Fixed: `messageTabFor` now puts a declined direct_message in Chats for its
+recipient too (not just its sender), `canSendInto` opens the composer for
+the recipient regardless of message count, and `SocialContext.tsx`'s
+`sendMessage` flips the row to `accepted` first when its recipient sends —
+before inserting the message — so it becomes a normal open chat for both
+sides. The sender of a declined request is unchanged and stays locked out.
+
 ## Live verification
 
 The database side of the fix (insert-participation-with-its-first-message,
@@ -37,6 +53,21 @@ credentials. So the actual React UI states below were verified with a real
 Chromium browser running the real rebuilt app code, with the Supabase
 REST/auth API mocked (no real network reachable regardless).
 
+The declined-recipient-reopen fix got the same treatment: verified live
+against the real production database (same two real accounts, no prior
+history, rolled back afterward) —
+
+```
+pid=88 initial_status=pending a_retry_blocked=t b_update_ok=t
+final_status=accepted msg_count=2 a_sees_accepted=t
+```
+
+— confirming the original sender (A) stays locked out of a second thread
+even after the recipient (B) declines, B's own `declined -> accepted` update
+succeeds, both messages land, and A then sees the thread as a normal
+accepted chat too. Plus a mocked-network browser pass for the UI states
+themselves.
+
 ## Screenshots
 
 | File | Shows |
@@ -44,3 +75,4 @@ REST/auth API mocked (no real network reachable regardless).
 | `01-draft-then-locked-after-send.png` | The same conversation before and after the fix: an enabled, empty draft with no row created yet, then locked with "Waiting for Rowan Ashford to accept." after the one message sends |
 | `02-empty-intent-fallback-copy.png` | An accepted Make-together thread with no intent set — falls back to "Say hi to Sam Patel." and a plain "Making together" subtitle, never an empty quote or "undefined" |
 | `03-zero-message-request-hidden.png` | Message requests correctly showing empty — a zero-message pending row never surfaces as something to accept or ignore |
+| `04-declined-reopened-by-recipient.png` | The recipient of a declined request messaging that person again — shows under Chats, composer enabled, no Accept/Ignore, both messages visible |

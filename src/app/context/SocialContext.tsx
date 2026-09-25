@@ -931,6 +931,20 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     // should never be the thing that tries something already known to fail.
     if (!canSendInto(thread, myId, hasMessages)) return { error: "failed" as const };
 
+    // I'm the recipient of a direct_message I earlier declined, messaging
+    // them again — the database only lets the recipient move declined ->
+    // accepted (the same move Accept makes on a still-pending one), so
+    // flip it before sending rather than leaving a live conversation
+    // sitting under a "declined" row. The sender has no such move;
+    // canSendInto already keeps them locked out above.
+    if (supabase && user && thread.kind === "direct_message" && thread.status === "declined" && thread.toUser === myId) {
+      const { error } = await supabase
+        .from("participations")
+        .update({ status: "accepted", responded_at: new Date().toISOString() })
+        .eq("id", thread.id);
+      if (error) return { error: "failed" as const };
+    }
+
     const isFirstPendingDm =
       thread.kind === "direct_message" && thread.status === "pending" && thread.fromUser === myId && !hasMessages;
     return insertMessage(thread, body, isFirstPendingDm);
