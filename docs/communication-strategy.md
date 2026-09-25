@@ -33,7 +33,8 @@ data model: there's almost nothing to migrate.
 ## Decisions needed before building (Sush)
 
 **Decided Sept 24, 2026:** 1 = yes, message requests; 2 = full block as recommended; 3 = admin
-Reports list, and reporting offers to block. Decisions 4–7 are still open.
+Reports list, and reporting offers to block. **Decided Sept 25:** 4 = Seen on by default, with a
+Settings switch that turns it off both ways. Decisions 5–7 are still open.
 
 **Messages and follow requests stay separate (Sush, Sept 24).**
 - Follow requests (and Circle invitations) stay where they are: Inbox → Requests, and the bell.
