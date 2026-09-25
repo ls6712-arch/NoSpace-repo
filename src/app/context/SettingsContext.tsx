@@ -25,6 +25,13 @@ interface SettingsContextType {
   defaultVisibility: DefaultVisibility;
   setDefaultVisibility: (next: DefaultVisibility) => Promise<{ error: string | null }>;
   defaultVisibilityLoaded: boolean;
+  /** profile_settings.read_receipts (Phase 3) — on by default. Off works
+   * both ways: turning it off stops others from seeing when you've read
+   * their messages, and stops you from seeing when they've read yours
+   * (enforced by thread_seen_at() in the database, not just hidden here). */
+  readReceipts: boolean;
+  setReadReceipts: (next: boolean) => Promise<{ error: string | null }>;
+  readReceiptsLoaded: boolean;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -46,25 +53,34 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [circlesVisible, setCirclesVisibleState] = useState<boolean>(readCirclesVisible);
   const [defaultVisibility, setDefaultVisibilityState] = useState<DefaultVisibility>("private");
   const [defaultVisibilityLoaded, setDefaultVisibilityLoaded] = useState(false);
+  const [readReceipts, setReadReceiptsState] = useState(true);
+  const [readReceiptsLoaded, setReadReceiptsLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     if (!supabase || !user) {
       setDefaultVisibilityState("private");
       setDefaultVisibilityLoaded(true);
+      setReadReceiptsState(true);
+      setReadReceiptsLoaded(true);
       return;
     }
     setDefaultVisibilityLoaded(false);
+    setReadReceiptsLoaded(false);
     supabase
       .from("profile_settings")
-      .select("default_visibility")
+      .select("default_visibility, read_receipts")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled) return;
-        const stored = (data as { default_visibility?: string } | null)?.default_visibility;
-        setDefaultVisibilityState(stored === "public" ? "public" : "private");
+        const row = data as { default_visibility?: string; read_receipts?: boolean } | null;
+        setDefaultVisibilityState(row?.default_visibility === "public" ? "public" : "private");
         setDefaultVisibilityLoaded(true);
+        // A missing row (read_receipts column not there yet, or no row at
+        // all) means the default — on — same rule the database itself uses.
+        setReadReceiptsState(row?.read_receipts !== false);
+        setReadReceiptsLoaded(true);
       });
     return () => {
       cancelled = true;
@@ -98,6 +114,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
+  const setReadReceipts = async (next: boolean) => {
+    if (!supabase || !user) return { error: "Not signed in." };
+    const prev = readReceipts;
+    setReadReceiptsState(next);
+    const { error } = await supabase
+      .from("profile_settings")
+      .upsert({ user_id: user.id, read_receipts: next }, { onConflict: "user_id" });
+    if (error) {
+      setReadReceiptsState(prev);
+      return { error: error.message };
+    }
+    return { error: null };
+  };
+
   return (
     <SettingsContext.Provider
       value={{
@@ -106,6 +136,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         defaultVisibility,
         setDefaultVisibility,
         defaultVisibilityLoaded,
+        readReceipts,
+        setReadReceipts,
+        readReceiptsLoaded,
       }}
     >
       {children}

@@ -28,6 +28,12 @@ export interface ThreadSummary {
   lastMessageFromUser: string | null;
   lastMessageBody: string | null;
   lastMessageCreatedAt: number | null;
+  /** Messages from the other person newer than my own last_read_at (Phase
+   * 3) — everything, if I've never opened this thread. A pending request's
+   * own unread count is real too; it's up to the caller to route it to the
+   * Message requests bucket rather than Chats, same as it already decides
+   * which tab the thread itself appears in. */
+  unreadCount: number;
 }
 
 function sortByCreatedAt(list: Message[]): Message[] {
@@ -95,9 +101,11 @@ export function combineHistoryAndPending(history: Message[], pending: PendingMes
  * so the conversation list's preview/count updates instantly rather than
  * waiting for the next refresh(). A thread with no summary loaded yet
  * (e.g. a brand-new request the participations refresh hasn't caught up
- * with) is left alone — the next refresh() fills it in.
+ * with) is left alone — the next refresh() fills it in. unreadCount only
+ * bumps for a message from the OTHER person — my own send (or its Realtime
+ * echo) increments messageCount but never marks itself unread to me.
  */
-export function patchSummaryWithNewMessage(summaries: ThreadSummary[], incoming: Message): ThreadSummary[] {
+export function patchSummaryWithNewMessage(summaries: ThreadSummary[], incoming: Message, myId: string): ThreadSummary[] {
   const idx = summaries.findIndex((s) => String(s.participationId) === String(incoming.participationId));
   if (idx === -1) return summaries;
   const existing = summaries[idx];
@@ -105,10 +113,47 @@ export function patchSummaryWithNewMessage(summaries: ThreadSummary[], incoming:
   const patched: ThreadSummary = {
     ...existing,
     messageCount: existing.messageCount + 1,
+    unreadCount: incoming.fromUser === myId ? existing.unreadCount : existing.unreadCount + 1,
     lastMessageId: incoming.id,
     lastMessageFromUser: incoming.fromUser,
     lastMessageBody: incoming.body,
     lastMessageCreatedAt: incoming.createdAt,
   };
   return [...summaries.slice(0, idx), patched, ...summaries.slice(idx + 1)];
+}
+
+/** How many of the given threads have unread messages — used for the Chats
+ * badge (a thread count: "how many chats have something new", not a total
+ * message count) and for bolding the thread list. */
+export function countUnreadThreads(
+  participationIds: ReadonlyArray<number | string>,
+  summaries: ReadonlyArray<ThreadSummary>,
+): number {
+  const unreadIds = new Set(
+    summaries.filter((s) => s.unreadCount > 0).map((s) => String(s.participationId)),
+  );
+  return participationIds.filter((id) => unreadIds.has(String(id))).length;
+}
+
+/** The header/tab-bar badge never shows an exact count past 9 — just "9+". */
+export function formatBadgeCount(n: number): string {
+  return n > 9 ? "9+" : String(n);
+}
+
+/** "Seen" appears under your own latest message once the other person's
+ * last_read_at is at or after it — never for a pending thread (the caller
+ * simply never has a myLastMessageCreatedAt to check in that case, since
+ * mark_conversation_read never ran for it) and never when either side's
+ * read_receipts made thread_seen_at() return null (otherLastReadAt is then
+ * also null here). */
+export function isSeenByOther(myLastMessageCreatedAt: number | null, otherLastReadAt: number | null): boolean {
+  if (myLastMessageCreatedAt == null || otherLastReadAt == null) return false;
+  return otherLastReadAt >= myLastMessageCreatedAt;
+}
+
+/** When to call mark_conversation_read: the conversation is open, the tab
+ * is actually visible, and you're scrolled to the newest message. Scrolled
+ * up reading history doesn't count as having read the latest. */
+export function shouldMarkThreadRead(input: { threadOpen: boolean; tabVisible: boolean; atBottom: boolean }): boolean {
+  return input.threadOpen && input.tabVisible && input.atBottom;
 }

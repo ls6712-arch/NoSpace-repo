@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   combineHistoryAndPending,
+  countUnreadThreads,
+  formatBadgeCount,
+  isSeenByOther,
   markPendingFailed,
   mergeMessage,
   patchSummaryWithNewMessage,
@@ -8,6 +11,7 @@ import {
   prependOlderPage,
   reconcilePendingAfterIncoming,
   removePendingByClientId,
+  shouldMarkThreadRead,
   ThreadSummary,
 } from "./messageSync";
 import { Message } from "../context/SocialContext";
@@ -116,24 +120,98 @@ describe("combineHistoryAndPending", () => {
 });
 
 describe("patchSummaryWithNewMessage", () => {
-  const summary = (participationId: number, count: number): ThreadSummary => ({
+  const summary = (participationId: number, count: number, unread = 0): ThreadSummary => ({
     participationId,
     messageCount: count,
     lastMessageId: count > 0 ? 1 : null,
     lastMessageFromUser: count > 0 ? "them" : null,
     lastMessageBody: count > 0 ? "old" : null,
     lastMessageCreatedAt: count > 0 ? 100 : null,
+    unreadCount: unread,
   });
 
-  it("bumps count and last-message fields for a live INSERT on a known thread", () => {
-    const result = patchSummaryWithNewMessage([summary(1, 1)], msg(2, 200, "me", "new one"));
-    expect(result[0]).toMatchObject({ messageCount: 2, lastMessageId: 2, lastMessageBody: "new one" });
+  it("bumps count, unread count, and last-message fields for a message from someone else", () => {
+    const result = patchSummaryWithNewMessage([summary(1, 1, 0)], msg(2, 200, "them", "new one"), "me");
+    expect(result[0]).toMatchObject({ messageCount: 2, unreadCount: 1, lastMessageId: 2, lastMessageBody: "new one" });
+  });
+
+  it("bumps count but never unread count for my own message", () => {
+    const result = patchSummaryWithNewMessage([summary(1, 1, 0)], msg(2, 200, "me", "new one"), "me");
+    expect(result[0]).toMatchObject({ messageCount: 2, unreadCount: 0 });
   });
 
   it("leaves a thread with no loaded summary alone (next refresh() fills it in)", () => {
     // participationId 999 has no summary row yet — unaffected.
     const incoming: Message = { ...msg(3, 200, "me", "hi"), participationId: 999 };
-    const result = patchSummaryWithNewMessage([summary(1, 1)], incoming);
+    const result = patchSummaryWithNewMessage([summary(1, 1)], incoming, "me");
     expect(result).toEqual([summary(1, 1)]);
+  });
+});
+
+describe("countUnreadThreads", () => {
+  const summary = (participationId: number, unread: number): ThreadSummary => ({
+    participationId,
+    messageCount: unread + 1,
+    lastMessageId: 1,
+    lastMessageFromUser: "them",
+    lastMessageBody: "hi",
+    lastMessageCreatedAt: 100,
+    unreadCount: unread,
+  });
+
+  it("counts only threads with unread > 0, among the given ids", () => {
+    const summaries = [summary(1, 2), summary(2, 0), summary(3, 1)];
+    expect(countUnreadThreads([1, 2, 3], summaries)).toBe(2);
+  });
+
+  it("ignores an unread thread whose id isn't in the given list", () => {
+    const summaries = [summary(1, 2)];
+    expect(countUnreadThreads([2, 3], summaries)).toBe(0);
+  });
+
+  it("returns 0 for an empty id list", () => {
+    expect(countUnreadThreads([], [summary(1, 5)])).toBe(0);
+  });
+});
+
+describe("formatBadgeCount", () => {
+  it("shows the exact count up to 9", () => {
+    expect(formatBadgeCount(0)).toBe("0");
+    expect(formatBadgeCount(1)).toBe("1");
+    expect(formatBadgeCount(9)).toBe("9");
+  });
+
+  it("caps anything over 9 at '9+'", () => {
+    expect(formatBadgeCount(10)).toBe("9+");
+    expect(formatBadgeCount(42)).toBe("9+");
+  });
+});
+
+describe("isSeenByOther", () => {
+  it("is true once the other party's read time is at or after my last message", () => {
+    expect(isSeenByOther(100, 100)).toBe(true);
+    expect(isSeenByOther(100, 150)).toBe(true);
+  });
+
+  it("is false when the other party read before my last message", () => {
+    expect(isSeenByOther(100, 50)).toBe(false);
+  });
+
+  it("is false when either side is null (never read, or thread_seen_at() returned null)", () => {
+    expect(isSeenByOther(null, 100)).toBe(false);
+    expect(isSeenByOther(100, null)).toBe(false);
+    expect(isSeenByOther(null, null)).toBe(false);
+  });
+});
+
+describe("shouldMarkThreadRead", () => {
+  it("is true only when the thread is open, the tab is visible, and you're at the bottom", () => {
+    expect(shouldMarkThreadRead({ threadOpen: true, tabVisible: true, atBottom: true })).toBe(true);
+  });
+
+  it("is false if any one condition fails", () => {
+    expect(shouldMarkThreadRead({ threadOpen: false, tabVisible: true, atBottom: true })).toBe(false);
+    expect(shouldMarkThreadRead({ threadOpen: true, tabVisible: false, atBottom: true })).toBe(false);
+    expect(shouldMarkThreadRead({ threadOpen: true, tabVisible: true, atBottom: false })).toBe(false);
   });
 });

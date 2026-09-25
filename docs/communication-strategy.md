@@ -182,7 +182,25 @@ the phase.
   check (message delivery latency, live request/accept/block updates, an
   actual offline-Wi-Fi retry) is still needed and listed in that folder's
   README. PR opened against `main`, not yet merged.
-- Phase 3 Unread and quieter bell: not started
+- Phase 3 Unread, Seen, and a quieter bell: database applied to live Supabase and verified (see
+  `docs/backend-state-20260925-phase3.md`) — `conversation_reads` table with RLS,
+  `mark_conversation_read()`, `profile_settings.read_receipts`, `unread_count` added to
+  `participation_message_summaries()`, and a `thread_seen_at()`/`private.other_party_seen_at()`
+  pair for Seen (the latter needed its own `GRANT EXECUTE ... TO authenticated` since a SECURITY
+  INVOKER wrapper calling a SECURITY DEFINER helper doesn't inherit the wrapper's own grants — an
+  issue caught in review before anything was applied live). `notifications` and
+  `conversation_reads` added to the Realtime publication. App built (unread bold + counts +
+  header badge, debounced mark-as-read, a "Seen" line under your own latest message refreshed on
+  open/after send/on tab focus/every 15s while genuinely unseen, a Privacy "Read receipts"
+  switch, no more "message"-kind bell notifications while `message_request` ones stay, and the
+  Phase 2 follow-up of narrowing participations Realtime refreshes to events relevant to you),
+  typechecked, tested (see the `messageSync.test.ts`/`messageTabs.test.ts` additions for badge
+  count, unread-thread detection, when-to-mark-read, whether-to-show-Seen, and the
+  participations-event filter), and verified with a mocked-network browser pass (see
+  `docs/verification/communication-phase3/`) — a real two-account live check (delivery + read +
+  Seen timing, read-receipts-off working both ways, a stranger's public activity not refreshing
+  your badge) is still needed and listed in that folder's README. PR opened against `main`, not
+  yet merged.
 - Phase 4 Richer conversations: not started
 - Phase 5 Notification center: not started
 - Phase 6 Email and push: not started

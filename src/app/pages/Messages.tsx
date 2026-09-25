@@ -5,6 +5,7 @@ import { useSocial, Participation, Message } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { usePeopleSearch, profilePath } from "../lib/people";
 import { canSendInto, messageTabFor } from "../lib/messageTabs";
+import { formatBadgeCount, isSeenByOther, shouldMarkThreadRead } from "../lib/messageSync";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -79,6 +80,8 @@ function ConversationPanel({
   loadingOlder,
   onLoadOlder,
   onRetry,
+  seenAt,
+  onAtBottomChange,
 }: {
   person: { id: string; name: string };
   subtitle: string;
@@ -96,10 +99,23 @@ function ConversationPanel({
   loadingOlder: boolean;
   onLoadOlder: () => void;
   onRetry: (clientId: string) => void;
+  /** The other party's read time for this thread, or null — see
+   * SocialContext's seenAt. Shows "Seen" under your own latest message
+   * only, and only while it's genuinely the last message in the thread. */
+  seenAt: number | null;
+  /** Fires whenever "at the bottom" changes, so the parent can decide when
+   * to mark the thread read (Phase 3) without duplicating scroll logic. */
+  onAtBottomChange?: (atBottom: boolean) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  const [atBottom, setAtBottom] = useState(true);
+  const [atBottom, setAtBottomState] = useState(true);
+  const setAtBottom = (next: boolean) => {
+    setAtBottomState((prev) => {
+      if (prev !== next) onAtBottomChange?.(next);
+      return next;
+    });
+  };
   const [newMessageCount, setNewMessageCount] = useState(0);
   const prevFirstIdRef = useRef<string | number | undefined>(undefined);
   const prevLastIdRef = useRef<string | number | undefined>(undefined);
@@ -186,8 +202,14 @@ function ConversationPanel({
           {messages.length === 0 ? (
             <p className="py-8 text-center text-xs text-muted-foreground">{emptyText}</p>
           ) : (
-            messages.map((m) => {
+            messages.map((m, i) => {
               const mine = m.fromUser === (myId ?? "local-user");
+              // "Seen" only ever sits under your own latest message, and
+              // only while it's genuinely the last one in the thread — once
+              // they reply, that reply itself is proof enough.
+              const isLastMessage = i === messages.length - 1;
+              const showSeen =
+                mine && isLastMessage && !m.status && isSeenByOther(m.createdAt, seenAt);
               return (
                 <div key={m.id} className={mine ? "ml-auto max-w-[80%]" : "max-w-[80%]"}>
                   <div
@@ -210,6 +232,7 @@ function ConversationPanel({
                       Not sent · Tap to retry
                     </button>
                   )}
+                  {showSeen && <p className="mt-0.5 text-right text-[11px] text-muted-foreground">Seen</p>}
                 </div>
               );
             })
@@ -347,6 +370,49 @@ export function Messages() {
     if (!active) return;
     social.retryMessage(active.id, clientId);
   };
+
+  // Phase 3: mark-as-read needs "the tab is actually visible" and "you're
+  // scrolled to the newest message" alongside "a thread is open" — the
+  // latter two aren't things SocialContext can know on its own.
+  const [tabVisible, setTabVisible] = useState(
+    () => typeof document === "undefined" || document.visibilityState === "visible",
+  );
+  const [atBottom, setAtBottom] = useState(true);
+  useEffect(() => {
+    const onVisibilityChange = () => setTabVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, []);
+
+  // Debounced: fires ~1s after all three conditions hold, and again if a
+  // new message arrives while they still do (messages.length in the deps).
+  // Only ever for an accepted thread — mark_conversation_read rejects
+  // anything else anyway, but there's nothing of the other person's to
+  // read yet on my own still-pending outgoing request.
+  useEffect(() => {
+    if (!active || active.status !== "accepted") return;
+    if (!shouldMarkThreadRead({ threadOpen: true, tabVisible, atBottom })) return;
+    const timer = setTimeout(() => {
+      social.markThreadRead(active.id);
+    }, 1000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active?.id, active?.status, tabVisible, atBottom, messages.length]);
+
+  // Seen refresh: on open (SocialContext's own openConversation) and after
+  // you send (sendMessage/retryMessage) are handled in SocialContext
+  // itself; this covers "every 15 seconds while your last message isn't
+  // yet seen" — and only then, so it stops polling the moment it's seen.
+  useEffect(() => {
+    if (!active || active.status !== "accepted") return;
+    const myLastMessage = [...messages].reverse().find((m) => m.fromUser === user?.id && !m.status);
+    if (!myLastMessage || isSeenByOther(myLastMessage.createdAt, social.seenAt)) return;
+    const interval = setInterval(() => {
+      social.refreshSeenAt();
+    }, 15000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active?.id, active?.status, messages, social.seenAt]);
   const otherId = active && user ? (active.fromUser === user.id ? active.toUser : active.fromUser) : undefined;
   const otherName =
     active && user
@@ -533,6 +599,7 @@ export function Messages() {
                       t.fromUser === user?.id &&
                       t.status !== "accepted" &&
                       social.messagesFor(t.id).length > 0;
+                    const unread = social.unreadCountFor(t.id);
                     return (
                       <li key={t.id}>
                         <button
@@ -548,8 +615,10 @@ export function Messages() {
                           <Avatar className="size-8 shrink-0">
                             <AvatarFallback className="text-[10px]">{initials(name ?? "?")}</AvatarFallback>
                           </Avatar>
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm">{name}</span>
+                          <span className="min-w-0 flex-1">
+                            <span className={`block truncate text-sm ${unread > 0 ? "font-semibold" : ""}`}>
+                              {name}
+                            </span>
                             <span className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
                               {t.kind === "make_together" ? (
                                 <Handshake className="size-3" />
@@ -561,6 +630,14 @@ export function Messages() {
                               {waiting ? "Waiting to accept" : t.kind === "direct_message" ? "Direct message" : t.intent}
                             </span>
                           </span>
+                          {unread > 0 && (
+                            <span
+                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+                              aria-label={`${unread} unread`}
+                            >
+                              {formatBadgeCount(unread)}
+                            </span>
+                          )}
                         </button>
                       </li>
                     );
@@ -585,6 +662,7 @@ export function Messages() {
                     loadingOlder={false}
                     onLoadOlder={() => {}}
                     onRetry={handleRetry}
+                    seenAt={null}
                   />
                 ) : (
                   active && (
@@ -605,6 +683,8 @@ export function Messages() {
                       loadingOlder={social.loadingOlderMessages}
                       onLoadOlder={social.loadOlderMessages}
                       onRetry={handleRetry}
+                      seenAt={active.status === "accepted" ? social.seenAt : null}
+                      onAtBottomChange={setAtBottom}
                     />
                   )
                 )}

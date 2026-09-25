@@ -6,12 +6,14 @@ import { ParticipationKind } from "../data/participation";
 import {
   applyParticipationDelete,
   canSendInto,
+  isRelevantParticipationEvent,
   messageTabFor,
   upsertParticipation,
   visibleParticipations,
 } from "../lib/messageTabs";
 import {
   combineHistoryAndPending,
+  countUnreadThreads,
   markPendingFailed,
   mergeMessage,
   patchSummaryWithNewMessage,
@@ -249,6 +251,29 @@ interface SocialContextType {
    * there's nothing more or a load is already in flight. */
   loadOlderMessages: () => Promise<void>;
 
+  /** Messages from the other person, newer than my own last_read_at, for
+   * this thread — 0 once summariesAvailable is false (the Phase 2
+   * fallback never tracked reads, so there's nothing to count). */
+  unreadCountFor: (participationId: number | string) => number;
+  /** How many of my accepted "chats" threads have something unread — the
+   * Chats-tab half of the header/tab-bar badge (the other half is
+   * messageRequests.length). */
+  chatsUnreadCount: number;
+  /** Marks the given (accepted) thread read as of now. Silently does
+   * nothing for a pending thread or one you're not in — the database
+   * enforces that; the UI should just never call it in those cases. */
+  markThreadRead: (participationId: number | string) => Promise<void>;
+  /** The OTHER party's last read time for the currently open conversation
+   * (openConversation), or null if they haven't read it, the thread isn't
+   * accepted, either side has read_receipts off, or you're blocked-between
+   * — thread_seen_at() collapses all of those to the same null on purpose.
+   * Always null for any thread that isn't the open one. */
+  seenAt: number | null;
+  /** Re-fetches seenAt for the open conversation. Call on open, after you
+   * send, on tab focus, and (only while your last message isn't yet seen)
+   * every 15 seconds — no other polling. */
+  refreshSeenAt: () => Promise<void>;
+
   refresh: () => Promise<void>;
   /** Re-fetches participations/summaries and the open conversation, without
    * the rest of refresh()'s work — the safety net Messages.tsx runs on a
@@ -382,6 +407,17 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   // requirement.
   const [pendingByThread, setPendingByThread] = useState<Record<string, PendingMessage[]>>({});
 
+  // Phase 3: the OTHER party's last read time for the open conversation
+  // only — reset on every open/close, refetched (not merged/patched) since
+  // it's a single value with no local pending state of its own.
+  const [seenAt, setSeenAt] = useState<number | null>(null);
+
+  // Mirrors state.participations synchronously for the Realtime handlers
+  // below (a stale closure over `state` would miss anything since the
+  // channel effect was set up) — read-only, "is this id already something
+  // I'm looking at" check for isRelevantParticipationEvent.
+  const participationsRef = useRef<Participation[]>([]);
+
   const myName = profile?.display_name || "You";
   const myId = user?.id ?? "local-user";
 
@@ -406,10 +442,15 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         .or(`from_user.eq.${user.id},to_user.eq.${user.id},to_user.is.null`)
         .order("created_at", { ascending: false }),
       supabase.from("thoughts").select("*").order("created_at", { ascending: false }).limit(400),
+      // Phase 3: a "message" notification is never created anymore (Seen
+      // + unread cover that job), but 16 pre-Phase-3 ones still exist live
+      // — excluded here rather than deleted, so the bell's list and count
+      // both quietly stop counting them without touching the rows.
       supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
+        .neq("kind", "message")
         .order("created_at", { ascending: false })
         .limit(60),
       // Degrades to "no one blocked" if the table isn't there yet — the
@@ -492,6 +533,9 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         lastMessageFromUser: s.last_message_from_user,
         lastMessageBody: s.last_message_body,
         lastMessageCreatedAt: s.last_message_created_at ? new Date(s.last_message_created_at).getTime() : null,
+        // Absent (an older migration) reads as 0 — no unread tracking
+        // rather than a crash; Phase 3's own migration always includes it.
+        unreadCount: s.unread_count ?? 0,
       }));
     } else {
       // Same subset and shape as before Phase 2: any accepted thread, plus
@@ -568,12 +612,28 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     });
   }, [user?.id]);
 
+  /** Re-fetches Seen for the open conversation only — a stale result (the
+   * user switched or closed the thread mid-flight) is dropped the same way
+   * every other open-thread fetch here is. */
+  const refreshSeenAt = useCallback(async () => {
+    if (!supabase || !user || openThreadIdRef.current == null) {
+      setSeenAt(null);
+      return;
+    }
+    const forThread = openThreadIdRef.current;
+    const { data, error } = await supabase.rpc("thread_seen_at", { pid: forThread });
+    if (openThreadIdRef.current !== forThread) return;
+    if (error) return;
+    setSeenAt(data ? new Date(data).getTime() : null);
+  }, [user?.id]);
+
   const openConversation = useCallback(
     (participationId: number | string) => {
       openThreadIdRef.current = participationId;
       setOpenThreadId(participationId);
       setOpenMessages([]);
       setHasMoreOlderMessages(false);
+      setSeenAt(null);
       if (!supabase || !user) return;
       (async () => {
         const { data, error } = await supabase
@@ -591,8 +651,9 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         setOpenMessages(page);
         setHasMoreOlderMessages(data.length > MESSAGE_PAGE_SIZE);
       })();
+      refreshSeenAt();
     },
-    [user?.id],
+    [user?.id, refreshSeenAt],
   );
 
   const closeConversation = useCallback(() => {
@@ -601,6 +662,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     setOpenMessages([]);
     setHasMoreOlderMessages(false);
     setLoadingOlderMessages(false);
+    setSeenAt(null);
   }, []);
 
   const loadOlderMessages = useCallback(async () => {
@@ -636,21 +698,28 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     await reloadOpenConversation();
   }, [refresh, reloadOpenConversation]);
 
-  /* ── Phase 2: one Realtime channel per signed-in user ──────────────────
+  // Mirrors state.participations for the Realtime handlers below, which
+  // are set up once per user and would otherwise close over a stale list.
+  useEffect(() => {
+    participationsRef.current = state.participations;
+  }, [state.participations]);
+
+  /* ── Phase 2/3: one Realtime channel per signed-in user ─────────────────
    * Created once per user, torn down automatically (this effect's own
-   * cleanup) on sign-out or when the user changes. Both tables' own RLS
-   * still applies to what's delivered here — see the migration's own
-   * comment — so this never widens who receives what.
+   * cleanup) on sign-out or when the user changes. Every table here is
+   * still governed by its own RLS — see the migrations' own comments — so
+   * this never widens who receives what.
    */
   useEffect(() => {
     if (!supabase || !user) return;
     const client = supabase;
+    const myUserId = user.id;
 
     const channel = client
-      .channel(`social-updates-${user.id}`)
+      .channel(`social-updates-${myUserId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload: any) => {
         const row = mapMessageRow(payload.new);
-        setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, row) }));
+        setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, row, myUserId) }));
         if (openThreadIdRef.current != null && String(openThreadIdRef.current) === String(row.participationId)) {
           setOpenMessages((prev) => mergeMessage(prev, row));
         }
@@ -662,21 +731,41 @@ export function SocialProvider({ children }: { children: ReactNode }) {
           return next === list ? prev : { ...prev, [key]: next };
         });
       })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "participations" }, () => {
-        refresh();
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "participations" }, (payload: any) => {
+        // Narrowed (Phase 2 follow-up): a stranger's public join_in used to
+        // trigger a full refresh() for everyone. Only refresh when the row
+        // is actually mine, or already sitting in local state.
+        const knownIds = new Set(participationsRef.current.map((p) => String(p.id)));
+        if (isRelevantParticipationEvent("INSERT", payload.new, myUserId, knownIds)) refresh();
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "participations" }, () => {
-        refresh();
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "participations" }, (payload: any) => {
+        const knownIds = new Set(participationsRef.current.map((p) => String(p.id)));
+        if (isRelevantParticipationEvent("UPDATE", payload.new, myUserId, knownIds)) refresh();
       })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "participations" }, (payload: any) => {
         // Postgres's default replica identity sends only the deleted row's
         // id on a DELETE — e.g. someone else's join_in leave, broadcast to
-        // every other subscriber who could see that public row. Applying
-        // it is just a filter: a delete for an id not already in state is
-        // a no-op, nothing to special-case.
+        // every other subscriber who could see that public row.
         const deletedId = payload.old?.id;
         if (deletedId == null) return;
+        const knownIds = new Set(participationsRef.current.map((p) => String(p.id)));
+        if (!isRelevantParticipationEvent("DELETE", { id: deletedId }, myUserId, knownIds)) return;
         setRemote((prev) => ({ ...prev, participations: applyParticipationDelete(prev.participations, deletedId) }));
+        refresh();
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, () => {
+        // Live bell — RLS already limits this to my own notifications.
+        refresh();
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications" }, () => {
+        // e.g. markAllRead from another of my own open tabs/devices.
+        refresh();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversation_reads" }, () => {
+        // RLS limits this to my own rows only — another of my devices
+        // marking a thread read updates my unread badge here too, without
+        // needing that thread open. Never fires for someone else's read
+        // (that's thread_seen_at()'s job, on its own explicit triggers).
         refresh();
       })
       .subscribe((status: string) => {
@@ -694,18 +783,20 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   }, [user?.id, refresh, reloadOpenConversation]);
 
   // Tab-visibility safety net — the other trigger alongside reconnects and
-  // Messages.tsx's own 60-second interval.
+  // Messages.tsx's own 60-second interval. Also one of Seen's own explicit
+  // refresh triggers ("on tab focus").
   useEffect(() => {
     if (!supabase || !user) return;
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         refresh();
         reloadOpenConversation();
+        refreshSeenAt();
       }
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, [user?.id, refresh, reloadOpenConversation]);
+  }, [user?.id, refresh, reloadOpenConversation, refreshSeenAt]);
 
   useEffect(() => {
     refresh();
@@ -973,6 +1064,44 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const acceptRequest = (id: number | string) => respond(id, true);
   const ignoreRequest = (id: number | string) => respond(id, false);
 
+  /** Messages from the other person, newer than my own last_read_at, for
+   * this one thread — bolds it in the list and feeds the Chats badge. */
+  const unreadCountFor = (participationId: number | string): number => {
+    const s = state.summaries.find((s) => String(s.participationId) === String(participationId));
+    return s?.unreadCount ?? 0;
+  };
+
+  /** How many accepted "chats" threads have something unread — the
+   * Chats-tab half of the header/tab-bar badge. Mirrors Messages.tsx's own
+   * chatThreads filter (accepted, plus my own still-waiting outgoing
+   * requests) rather than importing that page's component logic here. */
+  const chatsUnreadCount = countUnreadThreads(
+    state.participations
+      .filter((p) => {
+        if (messageTabFor(p, myId) !== "chats") return false;
+        const otherId = p.fromUser === myId ? p.toUser : p.fromUser;
+        return !isBlocked(otherId);
+      })
+      .map((p) => p.id),
+    state.summaries,
+  );
+
+  /** Marks the given thread read as of now. The database enforces
+   * accepted-only and party-only; a rejection here (a pending thread, a
+   * stale id) is quietly ignored rather than surfaced — the UI simply
+   * shouldn't have called this for a case where it can't succeed. */
+  const markThreadRead = async (participationId: number | string) => {
+    if (!supabase || !user) return;
+    const { error } = await supabase.rpc("mark_conversation_read", { pid: participationId });
+    if (error) return;
+    setRemote((prev) => ({
+      ...prev,
+      summaries: prev.summaries.map((s) =>
+        String(s.participationId) === String(participationId) ? { ...s, unreadCount: 0 } : s,
+      ),
+    }));
+  };
+
   // Matched by user id: two people can share a display name, and picking the
   // wrong thread would show one person's messages under another's name.
   const threadWith = (personId: string) =>
@@ -1239,11 +1368,13 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     // reason, the caller gets the same "failed" back either way. See
     // SocialContextType.sendMessage's own comment for why.
     if (error || !data) return { data: null, error: "failed" as const };
-    const other = thread.fromUser === user.id ? thread.toUser : thread.fromUser;
+    // Phase 3: a bell notification for every message is exactly the noise
+    // the quieter-bell goal is about — Seen and unread now do that job.
+    // The message_request notification (once per request, not per message)
+    // stays, same as follow requests.
     if (isFirstPendingDm) {
+      const other = thread.fromUser === user.id ? thread.toUser : thread.fromUser;
       await notify(other, "message_request", `${myName} wants to message you.`, "/messages?tab=requests");
-    } else {
-      await notify(other, "message", `${myName} sent you a message.`, "/messages");
     }
     return { data, error: null };
   };
@@ -1332,7 +1463,8 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     if (openThreadIdRef.current != null && String(openThreadIdRef.current) === key) {
       setOpenMessages((prev) => mergeMessage(prev, real));
     }
-    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real) }));
+    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real, myId) }));
+    refreshSeenAt();
     return { error: null };
   };
 
@@ -1370,7 +1502,8 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     if (openThreadIdRef.current != null && String(openThreadIdRef.current) === key) {
       setOpenMessages((prev) => mergeMessage(prev, real));
     }
-    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real) }));
+    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real, myId) }));
+    refreshSeenAt();
   };
 
   return (
@@ -1414,6 +1547,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         hasMoreOlderMessages,
         loadingOlderMessages,
         loadOlderMessages,
+        unreadCountFor,
+        chatsUnreadCount,
+        markThreadRead,
+        seenAt,
+        refreshSeenAt,
         refresh,
         refreshMessagesSafetyNet,
       }}

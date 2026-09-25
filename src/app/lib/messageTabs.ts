@@ -156,3 +156,33 @@ export function applyParticipationDelete<T extends { id: number | string }>(
 ): T[] {
   return list.filter((p) => String(p.id) !== String(deletedId));
 }
+
+/** A live participations row as Realtime delivers it — snake_case, and for
+ * a DELETE only `id` is ever populated (Postgres's default replica identity). */
+export interface ParticipationEventRow {
+  id: number | string;
+  from_user?: string;
+  to_user?: string;
+}
+
+/**
+ * Phase 3 follow-up on Phase 2: participations INSERT/UPDATE used to
+ * trigger a full refresh() for every visible change, including a
+ * complete stranger joining someone else's public activity (a `join_in`
+ * with `to_user` null is visible to every signed-in user by RLS). Only
+ * refresh when the row is actually mine — I'm from_user or to_user — or
+ * it's a thread already sitting in local state (so an update to something
+ * I'm already looking at, like an accept or a decline, still refreshes).
+ * DELETE carries no from_user/to_user at all, so it's judged by local
+ * state alone.
+ */
+export function isRelevantParticipationEvent(
+  type: "INSERT" | "UPDATE" | "DELETE",
+  row: ParticipationEventRow,
+  myId: string,
+  knownIds: ReadonlySet<string>,
+): boolean {
+  const idStr = String(row.id);
+  if (type === "DELETE") return knownIds.has(idStr);
+  return row.from_user === myId || row.to_user === myId || knownIds.has(idStr);
+}
