@@ -8,6 +8,7 @@ import { Post } from "../data/posts";
 import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
 import { circlesByHobby } from "../data/circles";
 import { usePeopleInHobby } from "../lib/people";
+import { messageTabFor } from "../lib/messageTabs";
 import { sessionsFromPosts } from "../components/HobbyShelf";
 import { tagsFromPosts } from "../lib/postTags";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
@@ -420,16 +421,20 @@ export function PublicProfile() {
                 )}
                 {/* No request, no acceptance needed to open the conversation
                     — but no participation row is created here either. If a
-                    thread already exists (of any kind), jump straight into
-                    it; otherwise this opens an empty draft in Messages, and
+                    thread already exists and is reachable as a chat, jump
+                    straight into it; otherwise (nothing yet, or a request of
+                    theirs I declined — hidden from my Chats, but still
+                    reopenable) this opens an empty draft in Messages, and
                     the row (with its first message) is only created on
-                    Send — see SocialContext.tsx's startAndSendDirectMessage(). */}
+                    Send — see SocialContext.tsx's startAndSendDirectMessage(),
+                    which reuses and un-declines that row rather than
+                    forking a second one. */}
                 {!isMe && user && (
                   <Button
                     variant="outline"
                     onClick={() => {
                       const existing = social.findExistingThread(personId);
-                      if (existing) {
+                      if (existing && messageTabFor(existing, user.id) === "chats") {
                         navigate(`/messages?thread=${existing.id}`);
                         return;
                       }

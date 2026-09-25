@@ -50,9 +50,17 @@ describe("messageTabFor", () => {
     ).toBe("chats");
   });
 
-  it("puts a declined direct_message someone sent me in chats too — I can still message them to un-decline it", () => {
+  it("puts a declined direct_message someone sent me nowhere — I already answered it", () => {
     expect(
       messageTabFor({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME),
+    ).toBe("none");
+  });
+
+  it("moves it into chats once I un-decline it by messaging them again (canSendInto flips it to accepted first)", () => {
+    // Same row, after SocialContext.tsx's sendMessage has flipped its status —
+    // messageTabFor only looks at current fields, not history.
+    expect(
+      messageTabFor({ kind: "direct_message", status: "accepted", fromUser: THEM, toUser: ME }, ME),
     ).toBe("chats");
   });
 });

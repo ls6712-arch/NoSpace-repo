@@ -8,16 +8,22 @@
  *   "requests" — a pending direct_message someone else sent me, waiting
  *                for me to accept or ignore.
  *   "chats"    — an accepted thread of any kind (Make/Explore together or
- *                direct_message); my own outgoing direct_message still
+ *                direct_message), or my own outgoing direct_message still
  *                waiting on the other person (pending, or declined — a
  *                decline doesn't free me to start a second one, so it's
- *                still "the thread I'm waiting on", not gone); or a
- *                direct_message I declined — I can still message that
- *                person again, which un-declines it (see canSendInto and
- *                SocialContext.tsx's sendMessage).
- *   "none"     — anything else: join_in (no messaging surface at all), or
- *                a pending/declined Make/Explore together request (those
- *                only unlock messaging once accepted).
+ *                still "the thread I'm waiting on", not gone).
+ *   "none"     — anything else: join_in (no messaging surface at all), a
+ *                pending/declined Make/Explore together request (those
+ *                only unlock messaging once accepted), or a direct_message
+ *                I declined — I answered it, it's gone from my Chats too,
+ *                not sitting there as a thread with nothing in it. I can
+ *                still un-decline it by messaging that person again from
+ *                their profile — canSendInto allows it and
+ *                SocialContext.tsx's sendMessage flips it to accepted,
+ *                which is what actually moves it into Chats. That flow
+ *                goes through a fresh draft (see PublicProfile.tsx and
+ *                Messages.tsx's startThreadWith), never through this
+ *                still-declined row appearing here first.
  */
 export type MessageTab = "chats" | "requests" | "none";
 
@@ -43,10 +49,6 @@ export function messageTabFor(p: ParticipationLike, myId: string): MessageTab {
   // already answered it; it doesn't keep asking me to answer again.
   if (p.status === "pending" && p.toUser === myId) return "requests";
   if (p.fromUser === myId) return "chats";
-  // I declined this one, but the database still lets me (the recipient)
-  // change my mind later — messaging them again un-declines it, so it
-  // belongs in Chats, not nowhere.
-  if (p.status === "declined" && p.toUser === myId) return "chats";
   return "none";
 }
 

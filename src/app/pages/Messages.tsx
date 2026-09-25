@@ -194,13 +194,16 @@ export function Messages() {
     return () => clearInterval(interval);
   }, [social.refresh]);
 
-  // A draft can turn out to already have a real thread behind it — another
-  // tab sent the first message, or (defensively) this one already did —
-  // in which case it isn't a draft any more.
+  // A draft can turn out to already have a real, reachable thread behind
+  // it — another tab sent the first message, or (defensively) this one
+  // already did — in which case it isn't a draft any more. A request of
+  // theirs I declined doesn't count: it exists, but it's hidden from Chats
+  // until sending actually un-declines it (see startAndSendDirectMessage),
+  // so the draft stays a draft until then.
   useEffect(() => {
     if (!draftThread) return;
     const existing = social.findExistingThread(draftThread.id);
-    if (existing) {
+    if (existing && messageTabFor(existing, user?.id ?? "") === "chats") {
       setActiveId(existing.id);
       setDraftThread(null);
       setTab("chats");
@@ -291,8 +294,12 @@ export function Messages() {
 
   const startThreadWith = (person: { id: string; name: string }) => {
     setStartError(null);
+    // Same rule as PublicProfile.tsx's "Message" button: only jump straight
+    // into a thread that's actually reachable as a chat. A request of
+    // theirs I declined is hidden from Chats but still reopenable — that
+    // goes through a fresh draft instead, same as someone brand new.
     const existing = social.findExistingThread(person.id);
-    if (existing) {
+    if (existing && messageTabFor(existing, user?.id ?? "") === "chats") {
       setDraftThread(null);
       setTab("chats");
       setActiveId(existing.id);
