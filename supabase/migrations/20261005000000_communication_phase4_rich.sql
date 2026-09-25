@@ -10,118 +10,12 @@
 -- from Phases 1-3 are untouched.
 
 -- ═══════════════════════════════════════════════════════════════════════
--- 1. message-media: a new PRIVATE bucket for chat photos.
+-- 1. messages: kind + attachment columns.
 -- ═══════════════════════════════════════════════════════════════════════
 --
--- Unlike post-media (public = true; a public URL works for anyone who has
--- it, per docs/private-media-plan.md's own finding), this bucket is
--- public = false — every read goes through RLS on storage.objects, no
--- unsigned public endpoint exists for it at all. Object path convention:
--- `<participation_id>/<uuid>.<ext>` (participation_id as folder segment 1,
--- so a single EXISTS-against-participations check on that segment governs
--- both upload and read — the same idea as post-media's own
--- uploader-folder scoping, just keyed by thread instead of by uploader,
--- since a chat photo needs to be readable by TWO people, not one).
---
--- Every policy below compares that folder segment as TEXT
--- (`p.id::text = (storage.foldername(name))[1]`), never by casting the
--- segment itself to bigint. A storage.objects policy is evaluated against
--- every row in the table regardless of bucket — Postgres doesn't guarantee
--- `bucket_id = 'message-media'` short-circuits before the rest of the
--- clause runs — so a `(storage.foldername(name))[1])::bigint` cast would
--- blow up with "invalid input syntax for type bigint" on post-media/avatar
--- paths, whose first folder segment is a uuid, not a number. That would
--- have broken ordinary Moment and avatar uploads/reads, not just this
--- bucket. Caught in review before applying.
-
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'message-media',
-  'message-media',
-  false,
-  10485760, -- 10 MiB
-  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-)
-on conflict (id) do nothing;
-
--- 1a. Upload: only a party to an ACCEPTED, not-blocked-between
--- participation, into that participation's own folder. A pending
--- direct_message can't receive a photo at all (see the messages INSERT
--- policy below for the matching rule on the row itself) — accepted-only
--- here is what actually enforces that at the storage layer, since nothing
--- stops a client from trying to upload straight to storage without ever
--- inserting a messages row.
-drop policy if exists "upload a photo into your own accepted chat" on storage.objects;
-create policy "upload a photo into your own accepted chat"
-  on storage.objects for insert
-  to authenticated
-  with check (
-    bucket_id = 'message-media'
-    and exists (
-      select 1 from public.participations p
-      where p.id::text = (storage.foldername(name))[1]
-        and p.status = 'accepted'
-        and (auth.uid() = p.from_user or auth.uid() = p.to_user)
-        and not private.is_blocked_between(p.from_user, p.to_user)
-    )
-  );
-
--- 1b. Read: the two parties to the thread (not blocked-between — a block
--- cuts off a chat photo the same way it cuts off Seen in Phase 3, even for
--- a photo sent before the block), OR an admin reviewing a message that has
--- an open or reviewed report against it. This is also what scopes the
--- storage LIST API (Supabase's list uses this same SELECT policy — see
--- close_post_media_listing's precedent for exactly this concern on
--- post-media), so nobody can enumerate another thread's photos either.
-drop policy if exists "read your chat's photos, or a reported one as admin" on storage.objects;
-create policy "read your chat's photos, or a reported one as admin"
-  on storage.objects for select
-  to authenticated
-  using (
-    bucket_id = 'message-media'
-    and (
-      exists (
-        select 1 from public.participations p
-        where p.id::text = (storage.foldername(name))[1]
-          and (auth.uid() = p.from_user or auth.uid() = p.to_user)
-          and not private.is_blocked_between(p.from_user, p.to_user)
-      )
-      or (
-        private.is_admin(auth.uid())
-        and exists (
-          select 1
-          from public.messages m
-          join public.reports r
-            on r.target_kind = 'message'
-            and r.target_id = m.id
-            and r.status in ('open', 'reviewed')
-          where m.media_path = storage.objects.name
-        )
-      )
-    )
-  );
-
--- 1c. Delete: only the uploader, only their own objects (unsend deletes
--- the storage object too — see the app-side unsend flow). Storage's own
--- `owner` column is set to the uploading user automatically; unlike
--- post-media's path (which embeds the uploader's uid as folder segment 1),
--- this bucket's folder segment 1 is the *thread*, not the uploader, so
--- ownership has to be checked this way instead.
-drop policy if exists "you delete your own message-media uploads" on storage.objects;
-create policy "you delete your own message-media uploads"
-  on storage.objects for delete
-  to authenticated
-  using (
-    bucket_id = 'message-media'
-    and owner = (select auth.uid())
-  );
-
--- No UPDATE policy at all — a message photo, once uploaded, never changes
--- in place (unsend removes the object outright instead).
-
--- ═══════════════════════════════════════════════════════════════════════
--- 2. messages: kind + attachment columns.
--- ═══════════════════════════════════════════════════════════════════════
+-- Done FIRST, before the storage bucket/policies below — the admin-review
+-- read policy on storage.objects references messages.media_path, which
+-- has to already exist by the time that policy is created.
 
 alter table public.messages
   add column if not exists kind text not null default 'text',
@@ -172,6 +66,116 @@ alter table public.messages
     or length(body) > 0
     or kind <> 'text'
   );
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 2. message-media: a new PRIVATE bucket for chat photos.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- Unlike post-media (public = true; a public URL works for anyone who has
+-- it, per docs/private-media-plan.md's own finding), this bucket is
+-- public = false — every read goes through RLS on storage.objects, no
+-- unsigned public endpoint exists for it at all. Object path convention:
+-- `<participation_id>/<uuid>.<ext>` (participation_id as folder segment 1,
+-- so a single EXISTS-against-participations check on that segment governs
+-- both upload and read — the same idea as post-media's own
+-- uploader-folder scoping, just keyed by thread instead of by uploader,
+-- since a chat photo needs to be readable by TWO people, not one).
+--
+-- Every policy below compares that folder segment as TEXT
+-- (`p.id::text = (storage.foldername(name))[1]`), never by casting the
+-- segment itself to bigint. A storage.objects policy is evaluated against
+-- every row in the table regardless of bucket — Postgres doesn't guarantee
+-- `bucket_id = 'message-media'` short-circuits before the rest of the
+-- clause runs — so a `(storage.foldername(name))[1])::bigint` cast would
+-- blow up with "invalid input syntax for type bigint" on post-media/avatar
+-- paths, whose first folder segment is a uuid, not a number. That would
+-- have broken ordinary Moment and avatar uploads/reads, not just this
+-- bucket. Caught in review before applying.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'message-media',
+  'message-media',
+  false,
+  10485760, -- 10 MiB
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do nothing;
+
+-- 2a. Upload: only a party to an ACCEPTED, not-blocked-between
+-- participation, into that participation's own folder. A pending
+-- direct_message can't receive a photo at all (see the messages INSERT
+-- policy below for the matching rule on the row itself) — accepted-only
+-- here is what actually enforces that at the storage layer, since nothing
+-- stops a client from trying to upload straight to storage without ever
+-- inserting a messages row.
+drop policy if exists "upload a photo into your own accepted chat" on storage.objects;
+create policy "upload a photo into your own accepted chat"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'message-media'
+    and exists (
+      select 1 from public.participations p
+      where p.id::text = (storage.foldername(name))[1]
+        and p.status = 'accepted'
+        and (auth.uid() = p.from_user or auth.uid() = p.to_user)
+        and not private.is_blocked_between(p.from_user, p.to_user)
+    )
+  );
+
+-- 2b. Read: the two parties to the thread (not blocked-between — a block
+-- cuts off a chat photo the same way it cuts off Seen in Phase 3, even for
+-- a photo sent before the block), OR an admin reviewing a message that has
+-- an open or reviewed report against it. This is also what scopes the
+-- storage LIST API (Supabase's list uses this same SELECT policy — see
+-- close_post_media_listing's precedent for exactly this concern on
+-- post-media), so nobody can enumerate another thread's photos either.
+drop policy if exists "read your chat's photos, or a reported one as admin" on storage.objects;
+create policy "read your chat's photos, or a reported one as admin"
+  on storage.objects for select
+  to authenticated
+  using (
+    bucket_id = 'message-media'
+    and (
+      exists (
+        select 1 from public.participations p
+        where p.id::text = (storage.foldername(name))[1]
+          and (auth.uid() = p.from_user or auth.uid() = p.to_user)
+          and not private.is_blocked_between(p.from_user, p.to_user)
+      )
+      or (
+        private.is_admin(auth.uid())
+        and exists (
+          select 1
+          from public.messages m
+          join public.reports r
+            on r.target_kind = 'message'
+            and r.target_id = m.id
+            and r.status in ('open', 'reviewed')
+          where m.media_path = storage.objects.name
+        )
+      )
+    )
+  );
+
+-- 2c. Delete: only the uploader, only their own objects (unsend deletes
+-- the storage object too — see the app-side unsend flow). Storage's own
+-- `owner` column is set to the uploading user automatically; unlike
+-- post-media's path (which embeds the uploader's uid as folder segment 1),
+-- this bucket's folder segment 1 is the *thread*, not the uploader, so
+-- ownership has to be checked this way instead.
+drop policy if exists "you delete your own message-media uploads" on storage.objects;
+create policy "you delete your own message-media uploads"
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'message-media'
+    and owner = (select auth.uid())
+  );
+
+-- No UPDATE policy at all — a message photo, once uploaded, never changes
+-- in place (unsend removes the object outright instead).
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 3. messages: extend the INSERT policy (never loosen it).
