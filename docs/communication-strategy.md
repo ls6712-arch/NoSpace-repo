@@ -161,9 +161,15 @@ the phase.
   request before any message was typed, the composer's lock rule didn't account for message
   count, a declined request's own recipient couldn't reopen it, and some empty-conversation copy
   could render an empty quote. Fixed and merged in PR #98 on 2026-09-25 (see
-  `docs/verification/communication-phase1-followup/`). Not yet separately confirmed on the live
-  production site after deploy — worth a quick click-through once the Vercel production deploy
-  for this merge finishes.
+  `docs/verification/communication-phase1-followup/`). Live testing of block/report/unblock then
+  found two more: a party a blocker had blocked saw a ghost "Someone" thread with an open
+  composer instead of the thread simply disappearing, and a fast double-click on Report could
+  insert two identical reports. Fixed and merged in PR #102 on 2026-09-25 (see
+  `docs/verification/communication-phase1-block-report/`); that PR also stages, but does not
+  apply, a one-open-report-per-target DB index (blocked from applying by two pre-existing
+  duplicate reports, left alone per instruction — needs one of them reviewed/dismissed first).
+  Not yet separately confirmed on the live production site after deploy — worth a quick
+  click-through once the Vercel production deploy for this merge finishes.
 - Phase 2 Live and reliable: not started
 - Phase 3 Unread and quieter bell: not started
 - Phase 4 Richer conversations: not started
