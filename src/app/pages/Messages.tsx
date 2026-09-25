@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Handshake, MessageCircle, MessagesSquare, Send } from "lucide-react";
 import { useSocial, Participation, Message } from "../context/SocialContext";
@@ -75,6 +75,10 @@ function ConversationPanel({
   onDraftChange,
   onSend,
   sendError,
+  hasMoreOlder,
+  loadingOlder,
+  onLoadOlder,
+  onRetry,
 }: {
   person: { id: string; name: string };
   subtitle: string;
@@ -88,14 +92,77 @@ function ConversationPanel({
   onDraftChange: (v: string) => void;
   onSend: () => void;
   sendError: string | null;
+  hasMoreOlder: boolean;
+  loadingOlder: boolean;
+  onLoadOlder: () => void;
+  onRetry: (clientId: string) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  const [atBottom, setAtBottom] = useState(true);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const prevFirstIdRef = useRef<string | number | undefined>(undefined);
+  const prevLastIdRef = useRef<string | number | undefined>(undefined);
+  const prevScrollHeightRef = useRef<number | null>(null);
+
+  // Switching to a different conversation entirely — snap to the bottom,
+  // don't carry over the previous thread's "new messages" pill or scroll
+  // memory.
+  useLayoutEffect(() => {
+    setAtBottom(true);
+    setNewMessageCount(0);
+    prevFirstIdRef.current = undefined;
+    prevLastIdRef.current = undefined;
+    prevScrollHeightRef.current = null;
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [messages.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [person.id]);
+
+  // Distinguishes an older page landing at the front (restore scroll
+  // position so nothing visually jumps) from a new message landing at the
+  // end (pin to bottom if already there, otherwise show the pill instead
+  // of yanking the view down).
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    const firstId = messages[0]?.id;
+    const lastId = messages[messages.length - 1]?.id;
+    const firstChanged = firstId !== prevFirstIdRef.current;
+    const lastChanged = lastId !== prevLastIdRef.current;
+
+    if (el && firstChanged && prevScrollHeightRef.current != null) {
+      el.scrollTop += el.scrollHeight - prevScrollHeightRef.current;
+      prevScrollHeightRef.current = null;
+    } else if (lastChanged && prevLastIdRef.current !== undefined) {
+      if (atBottom) {
+        endRef.current?.scrollIntoView({ block: "end" });
+      } else {
+        setNewMessageCount((n) => n + 1);
+      }
+    }
+    prevFirstIdRef.current = firstId;
+    prevLastIdRef.current = lastId;
+  }, [messages, atBottom]);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+    setAtBottom(nearBottom);
+    if (nearBottom) setNewMessageCount(0);
+    if (el.scrollTop < 80 && hasMoreOlder && !loadingOlder) {
+      prevScrollHeightRef.current = el.scrollHeight;
+      onLoadOlder();
+    }
+  };
+
+  const scrollToBottom = () => {
+    setNewMessageCount(0);
+    setAtBottom(true);
+    endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  };
 
   return (
-    <div className="flex min-h-[26rem] flex-col rounded-2xl border border-border bg-card">
+    <div className="flex h-[26rem] flex-col rounded-2xl border border-border bg-card md:h-[36rem]">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
         <div className="min-w-0">
           <div className="truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
@@ -106,30 +173,58 @@ function ConversationPanel({
         <PersonActionsMenu personId={person.id} personName={person.name} />
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
-        {bannerText && (
-          <p className="mb-2 rounded-xl bg-surface-muted px-3.5 py-2.5 text-center text-xs text-muted-foreground">
-            {bannerText}
-          </p>
+      <div className="relative flex-1 min-h-0">
+        <div ref={scrollRef} onScroll={handleScroll} className="h-full space-y-2 overflow-y-auto px-4 py-4">
+          {loadingOlder && (
+            <p className="pb-1 text-center text-[11px] text-muted-foreground">Loading earlier messages…</p>
+          )}
+          {bannerText && (
+            <p className="mb-2 rounded-xl bg-surface-muted px-3.5 py-2.5 text-center text-xs text-muted-foreground">
+              {bannerText}
+            </p>
+          )}
+          {messages.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted-foreground">{emptyText}</p>
+          ) : (
+            messages.map((m) => {
+              const mine = m.fromUser === (myId ?? "local-user");
+              return (
+                <div key={m.id} className={mine ? "ml-auto max-w-[80%]" : "max-w-[80%]"}>
+                  <div
+                    className={`rounded-2xl px-3.5 py-2 text-sm ${
+                      m.status === "failed"
+                        ? "border border-dashed border-[var(--coral-text)] bg-surface-muted text-foreground"
+                        : mine
+                          ? `text-white [background-color:var(--coral-deep)] ${m.status === "sending" ? "opacity-60" : ""}`
+                          : "bg-surface-muted"
+                    }`}
+                  >
+                    {m.body}
+                  </div>
+                  {m.status === "failed" && m.clientId && (
+                    <button
+                      type="button"
+                      onClick={() => onRetry(m.clientId!)}
+                      className="mt-0.5 block text-[11px] text-[var(--coral-text)] underline-offset-2 hover:underline"
+                    >
+                      Not sent · Tap to retry
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
+          <div ref={endRef} />
+        </div>
+        {newMessageCount > 0 && (
+          <button
+            type="button"
+            onClick={scrollToBottom}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--coral-deep)] px-3.5 py-1.5 text-xs text-white shadow"
+          >
+            New message{newMessageCount > 1 ? "s" : ""}
+          </button>
         )}
-        {messages.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted-foreground">{emptyText}</p>
-        ) : (
-          messages.map((m) => {
-            const mine = m.fromUser === (myId ?? "local-user");
-            return (
-              <div
-                key={m.id}
-                className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
-                  mine ? "ml-auto text-white [background-color:var(--coral-deep)]" : "bg-surface-muted"
-                }`}
-              >
-                {m.body}
-              </div>
-            );
-          })
-        )}
-        <div ref={endRef} />
       </div>
 
       <div className="flex gap-2 border-t border-[var(--hairline)] p-3">
@@ -187,12 +282,16 @@ export function Messages() {
   const { people, loading } = usePeopleSearch(query);
   const results = people.filter((p) => p.id !== user?.id && !social.blockedIds.includes(p.id));
 
+  // Live updates (Realtime, in SocialContext) replace polling for anything
+  // actually happening while this page is open. This interval is only the
+  // safety net: reconnects and tab-focus already trigger the same refresh,
+  // this just guarantees it happens at least once a minute regardless.
   useEffect(() => {
     const interval = setInterval(() => {
-      social.refresh();
-    }, 4000);
+      social.refreshMessagesSafetyNet();
+    }, 60000);
     return () => clearInterval(interval);
-  }, [social.refresh]);
+  }, [social.refreshMessagesSafetyNet]);
 
   // A draft can turn out to already have a real, reachable thread behind
   // it — another tab sent the first message, or (defensively) this one
@@ -228,8 +327,26 @@ export function Messages() {
   const requests = social.messageRequests;
 
   const active = draftThread ? undefined : chatThreads.find((t) => String(t.id) === String(activeId)) ?? chatThreads[0];
+
+  // The one thread on screen gets its real, paginated history (see
+  // SocialContext's openConversation) — everything else relies on its
+  // summary alone. Closes on unmount too, so leaving Messages entirely
+  // stops paying for a full history load.
+  useEffect(() => {
+    if (!active) {
+      social.closeConversation();
+      return;
+    }
+    social.openConversation(active.id);
+  }, [active?.id]);
+  useEffect(() => () => social.closeConversation(), []);
+
   const messages = active ? social.messagesFor(active.id) : [];
   const hasMessages = messages.length > 0;
+  const handleRetry = (clientId: string) => {
+    if (!active) return;
+    social.retryMessage(active.id, clientId);
+  };
   const otherId = active && user ? (active.fromUser === user.id ? active.toUser : active.fromUser) : undefined;
   const otherName =
     active && user
@@ -278,12 +395,12 @@ export function Messages() {
 
     if (!active || composerDisabled) return;
     setSendError(null);
-    const { error } = await social.sendMessage(active.id, draft);
-    if (error) {
-      setSendError("Couldn't send that. Try again later.");
-      return;
-    }
+    // Clears right away regardless of outcome — the message itself now
+    // appears immediately in the thread (see ConversationPanel), "sending"
+    // or, on failure, "Not sent · Tap to retry" in place. There's nothing
+    // left to redo from the composer; a retry taps the message itself.
     setDraft("");
+    await social.sendMessage(active.id, draft);
   };
 
   const openPicker = () => {
@@ -464,6 +581,10 @@ export function Messages() {
                     onDraftChange={setDraft}
                     onSend={send}
                     sendError={sendError}
+                    hasMoreOlder={false}
+                    loadingOlder={false}
+                    onLoadOlder={() => {}}
+                    onRetry={handleRetry}
                   />
                 ) : (
                   active && (
@@ -480,6 +601,10 @@ export function Messages() {
                       onDraftChange={setDraft}
                       onSend={send}
                       sendError={sendError}
+                      hasMoreOlder={social.hasMoreOlderMessages}
+                      loadingOlder={social.loadingOlderMessages}
+                      onLoadOlder={social.loadOlderMessages}
+                      onRetry={handleRetry}
                     />
                   )
                 )}

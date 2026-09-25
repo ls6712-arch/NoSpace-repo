@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { canSendInto, hasVisibleOtherParty, messageTabFor, visibleParticipations } from "./messageTabs";
+import {
+  applyParticipationDelete,
+  canSendInto,
+  hasVisibleOtherParty,
+  messageTabFor,
+  upsertParticipation,
+  visibleParticipations,
+} from "./messageTabs";
 
 const ME = "me";
 const THEM = "them";
@@ -175,5 +182,47 @@ describe("visibleParticipations", () => {
     // Distinguishes "lookup failed" from "lookup succeeded and came back
     // empty" — the latter really does mean no one here resolved.
     expect(visibleParticipations(list, ME, new Set(), true)).toEqual([]);
+  });
+});
+
+describe("upsertParticipation + visibleParticipations (live participations updates)", () => {
+  it("removes a thread from the visible list once a live update makes its other party unresolved (e.g. a fresh block)", () => {
+    const thread = { id: 1, fromUser: ME, toUser: THEM, status: "accepted" as const };
+    const prev = [thread];
+
+    // A Realtime UPDATE for the same thread arrives (status unchanged here —
+    // a block itself never touches participations, but the same upsert path
+    // is what any other live participations change goes through too).
+    const updated = upsertParticipation(prev, { ...thread });
+
+    // THEM no longer resolves — is_visible_profile() now hides them, same
+    // shape as the ghost-thread case this filter already existed for.
+    const visible = visibleParticipations(updated, ME, new Set(), true);
+    expect(visible.find((p) => p.id === 1)).toBeUndefined();
+  });
+
+  it("keeps a thread visible when the other party still resolves", () => {
+    const thread = { id: 1, fromUser: ME, toUser: THEM, status: "accepted" as const };
+    const updated = upsertParticipation([thread], { ...thread, status: "accepted" as const });
+    const visible = visibleParticipations(updated, ME, new Set([THEM]), true);
+    expect(visible.map((p) => p.id)).toEqual([1]);
+  });
+
+  it("inserts a brand-new participation row at the front", () => {
+    const existing = [{ id: 1, fromUser: ME, toUser: THEM }];
+    const result = upsertParticipation(existing, { id: 2, fromUser: THEM, toUser: ME });
+    expect(result.map((p) => p.id)).toEqual([2, 1]);
+  });
+});
+
+describe("applyParticipationDelete", () => {
+  it("removes a participation matching a live DELETE event's id", () => {
+    const list = [{ id: 1 }, { id: 2 }];
+    expect(applyParticipationDelete(list, 1).map((p) => p.id)).toEqual([2]);
+  });
+
+  it("ignores a DELETE for a participation not already in local state (e.g. someone else's join_in leave)", () => {
+    const list = [{ id: 1 }, { id: 2 }];
+    expect(applyParticipationDelete(list, 999)).toEqual(list);
   });
 });
