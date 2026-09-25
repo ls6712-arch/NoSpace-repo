@@ -14,6 +14,14 @@
 -- (confirmed by a plain SELECT before writing this): Sush, Nani, spd0008,
 -- Sushmitha.
 --
+-- Ran live 2026-09-25 (see the migration's application report). One
+-- correction made after the first live run: a `participations` insert
+-- always starts at status = 'pending' regardless of what's passed (a
+-- Phase 1 safeguard) — an accepted thread has to actually go through the
+-- accept flow (the recipient updates status to 'accepted'), not be
+-- inserted that way directly. Fixed below; re-run confirmed all four
+-- properties.
+--
 -- Proves:
 --   1. participation_message_summaries() returns a correct count/last
 --      message for an accepted thread, and ONLY threads the caller is a
@@ -35,17 +43,17 @@ declare
   v_spd uuid := '38b4d8b3-9502-49d8-9b2f-79d387872127';
   v_sushmitha uuid := '87220a04-06fc-464a-860d-988713665fe0';
 
-  v_thread1 bigint; -- Sush <-> spd0008, accepted, 2 messages
-  v_thread2 bigint; -- Sush <-> Sushmitha, accepted, then blocked
+  v_thread1 bigint; -- Sush -> spd0008, accepted, 2 messages
+  v_thread2 bigint; -- Sush -> Sushmitha, accepted, then blocked
   v_thread3 bigint; -- Nani -> spd0008, pending then declined by spd0008
 
   v_t1_count bigint;
   v_t1_last_body text;
-  v_t1_seen_by_nani boolean;
+  v_t1_seen_by_bystander boolean;
 
   v_t2_visible_to_sush_before boolean;
-  v_t2_visible_to_sush_after boolean;
-  v_t2_visible_to_sushmitha_after boolean;
+  v_t2_hidden_from_sush_after boolean;
+  v_t2_hidden_from_sushmitha_after boolean;
 
   v_t3_recipient_count bigint;
   v_t3_recipient_last_id bigint;
@@ -57,12 +65,15 @@ begin
   -- ── Thread 1: basic correctness + "only my threads" ──────────────────
   perform set_config('role', 'authenticated', true);
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
-  insert into public.participations (kind, from_user, to_user, status)
-  values ('direct_message', v_sush, v_spd, 'accepted')
+  insert into public.participations (kind, from_user, to_user)
+  values ('direct_message', v_sush, v_spd)
   returning id into v_thread1;
   insert into public.messages (participation_id, from_user, body) values (v_thread1, v_sush, 'Hey!');
 
+  -- Recipient accepts (the only way a direct_message reaches 'accepted'),
+  -- then can send their own message.
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
+  update public.participations set status = 'accepted', responded_at = now() where id = v_thread1;
   insert into public.messages (participation_id, from_user, body) values (v_thread1, v_spd, 'Hi there!');
 
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
@@ -75,15 +86,19 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_nani), true);
   select exists(
     select 1 from public.participation_message_summaries() where participation_id = v_thread1
-  ) into v_t1_seen_by_nani;
+  ) into v_t1_seen_by_bystander;
 
   -- ── Thread 2: a blocked pair's thread returns nothing ─────────────────
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
-  insert into public.participations (kind, from_user, to_user, status)
-  values ('direct_message', v_sush, v_sushmitha, 'accepted')
+  insert into public.participations (kind, from_user, to_user)
+  values ('direct_message', v_sush, v_sushmitha)
   returning id into v_thread2;
   insert into public.messages (participation_id, from_user, body) values (v_thread2, v_sush, 'Working Saturday?');
 
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sushmitha), true);
+  update public.participations set status = 'accepted', responded_at = now() where id = v_thread2;
+
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   select exists(
     select 1 from public.participation_message_summaries() where participation_id = v_thread2
   ) into v_t2_visible_to_sush_before;
@@ -92,12 +107,14 @@ begin
 
   select exists(
     select 1 from public.participation_message_summaries() where participation_id = v_thread2
-  ) into v_t2_visible_to_sush_after;
+  ) into v_t2_hidden_from_sush_after;
+  v_t2_hidden_from_sush_after := not v_t2_hidden_from_sush_after;
 
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sushmitha), true);
   select exists(
     select 1 from public.participation_message_summaries() where participation_id = v_thread2
-  ) into v_t2_visible_to_sushmitha_after;
+  ) into v_t2_hidden_from_sushmitha_after;
+  v_t2_hidden_from_sushmitha_after := not v_t2_hidden_from_sushmitha_after;
 
   -- ── Thread 3: a declined request's recipient gets no preview ─────────
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_nani), true);
@@ -126,9 +143,9 @@ begin
     from pg_publication_tables
     where pubname = 'supabase_realtime' and schemaname = 'public';
 
-  raise exception 'RESULTS: t1_count=% t1_last_body=% t1_hidden_from_bystander=% t2_visible_before_block=% t2_hidden_from_sush_after_block=% t2_hidden_from_sushmitha_after_block=% t3_recipient_count=% t3_recipient_last_id_is_null=% t3_sender_count=% t3_sender_last_body=% publication_tables=%',
-    v_t1_count, v_t1_last_body, v_t1_seen_by_nani,
-    v_t2_visible_to_sush_before, (not v_t2_visible_to_sush_after), (not v_t2_visible_to_sushmitha_after),
+  raise exception 'RESULTS: t1_count=% t1_last_body=% t1_seen_by_bystander=% t2_visible_before_block=% t2_hidden_from_sush_after_block=% t2_hidden_from_sushmitha_after_block=% t3_recipient_count=% t3_recipient_last_id_is_null=% t3_sender_count=% t3_sender_last_body=% publication_tables=%',
+    v_t1_count, v_t1_last_body, v_t1_seen_by_bystander,
+    v_t2_visible_to_sush_before, v_t2_hidden_from_sush_after, v_t2_hidden_from_sushmitha_after,
     v_t3_recipient_count, (v_t3_recipient_last_id is null),
     v_t3_sender_count, v_t3_sender_last_body,
     v_pub_tables;
