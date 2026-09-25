@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { Camera, ImagePlus, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { createSpace, updateSpace, type SpaceRow } from "../lib/spaces";
+import { createSpace, updateSpace, setSpaceCorners, type SpaceRow } from "../lib/spaces";
 import { CornerTagField } from "./CornerTagField";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -30,10 +30,11 @@ type CornerPick = { spaceSlug: string; slug: string; name: string } | null;
 
 /** Shared by CreateSpace and EditSpace. The slug is create-only — a stable
  * identifier once a Space exists (update_space doesn't take one at all) —
- * but Corners are editable in both modes: space_corners has its own
- * host-only policy for direct table writes ("hosts manage their space's
- * corners", using/with check is_space_host), so an edit-mode save just
- * replaces the Space's space_corners rows directly, no RPC needed. */
+ * but Corners are editable in both modes: create_space links them at
+ * creation, and an edit-mode save calls set_space_corners (host-only,
+ * 1-3 ids, delete+insert in one transaction) rather than writing
+ * space_corners directly — that table has no client-writable policy of
+ * its own anymore. */
 export function SpaceForm({
   mode,
   space,
@@ -120,22 +121,6 @@ export function SpaceForm({
     return ids;
   }
 
-  /** Edit mode's Corners save — there's no RPC for this, so it writes
-   * space_corners directly (its own host-only RLS policy allows it):
-   * clear the Space's current rows and re-insert the picked set, first
-   * slot primary. Simplest correct sync for at most 3 rows; no need to
-   * diff against what was there before. */
-  async function syncSpaceCorners(spaceId: string, cornerIds: number[]): Promise<string | null> {
-    if (!supabase) return "Corners couldn't be saved — try again.";
-    const { error: delErr } = await supabase.from("space_corners").delete().eq("space_id", spaceId);
-    if (delErr) return delErr.message;
-    if (cornerIds.length === 0) return null;
-    const { error: insErr } = await supabase.from("space_corners").insert(
-      cornerIds.map((corner_id, i) => ({ space_id: spaceId, corner_id, is_primary: i === 0 })),
-    );
-    return insErr ? insErr.message : null;
-  }
-
   // A blocklisted name is worded the same everywhere this class of error
   // can surface, regardless of which RPC raised it.
   function friendlyError(message: string) {
@@ -211,7 +196,7 @@ export function SpaceForm({
         setSaving(false);
         return setError(friendlyError(err));
       }
-      const cornersErr = await syncSpaceCorners(space.id, cornerIds);
+      const { error: cornersErr } = await setSpaceCorners(space.id, cornerIds);
       setSaving(false);
       if (cornersErr) return setError(`Space saved, but Corners couldn't be updated: ${cornersErr}`);
       navigate(`/space/${space.slug}`);
