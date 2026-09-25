@@ -48,7 +48,11 @@ export function SpaceMomentsTab({ space, isActiveMember }: { space: SpaceRow; is
   if (posts.length === 0) {
     return (
       <div className="py-16 text-center text-sm text-muted-foreground">
-        {isActiveMember ? "No Moments here yet. Be the first." : "No Moments here yet."}
+        {isActiveMember
+          ? "No Moments here yet. Be the first."
+          : space.access === "closed"
+            ? "Moments here are for members. Request to join to see them."
+            : "No Moments here yet."}
       </div>
     );
   }

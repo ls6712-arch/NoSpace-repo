@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { MapPin, Star, Users } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { requestOrJoinSpace, cancelJoinRequest, leaveSpace, spaceMomentCount30d, type SpaceRow, type SpaceMemberRow, type SpaceEventRow } from "../lib/spaces";
+import { requestOrJoinSpace, cancelJoinRequest, leaveSpace, spaceMomentCount30d, listEventTeasers, type SpaceRow, type SpaceMemberRow } from "../lib/spaces";
 import { capitalizeCornerName } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
@@ -15,6 +15,10 @@ import { SpaceManageTab } from "../components/space/SpaceManageTab";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string };
+/** Just enough to render the featured-event banner — the direct
+ * space_events row (members) or a list_event_teasers row (outsiders of a
+ * Closed Space, who can't read space_events directly) both satisfy this. */
+type FeaturedEventLite = { title: string; starts_at: string; timezone: string };
 
 function fmt(iso: string, tz: string) {
   try {
@@ -37,7 +41,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const [corners, setCorners] = useState<CornerLite[]>([]);
   const [hosts, setHosts] = useState<HostLite[]>([]);
   const [spaceAddress, setSpaceAddress] = useState<string | null>(null);
-  const [featuredEvent, setFeaturedEvent] = useState<SpaceEventRow | null>(null);
+  const [featuredEvent, setFeaturedEvent] = useState<FeaturedEventLite | null>(null);
   const [featuredEventAddress, setFeaturedEventAddress] = useState<string | null>(null);
   const [addMomentOpen, setAddMomentOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -93,15 +97,29 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           .filter(Boolean),
       );
       setSpaceAddress(addressRow?.exact_address ?? null);
-      const fe = (featuredRows as SpaceEventRow[] | null)?.[0] ?? null;
-      setFeaturedEvent(fe);
-      if (fe) {
+      const directFe = (featuredRows as { id: number; title: string; starts_at: string; timezone: string }[] | null)?.[0] ?? null;
+      let feId: number | null = null;
+      if (directFe) {
+        setFeaturedEvent(directFe);
+        feId = directFe.id;
+      } else if (space.access === "closed") {
+        // RLS hides space_events entirely from a non-member of a Closed
+        // Space — list_event_teasers is the sanctioned way for them to
+        // see which upcoming event (if any) is featured. No address:
+        // event_private_details is gated the same way space_events is,
+        // so there's nothing further to fetch for an outsider.
+        const { data: teasers } = await listEventTeasers(space.id);
+        if (!cancelled) setFeaturedEvent(teasers?.find((t) => t.featured) ?? null);
+      } else {
+        setFeaturedEvent(null);
+      }
+      if (feId != null) {
         // Same RLS-decides pattern as the Space's own address — a
         // "going" RSVP or active membership is what unlocks this row.
         const { data: feAddress } = await supabase
           .from("event_private_details")
           .select("exact_address")
-          .eq("event_id", fe.id)
+          .eq("event_id", feId)
           .maybeSingle();
         if (!cancelled) setFeaturedEventAddress(feAddress?.exact_address ?? null);
       } else {
@@ -162,11 +180,11 @@ export function SpacePage({ space }: { space: SpaceRow }) {
 
   return (
     <div className="min-h-screen pb-24">
-      <div className="relative aspect-[21/9] w-full overflow-hidden bg-surface-muted sm:aspect-[3/1]">
+      <div className="relative aspect-[21/9] w-full max-h-80 overflow-hidden bg-surface-muted sm:aspect-[3/1]">
         <img src={space.cover_image} alt="" className="size-full object-cover" />
       </div>
 
-      <div className="container mx-auto max-w-3xl px-4 pt-6">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-6">
         {space.status === "read_only" && (
           <div className="mb-4 rounded-2xl border border-[var(--coral-deep)]/30 bg-[var(--coral-deep)]/5 px-4 py-3 text-sm">
             This Space is read-only right now — no new members, requests, or events until it's reactivated.
@@ -270,7 +288,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         {actionError && <p className="mt-2 text-xs text-destructive">{actionError}</p>}
       </div>
 
-      <div className="container mx-auto max-w-3xl px-4 pt-6">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-6">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="moments">Moments</TabsTrigger>

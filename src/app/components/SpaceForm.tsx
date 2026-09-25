@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Camera, ImagePlus, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -126,6 +126,12 @@ export function SpaceForm({
   function friendlyError(message: string) {
     return message === "That name isn't available." ? "That name isn't allowed." : message;
   }
+
+  // update_space's own message once pending requests block a closed->open
+  // switch ("Approve or decline N pending request(s) first.") — matched
+  // here (not folded into friendlyError) so it can carry an actual link
+  // to Manage, not just different wording.
+  const pendingRequestsMatch = /^Approve or decline \d+ pending requests? first\.$/.test(error ?? "");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -434,7 +440,19 @@ export function SpaceForm({
         <Textarea id="space-rules" value={rules} onChange={(e) => setRules(e.target.value)} placeholder="Anything members should know" />
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <p className="text-sm text-destructive">
+          {error}
+          {pendingRequestsMatch && space && (
+            <>
+              {" "}
+              <Link to={`/space/${space.slug}?tab=manage`} className="underline">
+                Go to Manage
+              </Link>
+            </>
+          )}
+        </p>
+      )}
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={saving}>
