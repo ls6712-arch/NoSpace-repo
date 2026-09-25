@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import { ParticipationKind } from "../data/participation";
-import { messageTabFor } from "../lib/messageTabs";
+import { canSendInto, messageTabFor } from "../lib/messageTabs";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -122,19 +122,31 @@ interface SocialContextType {
   threadWith: (personId: string) => Participation | undefined;
   canMessage: (personId: string) => boolean;
   /**
-   * Opens (or reuses) a direct-message thread with someone, no request or
-   * acceptance needed — the "Message" button on a profile. Reuses whatever
-   * thread already exists with this person, of any kind and any status
-   * (accepted, pending, or declined), rather than forking a second parallel
-   * one — the database itself only allows one direct_message row per pair,
-   * regardless of status, and decides the new row's status server-side
-   * (accepted immediately if the recipient already follows the sender,
-   * pending otherwise; rejected, with the same "failed" wording as any
-   * other error, if the two are blocked-between).
+   * Any thread already open with this person — of any kind, and for a
+   * direct_message any status (accepted, pending, or declined), since the
+   * database only ever allows one direct_message row per pair. Read-only:
+   * unlike the old startDirectMessage, this never creates anything, so the
+   * "Message" button on a profile can check for a thread to jump back into
+   * without ever inserting an empty one first.
    */
-  startDirectMessage: (
+  findExistingThread: (personId: string) => Participation | undefined;
+  /**
+   * Opens a direct-message thread with someone AND sends its first message
+   * in the same call — no participation row is ever created without a
+   * message riding along with it, so nobody can end up with an empty
+   * request to accept or ignore. Reuses whatever thread already exists with
+   * this person (see findExistingThread) rather than forking a second one;
+   * the database decides the new row's status server-side (accepted
+   * immediately if the recipient already follows the sender, pending
+   * otherwise; rejected, with the same "failed" wording as any other error,
+   * if the two are blocked-between). If the participation insert succeeds
+   * but the message insert fails, the id is still returned (a real, if
+   * empty, thread now exists to retry into) alongside "failed".
+   */
+  startAndSendDirectMessage: (
     personId: string,
     personName: string,
+    body: string,
   ) => Promise<{ id: number | string | null; error: "self" | "failed" | null }>;
 
   /** Pending direct_message requests waiting on you to accept or ignore. */
@@ -605,12 +617,23 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   // remember to check blockedIds itself.
   const isBlocked = (id?: string) => !!id && blockedPeople.some((b) => b.id === id);
 
-  /** Message requests waiting on me to accept or ignore. */
+  // Declared here (rather than down in the Messages section below) because
+  // messageRequests, just below, needs it already defined — everything in
+  // this component body runs once per render, top to bottom.
+  const messagesFor = (participationId: number | string) =>
+    state.messages
+      .filter((m) => String(m.participationId) === String(participationId))
+      .sort((a, b) => a.createdAt - b.createdAt);
+
+  /** Message requests waiting on me to accept or ignore — never one with no
+   * message in it yet (a legacy row from before startAndSendDirectMessage
+   * always inserted the two together, or one where the message half of
+   * that insert failed): there's nothing yet to accept or ignore. */
   const messageRequests = state.participations.filter(
-    (p) => messageTabFor(p, myId) === "requests" && !isBlocked(p.fromUser),
+    (p) => messageTabFor(p, myId) === "requests" && !isBlocked(p.fromUser) && messagesFor(p.id).length > 0,
   );
   /** My own outgoing requests still waiting — pending, or declined (which
-   * doesn't free me to open a second thread; see startDirectMessage). */
+   * doesn't free me to open a second thread; see startAndSendDirectMessage). */
   const myPendingRequests = state.participations.filter(
     (p) =>
       p.kind === "direct_message" &&
@@ -633,25 +656,31 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
   const canMessage = (name: string) => !!threadWith(name);
 
-  const startDirectMessage: SocialContextType["startDirectMessage"] = async (personId, personName) => {
-    if (user && personId === user.id) return { id: null, error: "self" as const };
-
-    // Already have an accepted thread with this person — of any kind, not
-    // just a prior direct message — so this never forks a second, parallel
-    // one alongside a Make/Explore together match that already unlocked
-    // messaging.
+  // Any thread already open with this person, of any kind — an accepted one
+  // of any kind, or a direct_message of ANY status (the database allows only
+  // one per pair, ever, so a pending or declined one must be reused rather
+  // than re-inserted). Read-only: never creates anything.
+  const findExistingThread = (personId: string): Participation | undefined => {
     const accepted = threadWith(personId);
-    if (accepted) return { id: accepted.id, error: null };
-
-    // Or an existing direct_message specifically, of ANY status — the
-    // database allows only one per pair, ever, regardless of status, so a
-    // pending or declined one must be reused rather than re-inserted (which
-    // the database would reject anyway, but not with a message fit to show
-    // anyone).
-    const existingDm = state.participations.find(
+    if (accepted) return accepted;
+    return state.participations.find(
       (p) => p.kind === "direct_message" && (p.toUser === personId || p.fromUser === personId),
     );
-    if (existingDm) return { id: existingDm.id, error: null };
+  };
+
+  const startAndSendDirectMessage: SocialContextType["startAndSendDirectMessage"] = async (
+    personId,
+    personName,
+    body,
+  ) => {
+    if (!body.trim()) return { id: null, error: "failed" as const };
+    if (user && personId === user.id) return { id: null, error: "self" as const };
+
+    const existing = findExistingThread(personId);
+    if (existing) {
+      const { error } = await sendMessage(existing.id, body);
+      return { id: existing.id, error };
+    }
 
     if (supabase && user) {
       // No status sent — the database decides: accepted immediately if
@@ -664,16 +693,31 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         .select()
         .single();
       if (error || !data) return { id: null, error: "failed" as const };
-      // Awaited so the new thread is already in `participations` by the
-      // time the caller navigates to it — otherwise Messages.tsx renders
-      // its "No open threads" empty state for the moment refresh() is
-      // still in flight, with no compose box to show.
-      await refresh();
-      return { id: data.id, error: null };
+
+      const newThread: Participation = {
+        id: data.id,
+        kind: "direct_message",
+        fromUser: data.from_user,
+        fromName: myName,
+        toUser: data.to_user ?? undefined,
+        toName: personName,
+        status: data.status,
+        createdAt: new Date(data.created_at).getTime(),
+      };
+      const { error: msgError } = await insertMessage(newThread, body, newThread.status === "pending");
+      if (msgError) {
+        // The participation row is real even though its message failed —
+        // pick it up so a retry lands in the same thread instead of
+        // forking a second, unreachable one.
+        await refresh();
+        return { id: newThread.id, error: "failed" as const };
+      }
+      return { id: newThread.id, error: null };
     }
 
     // Local (signed-out) mode: no server to decide a status, and no one
-    // else in this browser to ask — same as before, pre-accepted.
+    // else in this browser to ask — same as before, pre-accepted, with its
+    // one message riding along in the same update.
     const entry: Participation = {
       id: localId(),
       kind: "direct_message",
@@ -684,7 +728,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       status: "accepted",
       createdAt: Date.now(),
     };
-    setState({ ...state, participations: [entry, ...state.participations] });
+    setState({
+      ...state,
+      participations: [entry, ...state.participations],
+      messages: [...state.messages, { id: localId(), participationId: entry.id, fromUser: myId, body: body.trim(), createdAt: Date.now() }],
+    });
     return { id: entry.id, error: null };
   };
 
@@ -829,36 +877,22 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   };
 
   /* ── Messages ───────────────────────────────────────────────────────── */
+  // (messagesFor itself is declared up near isBlocked — messageRequests
+  // needs it already defined by the time this component body reaches it.)
 
-  const messagesFor = (participationId: number | string) =>
-    state.messages
-      .filter((m) => String(m.participationId) === String(participationId))
-      .sort((a, b) => a.createdAt - b.createdAt);
-
-  const sendMessage: SocialContextType["sendMessage"] = async (participationId, body) => {
-    if (!body.trim()) return { error: null };
-    const thread = state.participations.find((p) => String(p.id) === String(participationId));
-    if (!thread || thread.kind === "join_in") return { error: "failed" as const };
-
-    const isAccepted = thread.status === "accepted";
-    // The one message a pending direct_message allows, from its sender —
-    // checked before inserting, since messagesFor() would otherwise already
-    // include the message this same call is about to send.
-    const isFirstPendingDm =
-      thread.kind === "direct_message" &&
-      thread.status === "pending" &&
-      thread.fromUser === myId &&
-      messagesFor(participationId).length === 0;
-
-    // Belt and braces: the database enforces the exact rule (including the
-    // one-message limit and exactly who may send into what), but the UI
-    // should never be the thing that tries something already known to fail.
-    if (!isAccepted && !isFirstPendingDm) return { error: "failed" as const };
-
+  // Shared by sendMessage (an existing thread) and startAndSendDirectMessage
+  // (a thread just now inserted, before it's even in `state` yet) — both
+  // just need somewhere to put a message and notify the other person, once
+  // the caller has already decided the send is allowed.
+  const insertMessage = async (
+    thread: Participation,
+    body: string,
+    isFirstPendingDm: boolean,
+  ): Promise<{ error: "failed" | null }> => {
     if (supabase && user) {
       const { error } = await supabase
         .from("messages")
-        .insert({ participation_id: participationId, from_user: user.id, body: body.trim() });
+        .insert({ participation_id: thread.id, from_user: user.id, body: body.trim() });
       // A block, a duplicate, a rate limit — whatever the database's own
       // reason, the caller gets the same "failed" back either way. See
       // SocialContextType.sendMessage's own comment for why.
@@ -869,17 +903,51 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       } else {
         await notify(other, "message", `${myName} sent you a message.`, "/messages");
       }
-      refresh();
+      // Awaited so the sent message (and, for a brand-new thread, the
+      // thread itself) is already in state by the time the caller updates
+      // the screen — otherwise Messages.tsx would flash "No open threads"
+      // for the moment this is still in flight.
+      await refresh();
       return { error: null };
     }
     setState({
       ...state,
       messages: [
         ...state.messages,
-        { id: localId(), participationId, fromUser: myId, body: body.trim(), createdAt: Date.now() },
+        { id: localId(), participationId: thread.id, fromUser: myId, body: body.trim(), createdAt: Date.now() },
       ],
     });
     return { error: null };
+  };
+
+  const sendMessage: SocialContextType["sendMessage"] = async (participationId, body) => {
+    if (!body.trim()) return { error: null };
+    const thread = state.participations.find((p) => String(p.id) === String(participationId));
+    if (!thread || thread.kind === "join_in") return { error: "failed" as const };
+
+    const hasMessages = messagesFor(participationId).length > 0;
+    // Belt and braces: the database enforces the exact rule (including the
+    // one-message limit and exactly who may send into what), but the UI
+    // should never be the thing that tries something already known to fail.
+    if (!canSendInto(thread, myId, hasMessages)) return { error: "failed" as const };
+
+    // I'm the recipient of a direct_message I earlier declined, messaging
+    // them again — the database only lets the recipient move declined ->
+    // accepted (the same move Accept makes on a still-pending one), so
+    // flip it before sending rather than leaving a live conversation
+    // sitting under a "declined" row. The sender has no such move;
+    // canSendInto already keeps them locked out above.
+    if (supabase && user && thread.kind === "direct_message" && thread.status === "declined" && thread.toUser === myId) {
+      const { error } = await supabase
+        .from("participations")
+        .update({ status: "accepted", responded_at: new Date().toISOString() })
+        .eq("id", thread.id);
+      if (error) return { error: "failed" as const };
+    }
+
+    const isFirstPendingDm =
+      thread.kind === "direct_message" && thread.status === "pending" && thread.fromUser === myId && !hasMessages;
+    return insertMessage(thread, body, isFirstPendingDm);
   };
 
   return (
@@ -898,7 +966,8 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         respond,
         threadWith,
         canMessage,
-        startDirectMessage,
+        findExistingThread,
+        startAndSendDirectMessage,
         messageRequests,
         myPendingRequests,
         acceptRequest,

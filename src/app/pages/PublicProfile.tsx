@@ -8,6 +8,7 @@ import { Post } from "../data/posts";
 import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
 import { circlesByHobby } from "../data/circles";
 import { usePeopleInHobby } from "../lib/people";
+import { messageTabFor } from "../lib/messageTabs";
 import { sessionsFromPosts } from "../components/HobbyShelf";
 import { tagsFromPosts } from "../lib/postTags";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
@@ -93,10 +94,6 @@ export function PublicProfile() {
   const [followStatus, setFollowStatus] = useState<FollowStatus>("none");
   const [followBusy, setFollowBusy] = useState(false);
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
-  const [messageBusy, setMessageBusy] = useState(false);
-  // Same wording whatever the actual cause — a block, a rate limit, a
-  // network error — so this can never reveal that a block exists.
-  const [messageError, setMessageError] = useState<string | null>(null);
   const [followListOpen, setFollowListOpen] = useState(false);
   const followerCount = useFollowerCount(
     state.status === "ready" ? state.personId : undefined,
@@ -422,20 +419,28 @@ export function PublicProfile() {
                         : "Follow"}
                   </Button>
                 )}
-                {/* No request, no acceptance — see SocialContext.tsx's
-                    startDirectMessage(). Reuses an existing thread with this
-                    person if one's already open, of any kind. */}
+                {/* No request, no acceptance needed to open the conversation
+                    — but no participation row is created here either. If a
+                    thread already exists and is reachable as a chat, jump
+                    straight into it; otherwise (nothing yet, or a request of
+                    theirs I declined — hidden from my Chats, but still
+                    reopenable) this opens an empty draft in Messages, and
+                    the row (with its first message) is only created on
+                    Send — see SocialContext.tsx's startAndSendDirectMessage(),
+                    which reuses and un-declines that row rather than
+                    forking a second one. */}
                 {!isMe && user && (
                   <Button
                     variant="outline"
-                    disabled={messageBusy}
-                    onClick={async () => {
-                      setMessageBusy(true);
-                      setMessageError(null);
-                      const { id, error } = await social.startDirectMessage(personId, displayName);
-                      setMessageBusy(false);
-                      if (!error && id != null) navigate(`/messages?thread=${id}`);
-                      else if (error && error !== "self") setMessageError("Couldn't message this person.");
+                    onClick={() => {
+                      const existing = social.findExistingThread(personId);
+                      if (existing && messageTabFor(existing, user.id) === "chats") {
+                        navigate(`/messages?thread=${existing.id}`);
+                        return;
+                      }
+                      navigate(
+                        `/messages?draftWith=${encodeURIComponent(personId)}&draftName=${encodeURIComponent(displayName)}`,
+                      );
                     }}
                   >
                     <MessageCircle className="size-3.5" />
@@ -445,7 +450,6 @@ export function PublicProfile() {
                 <CopyLinkButton />
                 {!isMe && user && <PersonActionsMenu personId={personId} personName={displayName} onBlocked={() => navigate("/discover")} />}
               </div>
-              {messageError && <p className="mt-2 text-xs text-[var(--coral-text)]">{messageError}</p>}
               <Link
                 to={`/u/${username}/studio`}
                 className="mt-2 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"

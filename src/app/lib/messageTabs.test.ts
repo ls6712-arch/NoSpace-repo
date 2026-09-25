@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { messageTabFor } from "./messageTabs";
+import { canSendInto, messageTabFor } from "./messageTabs";
 
 const ME = "me";
 const THEM = "them";
@@ -54,5 +54,74 @@ describe("messageTabFor", () => {
     expect(
       messageTabFor({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME),
     ).toBe("none");
+  });
+
+  it("moves it into chats once I un-decline it by messaging them again (canSendInto flips it to accepted first)", () => {
+    // Same row, after SocialContext.tsx's sendMessage has flipped its status —
+    // messageTabFor only looks at current fields, not history.
+    expect(
+      messageTabFor({ kind: "direct_message", status: "accepted", fromUser: THEM, toUser: ME }, ME),
+    ).toBe("chats");
+  });
+});
+
+describe("canSendInto", () => {
+  it("is always open once accepted, for Make/Explore together or direct_message", () => {
+    for (const kind of ["make_together", "explore_together", "direct_message"]) {
+      expect(canSendInto({ kind, status: "accepted", fromUser: ME, toUser: THEM }, ME, true)).toBe(true);
+      expect(canSendInto({ kind, status: "accepted", fromUser: THEM, toUser: ME }, ME, false)).toBe(true);
+    }
+  });
+
+  it("is never open for join_in, whatever its status", () => {
+    expect(canSendInto({ kind: "join_in", status: "accepted", fromUser: ME }, ME, false)).toBe(false);
+  });
+
+  it("is never open for a pending or declined Make/Explore together request", () => {
+    for (const kind of ["make_together", "explore_together"]) {
+      for (const status of ["pending", "declined"] as const) {
+        expect(canSendInto({ kind, status, fromUser: ME, toUser: THEM }, ME, false)).toBe(false);
+        expect(canSendInto({ kind, status, fromUser: THEM, toUser: ME }, ME, false)).toBe(false);
+      }
+    }
+  });
+
+  it("lets the sender of a pending direct_message send while it has no messages yet", () => {
+    expect(
+      canSendInto({ kind: "direct_message", status: "pending", fromUser: ME, toUser: THEM }, ME, false),
+    ).toBe(true);
+  });
+
+  it("closes the sender's composer once their one message has landed", () => {
+    expect(
+      canSendInto({ kind: "direct_message", status: "pending", fromUser: ME, toUser: THEM }, ME, true),
+    ).toBe(false);
+  });
+
+  it("never opens a composer for the recipient of a pending direct_message — they accept or ignore, they don't reply", () => {
+    expect(
+      canSendInto({ kind: "direct_message", status: "pending", fromUser: THEM, toUser: ME }, ME, false),
+    ).toBe(false);
+    expect(
+      canSendInto({ kind: "direct_message", status: "pending", fromUser: THEM, toUser: ME }, ME, true),
+    ).toBe(false);
+  });
+
+  it("stays closed for the SENDER of a declined direct_message, whatever its message count", () => {
+    expect(
+      canSendInto({ kind: "direct_message", status: "declined", fromUser: ME, toUser: THEM }, ME, false),
+    ).toBe(false);
+    expect(
+      canSendInto({ kind: "direct_message", status: "declined", fromUser: ME, toUser: THEM }, ME, true),
+    ).toBe(false);
+  });
+
+  it("opens the composer for the RECIPIENT of a declined direct_message — sending un-declines it", () => {
+    expect(
+      canSendInto({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME, false),
+    ).toBe(true);
+    expect(
+      canSendInto({ kind: "direct_message", status: "declined", fromUser: THEM, toUser: ME }, ME, true),
+    ).toBe(true);
   });
 });
