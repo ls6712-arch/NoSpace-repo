@@ -14,7 +14,7 @@ These apply to every session working in this repo, not just Spaces-related work.
   - One transaction, one `do $$ ... $$` block, ending unconditionally in `raise exception 'RESULTS: %', array_to_string(results, ', ');` so results land in the error message and the whole thing rolls back regardless of outcome.
   - Each expected *failure* case is its own `begin ... exception ... end` sub-block with strict `sqlstate` handling (e.g. `when raise_exception then ... when others then` record as an error, never silently treated as a pass).
   - Every count/assertion is scoped to the fixture's own ids, never a bare count against a whole live table.
-- **Check the live schema with a query** (e.g. via the SQL editor) rather than trusting `docs/schema-baseline-*.sql` or similar snapshot files, which may be stale relative to what's actually deployed.
+- **Check the live schema with a query, not by trusting `docs/schema-baseline-*.sql` or similar snapshot files** — those may be stale relative to what's actually deployed. This session cannot run SQL against the live database itself: write the read-only query (e.g. against `information_schema` or `pg_catalog`) and give it to the user to run in the SQL editor, then wait for them to paste back the result before proceeding on anything that depends on it.
 
 ## Notifications
 
@@ -24,3 +24,5 @@ These apply to every session working in this repo, not just Spaces-related work.
 ## Product terminology
 
 - **Categories are never shown to users.** Corners are the only visible tags — Categories are an internal-only grouping now (used for admin/data organization), not something anyone picks or sees in the UI.
+- **Say "Moments" in UI copy** — never "work" or "posts". A person's Moments are their Moments, not their "work" or their "posts", in any label, button, empty state, or message.
+- **Spaces have no member counts anywhere in the UI.** Not on a Space card, not on the Space page header, not in a list — nowhere. If a number is needed, it's the Moments count (`space_moment_count_30d`), never a count of members.
