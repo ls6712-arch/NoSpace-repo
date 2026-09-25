@@ -41,4 +41,13 @@ One thing the verification run surfaced that is *not* a bug: two of the three re
 
 **Security advisors, post-apply**: no new findings beyond the six trigger-function RPC-exposure ones already fixed above (see point 3). Everything else the advisors report (~55 more `SECURITY DEFINER`/anon findings, one mutable-search-path function, empty-policy RLS tables in `archive`/`rate_limit_hits`, leaked-password protection) is pre-existing, unrelated to this migration, and tracked separately — see `docs/communication-strategy.md`'s follow-up to audit live against `sql/security-hardening.sql`.
 
-Part B (the app) not yet started.
+Part B (the app) shipped in PR #96, with fixes in PRs #98 and #102.
+
+## Reports: one open report per target — applied 2026-09-25
+
+`supabase/migrations/20260925050000_reports_one_open_per_target.sql` — **applied to live
+2026-09-25** (recorded as `reports_one_open_per_target`), after the two duplicate open reports
+(ids 8 and 9) were marked reviewed/dismissed by an admin. Verified live in a rolled-back
+transaction: a first open report inserts, an identical second one is rejected
+(`unique_violation`, which the app shows as "Report sent"), and a new report is allowed again
+once the earlier one is no longer open.

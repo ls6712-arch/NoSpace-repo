@@ -165,11 +165,13 @@ the phase.
   found two more: a party a blocker had blocked saw a ghost "Someone" thread with an open
   composer instead of the thread simply disappearing, and a fast double-click on Report could
   insert two identical reports. Fixed and merged in PR #102 on 2026-09-25 (see
-  `docs/verification/communication-phase1-block-report/`); that PR also stages, but does not
-  apply, a one-open-report-per-target DB index (blocked from applying by two pre-existing
-  duplicate reports, left alone per instruction — needs one of them reviewed/dismissed first).
-  Not yet separately confirmed on the live production site after deploy — worth a quick
-  click-through once the Vercel production deploy for this merge finishes.
+  `docs/verification/communication-phase1-block-report/`). Its one-open-report-per-target index
+  (`20260925050000_reports_one_open_per_target`) was applied to live on 2026-09-25 after Sush
+  reviewed/dismissed the two duplicate reports from the admin Reports page.
+  Live click-through on production (2026-09-25): block, report, unblock, admin review, and a
+  known sender going straight to Chats all confirmed working. **Still to confirm live**: a real
+  message request between non-followers (send, Message requests tab, ignore, reopen), and
+  reporting a Moment and a Thought.
 - Phase 2 Live and reliable: not started
 - Phase 3 Unread and quieter bell: not started
 - Phase 4 Richer conversations: not started
