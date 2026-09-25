@@ -153,9 +153,12 @@ the phase.
 
 ## STATUS
 
-- Phase 1 Safety: in progress: migration applied to live Supabase and verified (see
-  `docs/backend-state-20260924.md`); app (Part B) built, typechecked, tested, and verified in the
-  browser at phone and laptop width, light and dark (Part C); PR open, awaiting Sush's merge
+- Phase 1 Safety: done. Migration applied to live Supabase and verified (see
+  `docs/backend-state-20260924.md`); app built, typechecked, tested, and verified in the browser
+  at phone and laptop width, light and dark (see `docs/verification/communication-phase1/`);
+  merged to `main` in PR #96 on 2026-09-25. Not yet separately confirmed on the live production
+  site after deploy — worth a quick click-through once the Vercel production deploy for this
+  merge finishes.
 - Phase 2 Live and reliable: not started
 - Phase 3 Unread and quieter bell: not started
 - Phase 4 Richer conversations: not started
