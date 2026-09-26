@@ -18,10 +18,15 @@ export function AddMomentToSpaceDialog({
   spaceId,
   open,
   onOpenChange,
+  onAdded,
 }: {
   spaceId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Called right after a link succeeds, so a parent showing this Space's
+   * Moments (count, "On the table") can refetch instead of going stale
+   * until the next full reload. */
+  onAdded?: () => void;
 }) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<{ id: number; caption: string; media_url: string | null }[] | "loading">("loading");
@@ -51,6 +56,7 @@ export function AddMomentToSpaceDialog({
     setLinking(null);
     if (insertError) return setError(insertError.message);
     setDone(true);
+    onAdded?.();
   };
 
   return (
