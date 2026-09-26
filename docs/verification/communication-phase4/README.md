@@ -79,12 +79,24 @@ description), not through the browser.
 three browser windows — the third signed out — with an existing accepted
 thread between the two accounts):
 
-1. **On a third, signed-out browser**, take a chat photo's signed URL
-   (copy it from the Network tab or from the `<img src>` on either
-   account) and open it directly. Confirm it does **not** load — the URL is
-   short-lived and scoped to a signed-in party of that thread, so a
-   signed-out request must be refused the same way a public bucket's URL
-   never would be.
+1. **Signed URL scoping**, three checks against one real chat photo (copy
+   its signed URL from the Network tab or the `<img src>` on either
+   account):
+   a. **On a third, signed-out browser**, open that signed URL directly.
+      Confirm it loads at first, then confirm the *same* URL stops working
+      after about 5 minutes (`MESSAGE_MEDIA_URL_TTL_SECONDS`) — it isn't
+      just scoped, it actually expires.
+   b. On any browser (signed in or out), open the plain storage path with
+      no token —
+      `https://<project>.supabase.co/storage/v1/object/public/message-media/<path>`
+      — and confirm it never loads. `message-media` has no public endpoint
+      at all (`public = false`), unlike `post-media`.
+   c. Sign in as a **third** account with no relationship to A or B's
+      thread and try to mint a signed URL for that same path yourself (the
+      browser console: `supabase.storage.from('message-media')
+      .createSignedUrl('<path>', 60)`). Confirm it fails — the read policy
+      is scoped to the two parties in that thread, not to being signed in
+      generally.
 2. On A, attach a photo in an accepted thread with B. Confirm it uploads,
    shows a progress/sending state, then renders full-size; confirm B sees
    the same photo appear live (Realtime), tap-to-view opens it full size on

@@ -9,8 +9,11 @@ export const MESSAGE_MEDIA_BUCKET = "message-media";
 /** How long a signed URL for a chat photo stays valid before the viewer
  * needs a fresh one. Short-lived by design (decision 5) — nothing about
  * this bucket is meant to be shareable outside the two parties' own
- * sessions. */
-export const MESSAGE_MEDIA_URL_TTL_SECONDS = 60 * 30;
+ * sessions, and whoever a URL gets forwarded to (a screenshot's link, a
+ * copy-pasted address) can open it until it expires regardless of who
+ * they are. 5 minutes, not 30 — reviewed down from the first draft's
+ * longer window for exactly that reason. */
+export const MESSAGE_MEDIA_URL_TTL_SECONDS = 60 * 5;
 
 function extensionOf(file: File): string {
   const dot = file.name.lastIndexOf(".");
@@ -51,9 +54,13 @@ export async function getMessagePhotoUrl(path: string): Promise<string | null> {
 /** Best-effort delete of a chat photo's storage object — called after a
  * successful unsend. Never throws: the message row is already cleared
  * either way (that's the security boundary), so a delete failure here
- * just leaves an orphaned object nobody but the uploader could read again
- * anyway (the read policy has no path back to a message whose media_path
- * has been nulled out). */
+ * just leaves an orphaned object. That object is still readable by BOTH
+ * parties to the thread, not just the uploader — the read policy is
+ * scoped to the chat's own folder (participation_id), not to the
+ * uploader's identity — so this is best-effort cleanup, not the thing
+ * standing between an unsent photo and being seen again; the message row
+ * having lost its media_path is what actually cuts off the ordinary path
+ * to it. */
 export async function deleteMessagePhoto(path: string): Promise<void> {
   if (!supabase) return;
   await supabase.storage.from(MESSAGE_MEDIA_BUCKET).remove([path]);

@@ -130,14 +130,19 @@ function loadFromStorage<T>(key: string): T[] {
 // anyone else's browser, even as a field the app's own JS ignores. A
 // wildcard select would put it on the wire regardless of what the mapper
 // below does with it. See docs/moment-card-and-reactions-spec.md's #86.
-const BASE_POST_COLUMNS =
+export const BASE_POST_COLUMNS =
   "id, user_id, hobby_slug, sub_hobby, corner, interest, type, media_url, media_urls, caption, likes, created_at, visibility, starts_at, location_name, location_privacy, thoughts_private, pursuit_id, circle_id, circle_tab, answered, hidden_from_moments, tags, pinned";
 /** Public reaction totals — only exist once the post_reaction_counts
  * migration is applied. Until then every posts select below retries
  * without them (see selectPosts), so the app never breaks on a missing
- * column; counts just read as 0. */
-let POST_COLUMNS = `${BASE_POST_COLUMNS}, love_count, in_count`;
-const isMissingCountColumn = (error: { message?: string; code?: string } | null) =>
+ * column; counts just read as 0. Exported (along with BASE_POST_COLUMNS and
+ * isMissingCountColumn) so every other posts select in the app — including
+ * a single-row fetch like sharedContent.ts's fetchSharedMoment — uses this
+ * same explicit list rather than `select("*")`, which would put a
+ * Reflection's private column on the wire regardless of what the caller's
+ * own mapper does with it (see the comment above this constant). */
+export let POST_COLUMNS = `${BASE_POST_COLUMNS}, love_count, in_count`;
+export const isMissingCountColumn = (error: { message?: string; code?: string } | null) =>
   !!error && (error.code === "42703" || /love_count|in_count/.test(error.message ?? ""));
 
 /** Maps a row from the real `posts` table into the app's existing Post shape.

@@ -87,6 +87,12 @@ function PhotoBubble({
   const [url, setUrl] = useState<string | null>(localPreviewUrl ?? null);
   const [failed, setFailed] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  // Bumped to force a fresh signed URL outside the scheduled refresh timer —
+  // an <img> load failure (the current URL expired early, e.g. a
+  // backgrounded tab throttling the timer) retries once via this rather
+  // than sitting on a broken image until the next scheduled refresh.
+  const [retryTick, setRetryTick] = useState(0);
+  const erroredForUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (localPreviewUrl) {
@@ -112,7 +118,16 @@ function PhotoBubble({
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [mediaPath, localPreviewUrl]);
+  }, [mediaPath, localPreviewUrl, retryTick]);
+
+  // One retry per URL, not an infinite loop: a URL that fails to load
+  // because it's genuinely gone (unsent, blocked) would otherwise retry
+  // forever, each fresh signed URL failing the same way.
+  const handleImageError = () => {
+    if (!mediaPath || !url || erroredForUrlRef.current === url) return;
+    erroredForUrlRef.current = url;
+    setRetryTick((n) => n + 1);
+  };
 
   if (failed) {
     return (
@@ -129,12 +144,17 @@ function PhotoBubble({
   return (
     <>
       <button type="button" onClick={() => setLightboxOpen(true)} className="block overflow-hidden rounded-xl">
-        <img src={url} alt="" className={`max-h-64 w-52 object-cover ${uploading ? "opacity-70" : ""}`} />
+        <img
+          src={url}
+          alt=""
+          className={`max-h-64 w-52 object-cover ${uploading ? "opacity-70" : ""}`}
+          onError={handleImageError}
+        />
       </button>
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-2xl border-none bg-transparent p-0 shadow-none">
           <DialogTitle className="sr-only">Photo</DialogTitle>
-          <img src={url} alt="" className="max-h-[85vh] w-full rounded-xl object-contain" />
+          <img src={url} alt="" className="max-h-[85vh] w-full rounded-xl object-contain" onError={handleImageError} />
         </DialogContent>
       </Dialog>
     </>

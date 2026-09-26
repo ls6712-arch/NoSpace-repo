@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import { rowToPost } from "../context/ContentContext";
+import { BASE_POST_COLUMNS, isMissingCountColumn, POST_COLUMNS, rowToPost } from "../context/ContentContext";
 import { Post } from "../data/posts";
 
 /**
@@ -18,7 +18,20 @@ import { Post } from "../data/posts";
 
 export async function fetchSharedMoment(postId: number | string): Promise<Post | null> {
   if (!supabase) return null;
-  const { data: row, error } = await supabase.from("posts").select("*").eq("id", postId).maybeSingle();
+  // Explicit columns, never select("*") — same reason as every other posts
+  // select in the app (see ContentContext.tsx's own comment on
+  // BASE_POST_COLUMNS): a Reflection is owner-only and must never round-trip
+  // to anyone else's browser, even as a field this mapper ignores. Retries
+  // once without the reaction-count columns if they're not in this database
+  // yet, same as ContentContext.tsx's refetchRealPosts.
+  let { data: row, error } = await supabase.from("posts").select(POST_COLUMNS).eq("id", postId).maybeSingle<any>();
+  if (isMissingCountColumn(error) && POST_COLUMNS !== BASE_POST_COLUMNS) {
+    ({ data: row, error } = await supabase
+      .from("posts")
+      .select(BASE_POST_COLUMNS)
+      .eq("id", postId)
+      .maybeSingle<any>());
+  }
   if (error || !row) return null;
   const { data: profile } = await supabase
     .from("profiles")
