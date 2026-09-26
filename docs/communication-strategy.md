@@ -35,6 +35,11 @@ data model: there's almost nothing to migrate.
 **Decided Sept 24, 2026:** 1 = yes, message requests; 2 = full block as recommended; 3 = admin
 Reports list, and reporting offers to block. Decisions 4–7 are still open.
 
+**Decided Sept 25, 2026 (Phase 4 build):** 5 = private bucket as recommended — `message-media`,
+`public = false`, readable only by the two people in that conversation via short-lived signed
+URLs, never a public URL; 6 = unsend as recommended — you can delete your own message, both sides
+see "Message deleted" in its place, no editing. Decision 7 is still open.
+
 **Messages and follow requests stay separate (Sush, Sept 24).**
 - Follow requests (and Circle invitations) stay where they are: Inbox → Requests, and the bell.
 - Message requests live only in Messages, in a tab named **Message requests** (never just
@@ -201,7 +206,28 @@ the phase.
   Seen timing, read-receipts-off working both ways, a stranger's public activity not refreshing
   your badge) is still needed and listed in that folder's README. PR opened against `main`, not
   yet merged.
-- Phase 4 Richer conversations: not started
+- Phase 4 Richer conversations: database applied to live Supabase and verified (see
+  `docs/backend-state-20260925-phase4.md`) — `message-media` private storage bucket with policies
+  scoped to the two people in a conversation, `messages` gaining `kind`
+  (text/photo/moment/pursuit), `media_path`, `shared_post_id`, `shared_pursuit_id`, `deleted_at`,
+  and a shape check tying `kind` to exactly the right combination of those columns; a
+  `messages_kind_shape` constraint; `unsend_message()` (sender-only, clears content, never a hard
+  delete); Realtime already covers the new `UPDATE`s since `messages` was added to the publication
+  in Phase 2. A follow-up migration adding two covering indexes for
+  `messages.shared_post_id`/`shared_pursuit_id` (a non-blocking performance note from Part A's own
+  advisor check) is staged but **not yet applied** — see
+  `supabase/migrations/20261006000000_communication_phase4_shared_content_indexes.sql`. App built
+  (photo attach with HEIC conversion and upload progress, "Send to…" from a Moment or a Pursuit
+  into any accepted chat, a new `/moment/:id` route so a shared Moment has somewhere to link to,
+  "Message about this" from someone else's Moment, unsend with a confirmation and live "Message
+  deleted" on both sides, previews/unread/Seen all updated for the new message kinds), typechecked,
+  tested (see the `messageSync.test.ts`/`messageTabs.test.ts` additions for
+  `renderableMessageKind`/`messagePreviewText`/`canAttachInto`/unsend state merging), and verified
+  with a mocked-network browser pass (see `docs/verification/communication-phase4/`) — a real
+  two-account live check (a chat photo's URL refused signed-out, live photo/share delivery, a
+  shared Moment turning "Not available" the moment it's made private, an unsent photo actually gone
+  from Storage) is still needed and listed in that folder's README. PR opened against `main`, not
+  yet merged.
 - Phase 5 Notification center: not started
 - Phase 6 Email and push: not started
 

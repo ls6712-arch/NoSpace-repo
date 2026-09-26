@@ -85,6 +85,18 @@ export function canSendInto(p: ParticipationLike, myId: string, hasMessages: boo
 }
 
 /**
+ * Whether a photo or a shared Moment/Pursuit may go into this thread right
+ * now (Phase 4) — accepted only, unlike canSendInto's plain text, which a
+ * pending direct_message's sender may still send exactly one of. Also the
+ * rule for which of your threads show up in the "Send to…" picker on a
+ * Moment or Pursuit.
+ */
+export function canAttachInto(p: ParticipationLike): boolean {
+  if (p.status !== "accepted") return false;
+  return p.kind === "make_together" || p.kind === "explore_together" || p.kind === "direct_message";
+}
+
+/**
  * Whether this participation's other party actually resolved to a visible
  * profile. A blocked-and-hidden account (RLS's is_visible_profile), a
  * deleted one, or a paused one all look identical from here: the profiles

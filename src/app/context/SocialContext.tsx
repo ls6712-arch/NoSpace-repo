@@ -5,6 +5,7 @@ import { LOCAL_CLEARED_EVENT } from "../lib/localData";
 import { ParticipationKind } from "../data/participation";
 import {
   applyParticipationDelete,
+  canAttachInto,
   canSendInto,
   isRelevantParticipationEvent,
   messageTabFor,
@@ -12,10 +13,13 @@ import {
   visibleParticipations,
 } from "../lib/messageTabs";
 import {
+  applyMessageUpdate,
   combineHistoryAndPending,
   countUnreadThreads,
   markPendingFailed,
   mergeMessage,
+  MessageKind,
+  patchSummaryOnMessageUpdate,
   patchSummaryWithNewMessage,
   PendingMessage,
   prependOlderPage,
@@ -23,6 +27,8 @@ import {
   removePendingByClientId,
   ThreadSummary,
 } from "../lib/messageSync";
+import { convertHeicIfNeeded } from "../lib/heicConversion";
+import { deleteMessagePhoto, uploadMessagePhoto } from "../lib/messageMedia";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -88,6 +94,18 @@ export interface Message {
   fromUser: string;
   body: string;
   createdAt: number;
+  /** Phase 4: 'text' for every message before this phase and for an
+   * ordinary typed message since. A photo/moment/pursuit share carries its
+   * content in the matching field below instead of (or alongside) body. */
+  kind: MessageKind;
+  mediaPath?: string | null;
+  sharedPostId?: number | null;
+  sharedPursuitId?: string | null;
+  /** Set once the sender has unsent this message — body/mediaPath/
+   * sharedPostId/sharedPursuitId are all cleared at the same time (see
+   * unsend_message() in the database), so this is the one field that says
+   * "there used to be content here" once everything else has gone null/''. */
+  deletedAt?: number | null;
   /** Only set for a not-yet-confirmed local send (Phase 2) — never present
    * on a message actually loaded from the database. "sending" while the
    * insert is in flight; "failed" if it came back with an error, with
@@ -95,6 +113,8 @@ export interface Message {
    * of creating a second row. */
   status?: "sending" | "failed";
   clientId?: string;
+  /** Phase 4, a still-uploading photo only — see PendingMessage. */
+  localPreviewUrl?: string;
 }
 
 export interface BlockedPerson {
@@ -234,6 +254,29 @@ interface SocialContextType {
    * never creating a second request row. No-ops if that pending entry is
    * gone (e.g. already retried successfully from another render). */
   retryMessage: (participationId: number | string, clientId: string) => Promise<void>;
+  /** Sends a photo — HEIC-converted by the caller (Messages.tsx uses the
+   * same convertHeicIfNeeded() every Moment upload does) or already a plain
+   * image. Accepted threads only (canAttachInto); fails quietly (never
+   * throws) if the thread isn't accepted, the upload fails, or the insert
+   * itself is rejected (e.g. the migration this depends on isn't applied
+   * live yet — the same "failed" any other rejection gets). Appears
+   * immediately as a "sending" bubble showing the picked photo, same
+   * retry-in-place behavior as a failed text send. */
+  sendPhotoMessage: (participationId: number | string, file: File) => Promise<{ error: "failed" | null }>;
+  /** Shares a Moment into a chat. Accepted threads only. The database's own
+   * INSERT policy is the actual gate on "can I share this" (a plain EXISTS
+   * against posts, under MY OWN RLS) — this never re-checks visibility
+   * client-side, since that check would just be re-deriving what the
+   * server is about to enforce anyway. */
+  shareMoment: (participationId: number | string, postId: number | string) => Promise<{ error: "failed" | null }>;
+  /** Shares a Pursuit into a chat — same shape as shareMoment. */
+  sharePursuit: (participationId: number | string, pursuitId: string) => Promise<{ error: "failed" | null }>;
+  /** Deletes your own message for both of you — clears its content and
+   * marks it deleted (never a hard delete; see unsend_message() in the
+   * database), and best-effort removes its storage object if it was a
+   * photo. Rejected server-side for anyone but the original sender; the UI
+   * should only ever offer this on your own messages. */
+  unsendMessage: (participationId: number | string, messageId: number | string) => Promise<{ error: "failed" | null }>;
 
   /**
    * Marks a thread as "the one currently on screen": messagesFor(id) then
@@ -351,6 +394,13 @@ function mapMessageRow(m: any): Message {
     fromUser: m.from_user,
     body: m.body,
     createdAt: new Date(m.created_at).getTime(),
+    // Absent on a database this old migration hasn't reached yet — same
+    // "reads as the pre-Phase-4 shape" default the column itself uses.
+    kind: (m.kind ?? "text") as MessageKind,
+    mediaPath: m.media_path ?? null,
+    sharedPostId: m.shared_post_id ?? null,
+    sharedPursuitId: m.shared_pursuit_id ?? null,
+    deletedAt: m.deleted_at ? new Date(m.deleted_at).getTime() : null,
   };
 }
 
@@ -731,6 +781,16 @@ export function SocialProvider({ children }: { children: ReactNode }) {
           return next === list ? prev : { ...prev, [key]: next };
         });
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload: any) => {
+        // Phase 4: the only thing that ever updates a message is unsend —
+        // lands here for BOTH parties (and my own other devices), so
+        // "Message deleted" shows up live without either side reloading.
+        const row = mapMessageRow(payload.new);
+        if (openThreadIdRef.current != null && String(openThreadIdRef.current) === String(row.participationId)) {
+          setOpenMessages((prev) => applyMessageUpdate(prev, row));
+        }
+        setRemote((prev) => ({ ...prev, summaries: patchSummaryOnMessageUpdate(prev.summaries, row) }));
+      })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "participations" }, (payload: any) => {
         // Narrowed (Phase 2 follow-up): a stranger's public join_in used to
         // trigger a full refresh() for everyone. Only refresh when the row
@@ -1033,7 +1093,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
           id: s.lastMessageId,
           participationId,
           fromUser: s.lastMessageFromUser ?? "",
+          // Already the server's own kind-aware preview text ("Photo",
+          // "Message deleted", …) — rendered as plain text here, so `kind`
+          // is always 'text' regardless of what the real message's kind is.
           body: s.lastMessageBody ?? "",
+          kind: "text",
           createdAt: s.lastMessageCreatedAt ?? 0,
         },
       ];
@@ -1162,7 +1226,12 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         status: data.status,
         createdAt: new Date(data.created_at).getTime(),
       };
-      const { error: msgError } = await rawInsertMessage(newThread, body, newThread.status === "pending");
+      const { error: msgError } = await rawInsertMessage(
+        newThread,
+        "text",
+        { body: body.trim() },
+        newThread.status === "pending",
+      );
       // Either way, this is a brand-new thread — refresh() once to bring
       // it (and its summary) into state, rather than the per-message
       // optimistic patching sendMessage does for an existing conversation.
@@ -1192,7 +1261,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     setState({
       ...state,
       participations: [entry, ...state.participations],
-      messages: [...state.messages, { id: localId(), participationId: entry.id, fromUser: myId, body: body.trim(), createdAt: Date.now() }],
+      messages: [...state.messages, { id: localId(), participationId: entry.id, fromUser: myId, body: body.trim(), kind: "text", createdAt: Date.now() }],
     });
     return { id: entry.id, error: null };
   };
@@ -1353,30 +1422,108 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   // insertMessage, this never refreshes — callers own updating local state
   // (optimistically, in sendMessage's case) so a send doesn't cost a full
   // reload of everything Messages doesn't even show.
+  //
+  // Phase 4: generalized from "body: string" to any of the four kinds — a
+  // photo/moment/pursuit share is body: "" plus the one field that matches
+  // its kind (see the database's own messages_kind_shape constraint).
   const rawInsertMessage = async (
     thread: Participation,
-    body: string,
+    kind: MessageKind,
+    payload: { body: string; mediaPath?: string; sharedPostId?: number | string; sharedPursuitId?: string },
     isFirstPendingDm: boolean,
   ): Promise<{ data: any; error: "failed" | null }> => {
     if (!supabase || !user) return { data: null, error: null };
     const { data, error } = await supabase
       .from("messages")
-      .insert({ participation_id: thread.id, from_user: user.id, body: body.trim() })
+      .insert({
+        participation_id: thread.id,
+        from_user: user.id,
+        kind,
+        body: payload.body,
+        media_path: payload.mediaPath ?? null,
+        shared_post_id: payload.sharedPostId ?? null,
+        shared_pursuit_id: payload.sharedPursuitId ?? null,
+      })
       .select()
       .single();
-    // A block, a duplicate, a rate limit — whatever the database's own
-    // reason, the caller gets the same "failed" back either way. See
-    // SocialContextType.sendMessage's own comment for why.
+    // A block, a duplicate, a rate limit, a migration this depends on not
+    // being applied yet — whatever the database's own reason, the caller
+    // gets the same "failed" back either way. See SocialContextType.
+    // sendMessage's own comment for why.
     if (error || !data) return { data: null, error: "failed" as const };
     // Phase 3: a bell notification for every message is exactly the noise
     // the quieter-bell goal is about — Seen and unread now do that job.
     // The message_request notification (once per request, not per message)
-    // stays, same as follow requests.
+    // stays, same as follow requests. Only ever true for a plain-text
+    // send anyway — a pending thread can't carry a photo/share at all.
     if (isFirstPendingDm) {
       const other = thread.fromUser === user.id ? thread.toUser : thread.fromUser;
       await notify(other, "message_request", `${myName} wants to message you.`, "/messages?tab=requests");
     }
     return { data, error: null };
+  };
+
+  /** The shared tail of every send (and every retry): insert, then either
+   * mark the pending entry failed or fold the real row into state. Callers
+   * are responsible for the pending entry already existing under `clientId`
+   * before this runs (and, for a photo, for its upload having already
+   * succeeded — see ensureUploaded). */
+  const settleSend = async (
+    thread: Participation,
+    clientId: string,
+    kind: MessageKind,
+    payload: { body: string; mediaPath?: string; sharedPostId?: number | string; sharedPursuitId?: string },
+    isFirstPendingDm: boolean,
+  ): Promise<{ error: "failed" | null }> => {
+    const key = String(thread.id);
+    const { data, error } = await rawInsertMessage(thread, kind, payload, isFirstPendingDm);
+    if (error || !data) {
+      // Left in place as "failed" rather than removed — retryMessage reuses
+      // this exact clientId (and, for a photo, its already-uploaded path),
+      // so a retry can never create a second request row or a second copy
+      // of the same photo.
+      setPendingByThread((prev) => ({ ...prev, [key]: markPendingFailed(prev[key] ?? [], clientId) }));
+      return { error: "failed" as const };
+    }
+
+    const real = mapMessageRow(data);
+    setPendingByThread((prev) => {
+      const list = prev[key] ?? [];
+      const stale = list.find((p) => p.clientId === clientId);
+      if (stale?.localPreviewUrl) URL.revokeObjectURL(stale.localPreviewUrl);
+      return { ...prev, [key]: removePendingByClientId(list, clientId) };
+    });
+    // Dedupes by id against the Realtime echo, whichever arrives first.
+    if (openThreadIdRef.current != null && String(openThreadIdRef.current) === key) {
+      setOpenMessages((prev) => mergeMessage(prev, real));
+    }
+    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real, myId) }));
+    refreshSeenAt();
+    return { error: null };
+  };
+
+  /** Uploads a photo pending entry's file, unless it already has a path
+   * from an earlier attempt (a retry after the INSERT itself failed skips
+   * re-uploading). Marks the entry failed and returns null on an upload
+   * failure — the caller has nothing left to do at that point. */
+  const ensureUploaded = async (
+    thread: Participation,
+    clientId: string,
+    file: File,
+    existingPath?: string,
+  ): Promise<string | null> => {
+    if (existingPath) return existingPath;
+    const key = String(thread.id);
+    const { path, error } = await uploadMessagePhoto(thread.id, file);
+    if (error || !path) {
+      setPendingByThread((prev) => ({ ...prev, [key]: markPendingFailed(prev[key] ?? [], clientId) }));
+      return null;
+    }
+    setPendingByThread((prev) => ({
+      ...prev,
+      [key]: (prev[key] ?? []).map((p) => (p.clientId === clientId ? { ...p, uploadedPath: path } : p)),
+    }));
+    return path;
   };
 
   const sendMessage: SocialContextType["sendMessage"] = async (participationId, body) => {
@@ -1420,7 +1567,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         ...state,
         messages: [
           ...state.messages,
-          { id: localId(), participationId: thread.id, fromUser: myId, body: trimmed, createdAt: Date.now() },
+          { id: localId(), participationId: thread.id, fromUser: myId, body: trimmed, kind: "text", createdAt: Date.now() },
         ],
       });
       return { error: null };
@@ -1442,30 +1589,106 @@ export function SocialProvider({ children }: { children: ReactNode }) {
           participationId: thread.id,
           fromUser: myId,
           body: trimmed,
+          kind: "text" as const,
           createdAt: Date.now(),
           status: "sending" as const,
         },
       ],
     }));
 
-    const { data, error } = await rawInsertMessage(thread, trimmed, isFirstPendingDm);
-    if (error || !data) {
-      // Left in place as "failed" rather than removed — retryMessage reuses
-      // this exact clientId and body, so a retry can never create a second
-      // request row.
-      setPendingByThread((prev) => ({ ...prev, [key]: markPendingFailed(prev[key] ?? [], clientId) }));
-      return { error: "failed" as const };
-    }
+    return settleSend(thread, clientId, "text", { body: trimmed }, isFirstPendingDm);
+  };
 
-    const real = mapMessageRow(data);
-    setPendingByThread((prev) => ({ ...prev, [key]: removePendingByClientId(prev[key] ?? [], clientId) }));
-    // Dedupes by id against the Realtime echo, whichever arrives first.
-    if (openThreadIdRef.current != null && String(openThreadIdRef.current) === key) {
-      setOpenMessages((prev) => mergeMessage(prev, real));
-    }
-    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real, myId) }));
-    refreshSeenAt();
-    return { error: null };
+  const sendPhotoMessage: SocialContextType["sendPhotoMessage"] = async (participationId, file) => {
+    const thread = state.participations.find((p) => String(p.id) === String(participationId));
+    if (!thread || !supabase || !user) return { error: "failed" as const };
+    if (!canAttachInto(thread)) return { error: "failed" as const };
+
+    const converted = await convertHeicIfNeeded(file);
+    const clientId = localId();
+    const key = String(thread.id);
+    // The picked photo itself, shown immediately while it uploads — there's
+    // no signed URL yet (nothing's been uploaded), so a local blob URL is
+    // the only thing there is to show. Revoked once this entry is removed
+    // (settleSend, on success) — see also closeConversation/unmount, which
+    // don't need to revoke anything since pendingByThread outlives them.
+    const localPreviewUrl = URL.createObjectURL(converted);
+    setPendingByThread((prev) => ({
+      ...prev,
+      [key]: [
+        ...(prev[key] ?? []),
+        {
+          id: clientId,
+          clientId,
+          participationId: thread.id,
+          fromUser: myId,
+          body: "",
+          kind: "photo" as const,
+          createdAt: Date.now(),
+          status: "sending" as const,
+          file: converted,
+          localPreviewUrl,
+        },
+      ],
+    }));
+
+    const path = await ensureUploaded(thread, clientId, converted);
+    if (!path) return { error: "failed" as const };
+    return settleSend(thread, clientId, "photo", { body: "", mediaPath: path }, false);
+  };
+
+  const shareMoment: SocialContextType["shareMoment"] = async (participationId, postId) => {
+    const thread = state.participations.find((p) => String(p.id) === String(participationId));
+    if (!thread || !supabase || !user) return { error: "failed" as const };
+    if (!canAttachInto(thread)) return { error: "failed" as const };
+
+    const clientId = localId();
+    const key = String(thread.id);
+    setPendingByThread((prev) => ({
+      ...prev,
+      [key]: [
+        ...(prev[key] ?? []),
+        {
+          id: clientId,
+          clientId,
+          participationId: thread.id,
+          fromUser: myId,
+          body: "",
+          kind: "moment" as const,
+          sharedPostId: typeof postId === "string" ? Number(postId) : postId,
+          createdAt: Date.now(),
+          status: "sending" as const,
+        },
+      ],
+    }));
+    return settleSend(thread, clientId, "moment", { body: "", sharedPostId: postId }, false);
+  };
+
+  const sharePursuit: SocialContextType["sharePursuit"] = async (participationId, pursuitId) => {
+    const thread = state.participations.find((p) => String(p.id) === String(participationId));
+    if (!thread || !supabase || !user) return { error: "failed" as const };
+    if (!canAttachInto(thread)) return { error: "failed" as const };
+
+    const clientId = localId();
+    const key = String(thread.id);
+    setPendingByThread((prev) => ({
+      ...prev,
+      [key]: [
+        ...(prev[key] ?? []),
+        {
+          id: clientId,
+          clientId,
+          participationId: thread.id,
+          fromUser: myId,
+          body: "",
+          kind: "pursuit" as const,
+          sharedPursuitId: pursuitId,
+          createdAt: Date.now(),
+          status: "sending" as const,
+        },
+      ],
+    }));
+    return settleSend(thread, clientId, "pursuit", { body: "", sharedPursuitId: pursuitId }, false);
   };
 
   const retryMessage: SocialContextType["retryMessage"] = async (participationId, clientId) => {
@@ -1481,6 +1704,24 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       [key]: (prev[key] ?? []).map((p) => (p.clientId === clientId ? { ...p, status: "sending" as const } : p)),
     }));
 
+    if (entry.kind === "photo") {
+      if (!entry.file) return; // a photo pending entry always carries its file
+      const path = await ensureUploaded(thread, clientId, entry.file, entry.uploadedPath);
+      if (!path) return;
+      await settleSend(thread, clientId, "photo", { body: "", mediaPath: path }, false);
+      return;
+    }
+    if (entry.kind === "moment") {
+      if (entry.sharedPostId == null) return;
+      await settleSend(thread, clientId, "moment", { body: "", sharedPostId: entry.sharedPostId }, false);
+      return;
+    }
+    if (entry.kind === "pursuit") {
+      if (entry.sharedPursuitId == null) return;
+      await settleSend(thread, clientId, "pursuit", { body: "", sharedPursuitId: entry.sharedPursuitId }, false);
+      return;
+    }
+
     // Whether this was the thread's very first message, for which
     // notification to send — based on confirmed history alone (excluding
     // the very entry being retried, which would otherwise always count
@@ -1491,19 +1732,45 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       thread.status === "pending" &&
       thread.fromUser === myId &&
       !hasConfirmedMessages;
+    await settleSend(thread, clientId, "text", { body: entry.body }, isFirstPendingDm);
+  };
 
-    const { data, error } = await rawInsertMessage(thread, entry.body, isFirstPendingDm);
-    if (error || !data) {
-      setPendingByThread((prev) => ({ ...prev, [key]: markPendingFailed(prev[key] ?? [], clientId) }));
-      return;
+  /** Deletes your own message for both of you (Phase 4) — clears its
+   * content and marks it deleted, never a hard delete (see unsend_message()
+   * in the database, which is also the ONLY place that enforces "only the
+   * sender"; this function doesn't re-check that itself). Only ever called
+   * from the UI on the currently open conversation, so `messagesFor` here
+   * is that thread's real, loaded history — including mediaPath, which the
+   * one-message summary preview other threads get never carries. */
+  const unsendMessage: SocialContextType["unsendMessage"] = async (participationId, messageId) => {
+    if (!supabase || !user) return { error: "failed" as const };
+    const existing = messagesFor(participationId).find((m) => String(m.id) === String(messageId));
+    const { error } = await supabase.rpc("unsend_message", { message_id: messageId });
+    if (error) return { error: "failed" as const };
+
+    const updated: Message = {
+      id: messageId,
+      participationId,
+      fromUser: existing?.fromUser ?? myId,
+      body: "",
+      kind: existing?.kind ?? "text",
+      mediaPath: null,
+      sharedPostId: null,
+      sharedPursuitId: null,
+      deletedAt: Date.now(),
+      createdAt: existing?.createdAt ?? Date.now(),
+    };
+    // Optimistic — the Realtime UPDATE (or the other party's own fetch)
+    // confirms it, but no need to wait on a round trip this call just caused.
+    setOpenMessages((prev) => applyMessageUpdate(prev, updated));
+    setRemote((prev) => ({ ...prev, summaries: patchSummaryOnMessageUpdate(prev.summaries, updated) }));
+    if (existing?.mediaPath) {
+      // Best-effort: the message row is already cleared (that's the real
+      // security boundary) — a failure here just leaves an orphaned object
+      // nobody but the two former parties could ever have read anyway.
+      deleteMessagePhoto(existing.mediaPath).catch(() => {});
     }
-    const real = mapMessageRow(data);
-    setPendingByThread((prev) => ({ ...prev, [key]: removePendingByClientId(prev[key] ?? [], clientId) }));
-    if (openThreadIdRef.current != null && String(openThreadIdRef.current) === key) {
-      setOpenMessages((prev) => mergeMessage(prev, real));
-    }
-    setRemote((prev) => ({ ...prev, summaries: patchSummaryWithNewMessage(prev.summaries, real, myId) }));
-    refreshSeenAt();
+    return { error: null };
   };
 
   return (
@@ -1542,6 +1809,10 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         messagesFor,
         sendMessage,
         retryMessage,
+        sendPhotoMessage,
+        shareMoment,
+        sharePursuit,
+        unsendMessage,
         openConversation,
         closeConversation,
         hasMoreOlderMessages,
