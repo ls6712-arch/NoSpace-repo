@@ -40,6 +40,10 @@
 --       permission-denied, not just "not exposed via PostgREST" — the
 --       latter isn't something this script can observe directly).
 
+-- Fixed Sept 26 before the live run: a sender can't SELECT the recipient's
+-- notifications, so `insert ... returning` failed RLS and the pursuit checks
+-- read as the wrong person. Now uses row counts, reads as the recipient,
+-- and only counts rows created in this transaction. Live result: all 20 true.
 begin;
 
 do $$
@@ -104,9 +108,9 @@ begin
   -- ═══════════════════════════════════════════════════════════════════
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_spd, 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is not null) into v_missing_row_not_muted;
+  values (v_spd, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_spd, 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_missing_row_not_muted := (v_rows_updated > 0);
 
   -- ═══════════════════════════════════════════════════════════════════
   -- 2-5. Mute 'thoughts' for spd0008 only.
@@ -119,21 +123,21 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_spd, 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is null) into v_muted_thoughts_dropped;
+  values (v_spd, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_spd, 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_muted_thoughts_dropped := (v_rows_updated = 0);
 
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'joined', 'Sush joined your activity.', '/my-space', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is not null) into v_muted_other_kind_unaffected;
+  values (v_spd, 'joined', 'Sush joined your activity.', '/my-space', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_muted_other_kind_unaffected := (v_rows_updated > 0);
 
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_nani, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_nani, 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is not null) into v_muted_other_person_unaffected;
+  values (v_nani, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_nani, 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_muted_other_person_unaffected := (v_rows_updated > 0);
 
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
   update public.profile_settings
@@ -143,9 +147,9 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_spd, 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is not null) into v_unmuted_restores;
+  values (v_spd, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_spd, 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_unmuted_restores := (v_rows_updated > 0);
 
   -- ═══════════════════════════════════════════════════════════════════
   -- 6. A SECURITY DEFINER trigger's own insert (notify_pursuit_membership,
@@ -162,10 +166,12 @@ begin
   insert into public.pursuits (id, user_id, title) values (v_pursuit_id, v_sush, 'Phase 5 verification pursuit');
   insert into public.pursuit_members (pursuit_id, user_id, role, status)
   values (v_pursuit_id, v_spd, 'member', 'invited');
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
   select not exists(
     select 1 from public.notifications
-    where user_id = v_spd and kind = 'pursuit_invite' and href = '/my-space' and actor_name = 'Sush'
+    where user_id = v_spd and kind = 'pursuit_invite' and actor_name = 'Sush' and created_at = now()
   ) into v_security_definer_dropped;
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
 
   delete from public.pursuit_members where pursuit_id = v_pursuit_id and user_id = v_spd;
 
@@ -177,9 +183,10 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   insert into public.pursuit_members (pursuit_id, user_id, role, status)
   values (v_pursuit_id, v_spd, 'member', 'invited');
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
   select exists(
     select 1 from public.notifications
-    where user_id = v_spd and kind = 'pursuit_invite' and href = '/my-space' and actor_name = 'Sush'
+    where user_id = v_spd and kind = 'pursuit_invite' and actor_name = 'Sush' and created_at = now()
   ) into v_security_definer_restored;
 
   -- ═══════════════════════════════════════════════════════════════════
@@ -197,9 +204,9 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'space_join_approved', 'You''re in Phase 5 Test Space.', '/space/phase5v-test', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is not null) into v_space_kind_never_dropped;
+  values (v_spd, 'space_join_approved', 'You''re in Phase 5 Test Space.', '/space/phase5v-test', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_space_kind_never_dropped := (v_rows_updated > 0);
 
   -- ═══════════════════════════════════════════════════════════════════
   -- 8. Circle invitations mute through the EXISTING circle_invites key,
@@ -207,9 +214,9 @@ begin
   -- ═══════════════════════════════════════════════════════════════════
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'circle_invite', 'Sush invited you to a Circle.', '/circles', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is null) into v_circle_invite_muted;
+  values (v_spd, 'circle_invite', 'Sush invited you to a Circle.', '/circles', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_circle_invite_muted := (v_rows_updated = 0);
 
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
   update public.profile_settings
@@ -219,9 +226,9 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'circle_invite', 'Sush invited you to a Circle.', '/circles', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is not null) into v_circle_invite_restored;
+  values (v_spd, 'circle_invite', 'Sush invited you to a Circle.', '/circles', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_circle_invite_restored := (v_rows_updated > 0);
 
   -- ═══════════════════════════════════════════════════════════════════
   -- 8b. 'make_together_explore_together' and 'message_requests' are still muted at this
@@ -235,33 +242,33 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'make_together', 'Sush asked to make together: a quilt.', '/you', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is null) into v_make_explore_ask_dropped;
+  values (v_spd, 'make_together', 'Sush asked to make together: a quilt.', '/you', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_make_explore_ask_dropped := (v_rows_updated = 0);
 
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'explore_together', 'Sush asked to explore together: a trailhead.', '/you', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is null) into v_explore_ask_dropped;
+  values (v_spd, 'explore_together', 'Sush asked to explore together: a trailhead.', '/you', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_explore_ask_dropped := (v_rows_updated = 0);
 
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'accepted', 'Sush accepted your Make together request.', '/messages', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is null) into v_make_explore_accepted_dropped;
+  values (v_spd, 'accepted', 'Sush accepted your Make together request.', '/messages', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_make_explore_accepted_dropped := (v_rows_updated = 0);
 
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'joined', 'Sush joined your activity.', '/my-space', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is null) into v_make_explore_joined_dropped;
+  values (v_spd, 'joined', 'Sush joined your activity.', '/my-space', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_make_explore_joined_dropped := (v_rows_updated = 0);
 
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'message_request', 'Sush wants to message you.', '/messages?tab=requests', 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is null) into v_message_requests_dropped;
+  values (v_spd, 'message_request', 'Sush wants to message you.', '/messages?tab=requests', 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_message_requests_dropped := (v_rows_updated = 0);
 
   -- Clean slate before the remaining checks — nothing muted from here on,
   -- so any drop below is attributable only to what that check is testing.
@@ -280,9 +287,9 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
-  values (v_spd, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_spd, 'Sush')
-  returning id into v_notif_id;
-  select (v_notif_id is null) into v_block_rule_still_holds;
+  values (v_spd, 'thought', 'Sush left a thought on your moment.', '/moment/' || v_post_spd, 'Sush');
+  get diagnostics v_rows_updated = row_count;
+  v_block_rule_still_holds := (v_rows_updated = 0);
 
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_spd), true);
   delete from public.blocks where blocker_id = v_spd and blocked_id = v_sush;
@@ -296,8 +303,9 @@ begin
     v_notif_id := null;
     insert into public.notifications (user_id, kind, body, actor_name)
     values (v_spd, 'message', 'legacy message-kind row (Phase 3 already stopped creating these)', 'Sush')
-    returning id into v_notif_id;
-    v_message_kind_still_accepted := (v_notif_id is not null);
+    ;
+    get diagnostics v_rows_updated = row_count;
+    v_message_kind_still_accepted := (v_rows_updated > 0);
   exception when others then
     v_message_kind_still_accepted := false;
   end;

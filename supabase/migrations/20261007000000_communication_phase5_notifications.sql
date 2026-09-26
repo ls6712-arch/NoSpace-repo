@@ -172,7 +172,11 @@ begin
 
   -- Circle invitations: the existing boolean, not the new array.
   if p_kind = 'circle_invite' then
-    return coalesce((v_prefs->>'circle_invites')::boolean, true) = false;
+    -- Compared as jsonb, never cast: a malformed value (e.g. a string the
+    -- owner wrote into their own settings) must not make this throw,
+    -- because a throw here would abort the SENDER's insert, not just
+    -- skip the notification. Only an explicit false mutes.
+    return (v_prefs->'circle_invites') = 'false'::jsonb;
   end if;
 
   v_category := case p_kind

@@ -215,7 +215,7 @@ the phase.
   delete); Realtime already covers the new `UPDATE`s since `messages` was added to the publication
   in Phase 2. A follow-up migration adding two covering indexes for
   `messages.shared_post_id`/`shared_pursuit_id` (a non-blocking performance note from Part A's own
-  advisor check) is staged but **not yet applied** — see
+  advisor check) was applied live on 2026-09-25 — see
   `supabase/migrations/20261006000000_communication_phase4_shared_content_indexes.sql`. App built
   (photo attach with HEIC conversion and upload progress, "Send to…" from a Moment or a Pursuit
   into any accepted chat, a new `/moment/:id` route so a shared Moment has somewhere to link to,
@@ -226,9 +226,13 @@ the phase.
   with a mocked-network browser pass (see `docs/verification/communication-phase4/`) — a real
   two-account live check (a chat photo's URL refused signed-out, live photo/share delivery, a
   shared Moment turning "Not available" the moment it's made private, an unsent photo actually gone
-  from Storage) is still needed and listed in that folder's README. PR opened against `main`, not
-  yet merged.
-- Phase 5 Notification center: database migration **staged, not yet applied** — see
+  from Storage) was listed in that folder's README. Merged in PR #107 (`9594a44`) on 2026-09-25;
+  live two-account check passed the same evening (photo both sides, signed link expires after
+  5 minutes, public storage address refused, shared Moment opens, private Moment "Not available",
+  unsend "Message deleted" both sides, no attach in requests; photo file confirmed deleted from
+  Storage after unsend).
+- Phase 5 Notification center: database migration **applied live on 2026-09-26** and verified
+  (all 20 checks true; security advisors unchanged) — see
   `supabase/migrations/20261007000000_communication_phase5_notifications.sql` and its rollback and
   verification script. It adds one new `private.notification_kind_muted(user, kind)` helper
   (SECURITY DEFINER, execute revoked from `public`/`anon`/`authenticated` — reachable only from
@@ -250,8 +254,11 @@ the phase.
   `notificationPreferences.test.ts`), and verified with a mocked-network browser pass (see
   `docs/verification/communication-phase5/`) — a real two-account live check (muting actually
   stopping an insert, cross-24h-boundary grouping, the Thought-notification href fix) is still
-  needed and listed in that folder's README. PR opened against `main`, not yet merged; the staged
-  migration is meant to be applied and verified live before that PR is merged, not after.
+  needed and listed in that folder's README. PR #108 opened against `main`. Two fixes were made at
+  apply time: the Circle-invitations check compares jsonb instead of casting to boolean (a
+  malformed stored value can't make the sender's insert throw), and the verification script was
+  corrected (a sender can't read the recipient's notifications, so it now uses row counts and
+  reads as the recipient).
 - Phase 6 Email and push: not started
 
 ## Follow-ups (found, not in any phase)

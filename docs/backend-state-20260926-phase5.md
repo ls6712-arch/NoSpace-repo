@@ -3,19 +3,15 @@
 Project: `eyzokuhhbyidvmuqfmwm`. Covers
 `supabase/migrations/20261007000000_communication_phase5_notifications.sql`.
 
-**Unlike every prior phase's own backend-state note, this one describes a
-migration that is staged but NOT yet applied live.** Sush approved the
-fact-checks and the category mapping (with the "Make together and Explore
-together" label rename) and asked for the branch to be pushed with Part A
-committed so the migration, rollback, and verification script could be
-reviewed before applying — specifically, so the reviewer could diff this
-migration's copy of `enforce_notification_insert()`'s body against the
-actual live `pg_get_functiondef('public.enforce_notification_insert'::regproc)`
-output before running it, since the migration's `create or replace` would
-silently revert any live drift the migration file doesn't know about. The
-migration will be applied from outside this sandbox. Everything below
-describes what the staged migration *will* do once applied, not something
-already observed live.
+**Applied live on 2026-09-26** after the live `enforce_notification_insert()`
+body was diffed against this migration's copy: identical except for the new
+mute check. One change at apply time: the Circle-invitations check compares
+`v_prefs->'circle_invites' = 'false'::jsonb` instead of casting to boolean, so a
+malformed stored value can't make the sender's insert throw. The verification
+script (corrected: row counts instead of `returning`, recipient-side reads for
+the Pursuit checks) ran live: all 20 checks true, nothing left behind.
+`private.notification_kind_muted` is not executable by `anon` or
+`authenticated`. Security advisors: no new findings.
 
 ## Fact-checks done before writing anything (read-only against live data)
 
@@ -52,7 +48,7 @@ already observed live.
    auth.uid() and not read`, against the existing "you update your own"
    UPDATE policy. Nothing to change, DB or app.
 
-## What the staged migration will change
+## What the migration changed
 
 1. New `private.notification_kind_muted(p_user uuid, p_kind text) returns
    boolean` — SECURITY DEFINER, `set search_path = public`. Looks up
