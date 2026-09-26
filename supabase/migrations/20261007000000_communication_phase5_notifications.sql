@@ -26,6 +26,17 @@
 -- file is deliberately narrow: one new private helper, and
 -- enforce_notification_insert() gains exactly one more check.
 --
+-- SELF-CAUGHT CORRECTION (after Sush's OK on the category mapping, before
+-- this migration was applied): the first draft's fact-check claimed
+-- make_together/explore_together notification kinds are never inserted —
+-- wrong. requestTogether() (SocialContext.tsx) really does call
+-- notify(input.toUser, input.kind, ...) with kind literally 'make_together'
+-- or 'explore_together' the moment someone sends that ask. Both kinds are
+-- now correctly included in the make_together_explore_together category's
+-- CASE mapping below (they weren't in the version Sush approved the LABEL
+-- for). Everything else approved is unchanged. Flagged in chat; re-review
+-- this one category if that matters before applying.
+--
 -- ── Fact-checks (read before this migration; they shaped what's below) ──
 --
 -- 1. connect_request / connect_accepted are NOT created by any code path
@@ -42,14 +53,12 @@
 --    alongside (never through) the notifications table. So the proposed
 --    "New followers and follow requests" mutable category has nothing to
 --    attach to — there is no kind to mute, and muting couldn't reach the
---    profile_follows-backed UI even if there were, the same structural gap
---    Message requests' own live `incoming` (pending make_together/
---    explore_together asks) has. **Dropped from the category list below;
---    left for Sush to decide** — either a follow-up notification kind
---    that actually gets created (then this becomes mutable the normal
---    way), or leave it alone. The 5 old orphaned rows are untouched by
---    this migration (no delete, no reclassification) — Sush said report,
---    not touch.
+--    profile_follows-backed UI even if there were. **Dropped from the
+--    category list below; left for Sush to decide** — either a follow-up
+--    notification kind that actually gets created (then this becomes
+--    mutable the normal way), or leave it alone. The 5 old orphaned rows
+--    are untouched by this migration (no delete, no reclassification) —
+--    Sush said report, not touch.
 --
 -- 2. hobby_follow rows are exactly what they look like: a note to
 --    yourself about your own action. `toggleHobbyFollow()` (SocialContext.
@@ -81,19 +90,23 @@
 -- ── Category → kind mapping (adjusted from the proposal to what the code
 --    actually creates; see the fact-check above for what got dropped) ──
 --
---   thoughts                     -> thought
---   pursuit_activity             -> pursuit_joined, pursuit_progress, pursuit_invite
---   make_together_explore_together -> accepted, joined
---     (Label kept as "Make together and Explore together" per Sush's call
---     — but the kinds it actually gates are NOT make_together/
---     explore_together themselves: those are never inserted as
---     notification rows at all; the initial ask is shown live from
---     `participations` directly in NotificationsMenu.tsx, the same
---     structural gap as fact-check 1 above. Only the ACCEPTANCE
---     (kind='accepted') and an instant join (kind='joined', the join_in
---     feature — joining an activity Moment, unrelated to Pursuits) are
---     real rows this switch can actually mute. Worth Sush knowing: the
---     switch's name promises slightly more than it delivers today.)
+--   thoughts                        -> thought
+--   pursuit_activity                -> pursuit_joined, pursuit_progress, pursuit_invite
+--   make_together_explore_together  -> make_together, explore_together, accepted, joined
+--     (CORRECTED after Sush's OK on the category mapping: the first draft
+--     of this migration's own fact-check wrongly claimed make_together/
+--     explore_together are never inserted as notification rows — they ARE.
+--     requestTogether() (SocialContext.tsx) calls notify(input.toUser,
+--     input.kind, ...) with input.kind literally 'make_together' or
+--     'explore_together', href '/you', the moment someone sends the ask —
+--     that's what the initial request itself looks like in the bell,
+--     redundantly alongside NotificationsMenu.tsx's own separate live
+--     `incoming` block (which reads pending participations directly, for
+--     the Accept/Decline buttons — a different rendering path, but not a
+--     different notification row). `joined` is the join_in feature —
+--     joining an activity Moment, unrelated to Pursuits — and `accepted`
+--     is the acceptance. All four are real, live-inserted rows; this
+--     category's name now matches what it actually covers.)
 --   message_requests      -> message_request
 --     (muting only stops the bell entry — the request itself still shows
 --     in Messages -> Message requests, same distinction the instructions
@@ -167,6 +180,8 @@ begin
     when 'pursuit_joined' then 'pursuit_activity'
     when 'pursuit_progress' then 'pursuit_activity'
     when 'pursuit_invite' then 'pursuit_activity'
+    when 'make_together' then 'make_together_explore_together'
+    when 'explore_together' then 'make_together_explore_together'
     when 'accepted' then 'make_together_explore_together'
     when 'joined' then 'make_together_explore_together'
     when 'message_request' then 'message_requests'

@@ -27,9 +27,10 @@
 --   7.  Every space_* kind is never dropped, even with every mutable
 --       category (and circle_invites) muted at once.
 --   8.  Circle invitations mute through the EXISTING `circle_invites`
---       boolean, not the new array, and restore the same way. Both kinds
---       under 'make_together_explore_together' (accepted, joined) and 'message_requests'
---       are also confirmed dropped while muted.
+--       boolean, not the new array, and restore the same way. Every kind
+--       under 'make_together_explore_together' (make_together,
+--       explore_together, accepted, joined) and 'message_requests' is
+--       also confirmed dropped while muted.
 --   9.  The Phase 1 block-between rule still holds (unrelated to muting).
 --  10.  `message` is still accepted by the kind allowlist (Phase 3's own
 --       behaviour — nothing here narrows it further).
@@ -62,6 +63,8 @@ declare
   v_space_kind_never_dropped boolean;
   v_circle_invite_muted boolean;
   v_circle_invite_restored boolean;
+  v_make_explore_ask_dropped boolean;
+  v_explore_ask_dropped boolean;
   v_make_explore_accepted_dropped boolean;
   v_make_explore_joined_dropped boolean;
   v_message_requests_dropped boolean;
@@ -223,10 +226,25 @@ begin
   -- ═══════════════════════════════════════════════════════════════════
   -- 8b. 'make_together_explore_together' and 'message_requests' are still muted at this
   --     point too (set in step 7 above, untouched by step 8's
-  --     circle_invites-only change) — confirm both kinds each category
-  --     maps to are actually dropped, not just 'thoughts'/'pursuit_activity'.
+  --     circle_invites-only change) — confirm every kind each category
+  --     maps to is actually dropped, not just 'thoughts'/'pursuit_activity'.
+  --     Includes make_together/explore_together themselves — real,
+  --     live-inserted rows (requestTogether() in SocialContext.tsx), not
+  --     just their acceptance/join counterparts.
   -- ═══════════════════════════════════════════════════════════════════
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_sush), true);
+  v_notif_id := null;
+  insert into public.notifications (user_id, kind, body, href, actor_name)
+  values (v_spd, 'make_together', 'Sush asked to make together: a quilt.', '/you', 'Sush')
+  returning id into v_notif_id;
+  select (v_notif_id is null) into v_make_explore_ask_dropped;
+
+  v_notif_id := null;
+  insert into public.notifications (user_id, kind, body, href, actor_name)
+  values (v_spd, 'explore_together', 'Sush asked to explore together: a trailhead.', '/you', 'Sush')
+  returning id into v_notif_id;
+  select (v_notif_id is null) into v_explore_ask_dropped;
+
   v_notif_id := null;
   insert into public.notifications (user_id, kind, body, href, actor_name)
   values (v_spd, 'accepted', 'Sush accepted your Make together request.', '/messages', 'Sush')
@@ -306,10 +324,11 @@ begin
   end;
   v_helper_unreachable_by_others := v_caught;
 
-  raise exception 'RESULTS: missing_row_not_muted=% muted_thoughts_dropped=% muted_other_kind_unaffected=% muted_other_person_unaffected=% unmuted_restores=% security_definer_dropped=% security_definer_restored=% space_kind_never_dropped=% circle_invite_muted=% circle_invite_restored=% make_explore_accepted_dropped=% make_explore_joined_dropped=% message_requests_dropped=% block_rule_still_holds=% message_kind_still_accepted=% helper_unreachable_by_others=% others_cant_read_settings=% others_cant_update_settings=%',
+  raise exception 'RESULTS: missing_row_not_muted=% muted_thoughts_dropped=% muted_other_kind_unaffected=% muted_other_person_unaffected=% unmuted_restores=% security_definer_dropped=% security_definer_restored=% space_kind_never_dropped=% circle_invite_muted=% circle_invite_restored=% make_explore_ask_dropped=% explore_ask_dropped=% make_explore_accepted_dropped=% make_explore_joined_dropped=% message_requests_dropped=% block_rule_still_holds=% message_kind_still_accepted=% helper_unreachable_by_others=% others_cant_read_settings=% others_cant_update_settings=%',
     v_missing_row_not_muted, v_muted_thoughts_dropped, v_muted_other_kind_unaffected, v_muted_other_person_unaffected,
     v_unmuted_restores, v_security_definer_dropped, v_security_definer_restored, v_space_kind_never_dropped,
-    v_circle_invite_muted, v_circle_invite_restored, v_make_explore_accepted_dropped, v_make_explore_joined_dropped,
+    v_circle_invite_muted, v_circle_invite_restored, v_make_explore_ask_dropped, v_explore_ask_dropped,
+    v_make_explore_accepted_dropped, v_make_explore_joined_dropped,
     v_message_requests_dropped, v_block_rule_still_holds, v_message_kind_still_accepted,
     v_helper_unreachable_by_others, v_others_cant_read_settings, v_others_cant_update_settings;
 end $$;
