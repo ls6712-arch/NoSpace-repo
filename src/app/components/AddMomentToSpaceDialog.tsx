@@ -33,12 +33,14 @@ export function AddMomentToSpaceDialog({
   const [linking, setLinking] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [donePending, setDonePending] = useState(false);
 
   useEffect(() => {
     if (!open || !supabase || !user) return;
     setPosts("loading");
     setError(null);
     setDone(false);
+    setDonePending(false);
     supabase
       .from("posts")
       .select("id, caption, media_url")
@@ -52,9 +54,19 @@ export function AddMomentToSpaceDialog({
     if (!supabase) return;
     setLinking(postId);
     setError(null);
-    const { error: insertError } = await supabase.from("space_moments").insert({ space_id: spaceId, post_id: postId });
+    // Read the row back rather than assuming from posting_mode client-side
+    // — set_space_moment_status() is the one source of truth for whether
+    // this landed 'approved' (immediate, or the poster's own Space) or
+    // 'pending' (approval mode, everyone else), and the message should
+    // say what actually happened, not what was merely expected to.
+    const { data, error: insertError } = await supabase
+      .from("space_moments")
+      .insert({ space_id: spaceId, post_id: postId })
+      .select("status")
+      .single();
     setLinking(null);
     if (insertError) return setError(insertError.message);
+    setDonePending(data?.status === "pending");
     setDone(true);
     onAdded?.();
   };
@@ -67,7 +79,9 @@ export function AddMomentToSpaceDialog({
           <DialogDescription>Pick one of your Moments to show here.</DialogDescription>
         </DialogHeader>
         {done ? (
-          <p className="py-4 text-sm text-muted-foreground">Added.</p>
+          <p className="py-4 text-sm text-muted-foreground">
+            {donePending ? "Sent to the hosts for approval." : "Added."}
+          </p>
         ) : posts === "loading" ? (
           <div className="py-6" />
         ) : posts.length === 0 ? (

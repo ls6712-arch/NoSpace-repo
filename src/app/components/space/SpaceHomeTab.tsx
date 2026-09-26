@@ -15,7 +15,7 @@ import type { Post } from "../../data/posts";
 
 type HostLite = { id: string; name: string; avatarUrl?: string };
 type Attendee = { userId: string; name: string; avatarUrl?: string };
-type SpaceMoment = Post & { featured: boolean };
+type SpaceMoment = Post & { featured: boolean; status: "approved" | "pending" };
 
 // Literal utility classes (Tailwind's scanner needs them written out, not
 // built from a template) — alternating so adjacent cards never tilt the
@@ -218,20 +218,19 @@ export function SpaceHomeTab({
     async function loadMoments() {
       if (!supabase) return;
       // space_moments' own "follows the space's access" SELECT policy
-      // already limits this to what the caller can actually see (Open, or
-      // an active member, plus a host/poster's own pending links) — same
-      // trust-RLS pattern as SpaceMomentsTab. status = 'approved' here is
-      // a deliberate extra filter on top of that, though: this grid is a
-      // public-facing preview of the Space (same thing "N Moments this
-      // month" in the header counts), not a moderation queue — a still-
-      // pending Moment (posting_mode = 'approval') showing here before a
-      // host has approved it would contradict that count right next to
-      // it, which only ever counts approved ones (space_moment_count_30d).
+      // already limits this to what the caller can actually see: every
+      // approved link (Open, or an active member), plus — pending ones
+      // only — the poster's own and a host's view of every pending one.
+      // This grid deliberately shows less than that raw set, though: it's
+      // a public-facing preview of the Space (same thing "N Moments this
+      // month" in the header counts, which only ever counts approved
+      // ones), not a moderation queue, so a pending Moment only ever
+      // renders here for its own author (labelled), never for a host
+      // looking at someone else's — that review happens on Manage.
       const { data } = await supabase
         .from("space_moments")
-        .select("added_at, featured, posts(*)")
+        .select("added_at, featured, status, posts(*)")
         .eq("space_id", space.id)
-        .eq("status", "approved")
         .order("featured", { ascending: false })
         .order("added_at", { ascending: false })
         .limit(15);
@@ -243,12 +242,17 @@ export function SpaceHomeTab({
         : { data: [] as { id: string; display_name: string }[] };
       if (cancelled) return;
       const nameById = new Map((profilesData ?? []).map((p) => [p.id, p.display_name]));
-      const posts = rows.map((r: any) => ({
+      const allRows = rows.map((r: any) => ({
         ...rowToPost(r.posts, nameById.get(r.posts.user_id) ?? "Someone"),
         featured: !!r.featured,
+        status: r.status as "approved" | "pending",
       })) as SpaceMoment[];
+      const posts = allRows.filter((p) => p.status === "approved" || (user && p.userId === user.id));
       setMoments(posts);
-      if (user) setSharedHere(posts.some((p) => p.userId === user.id));
+      // Submitting (even still pending) already counts as having shared
+      // one — the checklist step is "Share a Moment here", not "get one
+      // approved".
+      if (user) setSharedHere(allRows.some((p) => p.userId === user.id));
     }
     loadMoments();
     return () => {
@@ -362,9 +366,11 @@ export function SpaceHomeTab({
   const checklistComplete = checklistReady && !nextStep;
 
   const momentsLoaded = moments !== "loading" ? moments : [];
-  const pinnedMoments = momentsLoaded.filter((m) => m.featured).slice(0, 3);
+  const approvedMoments = momentsLoaded.filter((m) => m.status === "approved");
+  const myPendingMoments = user ? momentsLoaded.filter((m) => m.status === "pending" && m.userId === user.id) : [];
+  const pinnedMoments = approvedMoments.filter((m) => m.featured).slice(0, 3);
   const pinnedIds = new Set(pinnedMoments.map((m) => m.id));
-  const restMoments = momentsLoaded.filter((m) => !pinnedIds.has(m.id)).slice(0, 12);
+  const restMoments = approvedMoments.filter((m) => !pinnedIds.has(m.id)).slice(0, 12);
   const tableEmpty = pinnedMoments.length === 0 && restMoments.length === 0;
 
   const togglePin = async (post: SpaceMoment) => {
@@ -493,6 +499,17 @@ export function SpaceHomeTab({
             See all Moments
           </Link>
         </div>
+        {myPendingMoments.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="ns-section-kicker text-muted-foreground">Waiting for a host to approve</p>
+            {myPendingMoments.map((post) => (
+              <div key={post.id} className="flex items-center gap-3 rounded-xl border border-line bg-paper px-3 py-2">
+                {post.media && <img src={post.media} alt="" className="size-10 shrink-0 rounded-md object-cover" />}
+                <p className="line-clamp-1 flex-1 text-sm">{post.caption || `Moment #${post.id}`}</p>
+              </div>
+            ))}
+          </div>
+        )}
         {pinError && <p className="mt-2 text-xs text-destructive">{pinError}</p>}
         {moments === "loading" ? (
           <div className="min-h-[20vh]" />
