@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import {
   Bell,
@@ -8,7 +8,6 @@ import {
   Handshake,
   MessageCircleQuestion,
   MessagesSquare,
-  Sprout,
   Target,
   UserCheck,
   UserPlus,
@@ -19,6 +18,8 @@ import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 import { respondToFollow } from "../lib/profileFollows";
+import { formatBadgeCount } from "../lib/messageSync";
+import { groupNotifications, unreadGroupCount } from "../lib/notificationGrouping";
 import { Button } from "./ui/button";
 
 /**
@@ -27,6 +28,11 @@ import { Button } from "./ui/button";
  * new connection". Pending requests sit at the top with Accept and Decline on
  * them, because a request you can't answer from the notification isn't much of
  * a notification.
+ *
+ * Phase 5: repeats on the same target fold into one line (groupNotifications),
+ * a "Mark all read" button replaces the old "opening the bell marks
+ * everything read" behavior (so you actually get to see what's new before it
+ * clears), and opening one group marks only its own members read.
  */
 const ICON: Record<string, typeof Bell> = {
   thought: MessageCircleQuestion,
@@ -35,7 +41,6 @@ const ICON: Record<string, typeof Bell> = {
   explore_together: MessagesSquare,
   accepted: Check,
   message: MessagesSquare,
-  hobby_follow: Sprout,
   pursuit_invite: UserPlus,
   pursuit_joined: Users,
   pursuit_progress: Target,
@@ -63,6 +68,9 @@ export function NotificationsMenu() {
   const incomingFollows = useIncomingFollowRequests(user?.id, followRefreshKey) ?? [];
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
+  const groups = useMemo(() => groupNotifications(social.notifications), [social.notifications]);
+  const groupedUnread = unreadGroupCount(groups);
+
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -86,7 +94,7 @@ export function NotificationsMenu() {
   // this used to only light the bell for one (the request itself was only
   // answerable from /inbox); it's now rendered and answerable right here
   // too, the same respondToFollow() /inbox uses, via answerFollow() below.
-  const dot = social.unreadCount > 0 || incoming.length > 0 || incomingFollows.length > 0;
+  const badgeCount = groupedUnread + incoming.length + incomingFollows.length;
 
   const answerFollow = async (followerId: string, accept: boolean) => {
     if (!user || respondingTo) return;
@@ -96,35 +104,46 @@ export function NotificationsMenu() {
     setRespondingTo(null);
   };
 
+  const openGroup = (memberIds: Array<number | string>, read: boolean) => {
+    setOpen(false);
+    if (!read) void social.markNotificationsRead(memberIds);
+  };
+
   return (
     <div className="relative" ref={ref}>
       <Button
         variant="ghost"
         size="icon"
-        aria-label={
-          dot
-            ? `Notifications (${social.unreadCount + incoming.length + incomingFollows.length})`
-            : "Notifications"
-        }
+        aria-label={badgeCount > 0 ? `Notifications (${badgeCount} unread)` : "Notifications"}
         aria-expanded={open}
-        onClick={() => {
-          setOpen((v) => !v);
-          if (!open && social.unreadCount > 0) social.markAllRead();
-        }}
+        onClick={() => setOpen((v) => !v)}
         className="relative"
       >
         <Bell className="size-5" />
-        {dot && (
+        {badgeCount > 0 && (
           <span
-            className="absolute right-1.5 top-1.5 size-1.5 rounded-full [background-color:var(--coral-deep)]"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
             aria-hidden="true"
-          />
+          >
+            {formatBadgeCount(badgeCount)}
+          </span>
         )}
       </Button>
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-border bg-popover shadow-xl">
-          <div className="border-b border-[var(--hairline)] px-4 py-3 text-sm">Notifications</div>
+          <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3 text-sm">
+            Notifications
+            {groupedUnread > 0 && (
+              <button
+                type="button"
+                onClick={() => void social.markAllRead()}
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
 
           {incoming.length > 0 && (
             <ul className="border-b border-[var(--hairline)]">
@@ -190,7 +209,7 @@ export function NotificationsMenu() {
             </ul>
           )}
 
-          {social.notifications.length === 0 && incoming.length === 0 && incomingFollows.length === 0 ? (
+          {groups.length === 0 && incoming.length === 0 && incomingFollows.length === 0 ? (
             <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground">
               Nothing yet. Thoughts on your moments, people joining your
               activities, follow requests, and asks to make or explore
@@ -198,27 +217,29 @@ export function NotificationsMenu() {
             </p>
           ) : (
             <ul className="max-h-80 overflow-y-auto py-1">
-              {social.notifications.map((n) => {
-                const Icon = ICON[n.kind] ?? Bell;
+              {groups.map((g) => {
+                const Icon = ICON[g.kind] ?? Bell;
                 const body = (
                   <span className="flex items-start gap-3 px-4 py-2.5">
                     <Icon className="mt-0.5 size-4 shrink-0 text-[var(--violet-electric-bright)]" />
                     <span className="min-w-0">
-                      <span className="block text-sm leading-snug">{n.body}</span>
+                      <span className="block text-sm leading-snug">{g.body}</span>
                       <span className="block text-[11px] text-muted-foreground">
-                        {ago(n.createdAt)}
+                        {ago(g.createdAt)}
                       </span>
                     </span>
                   </span>
                 );
                 return (
-                  <li key={n.id} className={n.read ? "" : "bg-[color-mix(in_srgb,var(--yellow)_10%,transparent)]"}>
-                    {n.href ? (
-                      <Link to={n.href} onClick={() => setOpen(false)} className="block hover:bg-surface-muted">
+                  <li key={g.id} className={g.read ? "" : "bg-[color-mix(in_srgb,var(--yellow)_10%,transparent)]"}>
+                    {g.href ? (
+                      <Link to={g.href} onClick={() => openGroup(g.memberIds, g.read)} className="block hover:bg-surface-muted">
                         {body}
                       </Link>
                     ) : (
-                      body
+                      <button type="button" onClick={() => openGroup(g.memberIds, g.read)} className="block w-full text-left hover:bg-surface-muted">
+                        {body}
+                      </button>
                     )}
                   </li>
                 );
