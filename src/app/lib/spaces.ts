@@ -193,6 +193,16 @@ export function declineHostInvite(inviteId: number) {
 export function unlinkMyMoment(spaceId: string, postId: number) {
   return call("unlink_my_moment", { p_space_id: spaceId, p_post_id: postId });
 }
+/** The Manage tab's approval queue — a pending Moment (posting_mode =
+ * 'approval', poster not a host) either way. Approve sets status =
+ * 'approved'; decline deletes the link, leaving the author's post itself
+ * untouched (same as unlinkMyMoment, just host-side). */
+export function approveSpaceMoment(spaceId: string, postId: number) {
+  return call("approve_space_moment", { p_space_id: spaceId, p_post_id: postId });
+}
+export function declineSpaceMoment(spaceId: string, postId: number) {
+  return call("decline_space_moment", { p_space_id: spaceId, p_post_id: postId });
+}
 export function acceptHostHandoff(spaceId: string) {
   return call("accept_host_handoff", { p_space_id: spaceId });
 }
