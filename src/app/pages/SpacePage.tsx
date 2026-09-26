@@ -52,6 +52,23 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const [addMomentOpen, setAddMomentOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
+  // Bumped whenever a Moment is linked into this Space (from the Add
+  // Moment dialog) — SpaceHomeTab depends on it to know when to refetch
+  // its own Moments list (and, downstream of that, the checklist's
+  // "Share a Moment" step), since that state lives in SpaceHomeTab, not
+  // here. Pinning/unpinning doesn't change the count or need this — those
+  // already update SpaceHomeTab's own local state directly.
+  const [momentsVersion, setMomentsVersion] = useState(0);
+
+  const refetchMomentCount = async () => {
+    const { data } = await spaceMomentCount30d(space.id);
+    setMomentCount(data ?? 0);
+  };
+
+  const handleMomentAdded = () => {
+    setMomentsVersion((v) => v + 1);
+    void refetchMomentCount();
+  };
 
   const refetchMembership = async () => {
     if (!supabase || !user) return setMembership(null);
@@ -336,6 +353,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
               isHost={!!isHost}
               hosts={hosts}
               onAddMoment={() => setAddMomentOpen(true)}
+              momentsRefreshKey={momentsVersion}
             />
           </TabsContent>
           <TabsContent value="moments">
@@ -359,6 +377,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         spaceId={space.id}
         open={addMomentOpen}
         onOpenChange={setAddMomentOpen}
+        onAdded={handleMomentAdded}
       />
     </div>
   );
