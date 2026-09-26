@@ -233,6 +233,10 @@ interface SocialContextType {
   notifications: Notification[];
   unreadCount: number;
   markAllRead: () => Promise<void>;
+  /** Marks exactly these notifications read — what opening one bell GROUP
+   * does (every row folded into that line), as distinct from markAllRead's
+   * everything-at-once. */
+  markNotificationsRead: (ids: Array<number | string>) => Promise<void>;
 
   /**
    * For the currently open conversation (see openConversation below), the
@@ -495,12 +499,17 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       // Phase 3: a "message" notification is never created anymore (Seen
       // + unread cover that job), but 16 pre-Phase-3 ones still exist live
       // — excluded here rather than deleted, so the bell's list and count
-      // both quietly stop counting them without touching the rows.
+      // both quietly stop counting them without touching the rows. Phase 5
+      // does the same for "hobby_follow": every one of those is a note to
+      // yourself about your own action (toggleHobbyFollow below no longer
+      // creates them), so old ones are hidden the same way rather than
+      // deleted.
       supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
         .neq("kind", "message")
+        .neq("kind", "hobby_follow")
         .order("created_at", { ascending: false })
         .limit(60),
       // Degrades to "no one blocked" if the table isn't there yet — the
@@ -897,7 +906,10 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         await supabase.from("hobby_follows").delete().eq("user_id", user.id).eq("hobby_key", key);
       } else {
         await supabase.from("hobby_follows").insert({ user_id: user.id, hobby_key: key });
-        await notify(user.id, "hobby_follow", `You're exploring ${label}. New work shows up in My Space.`, "/my-space");
+        // Phase 5: retired — every hobby_follow notification was just a
+        // note to yourself about your own action (recipient === actor,
+        // always), so it never belonged in the bell. See the fetch filter
+        // above for how old rows are hidden rather than deleted.
       }
       refresh();
       return;
@@ -1356,7 +1368,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         media_url: mediaUrl ?? null,
       });
       if (postOwnerId && postOwnerId !== user.id) {
-        await notify(postOwnerId, "thought", `${myName} left a thought on your moment.`, "/you");
+        // Phase 5: links to the specific Moment, not the generic /you, so
+        // repeated Thoughts on different Moments can be told apart (and,
+        // for the bell's own grouping, only ever merge with another
+        // Thought on this SAME Moment). Never rewrites old rows' hrefs.
+        await notify(postOwnerId, "thought", `${myName} left a thought on your moment.`, `/moment/${postId}`);
       }
       refresh();
       return;
@@ -1408,6 +1424,25 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     setState({
       ...state,
       notifications: state.notifications.map((n) => ({ ...n, read: true })),
+    });
+  };
+
+  /** Phase 5: marks a specific set of notifications read together — what
+   * opening one bell GROUP does (every row folded into that line, not
+   * just the newest one). `.eq("user_id", ...)` is belt-and-braces on top
+   * of the existing "you update your own" RLS policy, same as every other
+   * update in this file. */
+  const markNotificationsRead = async (ids: Array<number | string>) => {
+    if (ids.length === 0) return;
+    if (supabase && user) {
+      await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).in("id", ids);
+      refresh();
+      return;
+    }
+    const idSet = new Set(ids.map(String));
+    setState({
+      ...state,
+      notifications: state.notifications.map((n) => (idSet.has(String(n.id)) ? { ...n, read: true } : n)),
     });
   };
 
@@ -1806,6 +1841,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         notifications: visibleNotifications,
         unreadCount,
         markAllRead,
+        markNotificationsRead,
         messagesFor,
         sendMessage,
         retryMessage,

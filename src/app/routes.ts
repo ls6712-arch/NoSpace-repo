@@ -44,6 +44,7 @@ import {
   ProfileSettingsPage,
   AccountSettingsPage,
   PrivacySettingsPage,
+  NotificationsSettingsPage,
   DataSettingsPage,
   PauseOrLeaveSettingsPage,
 } from "./pages/Settings";
@@ -88,6 +89,7 @@ export const router = createHashRouter([
       { path: "profile", Component: ProfileSettingsPage },
       { path: "account", Component: AccountSettingsPage },
       { path: "privacy", Component: PrivacySettingsPage },
+      { path: "notifications", Component: NotificationsSettingsPage },
       { path: "data", Component: DataSettingsPage },
       { path: "pause-or-leave", Component: PauseOrLeaveSettingsPage },
       { path: "onboarding", Component: Onboarding },

@@ -228,13 +228,45 @@ the phase.
   shared Moment turning "Not available" the moment it's made private, an unsent photo actually gone
   from Storage) is still needed and listed in that folder's README. PR opened against `main`, not
   yet merged.
-- Phase 5 Notification center: not started
+- Phase 5 Notification center: database migration **staged, not yet applied** — see
+  `supabase/migrations/20261007000000_communication_phase5_notifications.sql` and its rollback and
+  verification script. It adds one new `private.notification_kind_muted(user, kind)` helper
+  (SECURITY DEFINER, execute revoked from `public`/`anon`/`authenticated` — reachable only from
+  inside the trigger below) and one new check inside `enforce_notification_insert()`: a muted
+  category's notification is silently dropped (`return null`), the same way a blocked-between one
+  already is. Mute lives in `profile_settings.notification_preferences->'muted'` (a jsonb array of
+  category names) except Circle invitations, which reuse the existing `circle_invites` boolean
+  rather than adding a second switch. Fact-checked before writing anything: `connect_request`/
+  `connect_accepted` are dead (never created by any code path, not since the very first version of
+  this trigger) — dropped from the mutable category list rather than given a switch with nothing
+  to attach to; `hobby_follow` rows are confirmed self-notes (recipient always equals the actor) —
+  retired outright rather than made mutable. Everything else Phase 5 asked for needed no database
+  change: grouping, Mark all read (already worked), and the Thought-notification href fix all
+  landed as app-only changes. App built (`notificationGrouping.ts`'s pure, chaining (not
+  anchoring) 24-hour merge window; a numeric bell badge and "Mark all read" button; Settings →
+  Notifications with one switch per mutable category, "Make together and Explore together"
+  merged-safe as one category; `hobby_follow` notifications no longer created or shown; Thought
+  notifications now link to `/moment/<id>`), typechecked, tested (`notificationGrouping.test.ts`,
+  `notificationPreferences.test.ts`), and verified with a mocked-network browser pass (see
+  `docs/verification/communication-phase5/`) — a real two-account live check (muting actually
+  stopping an insert, cross-24h-boundary grouping, the Thought-notification href fix) is still
+  needed and listed in that folder's README. PR opened against `main`, not yet merged; the staged
+  migration is meant to be applied and verified live before that PR is merged, not after.
 - Phase 6 Email and push: not started
 
 ## Follow-ups (found, not in any phase)
 
-- The bell's `hobby_follow` notifications (29 so far) are the noisiest kind; Phase 5 grouping
-  should cover them.
+- The bell's `hobby_follow` notifications (29 so far) were the noisiest kind — Phase 5 confirmed
+  they're self-notes (the recipient is always the same person who took the action) and retired
+  them outright rather than grouping them: no new ones are created, and existing rows are hidden
+  from the bell (old rows themselves untouched, per instruction).
+- Phase 5 found the proposed "new followers / follow requests" mutable category has nothing to
+  attach to: follow requests are read live from `profile_follows` (`useIncomingFollowRequests`),
+  never inserted into `notifications` at all, and `connect_request`/`connect_accepted` — the two
+  kinds that would otherwise cover this — are dead (no code path creates them, and the trigger's
+  own allowlist has never included them). Left for a future decision: either add a real
+  notification-kind insert for follow requests (then mute the normal way), or leave this surface
+  alone.
 - The live `notifications` INSERT policy didn't match `sql/security-hardening.sql` (it was still
   `with check (true)` to `{public}`) — other sections of that file may not be applied live either.
   Audit live against `sql/security-hardening.sql`, section by section.
