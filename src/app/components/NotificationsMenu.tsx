@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import {
   Bell,
   Check,
+  Clock,
   Crown,
   DoorOpen,
   Handshake,
@@ -48,6 +49,8 @@ const ICON: Record<string, typeof Bell> = {
   space_join_approved: UserCheck,
   space_join_declined: X,
   space_host_invite: Crown,
+  space_moment_pending: Clock,
+  space_moment_approved: Check,
 };
 
 function ago(ts: number) {
