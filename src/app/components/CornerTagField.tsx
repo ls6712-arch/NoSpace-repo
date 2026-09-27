@@ -54,7 +54,17 @@ export function CornerTagField({
   const [pendingConfirm, setPendingConfirm] = useState<MatchResult | null>(null);
 
   const scoped = spaceSlug ? cornersFor(spaceSlug) : allCorners;
-  const topCorners = [...scoped].sort((a, b) => b.momentCount - a.momentCount).slice(0, 8);
+  // The currently-picked Corner (e.g. prefilled on Edit Space) always gets
+  // a chip, even when it wouldn't otherwise rank in the top 8 by
+  // momentCount — the chip highlight is this field's only way of showing
+  // what's selected (the text input is a search box, not a value display,
+  // and clears on every pick), so a picked Corner outside the top 8 would
+  // otherwise render as if nothing were selected at all.
+  const selected = value ? scoped.find((c) => c.slug === value) : undefined;
+  const ranked = [...scoped].sort((a, b) => b.momentCount - a.momentCount);
+  const topCorners = selected && !ranked.slice(0, 8).some((c) => c.slug === value)
+    ? [selected, ...ranked.filter((c) => c.slug !== value).slice(0, 7)]
+    : ranked.slice(0, 8);
   const q = query.trim();
   const matches = q ? (spaceSlug ? matchesFor(spaceSlug, q) : matchCorners(allCorners, q)) : [];
   const cornerNames = scoped.map((c) => c.name);

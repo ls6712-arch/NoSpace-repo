@@ -13,6 +13,8 @@ import {
   requestSpaceDeletion,
   respondToDeletionRequest,
   cancelDeletionRequest,
+  approveSpaceMoment,
+  declineSpaceMoment,
   type SpaceRow,
 } from "../../lib/spaces";
 import { Button } from "../ui/button";
@@ -25,6 +27,7 @@ type JoinRequestRow = {
   postCaption?: string;
 };
 type MemberRow = { user_id: string; role: "host" | "member"; status: "active" | "banned"; displayName: string };
+type PendingMomentRow = { postId: number; caption: string; mediaUrl: string | null; authorName: string };
 type InviteRow = { id: number; invited_user_id: string; displayName: string };
 type DeletionRequest = {
   id: number;
@@ -38,10 +41,14 @@ export function SpaceManageTab({
   space,
   isHost,
   viewerJoinedAt,
+  onPendingMomentsCountChange,
 }: {
   space: SpaceRow;
   isHost: boolean;
   viewerJoinedAt?: string;
+  /** Told the count on every refetch, so SpacePage can show it on the
+   * Manage tab's own label without duplicating this query. */
+  onPendingMomentsCountChange?: (count: number) => void;
 }) {
   const { user } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
@@ -51,6 +58,7 @@ export function SpaceManageTab({
   const [joinRequests, setJoinRequests] = useState<JoinRequestRow[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [pendingMoments, setPendingMoments] = useState<PendingMomentRow[]>([]);
   const [deletion, setDeletion] = useState<DeletionRequest | null>(null);
   const [inviteUsername, setInviteUsername] = useState("");
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
@@ -63,7 +71,7 @@ export function SpaceManageTab({
 
   const refetch = async () => {
     if (!supabase || !isHost) return;
-    const [{ data: reqs }, { data: memberRows }, { data: inviteRows }, { data: delReqs }] = await Promise.all([
+    const [{ data: reqs }, { data: memberRows }, { data: inviteRows }, { data: delReqs }, { data: pendingMomentRows }] = await Promise.all([
       supabase.from("space_join_requests").select("user_id, answers").eq("space_id", space.id),
       supabase
         .from("space_members")
@@ -81,6 +89,11 @@ export function SpaceManageTab({
         .eq("space_id", space.id)
         .eq("status", "pending")
         .maybeSingle(),
+      supabase
+        .from("space_moments")
+        .select("post_id, posts(id, caption, media_url, user_id)")
+        .eq("space_id", space.id)
+        .eq("status", "pending"),
     ]);
 
     const postIds = (reqs ?? []).map((r: any) => r.answers?.post_id).filter((id: unknown): id is number => typeof id === "number");
@@ -103,12 +116,14 @@ export function SpaceManageTab({
     // reference auth.users, and profiles is a sibling of that, not a
     // child of these) — no PostgREST embed is possible, so every name
     // shown here comes from one combined lookup instead.
+    const pendingMomentPosts = (pendingMomentRows ?? []).map((r: any) => r.posts).filter(Boolean);
     const userIds = [
       ...new Set([
         ...(reqs ?? []).map((r: any) => r.user_id as string),
         ...(memberRows ?? []).map((r: any) => r.user_id as string),
         ...(inviteRows ?? []).map((r: any) => r.invited_user_id as string),
         ...approvalRows.map((a) => a.host_user_id),
+        ...pendingMomentPosts.map((p: any) => p.user_id as string),
       ]),
     ];
     const { data: profilesData } = userIds.length
@@ -139,6 +154,14 @@ export function SpaceManageTab({
         displayName: nameById.get(r.invited_user_id) ?? "Someone",
       })),
     );
+    const pendingMomentList: PendingMomentRow[] = pendingMomentPosts.map((p: any) => ({
+      postId: p.id,
+      caption: p.caption || `Moment #${p.id}`,
+      mediaUrl: p.media_url ?? null,
+      authorName: nameById.get(p.user_id) ?? "Someone",
+    }));
+    setPendingMoments(pendingMomentList);
+    onPendingMomentsCountChange?.(pendingMomentList.length);
 
     setDeletion(
       delReqs
@@ -297,6 +320,45 @@ export function SpaceManageTab({
                   >
                     Decline
                   </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-sm font-medium">Moments waiting for approval</h3>
+        {pendingMoments.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Nothing pending.</p>
+        ) : (
+          <ul className="space-y-2">
+            {pendingMoments.map((m) => (
+              <li key={m.postId} className="flex items-start gap-3 rounded-xl border border-border p-3">
+                {m.mediaUrl && (
+                  <img src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-md object-cover" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">{m.authorName}</p>
+                  <p className="line-clamp-2 text-sm">{m.caption}</p>
+                  <div className="mt-2 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="coral"
+                      disabled={busy === `approve-moment-${m.postId}`}
+                      onClick={() => run(`approve-moment-${m.postId}`, () => approveSpaceMoment(space.id, m.postId))}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy === `decline-moment-${m.postId}`}
+                      onClick={() => run(`decline-moment-${m.postId}`, () => declineSpaceMoment(space.id, m.postId))}
+                    >
+                      Decline
+                    </Button>
+                  </div>
                 </div>
               </li>
             ))}

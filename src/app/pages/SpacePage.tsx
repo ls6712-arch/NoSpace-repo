@@ -52,6 +52,26 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const [addMomentOpen, setAddMomentOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
+  // Bumped whenever a Moment is linked into this Space (from the Add
+  // Moment dialog) — SpaceHomeTab depends on it to know when to refetch
+  // its own Moments list (and, downstream of that, the checklist's
+  // "Share a Moment" step), since that state lives in SpaceHomeTab, not
+  // here. Pinning/unpinning doesn't change the count or need this — those
+  // already update SpaceHomeTab's own local state directly.
+  const [momentsVersion, setMomentsVersion] = useState(0);
+  // Told by SpaceManageTab on every one of its own refetches — shown on
+  // the Manage tab's own label rather than queried separately here.
+  const [pendingMomentsCount, setPendingMomentsCount] = useState(0);
+
+  const refetchMomentCount = async () => {
+    const { data } = await spaceMomentCount30d(space.id);
+    setMomentCount(data ?? 0);
+  };
+
+  const handleMomentAdded = () => {
+    setMomentsVersion((v) => v + 1);
+    void refetchMomentCount();
+  };
 
   const refetchMembership = async () => {
     if (!supabase || !user) return setMembership(null);
@@ -68,7 +88,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
     let cancelled = false;
     async function load() {
       if (!supabase) return;
-      const [{ data: cornerRows }, { data: hostRows }, momentCountResult, { data: addressRow }, { data: featuredRows }] = await Promise.all([
+      const [{ data: cornerRows }, { data: hostRows }, momentCountResult, { data: addressRow }, { data: featuredRows }, pendingMomentsResult] = await Promise.all([
         supabase
           .from("space_corners")
           .select("is_primary, added_at, corners(slug, name)")
@@ -94,9 +114,20 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           .eq("status", "scheduled")
           .gt("starts_at", new Date().toISOString())
           .limit(1),
+        // Just for the Manage tab's own badge — RLS on space_moments
+        // ("their own pending links and a host's view of every pending
+        // one") already limits this to 0 for anyone but a host, so it's
+        // safe to run unconditionally rather than gating on isHost, which
+        // isn't known yet this early in the load.
+        supabase
+          .from("space_moments")
+          .select("post_id", { count: "exact", head: true })
+          .eq("space_id", space.id)
+          .eq("status", "pending"),
       ]);
       const count = momentCountResult.data;
       if (cancelled) return;
+      setPendingMomentsCount(pendingMomentsResult.count ?? 0);
       setCorners(
         (cornerRows ?? [])
           .map((r: any) => r.corners && { slug: r.corners.slug, name: capitalizeCornerName(r.corners.name), isPrimary: r.is_primary })
@@ -327,7 +358,11 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             <TabsTrigger value="moments">Moments</TabsTrigger>
             <TabsTrigger value="people">People</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
-            {canManage && <TabsTrigger value="manage">Manage</TabsTrigger>}
+            {canManage && (
+              <TabsTrigger value="manage">
+                Manage{pendingMomentsCount > 0 ? ` (${pendingMomentsCount})` : ""}
+              </TabsTrigger>
+            )}
           </TabsList>
           <TabsContent value="home">
             <SpaceHomeTab
@@ -336,6 +371,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
               isHost={!!isHost}
               hosts={hosts}
               onAddMoment={() => setAddMomentOpen(true)}
+              momentsRefreshKey={momentsVersion}
             />
           </TabsContent>
           <TabsContent value="moments">
@@ -349,7 +385,12 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           </TabsContent>
           {canManage && (
             <TabsContent value="manage">
-              <SpaceManageTab space={space} isHost={isHost} viewerJoinedAt={activeMembership?.joined_at} />
+              <SpaceManageTab
+                space={space}
+                isHost={isHost}
+                viewerJoinedAt={activeMembership?.joined_at}
+                onPendingMomentsCountChange={setPendingMomentsCount}
+              />
             </TabsContent>
           )}
         </Tabs>
@@ -359,6 +400,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         spaceId={space.id}
         open={addMomentOpen}
         onOpenChange={setAddMomentOpen}
+        onAdded={handleMomentAdded}
       />
     </div>
   );

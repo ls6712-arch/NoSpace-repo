@@ -15,7 +15,7 @@ import type { Post } from "../../data/posts";
 
 type HostLite = { id: string; name: string; avatarUrl?: string };
 type Attendee = { userId: string; name: string; avatarUrl?: string };
-type SpaceMoment = Post & { featured: boolean };
+type SpaceMoment = Post & { featured: boolean; status: "approved" | "pending" };
 
 // Literal utility classes (Tailwind's scanner needs them written out, not
 // built from a template) — alternating so adjacent cards never tilt the
@@ -77,12 +77,18 @@ export function SpaceHomeTab({
   isHost,
   hosts,
   onAddMoment,
+  momentsRefreshKey,
 }: {
   space: SpaceRow;
   isActiveMember: boolean;
   isHost: boolean;
   hosts: HostLite[];
   onAddMoment: () => void;
+  /** Bumped by the parent right after a Moment is linked into this Space
+   * (from the Add Moment dialog) — included below so that refetches the
+   * grid, which in turn recomputes the "Share a Moment" checklist step.
+   * Pin/unpin already update local state directly and don't need this. */
+  momentsRefreshKey?: number;
 }) {
   const { user } = useAuth();
   const journal = useJournal();
@@ -212,11 +218,18 @@ export function SpaceHomeTab({
     async function loadMoments() {
       if (!supabase) return;
       // space_moments' own "follows the space's access" SELECT policy
-      // already limits this to what the caller can actually see (Open, or
-      // an active member) — same trust-RLS pattern as SpaceMomentsTab.
+      // already limits this to what the caller can actually see: every
+      // approved link (Open, or an active member), plus — pending ones
+      // only — the poster's own and a host's view of every pending one.
+      // This grid deliberately shows less than that raw set, though: it's
+      // a public-facing preview of the Space (same thing "N Moments this
+      // month" in the header counts, which only ever counts approved
+      // ones), not a moderation queue, so a pending Moment only ever
+      // renders here for its own author (labelled), never for a host
+      // looking at someone else's — that review happens on Manage.
       const { data } = await supabase
         .from("space_moments")
-        .select("added_at, featured, posts(*)")
+        .select("added_at, featured, status, posts(*)")
         .eq("space_id", space.id)
         .order("featured", { ascending: false })
         .order("added_at", { ascending: false })
@@ -229,18 +242,23 @@ export function SpaceHomeTab({
         : { data: [] as { id: string; display_name: string }[] };
       if (cancelled) return;
       const nameById = new Map((profilesData ?? []).map((p) => [p.id, p.display_name]));
-      const posts = rows.map((r: any) => ({
+      const allRows = rows.map((r: any) => ({
         ...rowToPost(r.posts, nameById.get(r.posts.user_id) ?? "Someone"),
         featured: !!r.featured,
+        status: r.status as "approved" | "pending",
       })) as SpaceMoment[];
+      const posts = allRows.filter((p) => p.status === "approved" || (user && p.userId === user.id));
       setMoments(posts);
-      if (user) setSharedHere(posts.some((p) => p.userId === user.id));
+      // Submitting (even still pending) already counts as having shared
+      // one — the checklist step is "Share a Moment here", not "get one
+      // approved".
+      if (user) setSharedHere(allRows.some((p) => p.userId === user.id));
     }
     loadMoments();
     return () => {
       cancelled = true;
     };
-  }, [space.id, user?.id]);
+  }, [space.id, user?.id, momentsRefreshKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -316,26 +334,30 @@ export function SpaceHomeTab({
     done: boolean;
     // The step's "Next: …" action — a Link when `to` is set, an
     // onClick button (opening a dialog owned by an ancestor, e.g. Add
-    // Moment) otherwise.
-    actionLabel: string;
+    // Moment) otherwise. The button always reads "Next: <label>" (the
+    // step's own name, e.g. "Next: Add rules") — it names the step, not
+    // a separately-worded call to action, so it's never in doubt which
+    // checklist item pressing it addresses.
     to?: string;
     onClick?: () => void;
   };
 
   const checklist: ChecklistItem[] = [
-    { key: "join", label: "Join the Space", done: isActiveMember, actionLabel: "Join the Space" },
-    { key: "follow", label: "Follow a fellow member", done: followsMember, actionLabel: "Meet people", to: `/space/${space.slug}?tab=people` },
-    { key: "pursuit", label: "Start a Pursuit", done: startedPursuit, actionLabel: "Start a Pursuit", to: "/pursuits/new" },
-    { key: "rsvp", label: "RSVP to an event", done: rsvpedHere, actionLabel: "See events", to: `/space/${space.slug}?tab=events` },
-    { key: "moment", label: "Share a Moment here", done: sharedHere, actionLabel: "Add a Moment", onClick: onAddMoment },
+    { key: "join", label: "Join the Space", done: isActiveMember },
+    { key: "follow", label: "Follow a fellow member", done: followsMember, to: `/space/${space.slug}?tab=people` },
+    { key: "pursuit", label: "Start a Pursuit", done: startedPursuit, to: "/pursuits/new" },
+    { key: "rsvp", label: "RSVP to an event", done: rsvpedHere, to: `/space/${space.slug}?tab=events` },
+    { key: "moment", label: "Share a Moment here", done: sharedHere, onClick: onAddMoment },
   ];
 
   const hostChecklist: ChecklistItem[] = [
-    { key: "cover", label: "Add a cover photo", done: !!space.cover_image, actionLabel: "Edit Space", to: `/space/${space.slug}/edit` },
-    { key: "rules", label: "Add rules", done: !!space.rules?.trim(), actionLabel: "Edit Space", to: `/space/${space.slug}/edit` },
-    { key: "event", label: "Plan your first event", done: hasEverHadEvent, actionLabel: "Plan an event", to: `/space/${space.slug}?tab=events` },
-    { key: "cohost", label: "Invite a co-host", done: hosts.length > 1, actionLabel: "Invite a co-host", to: `/space/${space.slug}?tab=manage` },
-    { key: "moment", label: "Share the first Moment", done: sharedHere, actionLabel: "Add a Moment", onClick: onAddMoment },
+    { key: "cover", label: "Add a cover photo", done: !!space.cover_image, to: `/space/${space.slug}/edit` },
+    { key: "rules", label: "Add rules", done: !!space.rules?.trim(), to: `/space/${space.slug}/edit` },
+    { key: "event", label: "Plan your first event", done: hasEverHadEvent, to: `/space/${space.slug}?tab=events` },
+    // The People tab (task: real "Invite as co-host" action per member)
+    // is where inviting actually happens now, not Manage.
+    { key: "cohost", label: "Invite a co-host", done: hosts.length > 1, to: `/space/${space.slug}?tab=people` },
+    { key: "moment", label: "Share the first Moment", done: sharedHere, onClick: onAddMoment },
   ];
 
   const activeChecklist = isHost ? hostChecklist : checklist;
@@ -344,9 +366,11 @@ export function SpaceHomeTab({
   const checklistComplete = checklistReady && !nextStep;
 
   const momentsLoaded = moments !== "loading" ? moments : [];
-  const pinnedMoments = momentsLoaded.filter((m) => m.featured).slice(0, 3);
+  const approvedMoments = momentsLoaded.filter((m) => m.status === "approved");
+  const myPendingMoments = user ? momentsLoaded.filter((m) => m.status === "pending" && m.userId === user.id) : [];
+  const pinnedMoments = approvedMoments.filter((m) => m.featured).slice(0, 3);
   const pinnedIds = new Set(pinnedMoments.map((m) => m.id));
-  const restMoments = momentsLoaded.filter((m) => !pinnedIds.has(m.id)).slice(0, 12);
+  const restMoments = approvedMoments.filter((m) => !pinnedIds.has(m.id)).slice(0, 12);
   const tableEmpty = pinnedMoments.length === 0 && restMoments.length === 0;
 
   const togglePin = async (post: SpaceMoment) => {
@@ -455,11 +479,11 @@ export function SpaceHomeTab({
             <div className="mt-3">
               {nextStep.onClick ? (
                 <Button variant="outline" size="sm" onClick={nextStep.onClick}>
-                  Next: {nextStep.actionLabel}
+                  Next: {nextStep.label}
                 </Button>
               ) : nextStep.to ? (
                 <Button variant="outline" size="sm" asChild>
-                  <Link to={nextStep.to}>Next: {nextStep.actionLabel}</Link>
+                  <Link to={nextStep.to}>Next: {nextStep.label}</Link>
                 </Button>
               ) : null}
             </div>
@@ -475,6 +499,17 @@ export function SpaceHomeTab({
             See all Moments
           </Link>
         </div>
+        {myPendingMoments.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="ns-section-kicker text-muted-foreground">Waiting for a host to approve</p>
+            {myPendingMoments.map((post) => (
+              <div key={post.id} className="flex items-center gap-3 rounded-xl border border-line bg-paper px-3 py-2">
+                {post.media && <img src={post.media} alt="" className="size-10 shrink-0 rounded-md object-cover" />}
+                <p className="line-clamp-1 flex-1 text-sm">{post.caption || `Moment #${post.id}`}</p>
+              </div>
+            ))}
+          </div>
+        )}
         {pinError && <p className="mt-2 text-xs text-destructive">{pinError}</p>}
         {moments === "loading" ? (
           <div className="min-h-[20vh]" />
@@ -498,7 +533,7 @@ export function SpaceHomeTab({
                       type="button"
                       disabled={pinBusyId === post.id}
                       onClick={() => togglePin(post)}
-                      className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                      className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
                     >
                       <PinOff className="size-3" />
                       Unpin
@@ -519,7 +554,7 @@ export function SpaceHomeTab({
                         type="button"
                         disabled={pinBusyId === post.id}
                         onClick={() => togglePin(post)}
-                        className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                        className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
                       >
                         <Pin className="size-3" />
                         Pin to Home
