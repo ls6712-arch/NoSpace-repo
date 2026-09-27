@@ -41,7 +41,7 @@ export function PauseOrLeaveSection() {
 
   return (
     <section>
-      <SectionHeader n={6} eyebrow="PAUSE OR LEAVE" title="Pause or leave" />
+      <SectionHeader n={7} eyebrow="PAUSE OR LEAVE" title="Pause or leave" />
       <p className="mb-4 text-sm text-muted-foreground">
         Step back for a while, or leave for good. Neither is built yet.
       </p>

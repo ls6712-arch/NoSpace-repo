@@ -3,6 +3,7 @@ import { AppearanceSection } from "../components/settings/AppearanceSection";
 import { ProfileSection } from "../components/settings/ProfileSection";
 import { AccountSection } from "../components/settings/AccountSection";
 import { PrivacySection } from "../components/settings/PrivacySection";
+import { NotificationsSection } from "../components/settings/NotificationsSection";
 import { DataSection } from "../components/settings/DataSection";
 import { PauseOrLeaveSection } from "../components/settings/PauseOrLeaveSection";
 
@@ -49,6 +50,14 @@ export function PrivacySettingsPage() {
   return (
     <SettingsShell activeKey="privacy">
       <PrivacySection />
+    </SettingsShell>
+  );
+}
+
+export function NotificationsSettingsPage() {
+  return (
+    <SettingsShell activeKey="notifications">
+      <NotificationsSection />
     </SettingsShell>
   );
 }
