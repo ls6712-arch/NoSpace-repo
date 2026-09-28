@@ -7,7 +7,7 @@ type CardState =
   | { status: "loading" }
   | { status: "unavailable" }
   | { status: "moment"; title: string; image: string | null; owner: string; href: string }
-  | { status: "pursuit"; title: string; owner: string; href: string };
+  | { status: "pursuit"; title: string; image: string | null; owner: string; href: string };
 
 /**
  * A shared Moment or Pursuit's compact card inside a chat bubble. Loads its
@@ -55,7 +55,13 @@ export function SharedContentCard({
           setState({ status: "unavailable" });
           return;
         }
-        setState({ status: "pursuit", title: pursuit.title, owner: pursuit.ownerName, href: `/pursuit/${pursuit.id}` });
+        setState({
+          status: "pursuit",
+          title: pursuit.title,
+          image: pursuit.coverImage,
+          owner: pursuit.ownerName,
+          href: `/pursuit/${pursuit.id}`,
+        });
         return;
       }
       if (!cancelled) setState({ status: "unavailable" });
@@ -88,7 +94,7 @@ export function SharedContentCard({
       to={state.href}
       className="flex w-56 items-center gap-2.5 rounded-xl border border-[var(--hairline)] bg-card px-3 py-2.5 transition-colors hover:border-[var(--foreground)]/30"
     >
-      {state.status === "moment" && state.image ? (
+      {state.image ? (
         <img src={state.image} alt="" className="size-10 shrink-0 rounded-lg object-cover" />
       ) : (
         <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-muted-foreground">
