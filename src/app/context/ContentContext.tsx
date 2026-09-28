@@ -759,10 +759,13 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           type: input.type,
           // media_url/media_urls are NOT NULL — an empty string/null array
           // is this table's own existing "no media here" shape, same as a
-          // written-only Moment already writes today.
+          // written-only Moment already writes today. media_paths is NOT
+          // NULL DEFAULT '{}' too (Step 1's migration) — an explicit null
+          // there is a constraint violation, not "no photos", so a
+          // text-only Moment has to send [] instead.
           media_url: mediaPaths.length ? "" : (mediaUrls[0] ?? ""),
           media_urls: mediaPaths.length ? null : (mediaUrls.length ? mediaUrls : null),
-          media_paths: mediaPaths.length ? mediaPaths : null,
+          media_paths: mediaPaths,
           caption: input.caption,
           visibility: input.visibility,
           starts_at: input.startsAt ? new Date(input.startsAt).toISOString() : null,
