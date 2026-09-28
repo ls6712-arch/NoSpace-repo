@@ -1,5 +1,17 @@
 # Private media bucket — plan (not implemented)
 
+**Superseded by Step 1** ("Private moment photos", paired with
+`supabase/migrations/20261007000000_step1_moment_media_private.sql`): rather
+than a bucket scoped to private-only content with an owner-only read policy,
+Step 1 moves *every* new Moment photo — public, followers, circle, and
+just-me alike — into one `moment-media` bucket whose storage SELECT policy
+checks the same `posts` RLS the app already enforces everywhere else. That
+subsumes what this plan describes for "Only you" content specifically. The
+`saveAsPrivateLog()` dead `blob:` URL bug this plan diagnosed below is fixed
+as part of Step 1 too (private reflections' photos now upload to
+`moment-media` and store a real path, same as any other Moment's). Kept here
+for the object-name-predictability findings, which still apply.
+
 Written per request, alongside the pause/deletion RLS work. Nothing in this
 document has been applied — no bucket created, no code changed.
 

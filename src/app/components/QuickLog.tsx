@@ -11,6 +11,7 @@ import { defaultSpaceSlug } from "../data/hobbies";
 import { guessSpace } from "../lib/pursuitProgress";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
+import { uploadMomentFile } from "../lib/momentMedia";
 import { Button } from "./ui/button";
 
 type Audience = "private" | "followers";
@@ -27,11 +28,9 @@ type Audience = "private" | "followers";
  * Audience is two choices, not four — Only you or Followers. Anything wider
  * (a Circle, Everyone) is a considered choice and lives in the full form.
  *
- * Photos can't be kept "Only you" yet — private entries have no private
- * storage bucket (docs/private-media-plan.md), so a private photo would
- * either be lost or sit in the public bucket. Rather than do either
- * silently, picking a photo while "Only you" is chosen says so and offers
- * Followers.
+ * A photo picked while "Only you" is chosen uploads to the private
+ * moment-media bucket (Step 1), same as any other Moment's — no separate
+ * gate needed anymore.
  */
 export function QuickLog({
   pursuit,
@@ -75,8 +74,7 @@ export function QuickLog({
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
 
-  const photoBlocked = !!file && audience === "private";
-  const canPost = !saving && !photoBlocked && (line.trim().length > 0 || !!file);
+  const canPost = !saving && (line.trim().length > 0 || !!file);
 
   const pick = async (f: File | undefined) => {
     if (!f) return;
@@ -96,7 +94,18 @@ export function QuickLog({
     const hobbySlug = pursuit.hobbySlug ?? guessSpace(pursuit.title) ?? defaultSpaceSlug();
     try {
       if (audience === "private") {
-        const result = await addPrivateLog({ note: text, projectId: pursuit.id });
+        // Step 1: uploads to the private moment-media bucket, same as any
+        // other Moment's photo — no separate "can't be kept to just you" gate.
+        let media: { path: string; type: "image"; hobbySlug?: string } | undefined;
+        if (file && user) {
+          const { path, error: uploadError } = await uploadMomentFile(user.id, file);
+          if (uploadError || !path) {
+            setError("Your photo didn't upload. Try again.");
+            return;
+          }
+          media = { path, type: "image", hobbySlug: pursuit.hobbySlug };
+        }
+        const result = await addPrivateLog({ note: text, projectId: pursuit.id, media });
         if (!result.data) {
           setError(result.error || "That didn't save. Try again?");
           return;
@@ -211,15 +220,6 @@ export function QuickLog({
           {saving ? <Loader2 className="size-3.5 animate-spin" /> : "Post"}
         </Button>
       </div>
-      {photoBlocked && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Photos can't be kept to just you yet.{" "}
-          <button type="button" className="text-accent hover:underline" onClick={() => setAudience("followers")}>
-            Share with followers
-          </button>{" "}
-          or remove the photo.
-        </p>
-      )}
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
       {!compact && (
         <p className="mt-2 text-[11px] text-muted-foreground">

@@ -11,6 +11,7 @@ import { guessSpace } from "../lib/pursuitProgress";
 import { addProgress, markActivity, pursuitStatus, useJournalSlice } from "../lib/journal";
 import { attachPostToPursuit, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
+import { uploadMomentFile } from "../lib/momentMedia";
 import { formatAmount, hasMeasure, stepFor, summarize, targetText, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
 import { collectPursuitMoments } from "../lib/pursuitTrail";
@@ -89,8 +90,7 @@ export function AddMoment() {
     );
   }
 
-  const photoBlocked = !!file && audience === "private";
-  const canSave = !saving && !photoBlocked && (note.trim().length > 0 || !!file || (!!measure && counts && amount > 0));
+  const canSave = !saving && (note.trim().length > 0 || !!file || (!!measure && counts && amount > 0));
 
   const save = async () => {
     if (!canSave) return;
@@ -104,7 +104,23 @@ export function AddMoment() {
     let image: string | undefined;
     try {
       if (audience === "private") {
-        const result = await addPrivateLog({ note: text || `Moved it forward: ${unitWords}`, projectId: project.id });
+        // Step 1: a private Moment's photo now uploads to the same
+        // moment-media bucket any other Moment's does — no more "can't be
+        // kept to just you" gate.
+        let media: { path: string; type: "image"; hobbySlug?: string } | undefined;
+        if (file && user) {
+          const { path, error: uploadError } = await uploadMomentFile(user.id, file);
+          if (uploadError || !path) {
+            setError("Your photo didn't upload. Try again.");
+            return;
+          }
+          media = { path, type: "image", hobbySlug: project.hobbySlug };
+        }
+        const result = await addPrivateLog({
+          note: text || `Moved it forward: ${unitWords}`,
+          projectId: project.id,
+          media,
+        });
         if (!result.data) {
           setError(result.error || "That didn't save. Try again?");
           return;
@@ -288,11 +304,6 @@ export function AddMoment() {
                 </button>
               ))}
             </div>
-            {photoBlocked && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Photos can't be kept to just you yet. Choose Followers or Everyone, or remove the photo.
-              </p>
-            )}
             {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
             <p className="mt-4 text-center text-[11px] text-muted-foreground">
               Something bigger?{" "}

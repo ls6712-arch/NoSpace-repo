@@ -34,6 +34,7 @@ import { useRewards } from "../context/RewardsContext";
 import { startProject, useJournal } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
+import { uploadMomentFile } from "../lib/momentMedia";
 import { extractFirstUrl } from "../lib/linkPreview";
 import {
   draftHasContent,
@@ -742,26 +743,49 @@ export function Log() {
         subHobby: spaceSet ? subHobby || undefined : undefined,
       }).id;
     }
+
+    // The picture is the point of a wordless capture. It used to be dropped
+    // here and replaced with a generated placeholder, which read as the app
+    // losing the moment you'd just taken. Private logs stay single-image
+    // for now, so only the first photo of a multi-photo selection carries over.
+    //
+    // Step 1: a signed-in owner's photo goes to the private moment-media
+    // bucket, same as any other Moment's — filePreviewUrls[0] (an in-tab
+    // `blob:` URL) is only ever a display preview, never something that
+    // could survive being written to the row and read back later (that was
+    // the dead-photo bug docs/private-media-plan.md described). Signed out,
+    // there's no durable storage to upload to at all (moment-media's own
+    // upload policy requires a real user folder), so the local-only
+    // fallback keeps using the blob URL for this tab's session, same as
+    // before.
+    let media: { path: string; type: "image" | "video"; hobbySlug?: string } | undefined;
+    if (files[0]) {
+      // Only tag it with a Space the person actually saw and chose (or
+      // typed their way into via the interest field) — "Save this moment"
+      // from the Your moment screen never shows any Space UI, so filing it
+      // under whatever Space happens to be first in the list silently
+      // mistagged private logs. Untagged is honest; "Food & Cooking" when
+      // nobody chose that is not.
+      const mediaHobbySlug = spaceSet ? hobbySlug : undefined;
+      const mediaType = type === "video" ? "video" : "image";
+      if (user) {
+        const { path, error: uploadError } = await uploadMomentFile(user.id, files[0]);
+        if (uploadError || !path) {
+          setPrivateSaveError("Your photo didn't upload. Try again.");
+          setSavedAs("private");
+          setScreen("saved");
+          return;
+        }
+        media = { path, type: mediaType, hobbySlug: mediaHobbySlug };
+      } else if (filePreviewUrls[0]) {
+        media = { path: filePreviewUrls[0], type: mediaType, hobbySlug: mediaHobbySlug };
+      }
+    }
+
     const result = await addPrivateLog({
       note: note || (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment"),
       projectId: linkTo || undefined,
-      // The picture is the point of a wordless capture. It used to be dropped
-      // here and replaced with a generated placeholder, which read as the app
-      // losing the moment you'd just taken. Private logs stay single-image
-      // for now, so only the first photo of a multi-photo selection carries over.
-      media: filePreviewUrls[0]
-        ? {
-            url: filePreviewUrls[0],
-            type: type === "video" ? "video" : "image",
-            // Only tag it with a Space the person actually saw and chose (or
-            // typed their way into via the interest field) — "Save this
-            // moment" from the Your moment screen never shows any Space UI,
-            // so filing it under whatever Space happens to be first in the
-            // list silently mistagged private logs. Untagged is honest;
-            // "Food & Cooking" when nobody chose that is not.
-            hobbySlug: spaceSet ? hobbySlug : undefined,
-          }
-        : undefined,
+      media,
     });
 
     // An honest failure here matters more than almost anywhere else in this

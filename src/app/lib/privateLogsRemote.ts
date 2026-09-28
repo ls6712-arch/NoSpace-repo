@@ -17,7 +17,19 @@ import { supabase } from "../../lib/supabase";
 export interface PrivateLog {
   id: number;
   note: string;
+  /** The resolved, displayable URL for this log's photo — a signed
+   * moment-media URL for a signed-in owner's entry (resolved from
+   * `mediaPath` by PrivateLogsContext after fetching, batched the same way
+   * ContentContext.tsx resolves a page of Moments), or the raw value
+   * already usable as-is for a local-only (signed-out) entry, which has
+   * nowhere durable to upload to. Undefined until that resolution happens
+   * for a fresh remote row — never read directly off a row from this file. */
   media?: string;
+  /** The real moment-media storage path a signed-in owner's log photo
+   * lives at (Step 1: `private_logs.media_url` now stores a path, not a
+   * URL — the column that used to hold a dead `blob:` URL that never
+   * survived a reload). Undefined for a local-only entry. */
+  mediaPath?: string;
   mediaType?: "image" | "video";
   hobbySlug?: string;
   projectId?: string;
@@ -28,7 +40,7 @@ function fromRow(row: any): PrivateLog {
   return {
     id: row.id,
     note: row.body ?? "",
-    media: row.media_url ?? undefined,
+    mediaPath: row.media_url ?? undefined,
     mediaType: row.media_type ?? undefined,
     hobbySlug: row.hobby_slug ?? undefined,
     projectId: row.project_id ?? undefined,
@@ -63,7 +75,9 @@ export async function createPrivateLog(
   userId: string,
   input: {
     note: string;
-    media?: { url: string; type: "image" | "video"; hobbySlug?: string };
+    // A moment-media storage path (Step 1) — never a blob: URL or anything
+    // else that only means something in the tab that created it.
+    media?: { path: string; type: "image" | "video"; hobbySlug?: string };
     projectId?: string;
   },
 ): Promise<RemoteResult<PrivateLog>> {
@@ -73,7 +87,7 @@ export async function createPrivateLog(
     .insert({
       user_id: userId,
       body: input.note,
-      media_url: input.media?.url ?? null,
+      media_url: input.media?.path ?? null,
       media_type: input.media?.type ?? null,
       hobby_slug: input.media?.hobbySlug ?? null,
       project_id: input.projectId ?? null,
