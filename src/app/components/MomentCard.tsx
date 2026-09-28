@@ -41,6 +41,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
+/** The scrim behind the corner icons (Save, who-sees-this) that sit
+ * directly on top of a Moment's own photo — stronger than a plain
+ * drop-shadow so a white icon still reads on a truly light/white photo, via
+ * a soft dark halo rather than one thin outline. Layered, not solid, so it
+ * stays a shadow rather than a filled badge behind the icon; on a dark
+ * photo the black tones simply have nothing to contrast against, so it
+ * never reads as heavy there. */
+const CORNER_ICON_SCRIM =
+  "[filter:drop-shadow(0_0_1px_rgb(0_0_0/0.85))_drop-shadow(0_1px_2px_rgb(0_0_0/0.6))_drop-shadow(0_0_6px_rgb(0_0_0/0.4))]";
+
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 }
@@ -246,7 +256,7 @@ export function BookmarkOverlay({
         className="flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
       >
         <Bookmark
-          className="size-[22px] [filter:drop-shadow(0_0_1px_rgb(0_0_0/0.7))_drop-shadow(0_1px_3px_rgb(0_0_0/0.45))]"
+          className={`size-[22px] ${CORNER_ICON_SCRIM}`}
           strokeWidth={2}
           style={{ color: tone, fill: saved ? tone : "none" }}
           aria-hidden="true"
@@ -453,14 +463,14 @@ export function MomentCard({
           >
             {onlyYou ? (
               <Lock
-                className="size-[20px] [filter:drop-shadow(0_0_1px_rgb(0_0_0/0.7))_drop-shadow(0_1px_3px_rgb(0_0_0/0.45))]"
+                className={`size-[20px] ${CORNER_ICON_SCRIM}`}
                 strokeWidth={2}
                 style={{ color: hasRealMedia(post) ? "#fff" : tile.fg }}
                 aria-hidden="true"
               />
             ) : (
               <Eye
-                className="size-[20px] [filter:drop-shadow(0_0_1px_rgb(0_0_0/0.7))_drop-shadow(0_1px_3px_rgb(0_0_0/0.45))]"
+                className={`size-[20px] ${CORNER_ICON_SCRIM}`}
                 strokeWidth={2}
                 style={{ color: hasRealMedia(post) ? "#fff" : tile.fg }}
                 aria-hidden="true"
