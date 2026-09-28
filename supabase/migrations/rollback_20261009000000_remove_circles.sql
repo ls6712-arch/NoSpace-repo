@@ -18,13 +18,17 @@
 -- public.is_admin() (see 20260920020000_admin_function_and_grant_hardening.sql
 -- — that fix is carried forward here rather than silently reverted).
 --
--- This restores the canonical, sql/circles.sql-shaped Circle policies —
--- owns_circle()/is_circle_member() in `public`, "circle threads follow the
--- circle's visibility" on posts — not whatever undocumented live drift
--- (sql/fix-post-read-policy.sql's `private`-schema helpers and its
--- differently-named posts policy) may have existed immediately before the
--- forward migration ran; that drift was never itself a tracked migration,
--- so there's nothing to faithfully restore it from.
+-- The posts policy ("posts are readable by their audience") is restored
+-- to its confirmed-live body (a real `pg_policies` query against the
+-- database, not sql/circles.sql or sql/fix-post-read-policy.sql — both
+-- turned out to describe something other than what's actually live),
+-- circle branch included, referencing private.is_circle_member() as it
+-- live does. circles/circle_members/circle_invites' own policies below
+-- are restored to the canonical sql/circles.sql/sql/circle-invites.sql
+-- shape (owns_circle()/is_circle_member() in `public`) — those tables are
+-- fully dropped and recreated by this pair of migrations either way, so
+-- their own internal policy wording doesn't carry the same live-drift risk
+-- the posts policy did.
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. posts columns (sql/circle-threads.sql section 1).
@@ -137,17 +141,43 @@ create policy "you can leave a circle"
   on public.circle_members for delete
   using (user_id = auth.uid());
 
-create policy "circle threads follow the circle's visibility"
+-- "posts are readable by their audience" — restored to its actual live
+-- body (confirmed via a live `pg_policies` query, not sql/circles.sql —
+-- see this file's header), circle branch included, private.is_circle_member
+-- referenced as it live does (not the public.* version sql/circles.sql
+-- describes).
+drop policy if exists "posts are readable by their audience" on public.posts;
+create policy "posts are readable by their audience"
   on public.posts for select
   using (
-    visibility <> 'circle'
-    or circle_id is null
-    or not exists (
-      select 1 from public.circles ci where ci.id = posts.circle_id and ci.visibility = 'Members only'
+    (select auth.uid()) = user_id
+    or (visibility = 'public' and is_visible_profile(user_id))
+    or (
+      visibility = 'followers'
+      and (select auth.uid()) is not null
+      and is_visible_profile(user_id)
+      and exists (
+        select 1 from public.profile_follows pf
+        where pf.followed_id = posts.user_id
+          and pf.follower_id = (select auth.uid())
+          and pf.status = 'accepted'
+      )
     )
-    or auth.uid() = user_id
-    or public.owns_circle(circle_id, auth.uid())
-    or public.is_circle_member(circle_id, auth.uid())
+    or (
+      visibility = 'circle'
+      and circle_id is not null
+      and (select auth.uid()) is not null
+      and is_visible_profile(user_id)
+      and exists (
+        select 1 from public.circles c
+        where c.id = (posts.circle_id - 1000000)
+          and (
+            c.visibility = any (array['open_to_read', 'Open to read'])
+            or c.owner = (select auth.uid())
+            or private.is_circle_member(c.id, (select auth.uid()))
+          )
+      )
+    )
   );
 
 create or replace function public.real_circle_member_counts()

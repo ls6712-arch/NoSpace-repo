@@ -17,15 +17,16 @@
 -- listed and dropped explicitly, in dependency order, so nothing here can
 -- silently take an unrelated object down with it. The dependency map,
 -- gathered from sql/circles.sql, sql/circles-admin.sql,
--- sql/circle-invites.sql and sql/circle-threads.sql:
+-- sql/circle-invites.sql and sql/circle-threads.sql, corrected against the
+-- actual live `pg_policies` dump where the two disagreed (see section 1):
 --
 --   circles                     <- circle_members.circle_id (FK, cascade)
 --                                <- circle_invites.circle_id (no FK, plain int)
 --                                <- posts.circle_id (no FK, plain bigint)
 --                                <- owns_circle(), is_circle_member()
 --                                <- 3 policies on circles itself
---                                <- 1 policy on posts ("circle threads
---                                   follow the circle's visibility")
+--                                <- the circle branch of "posts are
+--                                   readable by their audience" on posts
 --                                <- real_circle_member_counts()
 --                                <- rl_circles() + its trigger
 --                                <- circle_usage(), admin_delete_circle()
@@ -40,9 +41,23 @@
 --   posts.circle_id/circle_tab   <- posts_circle_idx (index)
 --                                <- posts_circle_tab_check (constraint)
 --                                <- set_thread_answered() (also reads answered)
---                                <- the "circle threads follow..." policy
+--                                <- the circle branch of "posts are
+--                                   readable by their audience"
 --   posts.answered               <- set_thread_answered()
 --   posts.hidden_from_moments    <- admin_delete_circle() (resets it)
+--
+-- "posts are readable by their audience" — the one live SELECT policy on
+-- posts — is re-created first, before any other Circle drop, with its
+-- circle branch removed and its own/public/followers branches kept
+-- byte-for-byte. Confirmed against a live `select policyname, cmd, qual
+-- from pg_policies where schemaname = 'public' and tablename = 'posts';`
+-- run against the actual database, not against sql/circles.sql or
+-- sql/fix-post-read-policy.sql — both turned out to describe a shape
+-- (a standalone "circle threads follow..."/"circle posts follow..."
+-- policy, owns_circle/is_circle_member possibly still in `public`) that
+-- isn't what's actually live. Space visibility (a 'space' branch) is
+-- deliberately NOT added here — out of scope for this PR, tracked
+-- separately.
 --
 -- space_usage()/admin_delete_space()/admin_move_space_content() are
 -- re-created below verbatim minus their circles references — none of them
@@ -78,7 +93,35 @@ begin
 end $$;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 1. Triggers, then the trigger functions they call.
+-- 1. "posts are readable by their audience" — re-created first, own/
+--    public/followers branches verbatim from the live qual, circle branch
+--    removed. This is the ONE live SELECT policy on posts (confirmed via
+--    pg_policies — there is no separate "circle threads..."/"circle
+--    posts..." policy on this database). Doing this before any other
+--    Circle drop means posts.circle_id and private.is_circle_member() stop
+--    being referenced by anything the moment this statement runs.
+-- ─────────────────────────────────────────────────────────────────────────
+drop policy if exists "posts are readable by their audience" on public.posts;
+create policy "posts are readable by their audience"
+  on public.posts for select
+  using (
+    (select auth.uid()) = user_id
+    or (visibility = 'public' and is_visible_profile(user_id))
+    or (
+      visibility = 'followers'
+      and (select auth.uid()) is not null
+      and is_visible_profile(user_id)
+      and exists (
+        select 1 from public.profile_follows pf
+        where pf.followed_id = posts.user_id
+          and pf.follower_id = (select auth.uid())
+          and pf.status = 'accepted'
+      )
+    )
+  );
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 2. Triggers, then the trigger functions they call.
 -- ─────────────────────────────────────────────────────────────────────────
 drop trigger if exists rl_circles_insert on public.circles;
 drop trigger if exists rl_circle_members_insert on public.circle_members;
@@ -89,20 +132,10 @@ drop function if exists public.rl_circle_members();
 drop function if exists public.rl_circle_invites();
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 2. Policies — every one that reads or writes circles/circle_members/
---    circle_invites, including the one on posts itself.
---
---    Two names dropped for the posts policy: sql/circles.sql's original
---    "circle threads follow the circle's visibility" had a real bug (it
---    read `true` for every non-Circle post — see sql/fix-post-read-
---    policy.sql), which that file's live fix replaced with a differently
---    named "circle posts follow the circle's own visibility". Dropping
---    both by name is harmless regardless of which one is actually live —
---    IF EXISTS makes the other one a no-op.
+-- 3. Policies — every one left that reads or writes circles/circle_members/
+--    circle_invites. The posts policy is handled in section 1 above, not
+--    here.
 -- ─────────────────────────────────────────────────────────────────────────
-drop policy if exists "circle threads follow the circle's visibility" on public.posts;
-drop policy if exists "circle posts follow the circle's own visibility" on public.posts;
-
 drop policy if exists "you see the roster of a circle you're in" on public.circle_members;
 drop policy if exists "you can join a circle yourself" on public.circle_members;
 drop policy if exists "you can leave a circle" on public.circle_members;
@@ -118,7 +151,7 @@ drop policy if exists "you answer your own circle invitation" on public.circle_i
 drop policy if exists "you can leave a circle you joined" on public.circle_invites;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 3. Functions — admin/usage functions first (they reference the tables
+-- 4. Functions — admin/usage functions first (they reference the tables
 --    and the posts columns below), then the plain helpers.
 --
 --    owns_circle()/is_circle_member() are dropped from both `public` and
@@ -140,7 +173,7 @@ drop function if exists private.owns_circle(bigint, uuid);
 drop function if exists private.is_circle_member(bigint, uuid);
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 4. posts: the index and check constraint that reference the columns
+-- 5. posts: the index and check constraint that reference the columns
 --    below, then the columns themselves — explicit, so the column drops
 --    never need CASCADE.
 -- ─────────────────────────────────────────────────────────────────────────
@@ -153,7 +186,7 @@ alter table public.posts drop column if exists answered;
 alter table public.posts drop column if exists hidden_from_moments;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 5. Indexes on circle_invites/circle_members/circles, then the tables
+-- 6. Indexes on circle_invites/circle_members/circles, then the tables
 --    themselves — circle_invites and circle_members before circles, since
 --    circle_members.circle_id is a foreign key into circles (dropping
 --    circle_members first removes that FK along with it, so the circles
@@ -170,7 +203,7 @@ drop index if exists public.circles_hobby_idx;
 drop table if exists public.circles;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 6. space_usage() / admin_delete_space() / admin_move_space_content() —
+-- 7. space_usage() / admin_delete_space() / admin_move_space_content() —
 --    re-created minus every circles reference. Based on the live bodies
 --    from 20260920020000_admin_function_and_grant_hardening.sql (which
 --    fixed all three to call private.is_admin(), not the nonexistent
@@ -279,7 +312,7 @@ revoke all on function public.admin_move_space_content(text, text) from public, 
 grant execute on function public.admin_move_space_content(text, text) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 7. posts_visibility_check — drops 'circle', guarded by the safety gate
+-- 8. posts_visibility_check — drops 'circle', guarded by the safety gate
 --    in section 0 above.
 -- ─────────────────────────────────────────────────────────────────────────
 alter table public.posts drop constraint if exists posts_visibility_check;
@@ -287,7 +320,7 @@ alter table public.posts add constraint posts_visibility_check
   check (visibility in ('public', 'followers', 'space', 'just_me'));
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 8. enforce_notification_insert — verbatim from 20261008000000 (the
+-- 9. enforce_notification_insert — verbatim from 20261008000000 (the
 --    latest live definition), minus 'circle_invite' from the allowed list.
 -- ─────────────────────────────────────────────────────────────────────────
 create or replace function public.enforce_notification_insert()
