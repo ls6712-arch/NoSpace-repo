@@ -507,13 +507,20 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       // does the same for "hobby_follow": every one of those is a note to
       // yourself about your own action (toggleHobbyFollow below no longer
       // creates them), so old ones are hidden the same way rather than
-      // deleted.
+      // deleted. Live-test fix round (Sep 27): "connect_accepted" and
+      // "connect_request" are the same story — dead since before
+      // enforce_notification_insert's very first version ever allowed
+      // them, so the old orphaned rows just rendered "accepted your
+      // connection. You can message each other now." with no name to fill
+      // in. Hidden the same way; the rows themselves are untouched.
       supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
         .neq("kind", "message")
         .neq("kind", "hobby_follow")
+        .neq("kind", "connect_accepted")
+        .neq("kind", "connect_request")
         .order("created_at", { ascending: false })
         .limit(60),
       // Degrades to "no one blocked" if the table isn't there yet — the
