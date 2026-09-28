@@ -55,10 +55,16 @@ async function fetchLegacyPosts(): Promise<LegacyPostRow[]> {
   const rows: LegacyPostRow[] = [];
   let from = 0;
   for (;;) {
+    // No media_paths filter here: the live column is `text[] not null
+    // default '{}'`, so an unmigrated row reads as an empty array, never
+    // null — filtering on `.is("media_paths", null)` would match nothing,
+    // ever. Idempotency is handled below instead: legacyMediaPaths()
+    // already returns null for a row with no media_url/media_urls left to
+    // migrate, which is exactly the state a row this script already
+    // processed ends up in.
     const { data, error } = await supabase
       .from("posts")
       .select("id, media_url, media_urls")
-      .is("media_paths", null)
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw new Error(`Failed to load posts: ${error.message}`);
     if (!data || data.length === 0) break;
@@ -71,7 +77,7 @@ async function fetchLegacyPosts(): Promise<LegacyPostRow[]> {
 
 async function main() {
   const rows = await fetchLegacyPosts();
-  console.log(`Found ${rows.length} post(s) without media_paths yet.`);
+  console.log(`Found ${rows.length} post(s) total.`);
 
   let migrated = 0;
   let skipped = 0;
