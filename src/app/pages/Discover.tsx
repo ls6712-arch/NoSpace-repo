@@ -7,12 +7,10 @@ import {
   Search,
   ShoppingBag,
   UserRound,
-  Users,
   X,
 } from "lucide-react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { spacePhoto } from "../data/hobbyPhotos";
-import { circles } from "../data/circles";
 import { Post, postCorner } from "../data/posts";
 import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
@@ -33,9 +31,9 @@ import { MediaFilter, matchesMediaFilter } from "../components/discover/discover
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
- * then a deliberate choice about what to do next — explore a space, find a
- * Circle, create something of your own — rather than another page of work loading
- * itself under your thumb.
+ * then a deliberate choice about what to do next — explore a space, create
+ * something of your own — rather than another page of work loading itself
+ * under your thumb.
  *
  * PAGE_SIZE is the size of one "look". "Show more" is a button someone
  * presses on purpose; nothing here loads on scroll.
@@ -60,13 +58,7 @@ const BASE_CHIPS: Chip[] = [
  *
  * Spec change ("Corners carry discovery"): Corners is default now, not
  * Spaces — Categories (what the old "Spaces" tab actually browsed) are
- * internal-only, nobody picks one directly. Circle browsing is dropped
- * from Discover's front door entirely: the one real Circle this rework
- * found was deleted along with the rest of Circles' data (see
- * 20260924095000_spaces_rework_cleanup.sql), so there's nothing left to
- * browse here — the demo/seed Circle list is empty too (circles.ts). The
- * `/circles` page itself and CircleBoard aren't touched; this only drops
- * Discover's own tab into them, ahead of their full removal in Phase 6.
+ * internal-only, nobody picks one directly.
  * `spaces` is real now (Phase 5: Create Space, the Space page,
  * SpacesBrowser) — host-created communities, unrelated to the old
  * Category-browsing "Spaces" this same tab id used to mean. */
@@ -144,7 +136,7 @@ function DiscoverSpaceArt({
  * `likes`) never sort, rank, filter or promote anything here, per
  * docs/moment-card-and-reactions-spec.md §4.6; "Featured Moments stays
  * curated," not a popularity ranking. Then the result is spread across
- * creators and Spaces so one thread or one Space can't fill the whole row.
+ * creators and Spaces so one Moment or one Space can't fill the whole row.
  * No score is ever shown; it only decides the order.
  */
 function rankFeatured(posts: Post[], followedHobbies: string[], take: number): Post[] {
@@ -175,9 +167,9 @@ function rankFeatured(posts: Post[], followedHobbies: string[], take: number): P
 /**
  * Discover's own Marketplace tab — the one place, alongside a Space's own
  * Marketplace tab, where product listings are actually browsable rather
- * than reachable only by an accidental search hit. Grouped by Space, same
- * shape as CirclesBrowser above, with each group linking on to that
- * Space's full listing set on /shop rather than duplicating pagination here.
+ * than reachable only by an accidental search hit. Grouped by Space, with
+ * each group linking on to that Space's full listing set on /shop rather
+ * than duplicating pagination here.
  */
 function MarketplaceTab({ query }: { query: string }) {
   const { listings } = useContent();
@@ -479,11 +471,6 @@ export function Discover() {
   const visible = filtered.slice(0, shown);
   const remaining = filtered.length - visible.length;
 
-  // "Near you" only appears if there is actually somewhere near you. Circles
-  // with a city attached are the only geography this app honestly has, and it
-  // says so rather than inventing a location.
-  const localCircles = useMemo(() => circles.filter((c) => c.location), []);
-
   return (
     <div className="min-h-screen">
       <section className="relative overflow-hidden py-10 sm:py-12">
@@ -512,8 +499,8 @@ export function Discover() {
 
       <div className="bg-surface pb-24 pt-5">
         <div className="container mx-auto max-w-6xl px-4">
-          {/* Spaces / Circles / People — Discover's own front door. Five
-              tabs never fit a phone-width pill at once, so this scrolls
+          {/* Corners / Spaces / People / Marketplace — Discover's own front
+              door. These tabs never fit a phone-width pill at once, so this scrolls
               horizontally (edge-to-edge, bleeding past the container's own
               padding) instead of overflowing the screen or wrapping into a
               second, layout-shifting row. */}
@@ -699,7 +686,7 @@ export function Discover() {
 
               <p className="mb-6 text-sm text-muted-foreground">
                 {chip === "near"
-                  ? "Location isn't switched on yet. Circles with a city are the closest thing for now."
+                  ? "Location isn't switched on yet."
                   : `${filtered.length} ${filtered.length === 1 ? "Moment" : "Moments"}${q ? ` matching "${query}"` : ""}.`}
               </p>
 
@@ -707,26 +694,7 @@ export function Discover() {
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
                   <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
                     Sushii doesn't know where you are, and won't until you tell it.
-                    These Circles have a city attached, the closest thing to near you.
                   </p>
-                  <ul className="mx-auto grid max-w-2xl gap-2 text-left sm:grid-cols-2">
-                    {localCircles.map((c) => (
-                      <li key={c.id}>
-                        <Link
-                          to="/discover?tab=circles"
-                          className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
-                        >
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                              {c.name}
-                            </span>
-                            <span className="block text-[11px] text-muted-foreground">{c.location}</span>
-                          </span>
-                          <Users className="size-4 shrink-0 text-muted-foreground" />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               ) : visible.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
@@ -774,12 +742,6 @@ export function Discover() {
                           <Button variant="coral">
                             <PenLine className="size-4" />
                             Create something
-                          </Button>
-                        </Link>
-                        <Link to="/discover?tab=circles">
-                          <Button variant="outline">
-                            <Users className="size-4" />
-                            Find a Circle
                           </Button>
                         </Link>
                       </div>

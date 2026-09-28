@@ -14,8 +14,6 @@ import { EditSpace } from "./pages/EditSpace";
 import { Discover } from "./pages/Discover";
 import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
-import { Circles } from "./pages/Circles";
-import { CircleBoard } from "./pages/CircleBoard";
 import { Log } from "./pages/Log";
 import { You } from "./pages/You";
 import { Onboarding } from "./pages/Onboarding";
@@ -24,7 +22,6 @@ import { Inbox } from "./pages/Inbox";
 import { People } from "./pages/People";
 import { AdminCategories } from "./pages/AdminCategories";
 import { AdminSpaces } from "./pages/AdminSpaces";
-import { AdminCircles } from "./pages/AdminCircles";
 import { AdminCorners } from "./pages/AdminCorners";
 import { AdminReports } from "./pages/AdminReports";
 import { HobbyArchive } from "./pages/HobbyArchive";
@@ -65,15 +62,14 @@ export const router = createHashRouter([
       { path: "discover", Component: Discover },
       { path: "search", Component: SearchResults },
 
-      { path: "circles", Component: Circles },
-      { path: "circles/:id", Component: CircleBoard },
+      { path: "circles", loader: () => redirect("/discover") },
+      { path: "circles/*", loader: () => redirect("/discover") },
       { path: "create", Component: Log },
       { path: "people", Component: People },
       // Spaces are the categories now, so there is one page and one URL.
       { path: "category/:slug", loader: ({ params }) => redirect(`/space/${params.slug}`) },
       { path: "admin/categories", Component: AdminCategories },
       { path: "admin/spaces", Component: AdminSpaces },
-      { path: "admin/circles", Component: AdminCircles },
       { path: "admin/corners", Component: AdminCorners },
       { path: "admin/reports", Component: AdminReports },
       // "Log" was the old name for creating; keep old links working.

@@ -45,22 +45,6 @@ function CategoryRow({ category, label, description }: { category: NotificationC
   );
 }
 
-function CircleInvitesRow() {
-  const { circleInviteNotificationsEnabled, setCircleInviteNotificationsEnabled, notificationPrefsLoaded } =
-    useSettings();
-
-  return (
-    <SettingsRow label="Circle invitations" description="Someone invites you to join a Circle.">
-      <Switch
-        checked={circleInviteNotificationsEnabled}
-        onCheckedChange={(next) => void setCircleInviteNotificationsEnabled(next)}
-        disabled={!notificationPrefsLoaded}
-        aria-label="Circle invitations"
-      />
-    </SettingsRow>
-  );
-}
-
 export function NotificationsSection() {
   return (
     <section>
@@ -72,7 +56,6 @@ export function NotificationsSection() {
         {CATEGORY_ROWS.map((row) => (
           <CategoryRow key={row.category} {...row} />
         ))}
-        <CircleInvitesRow />
       </SettingsPanel>
     </section>
   );

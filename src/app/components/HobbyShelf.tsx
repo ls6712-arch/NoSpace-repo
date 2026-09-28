@@ -260,9 +260,9 @@ function CornerTile({
  * Your work, shelved. One flat, gapless-feeling grid of every Corner you
  * have Moments in, most-recently-updated first — no Space-level grouping
  * here. Space stays the top-level structure everywhere else in the app
- * (Discover, the composer, Circles); this view is the one deliberate
- * exception, since its whole point is to browse by the more specific thing
- * rather than re-derive the Space hierarchy a click away on every other tab.
+ * (Discover, the composer); this view is the one deliberate exception,
+ * since its whole point is to browse by the more specific thing rather
+ * than re-derive the Space hierarchy a click away on every other tab.
  */
 export function HobbyShelf({
   items: override,

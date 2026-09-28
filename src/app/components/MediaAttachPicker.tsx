@@ -5,10 +5,9 @@ import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 
 /**
  * A small, reusable "attach a photo or video" control — the same picked
- * file can be a Circle thread's own attachment (CircleComposer), a photo
- * riding along with a reply (Thoughts, when allowMedia is on), or
- * Onboarding's own first-Moment prompt. Owns nothing beyond the local
- * preview; the caller decides what happens to the file.
+ * file can be a photo riding along with a reply (Thoughts, when allowMedia
+ * is on), or Onboarding's own first-Moment prompt. Owns nothing beyond the
+ * local preview; the caller decides what happens to the file.
  *
  * Runs convertHeicIfNeeded() before handing the file back — this was the
  * gap that let HEIC uploads look "still broken" after

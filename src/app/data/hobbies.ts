@@ -34,9 +34,9 @@ const sub = (label: string, slug?: string): SubHobby => ({
  *
  * The type/variable names (`Hobby`, `hobbies`, `getHobby`, ...) are
  * deliberately NOT renamed to `Category`/`categories`/`getCategory` here —
- * that's a terminology change, not a data-model one, and lands in Phase 6
- * alongside the rest of this rework's renames (Circle removal, Work→Moments,
- * etc.) rather than mixed into this phase's schema/migration work.
+ * that's a terminology change, not a data-model one, and lands in a later
+ * phase alongside the rest of this rework's renames (Work→Moments, etc.)
+ * rather than mixed into this phase's schema/migration work.
  */
 export interface Hobby {
   slug: string;
@@ -458,7 +458,7 @@ export const hobbies: Hobby[] = [
 /**
  * The eight original Space slugs, and where their content lives now.
  *
- * Posts, Circles and saved links created before this change still carry these
+ * Posts and saved links created before this change still carry these
  * in the database. Nothing was migrated — the map means nothing had to be,
  * and an old bookmark still lands somewhere sensible.
  */

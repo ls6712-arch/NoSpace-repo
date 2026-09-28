@@ -22,7 +22,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
  * Invisible unless the profiles row says is_admin (sql/categories.sql).
  */
 
-type Usage = { posts: number; pursuits: number; circles: number; corners: number };
+type Usage = { posts: number; pursuits: number; corners: number };
 
 interface DeletePlan {
   slug: string;
@@ -182,7 +182,7 @@ export function AdminSpaces() {
     }
   };
 
-  const total = (u: Usage) => u.posts + u.pursuits + u.circles + u.corners;
+  const total = (u: Usage) => u.posts + u.pursuits + u.corners;
   const moveTargets = (slug: string) => spaces.filter((s) => s.slug !== slug);
 
   return (
@@ -349,9 +349,9 @@ export function AdminSpaces() {
                       <>
                         <p>
                           Still in this Space: {plural(plan.usage.posts, "Moment", "Moments")},{" "}
-                          {plural(plan.usage.pursuits, "Pursuit", "Pursuits")},{" "}
-                          {plural(plan.usage.circles, "Circle", "Circles")}. Deleting it now would
-                          orphan them, so either move them to another Space or just hide this one.
+                          {plural(plan.usage.pursuits, "Pursuit", "Pursuits")}. Deleting it now
+                          would orphan them, so either move them to another Space or just hide
+                          this one.
                         </p>
                         <div className="flex flex-wrap items-center gap-2">
                           <select
@@ -408,7 +408,7 @@ export function AdminSpaces() {
         title={confirm ? `Delete “${confirm.plan.name}”?` : ""}
         description={
           confirm?.move
-            ? `Every Moment, Pursuit and Circle in this Space moves to ${
+            ? `Every Moment and Pursuit in this Space moves to ${
                 spaces.find((s) => s.slug === confirm.plan.moveTo)?.name ?? "the other Space"
               }, then this Space is deleted. This can't be undone.`
             : "This Space is empty. Deleting it can't be undone."

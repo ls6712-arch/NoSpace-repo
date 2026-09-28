@@ -11,7 +11,7 @@ import { LOCAL_CLEARED_EVENT } from "./localData";
  *   Quick moment a short standalone entry that isn't part of a project
  *   Saved        something you kept to come back to, not a public applause metric
  *
- * This lives in localStorage for now, alongside circle joins and reactions.
+ * This lives in localStorage for now, alongside reactions.
  * A `projects` table is the obvious next step; until then everything here is
  * per-browser, and the UI never claims otherwise.
  *

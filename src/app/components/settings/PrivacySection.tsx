@@ -124,29 +124,13 @@ function ReadReceiptsRow() {
 }
 
 export function PrivacySection() {
-  const { circlesVisible, setCirclesVisible } = useSettings();
-
   return (
     <section>
       <SectionHeader n={4} eyebrow="PRIVACY" title="Privacy" />
       <p className="mb-4 text-sm text-muted-foreground">
-        Who sees your Circles, and who sees what you make by default.
+        Who sees what you make by default.
       </p>
       <SettingsPanel>
-        <SettingsRow
-          label="Show my Circles on my work"
-          description={
-            circlesVisible
-              ? "Visible — anyone viewing your work can see which Circles you've joined."
-              : "Hidden — only you can see which Circles you've joined."
-          }
-        >
-          <Switch
-            checked={circlesVisible}
-            onCheckedChange={setCirclesVisible}
-            aria-label="Show my Circles on my work"
-          />
-        </SettingsRow>
         <DefaultVisibilityRow />
         <ReadReceiptsRow />
       </SettingsPanel>

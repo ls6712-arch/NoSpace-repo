@@ -11,12 +11,10 @@ import {
   Pencil,
   Send,
   Trash2,
-  Users,
   UserRound,
 } from "lucide-react";
 import { Post } from "../data/posts";
 import { getHobby, subHobbyLabel, visibleSpaces } from "../data/hobbies";
-import { getCircle } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useAuth } from "../context/AuthContext";
@@ -54,7 +52,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 /** The audience words, identical to the ones chosen in the Log flow. */
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
   public: { label: "Everyone", icon: Globe2 },
-  circle: { label: "A Circle", icon: Users },
   followers: { label: "Followers", icon: UserRound },
 };
 
@@ -373,7 +370,6 @@ export function MomentDetail({
               postOwnerName={post.creator}
               isOwner={owned}
               privateThoughts={post.thoughtsPrivate}
-              allowMedia={post.visibility === "circle"}
             />
           </>
         )}
@@ -524,9 +520,6 @@ export function MomentDetail({
             <dd className="flex items-center gap-1.5">
               <audience.icon className="size-3" />
               {audience.label}
-              {post.visibility === "circle" && post.circleId
-                ? ` · ${getCircle(post.circleId)?.name ?? ""}`
-                : ""}
             </dd>
           </div>
           {/* entryProject is local, per-browser data (see lib/journal.ts) —

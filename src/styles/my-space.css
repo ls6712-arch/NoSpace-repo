@@ -26,7 +26,7 @@
 /* Below lg: rail is a plain stacked column, Pursuits first (this app's most
    useful thing to see right after the feed — docs/my-space-spec.md section
    1's base/sm row). CSS `order` moves it visually; DOM order stays
-   Shelf/Pursuits/Circles, so tab order doesn't quite track visual order at
+   Shelf/Pursuits, so tab order doesn't quite track visual order at
    this width — a known, flagged trade-off rather than a JS-driven
    conditional render just for that. */
 .myspace-rail {
@@ -41,14 +41,13 @@
 
 /* md (768–1023): tablet. Single column, whole page scrolls (no independent
    scroll areas yet — those start at lg). Rail becomes a 2-column grid:
-   [Shelf + Circles] | [Pursuits]. */
+   [Shelf] | [Pursuits]. */
 @media (min-width: 768px) {
   .myspace-rail {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
       "shelf pursuits"
-      "circles pursuits"
       "inspired inspired"
       "newspaces newspaces";
     gap: 24px;
@@ -61,11 +60,6 @@
 
   .myspace-rail-pursuits {
     grid-area: pursuits;
-    order: 0;
-  }
-
-  .myspace-rail-circles {
-    grid-area: circles;
     order: 0;
   }
 
@@ -117,7 +111,6 @@
 
   .myspace-rail-pursuits,
   .myspace-rail-shelf,
-  .myspace-rail-circles,
   .myspace-rail-inspired,
   .myspace-rail-newspaces {
     order: 0;

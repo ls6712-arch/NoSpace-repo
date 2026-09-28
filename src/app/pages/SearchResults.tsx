@@ -4,7 +4,6 @@ import {
   Search,
   Sparkle,
   Compass,
-  Users,
   UserRound,
   PenLine,
   MessagesSquare,
@@ -17,7 +16,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 const GROUP_ICON: Record<SearchGroup, LucideIcon> = {
   space: Compass,
   corner: Sparkle,
-  circle: Users,
   person: UserRound,
   pursuit: PenLine,
   moment: MessagesSquare,
@@ -37,10 +35,10 @@ function initials(name: string) {
  * The one results page both search boxes (Discover's and the global nav's)
  * send a submitted query to, grouped by type rather than one flat list —
  * and, unlike either search box before this, actually covers Spaces,
- * Corners, Circles, People, Pursuits, and Moments, with Products always
- * last rather than first (see lib/search.ts for why the old nav search
- * effectively only ever surfaced products for anything but an exact Space
- * or creator name).
+ * Corners, People, Pursuits, and Moments, with Products always last rather
+ * than first (see lib/search.ts for why the old nav search effectively
+ * only ever surfaced products for anything but an exact Space or creator
+ * name).
  */
 export function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -84,7 +82,7 @@ export function SearchResults() {
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Spaces, Corners, Circles, people, Pursuits, Moments…"
+            placeholder="Search Spaces, Corners, people, Pursuits, Moments…"
             className="w-full rounded-full border border-border bg-input-background py-3 pl-11 pr-4 text-sm text-foreground outline-none focus-visible:border-[var(--violet-electric)]"
           />
         </form>

@@ -1,18 +1,10 @@
 import { describe, expect, it } from "vitest";
-import {
-  circleInvitesEnabled,
-  isCategoryMuted,
-  withCircleInvitesEnabled,
-  withMutedCategory,
-} from "./notificationPreferences";
+import { isCategoryMuted, withMutedCategory } from "./notificationPreferences";
 
-// A realistic full row — the Phase 6 email keys already shipped
-// (20260919230000_pause_deletion_foundation.sql) alongside circle_invites,
-// plus a Phase 5 muted array.
+// A realistic full row — the email keys already shipped
+// (20260919230000_pause_deletion_foundation.sql), plus a Phase 5 muted array.
 const FULL_PREFS = {
-  circle_invites: true,
   replies_to_my_moments: true,
-  circle_updates_joined: false,
   weekly_digest: false,
   product_news: false,
   muted: ["thoughts"],
@@ -54,11 +46,9 @@ describe("withMutedCategory", () => {
     expect(next.muted).toEqual(["message_requests"]);
   });
 
-  it("preserves every other key untouched — circle_invites and every Phase 6 email key", () => {
+  it("preserves every other key untouched — every email key", () => {
     const next = withMutedCategory(FULL_PREFS, "pursuit_activity", true);
-    expect(next.circle_invites).toBe(true);
     expect(next.replies_to_my_moments).toBe(true);
-    expect(next.circle_updates_joined).toBe(false);
     expect(next.weekly_digest).toBe(false);
     expect(next.product_news).toBe(false);
   });
@@ -66,27 +56,5 @@ describe("withMutedCategory", () => {
   it("builds a fresh muted array from an empty settings object", () => {
     const next = withMutedCategory({}, "thoughts", true);
     expect(next.muted).toEqual(["thoughts"]);
-  });
-});
-
-describe("circleInvitesEnabled / withCircleInvitesEnabled", () => {
-  it("is true (on) for a missing settings row", () => {
-    expect(circleInvitesEnabled({})).toBe(true);
-  });
-
-  it("is true when explicitly true", () => {
-    expect(circleInvitesEnabled({ circle_invites: true })).toBe(true);
-  });
-
-  it("is false only when explicitly false", () => {
-    expect(circleInvitesEnabled({ circle_invites: false })).toBe(false);
-  });
-
-  it("toggling circle_invites never touches the muted array or other keys", () => {
-    const next = withCircleInvitesEnabled(FULL_PREFS, false);
-    expect(next.circle_invites).toBe(false);
-    expect(next.muted).toEqual(["thoughts"]);
-    expect(next.replies_to_my_moments).toBe(true);
-    expect(next.weekly_digest).toBe(false);
   });
 });

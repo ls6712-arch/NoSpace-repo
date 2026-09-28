@@ -10,7 +10,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 
 /**
- * A single Corner's own page — Feed/Moments only, no Work/People/Circles/
+ * A single Corner's own page — Feed/Moments only, no Work/People/
  * Marketplace/Contribute sub-tabs like the full Space page has. The one way
  * back is the link to the parent Space; there's no other navigation here.
  */
