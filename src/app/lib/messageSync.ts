@@ -219,3 +219,30 @@ export function isSeenByOther(myLastMessageCreatedAt: number | null, otherLastRe
 export function shouldMarkThreadRead(input: { threadOpen: boolean; tabVisible: boolean; atBottom: boolean }): boolean {
   return input.threadOpen && input.tabVisible && input.atBottom;
 }
+
+/** The Chats-list preview line: the last message, "You: "-prefixed when it
+ * was mine, one line (the caller truncates with CSS). `messagePreviewText`
+ * already gives the kind-aware text ("Photo", "Message deleted", …) whether
+ * the message came from a live summary row or the local/fallback full
+ * history — this just adds the "who sent it" prefix on top, uniformly.
+ * Falls back to the caller's default when there's no message yet to show
+ * (a freshly accepted request, or summaries genuinely unavailable). */
+export function threadPreviewText(
+  lastMessage: { fromUser: string; kind: MessageKind; deletedAt?: number | null; body: string } | undefined,
+  myId: string | undefined,
+  fallback: string,
+): string {
+  if (!lastMessage) return fallback;
+  const text = messagePreviewText(lastMessage);
+  return myId != null && lastMessage.fromUser === myId ? `You: ${text}` : text;
+}
+
+/** The Chats list's sort key: latest activity, not creation time — a
+ * thread's own `createdAt` never changes, so sorting by it alone left a
+ * chat pinned wherever it first appeared regardless of how recently anyone
+ * actually said anything in it. Falls back to `createdAt` for a thread with
+ * no message yet (a freshly accepted request) or when summaries aren't
+ * available. */
+export function threadSortKey(createdAt: number, lastMessageCreatedAt: number | null | undefined): number {
+  return lastMessageCreatedAt ?? createdAt;
+}

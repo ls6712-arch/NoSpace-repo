@@ -16,6 +16,8 @@ import {
   removePendingByClientId,
   renderableMessageKind,
   shouldMarkThreadRead,
+  threadPreviewText,
+  threadSortKey,
   ThreadSummary,
 } from "./messageSync";
 import { Message } from "../context/SocialContext";
@@ -313,5 +315,56 @@ describe("patchSummaryOnMessageUpdate", () => {
       body: "",
     });
     expect(result).toEqual(summaries);
+  });
+});
+
+describe("threadPreviewText", () => {
+  it("falls back to the given default when there's no message yet", () => {
+    expect(threadPreviewText(undefined, "me", "Direct message")).toBe("Direct message");
+  });
+
+  it("shows the other person's message plain, no prefix", () => {
+    expect(threadPreviewText({ fromUser: "them", kind: "text", body: "hey!" }, "me", "fallback")).toBe("hey!");
+  });
+
+  it("prefixes my own last message with 'You: '", () => {
+    expect(threadPreviewText({ fromUser: "me", kind: "text", body: "on my way" }, "me", "fallback")).toBe(
+      "You: on my way",
+    );
+  });
+
+  it("applies the same kind-aware text a summary row already carries (photo, deleted, …)", () => {
+    expect(threadPreviewText({ fromUser: "me", kind: "photo", body: "Photo" }, "me", "fallback")).toBe("You: Photo");
+    expect(
+      threadPreviewText({ fromUser: "them", kind: "text", body: "", deletedAt: 500 }, "me", "fallback"),
+    ).toBe("Message deleted");
+  });
+
+  it("never prefixes when there's no signed-in id to compare against", () => {
+    expect(threadPreviewText({ fromUser: "them", kind: "text", body: "hi" }, undefined, "fallback")).toBe("hi");
+  });
+});
+
+describe("threadSortKey", () => {
+  it("uses the last message's time when there is one", () => {
+    expect(threadSortKey(100, 500)).toBe(500);
+  });
+
+  it("falls back to createdAt when there's no last message yet", () => {
+    expect(threadSortKey(100, null)).toBe(100);
+    expect(threadSortKey(100, undefined)).toBe(100);
+  });
+
+  it("sorts a thread with a brand-new reply above one that's merely newer", () => {
+    // Thread A was created after B, but B just got a reply — B should sort
+    // first by activity even though A is the "younger" thread by createdAt.
+    const threads = [
+      { id: "A", createdAt: 200, lastMessageCreatedAt: null as number | null },
+      { id: "B", createdAt: 100, lastMessageCreatedAt: 900 },
+    ];
+    const sorted = [...threads].sort(
+      (a, b) => threadSortKey(b.createdAt, b.lastMessageCreatedAt) - threadSortKey(a.createdAt, a.lastMessageCreatedAt),
+    );
+    expect(sorted.map((t) => t.id)).toEqual(["B", "A"]);
   });
 });

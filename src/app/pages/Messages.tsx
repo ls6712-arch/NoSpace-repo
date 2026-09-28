@@ -5,7 +5,14 @@ import { useSocial, Participation, Message } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { usePeopleSearch, profilePath } from "../lib/people";
 import { canAttachInto, canSendInto, messageTabFor } from "../lib/messageTabs";
-import { formatBadgeCount, isSeenByOther, renderableMessageKind, shouldMarkThreadRead } from "../lib/messageSync";
+import {
+  formatBadgeCount,
+  isSeenByOther,
+  renderableMessageKind,
+  shouldMarkThreadRead,
+  threadPreviewText,
+  threadSortKey,
+} from "../lib/messageSync";
 import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { getMessagePhotoUrl, MESSAGE_MEDIA_URL_TTL_SECONDS } from "../lib/messageMedia";
 import { Button } from "../components/ui/button";
@@ -79,10 +86,15 @@ function PhotoBubble({
   mediaPath,
   localPreviewUrl,
   uploading,
+  onLoad,
 }: {
   mediaPath?: string | null;
   localPreviewUrl?: string;
   uploading?: boolean;
+  /** Fires once the visible (non-lightbox) image actually finishes loading
+   * — the caller re-pins the scroll to the bottom if it was already there,
+   * since this bubble's real height (unknown until now) can change it. */
+  onLoad?: () => void;
 }) {
   const [url, setUrl] = useState<string | null>(localPreviewUrl ?? null);
   const [failed, setFailed] = useState(false);
@@ -149,6 +161,7 @@ function PhotoBubble({
           alt=""
           className={`max-h-64 w-52 object-cover ${uploading ? "opacity-70" : ""}`}
           onError={handleImageError}
+          onLoad={onLoad}
         />
       </button>
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
@@ -249,7 +262,11 @@ function ConversationPanel({
   // Distinguishes an older page landing at the front (restore scroll
   // position so nothing visually jumps) from a new message landing at the
   // end (pin to bottom if already there, otherwise show the pill instead
-  // of yanking the view down).
+  // of yanking the view down) from the thread's very first batch landing
+  // (prevLastIdRef.current is still undefined right after the thread-switch
+  // effect above reset it) — that last case used to fall through both
+  // branches and land nowhere, leaving the view wherever it happened to be
+  // rendered instead of pinned to the newest message.
   useLayoutEffect(() => {
     const el = scrollRef.current;
     const firstId = messages[0]?.id;
@@ -260,7 +277,9 @@ function ConversationPanel({
     if (el && firstChanged && prevScrollHeightRef.current != null) {
       el.scrollTop += el.scrollHeight - prevScrollHeightRef.current;
       prevScrollHeightRef.current = null;
-    } else if (lastChanged && prevLastIdRef.current !== undefined) {
+    } else if (lastChanged && prevLastIdRef.current === undefined) {
+      if (messages.length > 0) endRef.current?.scrollIntoView({ block: "end" });
+    } else if (lastChanged) {
       if (atBottom) {
         endRef.current?.scrollIntoView({ block: "end" });
       } else {
@@ -270,6 +289,15 @@ function ConversationPanel({
     prevFirstIdRef.current = firstId;
     prevLastIdRef.current = lastId;
   }, [messages, atBottom]);
+
+  // Photos load after their message does, and each one can change the
+  // bubble's height (see PhotoBubble) — re-pin to the bottom once one
+  // finishes, but only while the person hasn't scrolled up to read
+  // history; `atBottom` is read fresh here since this fires from a plain
+  // DOM event, not a render.
+  const pinToBottomIfAtBottom = () => {
+    if (atBottom) endRef.current?.scrollIntoView({ block: "end" });
+  };
 
   const handleScroll = () => {
     const el = scrollRef.current;
@@ -337,13 +365,18 @@ function ConversationPanel({
                     </p>
                   ) : renderKind === "photo" ? (
                     <div className="relative inline-block">
-                      <PhotoBubble mediaPath={m.mediaPath} localPreviewUrl={m.localPreviewUrl} uploading={m.status === "sending"} />
+                      <PhotoBubble
+                        mediaPath={m.mediaPath}
+                        localPreviewUrl={m.localPreviewUrl}
+                        uploading={m.status === "sending"}
+                        onLoad={pinToBottomIfAtBottom}
+                      />
                       {canUnsend && (
                         <button
                           type="button"
                           onClick={() => setUnsendTargetId(m.id)}
                           aria-label="Unsend"
-                          className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -371,7 +404,7 @@ function ConversationPanel({
                           type="button"
                           onClick={() => setUnsendTargetId(m.id)}
                           aria-label="Unsend"
-                          className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -551,12 +584,20 @@ export function Messages() {
   // stops new messages in it (enforced by the database either way; this is
   // just so it doesn't still show in the list).
   const otherPartyOf = (p: Participation) => (user && p.fromUser === user.id ? p.toUser : p.fromUser);
+  // Sorted by latest activity (last message, falling back to when the
+  // thread itself was created for one with no message yet) rather than
+  // creation time — a summary patched live by Realtime re-sorts this on
+  // its own, the next time this renders.
   const chatThreads = social.participations
     .filter(
       (p) =>
         messageTabFor(p, user?.id ?? "") === "chats" && !social.blockedIds.includes(otherPartyOf(p) ?? ""),
     )
-    .sort((a, b) => b.createdAt - a.createdAt);
+    .sort(
+      (a, b) =>
+        threadSortKey(b.createdAt, social.lastMessageAtFor(b.id)) -
+        threadSortKey(a.createdAt, social.lastMessageAtFor(a.id)),
+    );
 
   const requests = social.messageRequests;
 
@@ -826,6 +867,14 @@ export function Messages() {
                       t.status !== "accepted" &&
                       social.messagesFor(t.id).length > 0;
                     const unread = social.unreadCountFor(t.id);
+                    // The last message in the thread, kind-aware ("Photo",
+                    // "Message deleted", …) and "You: "-prefixed when it was
+                    // mine — falls back to the old kind/intent label only
+                    // when there's genuinely no message yet to show.
+                    const threadMessages = social.messagesFor(t.id);
+                    const lastMessage = threadMessages[threadMessages.length - 1];
+                    const fallbackLabel = t.kind === "direct_message" ? "Direct message" : (t.intent ?? "");
+                    const preview = waiting ? "Waiting to accept" : threadPreviewText(lastMessage, user?.id, fallbackLabel);
                     return (
                       <li key={t.id}>
                         <button
@@ -842,18 +891,22 @@ export function Messages() {
                             <AvatarFallback className="text-[10px]">{initials(name ?? "?")}</AvatarFallback>
                           </Avatar>
                           <span className="min-w-0 flex-1">
-                            <span className={`block truncate text-sm ${unread > 0 ? "font-semibold" : ""}`}>
+                            <span className={`block truncate text-sm ${unread > 0 ? "font-semibold text-foreground" : ""}`}>
                               {name}
                             </span>
-                            <span className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+                            <span
+                              className={`flex items-center gap-1 truncate text-[11px] ${
+                                unread > 0 ? "font-semibold text-foreground" : "text-muted-foreground"
+                              }`}
+                            >
                               {t.kind === "make_together" ? (
-                                <Handshake className="size-3" />
+                                <Handshake className="size-3 shrink-0" />
                               ) : t.kind === "explore_together" ? (
-                                <MessagesSquare className="size-3" />
+                                <MessagesSquare className="size-3 shrink-0" />
                               ) : (
-                                <MessageCircle className="size-3" />
+                                <MessageCircle className="size-3 shrink-0" />
                               )}
-                              {waiting ? "Waiting to accept" : t.kind === "direct_message" ? "Direct message" : t.intent}
+                              <span className="truncate">{preview}</span>
                             </span>
                           </span>
                           {unread > 0 && (

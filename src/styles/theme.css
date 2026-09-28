@@ -355,6 +355,29 @@
   border-top-color: var(--line);
 }
 
+/* Live-test fix (Sep 27): .ns-paper-theme's own raw palette above had no
+   dark-mode counterpart at all, so You/Studio/PublicProfile/the cover
+   editor stayed on their light cream-and-ink values even with the rest of
+   the app (including this same Header) switched to dark — "only the
+   header turns dark". Same warm-charcoal identity as the app-wide .dark
+   block above (same literal hex values, scoped here rather than a new
+   palette this page would need its own design pass for), reached the same
+   way that block reaches :root: only the raw tokens need restating, since
+   every semantic one above (--background, --surface, --foreground, …) is
+   already declared as `var(--paper)`/`var(--ink)`/etc. and re-resolves on
+   its own once those raw values change under this more specific selector.
+   Never touches .ns-space-theme below — Spaces stays out of this round. */
+.dark .ns-paper-theme {
+  --paper: #1C1816;
+  --paper-raised: #26211D;
+  --ink: #EFE8DA;
+  --ink-soft: #A39885;
+  --ink-faint: color-mix(in srgb, #A39885 55%, transparent);
+  --line: #3A332B;
+  --surface-elevated: #2E2822;
+  --input-border: #847462;
+}
+
 /* ── The Space page's own editorial-paper world ───────────────────────────
    Same scoped-exception pattern as .ns-paper-theme above (You/Studio), a
    distinct palette that only applies inside this one class, never touching

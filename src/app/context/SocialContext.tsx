@@ -302,6 +302,10 @@ interface SocialContextType {
    * this thread — 0 once summariesAvailable is false (the Phase 2
    * fallback never tracked reads, so there's nothing to count). */
   unreadCountFor: (participationId: number | string) => number;
+  /** The same thread's latest-activity time (its last message, or null with
+   * no summary/message yet) — the Chats list's own sort key falls back to
+   * the thread's createdAt itself when this is null. */
+  lastMessageAtFor: (participationId: number | string) => number | null;
   /** How many of my accepted "chats" threads have something unread — the
    * Chats-tab half of the header/tab-bar badge (the other half is
    * messageRequests.length). */
@@ -503,13 +507,20 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       // does the same for "hobby_follow": every one of those is a note to
       // yourself about your own action (toggleHobbyFollow below no longer
       // creates them), so old ones are hidden the same way rather than
-      // deleted.
+      // deleted. Live-test fix round (Sep 27): "connect_accepted" and
+      // "connect_request" are the same story — dead since before
+      // enforce_notification_insert's very first version ever allowed
+      // them, so the old orphaned rows just rendered "accepted your
+      // connection. You can message each other now." with no name to fill
+      // in. Hidden the same way; the rows themselves are untouched.
       supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
         .neq("kind", "message")
         .neq("kind", "hobby_follow")
+        .neq("kind", "connect_accepted")
+        .neq("kind", "connect_request")
         .order("created_at", { ascending: false })
         .limit(60),
       // Degrades to "no one blocked" if the table isn't there yet — the
@@ -1145,6 +1156,15 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const unreadCountFor = (participationId: number | string): number => {
     const s = state.summaries.find((s) => String(s.participationId) === String(participationId));
     return s?.unreadCount ?? 0;
+  };
+
+  /** The Chats list's own sort key input — see threadSortKey in
+   * messageSync.ts. Null (not 0) when there's no summary yet or no message
+   * in it, so the caller's own createdAt fallback actually kicks in rather
+   * than every unsummarized thread tying at "epoch". */
+  const lastMessageAtFor = (participationId: number | string): number | null => {
+    const s = state.summaries.find((s) => String(s.participationId) === String(participationId));
+    return s?.lastMessageCreatedAt ?? null;
   };
 
   /** How many accepted "chats" threads have something unread — the
@@ -1855,6 +1875,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         loadingOlderMessages,
         loadOlderMessages,
         unreadCountFor,
+        lastMessageAtFor,
         chatsUnreadCount,
         markThreadRead,
         seenAt,
