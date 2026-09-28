@@ -43,6 +43,15 @@ export interface Post {
    * (1-8; videos stay single-item). media always mirrors mediaUrls[0], for
    * anywhere that only ever reads one URL. */
   mediaUrls?: string[];
+  /** Step 1 (private Moment photos): the real storage paths in the
+   * `moment-media` bucket this Moment's photos live at — `media`/
+   * `mediaUrls` above are always the signed URLs resolved from these, kept
+   * separately so a Moment can be deleted (or have its photo replaced)
+   * with the actual objects cleaned up, not just the display URL forgotten.
+   * Undefined for a legacy post that still uses `media_url`/`media_urls`
+   * directly (pre-Step-1, or not yet reached by the backfill), and for
+   * anything that was never a real Supabase-backed post at all. */
+  mediaPaths?: string[];
   creator: string;
   caption: string;
   /** A private reflection captured at post time — "Log, then Reflect" — never shown publicly. */

@@ -14,6 +14,7 @@ import { useRewards } from "./RewardsContext";
 import { useAuth } from "./AuthContext";
 import { SOCIAL_STORAGE_KEY } from "./SocialContext";
 import { supabase } from "../../lib/supabase";
+import { deleteMomentFiles, resolvePostMedia, signMomentPaths, uploadMomentFile } from "../lib/momentMedia";
 
 const LISTINGS_KEY = "sushii.listings.v1";
 const CIRCLES_KEY = "sushii.circles.joined.v1";
@@ -132,16 +133,30 @@ function loadFromStorage<T>(key: string): T[] {
 // below does with it. See docs/moment-card-and-reactions-spec.md's #86.
 export const BASE_POST_COLUMNS =
   "id, user_id, hobby_slug, sub_hobby, corner, interest, type, media_url, media_urls, caption, likes, created_at, visibility, starts_at, location_name, location_privacy, thoughts_private, pursuit_id, circle_id, circle_tab, answered, hidden_from_moments, tags, pinned";
+/** BASE_POST_COLUMNS plus Step 1's media_paths column (supabase/migrations/
+ * 20261007000000_step1_moment_media_private.sql) — the floor once that
+ * migration is applied, one tier above BASE_POST_COLUMNS itself so BASE
+ * stays the one column list guaranteed to exist against any database this
+ * app might be pointed at, migration or no migration. */
+export const POST_COLUMNS_WITH_MEDIA_PATHS = `${BASE_POST_COLUMNS}, media_paths`;
 /** Public reaction totals — only exist once the post_reaction_counts
  * migration is applied. Until then every posts select below retries
- * without them (see selectPosts), so the app never breaks on a missing
- * column; counts just read as 0. Exported (along with BASE_POST_COLUMNS and
+ * without them, then without media_paths too if that's ALSO missing (see
+ * each select's own two-step fallback), so the app never breaks on a
+ * missing column; counts just read as 0 and photos fall back to the
+ * legacy media_url/media_urls columns. Exported (along with
+ * BASE_POST_COLUMNS, POST_COLUMNS_WITH_MEDIA_PATHS and
  * isMissingCountColumn) so every other posts select in the app — including
  * a single-row fetch like sharedContent.ts's fetchSharedMoment — uses this
  * same explicit list rather than `select("*")`, which would put a
  * Reflection's private column on the wire regardless of what the caller's
  * own mapper does with it (see the comment above this constant). */
-export let POST_COLUMNS = `${BASE_POST_COLUMNS}, love_count, in_count`;
+export let POST_COLUMNS = `${POST_COLUMNS_WITH_MEDIA_PATHS}, love_count, in_count`;
+/** True for any "column doesn't exist" error, not only a count column's —
+ * the message-based OR clause exists for anything that logs this error
+ * message manually; the `code` check alone already catches every real
+ * Postgres 42703, which is what every select's fallback below actually
+ * relies on. */
 export const isMissingCountColumn = (error: { message?: string; code?: string } | null) =>
   !!error && (error.code === "42703" || /love_count|in_count/.test(error.message ?? ""));
 
@@ -163,8 +178,14 @@ export function rowToPost(row: any, creatorName: string): Post {
     corner: row.corner ?? row.sub_hobby ?? undefined,
     interest: row.interest ?? undefined,
     type: row.type,
+    // A Step-1 post's real display URLs are filled in afterward by the
+    // caller (one batched signMomentPaths call per page — see
+    // refetchRealPosts) from mediaPaths below; media_url/media_urls stay
+    // null for those rows and are only ever read directly here for a
+    // legacy post that predates Step 1.
     media: row.media_url,
     mediaUrls: row.media_urls ?? (row.media_url ? [row.media_url] : []),
+    mediaPaths: row.media_paths ?? undefined,
     creator: creatorName,
     caption: row.caption,
     likes: row.likes ?? 0,
@@ -208,7 +229,10 @@ interface ContentContextType {
   /** Set when a post failed to reach the database. Cleared when a save starts. */
   saveError: string | null;
   clearSaveError: () => void;
-  /** Edits a moment you own. Returns false if the change couldn't be saved. */
+  /** Edits a moment you own. Returns false if the change couldn't be saved.
+   * mediaPath (Step 1) replaces the photo via the private moment-media
+   * bucket — the caller has already uploaded it with uploadMomentFile and
+   * passes back the resulting storage path, never a URL. */
   updatePost: (
     postId: number,
     patch: {
@@ -218,7 +242,7 @@ interface ContentContextType {
       circleId?: number;
       hobbySlug?: string;
       subHobby?: string;
-      mediaUrl?: string;
+      mediaPath?: string;
     },
   ) => Promise<boolean>;
   /** Deletes a moment you own. Returns false if it couldn't be deleted — the
@@ -342,6 +366,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       .order("created_at", { ascending: false });
     // The reaction-count columns aren't in this database yet — drop them
     // for this and every later posts select, and try once more.
+    if (isMissingCountColumn(error) && POST_COLUMNS !== POST_COLUMNS_WITH_MEDIA_PATHS) {
+      POST_COLUMNS = POST_COLUMNS_WITH_MEDIA_PATHS;
+      ({ data, error } = await supabase
+        .from("posts")
+        .select(POST_COLUMNS)
+        .order("created_at", { ascending: false }));
+    }
+    // Step 1's media_paths column isn't in this database yet either — same
+    // deal, one tier further down. Legacy media_url/media_urls keep working
+    // on their own for every post this drops back to reading them from.
     if (isMissingCountColumn(error) && POST_COLUMNS !== BASE_POST_COLUMNS) {
       POST_COLUMNS = BASE_POST_COLUMNS;
       ({ data, error } = await supabase
@@ -373,15 +407,22 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    setRealPosts(
-      data.map((row: any) => {
-        const post = rowToPost(row, nameById.get(row.user_id) ?? "Someone");
-        if (user && row.user_id === user.id) {
-          post.reflection = reflectionByPostId.get(row.id);
-        }
-        return post;
-      }),
-    );
+    const mapped = data.map((row: any) => {
+      const post = rowToPost(row, nameById.get(row.user_id) ?? "Someone");
+      if (user && row.user_id === user.id) {
+        post.reflection = reflectionByPostId.get(row.id);
+      }
+      return post;
+    });
+
+    // One batched sign call for the whole page, not one per Moment — the
+    // in-memory cache in momentMedia.ts means a path already signed on a
+    // previous refetch doesn't even reach the network again. A legacy post
+    // with no mediaPaths (resolvePostMedia's own no-op case) never adds
+    // anything to this batch at all.
+    const allPaths = mapped.flatMap((p) => p.mediaPaths ?? []);
+    const signedByPath = await signMomentPaths(allPaths);
+    setRealPosts(mapped.map((p) => resolvePostMedia(p, signedByPath)));
 
     if (user) {
       const ownPostIds = data
@@ -665,36 +706,29 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
     // Real, persisted post — goes to Supabase when signed in and connected.
     if (supabase && user) {
+      // input.media is a plain ready-made URL (generated placeholder art
+      // for a wordless capture, never a real photo the person picked) —
+      // stays on the legacy media_url/media_urls columns regardless of
+      // Step 1, since there's no file behind it to upload anywhere. A real
+      // picked file always wins over it below.
       let mediaUrls: string[] = input.media ? [input.media] : [];
+      let mediaPaths: string[] = [];
       const files = input.files ?? [];
 
       if (files.length > 0) {
         // Uploaded one at a time, in order — not Promise.all. Keeps the
         // photos in the order they were picked and doesn't hammer storage
-        // with N parallel uploads from a single tap.
+        // with N parallel uploads from a single tap. Step 1: a real photo
+        // goes to the private moment-media bucket, keyed by storage path
+        // (media_paths), not a public post-media URL — see momentMedia.ts.
         const uploaded: string[] = [];
         let failCount = 0;
         for (const f of files) {
-          // Storage keys reject most punctuation and anything non-ASCII, which
-          // a phone's own filename ("Foto 5 sept. 2026, 10.32.png") routinely has.
-          const dot = f.name.lastIndexOf(".");
-          const ext = (dot > -1 ? f.name.slice(dot + 1) : "")
-            .toLowerCase()
-            .replace(/[^a-z0-9]/g, "")
-            .slice(0, 5);
-          const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? `.${ext}` : ""}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from("post-media")
-            .upload(path, f, {
-              contentType: f.type || undefined,
-              upsert: false,
-            });
-
-          if (uploadError) {
+          const { path, error: uploadError } = await uploadMomentFile(user.id, f);
+          if (uploadError || !path) {
             failCount++;
           } else {
-            uploaded.push(supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl);
+            uploaded.push(path);
           }
         }
 
@@ -710,10 +744,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         } else {
           setMediaError(null);
         }
-        mediaUrls = uploaded;
+        mediaPaths = uploaded;
+        mediaUrls = [];
       }
-
-      const mediaUrl = mediaUrls[0] ?? "";
 
       const { data, error } = await supabase
         .from("posts")
@@ -724,8 +757,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           corner: input.corner ?? null,
           interest: input.interest?.trim() ? input.interest.trim() : null,
           type: input.type,
-          media_url: mediaUrl,
-          media_urls: mediaUrls.length ? mediaUrls : null,
+          // media_url/media_urls are NOT NULL — an empty string/null array
+          // is this table's own existing "no media here" shape, same as a
+          // written-only Moment already writes today.
+          media_url: mediaPaths.length ? "" : (mediaUrls[0] ?? ""),
+          media_urls: mediaPaths.length ? null : (mediaUrls.length ? mediaUrls : null),
+          media_paths: mediaPaths.length ? mediaPaths : null,
           caption: input.caption,
           visibility: input.visibility,
           starts_at: input.startsAt ? new Date(input.startsAt).toISOString() : null,
@@ -741,7 +778,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (!error && data) {
-        const newPost = rowToPost(data, profile?.display_name ?? (input.creator || "You"));
+        let newPost = rowToPost(data, profile?.display_name ?? (input.creator || "You"));
+        // The row's own media_url/media_urls are empty for a Step-1 post
+        // (see above) — resolve its just-uploaded photos to real display
+        // URLs right away, same as every other page of posts does via
+        // refetchRealPosts, so the Moment that was just published doesn't
+        // render with no photo until the next refetch.
+        if (newPost.mediaPaths?.length) {
+          const signed = await signMomentPaths(newPost.mediaPaths);
+          newPost = resolvePostMedia(newPost, signed);
+        }
         // A Reflection is never written to `posts` (see #86) — its own
         // owner-only table, set right after the post exists since it needs
         // the new row's id.
@@ -832,10 +878,13 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       circleId?: number;
       hobbySlug?: string;
       subHobby?: string;
-      mediaUrl?: string;
+      mediaPath?: string;
     },
   ): Promise<boolean> => {
     const target = realPosts.find((p) => p.id === postId);
+    // Resolved up front (not inside apply() below) since signing is async
+    // and apply() has to stay a plain synchronous map over the list.
+    const newMediaUrl = patch.mediaPath ? (await signMomentPaths([patch.mediaPath])).get(patch.mediaPath) : undefined;
     const apply = (list: Post[]) =>
       list.map((p) =>
         p.id === postId
@@ -854,8 +903,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
               circleId: patch.visibility === undefined ? p.circleId : patch.circleId,
               hobbySlug: patch.hobbySlug ?? p.hobbySlug,
               subHobby: patch.subHobby === undefined ? p.subHobby : patch.subHobby || undefined,
-              media: patch.mediaUrl ?? p.media,
-              mediaUrls: patch.mediaUrl ? [patch.mediaUrl] : p.mediaUrls,
+              media: newMediaUrl ?? p.media,
+              mediaUrls: newMediaUrl ? [newMediaUrl] : p.mediaUrls,
+              mediaPaths: patch.mediaPath ? [patch.mediaPath] : p.mediaPaths,
             }
           : p,
       );
@@ -871,9 +921,13 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       }
       if (patch.hobbySlug !== undefined) postsPatch.hobby_slug = patch.hobbySlug;
       if (patch.subHobby !== undefined) postsPatch.sub_hobby = patch.subHobby || null;
-      if (patch.mediaUrl !== undefined) {
-        postsPatch.media_url = patch.mediaUrl;
-        postsPatch.media_urls = [patch.mediaUrl];
+      if (patch.mediaPath !== undefined) {
+        // Step 1: a replaced photo lives at a path in moment-media, never a
+        // public post-media URL — media_url/media_urls (NOT NULL/legacy)
+        // go back to "no media here" rather than an alongside stale value.
+        postsPatch.media_paths = [patch.mediaPath];
+        postsPatch.media_url = "";
+        postsPatch.media_urls = null;
       }
 
       // A no-op `.update({})` (only the Reflection changed) is skipped
@@ -920,6 +974,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     if (supabase && user && target.userId === user.id) {
       const { error } = await supabase.from("posts").delete().eq("id", postId);
       if (error) return false;
+      // Best-effort, after the row is actually gone — a failure here just
+      // leaves an orphaned object in moment-media, never blocks the delete
+      // the person is waiting on (same shape as messageMedia's own cleanup
+      // after unsend).
+      if (target.mediaPaths?.length) void deleteMomentFiles(target.mediaPaths);
     }
 
     setRealPosts((prev) => prev.filter((p) => p.id !== postId));
