@@ -6,7 +6,6 @@ import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { Post } from "../data/posts";
 import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
-import { circlesByHobby } from "../data/circles";
 import { usePeopleInHobby } from "../lib/people";
 import { messageTabFor } from "../lib/messageTabs";
 import { sessionsFromPosts } from "../components/HobbyShelf";
@@ -29,9 +28,9 @@ import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/p
 import { FollowListDialog } from "../components/FollowListDialog";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
 
-/** Whichever Space shows up most in their posts — used to pick a Circles
- * suggestion and the closing banner's illustration, not to claim membership
- * in anything we can't actually see. */
+/** Whichever Space shows up most in their posts — used for the closing
+ * banner's illustration, not to claim membership in anything we can't
+ * actually see. */
 function primaryHobbySlug(posts: Post[]): string | undefined {
   if (posts.length === 0) return undefined;
   const counts = new Map<string, number>();
@@ -45,10 +44,10 @@ function primaryHobbySlug(posts: Post[]): string | undefined {
  *
  * Deliberately shows only what's public: their name, what they've made, and
  * how long they've been at it. Private reflections never leave the owner's own
- * view, and neither do their circles or connections — this app has no way to
- * read either from anyone but the account they belong to, so the Circles and
- * People shown here are honestly labelled as built around their craft, not
- * claimed as their actual memberships or connections.
+ * view, and neither do their connections — this app has no way to read those
+ * from anyone but the account they belong to, so the People shown here are
+ * honestly labelled as built around their craft, not claimed as their actual
+ * connections.
  *
  * Quiet Milestones are private by default: this page shows none of them
  * unless the owner explicitly shared one or more from their own shelf, and
@@ -324,7 +323,6 @@ export function PublicProfile() {
   const primaryHobby = pickPrimaryHobby(posts);
   const hobbySlug = primaryHobbySlug(posts);
   const hobby = hobbySlug ? getHobby(hobbySlug) : undefined;
-  const relatedCircles = hobbySlug ? circlesByHobby(hobbySlug).slice(0, 4) : [];
 
   const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
   const sinceLabel = earliestPostAt
@@ -552,50 +550,11 @@ export function PublicProfile() {
           </div>
         )}
 
-        <div className="mb-10 grid gap-6 sm:grid-cols-2">
-          <div>
-            <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              Their Circles
-            </h2>
-            <p className="mb-3 text-sm text-muted-foreground">
-              {hobby
-                ? `Circles built around ${hobby.name.toLowerCase()} — the craft ${firstName} is deepest in, not a claim about which ones they've joined.`
-                : "Nothing to build a suggestion from yet."}
-            </p>
-            {relatedCircles.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
-                No Circles for this Space yet.
-              </p>
-            ) : (
-              <ul className="grid gap-2">
-                {relatedCircles.map((circle) => (
-                  <li key={circle.id}>
-                    <Link
-                      to="/circles"
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-[var(--coral-deep)]"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                          {circle.name}
-                        </span>
-                        <span className="block text-[11px] text-muted-foreground">
-                          {circle.memberCount.toLocaleString()} members
-                        </span>
-                      </span>
-                      <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div>
-            <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              This Corner
-            </h2>
-            <PeopleWhoAlsoMake hobbySlug={hobbySlug} excludePersonId={personId} firstName={firstName} />
-          </div>
+        <div className="mb-10">
+          <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            This Corner
+          </h2>
+          <PeopleWhoAlsoMake hobbySlug={hobbySlug} excludePersonId={personId} firstName={firstName} />
         </div>
 
         {hobby && (

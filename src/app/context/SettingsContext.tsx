@@ -8,10 +8,8 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import {
-  circleInvitesEnabled,
   isCategoryMuted,
   NotificationPreferences,
-  withCircleInvitesEnabled,
   withMutedCategory,
 } from "../lib/notificationPreferences";
 
@@ -20,10 +18,7 @@ export type DefaultVisibility = "private" | "public";
 /** The four Phase 5 mutable categories stored as category NAMES (not raw
  * notification kinds) in profile_settings.notification_preferences.muted
  * — see supabase/migrations/20261007000000_communication_phase5_
- * notifications.sql for the category->kind mapping this mirrors exactly.
- * Circle invitations is deliberately NOT here — it reuses the existing
- * `circle_invites` boolean instead (see circleInviteNotificationsEnabled
- * below), not a fifth array entry. */
+ * notifications.sql for the category->kind mapping this mirrors exactly. */
 export type NotificationCategory =
   | "thoughts"
   | "pursuit_activity"
@@ -38,17 +33,10 @@ const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
 ];
 
 interface SettingsContextType {
-  /** Whether your joined Circles show on your public work (Studio/Shelf).
-   * Local-only preference — profile_settings has no column for this yet,
-   * so it's kept in localStorage rather than adding one (Settings redesign
-   * Stage 1 takes no migrations). */
-  circlesVisible: boolean;
-  setCirclesVisible: (next: boolean) => void;
   /** profiles_settings.default_visibility — the audience a new Moment
    * starts with in the composer. True database default is 'private'; any
-   * other stored value (e.g. 'circle', set some other way) falls back to
-   * 'private' here since the Privacy section only ever offers Only you /
-   * Everyone as a choice. */
+   * other stored value falls back to 'private' here since the Privacy
+   * section only ever offers Only you / Everyone as a choice. */
   defaultVisibility: DefaultVisibility;
   setDefaultVisibility: (next: DefaultVisibility) => Promise<{ error: string | null }>;
   defaultVisibilityLoaded: boolean;
@@ -66,32 +54,13 @@ interface SettingsContextType {
    * private.notification_kind_muted() uses. */
   mutedNotificationCategories: Record<NotificationCategory, boolean>;
   setNotificationCategoryMuted: (category: NotificationCategory, muted: boolean) => Promise<{ error: string | null }>;
-  /** Circle invitations reuse the existing `circle_invites` boolean
-   * (shipped before Phase 5, defaulted true) rather than a second entry
-   * in `muted` — true unless explicitly set to false, same "missing means
-   * on" rule the database's own mute check uses for this one key. */
-  circleInviteNotificationsEnabled: boolean;
-  setCircleInviteNotificationsEnabled: (enabled: boolean) => Promise<{ error: string | null }>;
   notificationPrefsLoaded: boolean;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-const CIRCLES_VISIBLE_KEY = "sushii-circles-visible";
-
-function readCirclesVisible(): boolean {
-  try {
-    const v = localStorage.getItem(CIRCLES_VISIBLE_KEY);
-    if (v === "false") return false;
-  } catch {
-    // Private mode / blocked storage — default to visible.
-  }
-  return true;
-}
-
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [circlesVisible, setCirclesVisibleState] = useState<boolean>(readCirclesVisible);
   const [defaultVisibility, setDefaultVisibilityState] = useState<DefaultVisibility>("private");
   const [defaultVisibilityLoaded, setDefaultVisibilityLoaded] = useState(false);
   const [readReceipts, setReadReceiptsState] = useState(true);
@@ -99,8 +68,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // The full notification_preferences object, kept as-is (not just the
   // fields this app currently reads) so every write below can merge into
   // it without ever clobbering a key it doesn't know about yet (weekly_
-  // digest, product_news, circle_updates_joined, replies_to_my_moments —
-  // Phase 6 email prefs, untouched here).
+  // digest, product_news, replies_to_my_moments — email prefs, untouched
+  // here).
   const [notificationPreferences, setNotificationPreferencesState] = useState<NotificationPreferences>({});
   const [notificationPrefsLoaded, setNotificationPrefsLoaded] = useState(false);
 
@@ -144,15 +113,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
-  const setCirclesVisible = (next: boolean) => {
-    setCirclesVisibleState(next);
-    try {
-      localStorage.setItem(CIRCLES_VISIBLE_KEY, String(next));
-    } catch {
-      // Preference still applies for this visit even if it can't persist.
-    }
-  };
-
   const setDefaultVisibility = async (next: DefaultVisibility) => {
     if (!supabase || !user) return { error: "Not signed in." };
     const prev = defaultVisibility;
@@ -189,8 +149,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // (spread from the last-loaded/last-written one), never just the one
   // changed key — a plain upsert replaces the jsonb column wholesale, it
   // doesn't merge, so sending only `{ muted: [...] }` would silently wipe
-  // circle_invites and the Phase 6 email keys the very first time anyone
-  // touched a Phase 5 switch.
+  // the email prefs the very first time anyone touched a Phase 5 switch.
   const writeNotificationPreferences = async (next: NotificationPreferences) => {
     if (!supabase || !user) return { error: "Not signed in." };
     const prev = notificationPreferences;
@@ -213,17 +172,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     return writeNotificationPreferences(withMutedCategory(notificationPreferences, category, muted));
   };
 
-  const circleInviteNotificationsEnabled = circleInvitesEnabled(notificationPreferences);
-
-  const setCircleInviteNotificationsEnabled = async (enabled: boolean) => {
-    return writeNotificationPreferences(withCircleInvitesEnabled(notificationPreferences, enabled));
-  };
-
   return (
     <SettingsContext.Provider
       value={{
-        circlesVisible,
-        setCirclesVisible,
         defaultVisibility,
         setDefaultVisibility,
         defaultVisibilityLoaded,
@@ -232,8 +183,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         readReceiptsLoaded,
         mutedNotificationCategories,
         setNotificationCategoryMuted,
-        circleInviteNotificationsEnabled,
-        setCircleInviteNotificationsEnabled,
         notificationPrefsLoaded,
       }}
     >

@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router";
 import { Compass, Library, PlusCircle, UserRound } from "lucide-react";
-import { useConnections } from "../context/ConnectionsContext";
 import { useAuth } from "../context/AuthContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 
@@ -11,12 +10,6 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
  * two. The desktop button reads "Start your log"; this tab stays the
  * shorter "Create" since a 10px, single-line tab has no room for it.
  *
- * Circles nav link removed (Spaces Rework follow-up): Circles are being
- * retired and nobody should be able to reach a "start a new one" entry
- * point anymore, but the pages themselves stay live until Phase 6 — the
- * /circles route still resolves for anyone with a direct or bookmarked
- * link, it's just not offered here.
- *
  * Create sits in the middle because it's the thing you came to do, and it
  * keeps its word rather than becoming an anonymous "+".
  *
@@ -24,8 +17,8 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
  * message icon (Header.tsx) are visible on every breakpoint, including this
  * one, so /inbox stays one tap away without needing a sixth slot. The one
  * inbox-adjacent signal that lived on this bar — a dot for a pending follow
- * request or Circle invitation someone's waiting on — moves to Profile
- * below, the nearest personal-content tab, so it isn't lost.
+ * request someone's waiting on — moves to Profile below, the nearest
+ * personal-content tab, so it isn't lost.
  *
  * Visible below lg, exactly where the desktop top nav is hidden, so there is
  * never a width with no primary navigation and never two at once.
@@ -64,9 +57,8 @@ export const TABS = [
 export function BottomTabBar() {
   const { pathname } = useLocation();
   const { user } = useAuth();
-  const connections = useConnections();
   const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
-  const waiting = incomingFollows.length > 0 || connections.circleInvitations.length > 0;
+  const waiting = incomingFollows.length > 0;
 
   return (
     <>

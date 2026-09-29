@@ -1,17 +1,15 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import * as Icons from "lucide-react";
-import { Settings as SettingsIcon, Sparkles, Sprout, Users } from "lucide-react";
+import { Settings as SettingsIcon, Sparkles, Sprout } from "lucide-react";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
-import { useSettings } from "../context/SettingsContext";
 import { useRewards } from "../context/RewardsContext";
 import { badges, badgeName } from "../data/badges";
 import { Post } from "../data/posts";
 import { Button } from "../components/ui/button";
 import { QuietMilestones } from "../components/QuietMilestones";
-import { CirclesJoined } from "../components/CirclesJoined";
 import { AvatarPicker } from "../components/AvatarPicker";
 import { WorkGrid } from "../components/WorkGrid";
 import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../components/PursuitCompact";
@@ -61,7 +59,6 @@ export function You() {
   const myPostsAndPrivate = [...myPosts, ...privateLogsAsPosts].sort(
     (a, b) => b.createdAt - a.createdAt,
   );
-  const { circlesVisible } = useSettings();
   const profileLinks = useProfileLinks();
   const [shareOpen, setShareOpen] = useState(false);
   const [followListOpen, setFollowListOpen] = useState(false);
@@ -321,13 +318,13 @@ export function You() {
           </div>
         )}
 
-        {/* Four sections, stacked full-width. "Every moment" is the major
+        {/* Three sections, stacked full-width. "Every moment" is the major
             section here — it's what the Shelf is actually for — so it gets
-            the biggest type and the most air around it. Pursuits, Quiet
-            Milestones, and Circles are minor sections: smaller headers,
-            tighter rules, less padding, so the page reads as one important
-            thing plus three supporting ones rather than five equal blocks.
-            Order: Moments, Pursuits, Quiet Milestones, Circles. */}
+            the biggest type and the most air around it. Pursuits and Quiet
+            Milestones are minor sections: smaller headers, tighter rules,
+            less padding, so the page reads as one important thing plus
+            supporting ones rather than equal blocks.
+            Order: Moments, Pursuits, Quiet Milestones. */}
         <section className="mb-16">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
@@ -487,24 +484,6 @@ export function You() {
             Non-metric growth that feels good. Private by default — share one at a time, only if you want to.
           </p>
           <QuietMilestones />
-        </section>
-
-        <section className="border-t border-[var(--line,var(--border))] pt-7">
-          <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-              <Users className="size-4 text-foreground" strokeWidth={1.8} />
-              Your Circles
-            </h2>
-            <Link to="/circles" className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground">
-              View all →
-            </Link>
-          </div>
-          <p className="mb-5 text-sm text-muted-foreground">Communities you're part of.</p>
-          {circlesVisible ? (
-            <CirclesJoined limit={4} />
-          ) : (
-            <p className="text-sm text-muted-foreground">Hidden. Only you can see which Circles you've joined.</p>
-          )}
         </section>
       </div>
 

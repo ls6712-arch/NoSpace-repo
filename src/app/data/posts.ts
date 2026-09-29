@@ -1,19 +1,13 @@
-import { CircleTabId } from "./circles";
 import { getHobby, subHobbyLabel } from "./hobbies";
 
 /**
  * Spaces Rework: the new vocabulary is `just_me | followers | space | public`.
- * `circle` and `private` stay in this union as accepted legacy values —
- * Circle-posting (CircleComposer.tsx, Log.tsx's composer, MomentCard.tsx's
- * switcher) is still fully live UI through Phase 5 of that rework and can
- * still write `circle` until Phase 6 actually removes it, so narrowing this
- * type (or the DB check constraint) before then would break real, shipped
- * functionality. `private` is the pre-rename spelling of `just_me`; existing
- * data was already migrated (see supabase/migrations/
- * 20260924100000_spaces_rework_visibility.sql), but the type stays wide
- * until every write path is updated to stop producing it.
+ * `private` stays in this union as an accepted legacy value — it's the
+ * pre-rename spelling of `just_me`; existing data was already migrated (see
+ * supabase/migrations/20260924100000_spaces_rework_visibility.sql), but the
+ * type stays wide until every write path is updated to stop producing it.
  */
-export type Visibility = "public" | "followers" | "space" | "just_me" | "circle" | "private";
+export type Visibility = "public" | "followers" | "space" | "just_me" | "private";
 
 export interface Post {
   id: number;
@@ -64,8 +58,6 @@ export interface Post {
   inCount?: number;
   createdAt: number;
   visibility: Visibility;
-  /** Set when visibility === "circle" — which circle this post belongs to. */
-  circleId?: number;
   /** Links this post to a sellable listing in products.ts, if the creator is selling something. */
   productId?: number;
   /** Set on real (Supabase-backed) posts — the Supabase auth user id that made this post. */
@@ -83,17 +75,6 @@ export interface Post {
    * local-only entryProject map in lib/journal.ts remains the fast path for
    * the owner's own browser and for posts made before this field existed. */
   pursuitId?: string;
-  /** Set when visibility === "circle" — which of the board's four sections
-   * this thread was filed under. See sql/circle-threads.sql. */
-  circleTab?: CircleTabId;
-  /** A "questions" thread the asker or the Circle's owner has marked
-   * resolved. Meaningless outside the questions tab, but harmless there. */
-  answered?: boolean;
-  /** True unless the Circle composer's own "Also save to Moments" box was
-   * checked — a Circle contribution used to always leak into the poster's
-   * own public Moments shelf with no way to opt out. See
-   * ContentContext.tsx's myPosts and CircleComposer.tsx. */
-  hiddenFromMoments?: boolean;
   /** Open, multiple tags — what a Moment is actually about, replacing the
    * fixed Space+interest pair as the primary way to describe it (see
    * sql/open-tags.sql). hobbySlug/subHobby/interest above are kept exactly
@@ -129,7 +110,7 @@ const HOUR = 3600 * 1000;
 const hoursAgo = (h: number) => Date.now() - h * HOUR;
 
 // All seed content is public — it's the platform's existing discovery feed.
-// (circle- and friends-only posts only exist once a real user creates one via Creator Studio.)
+// (Followers-only posts only exist once a real user creates one via Creator Studio.)
 const PUBLIC = "public" as const;
 
 export const seedPosts: Post[] = [

@@ -26,7 +26,7 @@ type Audience = "private" | "followers";
  * what keeps a quick Moment a record of progress.
  *
  * Audience is two choices, not four — Only you or Followers. Anything wider
- * (a Circle, Everyone) is a considered choice and lives in the full form.
+ * (Everyone) is a considered choice and lives in the full form.
  *
  * A photo picked while "Only you" is chosen uploads to the private
  * moment-media bucket (Step 1), same as any other Moment's — no separate

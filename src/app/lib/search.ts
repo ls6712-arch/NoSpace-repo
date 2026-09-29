@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
-import { circles } from "../data/circles";
 import { products } from "../data/products";
 import { deriveProjects } from "./journal";
 import { useContent } from "../context/ContentContext";
@@ -11,15 +10,14 @@ import { usePeopleSearch, profilePath } from "./people";
  * One search, everywhere. Before this, Discover's search only matched Space
  * names, and the nav search only really surfaced products for anything that
  * wasn't an exact Space name or a creator's exact name (it did technically
- * loop over hobbies and creators too, but neither Corners, Circles, nor
- * Pursuits were ever in scope, so a query like "pottery" — a Corner, not a
- * Space — fell through to whatever products happened to match). This is the
- * one place that knows how to search all of it.
+ * loop over hobbies and creators too, but neither Corners nor Pursuits were
+ * ever in scope, so a query like "pottery" — a Corner, not a Space — fell
+ * through to whatever products happened to match). This is the one place
+ * that knows how to search all of it.
  */
 export type SearchGroup =
   | "space"
   | "corner"
-  | "circle"
   | "person"
   | "pursuit"
   | "moment"
@@ -39,7 +37,6 @@ export interface SearchHit {
 export const SEARCH_GROUP_ORDER: { group: SearchGroup; title: string }[] = [
   { group: "space", title: "Spaces" },
   { group: "corner", title: "Corners" },
-  { group: "circle", title: "Circles" },
   { group: "person", title: "People" },
   { group: "pursuit", title: "Pursuits" },
   { group: "moment", title: "Moments" },
@@ -76,8 +73,8 @@ export function hobbyMatchesQuery(
 /**
  * Everything except live people search (that part's async/debounced and
  * already has its own hook — see usePeopleSearch) and, notably, still
- * covers Spaces, Corners, Circles, Pursuits, Moments, and Products. Safe to
- * call on every keystroke: nothing here does network I/O.
+ * covers Spaces, Corners, Pursuits, Moments, and Products. Safe to call on
+ * every keystroke: nothing here does network I/O.
  */
 export function useUnifiedSearchIndex(query: string) {
   const { publicFeed } = useContent();
@@ -100,7 +97,6 @@ export function useUnifiedSearchIndex(query: string) {
     const groups: Record<SearchGroup, SearchHit[]> = {
       space: [],
       corner: [],
-      circle: [],
       person: [],
       pursuit: [],
       moment: [],
@@ -133,26 +129,6 @@ export function useUnifiedSearchIndex(query: string) {
             to: `/space/${hobbySlug}?hobby=${corner.slug}`,
           });
         }
-      }
-    }
-
-    for (const circle of circles) {
-      if (
-        includesQ(circle.name, q) ||
-        includesQ(circle.description, q) ||
-        includesQ(circle.purpose, q) ||
-        includesQ(circle.location, q)
-      ) {
-        const hobby = hobbies.find((h) => h.slug === circle.hobbySlug);
-        groups.circle.push({
-          group: "circle",
-          key: `circle-${circle.id}`,
-          label: circle.name,
-          sub: [hobby?.shortName, circle.location].filter(Boolean).join(" · "),
-          // No per-Circle route exists yet — the browse page is the real
-          // destination a result can land on today.
-          to: "/circles",
-        });
       }
     }
 
@@ -217,7 +193,7 @@ export function useUnifiedSearchIndex(query: string) {
  * The one hook both search boxes use: the synchronous index above, plus the
  * existing debounced/async people search, merged into a single ordered list
  * (products always last) and grouped for anywhere that wants to show
- * "Spaces / Corners / Circles / ..." sections.
+ * "Spaces / Corners / ..." sections.
  */
 export function useUnifiedSearch(query: string) {
   const indexGroups = useUnifiedSearchIndex(query);

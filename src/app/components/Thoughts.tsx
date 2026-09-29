@@ -50,10 +50,9 @@ export function Thoughts({
   onTogglePrivate,
   compact = false,
   className = "",
-  /** Lets a reply carry its own photo or video — on for a Circle thread's
-   * replies (they're genuine discussion, not a Moment's ordinary
-   * thoughts), off everywhere else so ContentCard and a non-Circle
-   * MomentDetail render exactly as they did before this existed. */
+  /** Lets a reply carry its own photo or video — opt-in per call site,
+   * off by default so ContentCard and MomentDetail render exactly as
+   * they did before this existed. */
   allowMedia = false,
 }: {
   postId: number;

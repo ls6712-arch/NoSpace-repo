@@ -36,7 +36,7 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
     n: 4,
     name: "Privacy",
     path: "/privacy",
-    summary: "Who sees your Circles, and who sees new Moments by default.",
+    summary: "Who sees new Moments by default.",
   },
   {
     key: "notifications",

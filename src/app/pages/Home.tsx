@@ -85,7 +85,7 @@ const VALUE_CARDS = [
 const LOOP_STEPS = [
   { n: "01", label: "Create", desc: "Log a Moment right when it happens. A photo, a note, a small update." },
   { n: "02", label: "Reflect", desc: "Add a private note only you can see. Never shown, never scored." },
-  { n: "03", label: "Share", desc: "Just you, your Clan, a Circle, or everyone. Chosen right when you write it." },
+  { n: "03", label: "Share", desc: "Just you, your Clan, or everyone. Chosen right when you write it." },
 ];
 
 export function Home() {
@@ -318,7 +318,6 @@ export function Home() {
           <nav aria-label="Product" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <Link to="/discover" className="hover:text-foreground">Discover</Link>
             <Link to="/my-space" className="hover:text-foreground">My Space</Link>
-            <Link to="/circles" className="hover:text-foreground">Circles</Link>
             <Link to="/create" className="hover:text-foreground">Start your log</Link>
           </nav>
         </div>

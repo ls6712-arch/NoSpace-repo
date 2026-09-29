@@ -121,8 +121,8 @@ describe("isOnlyYou", () => {
     expect(isOnlyYou({ visibility: "private" })).toBe(true);
   });
 
-  it("does not treat 'public' or 'circle' as Only you", () => {
+  it("does not treat 'public' or an unrecognized value as Only you", () => {
     expect(isOnlyYou({ visibility: "public" })).toBe(false);
-    expect(isOnlyYou({ visibility: "circle" })).toBe(false);
+    expect(isOnlyYou({ visibility: "space" })).toBe(false);
   });
 });

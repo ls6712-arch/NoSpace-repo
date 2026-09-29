@@ -5,13 +5,12 @@ import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { useJournal } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
-import { circles } from "../data/circles";
+import { supabase } from "../../lib/supabase";
 import { Post } from "../data/posts";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
 import { ShelfRail } from "../components/ShelfRail";
-import { CirclesRail } from "../components/CirclesRail";
 import { InspiredRail } from "../components/InspiredRail";
 import { NewSpacesRail } from "../components/NewSpacesRail";
 import { WelcomeBanner } from "../components/WelcomeBanner";
@@ -34,9 +33,9 @@ function greeting(name: string): string {
  * list — no fetch, no auto-load) rather than accumulating a longer
  * scrollable list the old strip let you browse.
  *
- * The right rail (Shelf, Pursuits, Circles) stays a sidebar at lg+, a
- * deliberate difference from boards 4/5 (which show no rail at all) — kept
- * on an explicit call rather than dropped or moved off this page.
+ * The right rail (Shelf, Pursuits) stays a sidebar at lg+, a deliberate
+ * difference from boards 4/5 (which show no rail at all) — kept on an
+ * explicit call rather than dropped or moved off this page.
  *
  * Nav below lg: this app already has a working "reach every section on a
  * small screen" answer — the global BottomTabBar (Root.tsx, every page) —
@@ -46,24 +45,58 @@ function greeting(name: string): string {
  */
 export function MySpaceGrid() {
   const { user, profile } = useAuth();
-  const { publicFeed, posts, isCircleJoined } = useContent();
+  const { publicFeed, posts } = useContent();
   const social = useSocial();
   const journal = useJournal();
   const [searchParams, setSearchParams] = useSearchParams();
   const [pageIndex, setPageIndex] = useState(0);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
+  // Approved, not-removed Moments linked into a Space you're an active
+  // member of — the real replacement for the old "space:<slug>"
+  // hobby_follows source below (dead: Categories are internal-only now, so
+  // nothing can create one of those follows any more; real Space
+  // membership is what actually gates a Space's Moments — see
+  // 20261010000000_space_moment_sharing.sql).
+  const [mySpaceMomentPostIds, setMySpaceMomentPostIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!user) return;
     fetchFollowingIds(user.id).then(setFollowingIds);
   }, [user?.id]);
 
-  const exploring = new Set(social.followedHobbies);
-  const joinedCircles = circles.filter((c) => isCircleJoined(c.id));
-  const joinedSpaces = new Set(joinedCircles.map((c) => c.hobbySlug));
+  useEffect(() => {
+    const client = supabase;
+    if (!user || !client) return;
+    let cancelled = false;
+    (async () => {
+      const { data: memberships } = await client
+        .from("space_members")
+        .select("space_id")
+        .eq("user_id", user.id)
+        .eq("status", "active");
+      const spaceIds = (memberships ?? []).map((m) => m.space_id as string);
+      if (spaceIds.length === 0) {
+        if (!cancelled) setMySpaceMomentPostIds(new Set());
+        return;
+      }
+      const { data: moments } = await client
+        .from("space_moments")
+        .select("post_id")
+        .in("space_id", spaceIds)
+        .eq("status", "approved")
+        .eq("removed_by_host", false);
+      if (!cancelled) setMySpaceMomentPostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
-  // Moments from people, Spaces or Circles you follow or joined, never your
-  // own (docs/my-space-spec.md section 2). Deliberately not gated to "since
+  const exploring = new Set(social.followedHobbies);
+
+  // Moments from people you follow, Corners you follow, or approved
+  // Moments from Spaces you're an active member of, never your own
+  // (docs/my-space-spec.md section 2). Deliberately not gated to "since
   // your last visit" — that's the cold-start bug this round's spec calls
   // out by name: a person whose follows haven't posted since they were last
   // here saw an empty sheet even though there was plenty to show. This is
@@ -71,7 +104,7 @@ export function MySpaceGrid() {
   // "recent" is entirely carried by the sort below, with no age floor
   // either (confirmed explicitly: always show the N most recent, even if
   // the newest one is months old, rather than a sheet that's sometimes
-  // empty for an active account with a quiet circle).
+  // empty for an active account whose follows have been quiet).
   const unseen = useMemo(
     () =>
       publicFeed
@@ -79,12 +112,11 @@ export function MySpaceGrid() {
         .filter(
           (p) =>
             (p.userId && followingIds.includes(p.userId)) ||
-            exploring.has(`space:${p.hobbySlug}`) ||
             (p.subHobby && exploring.has(p.subHobby)) ||
-            joinedSpaces.has(p.hobbySlug),
+            mySpaceMomentPostIds.has(p.id),
         )
         .sort((a, b) => b.createdAt - a.createdAt),
-    [publicFeed, user?.id, followingIds, exploring, joinedSpaces],
+    [publicFeed, user?.id, followingIds, exploring, mySpaceMomentPostIds],
   );
 
   // One distinct sheet of (at most) 6 — "Turn the page" moves to the next
@@ -207,7 +239,7 @@ export function MySpaceGrid() {
 
         {/* Not numbered: the spec's own "design patterns to reuse" section
             asks for sequential numbering on new right-rail sections, but
-            Shelf/Pursuits/Circles never actually shipped with one (they're
+            Shelf/Pursuits never actually shipped with one (they're
             plain <h2> headings, no kicker), and a mobile-only CSS rule
             just below (.myspace-rail-pursuits' order: -1) already moves
             Pursuits above Shelf on small screens — a numeral would show
@@ -223,9 +255,6 @@ export function MySpaceGrid() {
           </div>
           <div className="myspace-rail-pursuits">
             <PursuitsRail pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
-          </div>
-          <div className="myspace-rail-circles">
-            <CirclesRail />
           </div>
           <div className="myspace-rail-inspired">
             <InspiredRail />

@@ -26,7 +26,6 @@ export interface MomentDraftFields {
   tags?: string[];
   spaceSet: boolean;
   audience: string;
-  circleId?: number;
   isActivity: boolean;
   startsAt: string;
   locationName: string;
