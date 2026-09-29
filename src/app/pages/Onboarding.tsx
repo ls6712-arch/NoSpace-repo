@@ -9,6 +9,7 @@ import { AvatarPicker } from "../components/AvatarPicker";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useContent } from "../context/ContentContext";
+import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { useCorners, cornerFollowKey } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
@@ -116,7 +117,7 @@ function MomentCard({
         setBlockedError("Try a more general name, like Brick building.");
         return;
       }
-      await addPost({
+      const entry = await addPost({
         hobbySlug: match?.spaceSlug ?? hobbies[0].slug,
         subHobby: match?.slug,
         corner: match?.slug,
@@ -127,6 +128,10 @@ function MomentCard({
         caption: body.trim(),
         visibility: "public",
       });
+      // A guard-rejected concurrent call, not a failure — leaves the
+      // wizard on this step rather than advancing on a post that didn't
+      // actually happen from this tap.
+      if (isInFlightSkipped(entry)) return;
       setAdded(true);
       onAdded();
     } finally {

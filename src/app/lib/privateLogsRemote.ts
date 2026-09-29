@@ -55,6 +55,13 @@ function fromRow(row: any): PrivateLog {
 export interface RemoteResult<T> {
   data: T | null;
   error: string | null;
+  /** Set only when a call was refused outright by an in-flight guard (see
+   * lib/inFlightGuard.ts) because a previous call on the same write path
+   * hadn't finished yet — never set by an actual read/write attempt below.
+   * Deliberately distinct from a real failure: the in-flight call is still
+   * on track to succeed, so a caller should treat this as "do nothing,"
+   * not show the same error UI a genuine `error` would get. */
+  skipped?: true;
 }
 
 export async function fetchPrivateLogs(userId: string): Promise<RemoteResult<PrivateLog[]>> {

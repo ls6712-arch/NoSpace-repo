@@ -18,6 +18,7 @@ import {
   updatePrivateLog,
 } from "../lib/privateLogsRemote";
 import { signMomentPaths } from "../lib/momentMedia";
+import { InFlightGuard, isInFlightSkipped } from "../lib/inFlightGuard";
 
 /**
  * Private Logs. A signed-in owner's are Supabase-backed only (see
@@ -117,14 +118,15 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
     if (!loading) authReadyRef.current!.resolve();
   }, [loading]);
 
-  // Same backstop as ContentContext's addPostInFlightRef: a composer's own
+  // Same backstop as ContentContext's addPostGuardRef: a composer's own
   // disabled-while-saving button is the normal guard, but add() is called
   // from three different composers (AddMoment, QuickLog, Log.tsx), any one
   // of which could have — and, in Log.tsx's case, once did have — a bug in
   // that guard. Refusing a second concurrent add() here means a slow photo
   // upload can never turn one tap into more than one private_logs row,
-  // regardless of which screen's own state got it wrong.
-  const addInFlightRef = useRef(false);
+  // regardless of which screen's own state got it wrong. Silent by design
+  // (skipped: true, not an error) — the first call is still succeeding.
+  const addGuardRef = useRef(new InFlightGuard());
 
   useEffect(() => {
     const onCleared = () => setLocal(EMPTY);
@@ -153,17 +155,13 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
-  const add = useCallback<PrivateLogsContextType["add"]>(async (input) => {
-    if (addInFlightRef.current) {
-      return { data: null, error: "Already saving." };
-    }
-    addInFlightRef.current = true;
-    try {
-      return await addImpl(input);
-    } finally {
-      addInFlightRef.current = false;
-    }
-  }, []);
+  const add = useCallback<PrivateLogsContextType["add"]>(
+    async (input) => {
+      const outcome = await addGuardRef.current.run(() => addImpl(input));
+      return isInFlightSkipped(outcome) ? { data: null, error: null, skipped: true } : outcome;
+    },
+    [],
+  );
 
   const addImpl: PrivateLogsContextType["add"] = async (input) => {
     await authReadyRef.current!.promise;

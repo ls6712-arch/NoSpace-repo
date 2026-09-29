@@ -33,6 +33,7 @@ import { startProject, useJournal } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { uploadMomentFile } from "../lib/momentMedia";
+import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { extractFirstUrl } from "../lib/linkPreview";
 import {
   draftHasContent,
@@ -797,6 +798,10 @@ export function Log() {
       projectId: linkTo || undefined,
       media,
     });
+    // A guard-rejected concurrent call, not a failure — the call that's
+    // actually in flight is still on track to succeed, so this one leaves
+    // the screen alone rather than showing an error or a premature "Saved."
+    if (result.skipped) return;
 
     // An honest failure here matters more than almost anywhere else in this
     // app: a private log has no public copy anywhere to fall back on, so if
@@ -879,6 +884,7 @@ export function Log() {
             }
           : undefined,
       });
+      if (isInFlightSkipped(entry)) return;
 
       // Create (or attach to) the Pursuit only after the post exists, so a
       // brand-new Pursuit can use this Moment's own photo as its cover —

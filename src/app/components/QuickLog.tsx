@@ -12,6 +12,7 @@ import { guessSpace } from "../lib/pursuitProgress";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
+import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { Button } from "./ui/button";
 
 type Audience = "private" | "followers";
@@ -106,6 +107,7 @@ export function QuickLog({
           media = { path, type: "image", hobbySlug: pursuit.hobbySlug };
         }
         const result = await addPrivateLog({ note: text, projectId: pursuit.id, media });
+        if (result.skipped) return;
         if (!result.data) {
           setError(result.error || "That didn't save. Try again?");
           return;
@@ -123,6 +125,7 @@ export function QuickLog({
           visibility: "followers",
           pursuitId: pursuit.id,
         });
+        if (isInFlightSkipped(entry)) return;
         await attachPostToPursuit(entry.id, pursuit.id);
       }
       // A Moment on a resting or finished Pursuit reopens it (journal's
