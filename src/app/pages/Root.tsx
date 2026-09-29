@@ -4,6 +4,7 @@ import { Header } from "../components/Header";
 import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
 import { BottomTabBar } from "../components/BottomTabBar";
+import { PreviewBanner } from "../components/PreviewBanner";
 
 // Only the landing page and the login/signup screen are open to a signed-out
 // visitor. Everything else — Discover, Spaces, People, a profile, all of it
@@ -47,8 +48,11 @@ export function Root() {
   // bounced to the landing page for a moment before their session loads.
   if (isConfigured && loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="size-8 rounded-full border-2 border-border border-t-white/70 animate-spin" />
+      <div className="flex min-h-screen flex-col">
+        <PreviewBanner />
+        <div className="flex flex-1 items-center justify-center">
+          <span className="size-8 rounded-full border-2 border-border border-t-white/70 animate-spin" />
+        </div>
       </div>
     );
   }
@@ -81,6 +85,7 @@ export function Root() {
 
   return (
     <div className="min-h-screen">
+      <PreviewBanner />
       <Header />
       <main>
         <Outlet />
