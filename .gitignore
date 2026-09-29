@@ -4,3 +4,9 @@ dist
 backups/
 .env.seed
 seed-photos/
+
+# Locally installed `npx skills add` packages — not part of this repo's
+# own tooling, never meant to be committed.
+/.agents/
+/.claude/skills/
+/skills-lock.json
