@@ -34,10 +34,26 @@
 --   circle_members               <- 3 policies on circle_members itself
 --                                <- rl_circle_members() + its trigger
 --                                <- real_circle_member_counts()
---   circle_invites                <- 4 policies on circle_invites itself
---                                <- rl_circle_invites() + its trigger
---                                <- circle_member_counts()
+--   circle_invites                <- circle_member_counts()
 --                                <- circle_usage(), admin_delete_circle()
+--                                (no policies/trigger dropped for it below —
+--                                 confirmed live: this table doesn't exist
+--                                 on this database at all, matching docs/
+--                                 schema-baseline-20260920.sql's own note
+--                                 that it "didn't turn up in the public-
+--                                 schema introspection queries" this baseline
+--                                 was built from. A first run of this
+--                                 migration confirmed it: `drop trigger`/
+--                                 `drop policy ... on public.circle_invites`
+--                                 all failed with "relation ... does not
+--                                 exist" and aborted the whole transaction,
+--                                 even with IF EXISTS on the trigger/policy
+--                                 itself — IF EXISTS only suppresses "that
+--                                 trigger/policy doesn't exist," not "that
+--                                 table doesn't exist," which DROP TRIGGER/
+--                                 DROP POLICY's own ON-clause requires
+--                                 resolving regardless. DROP TABLE IF EXISTS
+--                                 has no such requirement, so it stays below.)
 --   posts.circle_id/circle_tab   <- posts_circle_idx (index)
 --                                <- posts_circle_tab_check (constraint)
 --                                <- set_thread_answered() (also reads answered)
@@ -125,16 +141,16 @@ create policy "posts are readable by their audience"
 -- ─────────────────────────────────────────────────────────────────────────
 drop trigger if exists rl_circles_insert on public.circles;
 drop trigger if exists rl_circle_members_insert on public.circle_members;
-drop trigger if exists rl_circle_invites_insert on public.circle_invites;
 
 drop function if exists public.rl_circles();
 drop function if exists public.rl_circle_members();
 drop function if exists public.rl_circle_invites();
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 3. Policies — every one left that reads or writes circles/circle_members/
---    circle_invites. The posts policy is handled in section 1 above, not
---    here.
+-- 3. Policies — every one left that reads or writes circles/circle_members.
+--    The posts policy is handled in section 1 above, not here. Nothing to
+--    drop for circle_invites — confirmed live, that table doesn't exist
+--    (see the dependency map above); its own policies never existed either.
 -- ─────────────────────────────────────────────────────────────────────────
 drop policy if exists "you see the roster of a circle you're in" on public.circle_members;
 drop policy if exists "you can join a circle yourself" on public.circle_members;
@@ -144,11 +160,6 @@ drop policy if exists "circles are readable when signed in" on public.circles;
 drop policy if exists "circles are visible to everyone" on public.circles;
 drop policy if exists "you create your own circle" on public.circles;
 drop policy if exists "the owner edits their own circle" on public.circles;
-
-drop policy if exists "you see your own circle invitations" on public.circle_invites;
-drop policy if exists "anyone can invite anyone to a circle" on public.circle_invites;
-drop policy if exists "you answer your own circle invitation" on public.circle_invites;
-drop policy if exists "you can leave a circle you joined" on public.circle_invites;
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 4. Functions — admin/usage functions first (they reference the tables
@@ -190,7 +201,11 @@ alter table public.posts drop column if exists hidden_from_moments;
 --    themselves — circle_invites and circle_members before circles, since
 --    circle_members.circle_id is a foreign key into circles (dropping
 --    circle_members first removes that FK along with it, so the circles
---    table drop below never needs CASCADE either).
+--    table drop below never needs CASCADE either). The circle_invites
+--    index drops stay (unlike its trigger/policy drops above) — DROP INDEX
+--    IF EXISTS doesn't need the table to exist, only the index itself, so
+--    these are harmless no-ops on a database where circle_invites was
+--    never created.
 -- ─────────────────────────────────────────────────────────────────────────
 drop index if exists public.circle_invites_user_idx;
 drop index if exists public.circle_invites_circle_idx;
