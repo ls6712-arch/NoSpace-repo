@@ -200,6 +200,64 @@ begin
   select count(*) into v_n from public.posts where posts.id = 900010007;
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL author can''t see their own unlinked post' end));
 
+  -- ───────────────────────────────────────────────────────────────────────
+  -- 15-18. Recursion regression: the posts policy's space branch reads
+  --        space_moments, whose own SELECT policy's pending branch reads
+  --        posts back — if that new branch were ever inlined into the
+  --        posts policy directly instead of going through
+  --        private.post_shared_via_space() (a SECURITY DEFINER function,
+  --        which bypasses RLS on space_moments/spaces entirely rather than
+  --        triggering their policies), every ordinary posts read would
+  --        fail outright with "infinite recursion detected in policy for
+  --        relation posts" — not just Space-linked ones. These four just
+  --        confirm a plain posts query and a space_moments-joined-to-posts
+  --        query both complete with no error, as an active member and as a
+  --        logged-out visitor.
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000c0002"}', true);
+  v_i := v_i + 1;
+  begin
+    perform count(*) from public.posts;
+    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when others then
+      get stacked diagnostics v_sqlstate = returned_sqlstate, v_message = message_text;
+      results := array_append(results, format('%s FAIL %s: %s', v_i, v_sqlstate, v_message));
+  end;
+
+  v_i := v_i + 1;
+  begin
+    perform count(*) from public.space_moments sm join public.posts p on p.id = sm.post_id;
+    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when others then
+      get stacked diagnostics v_sqlstate = returned_sqlstate, v_message = message_text;
+      results := array_append(results, format('%s FAIL %s: %s', v_i, v_sqlstate, v_message));
+  end;
+
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{}', true);
+  v_i := v_i + 1;
+  begin
+    perform count(*) from public.posts;
+    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when others then
+      get stacked diagnostics v_sqlstate = returned_sqlstate, v_message = message_text;
+      results := array_append(results, format('%s FAIL %s: %s', v_i, v_sqlstate, v_message));
+  end;
+
+  v_i := v_i + 1;
+  begin
+    perform count(*) from public.space_moments sm join public.posts p on p.id = sm.post_id;
+    results := array_append(results, format('%s PASS', v_i));
+  exception
+    when others then
+      get stacked diagnostics v_sqlstate = returned_sqlstate, v_message = message_text;
+      results := array_append(results, format('%s FAIL %s: %s', v_i, v_sqlstate, v_message));
+  end;
+
   perform set_config('role', v_owner_role, true);
 
   -- ───────────────────────────────────────────────────────────────────────

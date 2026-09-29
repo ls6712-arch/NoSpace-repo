@@ -14,34 +14,80 @@
 --   moment_approval.sql (set_space_moment_status, the current live body
 --   this migration re-creates with one addition).
 --
--- Three things:
---   1. "posts are readable by their audience" — the live author/public/
+-- Four things:
+--   1. private.post_shared_via_space(post_id, viewer) — a SECURITY DEFINER,
+--      STABLE function carrying the "is this post linked into a Space the
+--      viewer can see it through" check. This has to live outside the
+--      posts policy itself: a branch written inline as
+--      `exists (select 1 from space_moments sm join spaces s on ... )`
+--      makes evaluating the posts SELECT policy require evaluating
+--      space_moments' own SELECT policy ("space moments follow the space's
+--      access", 20260925010000) for the pending branch, and THAT policy's
+--      pending branch reads posts — Postgres detects that cycle at
+--      execution time and every posts read fails outright with "infinite
+--      recursion detected in policy for relation posts", not just Space-
+--      linked ones. SECURITY DEFINER (owned by the same role that owns
+--      space_moments/spaces, same as every other RLS-helper function here —
+--      is_space_member, is_space_host, private.is_circle_member before it)
+--      queries those two tables with RLS bypassed entirely, the same way
+--      is_space_member already does for space_members, so no policy on
+--      either table is ever evaluated and the cycle never starts.
+--   2. "posts are readable by their audience" — the live author/public/
 --      followers branches carried over verbatim, plus one new branch: not
---      just_me, the author's profile visible, and an approved,
---      not-removed space_moments link to an active Space the viewer can
---      see that Space's Moments in (Open: anyone, including logged-out;
---      Closed: active members) — or, while the link is still pending, the
---      Space's hosts, so the approval queue can show the Moment's actual
---      content instead of a blank row. Every column in the new branch is
---      qualified; the carried-over branches are untouched, unqualified
---      exactly as they are live.
---   2. set_space_moment_status() (the before-insert trigger already on
+--      just_me, the author's profile visible, and
+--      private.post_shared_via_space(posts.id, viewer) true. Every column
+--      in rule 1's function body is qualified; the carried-over branches
+--      are untouched, unqualified exactly as they are live.
+--   3. set_space_moment_status() (the before-insert trigger already on
 --      space_moments) rejects linking a just_me Moment, with a message a
 --      user would actually read — "Private Moments can't be shared to a
 --      Space." — instead of a generic RLS/constraint error. This is the
---      only new write-side rule; rule 1's `visibility <> 'just_me'`
+--      only new write-side rule; rule 2's `visibility <> 'just_me'`
 --      condition is what makes switching an already-linked Moment to
 --      just_me hide it automatically (the link row itself is never
 --      touched — nothing to clean up).
---   3. space_moments(post_id) — no index covered a lookup by post_id
+--   4. space_moments(post_id) — no index covered a lookup by post_id
 --      alone (the primary key is (space_id, post_id), post_id second);
---      rule 1's new branch does exactly that lookup on every posts read.
+--      rule 1's function does exactly that lookup on every posts read.
 --
 -- Safe to re-run: CREATE INDEX IF NOT EXISTS, CREATE OR REPLACE FUNCTION,
 -- DROP POLICY IF EXISTS + CREATE throughout.
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 1. "posts are readable by their audience".
+-- 1. private.post_shared_via_space() — see the header note above for why
+--    this can't be inlined into the posts policy.
+-- ─────────────────────────────────────────────────────────────────────────
+create or replace function private.post_shared_via_space(p_post_id bigint, p_viewer uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.space_moments sm
+    join public.spaces s on s.id = sm.space_id
+    where sm.post_id = p_post_id
+      and sm.removed_by_host = false
+      and s.status = 'active'
+      and (
+        (
+          sm.status = 'approved'
+          and (s.access = 'open' or public.is_space_member(s.id, p_viewer))
+        )
+        or (
+          sm.status = 'pending'
+          and public.is_space_host(s.id, p_viewer)
+        )
+      )
+  );
+$$;
+revoke all on function private.post_shared_via_space(bigint, uuid) from public;
+grant execute on function private.post_shared_via_space(bigint, uuid) to anon, authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 2. "posts are readable by their audience".
 -- ─────────────────────────────────────────────────────────────────────────
 drop policy if exists "posts are readable by their audience" on public.posts;
 create policy "posts are readable by their audience"
@@ -63,29 +109,12 @@ create policy "posts are readable by their audience"
     or (
       posts.visibility <> 'just_me'
       and is_visible_profile(posts.user_id)
-      and exists (
-        select 1
-        from public.space_moments sm
-        join public.spaces s on s.id = sm.space_id
-        where sm.post_id = posts.id
-          and sm.removed_by_host = false
-          and s.status = 'active'
-          and (
-            (
-              sm.status = 'approved'
-              and (s.access = 'open' or public.is_space_member(s.id, (select auth.uid())))
-            )
-            or (
-              sm.status = 'pending'
-              and public.is_space_host(s.id, (select auth.uid()))
-            )
-          )
-      )
+      and private.post_shared_via_space(posts.id, (select auth.uid()))
     )
   );
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 2. set_space_moment_status() — same body as the current live version
+-- 3. set_space_moment_status() — same body as the current live version
 --    (20261005000000), plus the just_me rejection up front.
 -- ─────────────────────────────────────────────────────────────────────────
 create or replace function public.set_space_moment_status()
@@ -116,6 +145,6 @@ end;
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 3. space_moments(post_id) — supports rule 1's new branch.
+-- 4. space_moments(post_id) — supports rule 1's function.
 -- ─────────────────────────────────────────────────────────────────────────
 create index if not exists space_moments_post_idx on public.space_moments (post_id);

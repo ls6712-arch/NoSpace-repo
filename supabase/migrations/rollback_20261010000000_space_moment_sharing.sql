@@ -4,7 +4,9 @@
 -- body (author/public/followers only — the same one this migration itself
 -- carried over verbatim, minus the new space branch) and
 -- set_space_moment_status() to its pre-this-migration body (20261005000000,
--- no just_me check), then drops the index this migration added.
+-- no just_me check), drops private.post_shared_via_space() (only reachable
+-- from the policy this rollback just replaced, so it's safe to drop after),
+-- then drops the index this migration added.
 --
 -- Not destructive of Circle-era wording, Circle branches, etc. — this pair
 -- of migrations never touched Circles.
@@ -27,6 +29,8 @@ create policy "posts are readable by their audience"
       )
     )
   );
+
+drop function if exists private.post_shared_via_space(bigint, uuid);
 
 create or replace function public.set_space_moment_status()
 returns trigger
