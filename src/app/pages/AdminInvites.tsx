@@ -14,19 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
  * every invite ever created, plus the waitlist. Invisible unless the
  * profiles row says is_admin (same guard as every other admin page).
  *
- * NOTE ON THE `invites`/`waitlist` READS BELOW: this page's create/revoke
- * actions go through create_invite/revoke_invite (lib/invites.ts), whose
- * exact RPC contract is fully specified — those two need no schema
- * knowledge beyond that. The two list reads below (`from("invites")`,
- * `from("waitlist")`) do need real column names, which the paired
- * migration wasn't available to confirm against directly (it hasn't been
- * applied live yet — dry-run only). The columns used here are the
- * best-supported inference from the RPC contract itself (create_invite
- * returns invite_code/invite_expires_at; the brief's own "status (open /
- * claimed by {name} / revoked / expired when expires_at < now())" implies
- * status is computed client-side from raw columns, not stored) — confirm
- * against the live `invites`/`waitlist` schema before merging, and adjust
- * the two `row.<field>` mappings below if any name differs.
+ * The `invites`/`waitlist` column names read below (`from("invites")`,
+ * `from("waitlist")`) are confirmed against the live schema (migration
+ * 20260929202136_step2_invite_only.sql). `invites` also has its own
+ * `status` column ('open'/'claimed'/'revoked'), but `revoked_at` and
+ * `claimed_by` are what's read here since `inviteStatus()` below already
+ * derives "Claimed by {name}" / "Expired" client-side from them.
  */
 
 interface InviteRow {
