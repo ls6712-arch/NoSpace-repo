@@ -38,7 +38,10 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   pathname.startsWith("/u/") ||
   // A Pursuit invite link: shows who invited you and to what before asking
   // you to sign up — the whole point is reaching people not on Sushii yet.
-  pathname.startsWith("/join/");
+  pathname.startsWith("/join/") ||
+  // Step 2's own arrival link — same reasoning as /join/ above: this is
+  // exactly how someone not on Sushii yet is meant to get here.
+  pathname.startsWith("/i/");
 
 export function Root() {
   const { user, profile, loading, isConfigured } = useAuth();
@@ -68,6 +71,16 @@ export function Root() {
     !HANDLES_SIGNED_OUT_ITSELF(location.pathname)
   ) {
     return <Navigate to="/" replace />;
+  }
+
+  // Step 2 (invite-only sign-up): a pending account — no claimed invite
+  // yet — sees the door screen and nothing else, checked before the
+  // onboarding gate below since a pending account's onboarding_completed
+  // is false too, and onboarding writes to several tables that migration
+  // blocks pending accounts from touching. Same transient-null caveat as
+  // the onboarding gate: `profile` can be briefly null right after sign-in.
+  if (user && profile && profile.access === "pending" && location.pathname !== "/welcome") {
+    return <Navigate to="/welcome" replace />;
   }
 
   // Post-signup onboarding (sql/onboarding-v2.sql), enforced here so it
