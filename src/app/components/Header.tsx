@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
+import { Flag, MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useTheme, type ThemePreference } from "../context/ThemeContext";
+import { useCategories } from "../context/CategoriesContext";
+import { supabase } from "../../lib/supabase";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -11,6 +13,7 @@ import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/searc
 import { NotificationsMenu } from "./NotificationsMenu";
 import { useSocial } from "../context/SocialContext";
 import { formatBadgeCount } from "../lib/messageSync";
+import { isDismissKey } from "../lib/menuDismiss";
 
 function initials(name: string) {
   return name
@@ -59,7 +62,11 @@ const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
 function AccountMenuPopover() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const { preference, setPreference } = useTheme();
+  const { isAdmin } = useCategories();
+  const location = useLocation();
+  const [openReportCount, setOpenReportCount] = useState<number | null>(null);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -69,9 +76,46 @@ function AccountMenuPopover() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
+  // Navigating away while this is open (any other header link, browser
+  // back/forward) used to leave it hanging open over the new page.
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
+  // Escape closes it and returns focus to the trigger — it previously had
+  // no keyboard way to close at all.
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (!isDismissKey(e.key)) return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  // Cheap (a HEAD request, no rows) and only for an admin who's actually
+  // opened the menu — every other visitor never runs this at all.
+  useEffect(() => {
+    if (!open || !isAdmin || !supabase) return;
+    let cancelled = false;
+    supabase
+      .from("reports")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "open")
+      .then(({ count }) => {
+        if (!cancelled) setOpenReportCount(count ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, isAdmin]);
+
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={triggerRef}
         type="button"
         aria-label="Account menu"
         aria-expanded={open}
@@ -90,6 +134,24 @@ function AccountMenuPopover() {
             <SettingsIcon className="size-4 text-muted-foreground" aria-hidden="true" />
             Settings
           </Link>
+          {isAdmin && (
+            <Link
+              to="/admin/reports"
+              onClick={() => setOpen(false)}
+              className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-sm transition-colors hover:bg-surface-muted"
+            >
+              <Flag className="size-4 text-muted-foreground" aria-hidden="true" />
+              Reports
+              {!!openReportCount && (
+                <span
+                  className="ml-auto flex size-5 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+                  aria-label={`${openReportCount} open`}
+                >
+                  {formatBadgeCount(openReportCount)}
+                </span>
+              )}
+            </Link>
+          )}
           <div className="border-t border-[var(--hairline)] px-4 py-3">
             <div className="mb-2 text-xs text-muted-foreground">Theme</div>
             <div className="flex gap-1 rounded-btn border border-border p-0.5">

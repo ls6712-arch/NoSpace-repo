@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import {
   Bell,
   Check,
@@ -21,6 +21,7 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 import { respondToFollow } from "../lib/profileFollows";
 import { formatBadgeCount } from "../lib/messageSync";
 import { groupNotifications, unreadGroupCount } from "../lib/notificationGrouping";
+import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
 
 /**
@@ -67,6 +68,7 @@ export function NotificationsMenu() {
   const ref = useRef<HTMLDivElement>(null);
   const social = useSocial();
   const { user } = useAuth();
+  const location = useLocation();
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
   const incomingFollows = useIncomingFollowRequests(user?.id, followRefreshKey) ?? [];
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
@@ -81,6 +83,26 @@ export function NotificationsMenu() {
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
+
+  // Navigating away while this is open (a header link, browser back/
+  // forward) used to leave it hanging open over the new page — a group's
+  // own click already closes it via openGroup, but nothing else did.
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
+  // Escape closes it and returns focus to the bell, same as any other
+  // dismissable menu — it previously had no keyboard way to close at all.
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (!isDismissKey(e.key)) return;
+      setOpen(false);
+      ref.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   // Requests waiting on you specifically — never ones you sent. The signed-out
   // case used to fall through to "show everything", so your own outgoing ask

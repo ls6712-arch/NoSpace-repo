@@ -37,6 +37,7 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { PursuitDialog } from "./PursuitDialog";
 import { ReportDialog } from "./ReportDialog";
 import { attachEntry, startProject, useJournal } from "../lib/journal";
+import { isOnlyYou } from "../lib/visibility";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -132,7 +133,11 @@ export function MomentDetail({
 
   const space = getHobby(post.hobbySlug);
   const hobbyLabel = post.subHobby ? subHobbyLabel(post.subHobby) ?? post.subHobby : null;
-  const audience = AUDIENCE[post.visibility] ?? AUDIENCE.followers;
+  // "Only you" Moments (private-log stand-ins, never a real posts row — see
+  // lib/visibility.ts's own comment) carry visibility "private" or
+  // "just_me", neither of which AUDIENCE maps — falling through to its
+  // ?? default used to mislabel them "Followers".
+  const audience = isOnlyYou(post) ? { label: "Only you", icon: Lock } : AUDIENCE[post.visibility] ?? AUDIENCE.followers;
   const attachedId = journal.entryProject[String(post.id)];
   const attached = journal.projects.find((p) => p.id === attachedId);
   const openProjects = journal.projects.filter((p) => !p.finishedAt);
@@ -317,15 +322,25 @@ export function MomentDetail({
                 someone else's). The card that shows up on the other end
                 reloads it under THEIR permissions, not this viewer's — see
                 docs/communication-strategy.md's Phase 4 "Not available"
-                requirement and SharedContentCard.tsx. */}
-            <button
-              type="button"
-              onClick={() => setSendToOpen(true)}
-              className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
-            >
-              <Send className="size-3" />
-              Send to…
-            </button>
+                requirement and SharedContentCard.tsx. Not offered at all
+                for an "Only you" Moment (a real just_me post — a private-
+                log stand-in never reaches this row to begin with, see the
+                !post.isPrivateLog guard above): it's meant for nobody but
+                its owner, so there's nothing SharedContentCard could ever
+                load on the other end. The explanation lives in the
+                metadata block above, next to "Who sees this", since that's
+                the one place that reaches both kinds of "Only you"
+                Moment. */}
+            {!isOnlyYou(post) && (
+              <button
+                type="button"
+                onClick={() => setSendToOpen(true)}
+                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              >
+                <Send className="size-3" />
+                Send to…
+              </button>
+            )}
 
             {/* "Message about this" — opens the chat with an attached
                 Moment card if one's already reachable; otherwise (a fresh
@@ -538,6 +553,17 @@ export function MomentDetail({
             </div>
           )}
         </dl>
+
+        {/* The natural place for this: right under the visibility it
+            explains, not buried in the action row below — a private-log
+            "Only you" entry (post.isPrivateLog) never even reaches that
+            row (see its own !post.isPrivateLog guard; none of those
+            actions are meaningful on a stand-in that was never a real
+            row), so this is the one place in the dialog that reaches
+            every "Only you" Moment, not just a real just_me post. */}
+        {isOnlyYou(post) && (
+          <p className="-mt-1 text-[11px] text-muted-foreground">Only you Moments can't be shared.</p>
+        )}
 
         {/* Owner-only: the note they wrote for themselves */}
         {owned && !editing && post.reflection && (

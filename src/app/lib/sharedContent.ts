@@ -1,6 +1,10 @@
 import { supabase } from "../../lib/supabase";
 import { BASE_POST_COLUMNS, isMissingCountColumn, POST_COLUMNS, rowToPost } from "../context/ContentContext";
 import { Post } from "../data/posts";
+import { buildSharedPursuitPreview, SharedPursuitPreview } from "./sharedPursuitPreview";
+
+export type { SharedPursuitPreview };
+export { buildSharedPursuitPreview };
 
 /**
  * Loads a shared Moment/Pursuit card's content under the VIEWER's own
@@ -41,13 +45,6 @@ export async function fetchSharedMoment(postId: number | string): Promise<Post |
   return rowToPost(row, profile?.display_name?.trim() || "Someone");
 }
 
-export interface SharedPursuitPreview {
-  id: string;
-  title: string;
-  ownerId: string;
-  ownerName: string;
-}
-
 export async function fetchSharedPursuit(pursuitId: string): Promise<SharedPursuitPreview | null> {
   if (!supabase) return null;
   const { data: row, error } = await supabase
@@ -61,10 +58,28 @@ export async function fetchSharedPursuit(pursuitId: string): Promise<SharedPursu
     .select("display_name")
     .eq("id", row.user_id)
     .maybeSingle();
-  return {
-    id: row.id,
-    title: row.title,
-    ownerId: row.user_id,
-    ownerName: profile?.display_name?.trim() || "Someone",
-  };
+  // The Pursuit's most recent photo Moment, under the VIEWER's own RLS —
+  // same "just comes back empty" privacy shape as fetchSharedMoment above,
+  // never a separate visibility check. A written-only entry (no media)
+  // just means no cover, same as any other Moment with nothing to show.
+  let { data: coverRow, error: coverError } = await supabase
+    .from("posts")
+    .select(POST_COLUMNS)
+    .eq("pursuit_id", pursuitId)
+    .neq("type", "written")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<any>();
+  if (isMissingCountColumn(coverError) && POST_COLUMNS !== BASE_POST_COLUMNS) {
+    ({ data: coverRow } = await supabase
+      .from("posts")
+      .select(BASE_POST_COLUMNS)
+      .eq("pursuit_id", pursuitId)
+      .neq("type", "written")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<any>());
+  }
+  const cover: string | null = coverRow?.media_url ?? null;
+  return buildSharedPursuitPreview(row, profile?.display_name, cover);
 }
