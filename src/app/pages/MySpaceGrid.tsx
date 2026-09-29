@@ -197,7 +197,7 @@ export function MySpaceGrid() {
                   at all — the sheet no longer gates on "since your last
                   visit" (see the unseen memo above), so that copy would be
                   inaccurate here. */}
-              Nothing here yet. Follow a Space or a person to start your sheet.
+              Nothing here yet. Join a Space or follow a person to start your sheet.
             </div>
           ) : (
             <div className={MOMENT_GRID}>
