@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import { isMissingCountColumn } from "../context/ContentContext";
+import { signMomentPaths } from "../lib/momentMedia";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 
@@ -29,7 +31,7 @@ export function AddMomentToSpaceDialog({
   onAdded?: () => void;
 }) {
   const { user } = useAuth();
-  const [posts, setPosts] = useState<{ id: number; caption: string; media_url: string | null }[] | "loading">("loading");
+  const [posts, setPosts] = useState<{ id: number; caption: string; media: string | null }[] | "loading">("loading");
   const [linking, setLinking] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -41,17 +43,48 @@ export function AddMomentToSpaceDialog({
     setError(null);
     setDone(false);
     setDonePending(false);
-    supabase
-      .from("posts")
-      .select("id, caption, media_url")
-      .eq("user_id", user.id)
-      // Only you Moments can't be shared to a Space (rejected server-side
-      // either way — set_space_moment_status() — this just keeps them off
-      // the picker so nobody tries).
-      .neq("visibility", "just_me")
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data }) => setPosts(data ?? []));
+    let cancelled = false;
+    (async () => {
+      const baseQuery = () =>
+        supabase!
+          .from("posts")
+          .select("id, caption, media_paths, media_url")
+          .eq("user_id", user.id)
+          // Only you Moments can't be shared to a Space (rejected server-side
+          // either way — set_space_moment_status() — this just keeps them off
+          // the picker so nobody tries).
+          .neq("visibility", "just_me")
+          .order("created_at", { ascending: false })
+          .limit(30);
+      let data: any[] | null;
+      let selectError: { message?: string; code?: string } | null;
+      ({ data, error: selectError } = await baseQuery());
+      // media_paths isn't in this database yet — same fallback every other
+      // posts select in the app makes; legacy rows fall back to media_url.
+      if (isMissingCountColumn(selectError)) {
+        ({ data, error: selectError } = await supabase!
+          .from("posts")
+          .select("id, caption, media_url")
+          .eq("user_id", user.id)
+          .neq("visibility", "just_me")
+          .order("created_at", { ascending: false })
+          .limit(30));
+      }
+      const rows = (data ?? []) as { id: number; caption: string; media_paths?: string[] | null; media_url: string | null }[];
+      const firstPaths = rows.map((r) => r.media_paths?.[0]).filter((p): p is string => !!p);
+      const signed = firstPaths.length ? await signMomentPaths(firstPaths) : new Map<string, string>();
+      if (cancelled) return;
+      setPosts(
+        rows.map((r) => {
+          const path = r.media_paths?.[0];
+          const media = (path ? signed.get(path) : undefined) ?? r.media_url ?? null;
+          return { id: r.id, caption: r.caption, media };
+        })
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [open, user]);
 
   const link = async (postId: number) => {
@@ -108,8 +141,8 @@ export function AddMomentToSpaceDialog({
                 onClick={() => link(p.id)}
                 className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-surface-muted disabled:opacity-50"
               >
-                {p.media_url && (
-                  <img src={p.media_url} alt="" className="size-10 shrink-0 rounded-md object-cover" />
+                {p.media && (
+                  <img src={p.media} alt="" className="size-10 shrink-0 rounded-md object-cover" />
                 )}
                 <span className="line-clamp-2 flex-1">{p.caption || `Moment #${p.id}`}</span>
                 {linking === p.id && <span className="text-xs text-muted-foreground">Adding…</span>}
