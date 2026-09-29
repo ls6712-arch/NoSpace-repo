@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from "react";
@@ -13,6 +14,7 @@ import { useAuth } from "./AuthContext";
 import { SOCIAL_STORAGE_KEY } from "./SocialContext";
 import { supabase } from "../../lib/supabase";
 import { deleteMomentFiles, resolvePostMedia, signMomentPaths, uploadMomentFile } from "../lib/momentMedia";
+import { InFlightGuard, InFlightSkipped } from "../lib/inFlightGuard";
 
 const LISTINGS_KEY = "sushii.listings.v1";
 
@@ -203,7 +205,14 @@ interface ContentContextType {
   listingsByHobby: (slug: string) => Product[];
   myListings: Product[];
   findListing: (id: number) => Product | undefined;
-  addPost: (input: NewPostInput) => Promise<Post>;
+  /**
+   * Resolves to the new Post normally. Resolves to InFlightSkipped
+   * (isInFlightSkipped) instead when a previous addPost call is still in
+   * flight — this is the double-submit backstop, not a failure: the first
+   * call is still on track to succeed, so a caller should silently return
+   * rather than show any error for this case.
+   */
+  addPost: (input: NewPostInput) => Promise<Post | InFlightSkipped>;
   /**
    * Set when a photo or video failed to reach storage. The entry still saves —
    * losing someone's words because their picture didn't upload would be worse —
@@ -289,6 +298,17 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // local-only mode (no account, or an account whose write just failed),
   // so "your" posts can still be told apart from the seeded sample content.
   const myId = user?.id ?? "local-user";
+
+  // A composer's own "Saving…"-disabled button is the normal guard against
+  // a double submit, but it isn't the only one — a screen with a bug in
+  // that guard (or a second composer calling in at the same moment) would
+  // otherwise reach Supabase twice for what the person only meant as one
+  // Moment, each with its own photo upload. This is the backstop that holds
+  // regardless of which UI called in: addPost refuses a second concurrent
+  // call outright (see lib/inFlightGuard.ts) rather than silently creating
+  // a second post — and does so silently, since the first call is still on
+  // track to succeed.
+  const addPostGuardRef = useRef(new InFlightGuard());
 
   // Real posts, fetched from Supabase — this is the layer that actually
   // persists across devices and sessions once accounts are wired up.
@@ -581,7 +601,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const listingsByHobby = (slug: string) => listings.filter((p) => p.hobbySlug === slug);
   const findListing = (id: number) => listings.find((p) => p.id === id);
 
-  const addPost = async (input: NewPostInput): Promise<Post> => {
+  const addPost = (input: NewPostInput): Promise<Post | InFlightSkipped> =>
+    addPostGuardRef.current.run(() => addPostImpl(input));
+
+  const addPostImpl = async (input: NewPostInput): Promise<Post> => {
     setSaveError(null);
     let productId: number | undefined;
     // What this session counts toward for the craft badges: the specific

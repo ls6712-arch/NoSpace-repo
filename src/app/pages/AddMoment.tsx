@@ -12,6 +12,7 @@ import { addProgress, markActivity, pursuitStatus, useJournalSlice } from "../li
 import { attachPostToPursuit, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
+import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { formatAmount, hasMeasure, stepFor, summarize, targetText, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
 import { collectPursuitMoments } from "../lib/pursuitTrail";
@@ -121,6 +122,7 @@ export function AddMoment() {
           projectId: project.id,
           media,
         });
+        if (result.skipped) return;
         if (!result.data) {
           setError(result.error || "That didn't save. Try again?");
           return;
@@ -140,6 +142,7 @@ export function AddMoment() {
           visibility: audience,
           pursuitId: project.id,
         });
+        if (isInFlightSkipped(entry)) return;
         postId = entry.id;
         image = entry.type === "photo" ? entry.media : undefined;
         await attachPostToPursuit(entry.id, project.id);
