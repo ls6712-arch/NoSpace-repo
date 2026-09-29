@@ -85,7 +85,7 @@ const VALUE_CARDS = [
 const LOOP_STEPS = [
   { n: "01", label: "Create", desc: "Log a Moment right when it happens. A photo, a note, a small update." },
   { n: "02", label: "Reflect", desc: "Add a private note only you can see. Never shown, never scored." },
-  { n: "03", label: "Share", desc: "Just you, your Clan, or everyone. Chosen right when you write it." },
+  { n: "03", label: "Share", desc: "Just you, your followers, a Space, or everyone. Chosen right when you write it." },
 ];
 
 export function Home() {

@@ -5,6 +5,7 @@
 // based routing ("#/space/crafting") works identically under file://, a
 // plain static host, or the published Artifact page.
 import { createHashRouter, redirect } from "react-router";
+import { marketplaceEnabled } from "./config";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
@@ -112,8 +113,11 @@ export const router = createHashRouter([
       { path: "u/:username/studio", Component: Studio },
       { path: "studio", Component: Studio },
       { path: "login", Component: Login },
-      { path: "shop", Component: Shop },
-      { path: "product/:id", Component: ProductDetail },
+      // Buying/selling isn't live — see src/app/config.ts's
+      // marketplaceEnabled. Off, both routes redirect to /discover instead
+      // of rendering a page for a marketplace that isn't there.
+      { path: "shop", loader: () => (marketplaceEnabled ? null : redirect("/discover")), Component: Shop },
+      { path: "product/:id", loader: () => (marketplaceEnabled ? null : redirect("/discover")), Component: ProductDetail },
 
       // Old paths people may have bookmarked or shared. Kept as redirects so
       // no link that used to work quietly turns into a 404.

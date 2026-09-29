@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router";
 import { hobbies } from "../data/hobbies";
 import { useContent } from "../context/ContentContext";
 import { ProductCard } from "../components/ProductCard";
-import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { Button } from "../components/ui/button";
 
 export function Shop() {
@@ -27,8 +26,6 @@ export function Shop() {
             Physical goods, digital guides, and courses, all made by real creators.
           </p>
         </div>
-
-        <ComingSoonBanner className="mx-auto max-w-xl" />
 
         <div className="mb-10 flex justify-center">
           <div className="flex flex-wrap gap-2 justify-center rounded-2xl border border-border bg-white/[0.03] p-2">

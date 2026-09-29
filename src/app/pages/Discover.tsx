@@ -9,6 +9,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { marketplaceEnabled } from "../config";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { spacePhoto } from "../data/hobbyPhotos";
 import { Post, postCorner } from "../data/posts";
@@ -22,7 +23,6 @@ import { deriveProjects } from "../lib/journal";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
-import { ComingSoonBanner } from "../components/ComingSoonBanner";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { SpacesBrowser } from "../components/SpacesBrowser";
 import { Button } from "../components/ui/button";
@@ -66,7 +66,7 @@ const DISCOVER_TABS = [
   { id: "corners", label: "Corners", icon: Compass, hidden: false },
   { id: "spaces", label: "Spaces", icon: LayoutGrid, hidden: false },
   { id: "people", label: "People", icon: UserRound, hidden: false },
-  { id: "marketplace", label: "Marketplace", icon: ShoppingBag, hidden: false },
+  { id: "marketplace", label: "Marketplace", icon: ShoppingBag, hidden: !marketplaceEnabled },
 ] as const;
 type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
 const VISIBLE_DISCOVER_TABS = DISCOVER_TABS.filter((t) => !t.hidden);
@@ -190,18 +190,14 @@ function MarketplaceTab({ query }: { query: string }) {
 
   if (matching.length === 0) {
     return (
-      <>
-        <ComingSoonBanner />
-        <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
-          {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
-        </p>
-      </>
+      <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+        {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
+      </p>
     );
   }
 
   return (
     <>
-      <ComingSoonBanner />
       {[...bySpace.entries()].map(([hobbySlug, list]) => {
         const hobby = hobbies.find((h) => h.slug === hobbySlug);
         return (

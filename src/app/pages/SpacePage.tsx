@@ -266,12 +266,17 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           {hosts.length > 0 && (
             <span className="flex items-center gap-1.5">
               <span className="flex items-center">
-                {hosts.map((h, i) => (
+                {hosts.slice(0, 4).map((h, i) => (
                   <Avatar key={h.id} className={`size-6 border-2 border-background ${i > 0 ? "-ml-2" : ""}`}>
                     {h.avatarUrl && <AvatarImage src={h.avatarUrl} alt="" />}
                     <AvatarFallback className="text-[9px]">{initials(h.name)}</AvatarFallback>
                   </Avatar>
                 ))}
+                {hosts.length > 4 && (
+                  <span className="-ml-2 flex size-6 items-center justify-center rounded-full border-2 border-background bg-surface-muted text-[9px] text-muted-foreground">
+                    +{hosts.length - 4}
+                  </span>
+                )}
               </span>
               Hosted by {hosts.map((h) => h.name).join(", ")}
             </span>
