@@ -17,6 +17,7 @@ import {
   deletePrivateLog,
   updatePrivateLog,
 } from "../lib/privateLogsRemote";
+import { signMomentPaths } from "../lib/momentMedia";
 
 /**
  * Private Logs. A signed-in owner's are Supabase-backed only (see
@@ -76,7 +77,7 @@ interface PrivateLogsContextType {
   isShared: boolean;
   add: (input: {
     note: string;
-    media?: { url: string; type: "image" | "video"; hobbySlug?: string };
+    media?: { path: string; type: "image" | "video"; hobbySlug?: string };
     projectId?: string;
   }) => Promise<RemoteResult<PrivateLog>>;
   remove: (id: number) => Promise<RemoteResult<true>>;
@@ -128,8 +129,15 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
       return;
     }
     let cancelled = false;
-    fetchPrivateLogs(user.id).then(({ data }) => {
-      if (!cancelled && data) setRemoteLogs(data);
+    fetchPrivateLogs(user.id).then(async ({ data }) => {
+      if (cancelled || !data) return;
+      // Step 1: each row's photo is a moment-media path now, not a ready URL
+      // — sign the whole page in one batch, same shape as ContentContext.tsx's
+      // own per-page Moment resolution.
+      const paths = data.flatMap((l) => (l.mediaPath ? [l.mediaPath] : []));
+      const signed = await signMomentPaths(paths);
+      if (cancelled) return;
+      setRemoteLogs(data.map((l) => (l.mediaPath ? { ...l, media: signed.get(l.mediaPath) } : l)));
     });
     return () => {
       cancelled = true;
@@ -142,14 +150,26 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
 
     if (currentUser) {
       const result = await createPrivateLog(currentUser.id, input);
-      if (result.data) setRemoteLogs((prev) => [result.data!, ...prev]);
+      if (result.data) {
+        let entry = result.data;
+        // Show the photo right away rather than waiting for the next
+        // fetch — same reason ContentContext.tsx resolves a just-inserted
+        // Moment's own signed URL immediately instead of leaving it blank
+        // until a refetch.
+        if (entry.mediaPath) {
+          const signed = await signMomentPaths([entry.mediaPath]);
+          entry = { ...entry, media: signed.get(entry.mediaPath) };
+        }
+        setRemoteLogs((prev) => [entry, ...prev]);
+        return { data: entry, error: null };
+      }
       return result;
     }
 
     const entry: PrivateLog = {
       id: localId(),
       note: input.note,
-      media: input.media?.url,
+      media: input.media?.path,
       mediaType: input.media?.type,
       hobbySlug: input.media?.hobbySlug,
       projectId: input.projectId,
@@ -187,7 +207,13 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
 
     if (currentUser) {
       const result = await updatePrivateLog(id, input);
-      if (result.data) setRemoteLogs((prev) => prev.map((l) => (l.id === id ? result.data! : l)));
+      // updatePrivateLog only ever changes the note, so the previous
+      // entry's already-resolved `media` still applies — fromRow() can't
+      // set it (it only knows the raw mediaPath), so a plain replace here
+      // would otherwise blank out a photo on every note edit.
+      if (result.data) {
+        setRemoteLogs((prev) => prev.map((l) => (l.id === id ? { ...result.data!, media: l.media } : l)));
+      }
       return result;
     }
 

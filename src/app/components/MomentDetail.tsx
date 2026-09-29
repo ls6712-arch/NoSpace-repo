@@ -22,6 +22,8 @@ import { useSocial } from "../context/SocialContext";
 import { messageTabFor } from "../lib/messageTabs";
 import { supabase } from "../../lib/supabase";
 import { useReactionState } from "../lib/reactionState";
+import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
+import { uploadMomentFile } from "../lib/momentMedia";
 import { SendToChatDialog } from "./SendToChatDialog";
 import {
   BookmarkOverlay,
@@ -150,29 +152,24 @@ export function MomentDetail({
     setSaveError(null);
     try {
       // Only set when a replacement photo was actually picked this time —
-      // updatePost only overwrites the photo when mediaUrl is present, so
+      // updatePost only overwrites the photo when mediaPath is present, so
       // an edit that doesn't touch the photo never risks blanking it out.
-      let uploadedMediaUrl: string | undefined;
-      if (newMediaFile && supabase && user) {
+      // Never attempted at all for a private-log stand-in (post.isPrivateLog):
+      // it isn't a real posts row, updatePost wouldn't touch it, and there's
+      // no reason to spend an upload on a result that gets thrown away.
+      let uploadedMediaPath: string | undefined;
+      if (newMediaFile && supabase && user && !post.isPrivateLog) {
         setUploadingMedia(true);
-        // Same upload shape as ContentContext.tsx's addPost — bucket,
-        // per-user path, extension sniffed from the filename.
-        const dot = newMediaFile.name.lastIndexOf(".");
-        const ext = (dot > -1 ? newMediaFile.name.slice(dot + 1) : "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "")
-          .slice(0, 5);
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? `.${ext}` : ""}`;
-        const { error: uploadError } = await supabase.storage
-          .from("post-media")
-          .upload(path, newMediaFile, { contentType: newMediaFile.type || undefined, upsert: false });
+        // Step 1: a real Moment's photo goes to the private moment-media
+        // bucket, keyed by storage path — see momentMedia.ts.
+        const { path, error: uploadError } = await uploadMomentFile(user.id, newMediaFile);
         setUploadingMedia(false);
-        if (uploadError) {
+        if (uploadError || !path) {
           setSaveError("Your photo didn't upload. Try again.");
           setSaving(false);
           return;
         }
-        uploadedMediaUrl = supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl;
+        uploadedMediaPath = path;
       }
 
       const ok = post.isPrivateLog
@@ -182,7 +179,7 @@ export function MomentDetail({
             reflection,
             hobbySlug: editHobbySlug,
             subHobby: editSubHobby || undefined,
-            ...(uploadedMediaUrl ? { mediaUrl: uploadedMediaUrl } : {}),
+            ...(uploadedMediaPath ? { mediaPath: uploadedMediaPath } : {}),
           });
       if (ok) setEditing(false);
       else setSaveError("Couldn't save that change. Your edit is still here, try again.");
@@ -477,10 +474,27 @@ export function MomentDetail({
                   id="m-media"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
+                  onChange={async (e) => {
+                    const raw = e.target.files?.[0] ?? null;
+                    e.target.value = "";
+                    if (!raw) {
+                      setNewMediaFile(null);
+                      setNewMediaPreview(null);
+                      return;
+                    }
+                    // Every other picker in the app runs a fresh file
+                    // through this before it's ever uploaded (Log.tsx,
+                    // AddMoment.tsx, QuickLog.tsx) — this one didn't, so an
+                    // iPhone's .heic photo went straight to moment-media
+                    // unconverted, unrenderable to anyone not on Safari.
+                    const file = await convertHeicIfNeeded(raw);
+                    if (isHeicFile(file)) {
+                      setSaveError("That photo couldn't be processed and wasn't added — try a different photo.");
+                      return;
+                    }
+                    setSaveError(null);
                     setNewMediaFile(file);
-                    setNewMediaPreview(file ? URL.createObjectURL(file) : null);
+                    setNewMediaPreview(URL.createObjectURL(file));
                   }}
                   className="block w-full text-xs text-muted-foreground"
                 />
