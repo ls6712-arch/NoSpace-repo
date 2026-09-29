@@ -117,6 +117,15 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
     if (!loading) authReadyRef.current!.resolve();
   }, [loading]);
 
+  // Same backstop as ContentContext's addPostInFlightRef: a composer's own
+  // disabled-while-saving button is the normal guard, but add() is called
+  // from three different composers (AddMoment, QuickLog, Log.tsx), any one
+  // of which could have — and, in Log.tsx's case, once did have — a bug in
+  // that guard. Refusing a second concurrent add() here means a slow photo
+  // upload can never turn one tap into more than one private_logs row,
+  // regardless of which screen's own state got it wrong.
+  const addInFlightRef = useRef(false);
+
   useEffect(() => {
     const onCleared = () => setLocal(EMPTY);
     window.addEventListener(LOCAL_CLEARED_EVENT, onCleared);
@@ -145,6 +154,18 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const add = useCallback<PrivateLogsContextType["add"]>(async (input) => {
+    if (addInFlightRef.current) {
+      return { data: null, error: "Already saving." };
+    }
+    addInFlightRef.current = true;
+    try {
+      return await addImpl(input);
+    } finally {
+      addInFlightRef.current = false;
+    }
+  }, []);
+
+  const addImpl: PrivateLogsContextType["add"] = async (input) => {
     await authReadyRef.current!.promise;
     const currentUser = userRef.current;
 
@@ -181,7 +202,7 @@ export function PrivateLogsProvider({ children }: { children: ReactNode }) {
       return next;
     });
     return { data: entry, error: null };
-  }, []);
+  };
 
   const remove = useCallback<PrivateLogsContextType["remove"]>(async (id) => {
     await authReadyRef.current!.promise;

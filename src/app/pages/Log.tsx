@@ -719,12 +719,30 @@ export function Log() {
     setScreen("caption");
   };
 
-  /** Keeps the record without publishing any of it. */
+  /** Keeps the record without publishing any of it. This is reached two
+   * ways — publish()'s own private branch below, and the "Just keep it for
+   * myself" button on the signed-out screen further down — so the
+   * saving/disabled guard lives here rather than in either caller, and
+   * covers both. Without it, a slow photo upload left the Save button
+   * looking idle (no disabled state, no "Saving…") for as long as the
+   * upload took, and a few taps during that window each ran this whole
+   * function again — the exact bug that put a moment's photo into
+   * private_logs three times over one upload. */
   const saveAsPrivateLog = async () => {
     const note = [thought.trim(), progress.trim(), changed.trim(), reflection.trim()]
       .filter(Boolean)
       .join("\n\n");
     if (!note && files.length === 0) return;
+    if (saving) return;
+    setSaving(true);
+    try {
+      await saveAsPrivateLogImpl(note);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveAsPrivateLogImpl = async (note: string) => {
     // A project named on the moment screen used to be dropped entirely when
     // you kept the moment private — the name was typed, then silently lost.
     let linkTo = projectId;
@@ -1138,8 +1156,8 @@ export function Log() {
             <Link to="/login?redirect=/create">
               <Button variant="coral">Log in or sign up</Button>
             </Link>
-            <Button variant="outline" onClick={saveAsPrivateLog}>
-              Just keep it for myself
+            <Button variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
+              {saving ? "Saving…" : "Just keep it for myself"}
             </Button>
           </div>
         </div>
@@ -1896,7 +1914,7 @@ export function Log() {
                 disabled={saving}
               >
                 <Lock className="size-4" />
-                Save as private log
+                {saving ? "Saving…" : "Save as private log"}
               </Button>
             )}
           </div>

@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from "react";
@@ -289,6 +290,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // local-only mode (no account, or an account whose write just failed),
   // so "your" posts can still be told apart from the seeded sample content.
   const myId = user?.id ?? "local-user";
+
+  // A composer's own "Saving…"-disabled button is the normal guard against
+  // a double submit, but it isn't the only one — a screen with a bug in
+  // that guard (or a second composer calling in at the same moment) would
+  // otherwise reach Supabase twice for what the person only meant as one
+  // Moment, each with its own photo upload. This ref is the backstop that
+  // holds regardless of which UI called in: addPost refuses a second
+  // concurrent call outright rather than silently creating a second post.
+  const addPostInFlightRef = useRef(false);
 
   // Real posts, fetched from Supabase — this is the layer that actually
   // persists across devices and sessions once accounts are wired up.
@@ -582,6 +592,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const findListing = (id: number) => listings.find((p) => p.id === id);
 
   const addPost = async (input: NewPostInput): Promise<Post> => {
+    if (addPostInFlightRef.current) {
+      throw new Error("A Moment is already being saved.");
+    }
+    addPostInFlightRef.current = true;
+    try {
+      return await addPostImpl(input);
+    } finally {
+      addPostInFlightRef.current = false;
+    }
+  };
+
+  const addPostImpl = async (input: NewPostInput): Promise<Post> => {
     setSaveError(null);
     let productId: number | undefined;
     // What this session counts toward for the craft badges: the specific
