@@ -9,6 +9,8 @@ import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { clearLocalData } from "../lib/localData";
 import { restoreOwnPursuits } from "../lib/pursuitsRemote";
+import { takeSavedInviteCode } from "../lib/inviteCode";
+import { claimInvite } from "../lib/invites";
 
 export interface Profile {
   id: string;
@@ -42,6 +44,14 @@ export interface Profile {
   /** "system" follows the OS; set from Settings > Appearance and mirrored to
    * localStorage so it survives being signed out (sql/theme-preference.sql). */
   theme_preference?: "system" | "light" | "dark";
+  /** Step 2 (invite-only sign-up) — 'pending' until an invite is claimed;
+   * every pre-existing account was backfilled to 'active' by that
+   * migration. Read-only here: only claim_invite/create_invite flip it,
+   * server-side. Root.tsx routes a pending account to /welcome and nowhere
+   * else. */
+  access?: "active" | "pending";
+  invited_by?: string | null;
+  invite_allowance?: number;
 }
 
 interface AuthContextType {
@@ -96,6 +106,13 @@ interface AuthContextType {
       >
     >,
   ) => Promise<{ error: string | null }>;
+  /** Set when a saved invite code (localStorage, across the sign-in
+   * redirect) turned out invalid — the door screen (/welcome) shows this
+   * once, then clears it via clearInviteClaimError so it doesn't reappear
+   * on a later visit or an unrelated re-render. Never set for the
+   * door screen's own manual code field, which tracks its own error. */
+  inviteClaimError: string | null;
+  clearInviteClaimError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -109,24 +126,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [inviteClaimError, setInviteClaimError] = useState<string | null>(null);
 
   /**
    * Reads the profile row. The row is created by a database trigger the
    * moment an account is made, so right after signup it can be missing, or
    * present with the email-derived placeholder name the trigger sets before
    * our own update lands. Either way the person's first impression used to be
-   * the app getting their name wrong, so this retries briefly.
+   * the app getting their name wrong, so this retries briefly. Returns the
+   * last row it saw (or null), so a caller — bootstrapProfile below, in
+   * particular — can act on the same read this already did instead of
+   * needing a separate fetch.
    */
-  const loadProfile = async (userId: string, expectName?: string) => {
-    if (!supabase) return;
+  const loadProfile = async (userId: string, expectName?: string): Promise<Profile | null> => {
+    if (!supabase) return null;
+    let lastRow: Profile | null = null;
     // theme_preference (sql/theme-preference.sql) may not exist yet on a
     // database that hasn't run that migration — a select naming a missing
     // column fails outright, which would otherwise leave `profile` stuck at
     // null for everyone. Once seen missing, stop asking for it this session.
+    // access/invited_by/invite_allowance (Step 2) get no such fallback: the
+    // deploy order applies that migration before this app ever ships, so a
+    // database missing them is the one case the ordering already prevents.
     for (let attempt = 0; attempt < 4; attempt++) {
       const columns = themeColumnKnownMissing
-        ? "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id"
-        : "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, theme_preference";
+        ? "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, access, invited_by, invite_allowance"
+        : "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, theme_preference, access, invited_by, invite_allowance";
       const { data, error } = await supabase
         .from("profiles")
         .select(columns)
@@ -140,11 +165,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const row = data as Profile | null;
       if (row) {
         setProfile(row);
+        lastRow = row;
         // Settled if we weren't waiting for a particular name, or it arrived.
-        if (!expectName || row.display_name?.trim() === expectName.trim()) return;
+        if (!expectName || row.display_name?.trim() === expectName.trim()) return row;
       }
       await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
     }
+    return lastRow;
+  };
+
+  /**
+   * Step 2's actual claim-on-sign-in: run right after every profile load
+   * that might be a brand-new or still-pending account. A pending account
+   * with a code saved from the arrival page (localStorage — the only thing
+   * that survives the Google redirect, whose redirect_to is the bare site
+   * root) gets that code claimed here, before Root.tsx ever has to decide
+   * where to route them. The code is taken (read + cleared) regardless of
+   * what claim_invite says, so a bad code is never retried silently on a
+   * later sign-in. 'invalid' surfaces once on the door screen via
+   * inviteClaimError; 'claimed'/'already_active' just needs the profile
+   * reloaded so `access` reflects reality — Root.tsx takes it from there.
+   */
+  const bootstrapProfile = async (userId: string, expectName?: string) => {
+    const row = await loadProfile(userId, expectName);
+    if (row?.access !== "pending") return;
+    const code = takeSavedInviteCode();
+    if (!code) return;
+    const result = await claimInvite(code);
+    if (result === "invalid") setInviteClaimError("That invite has expired or was already used.");
+    if (result === "claimed" || result === "already_active") await loadProfile(userId);
   };
 
   useEffect(() => {
@@ -164,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ data }) => {
         setSession(data.session);
         if (data.session) {
-          loadProfile(data.session.user.id);
+          void bootstrapProfile(data.session.user.id);
           // Brings back any Pursuits a previous sign-out wiped from this
           // browser (see clearLocalData in signOut, below). Fire-and-forget:
           // the local journal already works with or without this landing.
@@ -182,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession) {
-        loadProfile(newSession.user.id);
+        void bootstrapProfile(newSession.user.id);
         void restoreOwnPursuits(newSession.user.id);
       } else {
         setProfile(null);
@@ -238,8 +287,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
         }
         // Read it back before returning, so the first screen after signup
-        // already has the right name rather than correcting itself later.
-        await loadProfile(data.user.id, trimmedName);
+        // already has the right name rather than correcting itself later —
+        // and, via bootstrapProfile, claims a saved invite code right away
+        // if this account is pending (see the arrival page's "Use email").
+        await bootstrapProfile(data.user.id, trimmedName);
       } catch {
         // The account exists either way; they can rename themselves in
         // Settings. Failing the whole sign-up over a name would be worse.
@@ -380,6 +431,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOutEverywhere,
         refreshProfile,
         updateProfile,
+        inviteClaimError,
+        clearInviteClaimError: () => setInviteClaimError(null),
       }}
     >
       {children}

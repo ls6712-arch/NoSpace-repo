@@ -25,6 +25,7 @@ import { AdminCategories } from "./pages/AdminCategories";
 import { AdminSpaces } from "./pages/AdminSpaces";
 import { AdminCorners } from "./pages/AdminCorners";
 import { AdminReports } from "./pages/AdminReports";
+import { AdminInvites } from "./pages/AdminInvites";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Studio } from "./pages/Studio";
@@ -36,6 +37,8 @@ import { JoinPursuit } from "./pages/JoinPursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
+import { InviteArrival } from "./pages/InviteArrival";
+import { Welcome } from "./pages/Welcome";
 import {
   Settings,
   AppearanceSettingsPage,
@@ -58,7 +61,10 @@ export const router = createHashRouter([
       // signed-in person to their feed instead took that away. My Space is a
       // destination of its own, at /my-space.
       { index: true, Component: Home },
-      { path: "welcome", loader: () => redirect("/") },
+      // Step 2 (invite-only sign-up): the door screen Root.tsx routes every
+      // pending account to, and the arrival page an invite link points at.
+      { path: "welcome", Component: Welcome },
+      { path: "i/:code", Component: InviteArrival },
       { path: "my-space", Component: MySpace },
       { path: "discover", Component: Discover },
       { path: "search", Component: SearchResults },
@@ -73,6 +79,7 @@ export const router = createHashRouter([
       { path: "admin/spaces", Component: AdminSpaces },
       { path: "admin/corners", Component: AdminCorners },
       { path: "admin/reports", Component: AdminReports },
+      { path: "admin/invites", Component: AdminInvites },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
       { path: "you", Component: You },

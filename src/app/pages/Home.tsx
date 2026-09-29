@@ -9,6 +9,8 @@ import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
 import { useCategories } from "../context/CategoriesContext";
+import { useAuth } from "../context/AuthContext";
+import { WaitlistForm } from "../components/WaitlistForm";
 import heroWorldsImg from "../../assets/hero-worlds.png";
 
 /**
@@ -92,6 +94,14 @@ export function Home() {
   const heroRef = useHeroParallax();
   // Subscribing re-renders the Space grid when admin changes load.
   useCategories();
+  // Step 2 (invite-only sign-up): a signed-out visitor gets the waitlist
+  // instead of a "sign up" button here — the two CTAs below (hero, final)
+  // are the "invites strangers to sign up" copy the brief calls out.
+  // Anyone signed in (active or pending — Root.tsx already routes a
+  // pending account to /welcome before this page ever renders) still sees
+  // the normal "Begin your story" link into the composer.
+  const { user } = useAuth();
+  const signedOut = !user;
 
   // One below the hero, in the order they appear — the entire page reads as
   // one continuous unfolding story rather than five separately-loaded
@@ -130,12 +140,14 @@ export function Home() {
           </p>
 
           <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-2.5">
-            <Link to="/create">
-              <Button variant="coral" size="lg">
-                Begin your story
-                <ArrowRight className="size-4" />
-              </Button>
-            </Link>
+            {!signedOut && (
+              <Link to="/create">
+                <Button variant="coral" size="lg">
+                  Begin your story
+                  <ArrowRight className="size-4" />
+                </Button>
+              </Link>
+            )}
             <a
               href="#loop"
               className="ns-hero-secondary-link"
@@ -151,7 +163,13 @@ export function Home() {
               See how it works
             </a>
           </div>
-          <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">Free to join. No credit card.</p>
+          {signedOut ? (
+            <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">
+              Sushii is invite-only for now — no invite? Join the waitlist below.
+            </p>
+          ) : (
+            <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">Free to join. No credit card.</p>
+          )}
         </div>
 
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-12 sm:px-8 lg:px-12 lg:pb-20 xl:px-16">
@@ -293,15 +311,30 @@ export function Home() {
               <h2 className="mb-5 text-4xl leading-[1.02] md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
                 Whatever you're curious about,<br />it's worth keeping.
               </h2>
-              <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
-                Free to join. Private by default. Share only the Moments you
-                choose, with exactly the people you choose.
-              </p>
-              <Link to="/create">
-                <Button variant="brand" size="lg">
-                  <Sparkles className="size-4" /> Begin your story
-                </Button>
-              </Link>
+              {signedOut ? (
+                <>
+                  <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
+                    Sushii is invite-only for now. Private by default once you're
+                    in — share only the Moments you choose, with exactly the
+                    people you choose.
+                  </p>
+                  <div className="mx-auto max-w-xs text-left">
+                    <WaitlistForm />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
+                    Free to join. Private by default. Share only the Moments you
+                    choose, with exactly the people you choose.
+                  </p>
+                  <Link to="/create">
+                    <Button variant="brand" size="lg">
+                      <Sparkles className="size-4" /> Begin your story
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </section>
