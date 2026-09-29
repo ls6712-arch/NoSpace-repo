@@ -5,6 +5,7 @@ import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { useJournal } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
+import { supabase } from "../../lib/supabase";
 import { Post } from "../data/posts";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
@@ -50,15 +51,51 @@ export function MySpaceGrid() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [pageIndex, setPageIndex] = useState(0);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
+  // Approved, not-removed Moments linked into a Space you're an active
+  // member of — the real replacement for the old "space:<slug>"
+  // hobby_follows source below (dead: Categories are internal-only now, so
+  // nothing can create one of those follows any more; real Space
+  // membership is what actually gates a Space's Moments — see
+  // 20261010000000_space_moment_sharing.sql).
+  const [mySpaceMomentPostIds, setMySpaceMomentPostIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!user) return;
     fetchFollowingIds(user.id).then(setFollowingIds);
   }, [user?.id]);
 
+  useEffect(() => {
+    const client = supabase;
+    if (!user || !client) return;
+    let cancelled = false;
+    (async () => {
+      const { data: memberships } = await client
+        .from("space_members")
+        .select("space_id")
+        .eq("user_id", user.id)
+        .eq("status", "active");
+      const spaceIds = (memberships ?? []).map((m) => m.space_id as string);
+      if (spaceIds.length === 0) {
+        if (!cancelled) setMySpaceMomentPostIds(new Set());
+        return;
+      }
+      const { data: moments } = await client
+        .from("space_moments")
+        .select("post_id")
+        .in("space_id", spaceIds)
+        .eq("status", "approved")
+        .eq("removed_by_host", false);
+      if (!cancelled) setMySpaceMomentPostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
   const exploring = new Set(social.followedHobbies);
 
-  // Moments from people or Spaces you follow, never your own
+  // Moments from people you follow, Corners you follow, or approved
+  // Moments from Spaces you're an active member of, never your own
   // (docs/my-space-spec.md section 2). Deliberately not gated to "since
   // your last visit" — that's the cold-start bug this round's spec calls
   // out by name: a person whose follows haven't posted since they were last
@@ -75,11 +112,11 @@ export function MySpaceGrid() {
         .filter(
           (p) =>
             (p.userId && followingIds.includes(p.userId)) ||
-            exploring.has(`space:${p.hobbySlug}`) ||
-            (p.subHobby && exploring.has(p.subHobby)),
+            (p.subHobby && exploring.has(p.subHobby)) ||
+            mySpaceMomentPostIds.has(p.id),
         )
         .sort((a, b) => b.createdAt - a.createdAt),
-    [publicFeed, user?.id, followingIds, exploring],
+    [publicFeed, user?.id, followingIds, exploring, mySpaceMomentPostIds],
   );
 
   // One distinct sheet of (at most) 6 — "Turn the page" moves to the next

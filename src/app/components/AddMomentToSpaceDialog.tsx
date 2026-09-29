@@ -45,6 +45,10 @@ export function AddMomentToSpaceDialog({
       .from("posts")
       .select("id, caption, media_url")
       .eq("user_id", user.id)
+      // Only you Moments can't be shared to a Space (rejected server-side
+      // either way — set_space_moment_status() — this just keeps them off
+      // the picker so nobody tries).
+      .neq("visibility", "just_me")
       .order("created_at", { ascending: false })
       .limit(30)
       .then(({ data }) => setPosts(data ?? []));
@@ -78,6 +82,9 @@ export function AddMomentToSpaceDialog({
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Add a Moment</DialogTitle>
           <DialogDescription>Pick one of your Moments to show here.</DialogDescription>
         </DialogHeader>
+        {!done && posts !== "loading" && (
+          <p className="text-xs text-muted-foreground">Everyone who can see this Space will see this Moment.</p>
+        )}
         {done ? (
           <p className="py-4 text-sm text-muted-foreground">
             {donePending ? "Sent to the hosts for approval." : "Added."}
