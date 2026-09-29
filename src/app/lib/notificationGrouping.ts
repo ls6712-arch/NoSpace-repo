@@ -14,7 +14,7 @@ import { Notification } from "../context/SocialContext";
 
 /** The specific target this notification is ABOUT, if it has one — the
  * only shape merging ever applies to. `/messages`, `/messages?tab=requests`,
- * `/my-space`, `/circles`, `/space/<slug>...` and no-href notifications are
+ * `/my-space`, `/space/<slug>...` and no-href notifications are
  * all "generic": each one is its own line, always, never merged with
  * another of the same kind. Deliberately narrow (moment/pursuit only) — a
  * new per-target route later just needs a new case here, not a redesign. */

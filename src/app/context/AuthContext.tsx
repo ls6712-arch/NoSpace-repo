@@ -312,9 +312,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     // Clear the browser's copy first, and regardless of whether the network
-    // call succeeds. Private logs, saved work, reactions and joined Circles all
-    // live in localStorage; leaving them behind meant the next person to sign
-    // in on a shared laptop inherited the last person's private reflections.
+    // call succeeds. Private logs, saved work and reactions all live in
+    // localStorage; leaving them behind meant the next person to sign in on
+    // a shared laptop inherited the last person's private reflections.
     clearLocalData();
     if (!supabase) return;
     try {

@@ -3,9 +3,9 @@
  *
  * These stores exist so the app works before you sign in and stays responsive
  * after. That's fine on your own device and a problem on a shared one: private
- * reflections, saved work and joined Circles all sat here across a sign-out,
- * so the next person to sign in on the same laptop inherited them. Signing out
- * now clears the lot.
+ * reflections and saved work all sat here across a sign-out, so the next
+ * person to sign in on the same laptop inherited them. Signing out now
+ * clears the lot.
  *
  * Anything added here must be listed in LOCAL_KEYS, or it will quietly become
  * the next thing that leaks between accounts.
@@ -19,7 +19,7 @@ export const LOCAL_KEYS = [
   // context's own note on why they're left alone rather than migrated.
   "sushii.journal.v1", // saved posts, projects, entries (privateLogs field now unused)
   "sushii.listings.v1", // things you listed for sale
-  "sushii.circles.joined.v1", // Circles you joined
+  "sushii.circles.joined.v1", // legacy: Circles you'd joined (feature retired)
   "sushii.reactions.v1", // which reactions you left
   "sushii.rewards.v1", // milestone progress
   "sushii.social.v1", // participations, thoughts, notifications when signed out
@@ -40,7 +40,7 @@ export const LOCAL_KEYS = [
 const LEGACY_LOCAL_KEYS = [
   "nospace.journal.v1",
   "nospace.listings.v1",
-  "nospace.circles.joined.v1",
+  "nospace.circles.joined.v1", // legacy: Circles you'd joined (feature retired)
   "nospace.reactions.v1",
   "nospace.rewards.v1",
   "nospace.social.v1",
@@ -78,8 +78,8 @@ export function clearLocalData() {
 /**
  * One-time forward-copy from the pre-rebrand "nospace.*" storage keys (see
  * LEGACY_LOCAL_KEYS above) to their "sushii.*" replacements, so nobody's
- * existing badges, points, drafts, saved listings, joined Circles or private
- * logs reset to empty just because the product was renamed. Must run before
+ * existing badges, points, drafts, saved listings or private logs reset to
+ * empty just because the product was renamed. Must run before
  * anything else in the app reads from localStorage — called once, at the
  * top of main.tsx, ahead of the render.
  *

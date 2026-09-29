@@ -34,10 +34,7 @@ export const MOMENT_VISIBILITY_OPTIONS: {
 /**
  * "Your Moments" meta-row word (MomentCard §2.1.2): `PUBLIC`, `ONLY YOU`,
  * `FOLLOWERS` — small-caps ready, uppercase already applied. `spaceName` is
- * accepted for call-site compatibility with the old `circleName` parameter
- * (kept until MomentCard.tsx/MomentDetail.tsx are updated to stop passing a
- * Circle's name, in a later phase) but unused until a post can actually
- * carry `visibility: "space"`.
+ * unused until a post can actually carry `visibility: "space"`.
  */
 export function visibilityWord(post: VisibilityPost, spaceName?: string): string {
   if (isOnlyYou(post)) return "ONLY YOU";

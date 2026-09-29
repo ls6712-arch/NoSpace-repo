@@ -25,7 +25,7 @@ type Audience = "private" | "followers";
  * what keeps a quick Moment a record of progress.
  *
  * Audience is two choices, not four — Only you or Followers. Anything wider
- * (a Circle, Everyone) is a considered choice and lives in the full form.
+ * (Everyone) is a considered choice and lives in the full form.
  *
  * Photos can't be kept "Only you" yet — private entries have no private
  * storage bucket (docs/private-media-plan.md), so a private photo would

@@ -5,13 +5,11 @@ import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { useJournal } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
-import { circles } from "../data/circles";
 import { Post } from "../data/posts";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
 import { ShelfRail } from "../components/ShelfRail";
-import { CirclesRail } from "../components/CirclesRail";
 import { InspiredRail } from "../components/InspiredRail";
 import { NewSpacesRail } from "../components/NewSpacesRail";
 import { WelcomeBanner } from "../components/WelcomeBanner";
@@ -34,9 +32,9 @@ function greeting(name: string): string {
  * list — no fetch, no auto-load) rather than accumulating a longer
  * scrollable list the old strip let you browse.
  *
- * The right rail (Shelf, Pursuits, Circles) stays a sidebar at lg+, a
- * deliberate difference from boards 4/5 (which show no rail at all) — kept
- * on an explicit call rather than dropped or moved off this page.
+ * The right rail (Shelf, Pursuits) stays a sidebar at lg+, a deliberate
+ * difference from boards 4/5 (which show no rail at all) — kept on an
+ * explicit call rather than dropped or moved off this page.
  *
  * Nav below lg: this app already has a working "reach every section on a
  * small screen" answer — the global BottomTabBar (Root.tsx, every page) —
@@ -46,7 +44,7 @@ function greeting(name: string): string {
  */
 export function MySpaceGrid() {
   const { user, profile } = useAuth();
-  const { publicFeed, posts, isCircleJoined } = useContent();
+  const { publicFeed, posts } = useContent();
   const social = useSocial();
   const journal = useJournal();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -59,11 +57,9 @@ export function MySpaceGrid() {
   }, [user?.id]);
 
   const exploring = new Set(social.followedHobbies);
-  const joinedCircles = circles.filter((c) => isCircleJoined(c.id));
-  const joinedSpaces = new Set(joinedCircles.map((c) => c.hobbySlug));
 
-  // Moments from people, Spaces or Circles you follow or joined, never your
-  // own (docs/my-space-spec.md section 2). Deliberately not gated to "since
+  // Moments from people or Spaces you follow, never your own
+  // (docs/my-space-spec.md section 2). Deliberately not gated to "since
   // your last visit" — that's the cold-start bug this round's spec calls
   // out by name: a person whose follows haven't posted since they were last
   // here saw an empty sheet even though there was plenty to show. This is
@@ -71,7 +67,7 @@ export function MySpaceGrid() {
   // "recent" is entirely carried by the sort below, with no age floor
   // either (confirmed explicitly: always show the N most recent, even if
   // the newest one is months old, rather than a sheet that's sometimes
-  // empty for an active account with a quiet circle).
+  // empty for an active account whose follows have been quiet).
   const unseen = useMemo(
     () =>
       publicFeed
@@ -80,11 +76,10 @@ export function MySpaceGrid() {
           (p) =>
             (p.userId && followingIds.includes(p.userId)) ||
             exploring.has(`space:${p.hobbySlug}`) ||
-            (p.subHobby && exploring.has(p.subHobby)) ||
-            joinedSpaces.has(p.hobbySlug),
+            (p.subHobby && exploring.has(p.subHobby)),
         )
         .sort((a, b) => b.createdAt - a.createdAt),
-    [publicFeed, user?.id, followingIds, exploring, joinedSpaces],
+    [publicFeed, user?.id, followingIds, exploring],
   );
 
   // One distinct sheet of (at most) 6 — "Turn the page" moves to the next
@@ -207,7 +202,7 @@ export function MySpaceGrid() {
 
         {/* Not numbered: the spec's own "design patterns to reuse" section
             asks for sequential numbering on new right-rail sections, but
-            Shelf/Pursuits/Circles never actually shipped with one (they're
+            Shelf/Pursuits never actually shipped with one (they're
             plain <h2> headings, no kicker), and a mobile-only CSS rule
             just below (.myspace-rail-pursuits' order: -1) already moves
             Pursuits above Shelf on small screens — a numeral would show
@@ -223,9 +218,6 @@ export function MySpaceGrid() {
           </div>
           <div className="myspace-rail-pursuits">
             <PursuitsRail pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
-          </div>
-          <div className="myspace-rail-circles">
-            <CirclesRail />
           </div>
           <div className="myspace-rail-inspired">
             <InspiredRail />

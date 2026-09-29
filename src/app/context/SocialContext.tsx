@@ -66,8 +66,7 @@ export interface Thought {
   prompt?: string;
   body: string;
   /** A photo or video riding along with the reply — opt-in per call site
-   * via Thoughts' allowMedia prop (a circle thread reply, not a Moment's
-   * ordinary thoughts). */
+   * via Thoughts' allowMedia prop. */
   media?: string;
   createdAt: number;
 }

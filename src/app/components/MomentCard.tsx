@@ -8,14 +8,12 @@ import {
   Eye,
   PenLine,
   Lock,
-  Check,
   CalendarDays,
   MapPin,
 } from "lucide-react";
 import { Post } from "../data/posts";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
-import { useCircles } from "../context/CirclesContext";
 import { useSocial } from "../context/SocialContext";
 import { subHobbyLabel } from "../data/hobbies";
 import { displayLocation } from "../data/participation";
@@ -37,7 +35,6 @@ import {
   DialogDescription,
 } from "./ui/dialog";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -98,7 +95,6 @@ export type MomentCardSurface =
   | "you"
   | "discover"
   | "profile"
-  | "circle"
   | "pursuit"
   | "archive"
   | "feed";
@@ -114,13 +110,6 @@ export interface MomentCardProps {
   size?: "lead" | "wide" | "standard" | "compact";
   /** Opens MomentDetail at the call site. */
   onOpen?: () => void;
-  /** Circle thread extras (CircleBoard.tsx) — a plain Moment never sets
-   * these. The Answered/Open badge itself is derived straight from
-   * `post.circleTab === "questions"` and `post.answered`, not a prop, since
-   * both already live on the post; only the *permission* to toggle it
-   * (the thread's own author, or the Circle's owner) can't be derived from
-   * the post alone, so the caller passes it explicitly. */
-  canMarkAnswered?: boolean;
 }
 
 /** "Change who sees this" — the eye-icon control on your own Moment. Only
@@ -138,32 +127,18 @@ function VisibilityDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { updatePost } = useContent();
-  const { circles } = useCircles();
-  const [value, setValue] = useState<"just_me" | "followers" | "circle" | "public">(
-    isOnlyYou(post)
-      ? "just_me"
-      : post.visibility === "circle"
-        ? "circle"
-        : post.visibility === "followers"
-          ? "followers"
-          : "public",
+  const [value, setValue] = useState<"just_me" | "followers" | "public">(
+    isOnlyYou(post) ? "just_me" : post.visibility === "followers" ? "followers" : "public",
   );
-  const [circleId, setCircleId] = useState<number | undefined>(post.circleId);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hobbyCircles = circles.filter((c) => c.hobbySlug === post.hobbySlug);
 
   const save = async () => {
     if (saving) return;
-    if (value === "circle" && !circleId) {
-      setError("Choose a Circle first.");
-      return;
-    }
     setSaving(true);
     setError(null);
     const ok = await updatePost(post.id, {
       visibility: value,
-      circleId: value === "circle" ? circleId : undefined,
     });
     setSaving(false);
     if (!ok) {
@@ -192,20 +167,6 @@ function VisibilityDialog({
             </label>
           ))}
         </RadioGroup>
-        {value === "circle" && (
-          <Select value={circleId ? String(circleId) : undefined} onValueChange={(v) => setCircleId(Number(v))}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a Circle" />
-            </SelectTrigger>
-            <SelectContent>
-              {hobbyCircles.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
         {error && <p className="text-xs text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>
@@ -398,11 +359,8 @@ export function MomentCard({
   surface: _surface,
   number,
   onOpen,
-  canMarkAnswered = false,
 }: MomentCardProps) {
   const { user } = useAuth();
-  const { circles } = useCircles();
-  const { setThreadAnswered } = useContent();
   const social = useSocial();
   const mine = !!user && post.userId === user.id;
   const [visibilityOpen, setVisibilityOpen] = useState(false);
@@ -410,7 +368,6 @@ export function MomentCard({
   const [askTogetherOpen, setAskTogetherOpen] = useState(false);
   const { mine: myReactions } = useReactionState(post.id);
 
-  const isQuestion = post.circleTab === "questions";
   const isActivity = !!post.startsAt;
   const activityPlace = displayLocation(post.locationName, post.locationPrivacy);
   const goingCount = isActivity ? social.goingCount(post.id) : 0;
@@ -424,7 +381,6 @@ export function MomentCard({
   const cornerLine = [corner, pursuitTitle].filter(Boolean).join(" · ");
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   const onlyYou = isOnlyYou(post);
-  const circleName = post.circleId != null ? circles.find((c) => c.id === post.circleId)?.name : undefined;
   const timeLabel = new Date(post.createdAt).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -457,7 +413,7 @@ export function MomentCard({
           <button
             type="button"
             onClick={() => setVisibilityOpen(true)}
-            aria-label={`Who sees this: ${visibilityWord(post, circleName)}. Change it`}
+            aria-label={`Who sees this: ${visibilityWord(post)}. Change it`}
             title="Who sees this"
             className="absolute right-1.5 top-1.5 z-[1] flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
           >
@@ -491,7 +447,7 @@ export function MomentCard({
             <span className="ns-section-kicker flex shrink-0 items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
               {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
-              <span className="hidden sm:inline">{visibilityWord(post, circleName)} · </span>
+              <span className="hidden sm:inline">{visibilityWord(post)} · </span>
               {timeLabel}
             </span>
           </div>
@@ -545,30 +501,6 @@ export function MomentCard({
           </div>
         )}
 
-        {isQuestion && (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full px-2 py-0.5 text-[10px] ${
-                post.answered
-                  ? "bg-[var(--pastel-sage)]/40 text-foreground"
-                  : "bg-surface-muted text-muted-foreground"
-              }`}
-            >
-              {post.answered ? "Answered" : "Open"}
-            </span>
-            {canMarkAnswered && (
-              <button
-                type="button"
-                onClick={() => setThreadAnswered(post.id, !post.answered)}
-                className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Check className="size-3" />
-                {post.answered ? "Reopen" : "Mark answered"}
-              </button>
-            )}
-          </div>
-        )}
-
         {/* mt-auto pins the row to the bottom, so reaction rows line up
             across a grid row even when one card carries an event block. */}
         <div className="mt-auto pt-1.5">
@@ -605,7 +537,6 @@ export function MomentCard({
                 postOwnerName={post.creator}
                 isOwner={false}
                 privateThoughts={post.thoughtsPrivate}
-                allowMedia={post.circleId != null}
               />
             </DialogContent>
           </Dialog>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { Flag, MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, Users, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
+import { Flag, MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useTheme, type ThemePreference } from "../context/ThemeContext";
@@ -223,7 +223,6 @@ function AccountMenu() {
 const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
   space: Compass,
   corner: Sparkle,
-  circle: Users,
   person: UserRound,
   pursuit: PenLine,
   moment: MessagesSquare,
@@ -237,17 +236,12 @@ const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
  * not a tab competing with the places you go to make and find things.
  *
  * People doesn't get its own top-level slot: it lives inside Discover, as
- * one of Discover's own Spaces/Circles/People tabs (?tab=people) — reached
- * from here whenever "Discover" is active. The /people route still resolves
- * on its own for anyone with a direct link; it's just not a separate stop in
+ * one of Discover's own Spaces/People tabs (?tab=people) — reached from
+ * here whenever "Discover" is active. The /people route still resolves on
+ * its own for anyone with a direct link; it's just not a separate stop in
  * primary nav anymore, so the phone bar's five tabs and this list describe
  * the same places in the same order rather than two different apps.
  */
-// Circles nav link removed (Spaces Rework follow-up): Circles are being
-// retired and nobody should be able to reach a "start a new one" entry
-// point anymore, but the pages themselves stay live until Phase 6 — the
-// /circles route still resolves for anyone with a direct or bookmarked
-// link, it's just not offered here.
 const PRIMARY_NAV = [
   { to: "/discover", label: "Discover", hint: "Spaces, people and pursuits",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },

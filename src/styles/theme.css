@@ -19,7 +19,7 @@
      instead of nothing. */
   --font-display: var(--font-serif);
 
-  /* Soft pastels for the quiet milestones and circle cards. Deliberately
+  /* Soft pastels for the quiet milestones cards. Deliberately
      desaturated so they read as chalky and calm against the navy, never as
      status colours competing with the brand gradient. */
   --pastel-sage: #A9C3A0;
@@ -308,7 +308,7 @@
    the same reasoning WorkGrid's own cream cards already established: the
    portfolio/profile experience reads as a warm, physical object (paper,
    ink, a shelf) rather than a dashboard. Nothing outside .ns-paper-theme
-   reads these — the rest of the app (Header, nav, Discover, Circles) stays
+   reads these — the rest of the app (Header, nav, Discover) stays
    on the void/plum system untouched. Accent is the app's own existing
    chosen color (--coral-deep), not a new one — "exaggerated," not
    "different." */
@@ -769,19 +769,6 @@
 
   .ns-process-step:last-child { border-bottom: 0; }
 
-  .ns-circle-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 35%, transparent); }
-
-  .ns-circle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    border-bottom: 1px solid var(--hairline);
-    padding: 1rem 0;
-  }
-
-  .ns-circle-row:last-child { border-bottom: 0; padding-bottom: 0; }
-
   .ns-portfolio-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 26%, transparent); }
 
   /* ── Value cards — "Create moments / Document / Explore," right below the
@@ -1056,8 +1043,7 @@
     box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 30%, transparent);
   }
 
-  .ns-myspace-projects a,
-  .ns-myspace-circle-links a {
+  .ns-myspace-projects a {
     border-radius: 0;
     border-color: var(--border);
     background: color-mix(in srgb, var(--surface) 82%, transparent);

@@ -68,17 +68,17 @@ interface CategoriesContextType {
   }) => Promise<{ error: string | null; slug?: string }>;
   /** Removes a built-in's override, restoring its defaults. */
   resetSpace: (slug: string) => Promise<{ error: string | null }>;
-  /** How many Moments / Pursuits / Circles still point at a Space. */
+  /** How many Moments / Pursuits still point at a Space. */
   spaceUsage: (
     slug: string,
-  ) => Promise<{ error: string | null; usage?: { posts: number; pursuits: number; circles: number; corners: number } }>;
+  ) => Promise<{ error: string | null; usage?: { posts: number; pursuits: number; corners: number } }>;
   /** Deletes a database-only Space, and only if nothing points at it. */
   deleteSpace: (slug: string) => Promise<{ error: string | null }>;
-  /** Moves every Moment, Pursuit and Circle from one Space into another. */
+  /** Moves every Moment and Pursuit from one Space into another. */
   moveSpaceContent: (
     from: string,
     to: string,
-  ) => Promise<{ error: string | null; moved?: { posts: number; pursuits: number; circles: number } }>;
+  ) => Promise<{ error: string | null; moved?: { posts: number; pursuits: number } }>;
 }
 
 const CategoriesContext = createContext<CategoriesContextType | undefined>(undefined);
@@ -337,7 +337,6 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
         usage: {
           posts: Number(u.posts ?? 0),
           pursuits: Number(u.pursuits ?? 0),
-          circles: Number(u.circles ?? 0),
           corners: Number(u.corners ?? 0),
         },
       };
@@ -376,7 +375,6 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
         moved: {
           posts: Number(m.posts ?? 0),
           pursuits: Number(m.pursuits ?? 0),
-          circles: Number(m.circles ?? 0),
         },
       };
     } catch {

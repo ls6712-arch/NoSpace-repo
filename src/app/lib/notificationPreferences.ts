@@ -26,8 +26,8 @@ export function isCategoryMuted(prefs: NotificationPreferences, category: string
 }
 
 /** Adds or removes exactly one category from `muted`, leaving every other
- * key (circle_invites, and the Phase 6 email keys — weekly_digest,
- * product_news, circle_updates_joined, replies_to_my_moments) untouched. */
+ * key (the email keys — weekly_digest, product_news, replies_to_my_moments)
+ * untouched. */
 export function withMutedCategory(
   prefs: NotificationPreferences,
   category: string,
@@ -36,19 +36,4 @@ export function withMutedCategory(
   const current = mutedCategories(prefs);
   const next = muted ? [...new Set([...current, category])] : current.filter((c) => c !== category);
   return { ...prefs, muted: next };
-}
-
-/** Circle invitations reuse this existing boolean (shipped before Phase 5,
- * defaulted true) rather than a fifth `muted` array entry — true unless
- * explicitly set to false, same "missing means on" rule the database's
- * own mute check uses for this one key. */
-export function circleInvitesEnabled(prefs: NotificationPreferences): boolean {
-  return prefs.circle_invites !== false;
-}
-
-export function withCircleInvitesEnabled(
-  prefs: NotificationPreferences,
-  enabled: boolean,
-): NotificationPreferences {
-  return { ...prefs, circle_invites: enabled };
 }

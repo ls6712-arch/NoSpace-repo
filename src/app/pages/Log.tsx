@@ -15,7 +15,6 @@ import {
   PenLine,
   Plus,
   Sparkle,
-  Users,
   UserRound,
   Video,
   X,
@@ -26,7 +25,6 @@ import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility, postCorner } from "../data/posts";
 import { classifyMomentType } from "../lib/momentType";
 import { convertHeicFiles, convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
-import { circlesByHobby } from "../data/circles";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { useSettings } from "../context/SettingsContext";
@@ -113,7 +111,6 @@ const AUDIENCE: {
 }[] = [
   { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
   { value: "followers", label: "Followers", copy: "People who follow you, once you've accepted them", icon: UserRound },
-  { value: "circle", label: "A Circle", copy: "Only members of one Circle you pick", icon: Users },
   { value: "public", label: "Everyone", copy: "Anyone browsing this space can find it", icon: Globe2 },
 ];
 
@@ -354,7 +351,6 @@ export function Log() {
     if (audienceDecidedRef.current || !defaultVisibilityLoaded) return;
     setAudience(defaultVisibility);
   }, [defaultVisibilityLoaded, defaultVisibility]);
-  const [circleId, setCircleId] = useState<number | undefined>(undefined);
   const [forSale, setForSale] = useState(false);
   const [saleTitle, setSaleTitle] = useState("");
   const [salePrice, setSalePrice] = useState("25");
@@ -523,7 +519,6 @@ export function Log() {
     setSpaceSet(draftPrompt.spaceSet);
     audienceDecidedRef.current = true;
     setAudience(draftPrompt.audience as Visibility | "private");
-    setCircleId(draftPrompt.circleId);
     setIsActivity(draftPrompt.isActivity);
     setStartsAt(draftPrompt.startsAt);
     setLocationName(draftPrompt.locationName);
@@ -560,7 +555,6 @@ export function Log() {
       tags,
       spaceSet,
       audience,
-      circleId,
       isActivity,
       startsAt,
       locationName,
@@ -585,7 +579,6 @@ export function Log() {
     tags,
     spaceSet,
     audience,
-    circleId,
     isActivity,
     startsAt,
     locationName,
@@ -685,7 +678,6 @@ export function Log() {
     </Dialog>
   );
 
-  const hobbyCircles = circlesByHobby(hobbySlug);
   // Normally only open Pursuits are offered here — but if we arrived via
   // "Add progress" on a finished one, it needs to still appear as the
   // selected option (attaching an Update to it reopens it; see
@@ -834,7 +826,6 @@ export function Log() {
         caption,
         reflection: reflection.trim() || undefined,
         visibility: audience,
-        circleId: audience === "circle" ? circleId : undefined,
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
         locationName: locationName.trim() ? locationName.trim() : undefined,
         locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
@@ -905,7 +896,6 @@ export function Log() {
     setTags([]);
     setProjectTitle("");
     setProjectId(pursuitScoped ? initialPursuitId : "");
-    setCircleId(undefined);
     setFiles([]);
     setError(null);
     setSavedAs(null);
@@ -1528,10 +1518,7 @@ export function Log() {
                     <button
                       type="button"
                       aria-pressed={active}
-                      onClick={() => {
-                        chooseAudience(opt.value);
-                        if (opt.value !== "circle") setCircleId(undefined);
-                      }}
+                      onClick={() => chooseAudience(opt.value)}
                       className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
                         active
                           ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface-elevated))]"
@@ -1547,36 +1534,9 @@ export function Log() {
               })}
             </ul>
 
-            {audience === "circle" && (
-              <div className="mt-3">
-                {hobbyCircles.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    No Circles exist for this space yet.
-                  </p>
-                ) : (
-                  <Select
-                    value={circleId ? String(circleId) : undefined}
-                    onValueChange={(v) => setCircleId(Number(v))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pick a Circle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {hobbyCircles.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.name}
-                          {c.location ? ` · ${c.location}` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            )}
-
-            {/* Only a public Moment could become a listing — Connections and
-                Circle audiences couldn't be sold to anyway, same rule the
-                Pursuit-scoped flow's own version of this control uses. */}
+            {/* Only a public Moment could become a listing — Connections
+                couldn't be sold to anyway, same rule the Pursuit-scoped
+                flow's own version of this control uses. */}
             {audience === "public" && <ForSaleComingSoon className="mt-3" />}
 
             <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
@@ -1585,9 +1545,7 @@ export function Log() {
                 : `This will appear in ${
                     audience === "public"
                       ? `${cornerLabel}`
-                      : audience === "circle"
-                        ? "that Circle"
-                        : "My Space for people you've connected with"
+                      : "My Space for people you've connected with"
                   }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
             </p>
           </div>
@@ -1633,7 +1591,7 @@ export function Log() {
           variant="coral"
           size="lg"
           className="w-full"
-          disabled={!hasSomething || saving || (audience === "circle" && !circleId)}
+          disabled={!hasSomething || saving}
           onClick={publish}
         >
           {saving ? "Saving…" : audience === "private" ? "Keep it private" : "Share"}
@@ -1733,7 +1691,6 @@ export function Log() {
                       onChange={(slug, _name, resolvedSpaceSlug) => {
                         setSubHobby(slug);
                         setHobbySlug(resolvedSpaceSlug);
-                        setCircleId(undefined);
                       }}
                     />
                   </div>
@@ -1873,10 +1830,7 @@ export function Log() {
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => {
-                      chooseAudience(opt.value);
-                      if (opt.value !== "circle") setCircleId(undefined);
-                    }}
+                    onClick={() => chooseAudience(opt.value)}
                     aria-pressed={audience === opt.value}
                     className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-colors ${
                       audience === opt.value
@@ -1892,33 +1846,6 @@ export function Log() {
               <p className="mt-2 text-xs text-muted-foreground">
                 {AUDIENCE.find((o) => o.value === audience)?.copy}
               </p>
-
-              {audience === "circle" && (
-                <div className="mt-3">
-                  {hobbyCircles.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">
-                      No Circles exist for this space yet.
-                    </p>
-                  ) : (
-                    <Select
-                      value={circleId ? String(circleId) : undefined}
-                      onValueChange={(v) => setCircleId(Number(v))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pick a Circle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {hobbyCircles.map((c) => (
-                          <SelectItem key={c.id} value={String(c.id)}>
-                            {c.name}
-                            {c.location ? ` · ${c.location}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-              )}
             </section>
           )}
 

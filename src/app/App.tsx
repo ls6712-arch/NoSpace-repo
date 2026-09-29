@@ -6,11 +6,9 @@ import { CartProvider } from "./context/CartContext";
 import { RewardsProvider } from "./context/RewardsContext";
 import { ContentProvider } from "./context/ContentContext";
 import { SocialProvider } from "./context/SocialContext";
-import { ConnectionsProvider } from "./context/ConnectionsContext";
 import { CategoriesProvider } from "./context/CategoriesContext";
 import { CornersProvider } from "./context/CornersContext";
 import { PrivateLogsProvider } from "./context/PrivateLogsContext";
-import { CirclesProvider } from "./context/CirclesContext";
 import { SettingsProvider } from "./context/SettingsContext";
 
 export default function App() {
@@ -20,21 +18,17 @@ export default function App() {
         <SettingsProvider>
           <RewardsProvider>
             <ContentProvider>
-              <CirclesProvider>
-                <CornersProvider>
-                  <PrivateLogsProvider>
-                    <SocialProvider>
-                      <ConnectionsProvider>
-                        <CategoriesProvider>
-                          <CartProvider>
-                            <RouterProvider router={router} />
-                          </CartProvider>
-                        </CategoriesProvider>
-                      </ConnectionsProvider>
-                    </SocialProvider>
-                  </PrivateLogsProvider>
-                </CornersProvider>
-              </CirclesProvider>
+              <CornersProvider>
+                <PrivateLogsProvider>
+                  <SocialProvider>
+                    <CategoriesProvider>
+                      <CartProvider>
+                        <RouterProvider router={router} />
+                      </CartProvider>
+                    </CategoriesProvider>
+                  </SocialProvider>
+                </PrivateLogsProvider>
+              </CornersProvider>
             </ContentProvider>
           </RewardsProvider>
         </SettingsProvider>
