@@ -24,6 +24,7 @@ import { useSocial } from "../context/SocialContext";
 import { messageTabFor } from "../lib/messageTabs";
 import { supabase } from "../../lib/supabase";
 import { useReactionState } from "../lib/reactionState";
+import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { SendToChatDialog } from "./SendToChatDialog";
 import {
@@ -477,10 +478,27 @@ export function MomentDetail({
                   id="m-media"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
+                  onChange={async (e) => {
+                    const raw = e.target.files?.[0] ?? null;
+                    e.target.value = "";
+                    if (!raw) {
+                      setNewMediaFile(null);
+                      setNewMediaPreview(null);
+                      return;
+                    }
+                    // Every other picker in the app runs a fresh file
+                    // through this before it's ever uploaded (Log.tsx,
+                    // AddMoment.tsx, QuickLog.tsx) — this one didn't, so an
+                    // iPhone's .heic photo went straight to moment-media
+                    // unconverted, unrenderable to anyone not on Safari.
+                    const file = await convertHeicIfNeeded(raw);
+                    if (isHeicFile(file)) {
+                      setSaveError("That photo couldn't be processed and wasn't added — try a different photo.");
+                      return;
+                    }
+                    setSaveError(null);
                     setNewMediaFile(file);
-                    setNewMediaPreview(file ? URL.createObjectURL(file) : null);
+                    setNewMediaPreview(URL.createObjectURL(file));
                   }}
                   className="block w-full text-xs text-muted-foreground"
                 />

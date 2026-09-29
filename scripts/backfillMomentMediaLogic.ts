@@ -42,3 +42,45 @@ export function legacyMediaPaths(row: LegacyMediaRow, bucket: string): string[] 
   if (paths.some((p) => !p)) return null;
   return paths as string[];
 }
+
+/** True for a path ending .heic/.heif, case-insensitively — the shape
+ * every pre-HEIC-conversion upload left behind (a handful of posts from
+ * before ContentContext.tsx started running every pick through
+ * convertHeicIfNeeded). Chrome, Firefox and Android can't decode these at
+ * all — a non-Safari viewer just sees the illustration fallback instead of
+ * the photo, migration or not. */
+export function isHeicPath(path: string): boolean {
+  return /\.(heic|heif)$/i.test(path);
+}
+
+/** Swaps a HEIC/HEIF path's extension for .jpg — the path a converted copy
+ * lands at in moment-media. Non-HEIC paths are returned unchanged. */
+export function jpegPathFor(path: string): string {
+  return isHeicPath(path) ? path.replace(/\.(heic|heif)$/i, ".jpg") : path;
+}
+
+export interface LegacyMediaPlanEntry {
+  /** Where the object currently lives, in post-media. */
+  sourcePath: string;
+  /** Where it should land in moment-media — same path for a plain copy,
+   * the .heic/.heif extension swapped for .jpg when it needs converting. */
+  destPath: string;
+  needsConversion: boolean;
+}
+
+/**
+ * legacyMediaPaths() plus the HEIC decision for each path — the one thing
+ * the backfill script actually needs to decide, per file, whether to
+ * `storage.copy()` as-is or download-convert-upload as a JPEG. Returns null
+ * under the exact same conditions legacyMediaPaths() does (nothing to
+ * migrate, or something that was never really an upload to this bucket).
+ */
+export function planLegacyMedia(row: LegacyMediaRow, bucket: string): LegacyMediaPlanEntry[] | null {
+  const paths = legacyMediaPaths(row, bucket);
+  if (!paths) return null;
+  return paths.map((sourcePath) => ({
+    sourcePath,
+    destPath: jpegPathFor(sourcePath),
+    needsConversion: isHeicPath(sourcePath),
+  }));
+}
