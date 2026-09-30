@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Pencil,
   Send,
+  SlidersHorizontal,
   Trash2,
   UserRound,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import { useReactionState } from "../lib/reactionState";
 import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { SendToChatDialog } from "./SendToChatDialog";
+import { AddDetailsSheet } from "./AddDetailsSheet";
 import {
   BookmarkOverlay,
   CARD_CAPTION,
@@ -112,6 +114,7 @@ export function MomentDetail({
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [askTogetherOpen, setAskTogetherOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [inspiredDialogOpen, setInspiredDialogOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
@@ -604,6 +607,16 @@ export function MomentDetail({
               <FolderPlus className="size-3.5" />
               {attached ? "Move to another Pursuit" : "Add to Pursuit"}
             </Button>
+            {/* Step 3, §5: Corner, location and audience live here now,
+                alongside caption/photo — same "Add details" sheet the
+                composer itself offers right after Save. Never shown for a
+                private-log stand-in (AddDetailsSheet's own guard). */}
+            {!post.isPrivateLog && (
+              <Button variant="outline" size="sm" onClick={() => setDetailsOpen(true)}>
+                <SlidersHorizontal className="size-3.5" />
+                Add details
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={share}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               {copied ? "Link copied" : "Share this moment"}
@@ -670,6 +683,7 @@ export function MomentDetail({
         description="This can't be undone — the photo, caption, and any thoughts on it are gone for good."
         onConfirm={handleDelete}
       />
+      <AddDetailsSheet post={post} open={detailsOpen} onOpenChange={setDetailsOpen} />
     </Dialog>
   );
 }

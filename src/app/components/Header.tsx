@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
 import { Flag, MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { useQuickLog } from "../context/QuickLogContext";
 import { useAuth } from "../context/AuthContext";
 import { useTheme, type ThemePreference } from "../context/ThemeContext";
 import { useCategories } from "../context/CategoriesContext";
@@ -253,6 +254,7 @@ const PRIMARY_NAV = [
 
 export function Header() {
   const { openCart, cartCount } = useCart();
+  const { openQuickLog } = useQuickLog();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -327,6 +329,26 @@ export function Header() {
           <nav className="hidden lg:flex items-center gap-8" aria-label="Primary">
             {PRIMARY_NAV.map((item) => {
               const active = item.match(pathname);
+              // Step 3: "Start your log" opens the same two-tap sheet the
+              // phone bar's Create tab does, rather than the full /create
+              // form — see BottomTabBar.tsx's own comment on why. The full
+              // form (Log.tsx) stays one "More options" tap away inside it,
+              // and /create itself is untouched for anyone linking straight
+              // to it.
+              if (item.to === "/create") {
+                return (
+                  <button
+                    key={item.to}
+                    type="button"
+                    title={item.hint}
+                    onClick={openQuickLog}
+                    className="flex items-center gap-1.5 rounded-btn bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
+                  >
+                    <Plus className="size-3.5" aria-hidden="true" />
+                    {item.label}
+                  </button>
+                );
+              }
               return (
                 <Link
                   key={item.to}
