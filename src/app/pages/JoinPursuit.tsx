@@ -7,6 +7,7 @@ import { addJoinedProject } from "../lib/journal";
 import { InvitePreview, fetchInvitePreview, fetchPursuitAsProject, joinViaLink } from "../lib/pursuitsRemote";
 import { targetText } from "../lib/pursuitProgress";
 import { PersonAvatar } from "./CreatePursuit";
+import { APP_NAME } from "../config";
 
 /**
  * /join/:token — where an invite link lands. Works signed out: shows who
@@ -67,7 +68,7 @@ export function JoinPursuit() {
           The link may have been turned off. Ask whoever sent it for a new one.
         </p>
         <Link to="/">
-          <Button variant="outline">Go to Sushii</Button>
+          <Button variant="outline">Go to {APP_NAME}</Button>
         </Link>
       </div>
     );

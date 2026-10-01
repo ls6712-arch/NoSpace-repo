@@ -5,6 +5,7 @@ import { useRewards } from "../context/RewardsContext";
 import { usePrimaryHobbyKey } from "./usePrimaryHobbyKey";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { APP_NAME } from "../config";
 
 /**
  * Sharing one milestone, not the whole profile. Opening this never shares
@@ -32,7 +33,7 @@ export function ShareMilestoneDialog({
   const shared = isBadgeShared(badge.id);
   const name = badgeName(badge, hobbySlug, hobbyLabel);
   const Icon = (Icons as any)[badge.icon] ?? Icons.Sparkles;
-  const summary = `A quiet milestone reached on Sushii: ${name}. ${badge.description}`;
+  const summary = `A quiet milestone reached on ${APP_NAME}: ${name}. ${badge.description}`;
 
   const handleCopy = async () => {
     try {

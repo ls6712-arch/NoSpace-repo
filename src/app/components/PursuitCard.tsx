@@ -59,7 +59,7 @@ export function PursuitCard({
 }: {
   pursuit: PursuitLike;
   inspirationPost?: Post;
-  /** Only the owner's own view gets the share toggle and "Mark complete". */
+  /** Only the owner's own view gets the share toggle and "Mark as completed". */
   owner?: boolean;
   className?: string;
 }) {
@@ -228,7 +228,7 @@ export function PursuitCard({
 
         {/* Logging a count and writing a narrative update are two different
             things someone might or might not both want to do — this sits
-            beside "Add a Moment" below, not instead of it. */}
+            beside "Log a Moment" below, not instead of it. */}
         {owner && asProject && goal?.shape === "number" && !goal.reachedAt && (
           <div className="mt-2.5">
             {goalDeadlineText(goal) && (
@@ -244,7 +244,7 @@ export function PursuitCard({
               to={`/pursuit/${pursuit.id}/moment`}
               className="flex-1 rounded-full border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
             >
-              Add a Moment
+              Log a Moment
             </Link>
             {goal && !goal.reachedAt && (
               <button
@@ -260,7 +260,7 @@ export function PursuitCard({
               <button
                 type="button"
                 onClick={markDone}
-                title="Mark complete"
+                title="Mark as completed"
                 className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Check className="size-3.5" strokeWidth={2} />

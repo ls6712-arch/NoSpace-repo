@@ -118,9 +118,9 @@ export function PursuitsRail({
           <DialogHeader className="text-left">
             <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>All your Pursuits</DialogTitle>
           </DialogHeader>
-          <AllPursuitsGroup title="Moving" items={active} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
+          <AllPursuitsGroup title="In progress" items={active} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
           <AllPursuitsGroup title="Resting" items={resting} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
-          <AllPursuitsGroup title="Complete" items={complete} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
+          <AllPursuitsGroup title="Completed" items={complete} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
         </DialogContent>
       </Dialog>
 
@@ -183,7 +183,7 @@ function AllPursuitsGroup({
               <Link
                 to={`/pursuit/${p.id}/moment`}
                 onClick={onNavigate}
-                aria-label={`Add a Moment to ${p.title}`}
+                aria-label={`Log a Moment on ${p.title}`}
                 className="flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground hover:border-[var(--coral-deep)]"
               >
                 <Plus className="size-3" /> Add

@@ -3,11 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sushii</title>
+    <title>Soosh</title>
     <script>
       (function () {
         try {
-          var stored = localStorage.getItem("sushii-theme-preference");
+          // One-time migration from the old "sushii-theme-preference" key
+          // (src/app/config.ts's APP_NAME rename) so an existing saved
+          // theme survives. Same migration ThemeContext.tsx runs; done here
+          // too since this inline script has to read the preference before
+          // React (and this file) ever mounts.
+          var stored = localStorage.getItem("soosh-theme-preference");
+          if (stored === null) {
+            var legacy = localStorage.getItem("sushii-theme-preference");
+            if (legacy !== null) {
+              localStorage.setItem("soosh-theme-preference", legacy);
+              stored = legacy;
+            }
+          }
           var pref = stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
           var dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.classList.toggle("dark", dark);

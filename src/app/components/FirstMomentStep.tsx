@@ -303,7 +303,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
 
       <div className="mt-6 flex justify-end">
         <Button variant="coral" disabled={!canSave} onClick={requestSave}>
-          {saving ? <Loader2 className="size-4 animate-spin" /> : "Save"}
+          {saving ? <Loader2 className="size-4 animate-spin" /> : "Log"}
         </Button>
       </div>
     </>

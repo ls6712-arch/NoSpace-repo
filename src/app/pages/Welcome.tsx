@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { WaitlistForm } from "../components/WaitlistForm";
+import { APP_NAME } from "../config";
 
 /**
  * /#/welcome — Step 2's door screen. Root.tsx routes every signed-in
@@ -61,7 +62,7 @@ export function Welcome() {
     <div className="min-h-screen bg-surface px-5 pb-24 pt-16">
       <div className="mx-auto max-w-sm">
         <h1 className="text-center text-[1.75rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
-          Sushii is invite-only for now.
+          {APP_NAME} is invite-only for now.
         </h1>
 
         <div className="mt-8 space-y-3">

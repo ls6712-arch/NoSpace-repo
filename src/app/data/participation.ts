@@ -146,7 +146,7 @@ const BY_HOBBY: Record<string, HobbyIntents> = {
       "Share my interpretation",
       "Compare drafts",
     ],
-    makeTogether: ["Write to the same prompt", "Swap drafts for notes", "Set a weekly deadline"],
+    makeTogether: ["Write to the same prompt", "Swap drafts for notes", "Aim for the same day each week"],
   },
   poetry: {
     exploreTogether: ["Ask about the form", "Discuss the idea", "Share my interpretation"],

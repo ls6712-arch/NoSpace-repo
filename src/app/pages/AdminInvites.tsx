@@ -8,6 +8,7 @@ import { createInvite, revokeInvite } from "../lib/invites";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { APP_NAME } from "../config";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -181,7 +182,7 @@ export function AdminInvites() {
           Invites
         </h1>
         <p className="mb-8 mt-2 text-sm text-muted-foreground">
-          Sushii is invite-only for now — create a link for someone to join with.
+          {APP_NAME} is invite-only for now — create a link for someone to join with.
         </p>
 
         <div className="mb-8 rounded-2xl border border-border bg-card p-4">

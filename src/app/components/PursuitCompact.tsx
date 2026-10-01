@@ -228,7 +228,7 @@ export function PursuitExpandedPanel({
         <div className="flex flex-wrap items-center gap-2">
           <Link to={`/pursuit/${pursuit.id}/moment`}>
             <Button variant="coral" size="sm">
-              Add a Moment
+              Log a Moment
             </Button>
           </Link>
           <Button variant="outline" size="sm" onClick={() => setGoalOpen(true)}>
@@ -258,7 +258,7 @@ export function PursuitExpandedPanel({
           {!pursuit.finishedAt && (
             <Button variant="outline" size="sm" onClick={markDone}>
               <Check className="size-3.5" />
-              Mark complete
+              Mark as completed
             </Button>
           )}
         </div>
@@ -283,7 +283,7 @@ export function PursuitExpandedPanel({
                 {/* A number goal not yet reached gets the tap-to-log control
                     in place of the plain "Current" label — logging a count
                     and writing a narrative update stay two separate actions,
-                    so this sits alongside "Add a Moment" above, not instead
+                    so this sits alongside "Log a Moment" above, not instead
                     of it. */}
                 {goal.shape === "number" && !goal.reachedAt ? (
                   <GoalProgressTap project={pursuit} goal={goal} />

@@ -26,7 +26,6 @@ export function useKnownTags(): string[] {
       for (const t of post.tags ?? []) add(t);
     }
     for (const hobby of hobbies) {
-      add(hobby.name);
       for (const sub of hobby.subItems) add(sub.label);
     }
     for (const c of CATEGORIES) for (const e of c.examples) add(e);

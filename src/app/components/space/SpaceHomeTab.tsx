@@ -64,9 +64,9 @@ function AvatarRow({ people, max = 4 }: { people: Attendee[]; max?: number }) {
   );
 }
 
-/** The Home tab: the event band, the "Settling in" (members) / "Set up
- * your Space" (hosts) checklist, and the "On the table" Moment grid — up
- * to 3 pinned Moments (space_moments.featured, now at most 3 per Space —
+/** The Table tab: the event band, the "Settling in" (members) / "Set up
+ * your Space" (hosts) checklist, and the Host picks / Latest Moment grid —
+ * up to 3 pinned Moments (space_moments.featured, now at most 3 per Space —
  * see 20261004000000_spaces_rework_moments_pin_limit.sql) grouped first,
  * then the rest newest-first — plus host badges. Everything here is read
  * from data that already exists; pin/unpin is a direct write through the
@@ -85,7 +85,7 @@ export function SpaceHomeTab({
   hosts: HostLite[];
   onAddMoment: () => void;
   /** Bumped by the parent right after a Moment is linked into this Space
-   * (from the Add Moment dialog) — included below so that refetches the
+   * (from the Log a Moment dialog) — included below so that refetches the
    * grid, which in turn recomputes the "Share a Moment" checklist step.
    * Pin/unpin already update local state directly and don't need this. */
   momentsRefreshKey?: number;
@@ -491,10 +491,9 @@ export function SpaceHomeTab({
         </div>
       )}
 
-      {/* ── On the table ───────────────────────────────────────────────── */}
+      {/* ── Table ──────────────────────────────────────────────────────── */}
       <div>
-        <div className="flex items-baseline justify-between">
-          <p className="text-lg" style={{ fontFamily: "var(--font-display)" }}>On the table</p>
+        <div className="flex items-baseline justify-end">
           <Link to={`/space/${space.slug}?tab=moments`} className="text-xs text-muted-foreground underline">
             See all Moments
           </Link>
@@ -517,13 +516,13 @@ export function SpaceHomeTab({
           <div className="py-10 text-center">
             <p className="text-sm text-muted-foreground">The table's clear.</p>
             <Button variant="coral" size="sm" className="mt-3" onClick={onAddMoment}>
-              Add the first Moment
+              Log a Moment
             </Button>
           </div>
         ) : (
           <>
             {pinnedMoments.length > 0 && (
-              <p className="mt-4 ns-section-kicker text-muted-foreground">Pinned by the hosts</p>
+              <p className="mt-4 ns-section-kicker text-muted-foreground">Host picks</p>
             )}
             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
               {pinnedMoments.map((post, i) => (
@@ -536,7 +535,7 @@ export function SpaceHomeTab({
                       className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
                     >
                       <PinOff className="size-3" />
-                      Unpin
+                      Remove from host picks
                     </button>
                   )}
                   <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
@@ -546,26 +545,31 @@ export function SpaceHomeTab({
               ))}
             </div>
             {restMoments.length > 0 && (
-              <div className={`grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 ${pinnedMoments.length > 0 ? "mt-8" : "mt-3"}`}>
-                {restMoments.map((post, i) => (
-                  <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
-                    {isHost && (
-                      <button
-                        type="button"
-                        disabled={pinBusyId === post.id}
-                        onClick={() => togglePin(post)}
-                        className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
-                      >
-                        <Pin className="size-3" />
-                        Pin to Home
-                      </button>
-                    )}
-                    <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
-                      <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
+              <>
+                {pinnedMoments.length > 0 && (
+                  <p className="mt-8 ns-section-kicker text-muted-foreground">Latest</p>
+                )}
+                <div className={`grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 ${pinnedMoments.length > 0 ? "mt-3" : "mt-3"}`}>
+                  {restMoments.map((post, i) => (
+                    <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
+                      {isHost && (
+                        <button
+                          type="button"
+                          disabled={pinBusyId === post.id}
+                          onClick={() => togglePin(post)}
+                          className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                        >
+                          <Pin className="size-3" />
+                          Add to host picks
+                        </button>
+                      )}
+                      <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
+                        <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}

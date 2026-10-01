@@ -236,7 +236,7 @@ export function GoalDialog({
                   className="flex w-full items-center justify-between gap-3"
                 >
                   <span className="text-left">
-                    <span className="block text-sm">Also set a deadline</span>
+                    <span className="block text-sm">Also aim for a date</span>
                     <span className="block text-xs text-muted-foreground">
                       Shown next to your count, e.g. "Sep 23"
                     </span>

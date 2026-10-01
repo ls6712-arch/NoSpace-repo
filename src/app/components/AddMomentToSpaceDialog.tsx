@@ -26,7 +26,7 @@ export function AddMomentToSpaceDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Called right after a link succeeds, so a parent showing this Space's
-   * Moments (count, "On the table") can refetch instead of going stale
+   * Moments (count, the Table tab) can refetch instead of going stale
    * until the next full reload. */
   onAdded?: () => void;
 }) {
@@ -112,7 +112,7 @@ export function AddMomentToSpaceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Add a Moment</DialogTitle>
+          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Add from my Moments</DialogTitle>
           <DialogDescription>Pick one of your Moments to show here.</DialogDescription>
         </DialogHeader>
         {!done && posts !== "loading" && (

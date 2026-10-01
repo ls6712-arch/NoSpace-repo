@@ -1,4 +1,4 @@
-import { getHobby, subHobbyLabel } from "./hobbies";
+import { subHobbyLabel } from "./hobbies";
 
 /**
  * Spaces Rework: the new vocabulary is `just_me | followers | space | public`.
@@ -392,8 +392,6 @@ export const seedPosts: Post[] = [
  * seed Moment looking untagged next to real ones. */
 function legacyTags(post: Post): string[] {
   const out = new Set<string>();
-  const hobby = getHobby(post.hobbySlug);
-  if (hobby) out.add(hobby.name);
   if (post.subHobby) {
     const label = subHobbyLabel(post.subHobby);
     if (label) out.add(label);

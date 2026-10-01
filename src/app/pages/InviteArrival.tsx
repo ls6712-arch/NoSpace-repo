@@ -6,6 +6,7 @@ import { saveInviteCode } from "../lib/inviteCode";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { WaitlistForm } from "../components/WaitlistForm";
+import { APP_NAME } from "../config";
 
 /**
  * /#/i/:code — Step 2's arrival page, where an invite link lands. Works
@@ -51,13 +52,13 @@ export function InviteArrival() {
   }
 
   // Already signed in and active: this invite isn't for them — they're
-  // already on Sushii — so sign-in buttons here would do nothing useful.
+  // already on the app — so sign-in buttons here would do nothing useful.
   if (user && profile?.access === "active") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
-        <p className="text-sm text-muted-foreground">You're already on Sushii.</p>
+        <p className="text-sm text-muted-foreground">You're already on {APP_NAME}.</p>
         <Link to="/my-space">
-          <Button variant="coral">Go to My Space</Button>
+          <Button variant="coral">Go to Home</Button>
         </Link>
       </div>
     );
@@ -92,7 +93,7 @@ export function InviteArrival() {
           </Avatar>
         </div>
         <h1 className="mt-4 text-[1.75rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
-          {preview.inviterName} invited you to Sushii
+          {preview.inviterName} invited you to {APP_NAME}
         </h1>
         {preview.note && (
           <p className="mt-3 text-sm italic leading-relaxed text-muted-foreground">“{preview.note}”</p>

@@ -14,6 +14,7 @@ import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/searc
 import { NotificationsMenu } from "./NotificationsMenu";
 import { useSocial } from "../context/SocialContext";
 import { formatBadgeCount } from "../lib/messageSync";
+import { APP_NAME } from "../config";
 import { isDismissKey } from "../lib/menuDismiss";
 
 function initials(name: string) {
@@ -203,7 +204,7 @@ function AccountMenu() {
 
   return (
     <div className="flex items-center gap-0.5">
-      <Link to="/you" aria-label="You: your work and saved ideas" title="You">
+      <Link to="/you" aria-label="You: your profile and saved ideas" title="You">
         <Avatar className="size-8">
           {profile?.avatar_url && (
             <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />
@@ -246,9 +247,9 @@ const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
 const PRIMARY_NAV = [
   { to: "/discover", label: "Discover", hint: "Spaces, people and pursuits",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },
-  { to: "/my-space", label: "My Space", hint: "New work from the people and hobbies you're part of",
+  { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you're part of",
     match: (p: string) => p.startsWith("/my-space") },
-  { to: "/create", label: "Start your log", hint: "Share a moment, or start a pursuit.", accent: true,
+  { to: "/create", label: "Log a Moment", hint: "Share a moment, or start a pursuit.", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
 
@@ -315,7 +316,7 @@ export function Header() {
             aria-current={pathname === "/" ? "page" : undefined}
           >
             <span className="ns-wordmark-mark" aria-hidden="true" />
-            <span className="text-2xl font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>Sushii</span>
+            <span className="text-2xl font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>{APP_NAME}</span>
             {pathname === "/" && (
               <span
                 className="absolute -bottom-0.5 left-0 right-0 h-px"
@@ -329,12 +330,12 @@ export function Header() {
           <nav className="hidden lg:flex items-center gap-8" aria-label="Primary">
             {PRIMARY_NAV.map((item) => {
               const active = item.match(pathname);
-              // Step 3: "Start your log" opens the same two-tap sheet the
+              // Step 3: "Log a Moment" opens the same two-tap sheet the
               // phone bar's Create tab does, rather than the full /create
               // form — see BottomTabBar.tsx's own comment on why. The full
-              // form (Log.tsx) stays one "More options" tap away inside it,
-              // and /create itself is untouched for anyone linking straight
-              // to it.
+              // form (Log.tsx) stays one "Open the full form" tap away
+              // inside it, and /create itself is untouched for anyone
+              // linking straight to it.
               if (item.to === "/create") {
                 return (
                   <button
@@ -385,8 +386,8 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               type="search"
-              aria-label="Search hobbies, people, or spaces"
-              placeholder="Search hobbies, people, or spaces..."
+              aria-label="Search Moments, people, Spaces"
+              placeholder="Search Moments, people, Spaces"
               className="w-full rounded-none border-x-0 border-t-0 border-b-[var(--border)] bg-transparent pl-9 focus-visible:ring-0"
               value={query}
               onChange={(e) => {
@@ -467,8 +468,8 @@ export function Header() {
             <Input
               type="search"
               autoFocus
-              aria-label="Search hobbies, people, or spaces"
-              placeholder="Search hobbies, people, or spaces..."
+              aria-label="Search Moments, people, Spaces"
+              placeholder="Search Moments, people, Spaces"
               className="w-full rounded-none border-x-0 border-t-0 border-b-[var(--border)] bg-transparent pl-9 focus-visible:ring-0"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

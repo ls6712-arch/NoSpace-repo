@@ -39,7 +39,7 @@ const AUDIENCE_LABEL: Record<Audience, string> = {
 const NO_PURSUIT = "__none__";
 
 /**
- * Step 3's two-tap Moment: photo or line, Save — everything else (Pursuit,
+ * Step 3's two-tap Moment: photo or line, Log — everything else (Pursuit,
  * Corner, audience) is a visible default chip, one tap to change, never a
  * question that has to be answered first.
  *
@@ -251,7 +251,7 @@ export function QuickLog({
     return (
       <div className="space-y-2.5">
         <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-card px-3.5 text-sm">
-          <span>Saved</span>
+          <span>Logged</span>
           <button
             type="button"
             onClick={undo}
@@ -418,7 +418,7 @@ export function QuickLog({
           )}
         </div>
         <Button variant="coral" size="sm" onClick={requestSave} disabled={!canPost} className="shrink-0">
-          {saving ? <Loader2 className="size-3.5 animate-spin" /> : "Save"}
+          {saving ? <Loader2 className="size-3.5 animate-spin" /> : "Log"}
         </Button>
       </div>
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
@@ -429,7 +429,7 @@ export function QuickLog({
             to={effectivePursuit ? `/create?pursuit=${effectivePursuit.id}` : "/create"}
             className="text-accent hover:underline"
           >
-            More options
+            Open the full form
           </Link>
         </p>
       )}

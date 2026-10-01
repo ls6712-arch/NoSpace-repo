@@ -4,15 +4,16 @@ import { ArrowRight, MessageCircle, Plus, Share2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
-import { Post } from "../data/posts";
-import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
-import { usePeopleInHobby } from "../lib/people";
+import { Post, postCorner } from "../data/posts";
+import { subHobbyLabel, currentSpaceSlug } from "../data/hobbies";
+import { useCorners } from "../context/CornersContext";
 import { messageTabFor } from "../lib/messageTabs";
 import { sessionsFromPosts } from "../components/HobbyShelf";
 import { tagsFromPosts } from "../lib/postTags";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { WorkGrid } from "../components/WorkGrid";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { PursuitCard } from "../components/PursuitCard";
 import { QuietMilestones, SharedMilestones } from "../components/QuietMilestones";
 import { GeneratedArt } from "../components/GeneratedArt";
@@ -28,14 +29,20 @@ import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/p
 import { FollowListDialog } from "../components/FollowListDialog";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
 
-/** Whichever Space shows up most in their posts — used for the closing
- * banner's illustration, not to claim membership in anything we can't
- * actually see. */
-function primaryHobbySlug(posts: Post[]): string | undefined {
-  if (posts.length === 0) return undefined;
-  const counts = new Map<string, number>();
-  for (const p of posts) counts.set(p.hobbySlug, (counts.get(p.hobbySlug) ?? 0) + 1);
-  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+/** Whichever Corner shows up most in their public Moments — a Corner slug is
+ * only unique within its own Space, so this tracks the pair, never the slug
+ * alone. Categories never surface here or anywhere else a member can see. */
+function primaryCornerKey(posts: Post[]): { spaceSlug: string; slug: string } | undefined {
+  const counts = new Map<string, { spaceSlug: string; slug: string; count: number }>();
+  for (const p of posts) {
+    const slug = postCorner(p);
+    if (!slug) continue;
+    const key = `${p.hobbySlug}::${slug}`;
+    const entry = counts.get(key);
+    if (entry) entry.count++;
+    else counts.set(key, { spaceSlug: p.hobbySlug, slug, count: 1 });
+  }
+  return [...counts.values()].sort((a, b) => b.count - a.count)[0];
 }
 
 /**
@@ -61,6 +68,7 @@ export function PublicProfile() {
   const { username = "" } = useParams();
   const { user } = useAuth();
   const social = useSocial();
+  const { cornersFor } = useCorners();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [state, setState] = useState<
@@ -281,7 +289,7 @@ export function PublicProfile() {
             Nobody by that name. The link may be out of date.
           </p>
           <Link to="/discover">
-            <Button variant="outline">Explore hobbies instead</Button>
+            <Button variant="outline">Browse Discover</Button>
           </Link>
         </div>
       </div>
@@ -321,8 +329,13 @@ export function PublicProfile() {
     : { label: top?.label };
 
   const primaryHobby = pickPrimaryHobby(posts);
-  const hobbySlug = primaryHobbySlug(posts);
-  const hobby = hobbySlug ? getHobby(hobbySlug) : undefined;
+  const cornerKey = primaryCornerKey(posts);
+  const primaryCorner = cornerKey
+    ? cornersFor(cornerKey.spaceSlug).find((c) => c.slug === cornerKey.slug)
+    : undefined;
+  const cornerMoments = primaryCorner
+    ? posts.filter((p) => p.hobbySlug === primaryCorner.spaceSlug && postCorner(p) === primaryCorner.slug)
+    : [];
 
   const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
   const sinceLabel = earliestPostAt
@@ -452,7 +465,7 @@ export function PublicProfile() {
                 to={`/u/${username}/studio`}
                 className="mt-2 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
-                Open Studio →
+                Open Scrapbook →
               </Link>
             </div>
         </div>
@@ -550,22 +563,31 @@ export function PublicProfile() {
           </div>
         )}
 
-        <div className="mb-10">
-          <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-            This Corner
-          </h2>
-          <PeopleWhoAlsoMake hobbySlug={hobbySlug} excludePersonId={personId} firstName={firstName} />
-        </div>
+        {primaryCorner && cornerMoments.length > 0 && (
+          <div className="mb-10">
+            <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              {primaryCorner.name}
+            </h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              {firstName}'s Moments tagged {primaryCorner.name}.
+            </p>
+            <div className={MOMENT_GRID}>
+              {cornerMoments.slice(0, 6).map((post) => (
+                <MomentCard key={post.id} post={post} surface="feed" onOpen={() => setOpenPost(post)} />
+              ))}
+            </div>
+          </div>
+        )}
 
-        {hobby && (
+        {primaryCorner && (
           <Link
-            to={`/space/${hobby.slug}`}
+            to={`/discover?corner=${primaryCorner.slug}`}
             className="group mb-10 flex flex-col overflow-hidden rounded-3xl border border-border sm:flex-row sm:items-center"
           >
             <div className="h-40 w-full shrink-0 overflow-hidden sm:h-auto sm:w-64">
               <GeneratedArt
-                hobbySlug={hobby.slug}
-                seed={hobby.slug}
+                hobbySlug={primaryCorner.spaceSlug}
+                seed={primaryCorner.slug}
                 className="h-full w-full transition-transform duration-500 group-hover:scale-105"
               />
             </div>
@@ -574,7 +596,7 @@ export function PublicProfile() {
                 Same hobbies.<br />Brighter days.
               </p>
               <span className="inline-flex items-center gap-1.5 text-sm text-[var(--coral-text)]">
-                Explore their world
+                Go to {primaryCorner.name}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </span>
             </div>
@@ -624,63 +646,6 @@ export function PublicProfile() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/** Real people who post in the same hobby — the closest honest stand-in for
- * "people they make with" the client can actually see, since nothing here
- * can read who a stranger is personally connected to. */
-function PeopleWhoAlsoMake({
-  hobbySlug,
-  excludePersonId,
-  firstName,
-}: {
-  hobbySlug?: string;
-  excludePersonId: string;
-  firstName: string;
-}) {
-  const { people, loading } = usePeopleInHobby(hobbySlug ?? "");
-  const others = people.filter((p) => p.id !== excludePersonId).slice(0, 6);
-
-  return (
-    <div>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {hobbySlug
-          ? `Other people making ${getHobby(hobbySlug)?.name.toLowerCase() ?? "the same thing"} — not ${firstName}'s connections, which only they can see.`
-          : "Nothing to suggest yet."}
-      </p>
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Looking…</p>
-      ) : others.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
-          Nobody else here yet.
-        </p>
-      ) : (
-        <ul className="flex flex-wrap gap-5">
-          {others.map((person) => (
-            <li key={person.id}>
-              <Link
-                to={person.username ? `/u/${person.username}` : `/u/${person.id}`}
-                className="flex w-20 flex-col items-center gap-2 text-center transition-transform duration-200 hover:-translate-y-0.5"
-              >
-                <Avatar className="size-14">
-                  {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" className="object-cover" />}
-                  <AvatarFallback>
-                    {person.displayName
-                      .split(" ")
-                      .map((p) => p[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="w-full truncate text-xs text-foreground">{person.displayName}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
