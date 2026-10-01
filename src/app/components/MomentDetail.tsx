@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { pursuitTogetherHref } from "../lib/pursuitsRemote";
 import {
   Check,
   Copy,
@@ -291,13 +292,22 @@ export function MomentDetail({
                 the first "Count me in" tap, this reuses the existing
                 make-together request instead of building a second flow. */}
             {!owned && myReactions.includes("in") && post.userId && (
-              <button
-                type="button"
-                onClick={() => setAskTogetherOpen(true)}
-                className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
-              >
-                Ask {post.creator} to make it together?
-              </button>
+              <div className="flex flex-col items-start gap-0.5">
+                {/* Step 4c: Count me in → do it together, as a shared Pursuit. */}
+                <Link
+                  to={pursuitTogetherHref(post)}
+                  className="text-xs font-medium text-foreground transition-colors hover:underline"
+                >
+                  Start a Pursuit with {post.creator}?
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setAskTogetherOpen(true)}
+                  className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                >
+                  Ask {post.creator} to make it together?
+                </button>
+              </div>
             )}
 
             {/* The one real (cross-user) way pursuits.inspired_by_post_id

@@ -32,7 +32,7 @@ import {
 } from "../lib/journal";
 import { MEASURE_KINDS, defaultMeasure, formatAmount, guessSpace, localDateMs, targetText, unitFor } from "../lib/pursuitProgress";
 import { mirrorPursuit, mirrorPursuitMeasure, saveInvites } from "../lib/pursuitsRemote";
-import { Person, usePeopleSearch } from "../lib/people";
+import { Person, fetchPerson, usePeopleSearch } from "../lib/people";
 
 const STEPS = ["Goal", "Measure", "Rules", "People", "Review"];
 /** Screens → which step dot is lit. "Define" is the second screen of Measure. */
@@ -68,6 +68,24 @@ export function CreatePursuit() {
   const [participation, setParticipation] = useState<"solo" | "invite">("solo");
   const [mode, setMode] = useState<Exclude<PursuitMode, "solo">>("together");
   const [invitees, setInvitees] = useState<Person[]>([]);
+  // Step 4c: "Start a Pursuit with {name}" from a Count me in tap arrives
+  // as ?with=<their id>&from=<their moment id> — they're pre-invited,
+  // side by side, and the new Pursuit remembers the moment that started it.
+  const withId = searchParams.get("with");
+  const fromPostId = Number(searchParams.get("from")) || undefined;
+  useEffect(() => {
+    if (!withId || withId === user?.id) return;
+    let cancelled = false;
+    void fetchPerson(withId).then((p) => {
+      if (cancelled || !p) return;
+      setParticipation("invite");
+      setMode("together");
+      setInvitees((l) => (l.some((x) => x.id === p.id) ? l : [...l, p]));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [withId, user?.id]);
   const [query, setQuery] = useState("");
   const { people: results, loading: searching } = usePeopleSearch(query);
   const [saving, setSaving] = useState(false);
@@ -149,6 +167,7 @@ export function CreatePursuit() {
       mode: pursuitMode,
       members,
       checkInDays: DEFAULT_CHECK_IN_DAYS,
+      inspiredByPostId: fromPostId,
       // Invited people have to be able to open it.
       shared: false,
     });

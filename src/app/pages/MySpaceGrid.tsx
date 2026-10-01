@@ -10,6 +10,7 @@ import { Post } from "../data/posts";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
+import { DayTwoInviteCard } from "../components/DayTwoInviteCard";
 import { PursuitsInProgressSection } from "../components/PursuitsInProgressSection";
 import { ShelfRail } from "../components/ShelfRail";
 import { InspiredRail } from "../components/InspiredRail";
@@ -196,6 +197,8 @@ export function MySpaceGrid() {
           {numeral} · TODAY'S SHEET
         </p>
       </header>
+
+      <DayTwoInviteCard />
 
       <PursuitsInProgressSection pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
 

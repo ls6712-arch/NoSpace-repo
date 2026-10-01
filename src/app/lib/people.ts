@@ -107,6 +107,17 @@ async function decorate(people: Person[]): Promise<Person[]> {
   return [...byId.values()];
 }
 
+/** One person by id — for a page that arrives already knowing who it's
+ * about (CreatePursuit's ?with=). Null if they can't be read. */
+export async function fetchPerson(id: string): Promise<Person | null> {
+  if (!supabase || !id) return null;
+  const { data } = await withTimeout(
+    supabase.from("profiles").select("id, username, display_name, avatar_url").eq("id", id).maybeSingle(),
+    { data: null } as any,
+  );
+  return data ? toPerson(data as ProfileRow) : null;
+}
+
 /** Search people by the name they chose, or their handle. */
 export async function searchPeople(query: string, limit = 12): Promise<Person[]> {
   const q = query.trim();
