@@ -10,6 +10,7 @@ import { Post } from "../data/posts";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
+import { PursuitsInProgressSection } from "../components/PursuitsInProgressSection";
 import { ShelfRail } from "../components/ShelfRail";
 import { InspiredRail } from "../components/InspiredRail";
 import { NewSpacesRail } from "../components/NewSpacesRail";
@@ -36,6 +37,13 @@ function greeting(name: string): string {
  * The right rail (Shelf, Pursuits) stays a sidebar at lg+, a deliberate
  * difference from boards 4/5 (which show no rail at all) — kept on an
  * explicit call rather than dropped or moved off this page.
+ *
+ * PursuitsInProgressSection, full-width above the sheet, is additive to
+ * that rail rather than a replacement for it: the rail only ever sits at
+ * lg+, so below that this horizontal-scroll strip was the only always-
+ * visible surface for "what am I still moving on," previously buried below
+ * the whole feed. It shares its grouped "See all" dialog (AllPursuitsDialog)
+ * with the rail's own "See all" rather than duplicating that list.
  *
  * Nav below lg: this app already has a working "reach every section on a
  * small screen" answer — the global BottomTabBar (Root.tsx, every page) —
@@ -188,6 +196,8 @@ export function MySpaceGrid() {
           {numeral} · TODAY'S SHEET
         </p>
       </header>
+
+      <PursuitsInProgressSection pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
 
       <div className="myspace-body">
         <div className="myspace-feed">
