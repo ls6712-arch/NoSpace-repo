@@ -1,0 +1,11 @@
+-- BACKFILL (no-op): documents a migration recorded live as version
+-- 20260920120120 / close_post_media_listing. The real, committed content for this migration
+-- lives at supabase/migrations/20260919232000_close_post_media_listing.sql — that file was committed
+-- under a cleaned-up/rounded timestamp that doesn't match the exact
+-- version Postgres recorded at apply time. Per this repo's rule against
+-- editing or renaming an already-run migration file, that file is left
+-- as-is; this stub exists only so the local migrations directory has an
+-- exact match for every version in supabase_migrations.schema_migrations,
+-- which the "Supabase Preview" CI check verifies.
+--
+-- This file intentionally applies nothing.
