@@ -324,15 +324,19 @@ export function CornersProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const { data } = await supabase.from("app_config").select("value").eq("key", "corner_min_moments_30d").single();
+      // maybeSingle, not single: a missing/not-yet-migrated row is a normal
+      // "keep the default" case, not an error worth a 406 in the console
+      // (see 20261001120000_app_config_public_read.sql for the RLS half of
+      // this fix — this half is just not treating "0 rows" as exceptional).
+      const { data } = await supabase.from("app_config").select("value").eq("key", "corner_min_moments_30d").maybeSingle();
       if (typeof data?.value === "number") setCornerThreshold(data.value);
     } catch {
-      // app_config not migrated yet, or the row's missing — keep the
-      // built-in default (3), same number the migration seeds it with.
+      // app_config not migrated yet, or unreachable — keep the built-in
+      // default (3), same number the migration seeds it with.
     }
 
     try {
-      const { data } = await supabase.from("app_config").select("value").eq("key", "trademark_blocklist").single();
+      const { data } = await supabase.from("app_config").select("value").eq("key", "trademark_blocklist").maybeSingle();
       if (Array.isArray(data?.value)) setBlocklist(data.value as string[]);
     } catch {
       // Keep DEFAULT_BLOCKLIST — the real enforcement is the CHECK
