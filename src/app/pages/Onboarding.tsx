@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Check } from "lucide-react";
-import { hobbies } from "../data/hobbies";
-import { MediaAttachPicker } from "../components/MediaAttachPicker";
 import { TagsField } from "../components/TagsField";
 import { AvatarPicker } from "../components/AvatarPicker";
+import { FirstMomentStep } from "../components/FirstMomentStep";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useContent } from "../context/ContentContext";
-import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { useCorners, cornerFollowKey } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
-import { Textarea } from "../components/ui/textarea";
-
-const MOMENT_CAP = 5;
 
 /** Every chip carried across the wizard shares this layoutId prefix, so
  * Motion can visibly travel a tag from step 1's field into step 2's quiet
@@ -49,136 +43,15 @@ const COVER_TEXTURES = [
 const SPRING = { type: "spring" as const, stiffness: 260, damping: 28 };
 
 /**
- * One tag's optional first Moment, pre-tagged from step 1's picks — the same
- * lightweight shape as the old per-Space version (a Textarea,
- * MediaAttachPicker, addPost), just keyed by an open tag instead of a fixed
- * Hobby. Locks into a small "Added" confirmation once posted; never
- * re-openable from here — going back to change it is what /create is for
- * afterward.
- */
-function MomentCard({
-  tag,
-  disabled,
-  reduceMotion,
-  onAdded,
-}: {
-  tag: string;
-  disabled: boolean;
-  reduceMotion: boolean;
-  onAdded: () => void;
-}) {
-  const { addPost } = useContent();
-  const { profile } = useAuth();
-  const { resolveInterest } = useCorners();
-  const [body, setBody] = useState("");
-  const [media, setMedia] = useState<File | null>(null);
-  const [posting, setPosting] = useState(false);
-  const [added, setAdded] = useState(false);
-  const [blockedError, setBlockedError] = useState<string | null>(null);
-
-  const Chip = reduceMotion ? "span" : motion.span;
-  const chipProps = reduceMotion
-    ? {}
-    : { layout: true, layoutId: `${TAG_LAYOUT_PREFIX}${tag}` };
-
-  if (added) {
-    return (
-      <div className="flex items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--paper-raised)] p-4">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--coral-deep)] text-white">
-          <Check className="size-4" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-            {tag}
-          </p>
-          <p className="text-xs text-[var(--ink-soft)]">Added to your Shelf.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // A photo says enough on its own — the thought is a nice-to-have next to
-  // it, not a second thing required before either can be shared.
-  const canSubmit = (!!body.trim() || !!media) && !posting;
-
-  const submit = async () => {
-    if (!canSubmit) return;
-    setPosting(true);
-    setBlockedError(null);
-    try {
-      // Resolves the tag to a real Corner — an existing one (exact or a
-      // near-duplicate match) or a brand-new one, created here the same
-      // way tagging-into-existence always has (see CornersContext's
-      // resolveInterest). hobbySlug/subHobby are Category/Corner
-      // plumbing the schema still requires; the tag itself is what every
-      // caption, pill, and label on this Moment actually reads.
-      const match = await resolveInterest(tag);
-      if (match && "blocked" in match) {
-        setBlockedError("Try a more general name, like Brick building.");
-        return;
-      }
-      const entry = await addPost({
-        hobbySlug: match?.spaceSlug ?? hobbies[0].slug,
-        subHobby: match?.slug,
-        corner: match?.slug,
-        tags: [tag],
-        type: media?.type.startsWith("video/") ? "video" : "photo",
-        files: media ? [media] : undefined,
-        creator: profile?.display_name?.trim() || "You",
-        caption: body.trim(),
-        visibility: "public",
-      });
-      // A guard-rejected concurrent call, not a failure — leaves the
-      // wizard on this step rather than advancing on a post that didn't
-      // actually happen from this tap.
-      if (isInFlightSkipped(entry)) return;
-      setAdded(true);
-      onAdded();
-    } finally {
-      setPosting(false);
-    }
-  };
-
-  return (
-    <div
-      className={`rounded-2xl border border-[var(--line)] bg-[var(--paper-raised)] p-4 ${disabled ? "opacity-50" : ""}`}
-    >
-      <Chip
-        {...chipProps}
-        className="mb-2 inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--paper)] px-2.5 py-1 text-xs text-[var(--ink)]"
-      >
-        {tag}
-      </Chip>
-      <Textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder={`Say something about it, or just add the photo`}
-        className="min-h-16"
-        maxLength={2000}
-        disabled={disabled}
-      />
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <MediaAttachPicker file={media} onChange={setMedia} label="Add a photo" />
-        <Button variant="coral" size="sm" disabled={disabled || !canSubmit} onClick={submit}>
-          {posting ? "Adding…" : "Log a Moment"}
-        </Button>
-      </div>
-      {blockedError && <p className="mt-2 text-[11px] text-[var(--coral-text)]">{blockedError}</p>}
-      {disabled && (
-        <p className="mt-2 text-[11px] text-[var(--ink-soft)]">
-          You've added {MOMENT_CAP} for now. Add more anytime from Create.
-        </p>
-      )}
-    </div>
-  );
-}
-
-/**
  * Shown once, right after signup — see sql/onboarding-v2.sql and Root.tsx's
  * own guard for exactly when (both untouched by this rewrite; both correct
- * as-is). Three steps: open tags (replacing the old fixed Space grid), the
- * Studio-style cover itself (replacing the old bio-less flow entirely), and
- * a chance to write a first page or two before landing on the Shelf.
+ * as-is). Three steps: Step 3's own "Add your first moment" (no questions
+ * asked first), open tags (replacing the old fixed Space grid), and the
+ * Studio-style cover itself (replacing the old bio-less flow entirely) —
+ * finishing right from the cover step now. The old third step, a per-tag
+ * "write a first page" gauntlet, is gone: it asked for up to five more
+ * Moments right after the real first one, which is exactly the friction
+ * Step 3 exists to remove from onboarding.
  */
 export function Onboarding() {
   const [searchParams] = useSearchParams();
@@ -209,25 +82,33 @@ export function Onboarding() {
   const [tagline, setTagline] = useState("");
   const [textureIndex, setTextureIndex] = useState(0);
 
-  const [addedCount, setAddedCount] = useState(0);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
 
   const goToStep = (next: 1 | 2 | 3) => setStep(next);
 
   /** A "blank page" cover is still a complete, on-brand one — never a hole
-   * where a title or texture should be. */
+   * where a title or texture should be. Finishes onboarding directly now —
+   * the cover step is the last one, so "skip the cover" and "skip the rest
+   * of onboarding" are the same button. Passes the blank-page title/tagline
+   * straight to finish() rather than through setTitle/setTagline first —
+   * those are async state updates, and finish() reading its own still-stale
+   * closure a moment later would send whatever title/tagline predated this
+   * click instead of the blank-page values just chosen. */
   const skipCover = () => {
-    setTitle(profile?.display_name?.trim() ?? "You");
+    const blankTitle = profile?.display_name?.trim() ?? "You";
+    setTitle(blankTitle);
     setTagline("");
     setTextureIndex(0);
-    goToStep(3);
+    void finish({ title: blankTitle, tagline: "" });
   };
 
-  const finish = async () => {
+  const finish = async (overrides?: { title: string; tagline: string }) => {
     if (finishing) return;
     setFinishing(true);
     setFinishError(null);
+    const finishTitle = overrides?.title ?? title;
+    const finishTagline = overrides?.tagline ?? tagline;
     try {
       // Follows are derived from the open tags now, not written as each one
       // is picked — private Interests, Corner by Corner (spec change:
@@ -260,12 +141,12 @@ export function Onboarding() {
       // guard, which bounces you right back to step one.
       const { error } = await updateProfile({
         onboarding_completed: true,
-        cover_title: title.trim() || null,
+        cover_title: finishTitle.trim() || null,
         // One shared field at onboarding time — bio and cover_tagline can
         // diverge later from Settings or the cover editor, but they start
         // as the same input here rather than asking for both.
-        bio: tagline.trim() || null,
-        cover_tagline: tagline.trim() || null,
+        bio: finishTagline.trim() || null,
+        cover_tagline: finishTagline.trim() || null,
       });
       if (error) {
         setFinishError("Couldn't finish setting up. Try again in a moment.");
@@ -278,8 +159,6 @@ export function Onboarding() {
       setFinishing(false);
     }
   };
-
-  const capReached = addedCount >= MOMENT_CAP;
 
   const stepDirection = { 1: -1, 2: 0, 3: 1 } as const;
   const slideVariants = {
@@ -312,7 +191,9 @@ export function Onboarding() {
             exit="exit"
             transition={reduceMotion ? { duration: 0 } : SPRING}
           >
-            {step === 1 && (
+            {step === 1 && <FirstMomentStep onContinue={() => goToStep(2)} />}
+
+            {step === 2 && (
               <>
                 <h1 className="mb-1 text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
                   What are you into?
@@ -330,14 +211,14 @@ export function Onboarding() {
                 />
 
                 <div className="mt-8 flex justify-end">
-                  <Button variant="coral" onClick={() => goToStep(2)}>
+                  <Button variant="coral" onClick={() => goToStep(3)}>
                     Continue
                   </Button>
                 </div>
               </>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <CoverStep
                 avatar={avatar}
                 onAvatarChange={setAvatar}
@@ -352,47 +233,11 @@ export function Onboarding() {
                 onTextureChange={setTextureIndex}
                 tags={tags}
                 reduceMotion={reduceMotion}
-                onContinue={() => goToStep(3)}
+                onContinue={() => void finish()}
                 onSkip={skipCover}
+                finishing={finishing}
+                finishError={finishError}
               />
-            )}
-
-            {step === 3 && (
-              <>
-                <h1 className="mb-1 text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  Write your first page
-                </h1>
-                <p className="mb-6 text-sm text-[var(--ink-soft)]">
-                  Totally optional: a photo, a line about it, or both, for any of the tags you picked.
-                  Skip this if nothing comes to mind yet.
-                </p>
-
-                {tags.length === 0 ? (
-                  <p className="rounded-2xl border border-dashed border-[var(--line)] px-5 py-9 text-center text-sm text-[var(--ink-soft)]">
-                    No tags picked yet — nothing to pre-fill here. Skip ahead; you can log a Moment
-                    anytime from Create.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {tags.map((tag) => (
-                      <MomentCard
-                        key={tag}
-                        tag={tag}
-                        disabled={capReached}
-                        reduceMotion={reduceMotion}
-                        onAdded={() => setAddedCount((c) => c + 1)}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                <div className="mt-8 flex flex-col items-end gap-2">
-                  {finishError && <p className="text-xs text-[var(--coral-text)]">{finishError}</p>}
-                  <Button variant="coral" disabled={finishing} onClick={finish}>
-                    {finishing ? "Finishing…" : addedCount > 0 ? "Finish" : "Skip for now"}
-                  </Button>
-                </div>
-              </>
             )}
           </motion.div>
         </AnimatePresence>
@@ -422,6 +267,8 @@ function CoverStep({
   reduceMotion,
   onContinue,
   onSkip,
+  finishing,
+  finishError,
 }: {
   avatar: string | undefined;
   onAvatarChange: (next: string | undefined) => void;
@@ -435,6 +282,8 @@ function CoverStep({
   reduceMotion: boolean;
   onContinue: () => void;
   onSkip: () => void;
+  finishing: boolean;
+  finishError: string | null;
 }) {
   const displayName = title.trim() || "You";
   const Chip = reduceMotion ? "span" : motion.span;
@@ -544,13 +393,16 @@ function CoverStep({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-[var(--line)] bg-[var(--paper-raised)] p-4 sm:flex-row sm:justify-end">
-        <Button variant="outline" size="lg" onClick={onSkip}>
-          Start with a blank page
-        </Button>
-        <Button variant="coral" size="lg" onClick={onContinue}>
-          Continue
-        </Button>
+      <div className="flex flex-col items-end gap-2 border-t border-[var(--line)] bg-[var(--paper-raised)] p-4">
+        {finishError && <p className="text-xs text-[var(--coral-text)]">{finishError}</p>}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" size="lg" disabled={finishing} onClick={onSkip}>
+            Start with a blank page
+          </Button>
+          <Button variant="coral" size="lg" disabled={finishing} onClick={onContinue}>
+            {finishing ? "Finishing…" : "Continue"}
+          </Button>
+        </div>
       </div>
     </div>
   );

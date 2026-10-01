@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
 import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
+import { QuickLogGlobalSheet } from "../components/QuickLogGlobalSheet";
 import { BottomTabBar } from "../components/BottomTabBar";
 import { PreviewBanner } from "../components/PreviewBanner";
 
@@ -104,6 +105,7 @@ export function Root() {
         <Outlet />
       </main>
       <CartDrawer />
+      <QuickLogGlobalSheet />
       <BadgeUnlockToast />
       <BottomTabBar />
     </div>

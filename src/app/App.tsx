@@ -10,6 +10,7 @@ import { CategoriesProvider } from "./context/CategoriesContext";
 import { CornersProvider } from "./context/CornersContext";
 import { PrivateLogsProvider } from "./context/PrivateLogsContext";
 import { SettingsProvider } from "./context/SettingsContext";
+import { QuickLogProvider } from "./context/QuickLogContext";
 
 export default function App() {
   return (
@@ -23,7 +24,9 @@ export default function App() {
                   <SocialProvider>
                     <CategoriesProvider>
                       <CartProvider>
-                        <RouterProvider router={router} />
+                        <QuickLogProvider>
+                          <RouterProvider router={router} />
+                        </QuickLogProvider>
                       </CartProvider>
                     </CategoriesProvider>
                   </SocialProvider>

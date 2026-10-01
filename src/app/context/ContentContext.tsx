@@ -236,6 +236,11 @@ interface ContentContextType {
       hobbySlug?: string;
       subHobby?: string;
       mediaPath?: string;
+      // Step 3's "Add details" sheet — see the matching patch type on
+      // updatePost's own implementation for why these moved here too.
+      corner?: string;
+      locationName?: string;
+      locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
     },
   ) => Promise<boolean>;
   /** Deletes a moment you own. Returns false if it couldn't be deleted — the
@@ -799,6 +804,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       hobbySlug?: string;
       subHobby?: string;
       mediaPath?: string;
+      // Step 3's "Add details" sheet — Corner and location move to after
+      // Save now, so both need to be editable here, not just at creation.
+      corner?: string;
+      locationName?: string;
+      locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
     },
   ): Promise<boolean> => {
     const target = realPosts.find((p) => p.id === postId);
@@ -822,6 +832,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
               visibility: (patch.visibility ?? p.visibility) as Visibility,
               hobbySlug: patch.hobbySlug ?? p.hobbySlug,
               subHobby: patch.subHobby === undefined ? p.subHobby : patch.subHobby || undefined,
+              corner: patch.corner === undefined ? p.corner : patch.corner || undefined,
+              locationName: patch.locationName === undefined ? p.locationName : patch.locationName || undefined,
+              locationPrivacy: patch.locationPrivacy ?? p.locationPrivacy,
               media: newMediaUrl ?? p.media,
               mediaUrls: newMediaUrl ? [newMediaUrl] : p.mediaUrls,
               mediaPaths: patch.mediaPath ? [patch.mediaPath] : p.mediaPaths,
@@ -835,6 +848,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       if (patch.visibility !== undefined) postsPatch.visibility = patch.visibility;
       if (patch.hobbySlug !== undefined) postsPatch.hobby_slug = patch.hobbySlug;
       if (patch.subHobby !== undefined) postsPatch.sub_hobby = patch.subHobby || null;
+      if (patch.corner !== undefined) postsPatch.corner = patch.corner || null;
+      if (patch.locationName !== undefined) postsPatch.location_name = patch.locationName || null;
+      if (patch.locationPrivacy !== undefined) postsPatch.location_privacy = patch.locationPrivacy;
       if (patch.mediaPath !== undefined) {
         // Step 1: a replaced photo lives at a path in moment-media, never a
         // public post-media URL — media_url/media_urls (NOT NULL/legacy)

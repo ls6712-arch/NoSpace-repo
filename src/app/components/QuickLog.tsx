@@ -1,37 +1,54 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
-import { Camera, Loader2, Lock, UserRound, X } from "lucide-react";
+import { Camera, Loader2, Undo2, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useRewards } from "../context/RewardsContext";
 import { useSettings } from "../context/SettingsContext";
-import { Project, markActivity } from "../lib/journal";
-import { defaultSpaceSlug } from "../data/hobbies";
+import { useCorners } from "../context/CornersContext";
+import { Project, markActivity, useJournal } from "../lib/journal";
+import { defaultSpaceSlug, subHobbyLabel } from "../data/hobbies";
 import { guessSpace } from "../lib/pursuitProgress";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { isInFlightSkipped } from "../lib/inFlightGuard";
+import { Post } from "../data/posts";
+import { CornerRef, loadMomentDefaults, saveMomentDefaults } from "../lib/momentDefaults";
+import { EveryoneShareConfirm } from "./EveryoneShareConfirm";
+import { IsThisPartOfSomething, hasOfferedIsThisPartOfSomethingThisSession } from "./IsThisPartOfSomething";
+import { AddDetailsSheet } from "./AddDetailsSheet";
 import { Button } from "./ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
-type Audience = "private" | "followers";
+type Audience = "private" | "followers" | "public";
+
+const AUDIENCE_LABEL: Record<Audience, string> = {
+  private: "Only you",
+  followers: "Followers",
+  public: "Everyone",
+};
+
+const NO_PURSUIT = "__none__";
 
 /**
- * The ten-second Moment: one photo, one line, Log. For the small updates
- * ("did 20 minutes today") that don't deserve the full composer — which
- * stays one tap away for the big ones.
+ * Step 3's two-tap Moment: photo or line, Log — everything else (Pursuit,
+ * Corner, audience) is a visible default chip, one tap to change, never a
+ * question that has to be answered first.
  *
- * The line is always "What changed?", never a blank caption box. Speed
- * without reflection would just rebuild an Instagram caption; the prompt is
- * what keeps a quick Moment a record of progress.
- *
- * Audience is two choices, not four — Only you or Followers. Anything wider
- * (Everyone) is a considered choice and lives in the full form.
- *
- * A photo picked while "Only you" is chosen uploads to the private
- * moment-media bucket (Step 1), same as any other Moment's — no separate
- * gate needed anymore.
+ * `pursuit` locks the Pursuit chip the same way this component has always
+ * worked embedded on a Pursuit's own page (PursuitTrack, Pursuit.tsx,
+ * CheckInCard) — that context already answers "which Pursuit," so there's
+ * nothing to pick. Leaving it out (the new global "+" entry point, opened
+ * with no page context at all) turns the Pursuit chip into a real picker,
+ * defaulting to whichever Pursuit — or none — was used last time.
  */
 export function QuickLog({
   pursuit,
@@ -40,26 +57,50 @@ export function QuickLog({
   placeholder = "What changed?",
   compact = false,
 }: {
-  pursuit: Project;
+  pursuit?: Project;
   onDone?: () => void;
   autoFocus?: boolean;
   placeholder?: string;
   compact?: boolean;
 }) {
   const { user, profile } = useAuth();
-  const { addPost } = useContent();
-  const { add: addPrivateLog } = usePrivateLogs();
+  const { addPost, deletePost } = useContent();
+  const { add: addPrivateLog, remove: removePrivateLog } = usePrivateLogs();
+  const { resolveInterest } = useCorners();
   const rewards = useRewards();
   const { defaultVisibility } = useSettings();
+  const journal = useJournal();
+
+  const defaults = user ? loadMomentDefaults(user.id) : {};
+
   const [line, setLine] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [audience, setAudience] = useState<Audience>(defaultVisibility === "public" ? "followers" : "private");
+  const [selectedPursuitId, setSelectedPursuitId] = useState(
+    pursuit ? pursuit.id : defaults.pursuitId ?? "",
+  );
+  const [cornerName, setCornerName] = useState(() => {
+    if (pursuit?.subHobby) return subHobbyLabel(pursuit.subHobby) ?? pursuit.subHobby;
+    return defaults.corner?.name ?? "";
+  });
+  const [editingCorner, setEditingCorner] = useState(false);
+  const [cornerBlocked, setCornerBlocked] = useState(false);
+  const [audience, setAudience] = useState<Audience>(
+    (defaults.audience as Audience) ?? (defaultVisibility === "public" ? "followers" : "private"),
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [posted, setPosted] = useState(false);
+  const [confirmingEveryone, setConfirmingEveryone] = useState(false);
+  const [saved, setSaved] = useState<{ post: Post | null; privateLogId: number | null } | null>(null);
+  const [offerPursuitName, setOfferPursuitName] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const locked = !!pursuit;
+  const effectivePursuit = pursuit ?? journal.projects.find((p) => p.id === selectedPursuitId);
+  const openProjects = journal.projects.filter((p) => !p.finishedAt);
 
   useEffect(() => {
     if (!file) {
@@ -75,6 +116,10 @@ export function QuickLog({
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
 
+  useEffect(() => () => {
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+  }, []);
+
   const canPost = !saving && (line.trim().length > 0 || !!file);
 
   const pick = async (f: File | undefined) => {
@@ -87,16 +132,57 @@ export function QuickLog({
     }
   };
 
-  const post = async () => {
+  const finishSave = (result: { post: Post | null; privateLogId: number | null }) => {
+    setLine("");
+    setFile(null);
+    setSaved(result);
+    // A Moment not already in a Pursuit gets the one-per-session naming
+    // offer; a private log was never eligible for a Pursuit hand-off to
+    // begin with here (see IsThisPartOfSomething's own Post-only shape).
+    setOfferPursuitName(
+      !!result.post && !effectivePursuit && !hasOfferedIsThisPartOfSomethingThisSession(),
+    );
+    undoTimer.current = setTimeout(() => {
+      setSaved(null);
+      onDone?.();
+    }, 6000);
+  };
+
+  const undo = async () => {
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    if (saved?.post) await deletePost(saved.post.id);
+    else if (saved?.privateLogId) await removePrivateLog(saved.privateLogId);
+    setSaved(null);
+    onDone?.();
+  };
+
+  const save = async () => {
     if (!canPost) return;
     setSaving(true);
     setError(null);
+    setCornerBlocked(false);
     const text = line.trim();
-    const hobbySlug = pursuit.hobbySlug ?? guessSpace(pursuit.title) ?? defaultSpaceSlug();
     try {
+      let cornerRef: CornerRef | undefined;
+      const trimmedCorner = cornerName.trim();
+      if (trimmedCorner) {
+        const match = await resolveInterest(trimmedCorner);
+        if (match && "blocked" in match) {
+          setCornerBlocked(true);
+          return;
+        }
+        if (match) cornerRef = match;
+      }
+
+      const hobbySlug =
+        effectivePursuit?.hobbySlug ??
+        cornerRef?.spaceSlug ??
+        (effectivePursuit ? guessSpace(effectivePursuit.title) : undefined) ??
+        defaultSpaceSlug();
+
+      let result: { post: Post | null; privateLogId: number | null };
+
       if (audience === "private") {
-        // Step 1: uploads to the private moment-media bucket, same as any
-        // other Moment's photo — no separate "can't be kept to just you" gate.
         let media: { path: string; type: "image"; hobbySlug?: string } | undefined;
         if (file && user) {
           const { path, error: uploadError } = await uploadMomentFile(user.id, file);
@@ -104,45 +190,47 @@ export function QuickLog({
             setError("Your photo didn't upload. Try again.");
             return;
           }
-          media = { path, type: "image", hobbySlug: pursuit.hobbySlug };
+          media = { path, type: "image", hobbySlug };
         }
-        const result = await addPrivateLog({ note: text, projectId: pursuit.id, media });
-        if (result.skipped) return;
-        if (!result.data) {
-          setError(result.error || "That didn't save. Try again?");
+        const outcome = await addPrivateLog({ note: text, projectId: effectivePursuit?.id, media });
+        if (outcome.skipped) return;
+        if (!outcome.data) {
+          setError(outcome.error || "That didn't save. Try again?");
           return;
         }
-        rewards.recordPostCreated(pursuit.subHobby || (pursuit.hobbySlug ? `space:${pursuit.hobbySlug}` : undefined));
+        rewards.recordPostCreated(cornerRef?.slug ?? (hobbySlug ? `space:${hobbySlug}` : undefined));
+        if (effectivePursuit) markActivity(effectivePursuit.id);
+        result = { post: null, privateLogId: outcome.data.id };
       } else {
         const entry = await addPost({
           hobbySlug,
-          subHobby: pursuit.subHobby,
-          interest: pursuit.interest,
+          subHobby: cornerRef?.slug,
+          corner: cornerRef?.slug,
           type: file ? "photo" : "written",
           files: file ? [file] : undefined,
           creator: profile?.display_name?.trim() || "You",
-          caption: text || `A ${pursuit.title} Moment`,
-          visibility: "followers",
-          pursuitId: pursuit.id,
+          caption: text || (effectivePursuit ? `A ${effectivePursuit.title} Moment` : "A moment"),
+          visibility: audience,
+          pursuitId: effectivePursuit?.id,
         });
         if (isInFlightSkipped(entry)) return;
-        await attachPostToPursuit(entry.id, pursuit.id);
+        if (effectivePursuit) await attachPostToPursuit(entry.id, effectivePursuit.id);
+        result = { post: entry, privateLogId: null };
       }
-      // A Moment on a resting or finished Pursuit reopens it (journal's
-      // attachEntry) — mirror that so another device agrees.
-      if (user && (pursuit.pausedAt || pursuit.finishedAt)) {
-        void mirrorPursuit(user.id, { ...pursuit, pausedAt: undefined, finishedAt: undefined });
+
+      if (user && effectivePursuit && (effectivePursuit.pausedAt || effectivePursuit.finishedAt)) {
+        void mirrorPursuit(user.id, { ...effectivePursuit, pausedAt: undefined, finishedAt: undefined });
       }
-      // Private logs don't go through attachEntry, so the reopen (and the
-      // "this counts as answering a check-in") has to happen here for them.
-      if (audience === "private") markActivity(pursuit.id);
-      setLine("");
-      setFile(null);
-      setPosted(true);
-      setTimeout(() => {
-        setPosted(false);
-        onDone?.();
-      }, 1200);
+
+      if (user) {
+        saveMomentDefaults(user.id, {
+          pursuitId: effectivePursuit?.id,
+          corner: cornerRef,
+          audience,
+        });
+      }
+
+      finishSave(result);
     } catch {
       setError("That didn't save. Try again?");
     } finally {
@@ -150,11 +238,70 @@ export function QuickLog({
     }
   };
 
-  if (posted) {
+  const requestSave = () => {
+    if (audience === "public" && !confirmingEveryone) {
+      setConfirmingEveryone(true);
+      return;
+    }
+    setConfirmingEveryone(false);
+    void save();
+  };
+
+  if (saved) {
     return (
-      <p className="rounded-xl border border-border bg-card px-3 py-2.5 text-sm" role="status">
-        Moment added to <span style={{ fontFamily: "var(--font-serif)" }}>{pursuit.title}</span>.
-      </p>
+      <div className="space-y-2.5">
+        <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-card px-3.5 text-sm">
+          <span>Logged</span>
+          <button
+            type="button"
+            onClick={undo}
+            className="inline-flex items-center gap-1 text-[var(--coral-text,var(--accent))] transition-colors hover:opacity-80"
+          >
+            <Undo2 className="size-3.5" /> Undo
+          </button>
+        </div>
+        {saved.post && offerPursuitName && (
+          <IsThisPartOfSomething
+            post={saved.post}
+            onDone={() => setOfferPursuitName(false)}
+          />
+        )}
+        {saved.post && !offerPursuitName && (
+          <button
+            type="button"
+            onClick={() => setDetailsOpen(true)}
+            className="text-xs text-accent hover:underline"
+          >
+            Add details (Corner, location, reflection)
+          </button>
+        )}
+        {saved.post && (
+          <AddDetailsSheet post={saved.post} open={detailsOpen} onOpenChange={setDetailsOpen} />
+        )}
+      </div>
+    );
+  }
+
+  if (confirmingEveryone) {
+    return (
+      <div className={`rounded-xl border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
+        <EveryoneShareConfirm
+          name={profile?.display_name?.trim() || "You"}
+          cornerLabel={cornerName.trim() || "Uncategorized"}
+          caption={line.trim()}
+          photoPreviewUrl={preview}
+          disabled={saving}
+          onConfirm={() => void save()}
+        />
+        <button
+          type="button"
+          onClick={() => setConfirmingEveryone(false)}
+          disabled={saving}
+          className="mt-2 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+        >
+          Back
+        </button>
+      </div>
     );
   }
 
@@ -164,7 +311,7 @@ export function QuickLog({
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+          className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep,var(--accent))] hover:text-foreground"
           aria-label={file ? "Change photo" : "Add a photo"}
         >
           {preview ? <img src={preview} alt="" className="size-full object-cover" /> : <Camera className="size-4" />}
@@ -185,14 +332,63 @@ export function QuickLog({
             value={line}
             onChange={(e) => setLine(e.target.value.slice(0, 200))}
             onKeyDown={(e) => {
-              if (e.key === "Enter") void post();
+              if (e.key === "Enter") requestSave();
             }}
             placeholder={placeholder}
             aria-label={placeholder}
             className="w-full bg-transparent py-1 text-sm text-foreground outline-none placeholder:text-muted-foreground"
           />
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {(["private", "followers"] as const).map((a) => (
+            {!locked && (
+              <Select
+                value={selectedPursuitId || NO_PURSUIT}
+                onValueChange={(v) => setSelectedPursuitId(v === NO_PURSUIT ? "" : v)}
+              >
+                <SelectTrigger
+                  size="sm"
+                  className="h-6 w-auto gap-1 rounded-full border-border px-2 py-0.5 text-[11px]"
+                  aria-label="Pursuit"
+                >
+                  <SelectValue placeholder="No pursuit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_PURSUIT}>No pursuit</SelectItem>
+                  {openProjects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {editingCorner ? (
+              <input
+                autoFocus
+                value={cornerName}
+                onChange={(e) => {
+                  setCornerName(e.target.value);
+                  setCornerBlocked(false);
+                }}
+                onBlur={() => setEditingCorner(false)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") setEditingCorner(false);
+                }}
+                placeholder="Corner"
+                maxLength={60}
+                className="h-6 w-28 rounded-full border border-[var(--coral-deep,var(--accent))] bg-transparent px-2 text-[11px] text-foreground outline-none"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditingCorner(true)}
+                className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {cornerName.trim() || "Add a Corner"}
+              </button>
+            )}
+
+            {(["private", "followers", "public"] as const).map((a) => (
               <button
                 key={a}
                 type="button"
@@ -200,12 +396,11 @@ export function QuickLog({
                 aria-pressed={audience === a}
                 className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
                   audience === a
-                    ? "border-[var(--coral-deep)] text-foreground"
+                    ? "border-[var(--coral-deep,var(--accent))] text-foreground"
                     : "border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {a === "private" ? <Lock className="size-3" /> : <UserRound className="size-3" />}
-                {a === "private" ? "Only you" : "Followers"}
+                {AUDIENCE_LABEL[a]}
               </button>
             ))}
             {file && (
@@ -218,8 +413,11 @@ export function QuickLog({
               </button>
             )}
           </div>
+          {cornerBlocked && (
+            <p className="mt-1 text-[11px] text-destructive">Try a more general Corner name.</p>
+          )}
         </div>
-        <Button variant="coral" size="sm" onClick={post} disabled={!canPost} className="shrink-0">
+        <Button variant="coral" size="sm" onClick={requestSave} disabled={!canPost} className="shrink-0">
           {saving ? <Loader2 className="size-3.5 animate-spin" /> : "Log"}
         </Button>
       </div>
@@ -227,7 +425,10 @@ export function QuickLog({
       {!compact && (
         <p className="mt-2 text-[11px] text-muted-foreground">
           Something bigger?{" "}
-          <Link to={`/create?pursuit=${pursuit.id}`} className="text-accent hover:underline">
+          <Link
+            to={effectivePursuit ? `/create?pursuit=${effectivePursuit.id}` : "/create"}
+            className="text-accent hover:underline"
+          >
             Open the full form
           </Link>
         </p>

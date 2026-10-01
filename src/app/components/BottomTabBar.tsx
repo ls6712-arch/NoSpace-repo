@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { Compass, Library, PlusCircle, UserRound } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useQuickLog } from "../context/QuickLogContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 
 /**
@@ -57,6 +58,7 @@ export const TABS = [
 export function BottomTabBar() {
   const { pathname } = useLocation();
   const { user } = useAuth();
+  const { openQuickLog } = useQuickLog();
   const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
   const waiting = incomingFollows.length > 0;
 
@@ -80,22 +82,8 @@ export function BottomTabBar() {
                 ? "var(--violet-electric-bright)"
                 : undefined;
 
-            return (
-              <Link
-                key={tab.to}
-                to={tab.to}
-                aria-current={active ? "page" : undefined}
-                className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl py-1.5 transition-colors ${
-                  tint ? "" : "text-muted-foreground"
-                }`}
-                style={{
-                  color: tint,
-                  backgroundColor:
-                    tab.accent && active
-                      ? "color-mix(in srgb, var(--violet-electric) 16%, transparent)"
-                      : undefined,
-                }}
-              >
+            const content = (
+              <>
                 <span className="relative">
                   <Icon className="size-5" strokeWidth={active || tab.accent ? 2.1 : 1.7} />
                   {/* A dot, not a number: something is waiting, not how much. */}
@@ -108,6 +96,35 @@ export function BottomTabBar() {
                   )}
                 </span>
                 <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+              </>
+            );
+            const className = `flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl py-1.5 transition-colors ${
+              tint ? "" : "text-muted-foreground"
+            }`;
+            const style = {
+              color: tint,
+              backgroundColor:
+                tab.accent && active
+                  ? "color-mix(in srgb, var(--violet-electric) 16%, transparent)"
+                  : undefined,
+            };
+
+            // Step 3: Create opens the two-tap sheet (QuickLogGlobalSheet,
+            // mounted once in Root.tsx) instead of navigating to the full
+            // /create form — same reasoning as Header.tsx's "Log a Moment"
+            // button. The full form stays one "Open the full form" tap away
+            // inside the sheet.
+            if (tab.to === "/create") {
+              return (
+                <button key={tab.to} type="button" onClick={openQuickLog} className={className} style={style}>
+                  {content}
+                </button>
+              );
+            }
+
+            return (
+              <Link key={tab.to} to={tab.to} aria-current={active ? "page" : undefined} className={className} style={style}>
+                {content}
               </Link>
             );
           })}

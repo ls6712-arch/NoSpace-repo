@@ -26,6 +26,7 @@ export const LOCAL_KEYS = [
   "sushii.draft.v1", // the in-progress composer draft
   "sushii.privateLogs.local.v1", // private logs when signed out (no account to key a real row off)
   "sushii.cornerNotes.v1", // your own private note per Corner, shown on its Moments tile
+  "sushii.momentDefaults.v1", // last-used Pursuit/Corner/audience per account, for two-tap logging
 ] as const;
 
 /**
