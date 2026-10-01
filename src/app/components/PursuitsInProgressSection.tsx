@@ -1,22 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Compass } from "lucide-react";
 import { Post } from "../data/posts";
 import { Project, pursuitStatus } from "../lib/journal";
 import { activePursuits, collectPursuitMoments } from "../lib/pursuitTrail";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
+import { useScrollReveal } from "../lib/useScrollReveal";
 import { PursuitItem } from "./PursuitItem";
 import { AllPursuitsDialog } from "./AllPursuitsDialog";
 import { track } from "../lib/analytics";
 
 /**
- * Home tab, above the Moments feed: a horizontal-scroll strip of every
- * ACTIVE Pursuit (same "active" definition PursuitsRail uses — see
- * lib/pursuitTrail's activePursuits), each a PursuitItem card, ending in a
- * "See all" tile that opens the same grouped All-your-Pursuits dialog
- * PursuitsRail's own "See all" already uses (AllPursuitsDialog) — one
- * dialog, two entry points, rather than a second screen that duplicates
- * the same In progress/Resting/Completed grouping.
+ * Home tab, above the Moments feed: a card grid of every ACTIVE Pursuit
+ * (same "active" definition PursuitsRail uses — see lib/pursuitTrail's
+ * activePursuits), each a PursuitItem card, plus a "See all" tile that
+ * opens the same grouped All-your-Pursuits dialog PursuitsRail's own "See
+ * all" already uses (AllPursuitsDialog) — one dialog, two entry points,
+ * rather than a second screen that duplicates the same In progress/
+ * Resting/Completed grouping. Fades in, staggered per card, the first time
+ * it scrolls into view (useScrollReveal, same mechanism Home.tsx's own
+ * sections use) — switched off under prefers-reduced-motion in theme.css.
  */
 export function PursuitsInProgressSection({
   pursuits,
@@ -29,6 +32,7 @@ export function PursuitsInProgressSection({
 }) {
   const { logs } = usePrivateLogs();
   const [seeAll, setSeeAll] = useState(false);
+  const revealRef = useScrollReveal<HTMLDivElement>();
 
   const momentsFor = useMemo(() => {
     const cache = new Map<string, ReturnType<typeof collectPursuitMoments>>();
@@ -65,26 +69,40 @@ export function PursuitsInProgressSection({
       </h2>
 
       {active.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">
-          Nothing in progress right now.{" "}
-          <Link to="/pursuits/new" className="text-accent hover:underline">
-            Start a Pursuit
-          </Link>
-          .
-        </p>
+        <div className="mt-3 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+          <span
+            className="flex size-11 items-center justify-center rounded-full"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--coral) 14%, var(--surface-muted))",
+              color: "var(--coral-deep)",
+            }}
+            aria-hidden="true"
+          >
+            <Compass className="size-5" strokeWidth={1.7} />
+          </span>
+          <p className="text-sm text-muted-foreground">
+            Nothing in progress right now.{" "}
+            <Link to="/pursuits/new" className="text-accent hover:underline">
+              Start a Pursuit
+            </Link>
+            .
+          </p>
+        </div>
       ) : (
         <div
-          className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2"
+          ref={revealRef}
+          className="ns-reveal-grid mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"
           role="list"
           aria-label="Pursuits in progress"
         >
-          {active.map((p) => (
-            <PursuitItem key={p.id} pursuit={p} />
+          {active.map((p, i) => (
+            <PursuitItem key={p.id} pursuit={p} index={i} />
           ))}
           <button
             type="button"
             onClick={openSeeAll}
-            className="flex w-28 shrink-0 snap-start flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            style={{ transitionDelay: `${Math.min(active.length, 7) * 45}ms` }}
+            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ArrowRight className="size-4" />
             See all

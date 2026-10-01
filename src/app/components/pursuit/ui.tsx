@@ -17,6 +17,68 @@ export function ProgressBar({ fraction, className = "", thin = false }: { fracti
   );
 }
 
+/** Circular variant of ProgressBar — same terracotta fill, same "no
+ * percentage" rule: the ring's sweep communicates the fraction visually,
+ * same as the linear bar's fill width does. `children` renders centered
+ * inside the ring (this card uses it for the Pursuit's icon, never a
+ * number). */
+export function ProgressRing({
+  fraction,
+  size = 44,
+  strokeWidth = 4,
+  className = "",
+  children,
+}: {
+  fraction: number;
+  size?: number;
+  strokeWidth?: number;
+  className?: string;
+  children?: ReactNode;
+}) {
+  const pct = Math.max(0, Math.min(1, fraction));
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  return (
+    <div
+      className={`relative inline-flex shrink-0 items-center justify-center ${className}`}
+      style={{ width: size, height: size }}
+    >
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="-rotate-90"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(pct * 100)}
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="color-mix(in srgb, var(--coral) 14%, var(--surface-muted))"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--coral)"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - pct)}
+          className="transition-[stroke-dashoffset] duration-700 ease-out motion-reduce:transition-none"
+        />
+      </svg>
+      {children && <span className="absolute inset-0 flex items-center justify-center">{children}</span>}
+    </div>
+  );
+}
+
 /** Numbered step dots joined by a line, current one filled terracotta. */
 export function StepDots({ steps, current }: { steps: string[]; current: number }) {
   return (

@@ -1521,6 +1521,22 @@
     transform: translateY(0);
   }
 
+  /* Same scroll-triggered reveal as .ns-reveal, but staggered per child
+     (the "Pursuits in progress" grid) rather than fading the whole block
+     in as one unit — a handful of nth-child delays, capped, so a longer
+     grid doesn't leave its last rows waiting on a long queue. */
+  .ns-reveal-grid > * {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .5s cubic-bezier(.22,.61,.36,1), transform .5s cubic-bezier(.22,.61,.36,1);
+  }
+  .ns-reveal-grid.is-visible > * { opacity: 1; transform: translateY(0); }
+  .ns-reveal-grid.is-visible > *:nth-child(2) { transition-delay: 45ms; }
+  .ns-reveal-grid.is-visible > *:nth-child(3) { transition-delay: 90ms; }
+  .ns-reveal-grid.is-visible > *:nth-child(4) { transition-delay: 135ms; }
+  .ns-reveal-grid.is-visible > *:nth-child(5) { transition-delay: 180ms; }
+  .ns-reveal-grid.is-visible > *:nth-child(n+6) { transition-delay: 220ms; }
+
   .generated-art-sparkle {
     animation: generated-art-twinkle 2.4s ease-in-out infinite;
     transform-origin: center;
@@ -1696,6 +1712,11 @@ summary:focus-visible,
   .ns-worlds-path path { animation: none !important; }
   .ns-worlds-track { transform: none !important; }
   .ns-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .ns-reveal-grid > * {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
