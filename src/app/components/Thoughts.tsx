@@ -54,6 +54,7 @@ export function Thoughts({
    * off by default so ContentCard and MomentDetail render exactly as
    * they did before this existed. */
   allowMedia = false,
+  startOpen = false,
 }: {
   postId: number;
   postOwnerId?: string;
@@ -66,11 +67,14 @@ export function Thoughts({
   compact?: boolean;
   className?: string;
   allowMedia?: boolean;
+  /** Opens with the reply box already showing — used by the bell's
+   * "Welcome to Soosh" button (MomentPage's ?reply=1). */
+  startOpen?: boolean;
 }) {
   const social = useSocial();
   const { user, profile } = useAuth();
   const myName = profile?.display_name || "You";
-  const [openComposer, setOpenComposer] = useState(false);
+  const [openComposer, setOpenComposer] = useState(startOpen);
   const [body, setBody] = useState("");
   const [media, setMedia] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);

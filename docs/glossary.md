@@ -99,6 +99,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 |---|---|
 | Invite / Invite link | How someone gets in while Soosh is invite-only |
 | Waitlist / You're on the list | Asking to join without an invite |
+| Welcome to Soosh | The inviter's button on "[Name] added their first moment": opens it with the reply box ready |
 
 ## Writing rules
 

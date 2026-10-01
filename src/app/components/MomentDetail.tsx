@@ -85,10 +85,13 @@ export function MomentDetail({
   post,
   owned,
   onOpenChange,
+  replyOpen = false,
 }: {
   post: Post | null;
   owned: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Open with the reply box already showing (MomentPage's ?reply=1). */
+  replyOpen?: boolean;
 }) {
   const { updatePost, deletePost } = useContent();
   const { update: updatePrivateLogEntry, remove: removePrivateLogEntry } = usePrivateLogs();
@@ -385,6 +388,7 @@ export function MomentDetail({
               postOwnerName={post.creator}
               isOwner={owned}
               privateThoughts={post.thoughtsPrivate}
+              startOpen={replyOpen && !owned}
             />
           </>
         )}

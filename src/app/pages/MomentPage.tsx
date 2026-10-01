@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { ImageOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchSharedMoment } from "../lib/sharedContent";
@@ -22,6 +22,9 @@ import { MomentDetail } from "../components/MomentDetail";
  */
 export function MomentPage() {
   const { id } = useParams();
+  // ?reply=1 — from the bell's "Welcome to Soosh" button.
+  const [searchParams] = useSearchParams();
+  const replyOpen = searchParams.get("reply") === "1";
   const { user } = useAuth();
   const navigate = useNavigate();
   const [post, setPost] = useState<Post | null>(null);
@@ -62,6 +65,11 @@ export function MomentPage() {
   }
 
   return (
-    <MomentDetail post={post} owned={post.userId === user?.id} onOpenChange={(open) => !open && navigate(-1)} />
+    <MomentDetail
+      post={post}
+      owned={post.userId === user?.id}
+      replyOpen={replyOpen}
+      onOpenChange={(open) => !open && navigate(-1)}
+    />
   );
 }
