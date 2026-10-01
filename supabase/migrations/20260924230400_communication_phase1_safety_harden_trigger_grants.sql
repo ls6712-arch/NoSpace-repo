@@ -1,0 +1,22 @@
+-- BACKFILL (no-op): documents a migration recorded live as version
+-- 20260924230400 / communication_phase1_safety_harden_trigger_grants,
+-- which has no separate file in this repo. It was the third of three small
+-- live follow-up fixes applied right after communication_phase1_safety,
+-- before any users were on the feature, and its actual SQL was folded
+-- into the committed communication_phase1_safety.sql rather than kept
+-- as a separate file — see that file's own header comment (point 3).
+--
+-- What it did: revoked direct EXECUTE (anon/authenticated) on the trigger
+-- and support functions introduced by communication_phase1_safety —
+-- private.is_blocked_between, public.on_block_remove_follows,
+-- private.post_owner, public.set_participation_insert_status,
+-- public.enforce_participation_status_transition, and
+-- private.participation_has_message — per the security advisors. Not
+-- exploitable either way (Postgres refuses to invoke a RETURNS TRIGGER
+-- function outside trigger context), but closed for hygiene. See the
+-- `revoke execute` lines throughout communication_phase1_safety.sql.
+--
+-- This file intentionally applies nothing — the change already lives in
+-- communication_phase1_safety.sql. It exists only so this repo's local
+-- migrations directory accounts for every version Postgres has recorded
+-- as applied, which the "Supabase Preview" CI check verifies.

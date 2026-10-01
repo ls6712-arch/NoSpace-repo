@@ -1,0 +1,17 @@
+-- BACKFILL (no-op): documents a migration recorded live as version
+-- 20260924225530 / communication_phase1_safety_fix_messages_recursion,
+-- which has no separate file in this repo. It was one of three small
+-- live follow-up fixes applied right after communication_phase1_safety,
+-- before any users were on the feature, and its actual SQL was folded
+-- into the committed communication_phase1_safety.sql rather than kept
+-- as a separate file — see that file's own header comment (point 1) and
+-- private.participation_has_message() (around line 508).
+--
+-- What it fixed: messages' own INSERT policy hit Postgres's RLS
+-- self-recursion guard (42P17) on every insert. private.participation_has_message()
+-- was added so the check no longer recurses into messages' own policy.
+--
+-- This file intentionally applies nothing — the change already lives in
+-- communication_phase1_safety.sql. It exists only so this repo's local
+-- migrations directory accounts for every version Postgres has recorded
+-- as applied, which the "Supabase Preview" CI check verifies.
