@@ -77,6 +77,19 @@
 --
 -- Not run: this repo's SQL isn't executed by this session. Review, then
 -- run it yourself.
+--
+-- CORRECTION (live-schema audit, 2026-10-01): circle_invites never actually
+-- existed in production — no table, no circle_member_counts(), no
+-- rl_circle_invites() (confirmed via information_schema/pg_catalog against
+-- the live database). sql/circle-invites.sql was apparently never applied,
+-- unlike sql/circles.sql and sql/circle-threads.sql, which were. The
+-- original dependency map and the DROP TRIGGER/DROP POLICY statements below
+-- that targeted public.circle_invites have been removed accordingly — both
+-- of those statement kinds require their target table to exist even with
+-- IF EXISTS on the object name, unlike DROP INDEX IF EXISTS/DROP TABLE IF
+-- EXISTS, which don't. The circle_invites index drops and the table drop
+-- itself were left as-is, since those are safe regardless of whether the
+-- table was ever created.
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 0. Safety gate — refuses to continue if any live post still uses the
@@ -125,7 +138,9 @@ create policy "posts are readable by their audience"
 -- ─────────────────────────────────────────────────────────────────────────
 drop trigger if exists rl_circles_insert on public.circles;
 drop trigger if exists rl_circle_members_insert on public.circle_members;
-drop trigger if exists rl_circle_invites_insert on public.circle_invites;
+-- rl_circle_invites_insert dropped — circle_invites was never created live,
+-- so there's no table for a trigger on it to exist on. See the correction
+-- note at the top of this file.
 
 drop function if exists public.rl_circles();
 drop function if exists public.rl_circle_members();
@@ -145,10 +160,9 @@ drop policy if exists "circles are visible to everyone" on public.circles;
 drop policy if exists "you create your own circle" on public.circles;
 drop policy if exists "the owner edits their own circle" on public.circles;
 
-drop policy if exists "you see your own circle invitations" on public.circle_invites;
-drop policy if exists "anyone can invite anyone to a circle" on public.circle_invites;
-drop policy if exists "you answer your own circle invitation" on public.circle_invites;
-drop policy if exists "you can leave a circle you joined" on public.circle_invites;
+-- The four circle_invites policy drops that used to be here are removed —
+-- circle_invites was never created live. See the correction note at the
+-- top of this file.
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 4. Functions — admin/usage functions first (they reference the tables
