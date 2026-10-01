@@ -5,15 +5,15 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { Post, postCorner } from "../data/posts";
-import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
+import { subHobbyLabel, currentSpaceSlug } from "../data/hobbies";
 import { useCorners } from "../context/CornersContext";
-import { usePeopleInHobby } from "../lib/people";
 import { messageTabFor } from "../lib/messageTabs";
 import { sessionsFromPosts } from "../components/HobbyShelf";
 import { tagsFromPosts } from "../lib/postTags";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { WorkGrid } from "../components/WorkGrid";
+import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { PursuitCard } from "../components/PursuitCard";
 import { QuietMilestones, SharedMilestones } from "../components/QuietMilestones";
 import { GeneratedArt } from "../components/GeneratedArt";
@@ -28,16 +28,6 @@ import { useFollowerCount } from "../lib/useFollowerCount";
 import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/profileFollows";
 import { FollowListDialog } from "../components/FollowListDialog";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
-
-/** Whichever Space shows up most in their posts — used for the closing
- * banner's illustration, not to claim membership in anything we can't
- * actually see. */
-function primaryHobbySlug(posts: Post[]): string | undefined {
-  if (posts.length === 0) return undefined;
-  const counts = new Map<string, number>();
-  for (const p of posts) counts.set(p.hobbySlug, (counts.get(p.hobbySlug) ?? 0) + 1);
-  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
-}
 
 /** Whichever Corner shows up most in their public Moments — a Corner slug is
  * only unique within its own Space, so this tracks the pair, never the slug
@@ -339,11 +329,13 @@ export function PublicProfile() {
     : { label: top?.label };
 
   const primaryHobby = pickPrimaryHobby(posts);
-  const hobbySlug = primaryHobbySlug(posts);
   const cornerKey = primaryCornerKey(posts);
   const primaryCorner = cornerKey
     ? cornersFor(cornerKey.spaceSlug).find((c) => c.slug === cornerKey.slug)
     : undefined;
+  const cornerMoments = primaryCorner
+    ? posts.filter((p) => p.hobbySlug === primaryCorner.spaceSlug && postCorner(p) === primaryCorner.slug)
+    : [];
 
   const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
   const sinceLabel = earliestPostAt
@@ -571,12 +563,21 @@ export function PublicProfile() {
           </div>
         )}
 
-        <div className="mb-10">
-          <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-            This Corner
-          </h2>
-          <PeopleWhoAlsoMake hobbySlug={hobbySlug} excludePersonId={personId} firstName={firstName} />
-        </div>
+        {primaryCorner && cornerMoments.length > 0 && (
+          <div className="mb-10">
+            <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+              {primaryCorner.name}
+            </h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              {firstName}'s Moments tagged {primaryCorner.name}.
+            </p>
+            <div className={MOMENT_GRID}>
+              {cornerMoments.slice(0, 6).map((post) => (
+                <MomentCard key={post.id} post={post} surface="feed" onOpen={() => setOpenPost(post)} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {primaryCorner && (
           <Link
@@ -645,63 +646,6 @@ export function PublicProfile() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/** Real people who post in the same hobby — the closest honest stand-in for
- * "people they make with" the client can actually see, since nothing here
- * can read who a stranger is personally connected to. */
-function PeopleWhoAlsoMake({
-  hobbySlug,
-  excludePersonId,
-  firstName,
-}: {
-  hobbySlug?: string;
-  excludePersonId: string;
-  firstName: string;
-}) {
-  const { people, loading } = usePeopleInHobby(hobbySlug ?? "");
-  const others = people.filter((p) => p.id !== excludePersonId).slice(0, 6);
-
-  return (
-    <div>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {hobbySlug
-          ? `Other people making ${getHobby(hobbySlug)?.name.toLowerCase() ?? "the same thing"} — not ${firstName}'s connections, which only they can see.`
-          : "Nothing to suggest yet."}
-      </p>
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Looking…</p>
-      ) : others.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
-          Nobody else here yet.
-        </p>
-      ) : (
-        <ul className="flex flex-wrap gap-5">
-          {others.map((person) => (
-            <li key={person.id}>
-              <Link
-                to={person.username ? `/u/${person.username}` : `/u/${person.id}`}
-                className="flex w-20 flex-col items-center gap-2 text-center transition-transform duration-200 hover:-translate-y-0.5"
-              >
-                <Avatar className="size-14">
-                  {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" className="object-cover" />}
-                  <AvatarFallback>
-                    {person.displayName
-                      .split(" ")
-                      .map((p) => p[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="w-full truncate text-xs text-foreground">{person.displayName}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
