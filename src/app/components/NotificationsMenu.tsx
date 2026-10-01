@@ -7,8 +7,10 @@ import {
   Crown,
   DoorOpen,
   Handshake,
+  Heart,
   MessageCircleQuestion,
   MessagesSquare,
+  Sprout,
   Target,
   UserCheck,
   UserPlus,
@@ -23,6 +25,7 @@ import { formatBadgeCount } from "../lib/messageSync";
 import { groupNotifications, unreadGroupCount } from "../lib/notificationGrouping";
 import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
+import { APP_NAME } from "../config";
 
 /**
  * Notifications that describe what actually happened — "Reo accepted your Make
@@ -52,6 +55,8 @@ const ICON: Record<string, typeof Bell> = {
   space_host_invite: Crown,
   space_moment_pending: Clock,
   space_moment_approved: Check,
+  first_moment: Sprout,
+  love: Heart,
 };
 
 function ago(ts: number) {
@@ -265,6 +270,20 @@ export function NotificationsMenu() {
                       <button type="button" onClick={() => openGroup(g.memberIds, g.read)} className="block w-full text-left hover:bg-surface-muted">
                         {body}
                       </button>
+                    )}
+                    {/* Step 4: someone you invited added their first moment.
+                        One tap opens it with the reply box ready. */}
+                    {g.kind === "first_moment" && g.href && (
+                      <div className="px-4 pb-2.5 pl-11">
+                        <Button asChild variant="coral" size="sm">
+                          <Link
+                            to={`${g.href}?reply=1`}
+                            onClick={() => openGroup(g.memberIds, g.read)}
+                          >
+                            Welcome to {APP_NAME}
+                          </Link>
+                        </Button>
+                      </div>
                     )}
                   </li>
                 );

@@ -275,3 +275,26 @@ describe("unreadGroupCount", () => {
     expect(unreadGroupCount(groups)).toBe(1);
   });
 });
+
+describe("groupNotifications: Step 4 kinds", () => {
+  it("words merged Love notifications as 'loved your Moment'", () => {
+    const now = Date.now();
+    const list = [
+      notif({ kind: "love", href: "/moment/77", actorName: "Maya", createdAt: now, body: "Maya loved your moment." }),
+      notif({ kind: "love", href: "/moment/77", actorName: "Reo", createdAt: now - 20 * HOUR, body: "Reo loved your moment." }),
+    ];
+    const groups = groupNotifications(list);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].body).toBe("Maya and 1 other loved your Moment.");
+  });
+
+  it("keeps a single first_moment notification's own body", () => {
+    const now = Date.now();
+    const groups = groupNotifications([
+      notif({ kind: "first_moment", href: "/moment/80", actorName: "Ana", createdAt: now, body: "Ana added their first moment." }),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].kind).toBe("first_moment");
+    expect(groups[0].body).toBe("Ana added their first moment.");
+  });
+});

@@ -53,6 +53,8 @@ function verbPhrase(kind: string): string {
       return "joined your";
     case "pursuit_progress":
       return "logged progress on your";
+    case "love":
+      return "loved your";
     default:
       return "were active on your";
   }

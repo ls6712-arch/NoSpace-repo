@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCategories } from "../context/CategoriesContext";
 import { supabase } from "../../lib/supabase";
 import { createInvite, inviteLink, revokeInvite } from "../lib/invites";
+import { fetchWaitingFirstMoments, type WaitingFirstMoment } from "../lib/firstResponse";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
@@ -67,6 +68,9 @@ export function AdminInvites() {
   const [copied, setCopied] = useState(false);
   const [busyCode, setBusyCode] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
+  // Step 4: first moments nobody has written a thought on yet.
+  const [waiting, setWaiting] = useState<WaitingFirstMoment[]>([]);
+  const [waitingError, setWaitingError] = useState<string | null>(null);
 
   const load = async () => {
     if (!supabase) {
@@ -117,8 +121,17 @@ export function AdminInvites() {
     setLoading(false);
   };
 
+  const loadWaiting = async () => {
+    const result = await fetchWaitingFirstMoments();
+    setWaiting(result.rows);
+    setWaitingError(result.error ? "Couldn't load first moments. Try again in a moment." : null);
+  };
+
   useEffect(() => {
-    if (isAdmin) void load();
+    if (isAdmin) {
+      void load();
+      void loadWaiting();
+    }
   }, [isAdmin]);
 
   if (!user || !isAdmin) {
@@ -211,6 +224,9 @@ export function AdminInvites() {
           <TabsList className="mb-6">
             <TabsTrigger value="invites">Invites{rows.length > 0 ? ` (${rows.length})` : ""}</TabsTrigger>
             <TabsTrigger value="waitlist">Waitlist{waitlist.length > 0 ? ` (${waitlist.length})` : ""}</TabsTrigger>
+            <TabsTrigger value="first-moments">
+              First moments{waiting.length > 0 ? ` (${waiting.length})` : ""}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="invites">
@@ -282,6 +298,53 @@ export function AdminInvites() {
                     </span>
                   </li>
                 ))}
+              </ul>
+            )}
+          </TabsContent>
+
+          <TabsContent value="first-moments">
+            <p className="mb-4 text-sm text-muted-foreground">
+              New people's first moments from the last 14 days with no thought from anyone yet,
+              oldest first. Anything over 24 hours is ours to answer.
+            </p>
+            {waitingError && <p className="mb-4 text-sm text-destructive">{waitingError}</p>}
+            {waiting.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+                Every first moment has a thought.
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {waiting.map((m) => {
+                  const overdue = m.hoursWaiting >= 24;
+                  return (
+                    <li key={m.postId} className="rounded-2xl border border-border bg-card p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0 text-sm">
+                          <p className="font-medium text-foreground">{m.authorName}</p>
+                          {m.caption && <p className="mt-1 line-clamp-2 text-muted-foreground">{m.caption}</p>}
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {m.inviterName ? `Invited by ${m.inviterName} · ` : ""}
+                            {m.hoursWaiting < 1 ? "Just now" : `${m.hoursWaiting}h waiting`}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {overdue && (
+                            <span className="rounded-full border border-destructive/40 px-2.5 py-1 text-[11px] text-destructive">
+                              Over 24h
+                            </span>
+                          )}
+                          {m.canView ? (
+                            <Button asChild variant="coral" size="sm">
+                              <Link to={`/moment/${m.postId}?reply=1`}>Add a thought</Link>
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Followers only</span>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </TabsContent>
