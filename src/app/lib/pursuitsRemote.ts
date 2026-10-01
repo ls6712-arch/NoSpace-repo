@@ -546,3 +546,18 @@ export async function joinViaLink(token: string): Promise<{ pursuitId?: string; 
     return { error: e?.message ?? "Couldn't join." };
   }
 }
+
+/**
+ * Step 4c: where "Start a Pursuit with {name}?" goes after a Count me in tap
+ * — the create-Pursuit flow with them pre-invited side by side, the title
+ * seeded from their moment, and the moment remembered as the one that
+ * started it (CreatePursuit reads ?with= and ?from=).
+ */
+export function pursuitTogetherHref(post: { id: number | string; userId?: string; caption?: string }): string {
+  const params = new URLSearchParams();
+  if (post.userId) params.set("with", post.userId);
+  params.set("from", String(post.id));
+  const title = (post.caption ?? "").split(/[.\n]/)[0].slice(0, 60).trim();
+  if (title) params.set("title", title);
+  return `/pursuits/new?${params.toString()}`;
+}

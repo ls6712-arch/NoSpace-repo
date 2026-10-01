@@ -18,11 +18,16 @@ import { APP_NAME } from "../config";
 export function OnboardingInviteCard({
   invitesLeft,
   onDone,
+  variant = "page",
 }: {
   /** null = no limit (admins). */
   invitesLeft: number | null;
   onDone: () => void;
+  /** "page" for onboarding's full screen; "card" for the Day-2 ask on
+   * My Space (smaller heading, same content and buttons). */
+  variant?: "page" | "card";
 }) {
+  const Heading = variant === "page" ? "h1" : "h2";
   const [note, setNote] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,9 +70,12 @@ export function OnboardingInviteCard({
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+      <Heading
+        className={variant === "page" ? "mb-1 text-2xl sm:text-3xl" : "mb-1 text-xl"}
+        style={{ fontFamily: "var(--font-serif)" }}
+      >
         Invite someone?
-      </h1>
+      </Heading>
       <p className="mb-6 text-sm text-[var(--ink-soft)]">
         {APP_NAME} is invite-only for now.{" "}
         {invitesLeft === null

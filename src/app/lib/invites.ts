@@ -98,6 +98,19 @@ export async function fetchInvitesLeft(
   return Math.max(0, allowance - used);
 }
 
+/**
+ * Step 4c · the Day-2 invite ask. How many invites to offer on My Space
+ * right now, or 0 to show nothing: my_invite_ask() returns a number only
+ * once the account is a day old, their first moment has a written thought
+ * from someone else, and they haven't sent an invite yet.
+ */
+export async function fetchInviteAsk(): Promise<number> {
+  if (!supabase) return 0;
+  const { data, error } = await supabase.rpc("my_invite_ask");
+  if (error) return 0;
+  return typeof data === "number" ? data : Number(data) || 0;
+}
+
 export async function revokeInvite(code: string): Promise<boolean> {
   if (!supabase || !code) return false;
   const { data, error } = await supabase.rpc("revoke_invite", { p_code: code });

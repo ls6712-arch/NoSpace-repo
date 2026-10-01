@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
+import { pursuitTogetherHref } from "../lib/pursuitsRemote";
 import {
   Heart,
   Hand,
@@ -512,13 +513,22 @@ export function MomentCard({
         </div>
 
         {!mine && myReactions.includes("in") && post.userId && (
-          <button
-            type="button"
-            onClick={() => setAskTogetherOpen(true)}
-            className="mt-1 self-start text-left text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
-          >
-            Ask {post.creator} to make it together?
-          </button>
+          <div className="mt-1 flex flex-col items-start gap-0.5">
+            {/* Step 4c: Count me in → do it together, as a shared Pursuit. */}
+            <Link
+              to={pursuitTogetherHref(post)}
+              className="text-left text-xs font-medium text-foreground transition-colors hover:underline"
+            >
+              Start a Pursuit with {post.creator}?
+            </Link>
+            <button
+              type="button"
+              onClick={() => setAskTogetherOpen(true)}
+              className="text-left text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+            >
+              Ask {post.creator} to make it together?
+            </button>
+          </div>
         )}
       </div>
 
