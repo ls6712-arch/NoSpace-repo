@@ -7,7 +7,7 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
  * Phone and tablet navigation: four labelled destinations, matching the
  * desktop top nav's Discover / Home / Create in the same order (plus
  * Profile, which hangs off the avatar on desktop) — one mental model, not
- * two. The desktop button reads "Start your log"; this tab stays the
+ * two. The desktop button reads "Log a Moment"; this tab stays the
  * shorter "Create" since a 10px, single-line tab has no room for it.
  *
  * Create sits in the middle because it's the thing you came to do, and it
@@ -48,7 +48,7 @@ export const TABS = [
   },
   {
     to: "/you",
-    label: "Profile",
+    label: "You",
     icon: UserRound,
     match: (p: string) => p.startsWith("/you"),
   },

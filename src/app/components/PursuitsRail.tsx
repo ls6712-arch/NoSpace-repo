@@ -118,9 +118,9 @@ export function PursuitsRail({
           <DialogHeader className="text-left">
             <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>All your Pursuits</DialogTitle>
           </DialogHeader>
-          <AllPursuitsGroup title="Active" items={active} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
+          <AllPursuitsGroup title="In progress" items={active} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
           <AllPursuitsGroup title="Resting" items={resting} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
-          <AllPursuitsGroup title="Finished" items={complete} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
+          <AllPursuitsGroup title="Completed" items={complete} lastOf={lastMomentOf} onNavigate={() => setSeeAll(false)} />
         </DialogContent>
       </Dialog>
 

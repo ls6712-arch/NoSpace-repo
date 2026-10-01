@@ -240,7 +240,7 @@ export function Log() {
   const initialPursuit = initialPursuitId
     ? journal.projects.find((p) => p.id === initialPursuitId)
     : undefined;
-  // "Log a new Moment" from a Space's own Add Moment dialog (when the
+  // "Log a new Moment" from a Space's own Add from my Moments dialog (when the
   // member has no existing Moments to pick from) links here with
   // ?space=<space id>. No Pursuit-style scoped menu for this one — the
   // whole rest of the composer stays exactly as it is; only publish()
@@ -251,7 +251,7 @@ export function Log() {
   // so the detail form's own picker for all three stays hidden too.
   const pursuitScoped = !!initialPursuit;
 
-  // A Pursuit's own "Add a Moment" opens the form directly. There used to
+  // A Pursuit's own "Log a Moment" opens the form directly. There used to
   // be a chooser first ("Add an update" vs "Reflect privately"), but the
   // form already has a private reflection section and an "Only you"
   // audience, so that screen was a step that decided nothing.
@@ -1069,9 +1069,9 @@ export function Log() {
         {openProjects.length > 0 && (
           <div className="mt-3">
             <Select onValueChange={(id) => navigate(`/create?pursuit=${id}`)}>
-              <SelectTrigger className="w-full" aria-label="Add a Moment to a Pursuit">
+              <SelectTrigger className="w-full" aria-label="Log a Moment for a Pursuit">
                 <PenLine className="size-3.5" />
-                <SelectValue placeholder="Or add a Moment to a Pursuit" />
+                <SelectValue placeholder="Or log a Moment for a Pursuit" />
               </SelectTrigger>
               <SelectContent>
                 {openProjects.map((p) => (

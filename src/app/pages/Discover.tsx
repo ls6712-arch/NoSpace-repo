@@ -89,7 +89,7 @@ const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
  * Shared look for every navigational tab/filter on this page: plain
  * small-caps text, letter-spaced, no pill background — active means a thin
  * underline plus darker text, not a fill. Deliberately not used for
- * "Add a Moment"/"Start your log" or any other primary action button,
+ * "Log a Moment" or any other primary action button,
  * which stay solid — this is for choosing what you're looking at, not
  * doing something.
  */
@@ -656,8 +656,8 @@ export function Discover() {
               {/* Media type — same plain-text, underline-on-active look as
                   the top-level Discover tabs and the Corner row above, per
                   the brief: navigational filters read as text choices, not
-                  filled pills. "Add a Moment"/"Start your log" is the one
-                  thing on this page that stays a solid button. */}
+                  filled pills. "Log a Moment" is the one thing on this page
+                  that stays a solid button. */}
               <ul className="mb-6 flex items-center gap-6" role="tablist" aria-label="Media type">
                 {MEDIA_FILTERS.map(({ id, label }) => {
                   const active = mediaFilter === id;

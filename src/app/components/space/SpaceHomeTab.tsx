@@ -85,7 +85,7 @@ export function SpaceHomeTab({
   hosts: HostLite[];
   onAddMoment: () => void;
   /** Bumped by the parent right after a Moment is linked into this Space
-   * (from the Add Moment dialog) — included below so that refetches the
+   * (from the Log a Moment dialog) — included below so that refetches the
    * grid, which in turn recomputes the "Share a Moment" checklist step.
    * Pin/unpin already update local state directly and don't need this. */
   momentsRefreshKey?: number;

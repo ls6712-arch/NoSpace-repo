@@ -24,6 +24,7 @@ These apply to every session working in this repo, not just Spaces-related work.
 ## Product terminology
 
 - **All UI copy must follow `docs/glossary.md`: one word per idea, one idea per word; never use a retired term.**
+- **Never introduce a wording that isn't in `docs/glossary.md`; if one is needed, ask first.**
 - **Categories are never shown to users.** Corners are the only visible tags — Categories are an internal-only grouping now (used for admin/data organization), not something anyone picks or sees in the UI.
 - **Say "Moments" in UI copy** — never "work" or "posts". A person's Moments are their Moments, not their "work" or their "posts", in any label, button, empty state, or message.
 - **Spaces have no member counts anywhere in the UI.** Not on a Space card, not on the Space page header, not in a list — nowhere. If a number is needed, it's the Moments count (`space_moment_count_30d`), never a count of members.

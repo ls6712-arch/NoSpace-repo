@@ -208,7 +208,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
           profile. People are described by what they do.
         </p>
         <Link to="/discover">
-          <Button variant="outline">Explore hobbies instead</Button>
+          <Button variant="outline">Browse Discover</Button>
         </Link>
       </div>
     </div>

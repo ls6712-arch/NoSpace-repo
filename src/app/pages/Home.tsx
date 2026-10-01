@@ -80,7 +80,7 @@ const VALUE_CARDS = [
   },
   {
     icon: Compass,
-    title: "Explore what sparks next",
+    title: "Find what sparks next",
     copy: "Follow where your curiosity takes you and discover the next thing you want to try, learn, make, or experience.",
   },
 ];
@@ -136,7 +136,7 @@ export function Home() {
           </h1>
 
           <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg">
-            Create moments. Document what makes you more you. Explore
+            Create moments. Document what makes you more you. Find
             what sparks next.
           </p>
 

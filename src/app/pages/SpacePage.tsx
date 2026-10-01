@@ -318,7 +318,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           </Link>
         )}
 
-        {/* Actions: Join Space / Request to join / Add Moment — the
+        {/* Actions: Join Space / Request to join / Log a Moment — the
             primary action. Leave and Edit Space stay available (existing,
             explicitly-required functionality — a host must still be able
             to leave or edit) but as quieter secondary actions, not

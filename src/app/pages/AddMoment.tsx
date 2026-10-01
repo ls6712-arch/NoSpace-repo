@@ -29,7 +29,7 @@ const AUDIENCES: { value: Audience; label: string; icon: typeof Lock }[] = [
 ];
 
 /**
- * Add a Moment to a Pursuit — the mockup screen. One form: photo, what
+ * Log a Moment for a Pursuit — the mockup screen. One form: photo, what
  * changed, and "How much did this move it forward?", which logs the amount
  * toward the Pursuit's measure in the same action. Then "Moment added" with
  * the updated progress and the latest pieces.

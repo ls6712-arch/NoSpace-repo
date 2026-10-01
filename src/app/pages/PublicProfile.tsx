@@ -281,7 +281,7 @@ export function PublicProfile() {
             Nobody by that name. The link may be out of date.
           </p>
           <Link to="/discover">
-            <Button variant="outline">Explore hobbies instead</Button>
+            <Button variant="outline">Browse Discover</Button>
           </Link>
         </div>
       </div>
@@ -574,7 +574,7 @@ export function PublicProfile() {
                 Same hobbies.<br />Brighter days.
               </p>
               <span className="inline-flex items-center gap-1.5 text-sm text-[var(--coral-text)]">
-                Explore their world
+                Go to {hobby.shortName}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </span>
             </div>
