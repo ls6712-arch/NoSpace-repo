@@ -4,10 +4,13 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { TagsField } from "../components/TagsField";
 import { AvatarPicker } from "../components/AvatarPicker";
 import { FirstMomentStep } from "../components/FirstMomentStep";
+import { OnboardingInviteCard } from "../components/OnboardingInviteCard";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useContent } from "../context/ContentContext";
 import { useCorners, cornerFollowKey } from "../context/CornersContext";
+import { useCategories } from "../context/CategoriesContext";
+import { fetchInvitesLeft } from "../lib/invites";
 import { Button } from "../components/ui/button";
 
 /** Every chip carried across the wizard shares this layoutId prefix, so
@@ -52,18 +55,25 @@ const SPRING = { type: "spring" as const, stiffness: 260, damping: 28 };
  * "write a first page" gauntlet, is gone: it asked for up to five more
  * Moments right after the real first one, which is exactly the friction
  * Step 3 exists to remove from onboarding.
+ *
+ * After the cover saves, one optional invite card follows — only for someone
+ * who still has an invite to give (see OnboardingInviteCard). Everyone else
+ * goes straight on, exactly as before.
  */
 export function Onboarding() {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/you";
   const navigate = useNavigate();
-  const { profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
+  const { isAdmin } = useCategories();
   const social = useSocial();
   const { refetchActiveHobbies } = useContent();
   const { resolveInterest } = useCorners();
   const reduceMotion = !!useReducedMotion();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  // 4 = the optional invite card, reached only after the cover has saved.
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [invitesLeft, setInvitesLeft] = useState<number | null>(0);
   const [tags, setTags] = useState<string[]>([]);
 
   // Avatar: AvatarPicker persists to profiles.avatar_url the moment a photo
@@ -152,6 +162,17 @@ export function Onboarding() {
         setFinishError("Couldn't finish setting up. Try again in a moment.");
         return;
       }
+      // onboarding_completed is saved now, so the invite card below is
+      // purely optional: leaving from it (or a failed read here) can't
+      // bounce anyone back through Root's guard.
+      const left = user
+        ? await fetchInvitesLeft(user.id, profile?.invite_allowance ?? 0, isAdmin)
+        : 0;
+      if (left === null || left > 0) {
+        setInvitesLeft(left);
+        setStep(4);
+        return;
+      }
       navigate(redirectTo, { replace: true });
     } catch {
       setFinishError("Couldn't reach the server. Try again in a moment.");
@@ -160,7 +181,7 @@ export function Onboarding() {
     }
   };
 
-  const stepDirection = { 1: -1, 2: 0, 3: 1 } as const;
+  const stepDirection = { 1: -1, 2: 0, 3: 1, 4: 1 } as const;
   const slideVariants = {
     enter: (dir: number) => (reduceMotion ? {} : { x: dir >= 0 ? 32 : -32, opacity: 0 }),
     center: { x: 0, opacity: 1 },
@@ -237,6 +258,13 @@ export function Onboarding() {
                 onSkip={skipCover}
                 finishing={finishing}
                 finishError={finishError}
+              />
+            )}
+
+            {step === 4 && (
+              <OnboardingInviteCard
+                invitesLeft={invitesLeft}
+                onDone={() => navigate(redirectTo, { replace: true })}
               />
             )}
           </motion.div>
