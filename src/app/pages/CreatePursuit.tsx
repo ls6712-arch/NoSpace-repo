@@ -21,6 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { AmountStepper, ProgressBar, SoftPanel, StepDots, Toggle, initials } from "../components/pursuit/ui";
+import { APP_NAME } from "../config";
 import {
   DEFAULT_CHECK_IN_DAYS,
   Measure,
@@ -180,7 +181,7 @@ export function CreatePursuit() {
             <ArrowLeft className="size-5" />
           </button>
           <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
-            Sushii
+            {APP_NAME}
           </span>
           <Link to="/my-space" aria-label="Close" className="text-muted-foreground hover:text-foreground">
             <X className="size-5" />
@@ -191,7 +192,7 @@ export function CreatePursuit() {
 
         {screen === 0 && (
           <section>
-            {heading("Create a Pursuit", "What are you trying to accomplish?")}
+            {heading("Start a Pursuit", "What are you trying to accomplish?")}
             <textarea
               value={title}
               onChange={(e) => setTitle(e.target.value.slice(0, 80))}
@@ -252,7 +253,7 @@ export function CreatePursuit() {
             <div className="mt-6 space-y-4">
               {measure.kind === "milestones" ? (
                 <div>
-                  <label className="mb-1.5 block text-sm">Milestones, in order</label>
+                  <label className="mb-1.5 block text-sm">Stepping stones, in order</label>
                   <div className="space-y-2">
                     {(measure.milestones ?? []).map((m, i) => (
                       <div key={i} className="flex items-center gap-2">
@@ -264,7 +265,7 @@ export function CreatePursuit() {
                             list[i] = e.target.value.slice(0, 60);
                             patch({ milestones: list });
                           }}
-                          placeholder={["Learn three songs", "Play for friends", "First open mic"][i] ?? "Next milestone"}
+                          placeholder={["Learn three songs", "Play for friends", "First open mic"][i] ?? "Next stepping stone"}
                           className="h-10 flex-1 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
                         />
                       </div>
@@ -275,7 +276,7 @@ export function CreatePursuit() {
                     onClick={() => patch({ milestones: [...(measure.milestones ?? []), ""] })}
                     className="mt-2 text-xs text-accent hover:underline"
                   >
-                    + Add a milestone
+                    + Add a stepping stone
                   </button>
                 </div>
               ) : (
@@ -308,13 +309,13 @@ export function CreatePursuit() {
               </Field>
               <SoftPanel className="flex gap-2.5 text-xs text-foreground">
                 <Lightbulb className="mt-0.5 size-4 shrink-0" />
-                This helps Sushii understand how to track your progress.
+                This helps {APP_NAME} understand how to track your progress.
               </SoftPanel>
               <SoftPanel>
                 <p className="text-[11px] text-muted-foreground">Your goal</p>
                 <p className="mt-0.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
                   {measure.kind === "milestones"
-                    ? `${(measure.milestones ?? []).filter((x) => x.trim()).length} milestones`
+                    ? `${(measure.milestones ?? []).filter((x) => x.trim()).length} stepping stones`
                     : targetText(measure)}
                 </p>
               </SoftPanel>
@@ -351,10 +352,10 @@ export function CreatePursuit() {
                 />
               </RuleRow>
             </div>
-            <p className="mb-2 mt-5 text-sm">Deadline</p>
+            <p className="mb-2 mt-5 text-sm">Aim for</p>
             <div className="grid grid-cols-2 gap-2">
               <ChipButton active={!hasDeadline} onClick={() => setHasDeadline(false)}>
-                No deadline
+                No target date
               </ChipButton>
               <ChipButton active={hasDeadline} onClick={() => setHasDeadline(true)}>
                 <CalendarDays className="size-3.5" /> Pick a date
@@ -373,7 +374,7 @@ export function CreatePursuit() {
 
         {screen === 4 && (
           <section>
-            {heading("Who's participating?")}
+            {heading("Who's pursuing this with you?")}
             <div className="mt-6 grid grid-cols-2 gap-2">
               <ChipButton active={participation === "solo"} onClick={() => setParticipation("solo")}>
                 <User className="size-3.5" /> Just me
@@ -488,7 +489,7 @@ export function CreatePursuit() {
               <ReviewRow icon={Hash} label="Unit" value={finalMeasure.unit} />
               {finalMeasure.whatCounts && <ReviewRow icon={CheckCircle2} label="What counts" value={finalMeasure.whatCounts} />}
               {finalMeasure.kind === "milestones" && (
-                <ReviewRow icon={Flag} label="Milestones" value={(finalMeasure.milestones ?? []).map((n, i) => `${i + 1}. ${n}`).join("  ")} />
+                <ReviewRow icon={Flag} label="Stepping stones" value={(finalMeasure.milestones ?? []).map((n, i) => `${i + 1}. ${n}`).join("  ")} />
               )}
               <ReviewRow
                 icon={Target}
@@ -502,16 +503,16 @@ export function CreatePursuit() {
               <ReviewRow icon={Sigma} label="Starting amount" value={formatAmount(finalMeasure.startingAmount)} />
               <ReviewRow
                 icon={CalendarDays}
-                label="Deadline"
+                label="Aim for"
                 value={
                   finalMeasure.targetDate
                     ? new Date(finalMeasure.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
-                    : "No deadline"
+                    : "No target date"
                 }
               />
               <ReviewRow
                 icon={Users}
-                label="Participating"
+                label="Pursuing together"
                 value={
                   participation === "solo"
                     ? "Just you"
@@ -532,7 +533,7 @@ export function CreatePursuit() {
             </Button>
           ) : (
             <Button variant="coral" className="h-11 w-full rounded-xl" disabled={saving} onClick={begin}>
-              {saving ? "Starting…" : "Begin Pursuit"}
+              {saving ? "Starting…" : "Start a Pursuit"}
             </Button>
           )}
         </div>

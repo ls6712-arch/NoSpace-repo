@@ -840,10 +840,10 @@ export function Messages() {
                   <MessagesSquare className="size-6" />
                 </span>
                 <h2 className="mb-2 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  No open threads
+                  No open chats
                 </h2>
                 <p className="mx-auto mb-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  Nothing yet. A thread opens when someone accepts a Make together or Explore
+                  Nothing yet. A chat opens when someone accepts a Make together or Explore
                   together request, or when you send someone a direct message from their profile.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2">

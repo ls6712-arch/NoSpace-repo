@@ -18,6 +18,7 @@ import { usePursuitProgress } from "../lib/usePursuitProgress";
 import { collectPursuitMoments } from "../lib/pursuitTrail";
 import { Button } from "../components/ui/button";
 import { AmountStepper, ProgressBar, SoftPanel, Toggle } from "../components/pursuit/ui";
+import { APP_NAME } from "../config";
 
 type Audience = "private" | "followers" | "public";
 
@@ -85,7 +86,7 @@ export function AddMoment() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
         <p className="text-sm text-muted-foreground">That Pursuit isn't in your list.</p>
         <Link to="/my-space">
-          <Button variant="outline">Back to My Space</Button>
+          <Button variant="outline">Back to Home</Button>
         </Link>
       </div>
     );
@@ -180,13 +181,13 @@ export function AddMoment() {
             <ArrowLeft className="size-5" />
           </button>
           <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
-            Sushii
+            {APP_NAME}
           </span>
           <span className="size-5" />
         </div>
 
         <h1 className="text-center text-[1.9rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
-          Add a Moment
+          Log a Moment
         </h1>
         <p className="mt-1 text-center text-sm text-muted-foreground">A little progress, kept for good.</p>
 

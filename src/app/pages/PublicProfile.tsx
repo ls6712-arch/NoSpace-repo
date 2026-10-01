@@ -452,7 +452,7 @@ export function PublicProfile() {
                 to={`/u/${username}/studio`}
                 className="mt-2 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
-                Open Studio →
+                Open Scrapbook →
               </Link>
             </div>
         </div>

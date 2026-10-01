@@ -5,7 +5,7 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 
 /**
  * Phone and tablet navigation: four labelled destinations, matching the
- * desktop top nav's Discover / My Space / Create in the same order (plus
+ * desktop top nav's Discover / Home / Create in the same order (plus
  * Profile, which hangs off the avatar on desktop) — one mental model, not
  * two. The desktop button reads "Start your log"; this tab stays the
  * shorter "Create" since a 10px, single-line tab has no room for it.
@@ -35,7 +35,7 @@ export const TABS = [
   },
   {
     to: "/my-space",
-    label: "My Space",
+    label: "Home",
     icon: Library,
     match: (p: string) => p.startsWith("/my-space"),
   },

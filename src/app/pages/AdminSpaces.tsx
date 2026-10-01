@@ -136,7 +136,7 @@ export function AdminSpaces() {
           prompt: h.prompt ?? "",
           active: !!h.hidden,
         }),
-      h.hidden ? `“${h.name}” is visible again.` : `“${h.name}” is hidden. Its posts and links still work.`,
+      h.hidden ? `“${h.name}” is visible again.` : `“${h.name}” is hidden. Its Moments and links still work.`,
     );
   };
 

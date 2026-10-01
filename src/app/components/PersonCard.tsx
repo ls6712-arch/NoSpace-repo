@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { getHobby } from "../data/hobbies";
 import { profilePath, type Person } from "../lib/people";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { APP_NAME } from "../config";
 
 function initials(name: string) {
   return name
@@ -41,7 +42,7 @@ export function PersonCard({ person, className = "" }: { person: Person; classNa
           {hobbies.length > 0
             ? hobbies.join(" · ")
             : person.postCount > 0
-              ? "Sharing work on Sushii"
+              ? `Sharing Moments on ${APP_NAME}`
               : "Just joined, nothing shared yet"}
         </span>
       </span>

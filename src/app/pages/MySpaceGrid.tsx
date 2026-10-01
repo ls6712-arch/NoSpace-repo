@@ -231,7 +231,7 @@ export function MySpaceGrid() {
                 You're caught up
               </p>
               <Link to="/create" className="mt-2 inline-block text-xs text-accent hover:underline">
-                Add a Moment
+                Log a Moment
               </Link>
             </div>
           )}

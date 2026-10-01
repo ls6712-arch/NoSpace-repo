@@ -228,7 +228,7 @@ export function PursuitExpandedPanel({
         <div className="flex flex-wrap items-center gap-2">
           <Link to={`/pursuit/${pursuit.id}/moment`}>
             <Button variant="coral" size="sm">
-              Add a Moment
+              Log a Moment
             </Button>
           </Link>
           <Button variant="outline" size="sm" onClick={() => setGoalOpen(true)}>

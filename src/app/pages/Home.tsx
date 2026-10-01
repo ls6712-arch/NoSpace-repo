@@ -12,6 +12,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { useAuth } from "../context/AuthContext";
 import { WaitlistForm } from "../components/WaitlistForm";
 import heroWorldsImg from "../../assets/hero-worlds.png";
+import { APP_NAME } from "../config";
 
 /**
  * Desktop-only parallax on the hero collage: it drifts up a little more
@@ -165,7 +166,7 @@ export function Home() {
           </div>
           {signedOut ? (
             <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">
-              Sushii is invite-only for now — no invite? Join the waitlist below.
+              {APP_NAME} is invite-only for now — no invite? Join the waitlist below.
             </p>
           ) : (
             <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">Free to join. No credit card.</p>
@@ -250,7 +251,7 @@ export function Home() {
                 <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
                   A Corner is the specific thing inside a Space, like Pickleball
                   inside Sports &amp; Fitness. Here's an example, shown with
-                  real Moments from Sushii's sample content.
+                  real Moments from {APP_NAME}'s sample content.
                 </p>
               </div>
               <div className={MOMENT_GRID}>
@@ -314,7 +315,7 @@ export function Home() {
               {signedOut ? (
                 <>
                   <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
-                    Sushii is invite-only for now. Private by default once you're
+                    {APP_NAME} is invite-only for now. Private by default once you're
                     in — share only the Moments you choose, with exactly the
                     people you choose.
                   </p>
@@ -343,15 +344,15 @@ export function Home() {
       <footer className="border-t border-[var(--hairline)] py-12">
         <div className="container mx-auto flex flex-col items-center gap-6 px-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="text-center sm:text-left">
-            <span className="text-lg text-foreground" style={{ fontFamily: "var(--font-serif)" }}>Sushii</span>
+            <span className="text-lg text-foreground" style={{ fontFamily: "var(--font-serif)" }}>{APP_NAME}</span>
             <p className="mt-1 max-w-xs text-sm text-muted-foreground">
               One place for everything you're living, doing, and making.
             </p>
           </div>
           <nav aria-label="Product" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <Link to="/discover" className="hover:text-foreground">Discover</Link>
-            <Link to="/my-space" className="hover:text-foreground">My Space</Link>
-            <Link to="/create" className="hover:text-foreground">Start your log</Link>
+            <Link to="/my-space" className="hover:text-foreground">Home</Link>
+            <Link to="/create" className="hover:text-foreground">Log a Moment</Link>
           </nav>
         </div>
       </footer>

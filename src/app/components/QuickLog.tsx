@@ -18,7 +18,7 @@ import { Button } from "./ui/button";
 type Audience = "private" | "followers";
 
 /**
- * The ten-second Moment: one photo, one line, Post. For the small updates
+ * The ten-second Moment: one photo, one line, Log. For the small updates
  * ("did 20 minutes today") that don't deserve the full composer — which
  * stays one tap away for the big ones.
  *
@@ -220,7 +220,7 @@ export function QuickLog({
           </div>
         </div>
         <Button variant="coral" size="sm" onClick={post} disabled={!canPost} className="shrink-0">
-          {saving ? <Loader2 className="size-3.5 animate-spin" /> : "Post"}
+          {saving ? <Loader2 className="size-3.5 animate-spin" /> : "Log"}
         </Button>
       </div>
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}

@@ -117,7 +117,7 @@ export function You() {
     <div className="ns-paper-theme min-h-screen bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="mb-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          YOUR PERSONAL ARCHIVE
+          YOUR SHELF
         </div>
 
         <div className="mb-6 flex flex-col gap-3">
@@ -230,7 +230,7 @@ export function You() {
                   to="/create"
                   className="text-xs font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
                 >
-                  Add a moment
+                  Log a Moment
                 </Link>
                 <Link to="/settings" title="Settings" aria-label="Settings">
                   <SettingsIcon className="size-3.5 text-muted-foreground transition-colors hover:text-foreground" />
@@ -249,7 +249,7 @@ export function You() {
                   to="/studio"
                   className="text-xs uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  Public archive ↗
+                  Public Scrapbook ↗
                 </Link>
               </div>
             </div>
@@ -405,7 +405,7 @@ export function You() {
             </h2>
             <Button variant="outline" size="sm" onClick={() => setPursuitDialog(true)}>
               <Sparkles className="size-3.5" />
-              Create Your Pursuit
+              Start a Pursuit
             </Button>
           </div>
           <p className="mb-5 text-sm text-muted-foreground">The things you're bringing to life.</p>
@@ -416,7 +416,7 @@ export function You() {
                 Nothing yet. Name a thing you're working toward and it lives here.
               </p>
               <Button variant="outline" size="sm" className="mt-4" onClick={() => setPursuitDialog(true)}>
-                Create Your Pursuit
+                Start a Pursuit
               </Button>
             </div>
           ) : (

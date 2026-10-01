@@ -455,7 +455,7 @@ export function Pursuit() {
               <Link to={`/pursuit/${ownProject.id}/moment`} className="mt-3 inline-block">
                 <Button variant="coral" size="sm">
                   <Plus className="size-3.5" />
-                  Add a Moment
+                  Log a Moment
                 </Button>
               </Link>
             )}
@@ -468,7 +468,7 @@ export function Pursuit() {
               {moments.length > 0 && !hasMeasure(ownProject) && (
                 <Button variant="coral" size="sm" onClick={() => setLogging((v) => !v)} aria-expanded={logging}>
                   <Plus className="size-3.5" />
-                  Add a Moment
+                  Log a Moment
                 </Button>
               )}
               <Link to={`/create?pursuit=${view.id}`}>

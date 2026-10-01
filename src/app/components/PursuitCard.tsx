@@ -244,7 +244,7 @@ export function PursuitCard({
               to={`/pursuit/${pursuit.id}/moment`}
               className="flex-1 rounded-full border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
             >
-              Add a Moment
+              Log a Moment
             </Link>
             {goal && !goal.reachedAt && (
               <button

@@ -174,7 +174,7 @@ export function Inbox() {
           <TabsContent value="activity">
             {social.notifications.length === 0 ? (
               <Empty icon={InboxIcon}>
-                Quiet. Thoughts on your work and accepted follows all show up
+                Quiet. Thoughts on your Moments and accepted follows all show up
                 here.
               </Empty>
             ) : (

@@ -285,7 +285,7 @@ export function BePart({
               {active.id === "keep_exploring" && (
                 <>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    You'll see more posts, activities and people around {hobbyLabel}.
+                    You'll see more Moments, activities and people around {hobbyLabel}.
                   </p>
                   {exploring ? (
                     <>
