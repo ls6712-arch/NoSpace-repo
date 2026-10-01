@@ -4,7 +4,7 @@ import { Check, Copy, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCategories } from "../context/CategoriesContext";
 import { supabase } from "../../lib/supabase";
-import { createInvite, revokeInvite } from "../lib/invites";
+import { createInvite, inviteLink, revokeInvite } from "../lib/invites";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
@@ -37,8 +37,6 @@ interface WaitlistRow {
   hobby: string | null;
   createdAt: number;
 }
-
-const SITE_ORIGIN = "https://www.trynospace.com";
 
 function when(ts: number) {
   const mins = Math.floor((Date.now() - ts) / 60000);
@@ -151,7 +149,7 @@ export function AdminInvites() {
       setCreateError(result.error || "Couldn't create that invite.");
       return;
     }
-    setNewLink(`${SITE_ORIGIN}/#/i/${result.code}`);
+    setNewLink(inviteLink(result.code));
     setNote("");
     await load();
   };

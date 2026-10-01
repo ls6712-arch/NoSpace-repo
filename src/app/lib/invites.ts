@@ -64,6 +64,40 @@ export async function createInvite(note: string): Promise<CreateInviteResult> {
   };
 }
 
+/** The one shape of an invite link, shared by AdminInvites and the
+ * onboarding invite card so the two can never drift apart. */
+export const SITE_ORIGIN = "https://www.trynospace.com";
+export function inviteLink(code: string): string {
+  return `${SITE_ORIGIN}/#/i/${code}`;
+}
+
+/**
+ * How many more invites this person can create — the same count
+ * create_invite() enforces server-side (claimed, plus open and unexpired,
+ * against profiles.invite_allowance). `null` means no limit (admins).
+ * Returns 0 on any read failure, so a caller hides the invite UI rather
+ * than offering something the server would refuse.
+ */
+export async function fetchInvitesLeft(
+  userId: string,
+  allowance: number,
+  isAdmin: boolean,
+): Promise<number | null> {
+  if (isAdmin) return null;
+  if (!supabase || !userId || allowance <= 0) return 0;
+  const { data, error } = await supabase
+    .from("invites")
+    .select("status, expires_at")
+    .eq("inviter_id", userId);
+  if (error) return 0;
+  const now = Date.now();
+  const used = (data ?? []).filter(
+    (r: { status: string; expires_at: string }) =>
+      r.status === "claimed" || (r.status === "open" && new Date(r.expires_at).getTime() > now),
+  ).length;
+  return Math.max(0, allowance - used);
+}
+
 export async function revokeInvite(code: string): Promise<boolean> {
   if (!supabase || !code) return false;
   const { data, error } = await supabase.rpc("revoke_invite", { p_code: code });
