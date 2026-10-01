@@ -1,0 +1,20 @@
+-- BACKFILL (no-op): documents a migration recorded live as version
+-- 20260924230014 / communication_phase1_safety_fix_block_owner_lookup,
+-- which has no separate file in this repo. It was one of three small
+-- live follow-up fixes applied right after communication_phase1_safety,
+-- before any users were on the feature, and its actual SQL was folded
+-- into the committed communication_phase1_safety.sql rather than kept
+-- as a separate file — see that file's own header comment (point 2) and
+-- private.post_owner() (around line 299).
+--
+-- What it fixed: a blocked person could still react to or comment on the
+-- blocker's Moment, because the block check's own "who owns this post"
+-- subquery was itself subject to posts' new block-aware RLS — once the
+-- block hid the post, the subquery silently returned no rows, which made
+-- the block check vacuously pass. private.post_owner() resolves the
+-- owner bypassing that RLS so the block check actually runs.
+--
+-- This file intentionally applies nothing — the change already lives in
+-- communication_phase1_safety.sql. It exists only so this repo's local
+-- migrations directory accounts for every version Postgres has recorded
+-- as applied, which the "Supabase Preview" CI check verifies.
