@@ -4,8 +4,9 @@ import { ArrowRight, MessageCircle, Plus, Share2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
-import { Post } from "../data/posts";
+import { Post, postCorner } from "../data/posts";
 import { subHobbyLabel, currentSpaceSlug, getHobby } from "../data/hobbies";
+import { useCorners } from "../context/CornersContext";
 import { usePeopleInHobby } from "../lib/people";
 import { messageTabFor } from "../lib/messageTabs";
 import { sessionsFromPosts } from "../components/HobbyShelf";
@@ -38,6 +39,22 @@ function primaryHobbySlug(posts: Post[]): string | undefined {
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
 
+/** Whichever Corner shows up most in their public Moments — a Corner slug is
+ * only unique within its own Space, so this tracks the pair, never the slug
+ * alone. Categories never surface here or anywhere else a member can see. */
+function primaryCornerKey(posts: Post[]): { spaceSlug: string; slug: string } | undefined {
+  const counts = new Map<string, { spaceSlug: string; slug: string; count: number }>();
+  for (const p of posts) {
+    const slug = postCorner(p);
+    if (!slug) continue;
+    const key = `${p.hobbySlug}::${slug}`;
+    const entry = counts.get(key);
+    if (entry) entry.count++;
+    else counts.set(key, { spaceSlug: p.hobbySlug, slug, count: 1 });
+  }
+  return [...counts.values()].sort((a, b) => b.count - a.count)[0];
+}
+
 /**
  * Somebody's shelf, open to anyone with the link — no account needed to look.
  * This is what "Share profile" actually shares.
@@ -61,6 +78,7 @@ export function PublicProfile() {
   const { username = "" } = useParams();
   const { user } = useAuth();
   const social = useSocial();
+  const { cornersFor } = useCorners();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [state, setState] = useState<
@@ -322,7 +340,10 @@ export function PublicProfile() {
 
   const primaryHobby = pickPrimaryHobby(posts);
   const hobbySlug = primaryHobbySlug(posts);
-  const hobby = hobbySlug ? getHobby(hobbySlug) : undefined;
+  const cornerKey = primaryCornerKey(posts);
+  const primaryCorner = cornerKey
+    ? cornersFor(cornerKey.spaceSlug).find((c) => c.slug === cornerKey.slug)
+    : undefined;
 
   const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
   const sinceLabel = earliestPostAt
@@ -557,15 +578,15 @@ export function PublicProfile() {
           <PeopleWhoAlsoMake hobbySlug={hobbySlug} excludePersonId={personId} firstName={firstName} />
         </div>
 
-        {hobby && (
+        {primaryCorner && (
           <Link
-            to={`/space/${hobby.slug}`}
+            to={`/discover?corner=${primaryCorner.slug}`}
             className="group mb-10 flex flex-col overflow-hidden rounded-3xl border border-border sm:flex-row sm:items-center"
           >
             <div className="h-40 w-full shrink-0 overflow-hidden sm:h-auto sm:w-64">
               <GeneratedArt
-                hobbySlug={hobby.slug}
-                seed={hobby.slug}
+                hobbySlug={primaryCorner.spaceSlug}
+                seed={primaryCorner.slug}
                 className="h-full w-full transition-transform duration-500 group-hover:scale-105"
               />
             </div>
@@ -574,7 +595,7 @@ export function PublicProfile() {
                 Same hobbies.<br />Brighter days.
               </p>
               <span className="inline-flex items-center gap-1.5 text-sm text-[var(--coral-text)]">
-                Go to {hobby.shortName}
+                Go to {primaryCorner.name}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </span>
             </div>
