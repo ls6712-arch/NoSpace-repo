@@ -1,0 +1,960 @@
+text,file,glossary_term,status
+"Sushii",index.html,App name,retired
+"sushii-theme-preference" (localStorage key),index.html,App name,not in glossary
+"Messages ({n} unread) / Messages",src/app/components/Header.tsx,Messages / Inbox,ok
+"System",src/app/components/Header.tsx,-,ok
+"Light",src/app/components/Header.tsx,-,ok
+"Dark",src/app/components/Header.tsx,-,ok
+"Account menu",src/app/components/Header.tsx,-,ok
+"Settings",src/app/components/Header.tsx,-,ok
+"Reports",src/app/components/Header.tsx,-,ok
+"{n} open",src/app/components/Header.tsx,-,ok
+"Theme",src/app/components/Header.tsx,-,ok
+"Log in",src/app/components/Header.tsx,-,ok
+"You: your work and saved ideas",src/app/components/Header.tsx,You,retired
+"You",src/app/components/Header.tsx,You,ok
+"Discover",src/app/components/Header.tsx,Discover,ok
+"Spaces, people and pursuits",src/app/components/Header.tsx,Discover,ok
+"My Space",src/app/components/Header.tsx,Home,retired
+"New work from the people and hobbies you're part of",src/app/components/Header.tsx,Home,retired
+"Start your log",src/app/components/Header.tsx,Log a Moment,retired
+"Share a moment, or start a pursuit.",src/app/components/Header.tsx,Log a Moment,ok
+"Sushii",src/app/components/Header.tsx,App name,retired
+"Search hobbies, people, or spaces",src/app/components/Header.tsx,Search Moments, people, Spaces,synonym
+"Search hobbies, people, or spaces...",src/app/components/Header.tsx,Search Moments, people, Spaces,synonym
+"No matches for ""{query}""",src/app/components/Header.tsx,-,ok
+"Search",src/app/components/Header.tsx,-,ok
+"Cart ({cartCount})",src/app/components/Header.tsx,-,ok
+"Discover",src/app/components/BottomTabBar.tsx,Discover,ok
+"My Space",src/app/components/BottomTabBar.tsx,Home,retired
+"Create",src/app/components/BottomTabBar.tsx,Log a Moment,synonym
+"Profile",src/app/components/BottomTabBar.tsx,You,synonym
+"Main",src/app/components/BottomTabBar.tsx,-,ok
+"Notifications ({n} unread) / Notifications",src/app/components/NotificationsMenu.tsx,-,ok
+"Notifications",src/app/components/NotificationsMenu.tsx,-,ok
+"Mark all read",src/app/components/NotificationsMenu.tsx,-,ok
+"Accept",src/app/components/NotificationsMenu.tsx,-,ok
+"Not now",src/app/components/NotificationsMenu.tsx,-,ok
+"Decline",src/app/components/NotificationsMenu.tsx,-,ok
+"Nothing yet. Thoughts on your moments, people joining your activities, follow requests, and asks to make or explore together all turn up here.",src/app/components/NotificationsMenu.tsx,Thoughts / Follow requests,ok
+"You're not signed in, so requests can't reach anyone else yet.",src/app/components/NotificationsMenu.tsx,-,ok
+"just now",src/app/components/NotificationsMenu.tsx,-,ok
+"{n}m ago",src/app/components/NotificationsMenu.tsx,-,ok
+"{n}h ago",src/app/components/NotificationsMenu.tsx,-,ok
+"{n}d ago",src/app/components/NotificationsMenu.tsx,-,ok
+"All",src/app/pages/Discover.tsx,-,ok
+"New today",src/app/pages/Discover.tsx,-,ok
+"Near me",src/app/pages/Discover.tsx,-,ok
+"Pursuits in progress",src/app/pages/Discover.tsx,Pursuit,ok
+"Corners",src/app/pages/Discover.tsx,Corner,ok
+"Spaces",src/app/pages/Discover.tsx,Space,ok
+"People",src/app/pages/Discover.tsx,-,ok
+"Marketplace",src/app/pages/Discover.tsx,Book the studio (marketplace),ok
+"For You",src/app/pages/Discover.tsx,-,ok
+"Following",src/app/pages/Discover.tsx,Followers / Following,ok
+"Recent",src/app/pages/Discover.tsx,-,ok
+"Everything",src/app/pages/Discover.tsx,-,ok
+"Photos",src/app/pages/Discover.tsx,-,ok
+"Video",src/app/pages/Discover.tsx,-,ok
+"Written",src/app/pages/Discover.tsx,-,ok
+"No listings match ""{query}"" yet.",src/app/pages/Discover.tsx,-,ok
+"Nothing for sale yet.",src/app/pages/Discover.tsx,-,ok
+"See all in {hobby} ->",src/app/pages/Discover.tsx,-,ok
+"No Corners match that. Try a broader word.",src/app/pages/Discover.tsx,Corner,ok
+"Search people, projects, hobbies...",src/app/pages/Discover.tsx,-,retired
+"Clear search",src/app/pages/Discover.tsx,-,ok
+"Discover",src/app/pages/Discover.tsx,Discover,ok
+"POPULAR MOMENTS FROM ACROSS SUSHII",src/app/pages/Discover.tsx,App name / Moment,retired
+"Featured Moments",src/app/pages/Discover.tsx,Spotlight,retired
+"See all ->",src/app/pages/Discover.tsx,-,ok
+"MOMENTS FROM ACROSS SUSHII",src/app/pages/Discover.tsx,App name / Moment,retired
+"All Moments",src/app/pages/Discover.tsx,Moment,ok
+"Feed",src/app/pages/Discover.tsx,-,ok
+"Media type",src/app/pages/Discover.tsx,-,ok
+"Location isn't switched on yet.",src/app/pages/Discover.tsx,-,ok
+"{n} Moment(s){matching query}.",src/app/pages/Discover.tsx,Moment,ok
+"Sushii doesn't know where you are, and won't until you tell it.",src/app/pages/Discover.tsx,App name,retired
+"Nothing from your Interests yet. Tag a Moment with a Corner to start building your list.",src/app/pages/Discover.tsx,Moment / Corner,ok
+"Nothing matches that yet. Try a broader word or a different filter.",src/app/pages/Discover.tsx,-,ok
+"That's {n} of {n}. Nothing loads on its own. Keep going only if you want to.",src/app/pages/Discover.tsx,-,ok
+"Show more",src/app/pages/Discover.tsx,-,ok
+"That's everything here.",src/app/pages/Discover.tsx,-,ok
+"A good place to stop scrolling and go make something.",src/app/pages/Discover.tsx,-,ok
+"Create something",src/app/pages/Discover.tsx,Log a Moment,synonym
+"SEARCH",src/app/pages/SearchResults.tsx,-,ok
+"Results for ""{q}""",src/app/pages/SearchResults.tsx,-,ok
+"Search Sushii",src/app/pages/SearchResults.tsx,App name,retired
+"Search Spaces, Corners, people, Pursuits, Moments...",src/app/pages/SearchResults.tsx,Search Moments, people, Spaces,synonym
+"Type something above to search.",src/app/pages/SearchResults.tsx,-,ok
+"Searching...",src/app/pages/SearchResults.tsx,-,ok
+"Nothing matches ""{q}"" yet.",src/app/pages/SearchResults.tsx,-,ok
+"A SPACE FOR MORE OF YOU",src/app/pages/Home.tsx,Space,ok
+"Your interests are part of your story.",src/app/pages/Home.tsx,Tell your story,ok
+"Create moments. Document what makes you more you. Explore what sparks next.",src/app/pages/Home.tsx,Moment,ok
+"Begin your story",src/app/pages/Home.tsx,-,ok
+"See how it works",src/app/pages/Home.tsx,-,ok
+"Sushii is invite-only for now -- no invite? Join the waitlist below.",src/app/pages/Home.tsx,App name,retired
+"Free to join. No credit card.",src/app/pages/Home.tsx,-,ok
+"Create moments",src/app/pages/Home.tsx,Moment,ok
+"Turn the things you do, make, learn, and experience into moments worth remembering.",src/app/pages/Home.tsx,Moment,ok
+"Document what makes you more you",src/app/pages/Home.tsx,-,ok
+"Photos, notes, first attempts, small wins, and all the little changes that become part of your story.",src/app/pages/Home.tsx,-,ok
+"Explore what sparks next",src/app/pages/Home.tsx,Discover,ok
+"Follow where your curiosity takes you and discover the next thing you want to try, learn, make, or experience.",src/app/pages/Home.tsx,Follow / Discover,ok
+"Create",src/app/pages/Home.tsx,Log a Moment,synonym
+"Log a Moment right when it happens. A photo, a note, a small update.",src/app/pages/Home.tsx,Log a Moment,ok
+"Reflect",src/app/pages/Home.tsx,Reflection,ok
+"Add a private note only you can see. Never shown, never scored.",src/app/pages/Home.tsx,Reflection,ok
+"Share",src/app/pages/Home.tsx,-,ok
+"Just you, your followers, a Space, or everyone. Chosen right when you write it.",src/app/pages/Home.tsx,Only you / Followers / Everyone,ok
+"THE LOOP",src/app/pages/Home.tsx,-,ok
+"Ten seconds to log. A lifetime to look back on.",src/app/pages/Home.tsx,-,ok
+"Take a photo, write a quick note, or add a reflection nobody else will ever see. Every Moment adds to your Shelf, the full record of what you've actually done.",src/app/pages/Home.tsx,Reflection / Moment / Shelf,ok
+"THIS CORNER, RIGHT NOW",src/app/pages/Home.tsx,Corner,ok
+"Inside the Pickleball Corner.",src/app/pages/Home.tsx,Corner,ok
+"A Corner is the specific thing inside a Space, like Pickleball inside Sports & Fitness. Here's an example, shown with real Moments from Sushii's sample content.",src/app/pages/Home.tsx,Corner / Space / App name,retired
+"DISCOVER",src/app/pages/Home.tsx,Discover,ok
+"One place for everything you do.",src/app/pages/Home.tsx,-,ok
+"Fifteen Spaces today. Inside each one, tag a Moment anything you like -- ""Pasta Making,"" ""Food Photography,"" both at once -- and it's there. No fixed list, no approval queue.",src/app/pages/Home.tsx,Space / Corner,ok
+"Open Discover",src/app/pages/Home.tsx,Discover,ok
+"No feed algorithm. No streaks. No performing for an audience. Just your own log, kept the way you want it.",src/app/pages/Home.tsx,-,ok
+"START WHERE YOU ARE",src/app/pages/Home.tsx,-,ok
+"Whatever you're curious about, it's worth keeping.",src/app/pages/Home.tsx,-,ok
+"Sushii is invite-only for now. Private by default once you're in -- share only the Moments you choose, with exactly the people you choose.",src/app/pages/Home.tsx,App name / Moment,retired
+"Free to join. Private by default. Share only the Moments you choose, with exactly the people you choose.",src/app/pages/Home.tsx,Moment,ok
+"Small illustrated worlds of people playing music, painting, sculpting, gardening, reading, and coding, connected by soft glowing paths.",src/app/pages/Home.tsx,-,ok
+"Sushii",src/app/pages/Home.tsx,App name,retired
+"One place for everything you're living, doing, and making.",src/app/pages/Home.tsx,-,ok
+"Product",src/app/pages/Home.tsx,-,ok
+"Discover",src/app/pages/Home.tsx,Discover,ok
+"My Space",src/app/pages/Home.tsx,Home,retired
+"Start your log",src/app/pages/Home.tsx,Log a Moment,retired
+"Accounts aren't set up on this build",src/app/pages/Login.tsx,-,ok
+"This copy of Sushii isn't connected to a database yet, so there's no real sign-up here. Everything still works in local demo mode.",src/app/pages/Login.tsx,App name,retired
+"Create your account",src/app/pages/Login.tsx,-,ok
+"Welcome back",src/app/pages/Login.tsx,-,ok
+"Real work, saved for real, not just this browser tab.",src/app/pages/Login.tsx,Moment,retired
+"Log in to pick up where you left off.",src/app/pages/Login.tsx,-,ok
+"Check {email} for a confirmation link -- you'll be signed in once you click it.",src/app/pages/Login.tsx,-,ok
+"Sent again -- check your spam folder if it still doesn't turn up.",src/app/pages/Login.tsx,-,ok
+"Nothing after a few minutes? It can land in spam, or just take a moment.",src/app/pages/Login.tsx,-,ok
+"Resend confirmation email",src/app/pages/Login.tsx,-,ok
+"Sending...",src/app/pages/Login.tsx,-,ok
+"Continue with Google",src/app/pages/Login.tsx,-,ok
+"or",src/app/pages/Login.tsx,-,ok
+"Name",src/app/pages/Login.tsx,-,ok
+"What should we call you?",src/app/pages/Login.tsx,-,ok
+"Email",src/app/pages/Login.tsx,-,ok
+"Password",src/app/pages/Login.tsx,-,ok
+"At least 8 characters.",src/app/pages/Login.tsx,-,ok
+"Forgot your password?",src/app/pages/Login.tsx,-,ok
+"If there's an account for that address, a reset link is on its way. Check your spam folder if it doesn't arrive.",src/app/pages/Login.tsx,-,ok
+"That doesn't look like an email address.",src/app/pages/Login.tsx,-,ok
+"Your password needs at least 8 characters.",src/app/pages/Login.tsx,-,ok
+"What should people call you?",src/app/pages/Login.tsx,-,ok
+"Type your email address above first, then tap this again.",src/app/pages/Login.tsx,-,ok
+"Couldn't reach the server. Check your connection and try again.",src/app/pages/Login.tsx,-,ok
+"One sec...",src/app/pages/Login.tsx,-,ok
+"Sign up",src/app/pages/Login.tsx,-,ok
+"Log in",src/app/pages/Login.tsx,-,ok
+"Already have an account?",src/app/pages/Login.tsx,-,ok
+"New here?",src/app/pages/Login.tsx,-,ok
+"Added to your Shelf.",src/app/pages/Onboarding.tsx,Shelf,ok
+"Say something about it, or just add the photo",src/app/pages/Onboarding.tsx,-,ok
+"Add a photo",src/app/pages/Onboarding.tsx,-,ok
+"Adding...",src/app/pages/Onboarding.tsx,-,ok
+"Add Moment",src/app/pages/Onboarding.tsx,Log a Moment,retired
+"Try a more general name, like Brick building.",src/app/pages/Onboarding.tsx,Corner,ok
+"You've added {n} for now. Add more anytime from Create.",src/app/pages/Onboarding.tsx,-,ok
+"What are you into?",src/app/pages/Onboarding.tsx,-,ok
+"Add a few tags -- anything you like, however specific. There's no fixed list and no wrong number.",src/app/pages/Onboarding.tsx,Corner,ok
+"Pottery, sourdough, bouldering...",src/app/pages/Onboarding.tsx,Corner,ok
+"Continue",src/app/pages/Onboarding.tsx,-,ok
+"Write your first page",src/app/pages/Onboarding.tsx,-,ok
+"Totally optional: a photo, a line about it, or both, for any of the tags you picked. Skip this if nothing comes to mind yet.",src/app/pages/Onboarding.tsx,-,ok
+"No tags picked yet -- nothing to pre-fill here. Skip ahead; you can log a Moment anytime from Create.",src/app/pages/Onboarding.tsx,Log a Moment,ok
+"Finishing...",src/app/pages/Onboarding.tsx,-,ok
+"Finish",src/app/pages/Onboarding.tsx,-,ok
+"Skip for now",src/app/pages/Onboarding.tsx,-,ok
+"Couldn't finish setting up. Try again in a moment.",src/app/pages/Onboarding.tsx,-,ok
+"Couldn't reach the server. Try again in a moment.",src/app/pages/Onboarding.tsx,-,ok
+"Let's set the scene",src/app/pages/Onboarding.tsx,-,ok
+"Your name",src/app/pages/Onboarding.tsx,-,ok
+"What's this about? (optional)",src/app/pages/Onboarding.tsx,-,ok
+"Background",src/app/pages/Onboarding.tsx,-,ok
+"Use this background",src/app/pages/Onboarding.tsx,-,ok
+"Start with a blank page",src/app/pages/Onboarding.tsx,-,ok
+"Invites",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Sushii is invite-only for now -- create a link for someone to join with.",src/app/pages/AdminInvites.tsx,App name,retired
+"A note for them, optional -- shown on their arrival page.",src/app/pages/AdminInvites.tsx,-,ok
+"Creating...",src/app/pages/AdminInvites.tsx,-,ok
+"Create invite",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Copied",src/app/pages/AdminInvites.tsx,-,ok
+"Copy",src/app/pages/AdminInvites.tsx,-,ok
+"Invites {count}",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Waitlist {count}",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Loading...",src/app/pages/AdminInvites.tsx,-,ok
+"No invites created yet.",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Nobody on the waitlist yet.",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Nothing here for you",src/app/pages/AdminInvites.tsx,-,ok
+"This screen is for whoever sends invites.",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Back to Discover",src/app/pages/AdminInvites.tsx,Discover,ok
+"Revoke",src/app/pages/AdminInvites.tsx,-,ok
+"Claimed by {name}",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Revoked",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Expired",src/app/pages/AdminInvites.tsx,-,not in glossary
+"Open",src/app/pages/AdminInvites.tsx,Open / Closed,synonym
+"Couldn't create that invite.",src/app/pages/AdminInvites.tsx,-,ok
+"Couldn't load invites -- the columns this page expects may not match the live schema yet.",src/app/pages/AdminInvites.tsx,-,ok
+"{n}/280",src/app/pages/AdminInvites.tsx,-,ok
+"Checking your invite...",src/app/pages/InviteArrival.tsx,-,not in glossary
+"You're already on Sushii.",src/app/pages/InviteArrival.tsx,App name,retired
+"Go to My Space",src/app/pages/InviteArrival.tsx,Home,retired
+"This invite has expired or was already used.",src/app/pages/InviteArrival.tsx,-,not in glossary
+"{inviterName} invited you to Sushii",src/app/pages/InviteArrival.tsx,App name,retired
+"Continue with Google",src/app/pages/InviteArrival.tsx,-,ok
+"Use email",src/app/pages/InviteArrival.tsx,-,ok
+"You're on the list.",src/app/components/WaitlistForm.tsx,-,not in glossary
+"Email",src/app/components/WaitlistForm.tsx,-,ok
+"Your email",src/app/components/WaitlistForm.tsx,-,ok
+"What do you make?",src/app/components/WaitlistForm.tsx,-,ok
+"What do you make? (optional)",src/app/components/WaitlistForm.tsx,-,ok
+"Couldn't reach the server. Try again.",src/app/components/WaitlistForm.tsx,-,ok
+"Joining...",src/app/components/WaitlistForm.tsx,-,ok
+"Join the waitlist",src/app/components/WaitlistForm.tsx,-,not in glossary
+"This Space is read-only right now -- no new members, requests, or events until it's reactivated.",src/app/pages/SpacePage.tsx,Space,ok
+"This Space has been deleted. You're seeing it as an admin.",src/app/pages/SpacePage.tsx,Space,ok
+"Space",src/app/pages/SpacePage.tsx,Space,ok
+"Open",src/app/pages/SpacePage.tsx,Open / Closed,ok
+"Closed",src/app/pages/SpacePage.tsx,Open / Closed,ok
+"Hosted by",src/app/pages/SpacePage.tsx,Host,ok
+"Host",src/app/pages/SpacePage.tsx,Host / Member / Co-host,ok
+"Member",src/app/pages/SpacePage.tsx,Host / Member / Co-host,ok
+"{n} Moment(s) this month",src/app/pages/SpacePage.tsx,N Moments this month,ok
+"Add Moment",src/app/pages/SpacePage.tsx,Log a Moment / Add from my Moments,retired
+"Leave",src/app/pages/SpacePage.tsx,-,ok
+"Requested -- cancel",src/app/pages/SpacePage.tsx,Request to join / Requested,ok
+"Join Space",src/app/pages/SpacePage.tsx,Join Space,ok
+"Edit Space",src/app/pages/SpacePage.tsx,Space,ok
+"Home",src/app/pages/SpacePage.tsx,Table,synonym
+"Moments",src/app/pages/SpacePage.tsx,Moment,ok
+"People",src/app/pages/SpacePage.tsx,-,ok
+"Events",src/app/pages/SpacePage.tsx,Event,ok
+"Manage",src/app/pages/SpacePage.tsx,Manage,ok
+"Leave {space.name}?",src/app/pages/SpacePage.tsx,Space,ok
+"Request to join",src/app/pages/SpacePage.tsx,Request to join,ok
+"A short note to the hosts (optional)",src/app/pages/SpacePage.tsx,Host,ok
+"Attach one of your Moments (optional)",src/app/pages/SpacePage.tsx,Moment,ok
+"Moment #{id}",src/app/pages/SpacePage.tsx,Moment,ok
+"Cancel",src/app/pages/SpacePage.tsx,-,ok
+"Send request",src/app/pages/SpacePage.tsx,-,ok
+"Sending...",src/app/pages/SpacePage.tsx,-,ok
+"That Space doesn't exist",src/app/pages/EditSpace.tsx,Space,ok
+"Back to Discover",src/app/pages/EditSpace.tsx,Discover,ok
+"Only a host can edit this Space",src/app/pages/EditSpace.tsx,Host / Space,ok
+"Back to the Space",src/app/pages/EditSpace.tsx,Space,ok
+"HOST-CREATED COMMUNITIES",src/app/components/SpacesBrowser.tsx,Host / Space,ok
+"Spaces",src/app/components/SpacesBrowser.tsx,Space,ok
+"Create a Space",src/app/components/SpacesBrowser.tsx,Space,ok
+"No Spaces match that. Try a broader word.",src/app/components/SpacesBrowser.tsx,Space,ok
+"No Spaces yet -- be the first to start one.",src/app/components/SpacesBrowser.tsx,Space,ok
+"Open",src/app/components/SpacesBrowser.tsx,Open / Closed,ok
+"Closed",src/app/components/SpacesBrowser.tsx,Open / Closed,ok
+"Settling in",src/app/components/space/SpaceHomeTab.tsx,Settling in,ok
+"Set up your Space",src/app/components/space/SpaceHomeTab.tsx,Set up your Space,ok
+"Join the Space",src/app/components/space/SpaceHomeTab.tsx,Join Space,ok
+"Follow a fellow member",src/app/components/space/SpaceHomeTab.tsx,Follow,ok
+"Start a Pursuit",src/app/components/space/SpaceHomeTab.tsx,Start a Pursuit,ok
+"RSVP to an event",src/app/components/space/SpaceHomeTab.tsx,Event,ok
+"Share a Moment here",src/app/components/space/SpaceHomeTab.tsx,Moment,ok
+"Add a cover photo",src/app/components/space/SpaceHomeTab.tsx,Cover,ok
+"Add rules",src/app/components/space/SpaceHomeTab.tsx,-,ok
+"Plan your first event",src/app/components/space/SpaceHomeTab.tsx,Event,ok
+"Invite a co-host",src/app/components/space/SpaceHomeTab.tsx,Co-host,ok
+"Share the first Moment",src/app/components/space/SpaceHomeTab.tsx,Moment,ok
+"Next: {label}",src/app/components/space/SpaceHomeTab.tsx,-,ok
+"Starts in {n}h",src/app/components/space/SpaceHomeTab.tsx,Starts in 4h,ok
+"{n} going",src/app/components/space/SpaceHomeTab.tsx,I'm going,ok
+"I'm going (checked / unchecked)",src/app/components/space/SpaceHomeTab.tsx,I'm going,ok
+"See all events",src/app/components/space/SpaceHomeTab.tsx,Event,ok
+"Later this week",src/app/components/space/SpaceHomeTab.tsx,-,ok
+"Next: {day} - {title}",src/app/components/space/SpaceHomeTab.tsx,-,ok
+"Dismiss",src/app/components/space/SpaceHomeTab.tsx,-,ok
+"On the table",src/app/components/space/SpaceHomeTab.tsx,Table,retired
+"See all Moments",src/app/components/space/SpaceHomeTab.tsx,Moment,ok
+"Waiting for a host to approve",src/app/components/space/SpaceHomeTab.tsx,Waiting for a host to approve,ok
+"Moment #{id}",src/app/components/space/SpaceHomeTab.tsx,Moment,ok
+"The table's clear.",src/app/components/space/SpaceHomeTab.tsx,Table,ok
+"Add the first Moment",src/app/components/space/SpaceHomeTab.tsx,Moment,ok
+"Pinned by the hosts",src/app/components/space/SpaceHomeTab.tsx,Host picks,retired
+"Unpin",src/app/components/space/SpaceHomeTab.tsx,Remove from host picks,synonym
+"Pin to Home",src/app/components/space/SpaceHomeTab.tsx,Add to host picks,retired
+"People here",src/app/components/space/SpaceHomeTab.tsx,-,ok
+"No Moments here yet. Be the first.",src/app/components/space/SpaceMomentsTab.tsx,Moment,ok
+"Moments here are for members. Request to join to see them.",src/app/components/space/SpaceMomentsTab.tsx,Moment / Member,ok
+"No Moments here yet.",src/app/components/space/SpaceMomentsTab.tsx,Moment,ok
+"Join this Space to see event details and RSVP.",src/app/components/space/SpaceEventsTab.tsx,Space / Event,ok
+"No upcoming events.",src/app/components/space/SpaceEventsTab.tsx,Event,ok
+"Create event",src/app/components/space/SpaceEventsTab.tsx,Event,ok
+"Cancel this event? Everyone who RSVP'd will be notified.",src/app/components/space/SpaceEventsTab.tsx,Event,ok
+"Going -- cancel",src/app/components/space/SpaceEventsTab.tsx,I'm going,ok
+"RSVP",src/app/components/space/SpaceEventsTab.tsx,Event,ok
+"Unfeature",src/app/components/space/SpaceEventsTab.tsx,Featured,retired
+"Feature",src/app/components/space/SpaceEventsTab.tsx,Featured,retired
+"Edit",src/app/components/space/SpaceEventsTab.tsx,-,ok
+"Cancel event",src/app/components/space/SpaceEventsTab.tsx,Event,ok
+"{n} going",src/app/components/space/SpaceEventsTab.tsx,I'm going,ok
+"+{n} more",src/app/components/space/SpaceEventsTab.tsx,-,ok
+"Edit event / Create an event",src/app/components/space/CreateEventDialog.tsx,Event,ok
+"Members of this Space will be able to RSVP.",src/app/components/space/CreateEventDialog.tsx,Space / Member,ok
+"Title",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Description (optional)",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Starts",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Ends (optional)",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Meets",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Online",src/app/components/space/CreateEventDialog.tsx,-,ok
+"In person",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Both",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Neighborhood",src/app/components/space/CreateEventDialog.tsx,-,ok
+"City",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Exact address (optional)",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Only shown to members and RSVP'd guests",src/app/components/space/CreateEventDialog.tsx,Member,ok
+"Cancel",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Save changes",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Saving...",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Give the event a title.",src/app/components/space/CreateEventDialog.tsx,Event,ok
+"Pick a start time.",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Must be in the future.",src/app/components/space/CreateEventDialog.tsx,-,ok
+"Needed for an in-person event.",src/app/components/space/CreateEventDialog.tsx,Event,ok
+"Nobody to show yet.",src/app/components/space/SpacePeopleTab.tsx,-,ok
+"Once people join, you can invite a co-host here.",src/app/components/space/SpacePeopleTab.tsx,Co-host,ok
+"Host",src/app/components/space/SpacePeopleTab.tsx,Host,ok
+"Invited",src/app/components/space/SpacePeopleTab.tsx,-,ok
+"Inviting...",src/app/components/space/SpacePeopleTab.tsx,-,ok
+"Invite as co-host",src/app/components/space/SpacePeopleTab.tsx,Invite as co-host,ok
+"This Space has no host right now.",src/app/components/space/SpaceManageTab.tsx,Space / Host,ok
+"You were here before it lost its host -- you can step up.",src/app/components/space/SpaceManageTab.tsx,Host,ok
+"Claim hosting",src/app/components/space/SpaceManageTab.tsx,Host,ok
+"Claiming...",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Only members who were here before this happened can claim it.",src/app/components/space/SpaceManageTab.tsx,Member,ok
+"Only a host can manage this Space.",src/app/components/space/SpaceManageTab.tsx,Host / Space / Manage,ok
+"Pending requests",src/app/components/space/SpaceManageTab.tsx,Manage,ok
+"Nothing pending.",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Attached: {caption}",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Approve",src/app/components/space/SpaceManageTab.tsx,Manage,ok
+"Decline",src/app/components/space/SpaceManageTab.tsx,Manage,ok
+"Moments waiting for approval",src/app/components/space/SpaceManageTab.tsx,Waiting for a host to approve,ok
+"Nothing pending.",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Approve",src/app/components/space/SpaceManageTab.tsx,Manage,ok
+"Decline",src/app/components/space/SpaceManageTab.tsx,Manage,ok
+"Members",src/app/components/space/SpaceManageTab.tsx,Host / Member / Co-host,ok
+"Host",src/app/components/space/SpaceManageTab.tsx,Host,ok
+"Banned",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Unban",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Demote",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Make host",src/app/components/space/SpaceManageTab.tsx,Host,ok
+"Remove",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Ban",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Pending host invites",src/app/components/space/SpaceManageTab.tsx,Co-host,ok
+"{name} -- waiting on their response",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Invite a co-host",src/app/components/space/SpaceManageTab.tsx,Invite as co-host,synonym
+"username",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Invite",src/app/components/space/SpaceManageTab.tsx,Invite as co-host,ok
+"They need to already be a member.",src/app/components/space/SpaceManageTab.tsx,Member,ok
+"Delete this Space",src/app/components/space/SpaceManageTab.tsx,Space,ok
+"A deletion request is open, expiring {date}.",src/app/components/space/SpaceManageTab.tsx,-,ok
+"{name}: {decision}",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Approve",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Decline",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Cancel request",src/app/components/space/SpaceManageTab.tsx,-,ok
+"You're the only host -- type the Space's name to delete it now.",src/app/components/space/SpaceManageTab.tsx,Host / Space,ok
+"Request deletion",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Working...",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Type ""{space.name}"" exactly to confirm.",src/app/components/space/SpaceManageTab.tsx,Space,ok
+"No one with that username.",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Deletion requested -- every other host needs to approve within 7 days.",src/app/components/space/SpaceManageTab.tsx,Host,ok
+"That request had already expired and is now cancelled.",src/app/components/space/SpaceManageTab.tsx,-,ok
+"The deletion request was cancelled.",src/app/components/space/SpaceManageTab.tsx,-,ok
+"Your response is recorded -- waiting on other hosts.",src/app/components/space/SpaceManageTab.tsx,Host,ok
+"Add a Moment",src/app/components/AddMomentToSpaceDialog.tsx,Add from my Moments,synonym
+"Pick one of your Moments to show here.",src/app/components/AddMomentToSpaceDialog.tsx,Moment,ok
+"Everyone who can see this Space will see this Moment.",src/app/components/AddMomentToSpaceDialog.tsx,Space / Moment,ok
+"Sent to the hosts for approval.",src/app/components/AddMomentToSpaceDialog.tsx,Host / Waiting for a host to approve,ok
+"Added.",src/app/components/AddMomentToSpaceDialog.tsx,-,ok
+"You don't have any Moments yet.",src/app/components/AddMomentToSpaceDialog.tsx,Moment,ok
+"Log a new Moment",src/app/components/AddMomentToSpaceDialog.tsx,Log a Moment,ok
+"Moment #{id}",src/app/components/AddMomentToSpaceDialog.tsx,Moment,ok
+"Adding...",src/app/components/AddMomentToSpaceDialog.tsx,-,ok
+"Close",src/app/components/AddMomentToSpaceDialog.tsx,-,ok
+"That corner doesn't exist",src/app/pages/Corner.tsx,Corner,ok
+"Back home",src/app/pages/Corner.tsx,-,ok
+"<- Back to {shortName}",src/app/pages/Corner.tsx,-,ok
+"No {corner name} work yet. Be the first.",src/app/pages/Corner.tsx,Moment,retired
+"Try a more general name, like Brick building.",src/app/components/CornerTagField.tsx,Corner,ok
+"Type a Corner, e.g. Pasta Making",src/app/components/CornerTagField.tsx,Corner,ok
+"{n} Moments",src/app/components/CornerTagField.tsx,Moment,ok
+"New",src/app/components/CornerTagField.tsx,-,ok
+"Create ""{q}"" as a new Corner",src/app/components/CornerTagField.tsx,Corner,ok
+"Creating...",src/app/components/CornerTagField.tsx,-,ok
+"Close to ""{label}"" -- the same Corner, or something different?",src/app/components/CornerTagField.tsx,Corner,ok
+"Use ""{label}""",src/app/components/CornerTagField.tsx,-,ok
+"Create anyway",src/app/components/CornerTagField.tsx,-,ok
+"Already a Corner here. Pick it above to use it.",src/app/components/CornerTagField.tsx,Corner,ok
+"Create a Corner",src/app/components/CreateCornerDialog.tsx,Corner,ok
+"A specific craft or topic inside {shortName}.",src/app/components/CreateCornerDialog.tsx,Corner,ok
+"Space",src/app/components/CreateCornerDialog.tsx,Space,ok
+"Name",src/app/components/CreateCornerDialog.tsx,-,ok
+"e.g. Pasta Making",src/app/components/CreateCornerDialog.tsx,Corner,ok
+"Close to ""{label}"", already in {shortName}. Something different, or the same Corner?",src/app/components/CreateCornerDialog.tsx,Corner,ok
+"Use ""{label}""",src/app/components/CreateCornerDialog.tsx,-,ok
+"Create anyway",src/app/components/CreateCornerDialog.tsx,-,ok
+"Creating...",src/app/components/CreateCornerDialog.tsx,-,ok
+"Short description (optional)",src/app/components/CreateCornerDialog.tsx,-,ok
+"What belongs here, in a line.",src/app/components/CreateCornerDialog.tsx,-,ok
+"Give it a name first.",src/app/components/CreateCornerDialog.tsx,-,ok
+"{name} already exists in {shortName}.",src/app/components/CreateCornerDialog.tsx,-,ok
+"Create Corner",src/app/components/CreateCornerDialog.tsx,Corner,ok
+"Creating...",src/app/components/CreateCornerDialog.tsx,-,ok
+"Nothing here for you",src/app/pages/AdminSpaces.tsx,-,ok
+"This screen is for whoever manages Spaces.",src/app/pages/AdminSpaces.tsx,Space,ok
+"Back to Discover",src/app/pages/AdminSpaces.tsx,Discover,ok
+"""{name}"" is visible again.",src/app/pages/AdminSpaces.tsx,-,ok
+"""{name}"" is hidden. Its posts and links still work.",src/app/pages/AdminSpaces.tsx,Moment,synonym
+"""{name}"" is back to its default.",src/app/pages/AdminSpaces.tsx,-,ok
+"Deleted ""{name}"".",src/app/pages/AdminSpaces.tsx,-,ok
+"Couldn't copy. The link is {url}",src/app/pages/AdminSpaces.tsx,-,ok
+"Spaces",src/app/pages/AdminSpaces.tsx,Space,ok
+"Create a Space, reword one, or hide what you don't want people to see. Hiding never touches a post. Deleting is only allowed once nothing is left in a Space.",src/app/pages/AdminSpaces.tsx,Space / Moment,synonym
+"Creating a new Space here is turned off during the Spaces Rework. New communities will be made from the Create Space form instead, once it ships.",src/app/pages/AdminSpaces.tsx,Space,ok
+"All Spaces ({n})",src/app/pages/AdminSpaces.tsx,Space,ok
+"Built-in",src/app/pages/AdminSpaces.tsx,-,ok
+"Yours",src/app/pages/AdminSpaces.tsx,-,ok
+"Hidden",src/app/pages/AdminSpaces.tsx,-,ok
+"Copied",src/app/pages/AdminSpaces.tsx,-,ok
+"Link",src/app/pages/AdminSpaces.tsx,-,ok
+"Edit",src/app/pages/AdminSpaces.tsx,-,ok
+"Show",src/app/pages/AdminSpaces.tsx,-,ok
+"Hide",src/app/pages/AdminSpaces.tsx,-,ok
+"Reset",src/app/pages/AdminSpaces.tsx,-,ok
+"Delete",src/app/pages/AdminSpaces.tsx,-,ok
+"Name",src/app/pages/AdminSpaces.tsx,-,ok
+"One line about it",src/app/pages/AdminSpaces.tsx,-,ok
+"Prompt at the top",src/app/pages/AdminSpaces.tsx,-,ok
+"Show us your plant.",src/app/pages/AdminSpaces.tsx,-,ok
+"Save",src/app/pages/AdminSpaces.tsx,-,ok
+"Cancel",src/app/pages/AdminSpaces.tsx,-,ok
+"Nothing is in this Space, so it can be deleted safely.",src/app/pages/AdminSpaces.tsx,Space,ok
+"Delete permanently",src/app/pages/AdminSpaces.tsx,-,ok
+"Cancel",src/app/pages/AdminSpaces.tsx,-,ok
+"Still in this Space: {n} Moment(s), {n} Pursuit(s). Deleting it now would orphan them, so either move them to another Space or just hide this one.",src/app/pages/AdminSpaces.tsx,Space / Moment / Pursuit,ok
+"Move everything to...",src/app/pages/AdminSpaces.tsx,-,ok
+"Move everything to",src/app/pages/AdminSpaces.tsx,-,ok
+"Move, then delete",src/app/pages/AdminSpaces.tsx,-,ok
+"Hide instead",src/app/pages/AdminSpaces.tsx,-,ok
+"Cancel",src/app/pages/AdminSpaces.tsx,-,ok
+"Delete ""{name}""?",src/app/pages/AdminSpaces.tsx,-,ok
+"Every Moment and Pursuit in this Space moves to {target}, then this Space is deleted. This can't be undone.",src/app/pages/AdminSpaces.tsx,Space / Moment / Pursuit,ok
+"This Space is empty. Deleting it can't be undone.",src/app/pages/AdminSpaces.tsx,Space,ok
+"Move and delete",src/app/pages/AdminSpaces.tsx,-,ok
+"Delete",src/app/pages/AdminSpaces.tsx,-,ok
+"Nothing here for you",src/app/pages/AdminCorners.tsx,-,ok
+"This screen is for whoever manages Corners.",src/app/pages/AdminCorners.tsx,Corner,ok
+"Back to Discover",src/app/pages/AdminCorners.tsx,Discover,ok
+"""{name}"" isn't allowed as a Corner name.",src/app/pages/AdminCorners.tsx,Corner,ok
+"Renamed to ""{name}"".",src/app/pages/AdminCorners.tsx,-,ok
+"""{name}"" is visible again.",src/app/pages/AdminCorners.tsx,-,ok
+"""{name}"" is hidden from Discover.",src/app/pages/AdminCorners.tsx,Discover,ok
+"Merged ""{from}"" into ""{into}"": {moments}, {pursuits}, {spaces}, {interests} moved.",src/app/pages/AdminCorners.tsx,Moment / Pursuit / Space,ok
+"Corners",src/app/pages/AdminCorners.tsx,Corner,ok
+"Merge duplicates, rename, or hide. Merging moves every Moment, Pursuit, Space link and Interest from one Corner to the other, then removes the one merged away -- this can't be undone.",src/app/pages/AdminCorners.tsx,Corner / Moment / Pursuit / Space,ok
+"Loading...",src/app/pages/AdminCorners.tsx,-,ok
+"No Corner has a real Moment tagged into it yet.",src/app/pages/AdminCorners.tsx,Corner / Moment,ok
+"Save",src/app/pages/AdminCorners.tsx,-,ok
+"Hidden",src/app/pages/AdminCorners.tsx,-,ok
+"{n} Moment(s)",src/app/pages/AdminCorners.tsx,Moment,ok
+"Rename",src/app/pages/AdminCorners.tsx,-,ok
+"Unhide",src/app/pages/AdminCorners.tsx,-,ok
+"Hide",src/app/pages/AdminCorners.tsx,-,ok
+"Merge",src/app/pages/AdminCorners.tsx,-,ok
+"Merge ""{name}"" into which Corner? Everything above moves there and ""{name}"" is removed.",src/app/pages/AdminCorners.tsx,Corner,ok
+"Pick a Corner...",src/app/pages/AdminCorners.tsx,Corner,ok
+"Merge",src/app/pages/AdminCorners.tsx,-,ok
+"Cancel",src/app/pages/AdminCorners.tsx,-,ok
+"Nothing here for you",src/app/pages/AdminCategories.tsx,-,ok
+"This screen is for whoever reviews category suggestions.",src/app/pages/AdminCategories.tsx,Category,not in glossary
+"Back to Discover",src/app/pages/AdminCategories.tsx,Discover,ok
+"Choose which category it folds into.",src/app/pages/AdminCategories.tsx,Category,not in glossary
+"Category suggestions",src/app/pages/AdminCategories.tsx,Category,not in glossary
+"What people told us the list was missing. Approving one adds it to Discover; nothing here ever changes a post someone already made.",src/app/pages/AdminCategories.tsx,Discover / Moment,synonym
+"Waiting ({n})",src/app/pages/AdminCategories.tsx,-,ok
+"Decided",src/app/pages/AdminCategories.tsx,-,ok
+"Nothing waiting.",src/app/pages/AdminCategories.tsx,-,ok
+"Someone",src/app/pages/AdminCategories.tsx,-,ok
+"Examples: {examples}",src/app/pages/AdminCategories.tsx,-,ok
+"Note back to them (optional)",src/app/pages/AdminCategories.tsx,-,ok
+"Approve",src/app/pages/AdminCategories.tsx,-,ok
+"Merge into...",src/app/pages/AdminCategories.tsx,-,ok
+"Merge",src/app/pages/AdminCategories.tsx,-,ok
+"Reject",src/app/pages/AdminCategories.tsx,-,ok
+"Nothing decided yet.",src/app/pages/AdminCategories.tsx,-,ok
+"merged into {name}",src/app/pages/AdminCategories.tsx,-,ok
+"Their profile",src/app/pages/AdminReports.tsx,-,ok
+"A Moment",src/app/pages/AdminReports.tsx,Moment,ok
+"A Thought",src/app/pages/AdminReports.tsx,Thoughts,ok
+"A message",src/app/pages/AdminReports.tsx,-,ok
+"Nothing here for you",src/app/pages/AdminReports.tsx,-,ok
+"This screen is for whoever reviews reports.",src/app/pages/AdminReports.tsx,Report,ok
+"Back to Discover",src/app/pages/AdminReports.tsx,Discover,ok
+"Couldn't do that. Try again.",src/app/pages/AdminReports.tsx,-,ok
+"reported",src/app/pages/AdminReports.tsx,Report,ok
+"of",src/app/pages/AdminReports.tsx,-,ok
+"Mark reviewed",src/app/pages/AdminReports.tsx,-,ok
+"Dismiss",src/app/pages/AdminReports.tsx,-,ok
+"open / reviewed / dismissed",src/app/pages/AdminReports.tsx,-,ok
+"Reports",src/app/pages/AdminReports.tsx,Report,ok
+"Reports of a profile, message, Moment or Thought, oldest open ones first.",src/app/pages/AdminReports.tsx,Report / Moment / Thoughts,ok
+"Open ({n})",src/app/pages/AdminReports.tsx,-,ok
+"Reviewed & dismissed",src/app/pages/AdminReports.tsx,-,ok
+"Loading...",src/app/pages/AdminReports.tsx,-,ok
+"Nothing open.",src/app/pages/AdminReports.tsx,-,ok
+"Nothing decided yet.",src/app/pages/AdminReports.tsx,-,ok
+"Start a Pursuit / Give a new thing a home",src/app/pages/Log.tsx,Start a Pursuit,ok
+"Add a Moment / Keep an existing Pursuit moving",src/app/pages/Log.tsx,Log a Moment,synonym
+"Quick moment / A photo, win, question, or small discovery",src/app/pages/Log.tsx,Log a Moment,ok
+"Reflect privately / Keep a note just for you",src/app/pages/Log.tsx,Reflection,ok
+"Only you / Kept as a private log, nobody else ever sees it",src/app/pages/Log.tsx,Only you,ok
+"Followers / People who follow you, once you've accepted them",src/app/pages/Log.tsx,Followers,ok
+"Everyone / Anyone browsing this space can find it",src/app/pages/Log.tsx,Everyone,ok
+"Marketplace is coming soon.",src/app/pages/Log.tsx,Book the studio (marketplace),not in glossary
+"Offer this for sale -- coming soon",src/app/pages/Log.tsx,-,not in glossary
+"Offer this for sale",src/app/pages/Log.tsx,-,not in glossary
+"The physical piece, a digital download, or a course",src/app/pages/Log.tsx,-,not in glossary
+"Coming soon",src/app/pages/Log.tsx,-,ok
+"Discard this moment?",src/app/pages/Log.tsx,Moment,ok
+"Leaving now won't keep what you've added.",src/app/pages/Log.tsx,-,ok
+"Keep writing",src/app/pages/Log.tsx,-,ok
+"Discard",src/app/pages/Log.tsx,-,ok
+"Start your log",src/app/pages/Log.tsx,Log a Moment,retired
+"Share a moment, or start a pursuit.",src/app/pages/Log.tsx,Moment / Pursuit,ok
+"Photo or video",src/app/pages/Log.tsx,-,ok
+"Opens the camera, or pick one from your library.",src/app/pages/Log.tsx,-,ok
+"Write a moment",src/app/pages/Log.tsx,Moment,ok
+"Just a sentence counts.",src/app/pages/Log.tsx,-,ok
+"Start a pursuit",src/app/pages/Log.tsx,Start a Pursuit,ok
+"Something you're bringing to life over time.",src/app/pages/Log.tsx,Pursuit,ok
+"Add an update to a Pursuit",src/app/pages/Log.tsx,Pursuit,ok
+"Or add an update to a Pursuit",src/app/pages/Log.tsx,Pursuit,ok
+"Resume your last draft?",src/app/pages/Log.tsx,-,ok
+"You started a Moment you didn't finish.",src/app/pages/Log.tsx,Moment,ok
+"No caption yet.",src/app/pages/Log.tsx,-,ok
+"A {mediaType} was attached on another device -- not available here.",src/app/pages/Log.tsx,-,ok
+"Resume draft",src/app/pages/Log.tsx,-,ok
+"Log in to keep your work",src/app/pages/Log.tsx,Moment,retired
+"Your moments are tied to your account, so they're still here next time, not just in this browser tab.",src/app/pages/Log.tsx,Moment,ok
+"Log in or sign up",src/app/pages/Log.tsx,-,ok
+"Saving.../Just keep it for myself",src/app/pages/Log.tsx,-,ok
+"Not saved. / Saved.",src/app/pages/Log.tsx,-,ok
+"Kept just for you. / Another one made.",src/app/pages/Log.tsx,-,ok
+"Now on your Shelf.",src/app/pages/Log.tsx,Shelf,ok
+"{error} Nothing you wrote is lost yet. Try again before you close this tab.",src/app/pages/Log.tsx,-,ok
+"Done",src/app/pages/Log.tsx,-,ok
+"Create another",src/app/pages/Log.tsx,-,ok
+"Your moment",src/app/pages/Log.tsx,Moment,ok
+"Remove this video",src/app/pages/Log.tsx,-,ok
+"Remove photo {i}",src/app/pages/Log.tsx,-,ok
+"Add another photo",src/app/pages/Log.tsx,-,ok
+"Add a thought / Add a thought... / What happened? Even a sentence counts.",src/app/pages/Log.tsx,Add a thought,ok
+"One photo couldn't be processed and wasn't added -- try a different photo.",src/app/pages/Log.tsx,-,ok
+"{n} photos couldn't be processed and weren't added -- try different photos.",src/app/pages/Log.tsx,-,ok
+"What is it about?",src/app/pages/Log.tsx,-,ok
+"Which Corner? / Where this shows up when someone browses by Corner.",src/app/pages/Log.tsx,Corner,ok
+"This is something happening / A walk, a workshop, a meetup, a challenge: people can join in",src/app/pages/Log.tsx,Event,synonym
+"When / Where (optional) / e.g. Prospect Park, Brooklyn",src/app/pages/Log.tsx,-,ok
+"How precisely to show it / Neighborhood by default. Exact is never assumed.",src/app/pages/Log.tsx,-,ok
+"Choose who sees this",src/app/pages/Log.tsx,Only you / Followers / Everyone,ok
+"This stays a private log. Nobody else will see it.",src/app/pages/Log.tsx,Only you,ok
+"This will appear in {Corner or ""My Space for people you've connected with""} and be tagged {tag}.",src/app/pages/Log.tsx,Home,retired
+"Add to a Pursuit / Keep an ongoing thing together.",src/app/pages/Log.tsx,Pursuit,ok
+"Pick a Corner for this Moment.",src/app/pages/Log.tsx,Corner / Moment,ok
+"Keep it private / Share",src/app/pages/Log.tsx,Only you,ok
+"Add a photo, video, or a line of text to continue.",src/app/pages/Log.tsx,-,ok
+"Back",src/app/pages/Log.tsx,-,ok
+"What are you working on? / Choose the Pursuit this belongs to.",src/app/pages/Log.tsx,Pursuit,ok
+"Give it a name you'll recognise in six months.",src/app/pages/Log.tsx,-,ok
+"Where does this sit? / Choose a Pursuit",src/app/pages/Log.tsx,Pursuit,ok
+"e.g. Six matching mugs",src/app/pages/Log.tsx,-,ok
+"Show where it's at / Add a photo, video, or short note.",src/app/pages/Log.tsx,-,ok
+"Remove file",src/app/pages/Log.tsx,-,ok
+"Video / Photo",src/app/pages/Log.tsx,-,ok
+"Choose a different file / Add a photo or video",src/app/pages/Log.tsx,-,ok
+"Where it's at right now",src/app/pages/Log.tsx,-,ok
+"What changed? / A small win, a lesson, a question, or what comes next.",src/app/pages/Log.tsx,-,ok
+"Centred it on the third try, next time, wetter hands",src/app/pages/Log.tsx,-,ok
+"That photo couldn't be processed and wasn't added -- try a different photo.",src/app/pages/Log.tsx,-,ok
+"Private reflection / What do you want to remember for yourself?",src/app/pages/Log.tsx,Reflection,ok
+"Never shown to anyone, this part is only ever yours",src/app/pages/Log.tsx,Reflection,ok
+"Add a private reflection / (only you)",src/app/pages/Log.tsx,Reflection / Only you,ok
+"Create / Save as private log",src/app/pages/Log.tsx,-,ok
+"Who sees this / Changes who can find this Moment from now on.",src/app/components/MomentCard.tsx,Only you / Followers / Everyone,ok
+"Cancel / Save",src/app/components/MomentCard.tsx,-,ok
+"Couldn't save that. Try again in a moment.",src/app/components/MomentCard.tsx,-,ok
+"Saved to your Space. Tap again to remove it / Save to your Space",src/app/components/MomentCard.tsx,Save / Space,not in glossary
+"Saved (title attr)",src/app/components/MomentCard.tsx,Save,ok
+"Saved to your Space (toast)",src/app/components/MomentCard.tsx,Save / Space,not in glossary
+"Love this, {n} / Count me in, {n} / Thoughts, {n}",src/app/components/MomentCard.tsx,Love this / Count me in / Thoughts,ok
+"Love this / Count me in / Thoughts (title attrs)",src/app/components/MomentCard.tsx,Love this / Count me in / Thoughts,ok
+"Add a thought",src/app/components/MomentCard.tsx,Add a thought,ok
+"Open: {caption}",src/app/components/MomentCard.tsx,-,ok
+"Who sees this: {word}. Change it / Who sees this",src/app/components/MomentCard.tsx,Only you / Followers / Everyone,ok
+"Ask {creator} to make it together?",src/app/components/MomentCard.tsx,Make together,ok
+"Thoughts",src/app/components/MomentCard.tsx,Thoughts,ok
+"Everyone / Followers / Only you (status)",src/app/components/MomentDetail.tsx,Only you / Followers / Everyone,ok
+"Ask {creator} to make it together?",src/app/components/MomentDetail.tsx,Make together,ok
+"Start a Pursuit -- inspired by this",src/app/components/MomentDetail.tsx,Start a Pursuit,ok
+"Send to...",src/app/components/MomentDetail.tsx,-,ok
+"Message {creator} about this",src/app/components/MomentDetail.tsx,-,ok
+"Report",src/app/components/MomentDetail.tsx,Report,ok
+"Your photo didn't upload. Try again.",src/app/components/MomentDetail.tsx,-,ok
+"Couldn't save that change. Your edit is still here, try again.",src/app/components/MomentDetail.tsx,-,ok
+"Couldn't reach the server. Your edit is still here, try again.",src/app/components/MomentDetail.tsx,-,ok
+"Couldn't delete that. Try again in a moment.",src/app/components/MomentDetail.tsx,-,ok
+"Couldn't copy the link. Your browser blocked clipboard access.",src/app/components/MomentDetail.tsx,-,ok
+"Space / Choose a Space",src/app/components/MomentDetail.tsx,Space,ok
+"What within it / Choose one",src/app/components/MomentDetail.tsx,Corner,ok
+"Replace photo",src/app/components/MomentDetail.tsx,-,ok
+"That photo couldn't be processed and wasn't added -- try a different photo.",src/app/components/MomentDetail.tsx,-,ok
+"New photo preview",src/app/components/MomentDetail.tsx,-,ok
+"What you wrote",src/app/components/MomentDetail.tsx,-,ok
+"Private reflection, only you ever see this",src/app/components/MomentDetail.tsx,Reflection / Only you,ok
+"Save changes / Cancel",src/app/components/MomentDetail.tsx,-,ok
+"Hobby",src/app/components/MomentDetail.tsx,Corner,synonym
+"Who sees this",src/app/components/MomentDetail.tsx,Only you / Followers / Everyone,ok
+"Pursuit / Not part of a Pursuit",src/app/components/MomentDetail.tsx,Pursuit,ok
+"Only you Moments can't be shared.",src/app/components/MomentDetail.tsx,Only you,ok
+"Private reflection, only you",src/app/components/MomentDetail.tsx,Reflection / Only you,ok
+"Edit / Move to another Pursuit / Add to Pursuit",src/app/components/MomentDetail.tsx,Pursuit,ok
+"Link copied / Share this moment / Delete",src/app/components/MomentDetail.tsx,-,ok
+"You don't have a Pursuit yet. Starting one from here files this moment as its first update.",src/app/components/MomentDetail.tsx,Pursuit / Moment,ok
+"Start ""{title}"" as a Pursuit",src/app/components/MomentDetail.tsx,Start a Pursuit,ok
+"Choose a Pursuit",src/app/components/MomentDetail.tsx,Pursuit,ok
+"Delete this Moment?",src/app/components/MomentDetail.tsx,Moment,ok
+"This can't be undone -- the photo, caption, and any thoughts on it are gone for good.",src/app/components/MomentDetail.tsx,Thoughts,ok
+"Moment (fallback heading)",src/app/components/MomentDetail.tsx,Moment,ok
+"Only you / Followers / Everyone (audience picker)",src/app/pages/AddMoment.tsx,Only you / Followers / Everyone,ok
+"That Pursuit isn't in your list.",src/app/pages/AddMoment.tsx,Pursuit,ok
+"Back to My Space",src/app/pages/AddMoment.tsx,Home,retired
+"Sushii",src/app/pages/AddMoment.tsx,App name,retired
+"Add a Moment",src/app/pages/AddMoment.tsx,Add from my Moments / Log a Moment,synonym
+"A little progress, kept for good.",src/app/pages/AddMoment.tsx,-,ok
+"Pursuit",src/app/pages/AddMoment.tsx,Pursuit,ok
+"Change photo / Add a photo / Remove photo",src/app/pages/AddMoment.tsx,-,ok
+"What changed?",src/app/pages/AddMoment.tsx,-,ok
+"Finished the sky layer -- wetter paper worked.",src/app/pages/AddMoment.tsx,-,ok
+"How much did this move it forward?",src/app/pages/AddMoment.tsx,Goal / Measure / Unit,ok
+"Count toward Pursuit progress",src/app/pages/AddMoment.tsx,Pursuit,ok
+"{current} of {target} so far",src/app/pages/AddMoment.tsx,-,ok
+"Who sees this",src/app/pages/AddMoment.tsx,Only you / Followers / Everyone,ok
+"Something bigger? / Open the full form",src/app/pages/AddMoment.tsx,-,ok
+"Save Moment",src/app/pages/AddMoment.tsx,Moment,ok
+"Moment added",src/app/pages/AddMoment.tsx,Moment,ok
+"+{amount} {unit} / Saved to your Pursuit",src/app/pages/AddMoment.tsx,Pursuit,ok
+"Your latest pieces",src/app/pages/AddMoment.tsx,-,ok
+"Add another / View Pursuit",src/app/pages/AddMoment.tsx,Pursuit,ok
+"Private thoughts only / Thoughts are public",src/app/components/Thoughts.tsx,Thoughts,ok
+"Add a thought / Add a thought...",src/app/components/Thoughts.tsx,Add a thought,ok
+"Keep going / How did you...? / Show us the next one",src/app/components/Thoughts.tsx,Keep going,ok
+"What did this make you think?",src/app/components/Thoughts.tsx,-,ok
+"Add a photo",src/app/components/Thoughts.tsx,-,ok
+"That didn't send. Your words are still here, try again.",src/app/components/Thoughts.tsx,-,ok
+"Only you and the maker will see this. / Visible to anyone who can see this moment.",src/app/components/Thoughts.tsx,Only you,ok
+"Cancel / Add thought",src/app/components/Thoughts.tsx,Thoughts,ok
+"Delete this thought? / This can't be undone -- it's gone for whoever else could see it too.",src/app/components/Thoughts.tsx,Thoughts,ok
+"Saved in this browser only. Sign in for thoughts other people can see.",src/app/components/Thoughts.tsx,Thoughts,ok
+"Delete this thought / Report this thought",src/app/components/Thoughts.tsx,Thoughts / Report,ok
+"Keep exploring / See more around {hobby} (e.g. techniques, projects, people).",src/app/components/BePart.tsx,-,ok
+"Join in / Take part in something happening (e.g. workshops, challenges, groups).",src/app/components/BePart.tsx,-,ok
+"Make together / Create or do something together (e.g. a project, collection, or idea).",src/app/components/BePart.tsx,Make together,ok
+"Explore together / Ask, compare, learn or share how you approach {hobby}.",src/app/components/BePart.tsx,Explore together,ok
+"Be part / Be part of this",src/app/components/BePart.tsx,-,ok
+"Different ways to engage, based on what you want to do next.",src/app/components/BePart.tsx,-,ok
+"Each interaction helps you go deeper in what you love.",src/app/components/BePart.tsx,-,ok
+"You'll see more posts, activities and people around {hobby}.",src/app/components/BePart.tsx,Moment,synonym
+"Exploring {hobbyLabel} / You can change this anytime.",src/app/components/BePart.tsx,-,ok
+"Stop exploring / Start exploring",src/app/components/BePart.tsx,-,ok
+"Nothing scheduled on this one. It's a moment, not an activity. There may be something happening in {hobby} you can take part in.",src/app/components/BePart.tsx,Moment / Event,ok
+"See what's happening in {hobbyLabel}",src/app/components/BePart.tsx,Event,ok
+"This activity (fallback)",src/app/components/BePart.tsx,Event,ok
+"{n} going / You're joining",src/app/components/BePart.tsx,I'm going,ok
+"You'll get updates about this activity. / Can't make it",src/app/components/BePart.tsx,-,ok
+"Join this",src/app/components/BePart.tsx,-,ok
+"Sent to {personName}. / They'll be notified and can accept. Once accepted, you can message.",src/app/components/BePart.tsx,-,ok
+"You've already asked {personName}. Waiting on them.",src/app/components/BePart.tsx,-,ok
+"What would you like to make? / What would you like to discuss?",src/app/components/BePart.tsx,Make together / Explore together,ok
+"That's you. / We can't reach this maker yet. Try from their profile.",src/app/components/BePart.tsx,-,ok
+"That didn't send -- you may have already asked. Check your Inbox.",src/app/components/BePart.tsx,Inbox,ok
+"That didn't send. Check your connection and try again.",src/app/components/BePart.tsx,-,ok
+"Send request",src/app/components/BePart.tsx,-,ok
+"They'll be notified and can accept.<br/>Once accepted, you can message.",src/app/components/BePart.tsx,-,ok
+"<- All options",src/app/components/BePart.tsx,-,ok
+"Sushii",src/app/pages/CreatePursuit.tsx,App name,retired
+"Create a Pursuit / What are you trying to accomplish?",src/app/pages/CreatePursuit.tsx,Start a Pursuit,retired
+"Write 20,000 words",src/app/pages/CreatePursuit.tsx,-,ok
+"For example: Paint 10 paintings, Run 100 miles, Practice guitar 50 hours",src/app/pages/CreatePursuit.tsx,-,ok
+"How should progress add up?",src/app/pages/CreatePursuit.tsx,Goal / Measure / Unit,ok
+"You can change this later from the Pursuit.",src/app/pages/CreatePursuit.tsx,Pursuit,ok
+"Define your measurement",src/app/pages/CreatePursuit.tsx,Measure,ok
+"Milestones, in order",src/app/pages/CreatePursuit.tsx,Stepping stones,retired
+"Learn three songs / Play for friends / First open mic / Next milestone",src/app/pages/CreatePursuit.tsx,Stepping stones,retired
+"+ Add a milestone",src/app/pages/CreatePursuit.tsx,Stepping stones,retired
+"Target amount / Unit name / words",src/app/pages/CreatePursuit.tsx,Goal / Unit,ok
+"What counts as reaching one? / What counts as one?",src/app/pages/CreatePursuit.tsx,Stepping stones,retired
+"Any words included in the manuscript draft / A finished piece I'd show someone",src/app/pages/CreatePursuit.tsx,-,ok
+"This helps Sushii understand how to track your progress.",src/app/pages/CreatePursuit.tsx,App name,retired
+"Your goal / {n} milestones",src/app/pages/CreatePursuit.tsx,Goal / Stepping stones,retired
+"Set your rules / You can change these anytime.",src/app/pages/CreatePursuit.tsx,-,ok
+"Allow partial amounts / Log 0.5 of a/an {unit}",src/app/pages/CreatePursuit.tsx,-,ok
+"Allow decimals / e.g. 1.5 {unit}",src/app/pages/CreatePursuit.tsx,-,ok
+"Default amount per Moment",src/app/pages/CreatePursuit.tsx,Moment,ok
+"Starting amount / Anything you've already done",src/app/pages/CreatePursuit.tsx,-,ok
+"Deadline / No deadline",src/app/pages/CreatePursuit.tsx,Aim for,retired
+"Pick a date",src/app/pages/CreatePursuit.tsx,Aim for,ok
+"Who's participating? / Just me / Invite people",src/app/pages/CreatePursuit.tsx,Pursuing together,retired
+"Log in / to invite people.",src/app/pages/CreatePursuit.tsx,-,ok
+"How will you pursue it?",src/app/pages/CreatePursuit.tsx,-,ok
+"Side by side / Everyone has their own goal and journey.",src/app/pages/CreatePursuit.tsx,Side by side,ok
+"One shared goal / Everyone contributes to the same total.",src/app/pages/CreatePursuit.tsx,One shared goal,ok
+"Search people by name / No one found. / Invited / Remove {displayName}",src/app/pages/CreatePursuit.tsx,-,ok
+"Review your Pursuit",src/app/pages/CreatePursuit.tsx,Pursuit,ok
+"Unit / What counts / Milestones",src/app/pages/CreatePursuit.tsx,Unit / Stepping stones,retired
+"Rules / Partial amounts {on/off} / decimals {on/off} / {amount} per Moment / Starting amount",src/app/pages/CreatePursuit.tsx,Moment,ok
+"Deadline / No deadline",src/app/pages/CreatePursuit.tsx,Aim for,retired
+"Participating / Just you / You + {names} - one shared goal / side by side",src/app/pages/CreatePursuit.tsx,Pursuing together,retired
+"Invites didn't send: {err}",src/app/pages/CreatePursuit.tsx,-,ok
+"Continue",src/app/pages/CreatePursuit.tsx,-,ok
+"Begin Pursuit",src/app/pages/CreatePursuit.tsx,Start a Pursuit,retired
+"Close / Back",src/app/pages/CreatePursuit.tsx,-,ok
+"This Pursuit isn't here. / It may have been kept private, or the link's out of date.",src/app/pages/Pursuit.tsx,Pursuit,ok
+"Back to Discover / Back",src/app/pages/Pursuit.tsx,Discover,ok
+"Looking...",src/app/pages/Pursuit.tsx,-,ok
+"To day one / What would you tell yourself on day one?",src/app/pages/Pursuit.tsx,-,ok
+"Edit / Write it",src/app/pages/Pursuit.tsx,-,ok
+"Resting. Nothing's lost, and there's no clock running. / Pick it back up",src/app/pages/Pursuit.tsx,Resting,ok
+"Goal reached -- {label}",src/app/pages/Pursuit.tsx,Goal,ok
+"Add your first Moment / A photo of where you're starting makes the best before-and-after later.",src/app/pages/Pursuit.tsx,Moment,ok
+"Add a Moment",src/app/pages/Pursuit.tsx,Log a Moment / Add from my Moments,synonym
+"Add a Moment",src/app/pages/Pursuit.tsx,Log a Moment / Add from my Moments,synonym
+"Full form / Send to.../ Change goal / Set a goal / Reached it",src/app/pages/Pursuit.tsx,Goal,ok
+"Link copied! / Make private / Share",src/app/pages/Pursuit.tsx,Only you,ok
+"Rest it / Mark complete / Reopen",src/app/pages/Pursuit.tsx,Just started / In progress / Resting / Completed,synonym
+"Check in with me:",src/app/pages/Pursuit.tsx,Check in with me,ok
+"Send to...",src/app/pages/Pursuit.tsx,-,ok
+"No Moments shared yet. / Not counted toward progress",src/app/pages/Pursuit.tsx,Moment,ok
+"Day one - {date} / Latest - {date}",src/app/pages/Pursuit.tsx,-,ok
+"Your next photo goes here / More to come",src/app/pages/Pursuit.tsx,-,ok
+"Where you started -> where you are / Where it started -> where it is",src/app/pages/Pursuit.tsx,-,ok
+"Only you - {date}",src/app/pages/Pursuit.tsx,Only you,ok
+"Finished {timeAgo} / Resting since {date}",src/app/pages/Pursuit.tsx,Just started / In progress / Resting / Completed,ok
+"today / yesterday / {n}d ago / {n} month(s) ago",src/app/pages/Pursuit.tsx,-,ok
+"Opening your invite...",src/app/pages/JoinPursuit.tsx,-,ok
+"This invite isn't active. / The link may have been turned off. Ask whoever sent it for a new one.",src/app/pages/JoinPursuit.tsx,-,ok
+"Go to Sushii",src/app/pages/JoinPursuit.tsx,App name,retired
+"{ownerName} invited you to pursue this together",src/app/pages/JoinPursuit.tsx,Pursuing together,ok
+"One shared goal: {target} / Your own goal: {target}",src/app/pages/JoinPursuit.tsx,One shared goal / Side by side,ok
+"Everyone contributes to the same total. / Everyone has their own goal and journey, side by side.",src/app/pages/JoinPursuit.tsx,One shared goal / Side by side,ok
+"{n} people are in so far.",src/app/pages/JoinPursuit.tsx,Pursuing together,ok
+"This is your Pursuit -- open it / Join / Sign up or log in to join",src/app/pages/JoinPursuit.tsx,Pursuit,ok
+"Free to join. You'll come right back here.",src/app/pages/JoinPursuit.tsx,-,ok
+"Less / Amount / More",src/app/components/pursuit/ui.tsx,-,ok
+"All / Media / Notes",src/app/pages/HobbyArchive.tsx,-,ok
+"This is your own archive",src/app/pages/HobbyArchive.tsx,Shelf,retired
+"Every hobby you log gets a book here, holding every photo, video and note you've put in it. Make an account and yours starts filling up.",src/app/pages/HobbyArchive.tsx,Shelf,ok
+"Start my shelf",src/app/pages/HobbyArchive.tsx,Shelf,ok
+"No such hobby / That book isn't on your shelf.",src/app/pages/HobbyArchive.tsx,Shelf,ok
+"Back to Your work",src/app/pages/HobbyArchive.tsx,Moment,retired
+"Create a {label} moment",src/app/pages/HobbyArchive.tsx,Moment,ok
+"Add a short note about this Corner -- only you see it. / Your private note about {label}",src/app/pages/HobbyArchive.tsx,Corner / Only you,ok
+"Nothing logged under {label} yet. A photo, or a sentence about how it went, both count.",src/app/pages/HobbyArchive.tsx,-,ok
+"No {media/notes} here. Try All. / Create something",src/app/pages/HobbyArchive.tsx,-,ok
+"No {label} pursuits yet. A Pursuit is a thing you come back to. Moments group under it as updates.",src/app/pages/HobbyArchive.tsx,Pursuit / Moment,ok
+"Start a Pursuit",src/app/pages/HobbyArchive.tsx,Start a Pursuit,ok
+"Part of {space}: {plainLabel}.",src/app/pages/HobbyArchive.tsx,Space,ok
+"This archive",src/app/pages/HobbyArchive.tsx,Shelf,retired
+"First logged / Not yet / Moments / With a photo or video / Kept private",src/app/pages/HobbyArchive.tsx,Moment / Only you,ok
+"Find others doing this / Open {label} in {shortName} ->",src/app/pages/HobbyArchive.tsx,-,ok
+"Share this milestone",src/app/components/ShareMilestoneDialog.tsx,Quiet Milestones,synonym
+"Create, Don't Just Consume.",src/app/components/ShareMilestoneDialog.tsx,-,ok
+"Copied / Copy as text / Unshare / Share on your profile",src/app/components/ShareMilestoneDialog.tsx,-,ok
+"Visible on your public profile. Screenshot the card above to share it as an image.",src/app/components/ShareMilestoneDialog.tsx,-,ok
+"Only visible to you until you share it. Screenshot the card above to share it as an image.",src/app/components/ShareMilestoneDialog.tsx,-,ok
+"A quiet milestone reached on Sushii: {name}. {description}",src/app/components/ShareMilestoneDialog.tsx,Quiet Milestones / App name,retired
+"The Shelf",src/app/components/ShelfRail.tsx,Shelf,ok
+"Where bodies of work get bound.",src/app/components/ShelfRail.tsx,Shelf,retired
+"Nothing on the Shelf yet. Log a Moment to start one.",src/app/components/ShelfRail.tsx,Shelf / Log a Moment,ok
+"{label}: {n} moment(s) / {n} MOMENT / MOMENTS",src/app/components/ShelfRail.tsx,Moment,ok
+"Pursuits still moving / Start one",src/app/components/PursuitsRail.tsx,In progress,synonym
+"The ones you haven't set down yet.",src/app/components/PursuitsRail.tsx,-,ok
+"No Pursuits yet. / Start your first",src/app/components/PursuitsRail.tsx,Pursuit,ok
+"Everything's resting or finished. Pick one back up, or start something new.",src/app/components/PursuitsRail.tsx,Resting / Completed,ok
+"See all my Pursuits ({n}) / All your Pursuits",src/app/components/PursuitsRail.tsx,Pursuit,ok
+"Moving",src/app/components/PursuitsRail.tsx,In progress,synonym
+"Resting",src/app/components/PursuitsRail.tsx,Resting,ok
+"Complete",src/app/components/PursuitsRail.tsx,Completed,synonym
+"Add a Moment to {title} / Add",src/app/components/PursuitsRail.tsx,Log a Moment / Add from my Moments,synonym
+"Quiet, but real",src/app/components/InspiredRail.tsx,-,ok
+"Nothing yet this month.",src/app/components/InspiredRail.tsx,-,ok
+"This month, {n} person/people started a Pursuit not long after seeing yours -- {clauses}.",src/app/components/InspiredRail.tsx,Pursuit,ok
+"Visible only to you. Counted from real follow-throughs, not views. Nothing here is ranked against anyone else.",src/app/components/InspiredRail.tsx,-,ok
+"Freshly opened this week",src/app/components/NewSpacesRail.tsx,New Spaces,ok
+"Real Spaces the community just started. Not personalized, not ranked, just new.",src/app/components/NewSpacesRail.tsx,Space,ok
+"Nothing new to show yet. / Inside {shortName} / Visit",src/app/components/NewSpacesRail.tsx,-,ok
+"opened today / opened {weekday} / opened last week / opened {n} weeks ago",src/app/components/NewSpacesRail.tsx,-,ok
+"Good {part}, {name}",src/app/pages/MySpaceGrid.tsx,Home,ok
+"{n} Moment(s) from the people and Spaces you follow.",src/app/pages/MySpaceGrid.tsx,Moment / Space / Follow,ok
+"TODAY'S SHEET",src/app/pages/MySpaceGrid.tsx,-,ok
+"Nothing here yet. Join a Space or follow a person to start your sheet.",src/app/pages/MySpaceGrid.tsx,Space / Follow,ok
+"Turn the page",src/app/pages/MySpaceGrid.tsx,-,ok
+"END OF THE SHEET / You're caught up",src/app/pages/MySpaceGrid.tsx,You're caught up,ok
+"Add a Moment",src/app/pages/MySpaceGrid.tsx,Log a Moment,synonym
+"No shelf here",src/app/pages/PublicProfile.tsx,Shelf,ok
+"Nobody by that name. The link may be out of date. / Explore hobbies instead",src/app/pages/PublicProfile.tsx,-,ok
+"{n} moment(s) logged{since...}",src/app/pages/PublicProfile.tsx,Moments logged,ok
+"{n} follower(s) / Following / Requested / Follow / Message",src/app/pages/PublicProfile.tsx,Followers / Following / Follow,ok
+"Open Studio ->",src/app/pages/PublicProfile.tsx,-,ok
+"What {firstName} makes in {focusTag} / What {firstName} makes",src/app/pages/PublicProfile.tsx,-,ok
+"A look into the things they've created, explored, and loved. / Show everything",src/app/pages/PublicProfile.tsx,-,ok
+"{firstName} hasn't shared any Moments publicly yet.",src/app/pages/PublicProfile.tsx,Moment,ok
+"{firstName}'s Pursuits / The things they're bringing to life, that they've chosen to share.",src/app/pages/PublicProfile.tsx,Pursuit,ok
+"Quiet Milestones / Non-metric growth that feels good. / What {firstName} chose to share.",src/app/pages/PublicProfile.tsx,Quiet Milestones,ok
+"This Corner",src/app/pages/PublicProfile.tsx,Corner,ok
+"Same hobbies.\nBrighter days. / Explore their world",src/app/pages/PublicProfile.tsx,-,ok
+"Start your own shelf / Pick a hobby, log what you make, and watch it stack up. Free, and there's nothing here that scrolls forever.",src/app/pages/PublicProfile.tsx,Shelf,ok
+"Create an account / Browse every hobby",src/app/pages/PublicProfile.tsx,-,ok
+"Other people making {hobby} -- not {firstName}'s connections, which only they can see.",src/app/pages/PublicProfile.tsx,-,ok
+"Nothing to suggest yet. / Looking... / Nobody else here yet.",src/app/pages/PublicProfile.tsx,-,ok
+"Link copied / Share",src/app/pages/PublicProfile.tsx,-,ok
+"Started today / Started {n} day(s) ago",src/app/components/ProfileHeadline.tsx,-,ok
+"Day one of {label} / {n} day(s) into {label} / {n} month(s) into {label} / {n} year(s) into {label}",src/app/components/ProfileHeadline.tsx,-,ok
+"Just getting started / Keep going.",src/app/components/ProfileHeadline.tsx,Keep going,ok
+"YOUR PERSONAL ARCHIVE",src/app/pages/You.tsx,Shelf,retired
+"Tell your story: what got you into this, and where it's going.",src/app/pages/You.tsx,Tell your story,ok
+"{n} moment(s) logged{since...} / No one's following yet",src/app/pages/You.tsx,Moments logged / Following,ok
+"Add a moment / Settings / Share",src/app/pages/You.tsx,Log a Moment,synonym
+"Public archive ->",src/app/pages/You.tsx,Shelf,retired
+"Add a tag",src/app/pages/You.tsx,Corner,ok
+"You're not logged in. Sessions here are just local to this browser. / Log in",src/app/pages/You.tsx,-,ok
+"Every moment / All moments / By Corner",src/app/pages/You.tsx,Moment / Corner,ok
+"By Corner, most recently updated first -- open one to see every moment inside it.",src/app/pages/You.tsx,Corner,ok
+"Tagged ""{tagFilter}."" / A visual record of what you've made, explored, and loved, newest first.",src/app/pages/You.tsx,-,ok
+"Nothing logged yet. Create something and it'll show up here.",src/app/pages/You.tsx,-,ok
+"Your Pursuits / Create Your Pursuit",src/app/pages/You.tsx,Start a Pursuit,retired
+"The things you're bringing to life.",src/app/pages/You.tsx,Pursuit,ok
+"Nothing yet. Name a thing you're working toward and it lives here.",src/app/pages/You.tsx,Pursuit,ok
+"Non-metric growth that feels good. Private by default -- share one at a time, only if you want to.",src/app/pages/You.tsx,Quiet Milestones,ok
+"Your shelf lives here / Make an account and everything you log builds up on a shelf of your own: hobbies, sessions, milestones. You can keep browsing everything else without one.",src/app/pages/You.tsx,Shelf,ok
+"Start my shelf",src/app/pages/You.tsx,Shelf,ok
+"Sign in to open your own Studio. / No studio here. The link may be out of date.",src/app/pages/Studio.tsx,-,ok
+"Back",src/app/pages/Studio.tsx,-,ok
+"Sushii",src/app/pages/Studio.tsx,App name,retired
+"{n} moment(s){since...} / Open the studio / Back to cover",src/app/pages/Studio.tsx,Moment,ok
+"Chronological / By tag / {n} / {n} / Previous / Next",src/app/pages/Studio.tsx,-,ok
+"Settings / Settings live here / Make an account to control your name, your privacy, and your data. / Create an account",src/app/components/settings/SettingsShell.tsx,-,ok
+"Appearance / Light, dark, or match your device.",src/app/components/settings/sections.ts,-,ok
+"Profile / Name, bio, and photo.",src/app/components/settings/sections.ts,-,ok
+"Account / Email, password, and sessions.",src/app/components/settings/sections.ts,-,ok
+"Privacy / Who sees new Moments by default.",src/app/components/settings/sections.ts,Only you / Followers / Everyone,ok
+"Notifications / What the bell tells you about, and what it stays quiet on.",src/app/components/settings/sections.ts,-,ok
+"Your data / Only you Moments, and your points.",src/app/components/settings/sections.ts,Only you,ok
+"Pause or leave / Pause your account, or delete it.",src/app/components/settings/sections.ts,-,ok
+"Light is warm paper, dark is warm charcoal. Same identity in either.",src/app/components/settings/AppearanceSection.tsx,-,ok
+"System default/FOLLOWS YOUR DEVICE / Light/WARM PAPER / Dark/WARM CHARCOAL",src/app/components/settings/AppearanceSection.tsx,-,ok
+"What people see on your work -- your Shelf, your Studio, and anywhere you show up.",src/app/components/settings/ProfileSection.tsx,Moment / Shelf,retired
+"Is this how you'd like to be known? Your name is currently ""{emailPrefix}"" -- taken from your email. You can change it below any time. / Got it",src/app/components/settings/ProfileSection.tsx,-,ok
+"Display name / Shown wherever your work appears.",src/app/components/settings/ProfileSection.tsx,Moment,retired
+"Bio / A short line under your name. Never required. / What got you into this, and where it's going...",src/app/components/settings/ProfileSection.tsx,Tell your story,ok
+"Not set / Edit / Cancel / Save / Saving... / This can't be empty.",src/app/components/settings/EditableTextRow.tsx,-,ok
+"Saved",src/app/components/settings/SettingsRow.tsx,-,ok
+"Your sign-in details, and every device you're signed into.",src/app/components/settings/AccountSection.tsx,-,ok
+"Email / Signing in and account notices go here.",src/app/components/settings/AccountSection.tsx,-,ok
+"Password / Change your password. / Change password / Current password / New password / At least 10 characters / Confirm new password",src/app/components/settings/AccountSection.tsx,-,ok
+"Enter your current password. / Your new password needs at least 10 characters. / Those two don't match. / That current password isn't right.",src/app/components/settings/AccountSection.tsx,-,ok
+"Sign out everywhere / Ends every session on every device, including this one.",src/app/components/settings/AccountSection.tsx,-,ok
+"Sign out everywhere? / This ends every signed-in session for your account, including the one you're using right now.",src/app/components/settings/AccountSection.tsx,-,ok
+"Site admin / Manage Spaces / Manage Corners",src/app/components/settings/AccountSection.tsx,Manage / Space / Corner,ok
+"Review category suggestions",src/app/components/settings/AccountSection.tsx,Category,not in glossary
+"Reports / Invites / {n} waiting",src/app/components/settings/AccountSection.tsx,Report,ok
+"Who sees what you make by default.",src/app/components/settings/PrivacySection.tsx,Only you / Followers / Everyone,ok
+"Default visibility for new Moments / What a new Moment starts as in the composer -- you can always change it there before sharing.",src/app/components/settings/PrivacySection.tsx,Moment,ok
+"Only you / Everyone",src/app/components/settings/PrivacySection.tsx,Only you / Everyone,ok
+"Read receipts / If you turn this off, people won't see when you've read their messages, and you won't see when they've read yours. / Seen",src/app/components/settings/PrivacySection.tsx,Seen,ok
+"Blocked people / They can't message you, follow you, react, or comment on your Moments, and don't see your profile. Unblocking doesn't restore a follow. / You haven't blocked anyone. / Unblock",src/app/components/settings/PrivacySection.tsx,Block / Moment / Follow,ok
+"Turning a type off stops new ones. It doesn't remove ones you already have.",src/app/components/settings/NotificationsSection.tsx,-,ok
+"Thoughts on your Moments / Someone leaves a Thought on something you shared.",src/app/components/settings/NotificationsSection.tsx,Thoughts / Moment,ok
+"Pursuit activity / Someone joins, invites you to, or logs progress on a Pursuit.",src/app/components/settings/NotificationsSection.tsx,Pursuit,ok
+"Make together and Explore together / Someone asks to make or explore together, accepts your request, or joins something you posted.",src/app/components/settings/NotificationsSection.tsx,Make together / Explore together,ok
+"Message requests / Turning this off only stops the bell -- the request still waits for you in Messages.",src/app/components/settings/NotificationsSection.tsx,Message requests,ok
+"What's kept here, and only here. / ""Only you"" Moments / Kept here and nowhere else. These never appear in a Space, a feed, or your public shelf. / Nothing here yet. / Only you - {timeAgo} / Delete",src/app/components/settings/DataSection.tsx,Only you / Moment / Space / Shelf,ok
+"{n} point(s) earned so far. / Delete this? / This can't be undone -- nobody else ever saw it, and once it's gone there's no copy left anywhere.",src/app/components/settings/DataSection.tsx,-,ok
+"Step back for a while, or leave for good. Neither is built yet.",src/app/components/settings/PauseOrLeaveSection.tsx,-,ok
+"Pause your account / Hide your work until you come back. / Pause",src/app/components/settings/PauseOrLeaveSection.tsx,Moment,retired
+"Delete your account / Permanently remove your account and your work.",src/app/components/settings/PauseOrLeaveSection.tsx,Moment,retired
+"Log out / Sign out of this device.",src/app/components/settings/PauseOrLeaveSection.tsx,-,ok
+"This is coming soon and isn't built yet -- nothing happens if you select it. / Pausing is coming soon / Account deletion is coming soon",src/app/components/settings/PauseOrLeaveSection.tsx,-,ok
+"You both agreed to ""{active.intent}"", this is where that happens. / Say hi to {otherName}.",src/app/pages/Messages.tsx,-,ok
+"Making together - {intent} / Making together / Exploring together - {intent} / Exploring together",src/app/pages/Messages.tsx,Make together / Explore together,ok
+"Direct message",src/app/pages/Messages.tsx,-,ok
+"Photo unavailable / That photo couldn't be processed -- try a different one. / Attach a photo / Send",src/app/pages/Messages.tsx,-,ok
+"Photo",src/app/pages/Messages.tsx,-,ok
+"Message deleted / Unsend / Not sent - Tap to retry",src/app/pages/Messages.tsx,Unsend,ok
+"New message(s)",src/app/pages/Messages.tsx,-,ok
+"Unsend this message? / Both of you will see ""Message deleted"" in its place. This can't be undone. / Unsend",src/app/pages/Messages.tsx,Unsend,ok
+"Loading earlier messages...",src/app/pages/Messages.tsx,-,ok
+"Messages / New message",src/app/pages/Messages.tsx,Messages / Inbox,ok
+"People who accepted making or exploring something together, and anyone who's sent or received a direct message.",src/app/pages/Messages.tsx,Make together / Explore together,ok
+"Chats / Message requests{count}",src/app/pages/Messages.tsx,Message requests,ok
+"No open threads",src/app/pages/Messages.tsx,Chats,retired
+"Nothing yet. A thread opens when someone accepts a Make together or Explore together request, or when you send someone a direct message from their profile.",src/app/pages/Messages.tsx,Chats,retired
+"Find someone to make something with",src/app/pages/Messages.tsx,Make together,ok
+"Search people by name / Type a name to find someone. / Searching... / No one found.",src/app/pages/Messages.tsx,-,ok
+"Waiting to accept / {n} unread",src/app/pages/Messages.tsx,-,ok
+"You can share this Moment with {name} once they accept your message.",src/app/pages/Messages.tsx,Moment,ok
+"Message {draftThread.name} / Waiting for {otherName} to accept.",src/app/pages/Messages.tsx,-,ok
+"Nothing waiting. A first message from someone you don't follow shows up here, to accept or ignore. / Accept / Ignore / Block / Report",src/app/pages/Messages.tsx,Message requests / Follow / Block / Report,ok
+"Couldn't send that. Try again later.",src/app/pages/Messages.tsx,-,ok
+"Inbox / Requests and activity live here once you have an account. / Sign in",src/app/pages/Inbox.tsx,Messages / Inbox,ok
+"Everything addressed to you. Nothing here takes effect until you answer it. / Requests{count} / Activity",src/app/pages/Inbox.tsx,-,ok
+"Nothing waiting on you. Follow requests arrive here, and none of them take effect until you answer.",src/app/pages/Inbox.tsx,Follow requests,ok
+"Follow requests / {r.displayName} wants to follow your Shelf. / Accept / Decline",src/app/pages/Inbox.tsx,Follow requests / Shelf,ok
+"Quiet. Thoughts on your work and accepted follows all show up here.",src/app/pages/Inbox.tsx,Moment / Follow,retired
+"Send to... / No open chats yet -- start one from someone's profile first. / Sent / Sending... / Couldn't send that. Try again. / Done",src/app/components/SendToChatDialog.tsx,-,ok
+"Sharing work on Sushii",src/app/components/PersonCard.tsx,Moment / App name,retired
+"Just joined, nothing shared yet",src/app/components/PersonCard.tsx,-,ok
+"Followers / Following / Loading... / No followers yet. / Not following anyone yet.",src/app/components/FollowListDialog.tsx,Followers / Following,ok
+"More about {personName} / Block {personName} / Report",src/app/components/PersonActionsMenu.tsx,Block / Report,ok
+"Block {personName}? / {personName} won't be able to message you, follow you, or see your Moments. They won't be told. / Cancel / Block",src/app/components/BlockConfirmDialog.tsx,Block / Follow / Moment,ok
+"Spam / Harassment / Inappropriate / Other",src/app/components/ReportDialog.tsx,Report,ok
+"Report / Report sent / Report sent. Thanks for telling us. / Close",src/app/components/ReportDialog.tsx,Report,ok
+"Anything else we should know? (optional) / Also block {personName}",src/app/components/ReportDialog.tsx,Block,ok
+"Couldn't send that. Try again later. / Send report",src/app/components/ReportDialog.tsx,Report,ok
+"404 / This space doesn't exist / But eight other hobby spaces do, and they're worth a look. / Back home",src/app/pages/NotFound.tsx,Space,synonym
+"The marketplace / Physical goods, digital guides, and courses, all made by real creators.",src/app/pages/Shop.tsx,Book the studio (marketplace),not in glossary
+"All / {n} listing(s) / Nothing here yet / View everything",src/app/pages/Shop.tsx,-,not in glossary
+"Listing not found / Back to marketplace / Back",src/app/pages/ProductDetail.tsx,Book the studio (marketplace),not in glossary
+"{rating} ({reviews} reviews) / Choose a color / Select size / Coming soon",src/app/pages/ProductDetail.tsx,-,not in glossary
+"Buying isn't live yet -- the marketplace is coming soon.",src/app/pages/ProductDetail.tsx,Book the studio (marketplace),not in glossary
+"More from {hobby}",src/app/pages/ProductDetail.tsx,-,ok
+"Physical / Digital / Course / Selling is coming soon / by {creator}",src/app/components/ProductCard.tsx,-,not in glossary
+"Your cart ({n}) / Order placed. Thanks for supporting creators. / Points added to your profile. / Your cart is empty / Keep exploring / by {creator} / Total / Checkout -- coming soon",src/app/components/CartDrawer.tsx,-,not in glossary
+"{myName} joined {title}.",src/app/context/SocialContext.tsx,-,ok
+"{myName} asked to {label}: {intent}.",src/app/context/SocialContext.tsx,Make together / Explore together,ok
+"{myName} accepted your {label} request. You can now message each other.",src/app/context/SocialContext.tsx,Make together / Explore together,ok
+"{myName} left a thought on your moment.",src/app/context/SocialContext.tsx,Thoughts / Moment,ok
+"{myName} wants to message you.",src/app/context/SocialContext.tsx,Message requests,ok
+"{name} asked to join {space}.",supabase/migrations/20261001000000_spaces_rework_join_notifications.sql,Request to join,ok
+"You're in {space}.",supabase/migrations/20261001000000_spaces_rework_join_notifications.sql,Join Space,ok
+"Your request to join {space} wasn't approved.",supabase/migrations/20261001000000_spaces_rework_join_notifications.sql,Request to join,ok
+"{name} invited you to co-host {space}.",supabase/migrations/20261001000000_spaces_rework_join_notifications.sql,Co-host,ok
+"{name} cancelled {event}.",supabase/migrations/20261001000000_spaces_rework_join_notifications.sql,Event,ok
+"{name} shared a Moment in {space} for approval.",supabase/migrations/20261008000000_spaces_rework_moment_notifications.sql,Waiting for a host to approve,ok
+"Your Moment is now on the table in {space}.",supabase/migrations/20261008000000_spaces_rework_moment_notifications.sql,Table,retired
+"Sign in first. / Your account isn't active yet. / No invites left. / Enter a valid email.",supabase/migrations/20260929202136_step2_invite_only.sql,-,not in glossary
+"package.json name: sushii",package.json,App name,retired

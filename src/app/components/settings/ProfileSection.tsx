@@ -66,7 +66,7 @@ export function ProfileSection() {
     <section>
       <SectionHeader n={2} eyebrow="PROFILE" title="Profile" />
       <p className="mb-4 text-sm text-muted-foreground">
-        What people see on your work — your Shelf, your Studio, and anywhere you show up.
+        What people see — your Shelf, your Scrapbook, and anywhere you show up.
       </p>
 
       {showEmailPrefixPrompt && <EmailPrefixPrompt userId={user.id} emailPrefix={emailPrefix} />}
@@ -82,7 +82,7 @@ export function ProfileSection() {
       <SettingsPanel>
         <EditableTextRow
           label="Display name"
-          description="Shown wherever your work appears."
+          description="Shown wherever your Moments appear."
           value={displayName}
           maxLength={60}
           required

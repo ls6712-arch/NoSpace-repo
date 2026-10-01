@@ -9,7 +9,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { marketplaceEnabled } from "../config";
+import { marketplaceEnabled, APP_NAME } from "../config";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { spacePhoto } from "../data/hobbyPhotos";
 import { Post, postCorner } from "../data/posts";
@@ -89,7 +89,7 @@ const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
  * Shared look for every navigational tab/filter on this page: plain
  * small-caps text, letter-spaced, no pill background — active means a thin
  * underline plus darker text, not a fill. Deliberately not used for
- * "Add a Moment"/"Start your log" or any other primary action button,
+ * "Log a Moment" or any other primary action button,
  * which stay solid — this is for choosing what you're looking at, not
  * doing something.
  */
@@ -481,7 +481,7 @@ export function Discover() {
                 setShown(PAGE_SIZE);
                 if (searchParams.get("about")) setSearchParams({}, { replace: true });
               }}
-              placeholder="Search people, projects, hobbies..."
+              placeholder="Search Moments, people, Spaces"
               className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
             />
             {query && (
@@ -529,13 +529,13 @@ export function Discover() {
             <>
               <AllCornersBrowser query={query} />
 
-              {/* Featured Moments */}
+              {/* Spotlight */}
               {featured.length > 0 && (
                 <section className="mb-14">
                   <div className="mb-5 flex items-end justify-between gap-4">
                     <div>
-                      <div className="ns-section-kicker mb-2">POPULAR MOMENTS FROM ACROSS SUSHII</div>
-                      <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Featured Moments</h2>
+                      <div className="ns-section-kicker mb-2">Popular Moments from across {APP_NAME}</div>
+                      <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Spotlight</h2>
                     </div>
                     <a
                       href="#all-moments"
@@ -570,10 +570,10 @@ export function Discover() {
               {/* All Moments */}
               <div id="all-moments" className="mb-4 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <div className="ns-section-kicker mb-2">MOMENTS FROM ACROSS SUSHII</div>
+                  <div className="ns-section-kicker mb-2">Moments from across {APP_NAME}</div>
                   <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>All Moments</h2>
                 </div>
-                <ul role="tablist" aria-label="Feed" className="flex gap-1 rounded-full border border-border bg-card p-1">
+                <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-full border border-border bg-card p-1">
                   {FEED_TABS.map(({ id, label }) => {
                     const active = feedTab === id;
                     return (
@@ -656,8 +656,8 @@ export function Discover() {
               {/* Media type — same plain-text, underline-on-active look as
                   the top-level Discover tabs and the Corner row above, per
                   the brief: navigational filters read as text choices, not
-                  filled pills. "Add a Moment"/"Start your log" is the one
-                  thing on this page that stays a solid button. */}
+                  filled pills. "Log a Moment" is the one thing on this page
+                  that stays a solid button. */}
               <ul className="mb-6 flex items-center gap-6" role="tablist" aria-label="Media type">
                 {MEDIA_FILTERS.map(({ id, label }) => {
                   const active = mediaFilter === id;
@@ -689,7 +689,7 @@ export function Discover() {
               {chip === "near" ? (
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
                   <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                    Sushii doesn't know where you are, and won't until you tell it.
+                    {APP_NAME} doesn't know where you are, and won't until you tell it.
                   </p>
                 </div>
               ) : visible.length === 0 ? (

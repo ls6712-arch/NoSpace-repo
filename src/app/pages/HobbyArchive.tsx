@@ -91,7 +91,7 @@ export function HobbyArchive() {
   if (isConfigured && !user) {
     return (
       <SignUpPrompt
-        title="This is your own archive"
+        title="This is where your books live"
         body="Every hobby you log gets a book here, holding every photo, video and note you've put in it. Make an account and yours starts filling up."
         cta="Start my shelf"
       />
@@ -109,7 +109,7 @@ export function HobbyArchive() {
             That book isn't on your shelf.
           </p>
           <Link to="/you">
-            <Button variant="outline">Back to Your work</Button>
+            <Button variant="outline">Back to Your Shelf</Button>
           </Link>
         </div>
       </div>
@@ -140,7 +140,7 @@ export function HobbyArchive() {
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
-          Your work
+          Your Shelf
         </Link>
 
         <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
@@ -171,13 +171,13 @@ export function HobbyArchive() {
           <Link to={logTo}>
             <Button variant="coral">
               <PenLine className="size-4" />
-              Create a {target.label.toLowerCase()} moment
+              Log a {target.label.toLowerCase()} moment
             </Button>
           </Link>
         </div>
 
         {/* Sections */}
-        <div role="tablist" aria-label="Archive sections" className="mt-8 flex gap-1 border-b border-[var(--hairline)]">
+        <div role="tablist" aria-label="Sections" className="mt-8 flex gap-1 border-b border-[var(--hairline)]">
           {(["moments", "pursuits", "about"] as const).map((id) => (
             <button
               key={id}
@@ -317,7 +317,7 @@ export function HobbyArchive() {
             </div>
             <div className="rounded-2xl border border-border bg-card p-5">
               <h2 className="mb-2 text-base" style={{ fontFamily: "var(--font-serif)" }}>
-                This archive
+                This book
               </h2>
               <dl className="grid gap-1.5 text-sm">
                 <div className="flex justify-between gap-3">

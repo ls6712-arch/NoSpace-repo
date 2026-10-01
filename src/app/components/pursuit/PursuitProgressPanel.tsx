@@ -22,6 +22,7 @@ import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { PersonAvatar } from "../../pages/CreatePursuit";
 import { ProgressBar, SoftPanel } from "./ui";
+import { APP_NAME } from "../../config";
 
 /**
  * The top of a measured Pursuit's page, in whichever of the three shapes
@@ -72,7 +73,7 @@ export function PursuitProgressPanel({
       )}
       <Link to={`/pursuit/${project.id}/moment`} className={!viewerIsOwner ? "col-span-2" : ""}>
         <Button variant="coral" className="h-11 w-full rounded-xl">
-          <Plus className="size-4" /> Add a Moment
+          <Plus className="size-4" /> Log a Moment
         </Button>
       </Link>
     </div>
@@ -377,7 +378,7 @@ export function InviteDialog({
   const shareLink = async () => {
     if (!link) return;
     try {
-      await navigator.share?.({ title: project.title, text: `Pursue "${project.title}" with me on Sushii`, url: link });
+      await navigator.share?.({ title: project.title, text: `Pursue "${project.title}" with me on ${APP_NAME}`, url: link });
     } catch {
       // cancelled — nothing to do
     }
@@ -396,13 +397,13 @@ export function InviteDialog({
       <DialogContent className="max-w-md">
         <DialogHeader className="text-left">
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Invite people</DialogTitle>
-          <DialogDescription>Send a link to anyone, or invite people already on Sushii.</DialogDescription>
+          <DialogDescription>Send a link to anyone, or invite people already on {APP_NAME}.</DialogDescription>
         </DialogHeader>
         <div className="rounded-xl border border-border bg-surface-muted/40 p-3">
           <p className="flex items-center gap-2 text-sm">
             <Link2 className="size-4" /> Invite link
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Works for people who aren't on Sushii yet — they sign up and land in this Pursuit.</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Works for people who aren't on {APP_NAME} yet — they sign up and land in this Pursuit.</p>
           {link ? (
             <>
               <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-lg border border-border bg-card px-2 text-xs" />
@@ -427,7 +428,7 @@ export function InviteDialog({
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">Or find someone on Sushii — they'll get a notification.</p>
+        <p className="text-xs text-muted-foreground">Or find someone on {APP_NAME} — they'll get a notification.</p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input

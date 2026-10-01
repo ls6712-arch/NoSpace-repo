@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useUnifiedSearch, SEARCH_GROUP_ORDER, type SearchGroup } from "../lib/search";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { APP_NAME } from "../config";
 
 const GROUP_ICON: Record<SearchGroup, LucideIcon> = {
   space: Compass,
@@ -72,7 +73,7 @@ export function SearchResults() {
       <div className="container mx-auto max-w-4xl px-4 py-10">
         <div className="ns-section-kicker mb-3">SEARCH</div>
         <h1 className="mb-6 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-          {q ? `Results for "${q}"` : "Search Sushii"}
+          {q ? `Results for "${q}"` : `Search ${APP_NAME}`}
         </h1>
 
         <form onSubmit={onSubmit} className="relative mb-8 max-w-xl">
@@ -82,7 +83,7 @@ export function SearchResults() {
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Spaces, Corners, people, Pursuits, Moments…"
+            placeholder="Search Moments, people, Spaces"
             className="w-full rounded-full border border-border bg-input-background py-3 pl-11 pr-4 text-sm text-foreground outline-none focus-visible:border-[var(--violet-electric)]"
           />
         </form>

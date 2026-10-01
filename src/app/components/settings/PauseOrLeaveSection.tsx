@@ -46,12 +46,12 @@ export function PauseOrLeaveSection() {
         Step back for a while, or leave for good. Neither is built yet.
       </p>
       <SettingsPanel>
-        <SettingsRow label="Pause your account" description="Hide your work until you come back.">
+        <SettingsRow label="Pause your account" description="Hide your Moments until you come back.">
           <Button variant="outline" size="sm" onClick={() => setPauseOpen(true)}>
             Pause
           </Button>
         </SettingsRow>
-        <SettingsRow label="Delete your account" description="Permanently remove your account and your work.">
+        <SettingsRow label="Delete your account" description="Permanently remove your account and your Moments.">
           <Button variant="outline" size="sm" onClick={() => setDeleteOpen(true)}>
             Delete
           </Button>

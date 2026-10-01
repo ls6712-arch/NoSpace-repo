@@ -160,7 +160,7 @@ function MomentCard({
       <div className="mt-3 flex items-center justify-between gap-3">
         <MediaAttachPicker file={media} onChange={setMedia} label="Add a photo" />
         <Button variant="coral" size="sm" disabled={disabled || !canSubmit} onClick={submit}>
-          {posting ? "Adding…" : "Add Moment"}
+          {posting ? "Adding…" : "Log a Moment"}
         </Button>
       </div>
       {blockedError && <p className="mt-2 text-[11px] text-[var(--coral-text)]">{blockedError}</p>}

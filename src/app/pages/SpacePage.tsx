@@ -318,7 +318,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           </Link>
         )}
 
-        {/* Actions: Join Space / Request to join / Add Moment — the
+        {/* Actions: Join Space / Request to join / Log a Moment — the
             primary action. Leave and Edit Space stay available (existing,
             explicitly-required functionality — a host must still be able
             to leave or edit) but as quieter secondary actions, not
@@ -326,7 +326,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         <div className="mt-5 flex flex-wrap items-center gap-3">
           {isBanned ? null : isActiveMember ? (
             <>
-              <Button variant="coral" size="sm" onClick={() => setAddMomentOpen(true)}>Add Moment</Button>
+              <Button variant="coral" size="sm" onClick={() => setAddMomentOpen(true)}>Log a Moment</Button>
               {!(isHost && hosts.length <= 1) && (
                 <button
                   type="button"
@@ -359,7 +359,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       <div className="mx-auto w-full max-w-3xl px-4 pt-6">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
-            <TabsTrigger value="home">Home</TabsTrigger>
+            <TabsTrigger value="home">Table</TabsTrigger>
             <TabsTrigger value="moments">Moments</TabsTrigger>
             <TabsTrigger value="people">People</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>

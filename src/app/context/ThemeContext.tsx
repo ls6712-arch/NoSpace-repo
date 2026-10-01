@@ -7,6 +7,7 @@ import {
   ReactNode,
 } from "react";
 import { useAuth } from "./AuthContext";
+import { APP_NAME } from "../config";
 
 export type ThemePreference = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
@@ -20,11 +21,23 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // Same key the no-flash script in index.html reads before React mounts.
-const STORAGE_KEY = "sushii-theme-preference";
+const STORAGE_KEY = `${APP_NAME.toLowerCase()}-theme-preference`;
+// Pre-rename key ("sushii-theme-preference") — read once, below, so an
+// existing saved theme survives the rename instead of silently resetting
+// to "system". index.html's own inline script runs the same migration,
+// since it reads the preference before this file (or React) ever loads.
+const LEGACY_STORAGE_KEY = "sushii-theme-preference";
 
 function readStoredPreference(): ThemePreference {
   try {
-    const v = localStorage.getItem(STORAGE_KEY);
+    let v = localStorage.getItem(STORAGE_KEY);
+    if (v === null) {
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy !== null) {
+        localStorage.setItem(STORAGE_KEY, legacy);
+        v = legacy;
+      }
+    }
     if (v === "light" || v === "dark" || v === "system") return v;
   } catch {
     // Private mode / blocked storage — fall through to the default.

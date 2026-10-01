@@ -6,6 +6,7 @@ import { useContent } from "../context/ContentContext";
 import { usePeopleSearch, peopleInHobby, browsePeople, type Person } from "../lib/people";
 import { PeopleRow } from "../components/PersonCard";
 import { Button } from "../components/ui/button";
+import { APP_NAME } from "../config";
 
 /**
  * People, found through what they make.
@@ -203,11 +204,11 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
 
       <div className="mt-12 rounded-3xl border border-border bg-card px-6 py-9 text-center">
         <p className="mx-auto mb-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-          No follower counts anywhere on Sushii, not here, not on a
-          profile. People are described by what they work on.
+          No follower counts anywhere on {APP_NAME}, not here, not on a
+          profile. People are described by what they do.
         </p>
         <Link to="/discover">
-          <Button variant="outline">Explore hobbies instead</Button>
+          <Button variant="outline">Browse Discover</Button>
         </Link>
       </div>
     </div>

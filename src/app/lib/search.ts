@@ -5,6 +5,7 @@ import { deriveProjects } from "./journal";
 import { useContent } from "../context/ContentContext";
 import { useCorners, isDiscoverable } from "../context/CornersContext";
 import { usePeopleSearch, profilePath } from "./people";
+import { APP_NAME } from "../config";
 
 /**
  * One search, everywhere. Before this, Discover's search only matched Space
@@ -209,7 +210,7 @@ export function useUnifiedSearch(query: string) {
           .map((k) => hobbies.find((h) => h.slug === k)?.shortName)
           .filter(Boolean)
           .slice(0, 2)
-          .join(" · ") || "On Sushii",
+          .join(" · ") || `On ${APP_NAME}`,
       to: profilePath(p),
       avatarUrl: p.avatarUrl,
     }));

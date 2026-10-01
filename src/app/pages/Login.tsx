@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { APP_NAME } from "../config";
 
 export function Login() {
   const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
@@ -131,7 +132,7 @@ export function Login() {
           <AlertCircle className="size-8 mx-auto mb-3 text-muted-foreground" />
           <h2 className="text-xl mb-2">Accounts aren't set up on this build</h2>
           <p className="text-sm text-muted-foreground">
-            This copy of Sushii isn't connected to a database yet, so there's no real
+            This copy of {APP_NAME} isn't connected to a database yet, so there's no real
             sign-up here. Everything still works in local demo mode.
           </p>
         </div>
@@ -151,7 +152,7 @@ export function Login() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signup"
-              ? "Real work, saved for real, not just this browser tab."
+              ? "Your Moments, saved for real, not just this browser tab."
               : "Log in to pick up where you left off."}
           </p>
         </div>

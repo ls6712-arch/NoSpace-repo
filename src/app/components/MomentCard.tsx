@@ -211,7 +211,7 @@ export function BookmarkOverlay({
       <button
         type="button"
         aria-pressed={saved}
-        aria-label={saved ? "Saved to your Space. Tap again to remove it" : "Save to your Space"}
+        aria-label={saved ? "Saved. Tap again to remove it" : "Save"}
         title={saved ? "Saved" : "Save"}
         onClick={onClick}
         className="flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
@@ -228,7 +228,7 @@ export function BookmarkOverlay({
           role="status"
           className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-full bg-[var(--void)] px-2.5 py-1 text-[11px] text-[var(--offwhite)] shadow-md animate-in fade-in"
         >
-          Saved to your Space
+          Saved
         </span>
       )}
     </div>

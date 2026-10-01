@@ -99,8 +99,8 @@ type Mode = "project" | "update" | "moment" | "private";
 
 const MODES: { id: Mode; title: string; copy: string; icon: typeof Plus }[] = [
   { id: "project", title: "Start a Pursuit", copy: "Give a new thing a home", icon: Plus },
-  { id: "update", title: "Add a Moment", copy: "Keep an existing Pursuit moving", icon: PenLine },
-  { id: "moment", title: "Quick moment", copy: "A photo, win, question, or small discovery", icon: Sparkle },
+  { id: "update", title: "Add to a Pursuit", copy: "Keep an existing Pursuit moving", icon: PenLine },
+  { id: "moment", title: "Log a Moment", copy: "A photo, win, question, or small discovery", icon: Sparkle },
   { id: "private", title: "Reflect privately", copy: "Keep a note just for you", icon: Lock },
 ];
 
@@ -240,7 +240,7 @@ export function Log() {
   const initialPursuit = initialPursuitId
     ? journal.projects.find((p) => p.id === initialPursuitId)
     : undefined;
-  // "Log a new Moment" from a Space's own Add Moment dialog (when the
+  // "Log a new Moment" from a Space's own Add from my Moments dialog (when the
   // member has no existing Moments to pick from) links here with
   // ?space=<space id>. No Pursuit-style scoped menu for this one — the
   // whole rest of the composer stays exactly as it is; only publish()
@@ -251,7 +251,7 @@ export function Log() {
   // so the detail form's own picker for all three stays hidden too.
   const pursuitScoped = !!initialPursuit;
 
-  // A Pursuit's own "Add a Moment" opens the form directly. There used to
+  // A Pursuit's own "Log a Moment" opens the form directly. There used to
   // be a chooser first ("Add an update" vs "Reflect privately"), but the
   // form already has a private reflection section and an "Only you"
   // audience, so that screen was a step that decided nothing.
@@ -1004,7 +1004,7 @@ export function Log() {
     return (
       <Shell>
         <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
-          Start your log
+          Log a Moment
         </h1>
         <p className="mb-8 text-muted-foreground">Share a moment, or start a pursuit.</p>
 
@@ -1041,7 +1041,7 @@ export function Log() {
             </span>
             <span>
               <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                Write a moment
+                Write it down
               </span>
               <span className="block text-xs text-muted-foreground">Just a sentence counts.</span>
             </span>
@@ -1057,7 +1057,7 @@ export function Log() {
             </span>
             <span>
               <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                Start a pursuit
+                Start a Pursuit
               </span>
               <span className="block text-xs text-muted-foreground">
                 Something you're bringing to life over time.
@@ -1069,9 +1069,9 @@ export function Log() {
         {openProjects.length > 0 && (
           <div className="mt-3">
             <Select onValueChange={(id) => navigate(`/create?pursuit=${id}`)}>
-              <SelectTrigger className="w-full" aria-label="Add an update to a Pursuit">
+              <SelectTrigger className="w-full" aria-label="Log a Moment for a Pursuit">
                 <PenLine className="size-3.5" />
-                <SelectValue placeholder="Or add an update to a Pursuit" />
+                <SelectValue placeholder="Or log a Moment for a Pursuit" />
               </SelectTrigger>
               <SelectContent>
                 {openProjects.map((p) => (
@@ -1153,7 +1153,7 @@ export function Log() {
           <span className="mb-5 inline-flex size-14 items-center justify-center rounded-full text-white [background-color:var(--coral-deep)]">
             <NotebookPen className="size-7" />
           </span>
-          <h2 className="mb-2 text-2xl">Log in to keep your work</h2>
+          <h2 className="mb-2 text-2xl">Log in to keep your Moments</h2>
           <p className="mb-6 text-muted-foreground">
             Your moments are tied to your account, so they're still here next
             time, not just in this browser tab.
@@ -1593,7 +1593,7 @@ export function Log() {
                 : `This will appear in ${
                     audience === "public"
                       ? `${cornerLabel}`
-                      : "My Space for people you've connected with"
+                      : "Home for people you've connected with"
                   }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
             </p>
           </div>

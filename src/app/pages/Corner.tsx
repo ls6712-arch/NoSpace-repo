@@ -72,7 +72,7 @@ export function CornerPage() {
       <section className="container mx-auto px-4 pt-8 pb-24">
         {posts.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            No {corner.name.toLowerCase()} work yet. Be the first.
+            No {corner.name.toLowerCase()} Moments yet. Be the first.
           </div>
         ) : (
           <div className={MOMENT_GRID}>

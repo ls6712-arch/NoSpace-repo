@@ -10,10 +10,11 @@ import { Post } from "../data/posts";
 import { PostMedia } from "../components/PostMedia";
 import { CoverEditor } from "../components/CoverEditor";
 import { Button } from "../components/ui/button";
+import { APP_NAME } from "../config";
 
 type Grouping = "chronological" | "tag";
 
-/** True only for a real, loadable upload — the studio is a photo book, so a
+/** True only for a real, loadable upload — the Scrapbook is a photo book, so a
  * generated-art placeholder (nothing to actually show) never gets a page. */
 function hasRealMedia(post: Post) {
   return !!post.media && /^https?:\/\//.test(post.media);
@@ -199,14 +200,14 @@ export function Studio() {
     if (!username && !user) {
       return (
         <div className="flex min-h-[70vh] items-center justify-center px-4 text-center">
-          <p className="text-sm text-muted-foreground">Sign in to open your own Studio.</p>
+          <p className="text-sm text-muted-foreground">Sign in to open your own Scrapbook.</p>
         </div>
       );
     }
     if (remote.status === "missing") {
       return (
         <div className="flex min-h-[70vh] items-center justify-center px-4 text-center">
-          <p className="text-sm text-muted-foreground">No studio here. The link may be out of date.</p>
+          <p className="text-sm text-muted-foreground">No Scrapbook here. The link may be out of date.</p>
         </div>
       );
     }
@@ -268,7 +269,7 @@ export function Studio() {
           className="absolute right-8 top-7 text-sm italic text-white/80"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          Sushii
+          {APP_NAME}
         </span>
 
         {isMe && (
@@ -306,7 +307,7 @@ export function Studio() {
             className="mt-7 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm text-white transition-opacity disabled:opacity-40"
             style={{ backgroundColor: "var(--coral-deep)" }}
           >
-            Open the studio
+            Open the Scrapbook
             <ArrowRight className="size-4" />
           </button>
         </div>

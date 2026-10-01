@@ -36,7 +36,7 @@ export function ShelfRail() {
       <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
         The Shelf
       </h2>
-      <p className="mt-0.5 text-xs text-muted-foreground">Where bodies of work get bound.</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">Where your Moments get bound into Books.</p>
 
       {sessions.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">
