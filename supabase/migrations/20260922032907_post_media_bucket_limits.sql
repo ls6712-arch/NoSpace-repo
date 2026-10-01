@@ -1,11 +1,23 @@
--- BACKFILL (no-op): documents a migration recorded live as version
--- 20260922032907 / post_media_bucket_limits. The real, committed content for this migration
--- lives at supabase/migrations/20260922031500_post_media_bucket_limits.sql — that file was committed
--- under a cleaned-up/rounded timestamp that doesn't match the exact
--- version Postgres recorded at apply time. Per this repo's rule against
--- editing or renaming an already-run migration file, that file is left
--- as-is; this stub exists only so the local migrations directory has an
--- exact match for every version in supabase_migrations.schema_migrations,
--- which the "Supabase Preview" CI check verifies.
+-- The post-media bucket (post photos via ContentContext.tsx, and Add-a-
+-- thought photo replies via SocialContext.addThought) has never had a
+-- size or MIME restriction: storage.buckets.file_size_limit and
+-- allowed_mime_types were both null, so the upload policy in
+-- security-hardening.sql section 8 (folder ownership) was the only check
+-- at all. Anything uploadable by a browser <input type="file"> could be
+-- pushed to storage under an authenticated user's own folder, at any
+-- size, with no server-side limit.
 --
--- This file intentionally applies nothing.
+-- 25 MB covers a full-resolution phone photo and a short casual video
+-- clip (the two things this app's composer and MediaAttachPicker.tsx
+-- both use, via accept="image/*,video/*") with headroom; there is no
+-- client-side compression anywhere in this codebase, so the raw file is
+-- exactly what gets uploaded.
+update storage.buckets
+set
+  file_size_limit = 26214400, -- 25 MiB, in bytes
+  allowed_mime_types = array[
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'image/heic', 'image/heif',
+    'video/mp4', 'video/webm', 'video/quicktime'
+  ]
+where id = 'post-media';

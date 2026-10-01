@@ -1,11 +1,30 @@
--- BACKFILL (no-op): documents a migration recorded live as version
--- 20260926014728 / communication_phase4_shared_content_indexes. The real, committed content for this migration
--- lives at supabase/migrations/20261006000000_communication_phase4_shared_content_indexes.sql — that file was committed
--- under a cleaned-up/rounded timestamp that doesn't match the exact
--- version Postgres recorded at apply time. Per this repo's rule against
--- editing or renaming an already-run migration file, that file is left
--- as-is; this stub exists only so the local migrations directory has an
--- exact match for every version in supabase_migrations.schema_migrations,
--- which the "Supabase Preview" CI check verifies.
+-- Sushii: Communication Phase 4 follow-up — covering indexes for the two
+-- foreign keys the phase 4 migration (20261005000000) added to messages:
+-- shared_post_id -> posts(id) and shared_pursuit_id -> pursuits(id).
 --
--- This file intentionally applies nothing.
+--   Supabase → SQL Editor → New query → paste → Run
+--
+-- Postgres never auto-indexes a foreign-key column itself (only the side
+-- the FK points at gets one, from that table's own primary key) — a
+-- non-blocking note from the security/performance advisors run during
+-- Part A flagged both of these. Without them, two things stay slower than
+-- they need to be as messages grows:
+--   1. Deleting a Moment or a Pursuit that's been shared into any chat has
+--      to seq-scan messages to find every row whose shared_post_id /
+--      shared_pursuit_id points at it, to enforce the "on delete set
+--      null" behavior these columns already declare.
+--   2. Any future "everywhere this Moment/Pursuit was shared" query (there
+--      isn't one yet) would otherwise have no index to use.
+-- Neither is urgent today — messages is still small — but both are free to
+-- add now rather than as an emergency later. Partial indexes, since the
+-- large majority of rows are plain text/photo messages with both columns
+-- null; a partial index only stores the rows that are actually shares,
+-- keeping it small and cheap to maintain on every message insert.
+
+create index if not exists messages_shared_post_id_idx
+  on public.messages (shared_post_id)
+  where shared_post_id is not null;
+
+create index if not exists messages_shared_pursuit_id_idx
+  on public.messages (shared_pursuit_id)
+  where shared_pursuit_id is not null;

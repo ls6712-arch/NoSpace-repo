@@ -1,11 +1,25 @@
--- BACKFILL (no-op): documents a migration recorded live as version
--- 20260920120120 / close_post_media_listing. The real, committed content for this migration
--- lives at supabase/migrations/20260919232000_close_post_media_listing.sql — that file was committed
--- under a cleaned-up/rounded timestamp that doesn't match the exact
--- version Postgres recorded at apply time. Per this repo's rule against
--- editing or renaming an already-run migration file, that file is left
--- as-is; this stub exists only so the local migrations directory has an
--- exact match for every version in supabase_migrations.schema_migrations,
--- which the "Supabase Preview" CI check verifies.
+-- Storage hardening: replaces the unconditional SELECT policy on
+-- storage.objects for post-media with one scoped to each uploader's own
+-- folder, matching the write policies exactly. getPublicUrl() links keep
+-- working (that endpoint is gated by the bucket's own `public = true`
+-- flag, not by this policy), but listing/querying storage.objects for
+-- someone else's folder — or the whole bucket — stops returning anything.
+-- Draft only.
 --
--- This file intentionally applies nothing.
+-- Confirmed by grepping all of src/: the app never calls .list(),
+-- .download(), or createSignedUrl against post-media (every read goes
+-- through getPublicUrl(), in exactly three places: AvatarPicker.tsx,
+-- SocialContext.tsx, ContentContext.tsx), and never calls .remove() on it
+-- at all. AvatarPicker.tsx does call .upload() with upsert: true, which
+-- needs to check for an existing object at that path before deciding
+-- insert vs. replace — that check is scoped to
+-- `${user.id}/avatars/...`, i.e. always the caller's own folder, so the
+-- owner-scoped SELECT policy below covers it.
+drop policy if exists "post-media files are publicly readable" on storage.objects;
+
+create policy "you see your own post-media files"
+  on storage.objects for select
+  using (
+    bucket_id = 'post-media'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );

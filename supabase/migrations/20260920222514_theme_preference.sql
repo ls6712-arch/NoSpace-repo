@@ -1,11 +1,16 @@
--- BACKFILL (no-op): documents a migration recorded live as version
--- 20260920222514 / theme_preference. The real, committed content for this migration
--- lives at supabase/migrations/20260920005000_theme_preference.sql — that file was committed
--- under a cleaned-up/rounded timestamp that doesn't match the exact
--- version Postgres recorded at apply time. Per this repo's rule against
--- editing or renaming an already-run migration file, that file is left
--- as-is; this stub exists only so the local migrations directory has an
--- exact match for every version in supabase_migrations.schema_migrations,
--- which the "Supabase Preview" CI check verifies.
+-- Adds profiles.theme_preference, synced across devices once signed in.
+-- Repo-parity migration for sql/theme-preference.sql, which predates the
+-- supabase/migrations/ convention this session's work follows — same
+-- idempotent shape (IF NOT EXISTS / safe to re-run), just given a real
+-- migration file so `list_migrations` and this repo agree on it.
 --
--- This file intentionally applies nothing.
+-- Must apply BEFORE 20260920010000_profiles_is_admin_lock.sql: that
+-- migration's UPDATE column grant includes theme_preference, which would
+-- fail outright (GRANT UPDATE on a column that doesn't exist errors
+-- immediately) if this hasn't run first.
+--
+-- Applied 2026-09-20 as migration theme_preference (v20260920222514).
+
+alter table public.profiles
+  add column if not exists theme_preference text not null default 'system'
+    check (theme_preference in ('system', 'light', 'dark'));
