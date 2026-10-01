@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
+import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Compass } from "lucide-react";
 import { Post } from "../data/posts";
 import { Project, pursuitStatus } from "../lib/journal";
 import { activePursuits, collectPursuitMoments } from "../lib/pursuitTrail";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
-import { useScrollReveal } from "../lib/useScrollReveal";
+import { PURSUIT_SPRING } from "./pursuit/ui";
 import { PursuitItem } from "./PursuitItem";
 import { AllPursuitsDialog } from "./AllPursuitsDialog";
 import { track } from "../lib/analytics";
@@ -13,13 +14,14 @@ import { track } from "../lib/analytics";
 /**
  * Home tab, above the Moments feed: a card grid of every ACTIVE Pursuit
  * (same "active" definition PursuitsRail uses — see lib/pursuitTrail's
- * activePursuits), each a PursuitItem card, plus a "See all" tile that
- * opens the same grouped All-your-Pursuits dialog PursuitsRail's own "See
- * all" already uses (AllPursuitsDialog) — one dialog, two entry points,
- * rather than a second screen that duplicates the same In progress/
- * Resting/Completed grouping. Fades in, staggered per card, the first time
- * it scrolls into view (useScrollReveal, same mechanism Home.tsx's own
- * sections use) — switched off under prefers-reduced-motion in theme.css.
+ * activePursuits), each a PursuitItem card (its own latest photo Moment,
+ * a progress ring, title), plus a "See all" tile that opens the same
+ * grouped All-your-Pursuits dialog PursuitsRail's own "See all" already
+ * uses (AllPursuitsDialog) — one dialog, two entry points, rather than a
+ * second screen that duplicates the same In progress/Resting/Completed
+ * grouping. Each card fades/rises in on mount, staggered by index
+ * (motion/react — PursuitItem itself owns the per-card animation and its
+ * own useReducedMotion gate; this just hands it one).
  */
 export function PursuitsInProgressSection({
   pursuits,
@@ -32,7 +34,7 @@ export function PursuitsInProgressSection({
 }) {
   const { logs } = usePrivateLogs();
   const [seeAll, setSeeAll] = useState(false);
-  const revealRef = useScrollReveal<HTMLDivElement>();
+  const reduceMotion = useReducedMotion();
 
   const momentsFor = useMemo(() => {
     const cache = new Map<string, ReturnType<typeof collectPursuitMoments>>();
@@ -90,23 +92,26 @@ export function PursuitsInProgressSection({
         </div>
       ) : (
         <div
-          ref={revealRef}
-          className="ns-reveal-grid mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"
+          className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"
           role="list"
           aria-label="Pursuits in progress"
         >
           {active.map((p, i) => (
-            <PursuitItem key={p.id} pursuit={p} index={i} />
+            <PursuitItem key={p.id} pursuit={p} moments={momentsFor(p)} index={i} />
           ))}
-          <button
+          <motion.button
             type="button"
             onClick={openSeeAll}
-            style={{ transitionDelay: `${Math.min(active.length, 7) * 45}ms` }}
+            initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(active.length, 7) * 0.05 }}
+            whileHover={reduceMotion ? undefined : { y: -4 }}
+            whileTap={reduceMotion ? undefined : { scale: 0.97 }}
             className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ArrowRight className="size-4" />
             See all
-          </button>
+          </motion.button>
         </div>
       )}
 
