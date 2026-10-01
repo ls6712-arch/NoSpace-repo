@@ -14,7 +14,12 @@ These apply to every session working in this repo, not just Spaces-related work.
   - One transaction, one `do $$ ... $$` block, ending unconditionally in `raise exception 'RESULTS: %', array_to_string(results, ', ');` so results land in the error message and the whole thing rolls back regardless of outcome.
   - Each expected *failure* case is its own `begin ... exception ... end` sub-block with strict `sqlstate` handling (e.g. `when raise_exception then ... when others then` record as an error, never silently treated as a pass).
   - Every count/assertion is scoped to the fixture's own ids, never a bare count against a whole live table.
-- **Check the live schema with a query, not by trusting `docs/schema-baseline-*.sql` or similar snapshot files** — those may be stale relative to what's actually deployed. This session cannot run SQL against the live database itself: write the read-only query (e.g. against `information_schema` or `pg_catalog`) and give it to the user to run in the SQL editor, then wait for them to paste back the result before proceeding on anything that depends on it.
+- **Check the live schema with a query, not by trusting `docs/schema-baseline-*.sql` or similar snapshot files** — those may be stale relative to what's actually deployed.
+- **Running SQL on the live database (approved by the owner, Oct 1, 2026):** when the Supabase connector is available, a session may run these itself against the live project (`eyzokuhhbyidvmuqfmwm`, the one `src` points at):
+  - read-only queries (e.g. against `information_schema`, `pg_catalog`, `pg_get_functiondef`);
+  - verification scripts from `supabase/verification/`, which always end in `raise exception` + `rollback` — afterwards, confirm with a read-only query that no fixture rows were left behind.
+  Anything that changes the live database (migrations, data fixes) still goes through a merged PR, never run directly. Without the connector, give the query to the user to run and wait for the result.
+- **Verification scripts must not use `SELECT ... INTO` or `RETURNING ... INTO`.** The Supabase SQL editor's auto-RLS helper misreads them as `CREATE TABLE` and mangles the script. Assign with `:=` instead (e.g. `v_n := (select count(*) from ...)`).
 
 ## Notifications
 
