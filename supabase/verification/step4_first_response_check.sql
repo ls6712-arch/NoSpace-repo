@@ -10,6 +10,10 @@
 -- so auth.uid() (and so notifications.actor_id) is who it would be live.
 -- The admin queue is called as 'authenticated', the real caller role.
 --
+-- No SELECT ... INTO / RETURNING ... INTO anywhere: the Supabase SQL
+-- editor's auto-RLS helper misreads those as CREATE TABLE and mangles the
+-- script, so every value is assigned with := instead.
+--
 -- Fixed ids, a distinct block from every earlier script's own range:
 --   INVITER …7201, INVITEE …7202, OTHER (not invited) …7203,
 --   LOVER A …7204, LOVER B …7205, ADMIN …7206.
@@ -36,7 +40,7 @@ declare
   v_second_post bigint;
   v_other_post bigint;
 begin
-  select current_user into v_owner_role;
+  v_owner_role := current_user;
 
   -- ───────────────────────────────────────────────────────────────────────
   -- Fixture
@@ -73,12 +77,13 @@ begin
   -- ───────────────────────────────────────────────────────────────────────
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_invitee), true);
   insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility)
-  values (v_invitee, 'pottery', 'photo', 'https://example.test/s4-0.jpg', 'step4 private', 'just_me')
-  returning id into v_private_post;
+  values (v_invitee, 'pottery', 'photo', 'https://example.test/s4-0.jpg', 'step4 private', 'just_me');
+  v_private_post := (select max(public.posts.id) from public.posts
+    where public.posts.user_id = v_invitee and public.posts.caption = 'step4 private');
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.notifications
-    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment';
+  v_n := (select count(*) from public.notifications
+    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment');
   results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL rows=' || v_n end));
 
   -- ───────────────────────────────────────────────────────────────────────
@@ -86,18 +91,20 @@ begin
   --      body and link.
   -- ───────────────────────────────────────────────────────────────────────
   insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility)
-  values (v_invitee, 'pottery', 'photo', 'https://example.test/s4-1.jpg', 'step4 first', 'followers')
-  returning id into v_first_post;
+  values (v_invitee, 'pottery', 'photo', 'https://example.test/s4-1.jpg', 'step4 first', 'followers');
+  v_first_post := (select max(public.posts.id) from public.posts
+    where public.posts.user_id = v_invitee and public.posts.caption = 'step4 first');
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.notifications
-    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment';
+  v_n := (select count(*) from public.notifications
+    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment');
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL rows=' || v_n end));
 
   v_i := v_i + 1;
-  select public.notifications.body, public.notifications.href into v_body, v_href
-    from public.notifications
-    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment';
+  v_body := (select public.notifications.body from public.notifications
+    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment');
+  v_href := (select public.notifications.href from public.notifications
+    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment');
   results := array_append(results, format('%s %s', v_i,
     case when v_body = 'Step4 Invitee added their first moment.' and v_href = '/moment/' || v_first_post
          then 'PASS' else 'FAIL body=' || coalesce(v_body, 'null') || ' href=' || coalesce(v_href, 'null') end));
@@ -106,12 +113,13 @@ begin
   -- 4. A second moment doesn't notify again.
   -- ───────────────────────────────────────────────────────────────────────
   insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility)
-  values (v_invitee, 'pottery', 'photo', 'https://example.test/s4-2.jpg', 'step4 second', 'public')
-  returning id into v_second_post;
+  values (v_invitee, 'pottery', 'photo', 'https://example.test/s4-2.jpg', 'step4 second', 'public');
+  v_second_post := (select max(public.posts.id) from public.posts
+    where public.posts.user_id = v_invitee and public.posts.caption = 'step4 second');
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.notifications
-    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment';
+  v_n := (select count(*) from public.notifications
+    where public.notifications.user_id = v_inviter and public.notifications.kind = 'first_moment');
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL rows=' || v_n end));
 
   -- ───────────────────────────────────────────────────────────────────────
@@ -119,12 +127,13 @@ begin
   -- ───────────────────────────────────────────────────────────────────────
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_other), true);
   insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility)
-  values (v_other, 'running', 'photo', 'https://example.test/s4-3.jpg', 'step4 other', 'public')
-  returning id into v_other_post;
+  values (v_other, 'running', 'photo', 'https://example.test/s4-3.jpg', 'step4 other', 'public');
+  v_other_post := (select max(public.posts.id) from public.posts
+    where public.posts.user_id = v_other and public.posts.caption = 'step4 other');
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.notifications
-    where public.notifications.kind = 'first_moment' and public.notifications.actor_id = v_other;
+  v_n := (select count(*) from public.notifications
+    where public.notifications.kind = 'first_moment' and public.notifications.actor_id = v_other);
   results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL rows=' || v_n end));
 
   -- ───────────────────────────────────────────────────────────────────────
@@ -134,13 +143,13 @@ begin
   insert into public.reactions (post_id, user_id, type) values (v_first_post, v_lover_a, 'love');
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.notifications
-    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love';
+  v_n := (select count(*) from public.notifications
+    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love');
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL rows=' || v_n end));
 
   v_i := v_i + 1;
-  select public.notifications.body into v_body from public.notifications
-    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love';
+  v_body := (select public.notifications.body from public.notifications
+    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love');
   results := array_append(results, format('%s %s', v_i,
     case when v_body = 'Step4 Lover A loved your moment.' then 'PASS' else 'FAIL body=' || coalesce(v_body, 'null') end));
 
@@ -155,13 +164,15 @@ begin
   insert into public.reactions (post_id, user_id, type) values (v_first_post, v_lover_b, 'love');
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.notifications
-    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love';
+  v_n := (select count(*) from public.notifications
+    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love');
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL rows=' || v_n end));
 
   v_i := v_i + 1;
-  select public.notifications.body, public.notifications.read into v_body, v_read from public.notifications
-    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love';
+  v_body := (select public.notifications.body from public.notifications
+    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love');
+  v_read := (select public.notifications.read from public.notifications
+    where public.notifications.user_id = v_invitee and public.notifications.kind = 'love');
   results := array_append(results, format('%s %s', v_i,
     case when v_body = 'Step4 Lover B and 1 other loved your moment.' then 'PASS' else 'FAIL body=' || coalesce(v_body, 'null') end));
 
@@ -177,9 +188,9 @@ begin
   insert into public.reactions (post_id, user_id, type) values (v_second_post, v_invitee, 'love');
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.notifications
+  v_n := (select count(*) from public.notifications
     where public.notifications.user_id = v_invitee and public.notifications.kind = 'love'
-      and public.notifications.href = '/moment/' || v_second_post;
+      and public.notifications.href = '/moment/' || v_second_post);
   results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL rows=' || v_n end));
 
   -- ───────────────────────────────────────────────────────────────────────
@@ -190,13 +201,13 @@ begin
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_admin), true);
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.admin_first_moments_waiting() q
-    where q.post_id = v_first_post and q.inviter_name = 'Step4 Inviter';
+  v_n := (select count(*) from public.admin_first_moments_waiting() q
+    where q.post_id = v_first_post and q.inviter_name = 'Step4 Inviter');
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL rows=' || v_n end));
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.admin_first_moments_waiting() q
-    where q.post_id = v_first_post and q.admin_can_view = false;
+  v_n := (select count(*) from public.admin_first_moments_waiting() q
+    where q.post_id = v_first_post and q.admin_can_view = false);
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL rows=' || v_n end));
 
   -- ───────────────────────────────────────────────────────────────────────
@@ -207,7 +218,7 @@ begin
   perform set_config('role', 'authenticated', true);
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.admin_first_moments_waiting() q where q.post_id = v_first_post;
+  v_n := (select count(*) from public.admin_first_moments_waiting() q where q.post_id = v_first_post);
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL blank thought counted' end));
 
   perform set_config('role', v_owner_role, true);
@@ -215,7 +226,7 @@ begin
   perform set_config('role', 'authenticated', true);
 
   v_i := v_i + 1;
-  select count(*) into v_n from public.admin_first_moments_waiting() q where q.post_id = v_first_post;
+  v_n := (select count(*) from public.admin_first_moments_waiting() q where q.post_id = v_first_post);
   results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL still listed' end));
 
   -- ───────────────────────────────────────────────────────────────────────

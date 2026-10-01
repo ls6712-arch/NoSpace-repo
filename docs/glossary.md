@@ -66,6 +66,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Just started / In progress / Resting / Completed | Statuses. Button: "Mark as completed" |
 | One shared goal / Side by side | Shared Pursuit modes |
 | Pursuing together | People in a shared Pursuit |
+| Start a Pursuit with [Name]? | Shown after Count me in: opens a new Pursuit with them invited, side by side |
 
 ## Profile
 
