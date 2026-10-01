@@ -43,6 +43,8 @@ function rowToProject(row: any): Project {
     endingNote: row.ending_note ?? undefined,
     measure: row.measure ?? undefined,
     mode: row.mode ?? undefined,
+    // 20261014000000_step5a_pursuit_plans_and_let_go.sql.
+    letGoAt: row.let_go_at ? new Date(row.let_go_at).getTime() : undefined,
   };
 }
 
@@ -99,9 +101,56 @@ export async function mirrorPursuit(userId: string, project: Project) {
         ending_note: project.endingNote ?? null,
       })
       .eq("id", project.id);
+    // Step 5a's let_go_at in a write of its own, for the same reason as above.
+    await supabase
+      .from("pursuits")
+      .update({ let_go_at: project.letGoAt ? new Date(project.letGoAt).toISOString() : null })
+      .eq("id", project.id);
   } catch {
     // Best effort — the owner's own copy in the local journal is unaffected.
   }
+}
+
+/**
+ * Step 5a · best-effort mirror of this person's own plan for one Pursuit
+ * (next session, its note, times a week) into pursuit_plans, which only its
+ * owner can ever read. Works for a Pursuit they created or joined.
+ */
+export async function mirrorPursuitPlan(userId: string, project: Project) {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuit_plans").upsert(
+      {
+        pursuit_id: project.id,
+        user_id: userId,
+        next_session_at: project.nextSessionAt ? new Date(project.nextSessionAt).toISOString() : null,
+        next_session_note: project.nextSessionNote ?? null,
+        times_per_week: project.timesPerWeek ?? null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "pursuit_id,user_id" },
+    );
+  } catch {
+    // Best effort — the plan is still in this browser's journal.
+  }
+}
+
+/** Step 5a · this person's own plans, keyed by Pursuit id. */
+async function fetchMyPlans(userId: string): Promise<Map<string, Partial<Project>>> {
+  const plans = new Map<string, Partial<Project>>();
+  if (!supabase) return plans;
+  const { data } = await supabase
+    .from("pursuit_plans")
+    .select("pursuit_id, next_session_at, next_session_note, times_per_week")
+    .eq("user_id", userId);
+  for (const r of (data as any[]) ?? []) {
+    plans.set(r.pursuit_id, {
+      nextSessionAt: r.next_session_at ? new Date(r.next_session_at).getTime() : undefined,
+      nextSessionNote: r.next_session_note ?? undefined,
+      timesPerWeek: r.times_per_week ?? undefined,
+    });
+  }
+  return plans;
 }
 
 export interface SharedPursuit {
@@ -116,6 +165,7 @@ export interface SharedPursuit {
   finishedAt?: number;
   goal?: Goal;
   pausedAt?: number;
+  letGoAt?: number;
   endingNote?: string;
 }
 
@@ -160,6 +210,7 @@ export async function fetchPursuitById(id: string): Promise<SharedPursuit | null
       finishedAt: data.finished_at ? new Date(data.finished_at).getTime() : undefined,
       goal,
       pausedAt: data.paused_at ? new Date(data.paused_at).getTime() : undefined,
+      letGoAt: data.let_go_at ? new Date(data.let_go_at).getTime() : undefined,
       endingNote: data.ending_note ?? undefined,
     };
   } catch {
@@ -186,7 +237,11 @@ export async function restoreOwnPursuits(userId: string) {
       .eq("user_id", userId)
       .order("started_at", { ascending: false });
     if (error || !data) return;
-    mergeRemoteProjects((data as any[]).map(rowToProject));
+    // Step 5a: the person's own plan rides along with each Pursuit it
+    // belongs to. A failed read just leaves plans to be set again.
+    const plans = await fetchMyPlans(userId).catch(() => new Map<string, Partial<Project>>());
+    const withPlan = (p: Project): Project => ({ ...p, ...(plans.get(p.id) ?? {}) });
+    mergeRemoteProjects((data as any[]).map((row) => withPlan(rowToProject(row))));
 
     // Pursuits other people created that this person joined. Without this,
     // signing out and back in dropped every joined Pursuit from the list.
@@ -200,7 +255,7 @@ export async function restoreOwnPursuits(userId: string) {
     if (ids.length) {
       const { data: joined } = await supabase.from("pursuits").select("*").in("id", ids);
       mergeRemoteProjects(
-        ((joined as any[]) ?? []).map((row) => ({ ...rowToProject(row), ownerId: row.user_id, role: "member" as const })),
+        ((joined as any[]) ?? []).map((row) => ({ ...withPlan(rowToProject(row)), ownerId: row.user_id, role: "member" as const })),
       );
     }
   } catch {

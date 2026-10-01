@@ -174,6 +174,18 @@ export interface Project {
   /** Set on a Pursuit someone else created and invited you into. */
   ownerId?: string;
   role?: "owner" | "member";
+  /** Step 5a · "Let go": stopping without finishing. A fourth state beside
+   * active, Resting and Completed. Cleared the same way Resting is — by
+   * picking it back up or logging a Moment against it. */
+  letGoAt?: number;
+  /** Step 5a · this person's own plan for the Pursuit. Mirrored to the
+   * owner-only pursuit_plans table, never to pursuits (which is public when
+   * shared). In a shared Pursuit each person keeps their own. */
+  nextSessionAt?: number;
+  /** A short note for the next session, at most 140 characters. */
+  nextSessionNote?: string;
+  /** "Times a week" — what "[N] of [M] this week" counts toward. */
+  timesPerWeek?: number;
 }
 
 /** The check-in interval used when the maker hasn't picked one. Two weeks:
@@ -190,10 +202,11 @@ export const CHECK_IN_OPTIONS: { days: number; label: string }[] = [
 
 /** A Pursuit's state, derived — never stored as its own field, so it can't
  * disagree with finishedAt/pausedAt. */
-export type PursuitStatus = "active" | "resting" | "complete";
+export type PursuitStatus = "active" | "resting" | "complete" | "let_go";
 
-export function pursuitStatus(p: Pick<Project, "finishedAt" | "pausedAt">): PursuitStatus {
+export function pursuitStatus(p: Pick<Project, "finishedAt" | "pausedAt" | "letGoAt">): PursuitStatus {
   if (p.finishedAt) return "complete";
+  if (p.letGoAt) return "let_go";
   if (p.pausedAt) return "resting";
   return "active";
 }
@@ -479,6 +492,7 @@ export function finishProject(projectId: string, endingNote?: string): Project |
   return patchProject(projectId, () => ({
     finishedAt: Date.now(),
     pausedAt: undefined,
+    letGoAt: undefined,
     ...(endingNote?.trim() ? { endingNote: endingNote.trim() } : {}),
   }));
 }
@@ -493,6 +507,7 @@ export function pauseProject(projectId: string): Project | undefined {
   return patchProject(projectId, () => ({
     pausedAt: Date.now(),
     finishedAt: undefined,
+    letGoAt: undefined,
     checkInAnsweredAt: Date.now(),
     checkInsIgnored: 0,
   }));
@@ -505,6 +520,7 @@ export function markActivity(projectId: string): Project | undefined {
   return patchProject(projectId, () => ({
     pausedAt: undefined,
     finishedAt: undefined,
+    letGoAt: undefined,
     checkInAnsweredAt: Date.now(),
     checkInsIgnored: 0,
   }));
@@ -515,9 +531,60 @@ export function resumeProject(projectId: string): Project | undefined {
   return patchProject(projectId, () => ({
     pausedAt: undefined,
     finishedAt: undefined,
+    letGoAt: undefined,
     checkInAnsweredAt: Date.now(),
     checkInsIgnored: 0,
   }));
+}
+
+/** Step 5a · "Let go." Stops the Pursuit without finishing it — no
+ * warning, no penalty, and it can be picked back up like a resting one. */
+export function letGoProject(projectId: string): Project | undefined {
+  return patchProject(projectId, () => ({
+    letGoAt: Date.now(),
+    pausedAt: undefined,
+    finishedAt: undefined,
+    checkInAnsweredAt: Date.now(),
+    checkInsIgnored: 0,
+  }));
+}
+
+/** Step 5a · this person's own plan: next session time and note, and times
+ * a week. Pass undefined to clear a field. */
+export function setPursuitPlan(
+  projectId: string,
+  plan: { nextSessionAt?: number; nextSessionNote?: string; timesPerWeek?: number },
+): Project | undefined {
+  return patchProject(projectId, () => ({
+    nextSessionAt: plan.nextSessionAt,
+    nextSessionNote: plan.nextSessionNote?.trim().slice(0, 140) || undefined,
+    timesPerWeek: plan.timesPerWeek && plan.timesPerWeek >= 1 ? Math.min(14, Math.round(plan.timesPerWeek)) : undefined,
+  }));
+}
+
+/** Monday 00:00 local time of the week `now` falls in. */
+export function startOfWeek(now = Date.now()): number {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  const daysSinceMonday = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - daysSinceMonday);
+  return d.getTime();
+}
+
+/**
+ * Step 5a · sessions this week, for "[N] of [M] this week": the number of
+ * different days (Monday to Sunday, local time) with at least one Moment on
+ * this Pursuit. Two Moments on one day are one session.
+ */
+export function sessionsThisWeek(momentTimes: number[], now = Date.now()): number {
+  const from = startOfWeek(now);
+  const days = new Set<string>();
+  for (const t of momentTimes) {
+    if (t < from || t > now) continue;
+    const d = new Date(t);
+    days.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+  }
+  return days.size;
 }
 
 /** The maker's own check-in cadence, in days (0 = never). */
@@ -578,6 +645,10 @@ export function mergeRemoteProjects(remote: Project[]) {
     if (p.endingNote === undefined && r.endingNote !== undefined) patch.endingNote = r.endingNote;
     if (p.measure === undefined && r.measure !== undefined) patch.measure = r.measure;
     if (p.mode === undefined && r.mode !== undefined) patch.mode = r.mode;
+    if (p.letGoAt === undefined && r.letGoAt !== undefined && !p.finishedAt && !p.pausedAt) patch.letGoAt = r.letGoAt;
+    if (p.nextSessionAt === undefined && r.nextSessionAt !== undefined) patch.nextSessionAt = r.nextSessionAt;
+    if (p.nextSessionNote === undefined && r.nextSessionNote !== undefined) patch.nextSessionNote = r.nextSessionNote;
+    if (p.timesPerWeek === undefined && r.timesPerWeek !== undefined) patch.timesPerWeek = r.timesPerWeek;
     if (Object.keys(patch).length === 0) return p;
     filled = true;
     return { ...p, ...patch };

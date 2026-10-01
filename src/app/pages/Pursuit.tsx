@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
-import { ArrowLeft, ArrowRight, Check, Lock, Moon, PenLine, Play, Plus, Send, Share2, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Lock, Moon, PenLine, Play, Plus, Send, Share2, Target, Wind } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { SendToChatDialog } from "../components/SendToChatDialog";
@@ -15,6 +15,7 @@ import {
   deriveProjects,
   goalDeadlineText,
   markGoalReached,
+  letGoProject,
   pauseProject,
   pursuitStatus,
   resumeProject,
@@ -40,6 +41,7 @@ import { GoalProgressTap } from "../components/GoalProgressTap";
 import { QuickLog } from "../components/QuickLog";
 import { EndingDialog } from "../components/EndingDialog";
 import { PursuitProgressPanel } from "../components/pursuit/PursuitProgressPanel";
+import { NextSessionCard } from "../components/pursuit/NextSessionCard";
 import { ProgressBar } from "../components/pursuit/ui";
 import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
@@ -76,6 +78,7 @@ interface PursuitView {
   startedAt: number;
   finishedAt?: number;
   pausedAt?: number;
+  letGoAt?: number;
   endingNote?: string;
   goal?: Goal;
   shared?: boolean;
@@ -173,6 +176,7 @@ export function Pursuit() {
         startedAt: ownProject.startedAt,
         finishedAt: ownProject.finishedAt,
         pausedAt: ownProject.pausedAt,
+        letGoAt: ownProject.letGoAt,
         endingNote: ownProject.endingNote,
         goal: ownProject.goal,
         shared: ownProject.shared,
@@ -201,6 +205,7 @@ export function Pursuit() {
         startedAt: remote.data.startedAt,
         finishedAt: remote.data.finishedAt,
         pausedAt: remote.data.pausedAt,
+        letGoAt: remote.data.letGoAt,
         endingNote: remote.data.endingNote,
         goal: remote.data.goal,
         shared: true,
@@ -318,7 +323,15 @@ export function Pursuit() {
       ? `Finished ${timeAgo(view.finishedAt!)}`
       : status === "resting"
         ? `Resting since ${new Date(view.pausedAt!).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
-        : startedLabel(view.startedAt);
+        : status === "let_go"
+          ? `Let go ${new Date(view.letGoAt!).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+          : startedLabel(view.startedAt);
+
+  // Step 5a: "[N] of [M] this week" counts only this person's own Moments —
+  // in a shared Pursuit, other people's sessions aren't yours.
+  const myMomentTimes = moments
+    .filter((m) => m.log || (m.post && m.post.userId === user?.id))
+    .map((m) => m.createdAt);
 
   // The goal as one plain sentence — "4 of 10 pieces · aiming for Nov 15".
   // No bar and no percentage, anywhere.
@@ -400,6 +413,23 @@ export function Pursuit() {
               <Play className="size-3.5" /> Pick it back up
             </Button>
           </div>
+        )}
+
+        {status === "let_go" && owner && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
+            <p className="flex items-center gap-2 text-sm">
+              <Wind className="size-4 shrink-0 text-muted-foreground" />
+              Let go. Nothing's lost.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
+              <Play className="size-3.5" /> Pick it back up
+            </Button>
+          </div>
+        )}
+
+        {/* Step 5a: an active Pursuit you're part of opens with your next step. */}
+        {owner && ownProject && status === "active" && (
+          <NextSessionCard project={ownProject} myMomentTimes={myMomentTimes} />
         )}
 
         {/* ── Progress header ─────────────────────────────────────────── */}
@@ -515,6 +545,12 @@ export function Pursuit() {
                 <Button variant="outline" size="sm" onClick={() => mirror(pauseProject(view.id))}>
                   <Moon className="size-3.5" />
                   Rest it
+                </Button>
+              )}
+              {isCreator && (status === "active" || status === "resting") && (
+                <Button variant="outline" size="sm" onClick={() => mirror(letGoProject(view.id))}>
+                  <Wind className="size-3.5" />
+                  Let go
                 </Button>
               )}
               {!isCreator ? null : status !== "complete" ? (
