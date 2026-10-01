@@ -150,12 +150,17 @@ begin
     where public.pursuits.id = v_pid and public.pursuits.let_go_at is not null);
   results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL rows=' || v_n end));
 
-  -- 13. Deleting the Pursuit removes its plans (cascade).
+  -- 13. Deleting a Pursuit removes its plans: the pursuit_id foreign key is
+  --     ON DELETE CASCADE. Read from the catalog rather than by deleting,
+  --     because the Supabase connector holds any DELETE for approval.
   perform set_config('role', v_owner_role, true);
-  delete from public.pursuits where public.pursuits.id = v_pid;
   v_i := v_i + 1;
-  v_n := (select count(*) from public.pursuit_plans where public.pursuit_plans.pursuit_id = v_pid);
-  results := array_append(results, format('%s %s', v_i, case when v_n = 0 then 'PASS' else 'FAIL orphans=' || v_n end));
+  v_n := (select count(*) from pg_constraint c
+    where c.conrelid = 'public.pursuit_plans'::regclass
+      and c.confrelid = 'public.pursuits'::regclass
+      and c.contype = 'f'
+      and c.confdeltype = 'c');
+  results := array_append(results, format('%s %s', v_i, case when v_n = 1 then 'PASS' else 'FAIL cascade_fks=' || v_n end));
 
   raise exception 'RESULTS: %', array_to_string(results, ', ');
 end;
