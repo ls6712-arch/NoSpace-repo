@@ -38,6 +38,85 @@ const AUDIENCE_LABEL: Record<Audience, string> = {
 
 const NO_PURSUIT = "__none__";
 
+export type SavedMoment = { post: Post | null; privateLogId: number | null };
+
+/**
+ * The "Logged · Undo" confirmation shown after a Moment saves. Split out of
+ * QuickLog so the global "+" sheet can close itself the instant a Moment is
+ * logged and show this as a small floating card instead — keeping the sheet
+ * (and its dimmed, blurred overlay) open for the whole undo window made the
+ * app look frozen behind a nearly-empty modal.
+ */
+export function LoggedNotice({
+  saved,
+  offerPursuitName: initialOffer,
+  onDone,
+}: {
+  saved: SavedMoment;
+  offerPursuitName: boolean;
+  onDone: () => void;
+}) {
+  const { deletePost } = useContent();
+  const { remove: removePrivateLog } = usePrivateLogs();
+  const [offerPursuitName, setOfferPursuitName] = useState(initialOffer);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [undoing, setUndoing] = useState(false);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
+  // Auto-dismiss after the undo window — but never while the person is
+  // mid-way through the follow-up (naming a Pursuit, adding details), since
+  // dismissing would unmount what they're typing into.
+  const busy = detailsOpen || offerPursuitName;
+  useEffect(() => {
+    if (busy) return;
+    const t = setTimeout(() => onDoneRef.current(), 6000);
+    return () => clearTimeout(t);
+  }, [busy]);
+
+  const undo = async () => {
+    if (undoing) return;
+    setUndoing(true);
+    try {
+      if (saved.post) await deletePost(saved.post.id);
+      else if (saved.privateLogId) await removePrivateLog(saved.privateLogId);
+    } finally {
+      onDoneRef.current();
+    }
+  };
+
+  return (
+    <div className="space-y-2.5">
+      <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-card px-3.5 text-sm">
+        <span>Logged</span>
+        <button
+          type="button"
+          onClick={undo}
+          disabled={undoing}
+          className="inline-flex items-center gap-1 text-[var(--coral-text,var(--accent))] transition-colors hover:opacity-80 disabled:opacity-50"
+        >
+          <Undo2 className="size-3.5" /> Undo
+        </button>
+      </div>
+      {saved.post && offerPursuitName && (
+        <IsThisPartOfSomething post={saved.post} onDone={() => setOfferPursuitName(false)} />
+      )}
+      {saved.post && !offerPursuitName && (
+        <button
+          type="button"
+          onClick={() => setDetailsOpen(true)}
+          className="text-xs text-accent hover:underline"
+        >
+          Add details (Corner, location, reflection)
+        </button>
+      )}
+      {saved.post && (
+        <AddDetailsSheet post={saved.post} open={detailsOpen} onOpenChange={setDetailsOpen} />
+      )}
+    </div>
+  );
+}
+
 /**
  * Step 3's two-tap Moment: photo or line, Log — everything else (Pursuit,
  * Corner, audience) is a visible default chip, one tap to change, never a
@@ -53,19 +132,23 @@ const NO_PURSUIT = "__none__";
 export function QuickLog({
   pursuit,
   onDone,
+  onSaved,
   autoFocus = true,
   placeholder = "What changed?",
   compact = false,
 }: {
   pursuit?: Project;
   onDone?: () => void;
+  /** When given, the saved Moment is handed off here (so the caller can close
+   *  and show LoggedNotice itself) instead of being confirmed in place. */
+  onSaved?: (saved: SavedMoment, offerPursuitName: boolean) => void;
   autoFocus?: boolean;
   placeholder?: string;
   compact?: boolean;
 }) {
   const { user, profile } = useAuth();
-  const { addPost, deletePost } = useContent();
-  const { add: addPrivateLog, remove: removePrivateLog } = usePrivateLogs();
+  const { addPost } = useContent();
+  const { add: addPrivateLog } = usePrivateLogs();
   const { resolveInterest } = useCorners();
   const rewards = useRewards();
   const { defaultVisibility } = useSettings();
@@ -91,12 +174,10 @@ export function QuickLog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingEveryone, setConfirmingEveryone] = useState(false);
-  const [saved, setSaved] = useState<{ post: Post | null; privateLogId: number | null } | null>(null);
+  const [saved, setSaved] = useState<SavedMoment | null>(null);
   const [offerPursuitName, setOfferPursuitName] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const locked = !!pursuit;
   const effectivePursuit = pursuit ?? journal.projects.find((p) => p.id === selectedPursuitId);
@@ -116,10 +197,6 @@ export function QuickLog({
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
 
-  useEffect(() => () => {
-    if (undoTimer.current) clearTimeout(undoTimer.current);
-  }, []);
-
   const canPost = !saving && (line.trim().length > 0 || !!file);
 
   const pick = async (f: File | undefined) => {
@@ -132,28 +209,20 @@ export function QuickLog({
     }
   };
 
-  const finishSave = (result: { post: Post | null; privateLogId: number | null }) => {
+  const finishSave = (result: SavedMoment) => {
     setLine("");
     setFile(null);
-    setSaved(result);
     // A Moment not already in a Pursuit gets the one-per-session naming
     // offer; a private log was never eligible for a Pursuit hand-off to
     // begin with here (see IsThisPartOfSomething's own Post-only shape).
-    setOfferPursuitName(
-      !!result.post && !effectivePursuit && !hasOfferedIsThisPartOfSomethingThisSession(),
-    );
-    undoTimer.current = setTimeout(() => {
-      setSaved(null);
-      onDone?.();
-    }, 6000);
-  };
-
-  const undo = async () => {
-    if (undoTimer.current) clearTimeout(undoTimer.current);
-    if (saved?.post) await deletePost(saved.post.id);
-    else if (saved?.privateLogId) await removePrivateLog(saved.privateLogId);
-    setSaved(null);
-    onDone?.();
+    const offer =
+      !!result.post && !effectivePursuit && !hasOfferedIsThisPartOfSomethingThisSession();
+    if (onSaved) {
+      onSaved(result, offer);
+      return;
+    }
+    setOfferPursuitName(offer);
+    setSaved(result);
   };
 
   const save = async () => {
@@ -249,36 +318,14 @@ export function QuickLog({
 
   if (saved) {
     return (
-      <div className="space-y-2.5">
-        <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-card px-3.5 text-sm">
-          <span>Logged</span>
-          <button
-            type="button"
-            onClick={undo}
-            className="inline-flex items-center gap-1 text-[var(--coral-text,var(--accent))] transition-colors hover:opacity-80"
-          >
-            <Undo2 className="size-3.5" /> Undo
-          </button>
-        </div>
-        {saved.post && offerPursuitName && (
-          <IsThisPartOfSomething
-            post={saved.post}
-            onDone={() => setOfferPursuitName(false)}
-          />
-        )}
-        {saved.post && !offerPursuitName && (
-          <button
-            type="button"
-            onClick={() => setDetailsOpen(true)}
-            className="text-xs text-accent hover:underline"
-          >
-            Add details (Corner, location, reflection)
-          </button>
-        )}
-        {saved.post && (
-          <AddDetailsSheet post={saved.post} open={detailsOpen} onOpenChange={setDetailsOpen} />
-        )}
-      </div>
+      <LoggedNotice
+        saved={saved}
+        offerPursuitName={offerPursuitName}
+        onDone={() => {
+          setSaved(null);
+          onDone?.();
+        }}
+      />
     );
   }
 
