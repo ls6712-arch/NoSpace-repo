@@ -148,9 +148,21 @@ drop function if exists public.rl_circle_invites();
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 3. Policies — every one left that reads or writes circles/circle_members/
---    circle_invites. The posts policy is handled in section 1 above, not
---    here.
+--    circle_invites, plus the second live SELECT policy on posts.
+--
+--    CORRECTION (live-schema audit, 2026-10-01): this file's header claimed
+--    "posts are readable by their audience" (section 1) is "the ONE live
+--    SELECT policy on posts" and that a separate "circle threads follow the
+--    circle's visibility" policy had already been dropped by a later
+--    migration (20260919063618/20260920115108). Confirmed via a live
+--    `pg_policies` query that's wrong — that second policy is still live,
+--    still references public.owns_circle()/public.is_circle_member(), and
+--    is what caused this migration to fail with "cannot drop function
+--    owns_circle(bigint,uuid) because other objects depend on it" at the
+--    function-drop section below. Dropping it here, before section 4.
 -- ─────────────────────────────────────────────────────────────────────────
+drop policy if exists "circle threads follow the circle's visibility" on public.posts;
+
 drop policy if exists "you see the roster of a circle you're in" on public.circle_members;
 drop policy if exists "you can join a circle yourself" on public.circle_members;
 drop policy if exists "you can leave a circle" on public.circle_members;
