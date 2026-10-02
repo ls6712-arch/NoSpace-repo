@@ -8,6 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
+//   node scripts/visual/run.ts --profiles [--chromium-standin] [--only SE,iPad]  the six device profiles (WebKit for iOS, Chromium for the rest) x light/dark: layout + contrast + touch
 //   node scripts/visual/run.ts --contrast             WCAG contrast of every text/background pair (4.5:1, 3:1 large), light + dark; --strict fails on any
 //   node scripts/visual/run.ts --touch                 touch-target audit: 44x44px hit areas, and overlaps
 //
@@ -18,7 +19,7 @@ import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium, type Browser, type Page } from "playwright-core";
+import { chromium, webkit, type Browser, type BrowserType, type Page } from "playwright-core";
 import { buildFixtures } from "./fixtures.ts";
 import { cacheFonts } from "./fonts.ts";
 import { detectInPage, diffDetections, INFLATE_CSS, type Detection } from "./detect.ts";
@@ -32,6 +33,16 @@ const ROOT = path.resolve(HERE, "../..");
 const TYPES = path.join(HERE, "database.types.ts");
 const MIME: Record<string, string> = { ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".html": "text/html" };
 const HEIGHTS: Record<number, number> = { 375: 812, 768: 1024, 1440: 900 };
+// --profiles: the device sizes the design has to hold on. iOS devices run in WebKit, the rest in Chromium.
+// Viewports are CSS pixels, portrait; the two iPads are 768 (iPad / mini) and 834 (iPad Pro 11").
+const PROFILES = [
+  { name: "iPhone SE", w: 375, h: 667, engine: "webkit", touch: true },
+  { name: "iPhone 15", w: 393, h: 852, engine: "webkit", touch: true },
+  { name: "Android (Pixel-class)", w: 412, h: 915, engine: "chromium", touch: true },
+  { name: "iPad", w: 768, h: 1024, engine: "webkit", touch: true },
+  { name: "iPad Pro 11in", w: 834, h: 1194, engine: "webkit", touch: true },
+  { name: "Desktop", w: 1440, h: 900, engine: "chromium", touch: false },
+] as const;
 
 const args = process.argv.slice(2);
 const flag = (n: string) => args.includes(`--${n}`);
@@ -91,17 +102,18 @@ async function runPass(browser: Browser, o: RunOpts): Promise<{ results: Results
 
 async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, TouchResult>> {
   const srv = await serve(o.dist, o.fontsDir); const out = new Map<string, TouchResult>();
+  const W = o.widths[0] ?? 375, H0 = HEIGHTS[W] ?? 812;
   for (const theme of o.themes) {
-    const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
+    const ctx = await browser.newContext({ viewport: { width: W, height: H0 }, hasTouch: true, isMobile: true, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
     await installSupabaseMock(ctx, buildFixtures(), TYPES);
     await ctx.addInitScript(([session, t]) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", t as string); } catch { /* storage blocked */ } }, [seededSession(), theme] as const);
     const page = await ctx.newPage();
     for (const s of o.screens) {
       try {
-        await page.setViewportSize({ width: 375, height: 812 });
+        await page.setViewportSize({ width: W, height: H0 });
         await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page);
-        const h = await page.evaluate(() => Math.min(document.documentElement.scrollHeight, 20000)); await page.setViewportSize({ width: 375, height: Math.max(812, h) }); await page.waitForTimeout(300);
-        out.set(`${theme}/375/${s.name}`, await page.evaluate(touchAuditInPage, 44));
+        const h = await page.evaluate(() => Math.min(document.documentElement.scrollHeight, 20000)); await page.setViewportSize({ width: W, height: Math.max(H0, h) }); await page.waitForTimeout(300);
+        out.set(`${theme}/${W}/${s.name}`, await page.evaluate(touchAuditInPage, 44));
       } catch (e) { console.log(`note: touch ${theme}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
     }
     await ctx.close();
@@ -145,6 +157,36 @@ async function main() {
     console.log(`selftest: normal ${total(normal.results)} flags / ${hs(normal.results)}px hscroll → +45% type ${total(inflated.results)} flags / ${hs(inflated.results)}px hscroll`);
     console.log(ok ? "selftest PASS: the detector sees inflated type" : "selftest FAIL: the detector did not react to +45% type");
     await browser.close(); process.exit(ok ? 0 : 1);
+  }
+
+  if (flag("profiles")) {
+    // Every device profile, every theme: layout detection, contrast, and (touch devices) the 44px audit.
+    // An engine that isn't installed is reported as SKIPPED, never silently run in another engine.
+    const launchers: Record<string, BrowserType> = { chromium, webkit };
+    const rows: string[] = []; let bad = 0, skipped = 0, standIn = false;
+    const want = opt("only");
+    for (const p of PROFILES) {
+      if (want && !want.split(",").some((n) => p.name.toLowerCase().includes(n.trim().toLowerCase()))) continue;
+      let b: Browser; let label: string = p.engine;
+      try { b = await launchers[p.engine].launch(p.engine === "chromium" ? { executablePath: exe || undefined } : {}); }
+      catch (e) {
+        if (flag("chromium-standin") && p.engine === "webkit") { b = await chromium.launch({ executablePath: exe || undefined }); label = "chromium*"; standIn = true; }
+        else { skipped++; rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${p.engine.padEnd(8)} SKIPPED: ${p.engine} not installed here (${String(e).split("\n")[0].slice(0, 70)})`); continue; }
+      }
+      HEIGHTS[p.w] = p.h;
+      const o: RunOpts = { ...base, widths: [p.w] };
+      const lay = await runPass(b, o); const con = await contrastPass(b, o); const tch = p.touch ? await touchPass(b, o) : undefined;
+      const flags = total(lay.results), hs = [...lay.results].filter(([, d]) => d.hscroll > 0).length;
+      const cf = new Set([...con].flatMap(([k, r]) => r.failures.map((f) => `${k.split("/")[0]}|${f.sel}|${f.text}|${f.fg}|${f.bg}`))).size;
+      const small = tch ? new Set([...tch].flatMap(([, r]) => r.failing.filter((f) => f.reason === "small").map((f) => `${f.sel} ${f.text}`))).size : -1;
+      const ov = tch ? new Set([...tch].flatMap(([, r]) => r.overlaps.map((x) => `${x.a}|${x.b}`))).size : -1;
+      if (hs > 0 || cf > 0 || small > 0) bad++;
+      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}`);
+      await b.close();
+    }
+    console.log("\ndevice profiles (light + dark each):"); for (const r of rows) console.log("  " + r);
+    if (standIn) console.log("  * chromium stand-in at the iOS viewport sizes: layout only; NOT a WebKit result (run on a Mac/CI with webkit installed)");
+    await browser.close(); process.exit(flag("strict") && (bad > 0 || skipped > 0) ? 1 : 0);
   }
 
   if (flag("contrast")) {
