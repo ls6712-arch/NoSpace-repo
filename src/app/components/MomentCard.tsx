@@ -80,11 +80,13 @@ export const MOMENT_MEDIA = "aspect-square w-full rounded-card";
  * so no page drifts out of step again. */
 export const MOMENT_GRID = "grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-3";
 
-/** Caption set into a text-only Moment's colored tile. Scales with the
- * tile rather than a breakpoint, and clamps so a long note never changes
- * the tile's shape. */
+/** Caption set into a text-only Moment's colored tile. Clamps so a long
+ * note never changes the tile's shape. It was fluid (15-26px by tile width);
+ * on the type scale it is text-lead, not text-title: at 22px a typical
+ * 86-character note shows only 50-56% of its text on the smallest tiles
+ * (138-166px, measured at 320-375px wide) versus 56-71% at 18px. */
 export const TILE_CAPTION =
-  "line-clamp-5 text-center italic text-title leading-[1.2]";
+  "line-clamp-5 text-center italic text-lead leading-[1.2]";
 
 /** Caption under every card — same size and always two lines tall, so
  * cards in a row line up whether the caption is one word or a paragraph. */
