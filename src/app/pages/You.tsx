@@ -224,15 +224,15 @@ export function You() {
               </div>
             </div>
 
-            <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-              <div className="flex items-center gap-2">
+            <div className="flex shrink-0 flex-col items-end text-right">
+              <div className="flex items-center">
                 <Link
                   to="/create"
-                  className="text-caption font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
+                  className="flex min-h-11 items-center text-caption font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
                 >
                   Log a Moment
                 </Link>
-                <Link to="/settings" title="Settings" aria-label="Settings">
+                <Link to="/settings" title="Settings" aria-label="Settings" className="flex size-11 items-center justify-center">
                   <SettingsIcon className="size-3.5 text-muted-foreground transition-colors hover:text-foreground" />
                 </Link>
               </div>
@@ -240,14 +240,14 @@ export function You() {
                 <button
                   type="button"
                   onClick={() => setShareOpen(true)}
-                  className="text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="min-h-11 text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Share
                 </button>
                 <span className="text-muted-foreground/50" aria-hidden="true">·</span>
                 <Link
                   to="/studio"
-                  className="text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex min-h-11 items-center text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Public Scrapbook ↗
                 </Link>

@@ -122,7 +122,7 @@ function AccountMenuPopover() {
         aria-label="Account menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 min-w-6 items-center justify-center rounded-control text-muted-foreground transition-colors hover:text-foreground"
+        className="flex min-h-11 min-w-11 items-center justify-center rounded-control text-muted-foreground transition-colors hover:text-foreground"
       >
         <ChevronDown className="size-3.5" aria-hidden="true" />
       </button>
@@ -203,8 +203,8 @@ function AccountMenu() {
   const name = profile?.display_name?.trim();
 
   return (
-    <div className="flex items-center gap-0.5">
-      <Link to="/you" aria-label="You: your profile and saved ideas" title="You">
+    <div className="flex items-center">
+      <Link to="/you" aria-label="You: your profile and saved ideas" title="You" className="flex size-11 items-center justify-center">
         <Avatar className="size-8">
           {profile?.avatar_url && (
             <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />

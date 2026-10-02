@@ -385,7 +385,7 @@ export function QuickLog({
             aria-label={placeholder}
             className="w-full bg-transparent py-1 text-body text-foreground outline-none placeholder:text-muted-foreground"
           />
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-6">
             {!locked && (
               <Select
                 value={selectedPursuitId || NO_PURSUIT}
@@ -470,11 +470,11 @@ export function QuickLog({
       </div>
       {error && <p className="mt-2 text-caption text-destructive">{error}</p>}
       {!compact && (
-        <p className="mt-2 text-caption text-muted-foreground">
+        <p className="mt-3 flex flex-wrap items-center gap-x-1 text-caption text-muted-foreground">
           Something bigger?{" "}
           <Link
             to={effectivePursuit ? `/create?pursuit=${effectivePursuit.id}` : "/create"}
-            className="text-accent hover:underline"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
           >
             Open the full form
           </Link>

@@ -309,9 +309,9 @@ export function AddMoment() {
               ))}
             </div>
             {error && <p className="mt-2 text-caption text-destructive">{error}</p>}
-            <p className="mt-4 text-center text-caption text-muted-foreground">
+            <p className="mt-4 flex flex-wrap items-center justify-center gap-x-1 text-center text-caption text-muted-foreground">
               Something bigger?{" "}
-              <Link to={`/create?pursuit=${project.id}`} className="text-accent hover:underline">
+              <Link to={`/create?pursuit=${project.id}`} className="inline-flex min-h-11 items-center text-accent hover:underline">
                 Open the full form
               </Link>
             </p>
