@@ -39,7 +39,7 @@ export function NewSpacesRail() {
       </p>
 
       {corners.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing new to show yet.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Nothing new to show yet</p>
       ) : (
         <ul className="mt-3 space-y-2.5">
           {corners.map((c) => {

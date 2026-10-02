@@ -144,7 +144,7 @@ export function SpaceEventsTab({
     refetch();
   };
   const cancel = async (eventId: number) => {
-    if (!confirm("Cancel this event? Everyone who RSVP'd will be notified.")) return;
+    if (!confirm("Cancel this event? Everyone who RSVP’d will be notified.")) return;
     setBusyId(eventId);
     setError(null);
     const { error: err } = await cancelEvent(eventId);
@@ -170,7 +170,7 @@ export function SpaceEventsTab({
         {teasers === "loading" ? (
           <div className="min-h-[20vh]" />
         ) : teasers.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events</p>
         ) : (
           <ul className="space-y-2">
             {teasers.map((t) => (
@@ -205,7 +205,7 @@ export function SpaceEventsTab({
       {error && <p className="mb-3 text-xs text-destructive">{error}</p>}
 
       {ordered.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events</p>
       ) : (
         <ul className="space-y-3">
           {ordered.map((e) => {

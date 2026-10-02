@@ -89,7 +89,7 @@ export function WorldsSection() {
             Whatever pulls you in, it belongs here.
           </h2>
           <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
-            There are many ways to be a person. You don't have to choose just
+            There are many ways to be a person. You don’t have to choose just
             one — whatever genuinely pulls you in has a place to live.
           </p>
         </div>

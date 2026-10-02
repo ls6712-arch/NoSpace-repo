@@ -11,7 +11,7 @@ function snippet(caption: string): string {
 
 function clause(entry: InspiredEntry): string {
   const activity = (entry.subHobby ? subHobbyLabel(entry.subHobby) : undefined) ?? entry.pursuitTitle;
-  return `${activity.toLowerCase()} after your "${snippet(entry.inspiringPostCaption)}"`;
+  return `${activity.toLowerCase()} after your “${snippet(entry.inspiringPostCaption)}"`;
 }
 
 function joinClauses(clauses: string[]): string {
@@ -60,7 +60,7 @@ export function InspiredRail() {
       </h2>
 
       {entries.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing yet this month.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Nothing yet this month</p>
       ) : (
         <p className="mt-3 text-sm leading-relaxed text-foreground">
           This month, {plural(entries.length, "person", "people")} started a

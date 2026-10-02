@@ -30,7 +30,7 @@ function initials(name: string) {
 // "Keep going" was a reaction button before docs/moment-card-and-
 // reactions-spec.md section 1 retired it as one — it survives here, a
 // quick starter inside Add a thought rather than gone entirely.
-const QUICK_STARTERS = ["Keep going", "How did you...?", "Show us the next one"];
+const QUICK_STARTERS = ["Keep going", "How did you…?", "Show us the next one"];
 
 function ago(ts: number) {
   return formatWhen(ts, { ago: true });
@@ -165,7 +165,7 @@ export function Thoughts({
           )}
           {failed && (
             <p className="mt-2 text-[11px] text-[var(--coral-text)]">
-              That didn't send. Your words are still here, try again.
+              That didn’t send. Your words are still here, try again.
             </p>
           )}
           <div className="mt-2 flex items-center justify-between gap-3">
@@ -259,7 +259,7 @@ export function Thoughts({
         open={confirmDeleteId !== null}
         onOpenChange={(o) => !o && setConfirmDeleteId(null)}
         title="Delete this thought?"
-        description="This can't be undone — it's gone for whoever else could see it too."
+        description="This can’t be undone — it’s gone for whoever else could see it too."
         onConfirm={async () => {
           if (confirmDeleteId !== null) await social.removeThought(confirmDeleteId);
           setConfirmDeleteId(null);

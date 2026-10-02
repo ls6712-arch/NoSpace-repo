@@ -1,8 +1,7 @@
 import { Post } from "../data/posts";
 import type { PrivateLog } from "./privateLogsRemote";
 import { Project, pursuitStatus } from "./journal";
-import { formatDate, formatMonth } from "./dates";
-import { plural } from "./plural";
+import { formatDate, formatMonth, formatWhen } from "./dates";
 
 /**
  * "Still moving" and the trail dots both key off this one number — kept
@@ -49,13 +48,11 @@ export function pursuitMoments(
     .map((p) => ({ id: p.id, createdAt: p.createdAt, visibility: p.visibility, caption: p.caption ?? "" }));
 }
 
-/** "Last Moment 3 days ago" — neutral wording only, no matter how long. */
-export function lastMomentText(lastMomentAt: number | undefined): string {
-  if (lastMomentAt == null) return "No Moments yet.";
-  const days = Math.floor((Date.now() - lastMomentAt) / DAY_MS);
-  if (days <= 0) return "Last Moment today.";
-  if (days === 1) return "Last Moment yesterday.";
-  return `Last Moment ${plural(days, "day")} ago.`;
+/** "Last Moment 3d ago", then "Last Moment Sep 24" — neutral wording only,
+ * no matter how long. One-line helper text, so no period. */
+export function lastMomentText(lastMomentAt: number | undefined, now = Date.now()): string {
+  if (lastMomentAt == null) return "No Moments yet";
+  return `Last Moment ${formatWhen(lastMomentAt, { ago: true, now })}`;
 }
 
 /**

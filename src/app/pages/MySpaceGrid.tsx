@@ -216,11 +216,11 @@ export function MySpaceGrid() {
             <p className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
               {numeral}
             </p>
-            <p className="ns-section-kicker text-muted-foreground">TODAY'S SHEET</p>
+            <p className="ns-section-kicker text-muted-foreground">TODAY’S SHEET</p>
           </div>
         </div>
         <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
-          {numeral} · TODAY'S SHEET
+          {numeral} · TODAY’S SHEET
         </p>
       </header>
 
@@ -267,7 +267,7 @@ export function MySpaceGrid() {
             <div className="mt-6 rounded-lg border-t border-border pt-4">
               <p className="ns-section-kicker text-muted-foreground">END OF THE SHEET</p>
               <p className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                You're caught up
+                You’re caught up
               </p>
               <Link to="/create" className="mt-2 inline-block text-xs text-accent hover:underline">
                 Log a Moment

@@ -95,7 +95,7 @@ export function CameraCapture({
     let cancelled = false;
 
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Camera isn't available in this browser.");
+      setCameraError("Camera isn’t available in this browser.");
       return;
     }
 
@@ -111,7 +111,7 @@ export function CameraCapture({
         if (videoRef.current) videoRef.current.srcObject = stream;
       })
       .catch(() => {
-        if (!cancelled) setCameraError("Camera access isn't available — pick a photo or video instead.");
+        if (!cancelled) setCameraError("Camera access isn’t available — pick a photo or video instead.");
       });
 
     return () => {
@@ -222,8 +222,8 @@ export function CameraCapture({
     if (failedCount > 0) {
       setHeicWarning(
         failedCount === 1
-          ? "One photo couldn't be processed and wasn't added — try a different photo."
-          : `${failedCount} photos couldn't be processed and weren't added — try different photos.`,
+          ? "One photo couldn’t be processed and wasn’t added — try a different photo."
+          : `${failedCount} photos couldn’t be processed and weren’t added — try different photos.`,
       );
     }
     if (picked.length === 0) return;

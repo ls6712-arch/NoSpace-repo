@@ -138,13 +138,13 @@ export function ProductDetail() {
               size="lg"
               className="w-full mb-2 cursor-not-allowed opacity-70"
               disabled
-              title="Buying isn't live yet — the marketplace is coming soon."
+              title="Buying isn’t live yet — the marketplace is coming soon."
             >
               <Clock className="size-4" />
               Coming soon
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Buying isn't live yet — the marketplace is coming soon.
+              Buying isn’t live yet — the marketplace is coming soon.
             </p>
           </div>
         </div>

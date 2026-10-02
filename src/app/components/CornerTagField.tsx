@@ -176,7 +176,7 @@ export function CornerTagField({
                   className="flex items-center gap-1.5 text-left text-xs text-[var(--coral-text)]"
                 >
                   <Plus className="size-3" />
-                  {creating ? "Creating…" : `Create "${q}" as a new Corner`}
+                  {creating ? "Creating…" : `Create “${q}” as a new Corner`}
                 </button>
               </li>
             )}

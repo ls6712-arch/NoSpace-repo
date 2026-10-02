@@ -352,7 +352,7 @@ export function InviteDialog({
     if (!user) return;
     ensureShared();
     const err = await saveInvites(project.id, user.id, [personId]);
-    setStatus(err ? `Couldn't invite ${name}: ${err}` : `Invited ${name}.`);
+    setStatus(err ? `Couldn’t invite ${name}: ${err}` : `Invited ${name}.`);
     if (!err) onInvited?.();
     setQuery("");
   };
@@ -364,7 +364,7 @@ export function InviteDialog({
     const { token, error } = await getOrCreateInviteLink(project.id, user.id);
     if (!token) {
       setLinkState("error");
-      setStatus(`Couldn't make a link: ${error}`);
+      setStatus(`Couldn’t make a link: ${error}`);
       return;
     }
     const url = inviteUrl(token);
@@ -380,7 +380,7 @@ export function InviteDialog({
   const shareLink = async () => {
     if (!link) return;
     try {
-      await navigator.share?.({ title: project.title, text: `Pursue "${project.title}" with me on ${APP_NAME}`, url: link });
+      await navigator.share?.({ title: project.title, text: `Pursue “${project.title}” with me on ${APP_NAME}`, url: link });
     } catch {
       // cancelled — nothing to do
     }
@@ -405,7 +405,7 @@ export function InviteDialog({
           <p className="flex items-center gap-2 text-sm">
             <Link2 className="size-4" /> Invite link
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Works for people who aren't on {APP_NAME} yet — they sign up and land in this Pursuit.</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Works for people who aren’t on {APP_NAME} yet — they sign up and land in this Pursuit.</p>
           {link ? (
             <>
               <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-lg border border-border bg-card px-2 text-xs" />
@@ -430,7 +430,7 @@ export function InviteDialog({
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">Or find someone on {APP_NAME} — they'll get a notification.</p>
+        <p className="text-xs text-muted-foreground">Or find someone on {APP_NAME} — they’ll get a notification.</p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -458,7 +458,7 @@ export function InviteDialog({
               </li>
             ))}
           {query.trim().length >= 2 && !loading && people.length === 0 && (
-            <li className="px-2 py-2 text-xs text-muted-foreground">No one found.</li>
+            <li className="px-2 py-2 text-xs text-muted-foreground">No one found</li>
           )}
         </ul>
         {status && <p className="text-xs text-muted-foreground">{status}</p>}
@@ -505,7 +505,7 @@ export function PursuitInvitesCard() {
             </p>
           </div>
           <p className="mt-1 pl-[38px] text-xs text-muted-foreground">
-            {inv.mode === "group" ? "One shared goal, everyone contributes." : "Side by side — you'll have your own goal and journey."}
+            {inv.mode === "group" ? "One shared goal, everyone contributes." : "Side by side — you’ll have your own goal and journey."}
           </p>
           <div className="mt-3 flex gap-2 pl-[38px]">
             <Button variant="coral" size="sm" onClick={() => answer(inv, true)}>

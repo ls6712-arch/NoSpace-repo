@@ -112,7 +112,7 @@ const AUDIENCE: {
   icon: typeof Globe2;
 }[] = [
   { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
-  { value: "followers", label: "Followers", copy: "People who follow you, once you've accepted them", icon: UserRound },
+  { value: "followers", label: "Followers", copy: "People who follow you, once you’ve accepted them", icon: UserRound },
   { value: "public", label: "Everyone", copy: "Anyone browsing this space can find it", icon: Globe2 },
 ];
 
@@ -666,7 +666,7 @@ export function Log() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Discard this moment?</DialogTitle>
-          <DialogDescription>Leaving now won't keep what you've added.</DialogDescription>
+          <DialogDescription>Leaving now won’t keep what you’ve added.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={stayInComposer}>
@@ -782,7 +782,7 @@ export function Log() {
       if (user) {
         const { path, error: uploadError } = await uploadMomentFile(user.id, files[0]);
         if (uploadError || !path) {
-          setPrivateSaveError("Your photo didn't upload. Try again.");
+          setPrivateSaveError("Your photo didn’t upload. Try again.");
           setSavedAs("private");
           setScreen("saved");
           return;
@@ -810,7 +810,7 @@ export function Log() {
     // screen either way — same shape as the public-post path below, which
     // shows "Not saved." there rather than staying put.
     if (!result.data) {
-      setPrivateSaveError(result.error || "This didn't save.");
+      setPrivateSaveError(result.error || "This didn’t save.");
       setSavedAs("private");
       setScreen("saved");
       return;
@@ -1060,7 +1060,7 @@ export function Log() {
                 Start a Pursuit
               </span>
               <span className="block text-xs text-muted-foreground">
-                Something you're bringing to life over time.
+                Something you’re bringing to life over time.
               </span>
             </span>
           </button>
@@ -1098,15 +1098,15 @@ export function Log() {
             <DialogHeader>
               <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Resume your last draft?</DialogTitle>
               <DialogDescription>
-                You started a Moment you didn't finish.
+                You started a Moment you didn’t finish.
               </DialogDescription>
             </DialogHeader>
             {draftPrompt && (
               <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5 text-sm text-muted-foreground">
                 {draftPrompt.thought.trim() ? (
-                  <p className="line-clamp-3 text-foreground">"{draftPrompt.thought.trim()}"</p>
+                  <p className="line-clamp-3 text-foreground">"{draftPrompt.thought.trim()}”</p>
                 ) : (
-                  <p>No caption yet.</p>
+                  <p>No caption yet</p>
                 )}
                 {draftPrompt.mediaType && !draftPromptMedia && (
                   <p className="mt-2 text-xs">
@@ -1155,7 +1155,7 @@ export function Log() {
           </span>
           <h2 className="mb-2 text-2xl">Log in to keep your Moments</h2>
           <p className="mb-6 text-muted-foreground">
-            Your moments are tied to your account, so they're still here next
+            Your moments are tied to your account, so they’re still here next
             time, not just in this browser tab.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -1367,8 +1367,8 @@ export function Log() {
             if (failedCount > 0) {
               setHeicWarning(
                 failedCount === 1
-                  ? "One photo couldn't be processed and wasn't added — try a different photo."
-                  : `${failedCount} photos couldn't be processed and weren't added — try different photos.`,
+                  ? "One photo couldn’t be processed and wasn’t added — try a different photo."
+                  : `${failedCount} photos couldn’t be processed and weren’t added — try different photos.`,
               );
             }
             if (picked.length === 0) return;
@@ -1593,7 +1593,7 @@ export function Log() {
                 : `This will appear in ${
                     audience === "public"
                       ? `${cornerLabel}`
-                      : "Home for people you've connected with"
+                      : "Home for people you’ve connected with"
                   }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
             </p>
           </div>
@@ -1693,7 +1693,7 @@ export function Log() {
                     {mode === "update"
                       ? "Choose the Pursuit this belongs to."
                       : mode === "project"
-                        ? "Give it a name you'll recognise in six months."
+                        ? "Give it a name you’ll recognise in six months."
                         : "Where does this sit?"}
                   </p>
 
@@ -1746,7 +1746,7 @@ export function Log() {
               )}
 
               <section>
-                <h2 className="mb-1 text-sm">Show where it's at</h2>
+                <h2 className="mb-1 text-sm">Show where it’s at</h2>
                 <p className="mb-3 text-xs text-muted-foreground">
                   Add a photo, video, or short note.
                 </p>
@@ -1782,7 +1782,7 @@ export function Log() {
                         const picked = await convertHeicIfNeeded(raw);
                         if (isHeicFile(picked)) {
                           setHeicWarning(
-                            "That photo couldn't be processed and wasn't added — try a different photo.",
+                            "That photo couldn’t be processed and wasn’t added — try a different photo.",
                           );
                           return;
                         }
@@ -1819,7 +1819,7 @@ export function Log() {
 
                 <Textarea
                   id="progress"
-                  placeholder="Where it's at right now"
+                  placeholder="Where it’s at right now"
                   value={progress}
                   onChange={(e) => setProgress(e.target.value)}
                 />

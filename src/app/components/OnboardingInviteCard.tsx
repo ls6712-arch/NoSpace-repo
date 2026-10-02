@@ -43,7 +43,7 @@ export function OnboardingInviteCard({
     const result = await createInvite(note);
     setCreating(false);
     if (result.error || !result.code) {
-      setError(result.error || "Couldn't create that invite. Try again in a moment.");
+      setError(result.error || "Couldn’t create that invite. Try again in a moment.");
       return;
     }
     setLink(inviteLink(result.code));
@@ -80,7 +80,7 @@ export function OnboardingInviteCard({
       <p className="mb-6 text-sm text-[var(--ink-soft)]">
         {APP_NAME} is invite-only for now.{" "}
         {invitesLeft === null
-          ? "Send an invite link to someone you'd like here."
+          ? "Send an invite link to someone you’d like here."
           : `You have ${plural(invitesLeft, "invite")} to give.`}
       </p>
 
@@ -89,7 +89,7 @@ export function OnboardingInviteCard({
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 280))}
-            placeholder="A note for them, optional — they'll see it when they open the link."
+            placeholder="A note for them, optional — they’ll see it when they open the link."
             className="mb-2"
           />
           <div className="mb-3 text-right text-[11px] text-[var(--ink-soft)]">{note.length}/280</div>

@@ -37,7 +37,7 @@ export function JoinPursuit() {
     setError(null);
     const result = await joinViaLink(token);
     if (!result.pursuitId) {
-      setError(result.error ?? "Couldn't join.");
+      setError(result.error ?? "Couldn’t join.");
       setJoining(false);
       return;
     }
@@ -63,7 +63,7 @@ export function JoinPursuit() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-          This invite isn't active.
+          This invite isn’t active.
         </h1>
         <p className="max-w-sm text-sm text-muted-foreground">
           The link may have been turned off. Ask whoever sent it for a new one.
@@ -129,7 +129,7 @@ export function JoinPursuit() {
                   Sign up or log in to join
                 </Button>
               </Link>
-              <p className="mt-3 text-xs text-muted-foreground">Free to join. You'll come right back here.</p>
+              <p className="mt-3 text-xs text-muted-foreground">Free to join. You’ll come right back here.</p>
             </>
           )}
           {error && <p className="mt-3 text-xs text-destructive">{error}</p>}

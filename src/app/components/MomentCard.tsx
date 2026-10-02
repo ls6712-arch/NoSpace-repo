@@ -145,7 +145,7 @@ function VisibilityDialog({
     });
     setSaving(false);
     if (!ok) {
-      setError("Couldn't save that. Try again in a moment.");
+      setError("Couldn’t save that. Try again in a moment.");
       return;
     }
     onOpenChange(false);

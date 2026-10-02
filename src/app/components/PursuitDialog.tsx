@@ -127,7 +127,7 @@ function CornerField({
 }
 
 /**
- * Add to Your Pursuits — the whole point is that a Pursuit needs nothing but
+ * Add to your Pursuits — the whole point is that a Pursuit needs nothing but
  * a name. Corner and Space are both optional, both free-text at heart
  * (Space offers Sushii's real Spaces as a shortcut, with "Other" for
  * anything that isn't one), and neither is validated against a taxonomy.
@@ -243,7 +243,7 @@ export function PursuitDialog({
             >
               <Sparkles className="size-4 text-foreground" strokeWidth={1.7} />
             </span>
-            Add to Your Pursuits
+            Add to your Pursuits
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             Name it. Everything else is optional.
@@ -368,7 +368,7 @@ export function PursuitDialog({
                   </div>
                 )}
                 <p className="text-[11px] text-muted-foreground">
-                  You can add or change this later from the Pursuit's own page, too.
+                  You can add or change this later from the Pursuit’s own page, too.
                 </p>
               </div>
             )}

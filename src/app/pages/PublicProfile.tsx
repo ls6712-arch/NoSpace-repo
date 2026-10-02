@@ -504,7 +504,7 @@ export function PublicProfile() {
                   {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  A look into the things they've created, explored, and loved.
+                  A look into the things they’ve created, explored, and loved.
                 </p>
               </div>
               {focusTag && (
@@ -521,17 +521,17 @@ export function PublicProfile() {
               posts={shownPosts}
               onOpen={setOpenPost}
               editable={isMe}
-              emptyLabel={`${firstName} hasn't shared any Moments publicly yet.`}
+              emptyLabel={`${firstName} hasn’t shared any Moments publicly yet.`}
             />
           </section>
 
           {sharedPursuits.length > 0 && (
             <section>
               <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                {firstName}'s Pursuits
+                {firstName}’s Pursuits
               </h2>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
-                The things they're bringing to life, that they've chosen to share.
+                The things they’re bringing to life, that they’ve chosen to share.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {sharedPursuits.map((pursuit) => (
@@ -568,7 +568,7 @@ export function PublicProfile() {
               {primaryCorner.name}
             </h2>
             <p className="mb-4 text-sm text-muted-foreground">
-              {firstName}'s Moments tagged {primaryCorner.name}.
+              {firstName}’s Moments tagged {primaryCorner.name}.
             </p>
             <div className={MOMENT_GRID}>
               {cornerMoments.slice(0, 6).map((post) => (
@@ -629,7 +629,7 @@ export function PublicProfile() {
             Start your own shelf
           </h2>
           <p className="mx-auto mb-6 max-w-sm text-sm text-muted-foreground">
-            Pick a hobby, log what you make, and watch it stack up. Free, and there's
+            Pick a hobby, log what you make, and watch it stack up. Free, and there’s
             nothing here that scrolls forever.
           </p>
           <div className="flex flex-col justify-center gap-2.5 sm:flex-row">

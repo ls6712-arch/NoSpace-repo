@@ -20,19 +20,19 @@ export function DataSection() {
     <section>
       <SectionHeader n={6} eyebrow="YOUR DATA" title="Your data" />
       <p className="mb-4 text-sm text-muted-foreground">
-        What's kept here, and only here.
+        What’s kept here, and only here.
       </p>
 
       <div className="rounded-btn border border-border bg-card p-4 sm:p-5">
         <div className="mb-2 flex items-center gap-2 text-sm">
           <Lock className="size-4 text-muted-foreground" />
-          "Only you" Moments
+          “Only you” Moments
         </div>
         <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
           Kept here and nowhere else. These never appear in a Space, a feed, or your public shelf.
         </p>
         {logs.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing here yet.</p>
+          <p className="text-xs text-muted-foreground">Nothing here yet</p>
         ) : (
           <ul className="space-y-3">
             {logs.map((entry) => (
@@ -75,7 +75,7 @@ export function DataSection() {
         open={confirmDeleteId !== null}
         onOpenChange={(o) => !o && setConfirmDeleteId(null)}
         title="Delete this?"
-        description="This can't be undone — nobody else ever saw it, and once it's gone there's no copy left anywhere."
+        description="This can’t be undone — nobody else ever saw it, and once it’s gone there’s no copy left anywhere."
         onConfirm={async () => {
           if (confirmDeleteId !== null) await remove(confirmDeleteId);
           setConfirmDeleteId(null);

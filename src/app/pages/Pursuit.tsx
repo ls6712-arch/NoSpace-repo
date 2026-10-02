@@ -260,10 +260,10 @@ export function Pursuit() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
         <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-          This Pursuit isn't here.
+          This Pursuit isn’t here.
         </h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          It may have been kept private, or the link's out of date.
+          It may have been kept private, or the link’s out of date.
         </p>
         <Link to="/discover" className="mt-2">
           <Button variant="outline">Back to Discover</Button>
@@ -404,7 +404,7 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-sm">
               <Moon className="size-4 shrink-0 text-muted-foreground" />
-              Resting. Nothing's lost, and there's no clock running.
+              Resting. Nothing’s lost, and there’s no clock running.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
               <Play className="size-3.5" /> Pick it back up
@@ -416,7 +416,7 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-sm">
               <Wind className="size-4 shrink-0 text-muted-foreground" />
-              Let go. Nothing's lost.
+              Let go. Nothing’s lost.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
               <Play className="size-3.5" /> Pick it back up
@@ -476,7 +476,7 @@ export function Pursuit() {
               Add your first Moment
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              A photo of where you're starting makes the best before-and-after later.
+              A photo of where you’re starting makes the best before-and-after later.
             </p>
             {!hasMeasure(ownProject) && (
               <Link to={`/pursuit/${ownProject.id}/moment`} className="mt-3 inline-block">
@@ -608,7 +608,7 @@ export function Pursuit() {
         {moments.length === 0 ? (
           !owner && (
             <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-              <p className="text-sm text-muted-foreground">No Moments shared yet.</p>
+              <p className="text-sm text-muted-foreground">No Moments shared yet</p>
             </div>
           )
         ) : (

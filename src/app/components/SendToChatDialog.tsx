@@ -52,7 +52,7 @@ export function SendToChatDialog({
           : { error: "failed" as const };
     setSendingTo(null);
     if (result.error) {
-      setError("Couldn't send that. Try again.");
+      setError("Couldn’t send that. Try again.");
       return;
     }
     setSentTo(threadId);
@@ -72,7 +72,7 @@ export function SendToChatDialog({
         </DialogHeader>
         {chats.length === 0 ? (
           <p className="py-6 text-center text-xs text-muted-foreground">
-            No open chats yet — start one from someone's profile first.
+            No open chats yet — start one from someone’s profile first.
           </p>
         ) : (
           <ul className="max-h-72 space-y-1 overflow-y-auto">

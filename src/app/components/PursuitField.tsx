@@ -128,7 +128,7 @@ export function PursuitField({
               className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[var(--coral-deep)] transition-colors hover:bg-surface-muted"
             >
               <FolderPlus className="size-3.5 shrink-0" />
-              {query.trim() ? `Create new: "${query.trim()}"` : "Create new Pursuit"}
+              {query.trim() ? `Create new: “${query.trim()}"` : "Create new Pursuit"}
             </button>
           </li>
         </ul>

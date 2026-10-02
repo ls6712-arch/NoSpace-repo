@@ -143,7 +143,7 @@ export function GoalDialog({
             {project.goal ? "Change your goal" : "Set a goal"}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            For "{project.title}." Optional — skip anytime.
+            For “{project.title}.” Optional — skip anytime.
           </DialogDescription>
         </DialogHeader>
 
@@ -239,7 +239,7 @@ export function GoalDialog({
                   <span className="text-left">
                     <span className="block text-sm">Also aim for a date</span>
                     <span className="block text-xs text-muted-foreground">
-                      Shown next to your count, e.g. "Sep 23"
+                      Shown next to your count, e.g. “Sep 23”
                     </span>
                   </span>
                   <span
@@ -279,7 +279,7 @@ export function GoalDialog({
 
           {shape === "feeling" && (
             <div>
-              <Label htmlFor="goal-feeling" className="mb-1.5 block text-xs">What does "there" look like?</Label>
+              <Label htmlFor="goal-feeling" className="mb-1.5 block text-xs">What does “there” look like?</Label>
               <Input
                 id="goal-feeling"
                 value={feeling}
@@ -292,7 +292,7 @@ export function GoalDialog({
 
           <div>
             <Label htmlFor="goal-label" className="mb-1.5 block text-xs">
-              How it'll read on your Pursuit
+              How it’ll read on your Pursuit
             </Label>
             <Input
               id="goal-label"
@@ -309,7 +309,7 @@ export function GoalDialog({
             {project.goal ? "Save goal" : "Set goal"}
           </Button>
           <p className="text-center text-[11px] text-muted-foreground">
-            Just what you said you're going for. Progress shows on the Pursuit.
+            Just what you said you’re going for. Progress shows on the Pursuit.
           </p>
         </div>
       </DialogContent>

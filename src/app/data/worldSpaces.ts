@@ -34,7 +34,7 @@ export const WORLD_SPACES: WorldSpace[] = [
   {
     slug: "painting",
     name: "Painting",
-    description: "Mixing a color that isn't quite right yet, and trying again.",
+    description: "Mixing a color that isn’t quite right yet, and trying again.",
     illustration: "painting",
     accent: "var(--sky-deep)",
     to: "/space/art-creative",
@@ -66,7 +66,7 @@ export const WORLD_SPACES: WorldSpace[] = [
   {
     slug: "baking",
     name: "Baking",
-    description: "The first loaf that finally rises the way it's supposed to.",
+    description: "The first loaf that finally rises the way it’s supposed to.",
     illustration: "baking",
     accent: "var(--coral)",
     to: "/space/food-cooking",
@@ -74,7 +74,7 @@ export const WORLD_SPACES: WorldSpace[] = [
   {
     slug: "coding",
     name: "Coding",
-    description: "A small thing you built that didn't exist yesterday.",
+    description: "A small thing you built that didn’t exist yesterday.",
     illustration: "coding",
     accent: "var(--sky-deep)",
     to: "/space/tech-building",

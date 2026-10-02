@@ -65,7 +65,7 @@ export function ShareMilestoneDialog({
               {name}
             </h3>
             <p className="text-xs text-muted-foreground mb-1">{badge.description}</p>
-            <div className="text-xs text-muted-foreground">Create, Don't Just Consume.</div>
+            <div className="text-xs text-muted-foreground">Create, Don’t Just Consume.</div>
           </div>
         </div>
 

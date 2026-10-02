@@ -32,7 +32,7 @@ export function BlockConfirmDialog({
     const { error: err } = await social.block(personId);
     setBusy(false);
     if (err) {
-      setError("Couldn't do that. Try again later.");
+      setError("Couldn’t do that. Try again later.");
       return;
     }
     onOpenChange(false);
@@ -50,7 +50,7 @@ export function BlockConfirmDialog({
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Block {personName}?</DialogTitle>
           <DialogDescription>
-            {personName} won't be able to message you, follow you, or see your Moments. They won't be
+            {personName} won’t be able to message you, follow you, or see your Moments. They won’t be
             told.
           </DialogDescription>
         </DialogHeader>

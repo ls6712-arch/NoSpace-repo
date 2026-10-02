@@ -52,7 +52,7 @@ export function SpaceMomentsTab({ space, isActiveMember }: { space: SpaceRow; is
           ? "No Moments here yet. Be the first."
           : space.access === "closed"
             ? "Moments here are for members. Request to join to see them."
-            : "No Moments here yet."}
+            : "No Moments here yet"}
       </div>
     );
   }

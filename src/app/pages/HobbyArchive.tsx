@@ -94,7 +94,7 @@ export function HobbyArchive() {
     return (
       <SignUpPrompt
         title="This is where your books live"
-        body="Every hobby you log gets a book here, holding every photo, video and note you've put in it. Make an account and yours starts filling up."
+        body="Every hobby you log gets a book here, holding every photo, video and note you’ve put in it. Make an account and yours starts filling up."
         cta="Start my shelf"
       />
     );
@@ -108,10 +108,10 @@ export function HobbyArchive() {
             No such hobby
           </h1>
           <p className="mb-6 text-sm text-muted-foreground">
-            That book isn't on your shelf.
+            That book isn’t on your shelf.
           </p>
           <Link to="/you">
-            <Button variant="outline">Back to Your Shelf</Button>
+            <Button variant="outline">Back to your Shelf</Button>
           </Link>
         </div>
       </div>

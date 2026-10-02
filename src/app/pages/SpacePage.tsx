@@ -227,12 +227,12 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       <div className="mx-auto w-full max-w-3xl px-4 pt-5">
         {space.status === "read_only" && (
           <div className="mb-4 rounded-2xl border border-clay/30 bg-clay-soft px-4 py-3 text-sm">
-            This Space is read-only right now — no new members, requests, or events until it's reactivated.
+            This Space is read-only right now — no new members, requests, or events until it’s reactivated.
           </div>
         )}
         {space.status === "deleted" && (
           <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
-            This Space has been deleted. You're seeing it as an admin.
+            This Space has been deleted. You’re seeing it as an admin.
           </div>
         )}
 

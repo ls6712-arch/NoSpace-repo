@@ -168,7 +168,7 @@ export function MomentDetail({
         const { path, error: uploadError } = await uploadMomentFile(user.id, newMediaFile);
         setUploadingMedia(false);
         if (uploadError || !path) {
-          setSaveError("Your photo didn't upload. Try again.");
+          setSaveError("Your photo didn’t upload. Try again.");
           setSaving(false);
           return;
         }
@@ -185,9 +185,9 @@ export function MomentDetail({
             ...(uploadedMediaPath ? { mediaPath: uploadedMediaPath } : {}),
           });
       if (ok) setEditing(false);
-      else setSaveError("Couldn't save that change. Your edit is still here, try again.");
+      else setSaveError("Couldn’t save that change. Your edit is still here, try again.");
     } catch {
-      setSaveError("Couldn't reach the server. Your edit is still here, try again.");
+      setSaveError("Couldn’t reach the server. Your edit is still here, try again.");
     } finally {
       // Always runs, so the button can't stay stuck on "Saving…" and strand
       // an edit the person can no longer submit.
@@ -201,7 +201,7 @@ export function MomentDetail({
       ? (await removePrivateLogEntry(post.privateLogId!)).data === true
       : await deletePost(post.id);
     if (!ok) {
-      setDeleteError("Couldn't delete that. Try again in a moment.");
+      setDeleteError("Couldn’t delete that. Try again in a moment.");
       return;
     }
     setConfirmDeleteOpen(false);
@@ -220,7 +220,7 @@ export function MomentDetail({
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } catch {
-      setSaveError("Couldn't copy the link. Your browser blocked clipboard access.");
+      setSaveError("Couldn’t copy the link. Your browser blocked clipboard access.");
     }
   };
 
@@ -502,7 +502,7 @@ export function MomentDetail({
                     // unconverted, unrenderable to anyone not on Safari.
                     const file = await convertHeicIfNeeded(raw);
                     if (isHeicFile(file)) {
-                      setSaveError("That photo couldn't be processed and wasn't added — try a different photo.");
+                      setSaveError("That photo couldn’t be processed and wasn’t added — try a different photo.");
                       return;
                     }
                     setSaveError(null);
@@ -589,7 +589,7 @@ export function MomentDetail({
             row), so this is the one place in the dialog that reaches
             every "Only you" Moment, not just a real just_me post. */}
         {isOnlyYou(post) && (
-          <p className="-mt-1 text-[11px] text-muted-foreground">Only you Moments can't be shared.</p>
+          <p className="-mt-1 text-[11px] text-muted-foreground">Only you Moments can’t be shared.</p>
         )}
 
         {/* Owner-only: the note they wrote for themselves */}
@@ -643,7 +643,7 @@ export function MomentDetail({
             {openProjects.length === 0 ? (
               <>
                 <p className="text-xs text-muted-foreground">
-                  You don't have a Pursuit yet. Starting one from here files this
+                  You don’t have a Pursuit yet. Starting one from here files this
                   moment as its first update.
                 </p>
                 <Button
@@ -659,7 +659,7 @@ export function MomentDetail({
                     setAddingTo(false);
                   }}
                 >
-                  Start "{hobbyLabel ?? space?.shortName}" as a Pursuit
+                  Start “{hobbyLabel ?? space?.shortName}” as a Pursuit
                 </Button>
               </>
             ) : (
@@ -690,7 +690,7 @@ export function MomentDetail({
         open={confirmDeleteOpen}
         onOpenChange={setConfirmDeleteOpen}
         title="Delete this Moment?"
-        description="This can't be undone — the photo, caption, and any thoughts on it are gone for good."
+        description="This can’t be undone — the photo, caption, and any thoughts on it are gone for good."
         onConfirm={handleDelete}
       />
       <AddDetailsSheet post={post} open={detailsOpen} onOpenChange={setDetailsOpen} />

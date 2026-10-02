@@ -664,7 +664,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
         const noun = input.type === "video" ? "video" : files.length > 1 ? "photos" : "photo";
         if (uploaded.length === 0) {
-          setMediaError(`Your ${noun} didn't upload. The Moment was saved without it.`);
+          setMediaError(`Your ${noun} didn’t upload. The Moment was saved without it.`);
         } else if (failCount > 0) {
           // Some made it, some didn't — the post still saves with whatever
           // succeeded rather than losing the whole Moment over one bad file.
@@ -744,8 +744,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // someone "Saved." and then losing the post is worse than an error.
       setSaveError(
         error?.message
-          ? `This didn't save to your account: ${error.message}`
-          : "This didn't save to your account. It's still on screen, but it will go when you reload.",
+          ? `This didn’t save to your account: ${error.message}`
+          : "This didn’t save to your account. It’s still on screen, but it will go when you reload.",
       );
     }
 

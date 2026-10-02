@@ -281,7 +281,7 @@ export function HobbyShelf({
       <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
         <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
           {emptyCopy ??
-            "Your shelf is empty. Every hobby you log gets its own tile here, with everything you've made in it inside."}
+            "Your shelf is empty. Every hobby you log gets its own tile here, with everything you’ve made in it inside."}
         </p>
         {emptyCta && (
           <Link

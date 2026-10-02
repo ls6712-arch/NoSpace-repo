@@ -83,7 +83,7 @@ export function MediaAttachPicker({
     // Still HEIC-shaped means conversion failed — don't hand back a file
     // nothing but Safari can ever render; say so instead.
     if (isHeicFile(converted)) {
-      setHeicWarning("That photo couldn't be processed and wasn't added — try a different photo.");
+      setHeicWarning("That photo couldn’t be processed and wasn’t added — try a different photo.");
       return;
     }
     onChange(converted);

@@ -127,7 +127,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
       {searching2 ? (
         <section className="mb-10">
           <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-            Matching "{query}"
+            Matching “{query}”
           </h2>
           <p className="mb-4 mt-1 text-sm text-muted-foreground">
             {searching
@@ -178,7 +178,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
             <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
               <Users className="mx-auto mb-3 size-5 text-muted-foreground" />
               <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                Nobody's joined yet — pick a hobby above once people are in it.
+                Nobody’s joined yet — pick a hobby above once people are in it.
               </p>
             </div>
           ) : (
@@ -189,8 +189,8 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
         ) : inHobby.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
             <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Nobody's turned up in {hobbyLabel?.toLowerCase()} yet. Share
-              something there and you'll be the first.
+              Nobody’s turned up in {hobbyLabel?.toLowerCase()} yet. Share
+              something there and you’ll be the first.
             </p>
             <Link to={`/create?hobby=${hobby}`} className="mt-4 inline-block">
               <Button variant="outline" size="sm">

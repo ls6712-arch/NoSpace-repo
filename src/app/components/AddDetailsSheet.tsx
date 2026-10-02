@@ -66,7 +66,7 @@ export function AddDetailsSheet({
         visibility: audience,
       });
       if (!ok) {
-        setError("Couldn't save those details. Try again.");
+        setError("Couldn’t save those details. Try again.");
         return;
       }
       onOpenChange(false);

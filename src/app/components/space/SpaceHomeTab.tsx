@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { MapPin, Star, ArrowRight, X, Pin, PinOff } from "lucide-react";
+import { MapPin, Star, ArrowRight, X, Pin, PinOff, Check } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { useJournal } from "../../lib/journal";
@@ -385,7 +385,7 @@ export function SpaceHomeTab({
       .eq("post_id", post.id);
     setPinBusyId(null);
     if (error) {
-      setPinError(error.message || "Couldn't update that Moment.");
+      setPinError(error.message || "Couldn’t update that Moment.");
       return;
     }
     setMoments((prev) =>
@@ -409,11 +409,18 @@ export function SpaceHomeTab({
           )}
           <div className="mt-3 flex items-center gap-3">
             <AvatarRow people={todayAttendees} max={4} />
-            {todayGoing > 0 && <span className="text-xs text-paper/70">{todayGoing} going</span>}
+            {todayGoing > 0 && <span className="text-xs text-paper/70 tabular-nums">{todayGoing} going</span>}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button variant="coral" size="sm" disabled={rsvpBusy} onClick={() => rsvp(todayEvent.id)}>
-              {myRsvps.has(todayEvent.id) ? "I'm going ✓" : "I'm going"}
+            <Button
+              variant="coral"
+              size="sm"
+              disabled={rsvpBusy}
+              aria-pressed={myRsvps.has(todayEvent.id)}
+              onClick={() => rsvp(todayEvent.id)}
+            >
+              {myRsvps.has(todayEvent.id) && <Check aria-hidden="true" />}
+              I’m going
             </Button>
             <Link to={`/space/${space.slug}?tab=events`} className="text-xs text-paper/70 underline">
               See all events
@@ -462,12 +469,13 @@ export function SpaceHomeTab({
             {activeChecklist.map((c) => (
               <li key={c.key} className="flex items-center gap-2 text-sm">
                 <span
-                  className={`flex size-4 shrink-0 items-center justify-center rounded-full border text-[10px] ${
+                  className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
                     c.done ? "border-clay bg-clay text-paper" : "border-line text-transparent"
                   }`}
                 >
-                  ✓
+                  <Check className="size-2.5" strokeWidth={3} aria-hidden="true" />
                 </span>
+                {c.done && <span className="sr-only">Done: </span>}
                 <span className={c.done ? "text-muted-foreground line-through" : ""}>{c.label}</span>
               </li>
             ))}
@@ -511,7 +519,7 @@ export function SpaceHomeTab({
           <div className="min-h-[20vh]" />
         ) : tableEmpty ? (
           <div className="py-10 text-center">
-            <p className="text-sm text-muted-foreground">The table's clear.</p>
+            <p className="text-sm text-muted-foreground">The table’s clear.</p>
             <Button variant="coral" size="sm" className="mt-3" onClick={onAddMoment}>
               Log a Moment
             </Button>

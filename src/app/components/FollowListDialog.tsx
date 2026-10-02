@@ -82,7 +82,7 @@ export function FollowListDialog({
             <p className="py-6 text-center text-xs text-muted-foreground">Loading…</p>
           ) : people.length === 0 ? (
             <p className="py-6 text-center text-xs text-muted-foreground">
-              {tab === "followers" ? "No followers yet." : "Not following anyone yet."}
+              {tab === "followers" ? "No followers yet" : "Not following anyone yet"}
             </p>
           ) : (
             <ul className="max-h-72 space-y-1 overflow-y-auto">

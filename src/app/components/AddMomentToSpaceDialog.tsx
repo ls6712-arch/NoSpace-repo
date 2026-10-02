@@ -126,7 +126,7 @@ export function AddMomentToSpaceDialog({
           <div className="py-6" />
         ) : posts.length === 0 ? (
           <div className="py-4 text-center">
-            <p className="text-sm text-muted-foreground">You don't have any Moments yet.</p>
+            <p className="text-sm text-muted-foreground">You don’t have any Moments yet.</p>
             <Link to={`/create?space=${spaceId}`} onClick={() => onOpenChange(false)} className="mt-3 inline-block">
               <Button variant="coral" size="sm">Log a new Moment</Button>
             </Link>

@@ -36,7 +36,7 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
         <Link to={`/pursuit/${pursuit.id}`} className="hover:text-accent" style={{ fontFamily: "var(--font-serif)" }}>
           {pursuit.title}
         </Link>{" "}
-        <span className="text-muted-foreground">has been quiet for {quietFor(lastActivity)}. Where's it at?</span>
+        <span className="text-muted-foreground">has been quiet for {quietFor(lastActivity)}. Where’s it at?</span>
       </p>
 
       {logging ? (

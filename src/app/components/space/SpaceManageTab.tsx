@@ -227,7 +227,7 @@ export function SpaceManageTab({
   const startDeletion = async () => {
     const isSoleHost = members.filter((m) => m.role === "host" && m.status === "active").length <= 1;
     if (isSoleHost && deleteConfirmName.trim() !== space.name) {
-      return setError(`Type "${space.name}" exactly to confirm.`);
+      return setError(`Type “${space.name}” exactly to confirm.`);
     }
     setBusy("delete");
     setError(null);
@@ -296,13 +296,13 @@ export function SpaceManageTab({
       <section>
         <h3 className="mb-2 text-sm font-medium">Pending requests</h3>
         {joinRequests.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending.</p>
+          <p className="text-xs text-muted-foreground">Nothing pending</p>
         ) : (
           <ul className="space-y-2">
             {joinRequests.map((r) => (
               <li key={r.user_id} className="rounded-xl border border-border p-3">
                 <p className="text-sm">{r.displayName}</p>
-                {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">"{r.answers.message}"</p>}
+                {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">"{r.answers.message}”</p>}
                 {r.postCaption && <p className="mt-1 text-xs text-muted-foreground">Attached: {r.postCaption}</p>}
                 <div className="mt-2 flex gap-2">
                   <Button
@@ -331,7 +331,7 @@ export function SpaceManageTab({
       <section>
         <h3 className="mb-2 text-sm font-medium">Moments waiting for approval</h3>
         {pendingMoments.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending.</p>
+          <p className="text-xs text-muted-foreground">Nothing pending</p>
         ) : (
           <ul className="space-y-2">
             {pendingMoments.map((m) => (
@@ -461,7 +461,7 @@ export function SpaceManageTab({
           <div className="max-w-sm space-y-2">
             {members.filter((m) => m.role === "host" && m.status === "active").length <= 1 && (
               <>
-                <p className="text-xs text-muted-foreground">You're the only host — type the Space's name to delete it now.</p>
+                <p className="text-xs text-muted-foreground">You’re the only host — type the Space’s name to delete it now.</p>
                 <Input value={deleteConfirmName} onChange={(e) => setDeleteConfirmName(e.target.value)} placeholder={space.name} />
               </>
             )}

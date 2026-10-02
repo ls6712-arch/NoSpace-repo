@@ -148,7 +148,7 @@ export function You() {
                       to="/profile"
                       className="mt-1 inline-block rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                     >
-                      Tell your story: what got you into this, and where it's going.
+                      Tell your story: what got you into this, and where it’s going.
                     </Link>
                   )
                 )}
@@ -177,7 +177,7 @@ export function You() {
                   {followerCount === 0 && (
                     <>
                       <span className="text-muted-foreground/60" aria-hidden="true">·</span>
-                      <span>No one's following yet</span>
+                      <span>No one’s following yet</span>
                     </>
                   )}
                   {/* No count shown here — "who you follow" isn't a number
@@ -309,7 +309,7 @@ export function You() {
         {isConfigured && !user && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted px-4 py-3">
             <p className="text-xs text-muted-foreground">
-              You're not logged in. Sessions here are just local to this browser.
+              You’re not logged in. Sessions here are just local to this browser.
             </p>
             <Link to="/login" className="shrink-0">
               <Button variant="outline" size="sm">Log in</Button>
@@ -364,7 +364,7 @@ export function You() {
               ? "By Corner, most recently updated first — open one to see every moment inside it."
               : tagFilter
                 ? `Tagged “${tagFilter}.”`
-                : "A visual record of what you've made, explored, and loved, newest first."}
+                : "A visual record of what you’ve made, explored, and loved, newest first."}
             {momentsView === "grid" && tagFilter && (
               <button
                 type="button"
@@ -379,7 +379,7 @@ export function You() {
             <HobbyShelf
               items={sessions}
               emptyCta={false}
-              emptyCopy="Nothing logged yet. Create something and it'll show up here."
+              emptyCopy="Nothing logged yet. Create something and it’ll show up here."
             />
           ) : (
             <WorkGrid
@@ -392,7 +392,7 @@ export function You() {
               }
               onOpen={setOpenPost}
               editable
-              emptyLabel="Nothing logged yet. Create something and it'll show up here."
+              emptyLabel="Nothing logged yet. Create something and it’ll show up here."
             />
           )}
         </section>
@@ -407,12 +407,12 @@ export function You() {
               Start a Pursuit
             </Button>
           </div>
-          <p className="mb-5 text-sm text-muted-foreground">The things you're bringing to life.</p>
+          <p className="mb-5 text-sm text-muted-foreground">The things you’re bringing to life.</p>
 
           {myPursuits.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
               <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                Nothing yet. Name a thing you're working toward and it lives here.
+                Nothing yet. Name a thing you’re working toward and it lives here.
               </p>
               <Button variant="outline" size="sm" className="mt-4" onClick={() => setPursuitDialog(true)}>
                 Start a Pursuit

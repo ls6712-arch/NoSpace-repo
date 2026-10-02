@@ -247,7 +247,7 @@ const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
 const PRIMARY_NAV = [
   { to: "/discover", label: "Discover", hint: "Spaces, people and pursuits",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },
-  { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you're part of",
+  { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you’re part of",
     match: (p: string) => p.startsWith("/my-space") },
   { to: "/create", label: "Log a Moment", hint: "Share a moment, or start a pursuit.", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
@@ -401,7 +401,7 @@ export function Header() {
               <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl border border-border bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
                 {results.length === 0 ? (
                   <p className="px-4 py-3 text-sm text-muted-foreground">
-                    No matches for "{query}"
+                    No matches for “{query}”
                   </p>
                 ) : (
                   <ul className="max-h-80 overflow-y-auto py-1">
@@ -479,7 +479,7 @@ export function Header() {
           {query.trim() && (
             <ul className="mt-2 max-h-64 overflow-y-auto rounded-2xl border border-border bg-popover">
               {results.length === 0 ? (
-                <li className="px-4 py-3 text-sm text-muted-foreground">No matches for "{query}"</li>
+                <li className="px-4 py-3 text-sm text-muted-foreground">No matches for “{query}”</li>
               ) : (
                 results.map((result) => (
                   <li key={result.key}>

@@ -159,7 +159,7 @@ export function Onboarding() {
         cover_tagline: finishTagline.trim() || null,
       });
       if (error) {
-        setFinishError("Couldn't finish setting up. Try again in a moment.");
+        setFinishError("Couldn’t finish setting up. Try again in a moment.");
         return;
       }
       // onboarding_completed is saved now, so the invite card below is
@@ -175,7 +175,7 @@ export function Onboarding() {
       }
       navigate(redirectTo, { replace: true });
     } catch {
-      setFinishError("Couldn't reach the server. Try again in a moment.");
+      setFinishError("Couldn’t reach the server. Try again in a moment.");
     } finally {
       setFinishing(false);
     }
@@ -220,7 +220,7 @@ export function Onboarding() {
                   What are you into?
                 </h1>
                 <p className="mb-6 text-sm text-[var(--ink-soft)]">
-                  Add a few tags — anything you like, however specific. There's no fixed list and no
+                  Add a few tags — anything you like, however specific. There’s no fixed list and no
                   wrong number.
                 </p>
 
@@ -358,7 +358,7 @@ function CoverStep({
           </motion.div>
 
           <motion.p {...settle(0.05)} className="mb-1 text-xs uppercase tracking-[0.16em] text-white/70">
-            Let's set the scene
+            Let’s set the scene
           </motion.p>
 
           <motion.div {...settle(0.1)}>
@@ -376,7 +376,7 @@ function CoverStep({
             <input
               value={tagline}
               onChange={(e) => onTaglineChange(e.target.value)}
-              placeholder="What's this about? (optional)"
+              placeholder="What’s this about? (optional)"
               maxLength={160}
               className={`mt-2 w-full max-w-md border-b border-dashed bg-transparent text-base italic text-white outline-none placeholder:text-white/60 focus:border-white/70 sm:text-lg ${
                 tagline ? "border-transparent" : "border-white/40"

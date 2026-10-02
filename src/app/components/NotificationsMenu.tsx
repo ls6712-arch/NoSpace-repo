@@ -289,7 +289,7 @@ export function NotificationsMenu() {
 
           {!social.isShared && (
             <p className="border-t border-[var(--hairline)] px-4 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
-              You're not signed in, so requests can't reach anyone else yet.
+              You’re not signed in, so requests can’t reach anyone else yet.
             </p>
           )}
         </div>

@@ -203,14 +203,14 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       if (error) {
         return {
           error: /relation .* does not exist/i.test(error.message)
-            ? "Suggestions aren't set up yet. Run sql/categories.sql in Supabase."
+            ? "Suggestions aren’t set up yet. Run sql/categories.sql in Supabase."
             : error.message,
         };
       }
       await refresh();
       return { error: null };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: "Couldn’t reach the server. Try again in a moment." };
     }
   };
 
@@ -260,7 +260,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: "Couldn’t reach the server. Try again in a moment." };
     }
   };
 
@@ -270,7 +270,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
     const name = input.name.trim();
     if (!name) return { error: "Give the Space a name." };
     const slug = (input.slug ?? slugify(name)).trim();
-    if (!slug) return { error: "That name doesn't make a usable link. Try plain letters." };
+    if (!slug) return { error: "That name doesn’t make a usable link. Try plain letters." };
 
     const isNew = input.slug === undefined;
     if (isNew && (isBuiltInSpace(slug) || spaceRows.some((r) => r.slug === slug))) {
@@ -303,7 +303,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null, slug };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: "Couldn’t reach the server. Try again in a moment." };
     }
   };
 
@@ -316,7 +316,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: "Couldn’t reach the server. Try again in a moment." };
     }
   };
 
@@ -341,7 +341,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
         },
       };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: "Couldn’t reach the server. Try again in a moment." };
     }
   };
 
@@ -356,7 +356,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: "Couldn’t reach the server. Try again in a moment." };
     }
   };
 
@@ -378,7 +378,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
         },
       };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: "Couldn’t reach the server. Try again in a moment." };
     }
   };
 
