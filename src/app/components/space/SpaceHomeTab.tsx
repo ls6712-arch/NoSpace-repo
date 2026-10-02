@@ -400,34 +400,34 @@ export function SpaceHomeTab({
     <div className="space-y-8 py-6">
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
-        <div className="-mx-4 rounded-2xl bg-bark px-5 py-5 text-paper sm:mx-0">
-          <p className="text-[11px] uppercase tracking-wide text-paper/70">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
+        <div className="-mx-4 rounded-2xl bg-bark px-5 py-5 text-on-bark sm:mx-0">
+          <p className="text-[11px] uppercase tracking-wide text-on-bark/70">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
           <p className="mt-1 text-xl" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
-          <p className="mt-1 text-sm text-paper/80">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
+          <p className="mt-1 text-sm text-on-bark/80">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
           {(todayEvent.neighborhood || todayEvent.city || todayAddress) && (
-            <p className="mt-1 flex items-center gap-1 text-sm text-paper/80">
+            <p className="mt-1 flex items-center gap-1 text-sm text-on-bark/80">
               <MapPin className="size-3.5" />
               {todayAddress || [todayEvent.neighborhood, todayEvent.city].filter(Boolean).join(", ")}
             </p>
           )}
           <div className="mt-3 flex items-center gap-3">
             <AvatarRow people={todayAttendees} max={4} />
-            {todayGoing > 0 && <span className="text-xs text-paper/70">{todayGoing} going</span>}
+            {todayGoing > 0 && <span className="text-xs text-on-bark/70">{todayGoing} going</span>}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button variant="coral" size="sm" disabled={rsvpBusy} onClick={() => rsvp(todayEvent.id)}>
               {myRsvps.has(todayEvent.id) ? "I'm going ✓" : "I'm going"}
             </Button>
-            <Link to={`/space/${space.slug}?tab=events`} className="text-xs text-paper/70 underline">
+            <Link to={`/space/${space.slug}?tab=events`} className="text-xs text-on-bark/70 underline">
               See all events
             </Link>
           </div>
           {laterThisWeek.length > 0 && (
-            <div className="mt-4 border-t border-paper/20 pt-3">
-              <p className="text-[11px] uppercase tracking-wide text-paper/60">Later this week</p>
+            <div className="mt-4 border-t border-on-bark/20 pt-3">
+              <p className="text-[11px] uppercase tracking-wide text-on-bark/60">Later this week</p>
               <ul className="mt-1.5 space-y-1">
                 {laterThisWeek.map((e) => (
-                  <li key={e.id} className="text-sm text-paper/85">
+                  <li key={e.id} className="text-sm text-on-bark/85">
                     {fmtDay(e.starts_at)} · {e.title}
                   </li>
                 ))}
@@ -440,7 +440,7 @@ export function SpaceHomeTab({
       {isActiveMember && !todayEvent && nextEvent && nextWithinWeek && (
         <Link
           to={`/space/${space.slug}?tab=events`}
-          className="-mx-4 flex items-center justify-between gap-3 rounded-2xl bg-bark px-5 py-3 text-sm text-paper sm:mx-0"
+          className="-mx-4 flex items-center justify-between gap-3 rounded-2xl bg-bark px-5 py-3 text-sm text-on-bark sm:mx-0"
         >
           <span className="truncate">
             Next: {fmtDay(nextEvent.starts_at)} · {nextEvent.title}
@@ -466,7 +466,7 @@ export function SpaceHomeTab({
               <li key={c.key} className="flex items-center gap-2 text-sm">
                 <span
                   className={`flex size-4 shrink-0 items-center justify-center rounded-full border text-[10px] ${
-                    c.done ? "border-clay bg-clay text-paper" : "border-line text-transparent"
+                    c.done ? "border-clay bg-clay text-on-clay" : "border-line text-transparent"
                   }`}
                 >
                   ✓

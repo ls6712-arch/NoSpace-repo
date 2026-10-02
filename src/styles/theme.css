@@ -410,7 +410,7 @@
    every semantic one above (--background, --surface, --foreground, …) is
    already declared as `var(--paper)`/`var(--ink)`/etc. and re-resolves on
    its own once those raw values change under this more specific selector.
-   Never touches .ns-space-theme below — Spaces stays out of this round. */
+   .ns-space-theme has its own dark block below. */
 .dark .ns-paper-theme {
   --paper: #1C1816;
   --paper-raised: #26211D;
@@ -459,6 +459,12 @@
   --bark: #5E3B28;
   --moss: #56613F;
   --moss-soft: #E4E6D6;
+  --ink-muted: #6E5E52;
+  /* Text/icons on a filled --bark panel or --clay fill. Their own tokens
+     rather than --paper: in dark, --paper turns dark while those fills
+     need light (bark) or dark (clay) text, not paper's. */
+  --on-bark: var(--paper);
+  --on-clay: var(--paper);
 
   /* Re-point the semantic layer, same as .ns-paper-theme — every existing
      component that already reads --surface/--foreground/--border/--card/
@@ -474,8 +480,8 @@
   --surface-elevated: var(--paper);
   --surface-muted: var(--sand);
   --foreground: var(--ink);
-  --foreground-muted: #6E5E52;
-  --muted-foreground: #6E5E52;
+  --foreground-muted: var(--ink-muted);
+  --muted-foreground: var(--ink-muted);
   --border: var(--line);
   --hairline: var(--line);
   --card: var(--paper);
@@ -483,14 +489,14 @@
   --popover: var(--paper);
   --popover-foreground: var(--ink);
   --accent: var(--clay);
-  --accent-foreground: var(--paper);
+  --accent-foreground: var(--on-clay);
   --primary: var(--clay);
-  --primary-foreground: var(--paper);
+  --primary-foreground: var(--on-clay);
   --input-border: var(--clay-dark);
   --input: var(--input-border);
   --input-background: var(--paper);
   --destructive: var(--clay-dark);
-  --destructive-foreground: var(--paper);
+  --destructive-foreground: var(--on-clay);
   --ring: var(--clay);
 
   /* Display font for this page only — the app's own sans stays for body
@@ -500,6 +506,33 @@
 
   color: var(--ink);
   background: var(--cream);
+}
+
+/* The Space page in dark mode — same warm charcoal as the app-wide .dark
+   block, a touch warmer to keep the Space's own bark/clay character. Only
+   the raw palette is restated; the semantic layer above re-resolves on its
+   own. Clay and clay-dark get lighter (they're text and fills on a dark
+   page now), so --on-clay flips to dark text; bark stays a deep brown
+   panel with light --on-bark text.
+   Contrast (WCAG AA): ink/cream 14.3, ink/paper 13.0, ink-muted/paper 6.1,
+   ink-muted/sand 5.2, clay/paper 5.3, clay/cream 5.8, on-clay/clay 5.8,
+   clay-dark/clay-soft 6.1, clay-dark/paper 7.4 (input boundary ≥3),
+   on-bark/bark 9.9 (4.7 at /60). */
+.dark .ns-space-theme {
+  --cream: #1E1915;
+  --paper: #28211C;
+  --sand: #352C25;
+  --line: #43382E;
+  --ink: #F1E7DA;
+  --ink-muted: #AD9E8B;
+  --clay: #DB7C55;
+  --clay-dark: #E9A07F;
+  --clay-soft: #47291D;
+  --bark: #4A3124;
+  --moss: #A8B488;
+  --moss-soft: #2E3325;
+  --on-bark: #F3E8DB;
+  --on-clay: #1E1915;
 }
 
 /* `dark:` follows the in-app theme (the .dark class ThemeContext puts on
@@ -599,6 +632,8 @@
   --color-bark: var(--bark);
   --color-moss: var(--moss);
   --color-moss-soft: var(--moss-soft);
+  --color-on-bark: var(--on-bark);
+  --color-on-clay: var(--on-clay);
   --color-yellow: var(--yellow);
   --color-plum: var(--plum);
   --color-plum-deep: var(--plum-deep);
