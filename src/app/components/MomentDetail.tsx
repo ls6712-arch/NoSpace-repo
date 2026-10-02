@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { pursuitTogetherHref } from "../lib/pursuitsRemote";
 import {
@@ -79,7 +79,7 @@ function initials(name: string) {
  * a read-only view.
  */
 export function MomentDetail({
-  post,
+  post: openPost,
   owned,
   onOpenChange,
   replyOpen = false,
@@ -90,6 +90,11 @@ export function MomentDetail({
   /** Open with the reply box already showing (MomentPage's ?reply=1). */
   replyOpen?: boolean;
 }) {
+  // Keep showing the last Moment while the dialog animates closed; without
+  // this the parent clearing `post` unmounts it mid-exit.
+  const lastPost = useRef<Post | null>(openPost);
+  if (openPost) lastPost.current = openPost;
+  const post = openPost ?? lastPost.current;
   const { updatePost, deletePost } = useContent();
   const { update: updatePrivateLogEntry, remove: removePrivateLogEntry } = usePrivateLogs();
   const { user } = useAuth();
@@ -225,7 +230,7 @@ export function MomentDetail({
   };
 
   return (
-    <Dialog open={!!post} onOpenChange={onOpenChange}>
+    <Dialog open={!!openPost} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>
