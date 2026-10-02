@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { Post } from "../data/posts";
-import { Project, checkInDue, pursuitStatus } from "../lib/journal";
+import { Project, checkInDue } from "../lib/journal";
 import { activePursuits, collectPursuitMoments, lastActivityAt } from "../lib/pursuitTrail";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
+import { scrollToElementId } from "../lib/scrollToElement";
+import { ALL_PURSUITS_SECTION_ID } from "./AllPursuitsSection";
 import { PursuitTrack } from "./PursuitTrack";
 import { CheckInCard } from "./CheckInCard";
 import { PursuitDialog } from "./PursuitDialog";
 import { PursuitInvitesCard } from "./pursuit/PursuitProgressPanel";
-import { AllPursuitsDialog } from "./AllPursuitsDialog";
 
 
 /**
@@ -30,7 +31,6 @@ export function PursuitsRail({
   entryProject: Record<string, string>;
 }) {
   const { logs } = usePrivateLogs();
-  const [seeAll, setSeeAll] = useState(false);
   const [starting, setStarting] = useState(false);
 
   const momentsFor = useMemo(() => {
@@ -50,8 +50,6 @@ export function PursuitsRail({
   // Every active Pursuit. A cap of 5 quietly hid the sixth — usually the
   // newest, since it has no Moments to sort it up.
   const shown = active.filter((p) => !due.includes(p));
-  const resting = pursuits.filter((p) => pursuitStatus(p) === "resting");
-  const complete = pursuits.filter((p) => pursuitStatus(p) === "complete");
 
   return (
     <section>
@@ -104,20 +102,15 @@ export function PursuitsRail({
               </p>
             )
           )}
-          <button type="button" onClick={() => setSeeAll(true)} className="mt-2 text-caption text-accent hover:underline">
+          <button
+            type="button"
+            onClick={() => scrollToElementId(ALL_PURSUITS_SECTION_ID)}
+            className="mt-2 text-caption text-accent hover:underline"
+          >
             See all my Pursuits ({pursuits.length})
           </button>
         </>
       )}
-
-      <AllPursuitsDialog
-        open={seeAll}
-        onOpenChange={setSeeAll}
-        active={active}
-        resting={resting}
-        complete={complete}
-        lastOf={lastMomentOf}
-      />
 
       <PursuitDialog open={starting} onOpenChange={setStarting} />
     </section>
