@@ -114,9 +114,9 @@ export function You() {
   }
 
   return (
-    <div className="ns-paper-theme min-h-screen bg-background py-8 sm:py-12">
+    <div className="ns-paper-theme min-h-viewport bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="mb-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="mb-5 text-caption font-medium uppercase tracking-[0.14em] text-muted-foreground">
           YOUR SHELF
         </div>
 
@@ -131,15 +131,15 @@ export function You() {
               />
               <div className="min-w-0">
                 <h2
-                  className="truncate text-2xl leading-tight sm:text-4xl"
+                  className="truncate text-title leading-tight sm:text-display"
                   style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
-                >
+                 title={user ? displayName : "You"}>
                   {user ? displayName : "You"}
                 </h2>
                 {user && (
                   profile?.bio?.trim() ? (
                     <p
-                      className="mt-1 text-base leading-relaxed text-muted-foreground sm:text-lg"
+                      className="mt-1 text-body leading-relaxed text-muted-foreground sm:text-lead"
                       style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
                     >
                       {profile.bio}
@@ -147,13 +147,13 @@ export function You() {
                   ) : (
                     <Link
                       to="/profile"
-                      className="mt-1 inline-block rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                      className="mt-1 inline-block rounded-control border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-caption text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                     >
                       Tell your story: what got you into this, and where it's going.
                     </Link>
                   )
                 )}
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-caption text-muted-foreground sm:text-small">
                   <span>
                     <strong className="text-foreground">{totalSessions}</strong>{" "}
                     {totalSessions === 1 ? "moment" : "moments"} logged
@@ -212,7 +212,7 @@ export function You() {
                         <span
                           key={b.id}
                           title={b.description}
-                          className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
+                          className="flex items-center gap-1.5 text-caption font-medium uppercase tracking-[0.08em] text-muted-foreground"
                         >
                           <Icon className="size-3.5 text-[var(--coral-deep)]" strokeWidth={1.8} aria-hidden="true" />
                           {badgeName(b, primaryHobbySlug, primaryHobbyLabel)}
@@ -224,15 +224,15 @@ export function You() {
               </div>
             </div>
 
-            <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-              <div className="flex items-center gap-2">
+            <div className="flex shrink-0 flex-col items-end text-right">
+              <div className="flex items-center">
                 <Link
                   to="/create"
-                  className="text-xs font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
+                  className="flex min-h-11 items-center text-caption font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
                 >
                   Log a Moment
                 </Link>
-                <Link to="/settings" title="Settings" aria-label="Settings">
+                <Link to="/settings" title="Settings" aria-label="Settings" className="flex size-11 items-center justify-center">
                   <SettingsIcon className="size-3.5 text-muted-foreground transition-colors hover:text-foreground" />
                 </Link>
               </div>
@@ -240,14 +240,14 @@ export function You() {
                 <button
                   type="button"
                   onClick={() => setShareOpen(true)}
-                  className="text-xs uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="min-h-11 text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Share
                 </button>
                 <span className="text-muted-foreground/50" aria-hidden="true">·</span>
                 <Link
                   to="/studio"
-                  className="text-xs uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex min-h-11 items-center text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Public Scrapbook ↗
                 </Link>
@@ -270,7 +270,7 @@ export function You() {
             Every moment below to just that tag, tap it again to clear. */}
         {myTags.length > 0 && (
           <div
-            className="mb-5 flex flex-wrap items-center gap-2 text-base"
+            className="mb-5 flex flex-wrap items-center gap-2 text-body"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             {myTags.slice(0, 6).map(({ tag }, i) => (
@@ -308,8 +308,8 @@ export function You() {
         <div className="mb-7 border-t border-[var(--hairline)]" />
 
         {isConfigured && !user && (
-          <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted px-4 py-3">
-            <p className="text-xs text-muted-foreground">
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-card border border-border bg-surface-muted px-4 py-3">
+            <p className="text-caption text-muted-foreground">
               You're not logged in. Sessions here are just local to this browser.
             </p>
             <Link to="/login" className="shrink-0">
@@ -325,9 +325,9 @@ export function You() {
             less padding, so the page reads as one important thing plus
             supporting ones rather than equal blocks.
             Order: Moments, Pursuits, Quiet Milestones. */}
-        <section className="mb-16">
+        <section className="mb-12">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
+            <h2 className="text-title sm:text-display" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
               Every moment
             </h2>
             {/* All moments (plain chronological) is the default now — By
@@ -339,12 +339,12 @@ export function You() {
                 this "By space" when the view still had Space headers with
                 Corners stacked inside each one; that structure is gone,
                 so that label would now be the wrong one.) */}
-            <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
+            <div className="flex gap-1 rounded-control border border-border p-0.5 text-caption">
               <button
                 type="button"
                 onClick={() => setMomentsView("grid")}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                className={`rounded-control px-3 py-1 transition-colors ${
+                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-on-brand" : "text-muted-foreground"
                 }`}
               >
                 All moments
@@ -352,15 +352,15 @@ export function You() {
               <button
                 type="button"
                 onClick={() => setMomentsView("shelf")}
-                className={`rounded-full px-3 py-1 transition-colors ${
-                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                className={`rounded-control px-3 py-1 transition-colors ${
+                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-on-brand" : "text-muted-foreground"
                 }`}
               >
                 By Corner
               </button>
             </div>
           </div>
-          <p className="mb-5 mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <p className="mb-5 mt-1 flex flex-wrap items-center gap-2 text-small text-muted-foreground">
             {momentsView === "shelf"
               ? "By Corner, most recently updated first — open one to see every moment inside it."
               : tagFilter
@@ -370,7 +370,7 @@ export function You() {
               <button
                 type="button"
                 onClick={() => setTagFilter(null)}
-                className="text-xs text-[var(--coral-text)] hover:underline"
+                className="text-caption text-[var(--coral-text)] hover:underline"
               >
                 Show everything
               </button>
@@ -398,9 +398,9 @@ export function You() {
           )}
         </section>
 
-        <section className="mb-10 border-t border-[var(--line,var(--border))] pt-7">
+        <section className="mb-12 border-t border-[var(--line,var(--border))] pt-8">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="text-body sm:text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               Your Pursuits
             </h2>
             <Button variant="outline" size="sm" onClick={() => setPursuitDialog(true)}>
@@ -408,11 +408,11 @@ export function You() {
               Start a Pursuit
             </Button>
           </div>
-          <p className="mb-5 text-sm text-muted-foreground">The things you're bringing to life.</p>
+          <p className="mb-5 text-small text-muted-foreground">The things you're bringing to life.</p>
 
           {myPursuits.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
-              <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+            <div className="rounded-card border border-dashed border-border px-5 py-9 text-center">
+              <p className="mx-auto max-w-sm text-small leading-relaxed text-muted-foreground">
                 Nothing yet. Name a thing you're working toward and it lives here.
               </p>
               <Button variant="outline" size="sm" className="mt-4" onClick={() => setPursuitDialog(true)}>
@@ -448,11 +448,11 @@ export function You() {
                 style={{
                   display: "grid",
                   gridTemplateRows: expandedPursuitId ? "1fr" : "0fr",
-                  transition: "grid-template-rows 280ms ease",
+                  transition: "grid-template-rows var(--duration-base) var(--ease-standard)",
                 }}
               >
                 <div style={{ overflow: "hidden" }}>
-                  <div style={{ opacity: expandedPursuitId ? 1 : 0, transition: "opacity 200ms ease" }}>
+                  <div style={{ opacity: expandedPursuitId ? 1 : 0, transition: "opacity var(--duration-base) var(--ease-standard)" }}>
                     {(() => {
                       const renderedPursuit = myPursuits.find((p) => p.id === renderedPursuitId);
                       return (
@@ -473,14 +473,14 @@ export function You() {
           )}
         </section>
 
-        <section className="mb-10 border-t border-[var(--line,var(--border))] pt-7">
+        <section className="mb-12 border-t border-[var(--line,var(--border))] pt-8">
           <div className="mb-1 flex items-baseline justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-base sm:text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="flex items-center gap-2 text-body sm:text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
               Quiet Milestones
             </h2>
           </div>
-          <p className="mb-5 text-sm text-muted-foreground">
+          <p className="mb-5 text-small text-muted-foreground">
             Non-metric growth that feels good. Private by default — share one at a time, only if you want to.
           </p>
           <QuietMilestones />

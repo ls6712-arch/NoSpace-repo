@@ -51,7 +51,7 @@ export function MediaAttachPicker({
   if (file && previewUrl) {
     const isVideo = file.type.startsWith("video/");
     return (
-      <div className="relative inline-block overflow-hidden rounded-xl border border-border">
+      <div className="relative inline-block overflow-hidden rounded-card border border-border">
         {isVideo ? (
           <video src={previewUrl} className="h-24 w-24 object-cover" muted />
         ) : (
@@ -61,7 +61,7 @@ export function MediaAttachPicker({
           type="button"
           onClick={() => onChange(null)}
           aria-label="Remove attachment"
-          className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/70 text-white"
+          className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media"
         >
           <X className="size-3" />
         </button>
@@ -109,7 +109,7 @@ export function MediaAttachPicker({
         {converting ? "Preparing…" : label}
       </Button>
       {heicWarning && (
-        <p className="mt-1.5 max-w-[16rem] text-[11px] leading-relaxed text-[var(--coral-text)]">
+        <p className="mt-1.5 max-w-[16rem] text-caption leading-relaxed text-[var(--coral-text)]">
           {heicWarning}
         </p>
       )}

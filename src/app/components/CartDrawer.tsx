@@ -31,17 +31,17 @@ export function CartDrawer() {
     <Sheet open={isCartOpen} onOpenChange={closeCart}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
-          <SheetTitle className="text-xl">Your cart ({cartItems.length})</SheetTitle>
+          <SheetTitle className="text-title">Your cart ({cartItems.length})</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {justCheckedOut ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-              <span className="flex size-14 items-center justify-center rounded-full text-white [background-image:var(--gradient-brand)]">
+              <span className="flex size-14 items-center justify-center rounded-full text-on-brand [background-image:var(--gradient-brand)]">
                 <Check className="size-7" />
               </span>
-              <div className="text-lg">Order placed. Thanks for supporting creators.</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-lead">Order placed. Thanks for supporting creators.</div>
+              <div className="text-small text-muted-foreground">
                 Points added to your profile.
               </div>
             </div>
@@ -57,9 +57,9 @@ export function CartDrawer() {
               {cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-3 rounded-2xl border border-border bg-white/[0.03] p-3"
+                  className="flex gap-3 rounded-card border border-border bg-surface-muted p-3"
                 >
-                  <div className="size-20 shrink-0 overflow-hidden rounded-xl">
+                  <div className="size-20 shrink-0 overflow-hidden rounded-control">
                     <GeneratedArt
                       hobbySlug={item.hobbySlug}
                       seed={item.id}
@@ -67,8 +67,8 @@ export function CartDrawer() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm mb-0.5 line-clamp-1">{item.name}</h4>
-                    <div className="text-xs text-muted-foreground mb-2">
+                    <h4 className="text-small mb-0.5 line-clamp-1" title={item.name}>{item.name}</h4>
+                    <div className="text-caption text-muted-foreground mb-2">
                       by {item.creator}
                     </div>
                     <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export function CartDrawer() {
                       >
                         <Minus className="size-3" />
                       </Button>
-                      <span className="w-6 text-center text-sm">{item.quantity}</span>
+                      <span className="w-6 text-center text-small">{item.quantity}</span>
                       <Button
                         size="icon"
                         variant="outline"
@@ -89,7 +89,7 @@ export function CartDrawer() {
                       >
                         <Plus className="size-3" />
                       </Button>
-                      <span className="ml-auto text-sm text-[var(--coral-text)]">
+                      <span className="ml-auto text-small text-[var(--coral-text)]">
                         ${(item.price * item.quantity).toFixed(2)}
                       </span>
                       <Button
@@ -110,7 +110,7 @@ export function CartDrawer() {
 
         {cartItems.length > 0 && !justCheckedOut && (
           <div className="border-t border-border p-4 space-y-3">
-            <div className="flex justify-between text-lg">
+            <div className="flex justify-between text-lead">
               <span>Total</span>
               <span className="text-[var(--coral-text)]">${cartTotal.toFixed(2)}</span>
             </div>
@@ -124,7 +124,7 @@ export function CartDrawer() {
               <Clock className="size-4" />
               Checkout — coming soon
             </Button>
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-caption text-muted-foreground">
               Buying isn't live yet — the marketplace is coming soon.
             </p>
           </div>

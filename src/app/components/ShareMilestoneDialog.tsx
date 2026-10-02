@@ -49,8 +49,8 @@ export function ShareMilestoneDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
         <DialogTitle className="sr-only">Share this milestone</DialogTitle>
-        <div className="rounded-3xl p-[1.5px] [background-image:var(--gradient-brand)]">
-          <div className="rounded-[calc(1.5rem-1.5px)] bg-[var(--surface)] p-7 text-center">
+        <div className="rounded-card p-[1.5px] [background-image:var(--gradient-brand)]">
+          <div className="rounded-card bg-[var(--surface)] p-7 text-center">
             <span
               className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full"
               style={{
@@ -61,11 +61,11 @@ export function ShareMilestoneDialog({
             >
               <Icon className="size-7" strokeWidth={1.6} />
             </span>
-            <h3 className="mb-1.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            <h3 className="mb-1.5 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               {name}
             </h3>
-            <p className="text-xs text-muted-foreground mb-1">{badge.description}</p>
-            <div className="text-xs text-muted-foreground">Create, Don't Just Consume.</div>
+            <p className="text-caption text-muted-foreground mb-1">{badge.description}</p>
+            <div className="text-caption text-muted-foreground">Create, Don't Just Consume.</div>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export function ShareMilestoneDialog({
             )}
           </Button>
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-3 px-1">
+        <p className="text-center text-caption text-muted-foreground mt-3 px-1">
           {shared
             ? "Visible on your public profile. Screenshot the card above to share it as an image."
             : "Only visible to you until you share it. Screenshot the card above to share it as an image."}

@@ -26,14 +26,14 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link to={`/product/${product.id}`}>
-      <Card className="group overflow-hidden hover:border-border transition-all duration-300">
-        <div className="relative aspect-square overflow-hidden bg-white/[0.03]">
+      <Card className="group overflow-hidden hover:border-border transition-all duration-fast">
+        <div className="relative aspect-square overflow-hidden bg-surface-muted">
           <GeneratedArt
             hobbySlug={product.hobbySlug}
             seed={product.id}
-            className="h-full w-full transition-transform duration-500 group-hover:scale-110"
+            className="h-full w-full transition-transform duration-fast group-hover:scale-110"
           />
-          <Badge variant="outline" className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border-border">
+          <Badge variant="outline" className="absolute top-3 left-3 bg-scrim-solid/40 backdrop-blur-md border-border">
             <Meta.icon className="size-3" />
             {Meta.label}
           </Badge>
@@ -41,32 +41,32 @@ export function ProductCard({ product }: { product: Product }) {
             size="icon"
             disabled
             title="Selling is coming soon"
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-full bg-white/70 text-black/40 cursor-not-allowed"
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-control bg-surface-muted text-muted-foreground cursor-not-allowed"
           >
             <ShoppingCart className="size-4" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
-            className={`absolute bottom-3 right-3 rounded-full backdrop-blur-md ${
-              inWishlist ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white hover:bg-black/60"
+            className={`absolute bottom-3 right-3 rounded-control backdrop-blur-md ${
+              inWishlist ? "bg-[var(--coral-deep)] text-on-brand" : "bg-scrim-solid/40 text-on-media hover:bg-scrim-solid/60"
             }`}
             onClick={handleWishlistToggle}
           >
-            <Heart className={`size-4 ${inWishlist ? "fill-white" : ""}`} />
+            <Heart className={`size-4 ${inWishlist ? "fill-on-media" : ""}`} />
           </Button>
         </div>
         <div className="p-4">
-          <div className="text-xs text-muted-foreground mb-1">by {product.creator}</div>
-          <h3 className="mb-2 line-clamp-1">{product.name}</h3>
+          <div className="text-caption text-muted-foreground mb-1">by {product.creator}</div>
+          <h3 className="mb-2 line-clamp-1" title={product.name}>{product.name}</h3>
           <div className="flex items-center gap-2 mb-3">
             <div className="flex items-center">
               <Star className="size-3.5 fill-[var(--mustard)] text-[var(--mustard)]" />
-              <span className="ml-1 text-sm">{product.rating}</span>
+              <span className="ml-1 text-small">{product.rating}</span>
             </div>
-            <span className="text-xs text-muted-foreground">({product.reviews})</span>
+            <span className="text-caption text-muted-foreground">({product.reviews})</span>
           </div>
-          <div className="text-lg text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
+          <div className="text-lead text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
         </div>
       </Card>
     </Link>

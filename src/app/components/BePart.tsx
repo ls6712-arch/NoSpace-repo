@@ -203,10 +203,10 @@ export function BePart({
           type="button"
           onClick={() => setOpen(true)}
           aria-haspopup="dialog"
-          className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors ${
+          className={`flex w-full items-center justify-center gap-2 rounded-control px-5 py-3 text-small font-medium transition-colors ${
             state
               ? "text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]"
-              : "text-white [background-image:var(--gradient-brand)]"
+              : "text-on-brand [background-image:var(--gradient-brand)]"
           } ${className}`}
         >
           {state ? (
@@ -226,7 +226,7 @@ export function BePart({
           {!active ? (
             <>
               <DialogHeader className="gap-1 text-left">
-                <DialogTitle className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                <DialogTitle className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
                   Be part of this
                 </DialogTitle>
                 <DialogDescription className="leading-relaxed">
@@ -240,7 +240,7 @@ export function BePart({
                     <button
                       type="button"
                       onClick={() => setPane(o.id)}
-                      className="flex w-full items-center gap-3.5 rounded-2xl px-2 py-3 text-left transition-colors hover:bg-surface-muted"
+                      className="flex w-full items-center gap-3.5 rounded-control px-2 py-3 text-left transition-colors hover:bg-surface-muted"
                     >
                       <span
                         className="flex size-11 shrink-0 items-center justify-center rounded-full"
@@ -251,8 +251,8 @@ export function BePart({
                         <o.icon className="size-5 text-foreground" strokeWidth={1.7} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm">{o.label}</span>
-                        <span className="block text-xs leading-relaxed text-muted-foreground">
+                        <span className="block text-small">{o.label}</span>
+                        <span className="block text-caption leading-relaxed text-muted-foreground">
                           {o.copy(hobbyLabel)}
                         </span>
                       </span>
@@ -262,14 +262,14 @@ export function BePart({
                 ))}
               </ul>
 
-              <p className="rounded-xl bg-surface-muted px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+              <p className="rounded-card bg-surface-muted px-4 py-3 text-caption leading-relaxed text-muted-foreground">
                 Each interaction helps you go deeper in what you love.
               </p>
             </>
           ) : (
             <>
               <DialogHeader className="text-left">
-                <DialogTitle className="flex items-center gap-2.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                <DialogTitle className="flex items-center gap-2.5 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
                   <span
                     className="flex size-8 shrink-0 items-center justify-center rounded-full"
                     style={{ backgroundColor: `color-mix(in srgb, ${active.tint} 42%, var(--surface-elevated))` }}
@@ -284,16 +284,16 @@ export function BePart({
               {/* ── Keep exploring ─────────────────────────────────────── */}
               {active.id === "keep_exploring" && (
                 <>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
+                  <p className="text-small leading-relaxed text-muted-foreground">
                     You'll see more Moments, activities and people around {hobbyLabel}.
                   </p>
                   {exploring ? (
                     <>
-                      <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]">
+                      <div className="flex items-center justify-center gap-2 rounded-control px-5 py-3 text-small text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]">
                         <Check className="size-4" />
                         Exploring {hobbyLabel}
                       </div>
-                      <p className="text-center text-xs text-muted-foreground">
+                      <p className="text-center text-caption text-muted-foreground">
                         You can change this anytime.
                       </p>
                       <Button
@@ -305,7 +305,7 @@ export function BePart({
                     </>
                   ) : (
                     <Button
-                      className="w-full text-white [background-image:var(--gradient-brand)]"
+                      className="w-full text-on-brand [background-image:var(--gradient-brand)]"
                       onClick={() => social.toggleHobbyFollow(hobbyKey, hobbyLabel)}
                     >
                       Start exploring
@@ -317,7 +317,7 @@ export function BePart({
               {/* ── Join in ────────────────────────────────────────────── */}
               {active.id === "join_in" && postId && !isActivity && (
                 <>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
+                  <p className="text-small leading-relaxed text-muted-foreground">
                     Nothing scheduled on this one. It's a moment, not an
                     activity. There may be something happening in {hobbyLabel}{" "}
                     you can take part in.
@@ -332,28 +332,28 @@ export function BePart({
 
               {active.id === "join_in" && postId && isActivity && (
                 <>
-                  <div className="rounded-2xl border border-border bg-surface px-4 py-3">
-                    <div className="text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                  <div className="rounded-card border border-border bg-surface px-4 py-3">
+                    <div className="text-small" style={{ fontFamily: "var(--font-serif)" }}>
                       {activityTitle ?? "This activity"}
                     </div>
                     {activityWhen && (
-                      <div className="mt-0.5 text-xs text-muted-foreground">{activityWhen}</div>
+                      <div className="mt-0.5 text-caption text-muted-foreground">{activityWhen}</div>
                     )}
                     {activityWhere && (
-                      <div className="text-xs text-muted-foreground">{activityWhere}</div>
+                      <div className="text-caption text-muted-foreground">{activityWhere}</div>
                     )}
-                    <div className="mt-2 text-xs text-muted-foreground">
+                    <div className="mt-2 text-caption text-muted-foreground">
                       {goingCount} going
                     </div>
                   </div>
 
                   {going ? (
                     <>
-                      <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-stone)_38%,var(--surface-elevated))]">
+                      <div className="flex items-center justify-center gap-2 rounded-control px-5 py-3 text-small text-foreground [background-color:color-mix(in_srgb,var(--pastel-stone)_38%,var(--surface-elevated))]">
                         <Check className="size-4" />
                         You're joining
                       </div>
-                      <p className="text-center text-xs text-muted-foreground">
+                      <p className="text-center text-caption text-muted-foreground">
                         You'll get updates about this activity.
                       </p>
                       <Button variant="outline" onClick={() => social.leaveActivity(postId)}>
@@ -362,7 +362,7 @@ export function BePart({
                     </>
                   ) : (
                     <Button
-                      className="w-full text-white [background-image:var(--gradient-brand)]"
+                      className="w-full text-on-brand [background-image:var(--gradient-brand)]"
                       disabled={joining}
                       onClick={async () => {
                         // isGoing() (which gates joinIn itself) reads
@@ -393,23 +393,23 @@ export function BePart({
               {(active.id === "make_together" || active.id === "explore_together") && (
                 <>
                   {sent ? (
-                    <div className="rounded-2xl bg-surface-muted px-4 py-4">
-                      <p className="mb-1 flex items-center gap-2 text-sm">
+                    <div className="rounded-card bg-surface-muted px-4 py-4">
+                      <p className="mb-1 flex items-center gap-2 text-small">
                         <Check className="size-4 text-foreground" />
                         Sent to {personName}.
                       </p>
-                      <p className="text-xs leading-relaxed text-muted-foreground">
+                      <p className="text-caption leading-relaxed text-muted-foreground">
                         They'll be notified and can accept. Once accepted, you can message.
                       </p>
                     </div>
                   ) : pending ? (
-                    <p className="rounded-2xl bg-surface-muted px-4 py-4 text-sm text-muted-foreground">
+                    <p className="rounded-card bg-surface-muted px-4 py-4 text-small text-muted-foreground">
                       You've already asked {personName}. Waiting on them.
                     </p>
                   ) : (
                     <>
                       <div>
-                        <label htmlFor="bp-text" className="mb-2 block text-sm">
+                        <label htmlFor="bp-text" className="mb-2 block text-small">
                           {active.id === "make_together"
                             ? "What would you like to make?"
                             : "What would you like to discuss?"}
@@ -425,24 +425,24 @@ export function BePart({
                             .toLowerCase()}…`}
                           className="min-h-24"
                         />
-                        <div className="mt-1 text-right text-[11px] text-muted-foreground">
+                        <div className="mt-1 text-right text-caption text-muted-foreground">
                           {text.length}/{LIMIT}
                         </div>
                       </div>
 
                       {error && (
-                        <p className="rounded-xl bg-surface-muted px-4 py-2.5 text-xs text-[var(--coral-text)]">
+                        <p className="rounded-card bg-surface-muted px-4 py-2.5 text-caption text-[var(--coral-text)]">
                           {error}
                         </p>
                       )}
                       <Button
-                        className="w-full text-white [background-image:var(--gradient-brand)]"
+                        className="w-full text-on-brand [background-image:var(--gradient-brand)]"
                         disabled={!text.trim() || sending}
                         onClick={() => send(active.id as "make_together" | "explore_together")}
                       >
                         {sending ? "Sending…" : "Send request"}
                       </Button>
-                      <p className="text-center text-xs leading-relaxed text-muted-foreground">
+                      <p className="text-center text-caption leading-relaxed text-muted-foreground">
                         They'll be notified and can accept.
                         <br />
                         Once accepted, you can message.
@@ -455,7 +455,7 @@ export function BePart({
               <button
                 type="button"
                 onClick={() => setPane(null)}
-                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                className="text-caption text-muted-foreground transition-colors hover:text-foreground"
               >
                 ← All options
               </button>

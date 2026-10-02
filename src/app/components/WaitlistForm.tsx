@@ -34,7 +34,7 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
   };
 
   if (done) {
-    return <p className={`text-sm text-muted-foreground ${className}`}>You're on the list.</p>;
+    return <p className={`text-small text-muted-foreground ${className}`}>You're on the list.</p>;
   }
 
   return (
@@ -64,7 +64,7 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
           placeholder="What do you make? (optional)"
         />
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-caption text-destructive">{error}</p>}
       <Button type="submit" variant="outline" className="w-full" disabled={submitting || !email.trim()}>
         {submitting ? "Joining…" : "Join the waitlist"}
       </Button>

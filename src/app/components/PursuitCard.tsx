@@ -137,7 +137,7 @@ export function PursuitCard({
 
   return (
     <div
-      className={`group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors duration-200 hover:border-[var(--coral-deep)] ${className}`}
+      className={`group flex w-64 shrink-0 flex-col overflow-hidden rounded-card border border-border bg-card transition-colors duration-fast hover:border-[var(--coral-deep)] ${className}`}
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden">
         <Link to={`/pursuit/${pursuit.id}`} className="absolute inset-0 block" aria-label={`Open ${pursuit.title}`}>
@@ -158,8 +158,8 @@ export function PursuitCard({
             />
           )}
           <span
-            className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-md ${
-              pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-[var(--void)]/55"
+            className={`absolute left-2.5 top-2.5 rounded-control px-2.5 py-1 text-caption font-medium text-on-media backdrop-blur-md ${
+              pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-scrim-solid/55"
             }`}
           >
             {status}
@@ -177,14 +177,14 @@ export function PursuitCard({
                   : "Private (tap to share and copy a link)"
             }
             aria-pressed={shared}
-            className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-full bg-[var(--void)]/55 px-2.5 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
+            className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-control bg-scrim-solid/55 px-2.5 backdrop-blur-md transition-colors hover:bg-scrim-solid/75"
           >
             {justCopied ? (
-              <span className="text-[10px] font-medium text-white">Copied!</span>
+              <span className="text-caption font-medium text-on-media">Copied!</span>
             ) : shared ? (
-              <Share2 className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
+              <Share2 className="size-3.5 text-on-media" strokeWidth={1.9} />
             ) : (
-              <Lock className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
+              <Lock className="size-3.5 text-on-media" strokeWidth={1.9} />
             )}
           </button>
         )}
@@ -192,15 +192,15 @@ export function PursuitCard({
 
       <div className="flex flex-1 flex-col p-4">
         <Link to={`/pursuit/${pursuit.id}`} className="block">
-          <p className="text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+          <p className="text-body leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
             {pursuit.title}
           </p>
           {(pursuit.interest || spaceLabel) && (
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="mt-1.5 text-caption text-muted-foreground">
               {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
             </p>
           )}
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-caption text-muted-foreground">
             {pursuit.finishedAt ? `Finished ${timeAgo(moved)}` : `Updated ${timeAgo(moved)}`}
           </p>
         </Link>
@@ -210,7 +210,7 @@ export function PursuitCard({
             <button
               type="button"
               onClick={() => setGoalOpen(true)}
-              className={`flex w-fit min-w-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+              className={`flex w-fit min-w-0 items-center gap-2 rounded-control border px-3 py-1.5 text-small transition-colors ${
                 goal
                   ? goal.reachedAt
                     ? "border-border bg-surface-muted text-muted-foreground"
@@ -219,7 +219,7 @@ export function PursuitCard({
               }`}
             >
               <Target className="size-4 shrink-0" strokeWidth={1.8} />
-              <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`}>
+              <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`} title={goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}>
                 {goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}
               </span>
             </button>
@@ -232,7 +232,7 @@ export function PursuitCard({
         {owner && asProject && goal?.shape === "number" && !goal.reachedAt && (
           <div className="mt-2.5">
             {goalDeadlineText(goal) && (
-              <p className="mb-1.5 text-right text-xs text-muted-foreground">{goalDeadlineText(goal)}</p>
+              <p className="mb-1.5 text-right text-caption text-muted-foreground">{goalDeadlineText(goal)}</p>
             )}
             <GoalProgressTap project={asProject} goal={goal} fullWidth />
           </div>
@@ -242,7 +242,7 @@ export function PursuitCard({
           <div className="mt-3 flex items-center gap-2">
             <Link
               to={`/pursuit/${pursuit.id}/moment`}
-              className="flex-1 rounded-full border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
+              className="flex-1 rounded-control border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-caption font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
             >
               Log a Moment
             </Link>
@@ -251,7 +251,7 @@ export function PursuitCard({
                 type="button"
                 onClick={reachIt}
                 title="Reached it"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                className="flex size-8 shrink-0 items-center justify-center rounded-control border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Target className="size-3.5" strokeWidth={2} />
               </button>
@@ -261,7 +261,7 @@ export function PursuitCard({
                 type="button"
                 onClick={markDone}
                 title="Mark as completed"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                className="flex size-8 shrink-0 items-center justify-center rounded-control border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Check className="size-3.5" strokeWidth={2} />
               </button>

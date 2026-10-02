@@ -97,18 +97,18 @@ export function CoverImageDialog({
 
         <div className="space-y-4">
           <div>
-            <p className="mb-1.5 text-xs">Custom photo</p>
+            <p className="mb-1.5 text-caption">Custom photo</p>
             <MediaAttachPicker file={file} onChange={pick} label="Upload a photo" />
-            {error && <p className="mt-1.5 text-[11px] text-destructive">{error}</p>}
+            {error && <p className="mt-1.5 text-caption text-destructive">{error}</p>}
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs">Without a custom photo, use</p>
+            <p className="mb-1.5 text-caption">Without a custom photo, use</p>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setPreference("first")}
-                className={`rounded-xl border px-3 py-2 text-left text-xs transition-colors ${
+                className={`rounded-card border px-3 py-2 text-left text-caption transition-colors ${
                   preference === "first"
                     ? "border-[var(--coral-deep)] bg-surface-muted"
                     : "border-border hover:border-foreground/30"
@@ -120,7 +120,7 @@ export function CoverImageDialog({
               <button
                 type="button"
                 onClick={() => setPreference("last")}
-                className={`rounded-xl border px-3 py-2 text-left text-xs transition-colors ${
+                className={`rounded-card border px-3 py-2 text-left text-caption transition-colors ${
                   preference === "last"
                     ? "border-[var(--coral-deep)] bg-surface-muted"
                     : "border-border hover:border-foreground/30"
@@ -141,7 +141,7 @@ export function CoverImageDialog({
               type="button"
               onClick={removeCustom}
               disabled={saving}
-              className="flex w-full items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              className="flex w-full items-center justify-center gap-1.5 text-caption text-muted-foreground hover:text-foreground"
             >
               <ImageOff className="size-3.5" />
               Remove custom photo

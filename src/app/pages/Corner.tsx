@@ -41,9 +41,9 @@ export function CornerPage() {
 
   if (!corner) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-viewport flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl mb-4">That corner doesn't exist</h2>
+          <h2 className="text-title mb-4">That corner doesn't exist</h2>
           <Link to="/">
             <Button variant="outline">Back home</Button>
           </Link>
@@ -56,20 +56,20 @@ export function CornerPage() {
   const posts = publicFeed.filter((p) => p.hobbySlug === spaceSlug && postCorner(p) === corner.slug);
 
   return (
-    <div className="min-h-screen">
-      <section className="container mx-auto px-4 pt-14">
+    <div className="min-h-viewport">
+      <section className="container mx-auto px-4 pt-12">
         <Link
           to={`/space/${spaceSlug}`}
-          className="mb-3 inline-block text-xs text-muted-foreground hover:text-foreground"
+          className="mb-3 inline-block text-caption text-muted-foreground hover:text-foreground"
         >
           ← Back to {hobbies.find((h) => h.slug === spaceSlug)?.shortName ?? spaceSlug}
         </Link>
-        <h1 className="text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           {corner.name}
         </h1>
       </section>
 
-      <section className="container mx-auto px-4 pt-8 pb-24">
+      <section className="container mx-auto px-4 pt-8 pb-12">
         {posts.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             No {corner.name.toLowerCase()} Moments yet. Be the first.

@@ -40,7 +40,7 @@ function MessagesLink() {
         <MessagesSquare className="size-5" />
         {badgeCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand"
             aria-hidden="true"
           >
             {formatBadgeCount(badgeCount)}
@@ -122,16 +122,16 @@ function AccountMenuPopover() {
         aria-label="Account menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 min-w-6 items-center justify-center rounded-btn text-muted-foreground transition-colors hover:text-foreground"
+        className="flex min-h-11 min-w-11 items-center justify-center rounded-control text-muted-foreground transition-colors hover:text-foreground"
       >
         <ChevronDown className="size-3.5" aria-hidden="true" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-btn border border-border bg-popover shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-control border border-border bg-popover shadow-overlay">
           <Link
             to="/settings"
             onClick={() => setOpen(false)}
-            className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-sm transition-colors hover:bg-surface-muted"
+            className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-small transition-colors hover:bg-surface-muted"
           >
             <SettingsIcon className="size-4 text-muted-foreground" aria-hidden="true" />
             Settings
@@ -140,13 +140,13 @@ function AccountMenuPopover() {
             <Link
               to="/admin/reports"
               onClick={() => setOpen(false)}
-              className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-sm transition-colors hover:bg-surface-muted"
+              className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-small transition-colors hover:bg-surface-muted"
             >
               <Flag className="size-4 text-muted-foreground" aria-hidden="true" />
               Reports
               {!!openReportCount && (
                 <span
-                  className="ml-auto flex size-5 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+                  className="ml-auto flex size-5 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand"
                   aria-label={`${openReportCount} open`}
                 >
                   {formatBadgeCount(openReportCount)}
@@ -155,8 +155,8 @@ function AccountMenuPopover() {
             </Link>
           )}
           <div className="border-t border-[var(--hairline)] px-4 py-3">
-            <div className="mb-2 text-xs text-muted-foreground">Theme</div>
-            <div className="flex gap-1 rounded-btn border border-border p-0.5">
+            <div className="mb-2 text-caption text-muted-foreground">Theme</div>
+            <div className="flex gap-1 rounded-control border border-border p-0.5">
               {THEME_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -164,7 +164,7 @@ function AccountMenuPopover() {
                   aria-pressed={preference === opt.value}
                   onClick={() => setPreference(opt.value)}
                   className={
-                    "min-h-8 flex-1 rounded-[6px] px-2 text-xs transition-colors " +
+                    "min-h-8 flex-1 rounded-control px-2 text-caption transition-colors " +
                     (preference === opt.value
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-foreground")
@@ -203,13 +203,13 @@ function AccountMenu() {
   const name = profile?.display_name?.trim();
 
   return (
-    <div className="flex items-center gap-0.5">
-      <Link to="/you" aria-label="You: your profile and saved ideas" title="You">
+    <div className="flex items-center">
+      <Link to="/you" aria-label="You: your profile and saved ideas" title="You" className="flex size-11 items-center justify-center">
         <Avatar className="size-8">
           {profile?.avatar_url && (
             <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />
           )}
-          <AvatarFallback className="text-[11px]">
+          <AvatarFallback className="text-caption">
             {name ? initials(name) : <UserRound className="size-4 text-muted-foreground" />}
           </AvatarFallback>
         </Avatar>
@@ -303,7 +303,7 @@ export function Header() {
   }
 
   return (
-    <header className="ns-site-header sticky top-0 z-50 w-full border-b border-[var(--hairline)]">
+    <header className="ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)]">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries
@@ -316,7 +316,7 @@ export function Header() {
             aria-current={pathname === "/" ? "page" : undefined}
           >
             <span className="ns-wordmark-mark" aria-hidden="true" />
-            <span className="text-2xl font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>{APP_NAME}</span>
+            <span className="text-title font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>{APP_NAME}</span>
             {pathname === "/" && (
               <span
                 className="absolute -bottom-0.5 left-0 right-0 h-px"
@@ -343,7 +343,7 @@ export function Header() {
                     type="button"
                     title={item.hint}
                     onClick={openQuickLog}
-                    className="flex items-center gap-1.5 rounded-btn bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
+                    className="flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-small text-accent-foreground transition-[filter] hover:brightness-110"
                   >
                     <Plus className="size-3.5" aria-hidden="true" />
                     {item.label}
@@ -358,8 +358,8 @@ export function Header() {
                   aria-current={active ? "page" : undefined}
                   className={
                     item.accent
-                      ? "flex items-center gap-1.5 rounded-btn bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
-                      : `relative py-1 text-sm transition-colors ${
+                      ? "flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-small text-accent-foreground transition-[filter] hover:brightness-110"
+                      : `relative py-1 text-small transition-colors ${
                           active ? "text-accent" : "text-foreground/75 hover:text-foreground"
                         }`
                   }
@@ -398,9 +398,9 @@ export function Header() {
               onKeyDown={onSearchKeyDown}
             />
             {searchOpen && query.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl border border-border bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+              <div className="absolute top-full left-0 right-0 mt-2 rounded-card border border-border bg-popover/95 backdrop-blur-xl shadow-overlay overflow-hidden z-50">
                 {results.length === 0 ? (
-                  <p className="px-4 py-3 text-sm text-muted-foreground">
+                  <p className="px-4 py-3 text-small text-muted-foreground">
                     No matches for "{query}"
                   </p>
                 ) : (
@@ -417,7 +417,7 @@ export function Header() {
                             {result.group === "person" ? (
                               <Avatar className="size-8 shrink-0">
                                 {result.avatarUrl && <AvatarImage src={result.avatarUrl} alt="" className="object-cover" />}
-                                <AvatarFallback className="text-[10px]">{initials(result.label)}</AvatarFallback>
+                                <AvatarFallback className="text-caption">{initials(result.label)}</AvatarFallback>
                               </Avatar>
                             ) : (
                               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
@@ -425,8 +425,8 @@ export function Header() {
                               </span>
                             )}
                             <span className="min-w-0">
-                              <span className="block text-sm truncate">{result.label}</span>
-                              <span className="block text-xs text-muted-foreground truncate">{result.sub}</span>
+                              <span className="block text-small truncate" title={result.label}>{result.label}</span>
+                              <span className="block text-caption text-muted-foreground truncate" title={result.sub}>{result.sub}</span>
                             </span>
                           </button>
                         </li>
@@ -452,7 +452,7 @@ export function Header() {
           {cartCount > 0 && (
             <Button variant="ghost" size="icon" onClick={openCart} className="relative" aria-label={`Cart (${cartCount})`}>
               <ShoppingBag className="size-5" />
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white">
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand">
                 {cartCount}
               </span>
             </Button>
@@ -477,9 +477,9 @@ export function Header() {
             />
           </div>
           {query.trim() && (
-            <ul className="mt-2 max-h-64 overflow-y-auto rounded-2xl border border-border bg-popover">
+            <ul className="mt-2 max-h-64 overflow-y-auto rounded-card border border-border bg-popover">
               {results.length === 0 ? (
-                <li className="px-4 py-3 text-sm text-muted-foreground">No matches for "{query}"</li>
+                <li className="px-4 py-3 text-small text-muted-foreground">No matches for "{query}"</li>
               ) : (
                 results.map((result) => (
                   <li key={result.key}>
@@ -492,8 +492,8 @@ export function Header() {
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-muted"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-sm">{result.label}</span>
-                        <span className="block truncate text-xs text-muted-foreground">{result.sub}</span>
+                        <span className="block truncate text-small" title={result.label}>{result.label}</span>
+                        <span className="block truncate text-caption text-muted-foreground" title={result.sub}>{result.sub}</span>
                       </span>
                     </button>
                   </li>

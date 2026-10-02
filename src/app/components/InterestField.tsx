@@ -61,13 +61,13 @@ export function InterestField({
         placeholder={placeholder}
       />
       {!value.trim() && !focused && (
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1.5 text-caption text-muted-foreground">
           Anything you like, not listed? Enter your own.
         </p>
       )}
 
       {value.trim() && (
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1.5 text-caption text-muted-foreground">
           {exact ? (
             <span className="flex items-center gap-1">
               <Check className="size-3 text-foreground" />
@@ -93,7 +93,7 @@ export function InterestField({
       )}
 
       {focused && (suggestions.length > 0 || query.length > 0) && (
-        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border border-border bg-popover py-1 shadow-xl">
+        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-overlay">
           {suggestions.map((s) => (
             <li key={s}>
               <button
@@ -103,7 +103,7 @@ export function InterestField({
                   onChange(s);
                   setFocused(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                className="w-full px-4 py-2 text-left text-small transition-colors hover:bg-surface-muted"
               >
                 {s}
               </button>
@@ -119,12 +119,12 @@ export function InterestField({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setFocused(false)}
-                className="text-left text-xs text-[var(--coral-text)]"
+                className="text-left text-caption text-[var(--coral-text)]"
               >
                 Use “{value.trim()}” as your own
               </button>
             ) : (
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-caption text-muted-foreground">
                 Not listed? Just type your own.
               </span>
             )}

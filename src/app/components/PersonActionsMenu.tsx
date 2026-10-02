@@ -44,10 +44,10 @@ export function PersonActionsMenu({
       </Button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-44 overflow-hidden rounded-2xl border border-border bg-popover shadow-xl">
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-44 overflow-hidden rounded-card border border-border bg-popover shadow-overlay">
           <button
             type="button"
-            className="block w-full px-3.5 py-2.5 text-left text-sm text-[var(--coral-text)] transition-colors hover:bg-surface-muted"
+            className="block w-full px-3.5 py-2.5 text-left text-small text-[var(--coral-text)] transition-colors hover:bg-surface-muted"
             onClick={() => {
               setOpen(false);
               setBlockOpen(true);
@@ -57,7 +57,7 @@ export function PersonActionsMenu({
           </button>
           <button
             type="button"
-            className="block w-full px-3.5 py-2.5 text-left text-sm transition-colors hover:bg-surface-muted"
+            className="block w-full px-3.5 py-2.5 text-left text-small transition-colors hover:bg-surface-muted"
             onClick={() => {
               setOpen(false);
               setReportOpen(true);

@@ -171,19 +171,19 @@ export function SpaceEventsTab({
   if (!canSeeFull) {
     return (
       <div className="py-6">
-        <p className="mb-4 text-xs text-muted-foreground">
+        <p className="mb-4 text-caption text-muted-foreground">
           Join this Space to see event details and RSVP.
         </p>
         {teasers === "loading" ? (
           <div className="min-h-[20vh]" />
         ) : teasers.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events.</p>
+          <p className="py-10 text-center text-small text-muted-foreground">No upcoming events.</p>
         ) : (
           <ul className="space-y-2">
             {teasers.map((t) => (
-              <li key={t.id} className="rounded-2xl border border-border px-4 py-3">
-                <p className="text-sm">{t.title}</p>
-                <p className="text-xs text-muted-foreground">{fmt(t.starts_at, t.timezone)}</p>
+              <li key={t.id} className="rounded-card border border-border px-4 py-3">
+                <p className="text-small">{t.title}</p>
+                <p className="text-caption text-muted-foreground">{fmt(t.starts_at, t.timezone)}</p>
               </li>
             ))}
           </ul>
@@ -209,10 +209,10 @@ export function SpaceEventsTab({
           <Button variant="coral" size="sm" onClick={() => setCreateOpen(true)}>Create event</Button>
         </div>
       )}
-      {error && <p className="mb-3 text-xs text-destructive">{error}</p>}
+      {error && <p className="mb-3 text-caption text-destructive">{error}</p>}
 
       {ordered.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events.</p>
+        <p className="py-10 text-center text-small text-muted-foreground">No upcoming events.</p>
       ) : (
         <ul className="space-y-3">
           {ordered.map((e) => {
@@ -220,27 +220,27 @@ export function SpaceEventsTab({
             const canEdit = isHost || e.created_by === user?.id;
             const address = addressByEventId.get(e.id);
             return (
-              <li key={e.id} className="rounded-2xl border border-border p-4">
+              <li key={e.id} className="rounded-card border border-border p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="flex items-center gap-1.5 text-sm font-medium">
-                      {e.featured === true && <Star className="size-3.5 fill-current text-[var(--coral-deep)]" />}
+                    <p className="flex items-center gap-1.5 text-small font-medium">
+                      {e.featured === true && <Star className="size-3.5 fill-current text-accent" />}
                       {e.title}
                     </p>
-                    <p className="text-xs text-muted-foreground">{fmt(e.starts_at, e.timezone)}</p>
+                    <p className="text-caption text-muted-foreground">{fmt(e.starts_at, e.timezone)}</p>
                     {(e.neighborhood || e.city) && (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                      <p className="mt-1 flex items-center gap-1 text-caption text-muted-foreground">
                         <MapPin className="size-3" />
                         {[e.neighborhood, e.city].filter(Boolean).join(", ")}
                       </p>
                     )}
                     {address && (
-                      <p className="mt-1 flex items-center gap-1 text-xs">
-                        <MapPin className="size-3 text-[var(--coral-deep)]" />
+                      <p className="mt-1 flex items-center gap-1 text-caption">
+                        <MapPin className="size-3 text-accent" />
                         {address}
                       </p>
                     )}
-                    {e.description && <p className="mt-1.5 text-sm">{e.description}</p>}
+                    {e.description && <p className="mt-1.5 text-small">{e.description}</p>}
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -278,7 +278,7 @@ export function SpaceEventsTab({
                   const attendees = attendeesByEvent.get(e.id) ?? [];
                   return (
                     <div className="mt-3">
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-caption text-muted-foreground">
                         {attendees.length} going
                       </p>
                       {attendees.length > 0 && (
@@ -287,13 +287,13 @@ export function SpaceEventsTab({
                             <span key={a.userId} className="flex items-center gap-1.5">
                               <Avatar className="size-6">
                                 {a.avatarUrl && <AvatarImage src={a.avatarUrl} alt="" />}
-                                <AvatarFallback className="text-[9px]">{initials(a.name)}</AvatarFallback>
+                                <AvatarFallback className="text-caption">{initials(a.name)}</AvatarFallback>
                               </Avatar>
-                              <span className="text-xs text-muted-foreground">{a.name}</span>
+                              <span className="text-caption text-muted-foreground">{a.name}</span>
                             </span>
                           ))}
                           {attendees.length > 8 && (
-                            <span className="text-xs text-muted-foreground">+{attendees.length - 8} more</span>
+                            <span className="text-caption text-muted-foreground">+{attendees.length - 8} more</span>
                           )}
                         </div>
                       )}

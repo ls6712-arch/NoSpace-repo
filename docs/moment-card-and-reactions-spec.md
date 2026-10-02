@@ -90,7 +90,7 @@ Build a single `MomentCard` and replace every separate card implementation with 
 
 ### 2.1 Anatomy, top to bottom
 
-1. **Media**, radius 22px (define one radius token, do not scatter values).
+1. **Media**, `rounded-card` (12px, the one card radius app-wide; was 22px before the P0 Foundations token pass).
    - Photo: `object-cover`, fixed height per surface (see 2.4).
    - Carousel and video: reuse `PostMediaCarousel` and the existing play badge.
    - **Text-only Moment: a typographic tile**, not a quote icon. The caption text is the picture: Fraunces italic, on a solid tile. Rotate the tile through three semantic tokens (accent, a moss/green token, an ink token) chosen deterministically from the post id. Text uses the matching on-color token. Contrast at least 4.5:1.

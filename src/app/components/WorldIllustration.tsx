@@ -25,6 +25,7 @@ import {
   CREAM,
 } from "./GeneratedArt";
 import { hobbyPhoto } from "../data/hobbyPhotos";
+import { NIGHT } from "./subart/palette";
 import type { WorldSpace } from "../data/worldSpaces";
 
 /**
@@ -81,7 +82,7 @@ function Camera({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
       <rect x={-32} y={-18} width={64} height={42} rx={8} fill={INK} />
       <rect x={-14} y={-30} width={28} height={14} rx={4} fill={INK} />
       <circle cx={0} cy={4} r={16} fill={DENIM} />
-      <circle cx={0} cy={4} r={10} fill="#1b2733" />
+      <circle cx={0} cy={4} r={10} fill={NIGHT} />
       <circle cx={-5} cy={-1} r={3} fill={CREAM} opacity={0.6} />
       <circle cx={24} cy={-10} r={3.5} fill={MUSTARD} />
     </g>
@@ -116,8 +117,8 @@ function BookStack({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
 }
 
 function SculptureForm({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
-  const bronze = "#8A6A49";
-  const bronzeDark = "#6B4E35";
+  const bronze = "var(--wood-light)";
+  const bronzeDark = "var(--wood)";
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
       <rect x={-30} y={30} width={60} height={14} rx={2} fill={PAPER_DARK} />
@@ -137,7 +138,7 @@ function SculptureForm({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
 function PotteryWheel({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <ellipse cx={0} cy={28} rx={30} ry={8} fill="#8B5A3C" />
+      <ellipse cx={0} cy={28} rx={30} ry={8} fill="var(--gen-art-skin-3)" />
       <path d="M -16 -2 Q 0 -14 16 -2 Q 20 14 0 20 Q -20 14 -16 -2 Z" fill={RUST} />
       <ellipse cx={0} cy={0} rx={17} ry={5} fill={TERRACOTTA} opacity={0.7} />
     </g>
@@ -258,7 +259,7 @@ export function WorldIllustration({
           alt=""
           loading="lazy"
           onError={() => setPhotoFailed(true)}
-          className="h-full w-full object-cover transition-transform duration-[700ms] ease-out"
+          className="h-full w-full object-cover transition-transform duration-fast ease-standard"
         />
       </div>
     );

@@ -54,8 +54,8 @@ export function EndingDialog({
         </DialogHeader>
         {firstImage && (
           <figure className="flex items-center gap-3">
-            <img src={firstImage} alt="" className="size-16 rounded-lg object-cover" />
-            <figcaption className="text-xs text-muted-foreground">Where you started.</figcaption>
+            <img src={firstImage} alt="" className="size-16 rounded-control object-cover" />
+            <figcaption className="text-caption text-muted-foreground">Where you started.</figcaption>
           </figure>
         )}
         <Textarea

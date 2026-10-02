@@ -140,7 +140,7 @@ export function PursuitsInProgressSection({
     <>
       <section
         ref={barRef}
-        className={`fixed inset-x-0 top-16 z-40 bg-surface pb-5 ${reduceMotion ? "" : "transition-[opacity,transform] duration-300 ease-out"} ${
+        className={`fixed inset-x-0 top-16 z-40 bg-surface pb-5 ${reduceMotion ? "" : "transition-[opacity,transform] duration-base ease-standard"} ${
           atTop ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"
         }`}
         aria-hidden={!atTop}
@@ -150,12 +150,12 @@ export function PursuitsInProgressSection({
             lines up with the page content under it instead of running
             edge-to-edge. */}
         <div className="mx-auto max-w-[1600px] px-4 pt-5 sm:px-5 lg:px-8">
-          <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
             Pursuits in progress
           </h2>
 
           {active.length === 0 ? (
-            <div className="mt-3 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+            <div className="mt-3 flex flex-col items-center gap-3 rounded-card border border-dashed border-border px-5 py-10 text-center">
               <span
                 className="flex size-11 items-center justify-center rounded-full"
                 style={{
@@ -166,7 +166,7 @@ export function PursuitsInProgressSection({
               >
                 <Compass className="size-5" strokeWidth={1.7} />
               </span>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-small text-muted-foreground">
                 Nothing in progress right now.{" "}
                 <Link to="/pursuits/new" className="text-accent hover:underline">
                   Start a Pursuit
@@ -197,7 +197,7 @@ export function PursuitsInProgressSection({
                 transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(active.length, 7) * 0.05 }}
                 whileHover={reduceMotion ? undefined : { y: -4 }}
                 whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-                className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-border text-caption text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <ArrowRight className="size-4" />
                 See all
@@ -223,7 +223,7 @@ export function PursuitsInProgressSection({
       <div
         aria-hidden="true"
         style={{ height: atTop ? barHeight : 0 }}
-        className={reduceMotion ? "" : "transition-[height] duration-300 ease-out"}
+        className={reduceMotion ? "" : "transition-[height] duration-base ease-standard"}
       />
     </>
   );

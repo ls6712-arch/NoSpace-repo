@@ -173,12 +173,12 @@ export function MySpaceGrid() {
                 (any place gold is used as text, not decoration). */}
             <p className="ns-section-kicker text-gold-text">{dateEyebrow}</p>
             <h1
-              className="mt-1 text-[clamp(1.75rem,4vw,2.5rem)] leading-tight"
+              className="mt-1 text-display leading-tight"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {greeting(profile?.display_name ?? "there")}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-small text-muted-foreground">
               {unseen.length} Moment{unseen.length === 1 ? "" : "s"} from the people and Spaces you follow.
             </p>
           </div>
@@ -187,7 +187,7 @@ export function MySpaceGrid() {
               numeral. lg+ only here; below lg it moves under the subtitle
               on one line instead (just below). */}
           <div className="hidden text-right text-foreground lg:block">
-            <p className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <p className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
               {numeral}
             </p>
             <p className="ns-section-kicker text-muted-foreground">TODAY'S SHEET</p>
@@ -205,7 +205,7 @@ export function MySpaceGrid() {
       <div className="myspace-body">
         <div className="myspace-feed">
           {sheet.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            <div className="rounded-card border border-dashed border-border p-6 text-center text-small text-muted-foreground">
               {/* Genuinely empty now only means zero eligible Moments exist
                   at all — the sheet no longer gates on "since your last
                   visit" (see the unseen memo above), so that copy would be
@@ -231,19 +231,19 @@ export function MySpaceGrid() {
             <button
               type="button"
               onClick={() => setPageIndex((p) => p + 1)}
-              className="mt-6 text-xs text-accent hover:underline"
+              className="mt-6 text-caption text-accent hover:underline"
             >
               Turn the page
             </button>
           )}
 
           {sheet.length > 0 && (
-            <div className="mt-6 rounded-lg border-t border-border pt-4">
+            <div className="mt-6 rounded-card border-t border-border pt-4">
               <p className="ns-section-kicker text-muted-foreground">END OF THE SHEET</p>
-              <p className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+              <p className="mt-1 text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 You're caught up
               </p>
-              <Link to="/create" className="mt-2 inline-block text-xs text-accent hover:underline">
+              <Link to="/create" className="mt-2 inline-block text-caption text-accent hover:underline">
                 Log a Moment
               </Link>
             </div>

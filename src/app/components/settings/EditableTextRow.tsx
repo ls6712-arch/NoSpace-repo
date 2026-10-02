@@ -86,7 +86,7 @@ export function EditableTextRow({
       <SettingsRow label={label} description={description}>
         <div className="flex items-center justify-end gap-3">
           {saved && <SavedFlash show />}
-          <span className="max-w-[16rem] truncate text-sm text-muted-foreground sm:max-w-xs">
+          <span className="max-w-[16rem] truncate text-small text-muted-foreground sm:max-w-xs" title={value.trim() || emptyLabel}>
             {value.trim() || <span className="italic">{emptyLabel}</span>}
           </span>
           <Button variant="outline" size="sm" onClick={startEdit}>
@@ -100,9 +100,9 @@ export function EditableTextRow({
   return (
     <div className="px-4 py-4 sm:px-5">
       <div className="mb-2">
-        <div className="text-sm">{label}</div>
+        <div className="text-small">{label}</div>
         {description && (
-          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
+          <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground">{description}</p>
         )}
       </div>
       {multiline ? (
@@ -134,11 +134,11 @@ export function EditableTextRow({
       <div className="mt-2 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {maxLength && (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-caption text-muted-foreground">
               {draft.length}/{maxLength}
             </span>
           )}
-          {error && <span className="text-[11px] text-destructive">{error}</span>}
+          {error && <span className="text-caption text-destructive">{error}</span>}
         </div>
         <div className="flex shrink-0 gap-2">
           <Button variant="outline" size="sm" onClick={cancel} disabled={saving}>

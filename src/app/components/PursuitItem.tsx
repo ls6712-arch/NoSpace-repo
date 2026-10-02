@@ -76,7 +76,7 @@ export function PursuitItem({
 
   return (
     <motion.div
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_8px_20px_-16px_rgba(43,33,28,0.4)]"
+      className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card"
       initial={reduceMotion ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(index, 7) * 0.05 }}
@@ -95,7 +95,7 @@ export function PursuitItem({
             hobbySlug={pursuit.hobbySlug ?? "crafts-making"}
             seed={pursuit.id}
             preview
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+            className="h-full w-full object-cover transition-transform duration-base group-hover:scale-[1.04]"
           />
         </Link>
 
@@ -103,7 +103,7 @@ export function PursuitItem({
           type="button"
           onClick={() => setCoverOpen(true)}
           aria-label={`Change the cover photo for ${pursuit.title}`}
-          className="absolute right-2.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/55 text-white opacity-0 backdrop-blur-md transition-opacity duration-150 hover:bg-[var(--void)]/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-2.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
         >
           <ImagePlus className="size-3.5" strokeWidth={1.9} />
         </button>
@@ -112,7 +112,7 @@ export function PursuitItem({
           type="button"
           onClick={() => setGoalOpen(true)}
           aria-label={`Edit the goal for ${pursuit.title}`}
-          className="absolute right-11 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/55 text-white opacity-0 backdrop-blur-md transition-opacity duration-150 hover:bg-[var(--void)]/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-11 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
         >
           <Target className="size-3.5" strokeWidth={1.9} />
         </button>
@@ -122,7 +122,7 @@ export function PursuitItem({
             to={`/pursuit/${pursuit.id}/moment`}
             onClick={() => track({ name: "pursuits_in_progress_item_tapped", pursuitId: pursuit.id })}
             aria-label={`Log a Moment on ${pursuit.title}`}
-            className="flex size-9 items-center justify-center rounded-full text-white shadow-[0_6px_14px_-4px_rgba(43,33,28,0.5)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)]"
+            className="flex size-9 items-center justify-center rounded-full text-on-brand shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)]"
             style={{ backgroundColor: "var(--coral-deep)" }}
           >
             <Plus className="size-4" strokeWidth={2.2} />
@@ -149,13 +149,13 @@ export function PursuitItem({
         </ProgressRing>
 
         <span
-          className="line-clamp-2 block text-sm leading-snug text-foreground"
+          className="line-clamp-2 block text-small leading-snug text-foreground"
           style={{ fontFamily: "var(--font-serif)" }}
           title={pursuit.title}
         >
           {pursuit.title}
         </span>
-        {progressLabel && <span className="mt-0.5 block text-xs text-muted-foreground">{progressLabel}</span>}
+        {progressLabel && <span className="mt-0.5 block text-caption text-muted-foreground">{progressLabel}</span>}
       </Link>
 
       <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={pursuit} />

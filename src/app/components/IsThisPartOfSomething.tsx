@@ -57,8 +57,8 @@ export function IsThisPartOfSomething({ post, onDone }: { post: Post; onDone: ()
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <p className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
+    <div className="rounded-card border border-border bg-card p-4">
+      <p className="text-body" style={{ fontFamily: "var(--font-serif)" }}>
         Is this part of something?
       </p>
       <Input
@@ -70,7 +70,7 @@ export function IsThisPartOfSomething({ post, onDone }: { post: Post; onDone: ()
         onKeyDown={(e) => e.key === "Enter" && next()}
         className="mt-2.5"
       />
-      <p className="mt-1.5 text-xs text-muted-foreground">Your next moments can go with it.</p>
+      <p className="mt-1.5 text-caption text-muted-foreground">Your next moments can go with it.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Button variant="outline" onClick={notNow} disabled={creating}>
           Not now

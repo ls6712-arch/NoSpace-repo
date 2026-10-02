@@ -28,15 +28,15 @@ function EmailPrefixPrompt({ userId, emailPrefix }: { userId: string; emailPrefi
   if (dismissed) return null;
 
   return (
-    <div className="mb-4 flex items-start justify-between gap-4 rounded-btn border border-accent/40 bg-accent/5 p-4">
-      <p className="text-sm leading-relaxed">
+    <div className="mb-4 flex items-start justify-between gap-4 rounded-control border border-accent/40 bg-accent/5 p-4">
+      <p className="text-small leading-relaxed">
         Is this how you'd like to be known? Your name is currently{" "}
         <span style={{ fontFamily: "var(--font-serif)" }}>"{emailPrefix}"</span> — taken from your
         email. You can change it below any time.
       </p>
       <button
         type="button"
-        className="min-h-11 shrink-0 text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+        className="min-h-11 shrink-0 text-caption text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
         onClick={() => {
           try {
             localStorage.setItem(nameDismissKey(userId), "1");
@@ -65,13 +65,13 @@ export function ProfileSection() {
   return (
     <section>
       <SectionHeader n={2} eyebrow="PROFILE" title="Profile" />
-      <p className="mb-4 text-sm text-muted-foreground">
+      <p className="mb-4 text-small text-muted-foreground">
         What people see — your Shelf, your Scrapbook, and anywhere you show up.
       </p>
 
       {showEmailPrefixPrompt && <EmailPrefixPrompt userId={user.id} emailPrefix={emailPrefix} />}
 
-      <div className="mb-4 rounded-btn border border-border bg-card p-4 sm:p-5">
+      <div className="mb-4 rounded-control border border-border bg-card p-4 sm:p-5">
         <AvatarPicker
           name={displayName || "You"}
           url={avatar ?? profile.avatar_url}

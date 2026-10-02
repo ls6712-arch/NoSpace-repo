@@ -18,10 +18,13 @@ export function ProgressBar({ fraction, className = "", thin = false }: { fracti
       aria-valuemax={100}
       aria-valuenow={Math.round(pct)}
     >
-      <div className="h-full rounded-full bg-[var(--coral)] transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
+      <div className="h-full rounded-full bg-[var(--coral)] transition-[width] duration-base ease-standard" style={{ width: `${pct}%` }} />
     </div>
   );
 }
+
+// design-token-ignore: motion/react takes numbers; these mirror --duration-base and --ease-standard
+const RING_SWEEP = { duration: 0.25, ease: [0.22, 0.61, 0.36, 1] } as const;
 
 /** Circular variant of ProgressBar — same terracotta fill, same "no
  * percentage" rule: the ring's sweep communicates the fraction visually,
@@ -80,7 +83,7 @@ export function ProgressRing({
           strokeDasharray={circumference}
           initial={false}
           animate={{ strokeDashoffset: offset }}
-          transition={reduceMotion ? { duration: 0 } : { duration: 0.7, ease: "easeOut" }}
+          transition={reduceMotion ? { duration: 0 } : RING_SWEEP}
         />
       </svg>
       {children && <span className="absolute inset-0 flex items-center justify-center">{children}</span>}
@@ -104,9 +107,9 @@ export function StepDots({ steps, current }: { steps: string[]; current: number 
               />
             )}
             <span
-              className={`relative z-10 flex size-7 items-center justify-center rounded-full border text-xs ${
+              className={`relative z-10 flex size-7 items-center justify-center rounded-full border text-caption ${
                 active
-                  ? "border-[var(--coral)] bg-[var(--coral)] text-white"
+                  ? "border-[var(--coral-deep)] bg-[var(--coral-deep)] text-on-brand"
                   : done
                     ? "border-[var(--coral)] bg-card text-[var(--coral-deep)]"
                     : "border-border bg-card text-muted-foreground"
@@ -115,7 +118,7 @@ export function StepDots({ steps, current }: { steps: string[]; current: number 
             >
               {done ? <Check className="size-3.5" /> : i + 1}
             </span>
-            <span className={`mt-1.5 text-[11px] ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
+            <span className={`mt-1.5 text-caption ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
           </li>
         );
       })}
@@ -152,7 +155,7 @@ export function AmountStepper({
       <button
         type="button"
         onClick={() => onChange(round(value - step))}
-        className="flex size-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
+        className="flex size-9 items-center justify-center rounded-control border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
         aria-label="Less"
       >
         <Minus className="size-4" />
@@ -169,18 +172,18 @@ export function AmountStepper({
           if (Number.isFinite(v)) onChange(round(v));
         }}
         onBlur={() => setText(String(value))}
-        className="h-9 w-20 rounded-lg border border-border bg-card text-center text-sm text-foreground outline-none focus:border-[var(--coral-deep)]"
+        className="h-9 w-20 rounded-control border border-border bg-card text-center text-body text-foreground outline-none focus:border-[var(--coral-deep)]"
         aria-label="Amount"
       />
       <button
         type="button"
         onClick={() => onChange(round(value + step))}
-        className="flex size-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
+        className="flex size-9 items-center justify-center rounded-control border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
         aria-label="More"
       >
         <Plus className="size-4" />
       </button>
-      <span className="ml-1 text-sm text-foreground">{unit}</span>
+      <span className="ml-1 text-small text-foreground">{unit}</span>
     </div>
   );
 }
@@ -188,7 +191,7 @@ export function AmountStepper({
 /** Lavender panel — the tip boxes and selected rows in the mockups. */
 export function SoftPanel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))] p-3.5 ${className}`}>{children}</div>
+    <div className={`rounded-card bg-surface-muted p-3.5 ${className}`}>{children}</div>
   );
 }
 
@@ -203,7 +206,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-[var(--coral)]" : "bg-border"}`}
     >
-      <span className={`inline-block size-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+      <span className={`inline-block size-5 rounded-full bg-background transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
     </button>
   );
 }

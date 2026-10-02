@@ -44,12 +44,12 @@ export function ShareProfileDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
         <DialogTitle className="sr-only">Share your {APP_NAME} profile</DialogTitle>
-        <div className="rounded-3xl p-[1.5px] [background-image:var(--gradient-brand)]">
-          <div className="rounded-[calc(1.5rem-1.5px)] bg-[var(--surface)] p-7 text-center">
+        <div className="rounded-card p-[1.5px] [background-image:var(--gradient-brand)]">
+          <div className="rounded-card bg-[var(--surface)] p-7 text-center">
             <Avatar className="size-16 mx-auto mb-4">
-              <AvatarFallback className="text-lg">YOU</AvatarFallback>
+              <AvatarFallback className="text-lead">YOU</AvatarFallback>
             </Avatar>
-            <div className="font-hud text-4xl mb-6 text-gradient-brand">
+            <div className="font-hud text-display mb-6 text-gradient-brand">
               {stats.postsCreated} {stats.postsCreated === 1 ? "thing" : "things"} created
             </div>
 
@@ -61,7 +61,7 @@ export function ShareProfileDialog({
                     <span
                       key={b.id}
                       title={badgeName(b, hobbySlug, hobbyLabel)}
-                      className="flex size-9 items-center justify-center rounded-full text-white [background-image:var(--gradient-brand)]"
+                      className="flex size-9 items-center justify-center rounded-full text-on-brand [background-image:var(--gradient-brand)]"
                     >
                       <Icon className="size-4" />
                     </span>
@@ -70,7 +70,7 @@ export function ShareProfileDialog({
               </div>
             )}
 
-            <div className="text-xs text-muted-foreground mb-1">Create, Don't Just Consume.</div>
+            <div className="text-caption text-muted-foreground mb-1">Create, Don't Just Consume.</div>
           </div>
         </div>
 
@@ -92,7 +92,7 @@ export function ShareProfileDialog({
             Done
           </Button>
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-3 px-1">
+        <p className="text-center text-caption text-muted-foreground mt-3 px-1">
           Screenshot the card above to share it as an image.
         </p>
       </DialogContent>

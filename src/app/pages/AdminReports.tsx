@@ -114,10 +114,10 @@ export function AdminReports() {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Nothing here for you
           </h2>
-          <p className="mb-6 max-w-sm text-sm text-muted-foreground">This screen is for whoever reviews reports.</p>
+          <p className="mb-6 max-w-sm text-small text-muted-foreground">This screen is for whoever reviews reports.</p>
           <Link to="/discover">
             <Button variant="outline">Back to Discover</Button>
           </Link>
@@ -143,9 +143,9 @@ export function AdminReports() {
   const decided = rows.filter((r) => r.status !== "open");
 
   const Row = ({ r }: { r: ReportRow }) => (
-    <li className="rounded-2xl border border-border bg-card p-4">
+    <li className="rounded-card border border-border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 text-sm">
+        <div className="min-w-0 text-small">
           <p>
             <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>{r.reporterName}</strong>{" "}
             reported{" "}
@@ -155,10 +155,10 @@ export function AdminReports() {
             of{" "}
             <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>{r.targetName}</strong>.
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-caption text-muted-foreground">
             {r.reason} · {when(r.createdAt)}
           </p>
-          {r.note && <p className="mt-1.5 text-xs italic text-muted-foreground">“{r.note}”</p>}
+          {r.note && <p className="mt-1.5 text-caption italic text-muted-foreground">“{r.note}”</p>}
         </div>
         {r.status === "open" && (
           <div className="flex shrink-0 gap-1.5">
@@ -173,7 +173,7 @@ export function AdminReports() {
           </div>
         )}
         {r.status !== "open" && (
-          <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-[11px] capitalize text-muted-foreground">
+          <span className="shrink-0 rounded-control border border-border px-2.5 py-1 text-caption capitalize text-muted-foreground">
             {r.status}
           </span>
         )}
@@ -182,17 +182,17 @@ export function AdminReports() {
   );
 
   return (
-    <div className="min-h-screen bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Reports
         </h1>
-        <p className="mb-8 mt-2 text-sm text-muted-foreground">
+        <p className="mb-8 mt-2 text-small text-muted-foreground">
           Reports of a profile, message, Moment or Thought, oldest open ones first.
         </p>
 
         {error && (
-          <p className="mb-5 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-small">
             {error}
           </p>
         )}
@@ -205,9 +205,9 @@ export function AdminReports() {
 
           <TabsContent value="open">
             {loading ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+              <p className="py-12 text-center text-small text-muted-foreground">Loading…</p>
             ) : open.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
                 Nothing open.
               </div>
             ) : (
@@ -221,7 +221,7 @@ export function AdminReports() {
 
           <TabsContent value="decided">
             {decided.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
                 Nothing decided yet.
               </div>
             ) : (

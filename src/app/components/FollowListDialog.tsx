@@ -56,12 +56,12 @@ export function FollowListDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
+        <div className="flex gap-1 rounded-control border border-border p-0.5 text-caption">
           <button
             type="button"
             onClick={() => setTab("followers")}
-            className={`flex-1 rounded-full px-3 py-1 transition-colors ${
-              tab === "followers" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+            className={`flex-1 rounded-control px-3 py-1 transition-colors ${
+              tab === "followers" ? "bg-[var(--coral-deep)] text-on-brand" : "text-muted-foreground"
             }`}
           >
             Followers
@@ -69,8 +69,8 @@ export function FollowListDialog({
           <button
             type="button"
             onClick={() => setTab("following")}
-            className={`flex-1 rounded-full px-3 py-1 transition-colors ${
-              tab === "following" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+            className={`flex-1 rounded-control px-3 py-1 transition-colors ${
+              tab === "following" ? "bg-[var(--coral-deep)] text-on-brand" : "text-muted-foreground"
             }`}
           >
             Following
@@ -79,9 +79,9 @@ export function FollowListDialog({
 
         <div className="mt-2">
           {loading ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">Loading…</p>
+            <p className="py-6 text-center text-caption text-muted-foreground">Loading…</p>
           ) : people.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
+            <p className="py-6 text-center text-caption text-muted-foreground">
               {tab === "followers" ? "No followers yet." : "Not following anyone yet."}
             </p>
           ) : (
@@ -91,10 +91,10 @@ export function FollowListDialog({
                   <Link
                     to={profilePath(person)}
                     onClick={() => onOpenChange(false)}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                    className="flex w-full items-center gap-3 rounded-control px-3 py-2 text-left text-small transition-colors hover:bg-surface-muted"
                   >
                     <Avatar className="size-7 shrink-0">
-                      <AvatarFallback className="text-[10px]">{initials(person.displayName)}</AvatarFallback>
+                      <AvatarFallback className="text-caption">{initials(person.displayName)}</AvatarFallback>
                     </Avatar>
                     {person.displayName}
                   </Link>

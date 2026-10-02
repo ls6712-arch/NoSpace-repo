@@ -117,7 +117,7 @@ export function Home() {
   const cornerMoments = seedPosts.filter((p) => p.subHobby === "pickleball").slice(0, 4);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-viewport">
       {/* Hero */}
       <section className="ns-home-hero relative isolate overflow-hidden">
         <div className="mx-auto w-full max-w-[1200px] px-5 pb-12 pt-12 text-center sm:px-8 sm:pt-16 lg:pb-16 lg:pt-20">
@@ -127,7 +127,7 @@ export function Home() {
           </div>
 
           <h1
-            className="ns-enter ns-enter-1 mb-5 text-[clamp(2.7rem,5vw,4.35rem)] font-semibold leading-[.98] tracking-[-0.035em] text-balance text-foreground"
+            className="ns-enter ns-enter-1 mb-5 text-hero font-semibold leading-[.98] tracking-[-0.035em] text-balance text-foreground"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             Your interests are
@@ -135,7 +135,7 @@ export function Home() {
             part of your story.
           </h1>
 
-          <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg">
+          <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-md text-body leading-relaxed text-foreground/90 sm:text-lead">
             Create moments. Document what makes you more you. Find
             what sparks next.
           </p>
@@ -165,11 +165,11 @@ export function Home() {
             </a>
           </div>
           {signedOut ? (
-            <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">
+            <p className="ns-enter ns-enter-3 mt-4 text-small text-foreground/70">
               {APP_NAME} is invite-only for now — no invite? Join the waitlist below.
             </p>
           ) : (
-            <p className="ns-enter ns-enter-3 mt-4 text-sm text-foreground/70">Free to join. No credit card.</p>
+            <p className="ns-enter ns-enter-3 mt-4 text-small text-foreground/70">Free to join. No credit card.</p>
           )}
         </div>
 
@@ -190,16 +190,16 @@ export function Home() {
 
       <div className="bg-surface">
         {/* Three value cards — what you actually come here to do. */}
-        <section className="pb-4 pt-16 lg:pb-8 lg:pt-20">
+        <section className="pb-4 pt-12 lg:pb-8 lg:pt-12">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div ref={valueCardsRef} className="ns-reveal grid gap-4 sm:grid-cols-3">
               {VALUE_CARDS.map(({ icon: Icon, title, copy }) => (
-                <div key={title} className="ns-value-card rounded-2xl p-6">
+                <div key={title} className="ns-value-card rounded-card p-6">
                   <span className="ns-value-card-icon mb-5 flex size-11 items-center justify-center rounded-full bg-surface-muted">
                     <Icon className="size-5 text-foreground" strokeWidth={1.7} />
                   </span>
-                  <div className="mb-2 text-xl" style={{ fontFamily: "var(--font-serif)" }}>{title}</div>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{copy}</p>
+                  <div className="mb-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>{title}</div>
+                  <p className="text-small leading-relaxed text-muted-foreground">{copy}</p>
                 </div>
               ))}
             </div>
@@ -207,15 +207,15 @@ export function Home() {
         </section>
 
         {/* The Loop */}
-        <section id="loop" ref={loopRef} className="ns-reveal py-20 lg:py-28">
+        <section id="loop" ref={loopRef} className="ns-reveal py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="grid items-center gap-10 md:grid-cols-2 md:gap-20">
               <div className="mx-auto max-w-lg lg:mx-0">
                 <div className="ns-section-kicker mb-4">THE LOOP</div>
-                <h2 className="mb-5 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+                <h2 className="mb-5 text-display" style={{ fontFamily: "var(--font-serif)" }}>
                   Ten seconds to log. A lifetime to look back on.
                 </h2>
-                <p className="max-w-md text-[1.05rem] leading-relaxed text-muted-foreground">
+                <p className="max-w-md text-body leading-relaxed text-muted-foreground">
                   Take a photo, write a quick note, or add a reflection nobody
                   else will ever see. Every Moment adds to your Shelf, the
                   full record of what you've actually done.
@@ -224,10 +224,10 @@ export function Home() {
               <div className="ns-paper-panel ns-process-panel">
                 {LOOP_STEPS.map((step) => (
                   <div key={step.n} className="ns-process-step">
-                    <span className="font-hud text-xs text-[var(--violet-electric-bright)]">{step.n}</span>
+                    <span className="font-hud text-caption text-[var(--violet-electric-bright)]">{step.n}</span>
                     <div>
-                      <div className="mb-0.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>{step.label}</div>
-                      <div className="text-xs leading-relaxed text-muted-foreground">{step.desc}</div>
+                      <div className="mb-0.5 text-lead" style={{ fontFamily: "var(--font-serif)" }}>{step.label}</div>
+                      <div className="text-caption leading-relaxed text-muted-foreground">{step.desc}</div>
                     </div>
                   </div>
                 ))}
@@ -241,14 +241,14 @@ export function Home() {
 
         {/* This Corner */}
         {cornerMoments.length > 0 && (
-          <section ref={cornerRef} className="ns-reveal py-20 lg:py-28">
+          <section ref={cornerRef} className="ns-reveal py-12 lg:py-section-hero">
             <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
               <div className="mb-10 max-w-xl lg:mb-12">
                 <div className="ns-section-kicker mb-4">THIS CORNER, RIGHT NOW</div>
-                <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+                <h2 className="mb-3 text-display" style={{ fontFamily: "var(--font-serif)" }}>
                   Inside the Pickleball Corner.
                 </h2>
-                <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
+                <p className="text-body leading-relaxed text-muted-foreground">
                   A Corner is the specific thing inside a Space, like Pickleball
                   inside Sports &amp; Fitness. Here's an example, shown with
                   real Moments from {APP_NAME}'s sample content.
@@ -264,15 +264,15 @@ export function Home() {
         )}
 
         {/* Discover / Spaces grid */}
-        <section ref={discoverRef} className="ns-reveal border-t border-[var(--hairline)] py-20 lg:py-28">
+        <section ref={discoverRef} className="ns-reveal border-t border-[var(--hairline)] py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="mb-10 flex items-end justify-between gap-5 lg:mb-12">
               <div className="max-w-xl">
                 <div className="ns-section-kicker mb-4">DISCOVER</div>
-                <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+                <h2 className="mb-3 text-display" style={{ fontFamily: "var(--font-serif)" }}>
                   One place for everything you do.
                 </h2>
-                <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
+                <p className="text-body leading-relaxed text-muted-foreground">
                   Fifteen Spaces today. Inside each one, tag a Moment
                   anything you like — "Pasta Making," "Food Photography,"
                   both at once — and it's there. No fixed list, no approval
@@ -293,10 +293,10 @@ export function Home() {
         </section>
 
         {/* Quote / proof */}
-        <section ref={quoteRef} className="ns-reveal py-20 [background:var(--atmo-wine)] lg:py-28">
+        <section ref={quoteRef} className="ns-reveal py-12 [background:var(--atmo-wine)] lg:py-section-hero">
           <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
             <Quote className="mx-auto mb-5 size-6 text-[var(--violet-electric-bright)]" />
-            <p className="text-2xl leading-snug text-foreground md:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <p className="text-title leading-snug text-foreground md:text-display" style={{ fontFamily: "var(--font-serif)" }}>
               No feed algorithm. No streaks. No performing for an audience.
               Just your own log, kept the way you want it.
             </p>
@@ -304,12 +304,12 @@ export function Home() {
         </section>
 
         {/* Final CTA */}
-        <section ref={finalCtaRef} className="ns-reveal py-20 lg:py-28">
+        <section ref={finalCtaRef} className="ns-reveal py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[900px] px-5 sm:px-8">
             <div className="ns-invitation text-center">
               <div className="ns-invitation-spark" aria-hidden="true">✦</div>
               <div className="ns-section-kicker mb-5">START WHERE YOU ARE</div>
-              <h2 className="mb-5 text-4xl leading-[1.02] md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+              <h2 className="mb-5 text-display leading-[1.02]" style={{ fontFamily: "var(--font-serif)" }}>
                 Whatever you're curious about,<br />it's worth keeping.
               </h2>
               {signedOut ? (
@@ -344,12 +344,12 @@ export function Home() {
       <footer className="border-t border-[var(--hairline)] py-12">
         <div className="container mx-auto flex flex-col items-center gap-6 px-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="text-center sm:text-left">
-            <span className="text-lg text-foreground" style={{ fontFamily: "var(--font-serif)" }}>{APP_NAME}</span>
-            <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+            <span className="text-lead text-foreground" style={{ fontFamily: "var(--font-serif)" }}>{APP_NAME}</span>
+            <p className="mt-1 max-w-xs text-small text-muted-foreground">
               One place for everything you're living, doing, and making.
             </p>
           </div>
-          <nav aria-label="Product" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+          <nav aria-label="Product" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">
             <Link to="/discover" className="hover:text-foreground">Discover</Link>
             <Link to="/my-space" className="hover:text-foreground">Home</Link>
             <Link to="/create" className="hover:text-foreground">Log a Moment</Link>

@@ -71,7 +71,7 @@ export function SendToChatDialog({
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Send to…</DialogTitle>
         </DialogHeader>
         {chats.length === 0 ? (
-          <p className="py-6 text-center text-xs text-muted-foreground">
+          <p className="py-6 text-center text-caption text-muted-foreground">
             No open chats yet — start one from someone's profile first.
           </p>
         ) : (
@@ -85,18 +85,18 @@ export function SendToChatDialog({
                     type="button"
                     disabled={sendingTo === t.id || done}
                     onClick={() => (done ? navigate(`/messages?thread=${t.id}`) : send(t.id))}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted disabled:cursor-default"
+                    className="flex w-full items-center gap-3 rounded-control px-3 py-2 text-left text-small transition-colors hover:bg-surface-muted disabled:cursor-default"
                   >
                     <Avatar className="size-7 shrink-0">
-                      <AvatarFallback className="text-[10px]">{initials(name ?? "?")}</AvatarFallback>
+                      <AvatarFallback className="text-caption">{initials(name ?? "?")}</AvatarFallback>
                     </Avatar>
-                    <span className="min-w-0 flex-1 truncate">{name}</span>
+                    <span className="min-w-0 flex-1 truncate" title={name}>{name}</span>
                     {done ? (
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1 text-caption text-muted-foreground">
                         <Check className="size-3.5" /> Sent
                       </span>
                     ) : sendingTo === t.id ? (
-                      <span className="text-[11px] text-muted-foreground">Sending…</span>
+                      <span className="text-caption text-muted-foreground">Sending…</span>
                     ) : null}
                   </button>
                 </li>
@@ -104,7 +104,7 @@ export function SendToChatDialog({
             })}
           </ul>
         )}
-        {error && <p className="text-xs text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={close}>
             Done

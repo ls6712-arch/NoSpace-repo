@@ -46,7 +46,7 @@ export function InviteArrival() {
   if (checking || loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-sm text-muted-foreground">Checking your invite…</p>
+        <p className="text-small text-muted-foreground">Checking your invite…</p>
       </div>
     );
   }
@@ -56,7 +56,7 @@ export function InviteArrival() {
   if (user && profile?.access === "active") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
-        <p className="text-sm text-muted-foreground">You're already on {APP_NAME}.</p>
+        <p className="text-small text-muted-foreground">You're already on {APP_NAME}.</p>
         <Link to="/my-space">
           <Button variant="coral">Go to Home</Button>
         </Link>
@@ -66,9 +66,9 @@ export function InviteArrival() {
 
   if (!preview?.isValid) {
     return (
-      <div className="min-h-screen bg-surface px-5 pb-24 pt-16">
+      <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
         <div className="mx-auto max-w-sm text-center">
-          <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             This invite has expired or was already used.
           </h1>
           <div className="mt-8 text-left">
@@ -80,36 +80,36 @@ export function InviteArrival() {
   }
 
   return (
-    <div className="min-h-screen bg-surface px-5 pb-24 pt-16">
+    <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
       <div className="mx-auto max-w-sm text-center">
         <div className="flex justify-center">
           <Avatar className="size-16">
             {preview.inviterAvatar && (
               <AvatarImage src={preview.inviterAvatar} alt="" className="object-cover" />
             )}
-            <AvatarFallback className="text-lg">
+            <AvatarFallback className="text-lead">
               {(preview.inviterName ?? "?").trim().slice(0, 1).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
-        <h1 className="mt-4 text-[1.75rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mt-4 text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
           {preview.inviterName} invited you to {APP_NAME}
         </h1>
         {preview.note && (
-          <p className="mt-3 text-sm italic leading-relaxed text-muted-foreground">“{preview.note}”</p>
+          <p className="mt-3 text-small italic leading-relaxed text-muted-foreground">“{preview.note}”</p>
         )}
 
         <div className="mt-8 space-y-3">
-          <Button variant="coral" className="h-11 w-full rounded-xl" onClick={startGoogle}>
+          <Button variant="coral" className="h-11 w-full rounded-control" onClick={startGoogle}>
             Continue with Google
           </Button>
           <Link to="/login" onClick={() => saveInviteCode(code)}>
-            <Button variant="outline" className="h-11 w-full rounded-xl">
+            <Button variant="outline" className="h-11 w-full rounded-control">
               Use email
             </Button>
           </Link>
         </div>
-        {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
+        {error && <p className="mt-3 text-caption text-destructive">{error}</p>}
       </div>
     </div>
   );

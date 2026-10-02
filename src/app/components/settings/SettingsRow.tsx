@@ -18,9 +18,9 @@ export function SettingsRow({
   return (
     <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5">
       <div className="min-w-0">
-        <div className="text-sm">{label}</div>
+        <div className="text-small">{label}</div>
         {description && (
-          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
+          <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground">{description}</p>
         )}
       </div>
       <div className="min-w-0 sm:shrink-0 sm:text-right">{children}</div>
@@ -33,7 +33,7 @@ export function SettingsRow({
  * already does that). */
 export function SettingsPanel({ children }: { children: ReactNode }) {
   return (
-    <div className="divide-y divide-[var(--hairline)] rounded-btn border border-border bg-card">
+    <div className="divide-y divide-[var(--hairline)] rounded-control border border-border bg-card">
       {children}
     </div>
   );

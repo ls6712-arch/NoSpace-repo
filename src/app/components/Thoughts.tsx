@@ -112,7 +112,7 @@ export function Thoughts({
             type="button"
             onClick={() => onTogglePrivate(!privateThoughts)}
             aria-pressed={privateThoughts}
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 text-caption text-muted-foreground transition-colors hover:text-foreground"
           >
             <Lock className="size-3" />
             {privateThoughts ? "Private thoughts only" : "Thoughts are public"}
@@ -124,14 +124,14 @@ export function Thoughts({
         <button
           type="button"
           onClick={() => setOpenComposer(true)}
-          className={`mb-3 flex w-full items-center gap-2.5 rounded-full border border-[var(--border)] bg-surface text-left transition-colors hover:border-[var(--foreground)]/30 ${
+          className={`mb-3 flex w-full items-center gap-2.5 rounded-control border border-[var(--border)] bg-surface text-left transition-colors hover:border-[var(--foreground)]/30 ${
             compact ? "px-2.5 py-1.5" : "px-3 py-2.5"
           }`}
         >
           <Avatar className={compact ? "size-5 shrink-0" : "size-6 shrink-0"}>
-            <AvatarFallback className="text-[9px]">{initials(myName)}</AvatarFallback>
+            <AvatarFallback className="text-caption">{initials(myName)}</AvatarFallback>
           </Avatar>
-          <span className={`flex-1 truncate text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+          <span className={`flex-1 truncate text-muted-foreground ${compact ? "text-caption" : "text-small"}`}>
             {compact ? "Add a thought" : "Add a thought…"}
           </span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
@@ -147,7 +147,7 @@ export function Thoughts({
                   key={starter}
                   type="button"
                   onClick={() => setBody(starter)}
-                  className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+                  className="rounded-control border border-border bg-surface px-3 py-1 text-caption text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
                 >
                   {starter}
                 </button>
@@ -168,12 +168,12 @@ export function Thoughts({
             </div>
           )}
           {failed && (
-            <p className="mt-2 text-[11px] text-[var(--coral-text)]">
+            <p className="mt-2 text-caption text-[var(--coral-text)]">
               That didn't send. Your words are still here, try again.
             </p>
           )}
           <div className="mt-2 flex items-center justify-between gap-3">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-caption text-muted-foreground">
               {privateThoughts
                 ? "Only you and the maker will see this."
                 : "Visible to anyone who can see this moment."}
@@ -202,17 +202,17 @@ export function Thoughts({
           {thoughts.map((t) => (
             <li
               key={t.id}
-              className="rounded-2xl border border-[var(--hairline)] bg-surface px-3.5 py-3"
+              className="rounded-card border border-[var(--hairline)] bg-surface px-3.5 py-3"
             >
               {t.prompt && (
-                <div className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-[var(--coral-text)]">
+                <div className="mb-1.5 flex items-center gap-1.5 text-caption uppercase tracking-wide text-[var(--coral-text)]">
                   <MessageCircleQuestion className="size-3" />
                   {t.prompt}
                 </div>
               )}
-              <p className="text-sm leading-relaxed">{t.body}</p>
+              <p className="text-small leading-relaxed">{t.body}</p>
               {t.media && (
-                <div className="mt-2 overflow-hidden rounded-xl border border-[var(--hairline)]">
+                <div className="mt-2 overflow-hidden rounded-card border border-[var(--hairline)]">
                   {/^https?:\/\/.*\.(mp4|webm|mov)$/i.test(t.media) ? (
                     <video src={t.media} controls className="w-full" />
                   ) : (
@@ -223,9 +223,9 @@ export function Thoughts({
               <div className="mt-2 flex items-center gap-2">
                 <Avatar className="size-5">
                   {t.authorAvatar && <AvatarImage src={t.authorAvatar} alt="" />}
-                  <AvatarFallback className="text-[9px]">{initials(t.authorName)}</AvatarFallback>
+                  <AvatarFallback className="text-caption">{initials(t.authorName)}</AvatarFallback>
                 </Avatar>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-caption text-muted-foreground">
                   {t.authorName} · {ago(t.createdAt)}
                 </span>
                 {user?.id === t.userId ? (
@@ -254,7 +254,7 @@ export function Thoughts({
       )}
 
       {!social.isShared && thoughts.length > 0 && (
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-caption text-muted-foreground">
           Saved in this browser only. Sign in for thoughts other people can see.
         </p>
       )}

@@ -95,7 +95,7 @@ const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
  */
 function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
   return `border-b-2 font-medium uppercase tracking-wider transition-colors ${
-    size === "sm" ? "pb-2 text-xs" : "pb-1 text-[11px]"
+    size === "sm" ? "pb-2 text-caption" : "pb-1 text-caption"
   } ${
     active
       ? "border-[var(--coral-deep)] text-foreground"
@@ -190,7 +190,7 @@ function MarketplaceTab({ query }: { query: string }) {
 
   if (matching.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+      <p className="rounded-card border border-dashed border-border px-5 py-6 text-center text-small text-muted-foreground">
         {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
       </p>
     );
@@ -201,14 +201,14 @@ function MarketplaceTab({ query }: { query: string }) {
       {[...bySpace.entries()].map(([hobbySlug, list]) => {
         const hobby = hobbies.find((h) => h.slug === hobbySlug);
         return (
-          <section key={hobbySlug} className="mb-11">
+          <section key={hobbySlug} className="mb-12">
             <div className="mb-3 flex items-end justify-between gap-4">
-              <h2 className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+              <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
                 {hobby?.name ?? hobbySlug}
               </h2>
               <Link
                 to={`/shop?hobby=${hobbySlug}`}
-                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                className="text-caption text-muted-foreground transition-colors hover:text-foreground"
               >
                 See all in {hobby?.shortName ?? hobbySlug} →
               </Link>
@@ -253,7 +253,7 @@ function AllCornersBrowser({ query }: { query: string }) {
     // below is only ever seen when a search genuinely comes up empty.
     if (!q) return null;
     return (
-      <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+      <div className="rounded-card border border-dashed border-border px-5 py-6 text-center text-small text-muted-foreground">
         No Corners match that. Try a broader word.
       </div>
     );
@@ -265,17 +265,17 @@ function AllCornersBrowser({ query }: { query: string }) {
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
           to={`/corner/${c.slug}`}
-          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+          className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-fast ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
         >
           <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
             <DiscoverSpaceArt
               hobbySlug={c.spaceSlug}
               seed={`${c.spaceSlug}-${c.slug}`}
-              className="transition-transform duration-500 ease-out group-hover:scale-110"
+              className="transition-transform duration-fast ease-standard group-hover:scale-110"
             />
           </div>
           <div className="px-3 py-2.5">
-            <span className="block text-sm leading-tight text-foreground">{c.name}</span>
+            <span className="block text-small leading-tight text-foreground">{c.name}</span>
           </div>
         </Link>
       ))}
@@ -468,8 +468,8 @@ export function Discover() {
   const remaining = filtered.length - visible.length;
 
   return (
-    <div className="min-h-screen">
-      <section className="relative overflow-hidden py-10 sm:py-12">
+    <div className="min-h-viewport">
+      <section className="relative overflow-hidden py-12 sm:py-12">
         <div className="container relative mx-auto max-w-3xl px-4">
           <div className="ns-discover-search relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
@@ -482,7 +482,7 @@ export function Discover() {
                 if (searchParams.get("about")) setSearchParams({}, { replace: true });
               }}
               placeholder="Search Moments, people, Spaces"
-              className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-sm text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
+              className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-body text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
             />
             {query && (
               <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
@@ -500,7 +500,7 @@ export function Discover() {
               horizontally (edge-to-edge, bleeding past the container's own
               padding) instead of overflowing the screen or wrapping into a
               second, layout-shifting row. */}
-          <div className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
+          <div className="-mx-4 -mt-2.5 mb-3.5 overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
             <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
               {VISIBLE_DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
                 const active = tab === id;
@@ -531,15 +531,15 @@ export function Discover() {
 
               {/* Spotlight */}
               {featured.length > 0 && (
-                <section className="mb-14">
+                <section className="mb-12">
                   <div className="mb-5 flex items-end justify-between gap-4">
                     <div>
                       <div className="ns-section-kicker mb-2">Popular Moments from across {APP_NAME}</div>
-                      <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Spotlight</h2>
+                      <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>Spotlight</h2>
                     </div>
                     <a
                       href="#all-moments"
-                      className="shrink-0 text-xs text-[var(--coral-text)] hover:underline"
+                      className="shrink-0 text-caption text-[var(--coral-text)] hover:underline"
                       onClick={(e) => {
                         // A plain href would set location.hash, which the
                         // HashRouter reads as a navigation to path
@@ -571,9 +571,9 @@ export function Discover() {
               <div id="all-moments" className="mb-4 flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <div className="ns-section-kicker mb-2">Moments from across {APP_NAME}</div>
-                  <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>All Moments</h2>
+                  <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>All Moments</h2>
                 </div>
-                <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-full border border-border bg-card p-1">
+                <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-control border border-border bg-card p-1">
                   {FEED_TABS.map(({ id, label }) => {
                     const active = feedTab === id;
                     return (
@@ -586,9 +586,9 @@ export function Discover() {
                             setFeedTab(id);
                             setShown(PAGE_SIZE);
                           }}
-                          className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                          className={`rounded-control px-3.5 py-1.5 text-caption font-medium transition-colors ${
                             active
-                              ? "text-white [background-image:var(--gradient-brand)]"
+                              ? "text-on-brand [background-image:var(--gradient-brand)]"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
@@ -613,9 +613,9 @@ export function Discover() {
                           setChip(c.id);
                           setShown(PAGE_SIZE);
                         }}
-                        className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                        className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
                           active
-                            ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                            ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
                             : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
                         }`}
                       >
@@ -680,20 +680,20 @@ export function Discover() {
                 })}
               </ul>
 
-              <p className="mb-6 text-sm text-muted-foreground">
+              <p className="mb-6 text-small text-muted-foreground">
                 {chip === "near"
                   ? "Location isn't switched on yet."
                   : `${filtered.length} ${filtered.length === 1 ? "Moment" : "Moments"}${q ? ` matching "${query}"` : ""}.`}
               </p>
 
               {chip === "near" ? (
-                <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
-                  <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                <div className="rounded-card border border-dashed border-border px-5 py-10 text-center">
+                  <p className="mx-auto mb-5 max-w-sm text-small leading-relaxed text-muted-foreground">
                     {APP_NAME} doesn't know where you are, and won't until you tell it.
                   </p>
                 </div>
               ) : visible.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
+                <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-small text-muted-foreground">
                   {feedTab === "following"
                     ? "Nothing from your Interests yet. Tag a Moment with a Corner to start building your list."
                     : "Nothing matches that yet. Try a broader word or a different filter."}
@@ -714,10 +714,10 @@ export function Discover() {
 
               {/* The end of the gallery — an intentional choice, not more scroll */}
               {visible.length > 0 && (
-                <div className="mt-10 rounded-3xl border border-border bg-card px-6 py-9 text-center">
+                <div className="mt-10 rounded-card border border-border bg-card px-6 py-9 text-center">
                   {remaining > 0 ? (
                     <>
-                      <p className="mb-4 text-sm text-muted-foreground">
+                      <p className="mb-4 text-small text-muted-foreground">
                         That's {visible.length} of {filtered.length}. Nothing loads on
                         its own. Keep going only if you want to.
                       </p>
@@ -727,10 +727,10 @@ export function Discover() {
                     </>
                   ) : (
                     <>
-                      <p className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                      <p className="mb-1 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
                         That's everything here.
                       </p>
-                      <p className="mb-5 text-sm text-muted-foreground">
+                      <p className="mb-5 text-small text-muted-foreground">
                         A good place to stop scrolling and go make something.
                       </p>
                       <div className="flex flex-wrap items-center justify-center gap-3">

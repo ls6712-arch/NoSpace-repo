@@ -45,12 +45,14 @@ function AllPursuitsGroup({
             <li key={p.id} className="flex items-center gap-3 py-2.5">
               <Link to={`/pursuit/${p.id}`} onClick={onNavigate} className="group min-w-0 flex-1">
                 <span
-                  className="block truncate text-base text-foreground group-hover:text-accent"
+                  className="block truncate text-body text-foreground group-hover:text-accent"
                   style={{ fontFamily: "var(--font-serif)" }}
-                >
+                 title={p.title}>
                   {p.title}
                 </span>
-                <span className="block truncate text-xs text-foreground/80">
+                <span className="block truncate text-caption text-foreground/80" title={[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
+                    .filter(Boolean)
+                    .join(" · ")}>
                   {[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
                     .filter(Boolean)
                     .join(" · ")}
@@ -60,7 +62,7 @@ function AllPursuitsGroup({
                 to={`/pursuit/${p.id}/moment`}
                 onClick={onNavigate}
                 aria-label={`Log a Moment on ${p.title}`}
-                className="flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground hover:border-[var(--coral-deep)]"
+                className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground hover:border-[var(--coral-deep)]"
               >
                 <Plus className="size-3" /> Add
               </Link>

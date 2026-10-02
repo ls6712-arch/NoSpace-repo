@@ -28,17 +28,21 @@ export function PersonCard({ person, className = "" }: { person: Person; classNa
   return (
     <Link
       to={profilePath(person)}
-      className={`flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] ${className}`}
+      className={`flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-fast hover:-translate-y-0.5 hover:border-[var(--coral-deep)] ${className}`}
     >
       <Avatar className="size-11 shrink-0">
         {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" />}
-        <AvatarFallback className="text-xs">{initials(person.displayName)}</AvatarFallback>
+        <AvatarFallback className="text-caption">{initials(person.displayName)}</AvatarFallback>
       </Avatar>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+        <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={person.displayName}>
           {person.displayName}
         </span>
-        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+        <span className="mt-0.5 block truncate text-caption text-muted-foreground" title={hobbies.length > 0
+            ? hobbies.join(" · ")
+            : person.postCount > 0
+              ? `Sharing Moments on ${APP_NAME}`
+              : "Just joined, nothing shared yet"}>
           {hobbies.length > 0
             ? hobbies.join(" · ")
             : person.postCount > 0

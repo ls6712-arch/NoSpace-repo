@@ -24,11 +24,11 @@ export function SignUpPrompt({
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
-      <div className="glass-panel glow-violet w-full max-w-md rounded-3xl p-8 text-center sm:p-10">
-        <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+      <div className="glass-panel shadow-card w-full max-w-md rounded-card p-8 text-center sm:p-10">
+        <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
           {title}
         </h2>
-        <p className="mb-7 text-sm leading-relaxed text-muted-foreground">{body}</p>
+        <p className="mb-7 text-small leading-relaxed text-muted-foreground">{body}</p>
         <div className="flex flex-col gap-2.5">
           <Link to={`/login?redirect=${redirect}`}>
             <Button variant="brand" className="w-full" size="lg">
@@ -41,7 +41,7 @@ export function SignUpPrompt({
             </Button>
           </Link>
         </div>
-        <p className="mt-5 text-xs text-muted-foreground/70">
+        <p className="mt-5 text-caption text-muted-foreground/70">
           Browsing stays free. An account is only for keeping what you make.
         </p>
       </div>
