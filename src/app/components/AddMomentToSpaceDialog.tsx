@@ -6,6 +6,7 @@ import { isMissingCountColumn } from "../context/ContentContext";
 import { signMomentPaths } from "../lib/momentMedia";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { friendlyError } from "../lib/friendlyError";
 
 /** Links one of the member's own existing Moments into this Space —
  * space_moments' own "the poster or a host links/unlinks" policy already
@@ -102,7 +103,13 @@ export function AddMomentToSpaceDialog({
       .select("status")
       .single();
     setLinking(null);
-    if (insertError) return setError(insertError.message);
+    if (insertError) {
+      console.warn("[AddMomentToSpaceDialog] add failed:", insertError);
+      // A duplicate means it's already here — say that, not the constraint name.
+      return setError(
+        insertError.code === "23505" ? "That Moment is already in this Space." : friendlyError(insertError),
+      );
+    }
     setDonePending(data?.status === "pending");
     setDone(true);
     onAdded?.();

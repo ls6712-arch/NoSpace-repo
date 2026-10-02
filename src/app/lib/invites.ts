@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { friendlyError } from "./friendlyError";
 
 /**
  * Step 2 (invite-only sign-up) — thin RPC wrappers, same shape as
@@ -55,7 +56,7 @@ export interface CreateInviteResult {
 export async function createInvite(note: string): Promise<CreateInviteResult> {
   if (!supabase) return { code: null, expiresAt: null, error: "Not signed in." };
   const { data, error } = await supabase.rpc("create_invite", { p_note: note.trim() || null });
-  if (error) return { code: null, expiresAt: null, error: error.message };
+  if (error) return { code: null, expiresAt: null, error: friendlyError(error) };
   const row = Array.isArray(data) ? data[0] : data;
   return {
     code: row?.invite_code ?? null,

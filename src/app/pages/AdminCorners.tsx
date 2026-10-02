@@ -9,6 +9,7 @@ import { Input } from "../components/ui/input";
 import { plural } from "../lib/plural";
 import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
+import { friendlyError } from "../lib/friendlyError";
 
 /**
  * Merging, renaming and hiding Corners.
@@ -106,7 +107,7 @@ export function AdminCorners() {
       setError(
         /blocklisted|constraint/i.test(err.message)
           ? `“${name}” isn’t allowed as a Corner name.`
-          : err.message,
+          : friendlyError(err),
       );
       return;
     }
@@ -125,7 +126,8 @@ export function AdminCorners() {
     });
     setBusy(null);
     if (err) {
-      setError(err.message);
+      console.warn("[AdminCorners] action failed:", err);
+      setError(friendlyError(err));
       return;
     }
     setNotice(row.hidden ? `“${row.name}” is visible again.` : `“${row.name}” is hidden from Discover.`);
@@ -152,7 +154,8 @@ export function AdminCorners() {
     });
     setBusy(null);
     if (err) {
-      setError(err.message);
+      console.warn("[AdminCorners] action failed:", err);
+      setError(friendlyError(err));
       return;
     }
     const moved = (data ?? {}) as { moments?: number; pursuits?: number; spaces?: number; interests?: number };

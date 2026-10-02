@@ -28,6 +28,9 @@ export function friendlyError(err: unknown, fallback: string = ERROR_LINE): stri
   }
   const authored = authoredMessage(err);
   if (authored) return authored;
+  // Kept for whoever's debugging: the person sees the plain line, the
+  // console keeps the real error.
+  if (err && import.meta.env?.MODE !== "test") console.warn("[friendlyError] hid:", err);
   return fallback;
 }
 
