@@ -45,6 +45,8 @@ import { NextSessionCard } from "../components/pursuit/NextSessionCard";
 import { ProgressBar } from "../components/pursuit/ui";
 import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
+import { formatDate, formatWhen } from "../lib/dates";
+import { plural } from "../lib/plural";
 
 function initials(name: string) {
   return name
@@ -56,12 +58,7 @@ function initials(name: string) {
 }
 
 function timeAgo(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days < 1) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30.44);
-  return `${months} ${months === 1 ? "month" : "months"} ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 /** What every source (the owner's own local journal, a shared row from
@@ -263,10 +260,10 @@ export function Pursuit() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
         <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-          This Pursuit isn't here.
+          This Pursuit isn’t here.
         </h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          It may have been kept private, or the link's out of date.
+          It may have been kept private, or the link’s out of date.
         </p>
         <Link to="/discover" className="mt-2">
           <Button variant="outline">Back to Discover</Button>
@@ -322,9 +319,9 @@ export function Pursuit() {
     status === "complete"
       ? `Finished ${timeAgo(view.finishedAt!)}`
       : status === "resting"
-        ? `Resting since ${new Date(view.pausedAt!).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+        ? `Resting since ${formatDate(view.pausedAt!)}`
         : status === "let_go"
-          ? `Let go ${new Date(view.letGoAt!).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+          ? `Let go ${formatDate(view.letGoAt!)}`
           : startedLabel(view.startedAt);
 
   // Step 5a: "[N] of [M] this week" counts only this person's own Moments —
@@ -363,7 +360,7 @@ export function Pursuit() {
           <span className="text-sm text-muted-foreground">{view.ownerName}</span>
         </div>
 
-        <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mb-2 break-words text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
           {view.title}
         </h1>
 
@@ -376,8 +373,8 @@ export function Pursuit() {
           {moments.length > 0 && (
             <>
               <span aria-hidden="true">·</span>
-              <span>
-                {moments.length} Moment{moments.length === 1 ? "" : "s"}
+              <span className="tabular-nums">
+                {plural(moments.length, "Moment")}
               </span>
             </>
           )}
@@ -407,7 +404,7 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-sm">
               <Moon className="size-4 shrink-0 text-muted-foreground" />
-              Resting. Nothing's lost, and there's no clock running.
+              Resting. Nothing’s lost, and there’s no clock running.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
               <Play className="size-3.5" /> Pick it back up
@@ -419,7 +416,7 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-sm">
               <Wind className="size-4 shrink-0 text-muted-foreground" />
-              Let go. Nothing's lost.
+              Let go. Nothing’s lost.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
               <Play className="size-3.5" /> Pick it back up
@@ -445,12 +442,12 @@ export function Pursuit() {
                   Goal reached — <span className="text-muted-foreground">{goal.label}</span>
                 </span>
               ) : (
-                <span>{goalSentence}</span>
+                <span className="tabular-nums">{goalSentence}</span>
               )}
             </p>
             {!goalReached && goal.shape === "date" && goal.targetDate && (
               <p className="mt-1 pl-6 text-xs text-muted-foreground">
-                {new Date(goal.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                {formatDate(goal.targetDate)}
               </p>
             )}
             {!goalReached && goal.shape === "number" && goal.targetNumber ? (
@@ -479,7 +476,7 @@ export function Pursuit() {
               Add your first Moment
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              A photo of where you're starting makes the best before-and-after later.
+              A photo of where you’re starting makes the best before-and-after later.
             </p>
             {!hasMeasure(ownProject) && (
               <Link to={`/pursuit/${ownProject.id}/moment`} className="mt-3 inline-block">
@@ -611,7 +608,7 @@ export function Pursuit() {
         {moments.length === 0 ? (
           !owner && (
             <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-              <p className="text-sm text-muted-foreground">No Moments shared yet.</p>
+              <p className="text-sm text-muted-foreground">No Moments shared yet</p>
             </div>
           )
         ) : (
@@ -672,7 +669,7 @@ export function Pursuit() {
 }
 
 function shortDate(ms: number) {
-  return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return formatDate(ms);
 }
 
 /**

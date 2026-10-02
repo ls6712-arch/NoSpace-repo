@@ -36,6 +36,8 @@ import {
   DialogDescription,
 } from "./ui/dialog";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { plural } from "../lib/plural";
+import { Time } from "./ui/time";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -143,7 +145,7 @@ function VisibilityDialog({
     });
     setSaving(false);
     if (!ok) {
-      setError("Couldn't save that. Try again in a moment.");
+      setError("Couldn’t save that. Try again in a moment.");
       return;
     }
     onOpenChange(false);
@@ -382,10 +384,6 @@ export function MomentCard({
   const cornerLine = [corner, pursuitTitle].filter(Boolean).join(" · ");
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   const onlyYou = isOnlyYou(post);
-  const timeLabel = new Date(post.createdAt).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
 
   return (
     <article className="flex min-w-0 flex-col">
@@ -449,7 +447,7 @@ export function MomentCard({
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
               {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
               <span className="hidden sm:inline">{visibilityWord(post)} · </span>
-              {timeLabel}
+              <Time value={post.createdAt} />
             </span>
           </div>
         ) : (
@@ -482,13 +480,7 @@ export function MomentCard({
           <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2.5">
             <div className="flex items-center gap-1.5 text-xs">
               <CalendarDays className="size-3.5 shrink-0 text-foreground" />
-              {new Date(post.startsAt!).toLocaleString(undefined, {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}
+              <Time value={post.startsAt!} format="datetime" />
             </div>
             {activityPlace && (
               <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -497,7 +489,7 @@ export function MomentCard({
               </div>
             )}
             <div className="mt-1.5 text-xs text-muted-foreground">
-              {goingCount} {goingCount === 1 ? "person" : "people"} going
+              {plural(goingCount, "person", "people")} going
             </div>
           </div>
         )}

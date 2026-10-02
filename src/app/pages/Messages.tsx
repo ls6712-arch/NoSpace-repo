@@ -25,6 +25,7 @@ import { BlockConfirmDialog } from "../components/BlockConfirmDialog";
 import { ReportDialog } from "../components/ReportDialog";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SharedContentCard } from "../components/SharedContentCard";
+import { pluralWord } from "../lib/plural";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -60,7 +61,7 @@ function initials(name: string) {
  * pair of quotes when intent is missing. */
 function emptyStateFor(active: Participation | null, otherName: string): string {
   if (active && (active.kind === "make_together" || active.kind === "explore_together") && active.intent) {
-    return `You both agreed to "${active.intent}", this is where that happens.`;
+    return `You both agreed to “${active.intent}”, this is where that happens.`;
   }
   return `Say hi to ${otherName}.`;
 }
@@ -417,7 +418,7 @@ function ConversationPanel({
                       onClick={() => onRetry(m.clientId!)}
                       className="mt-0.5 block text-[11px] text-[var(--coral-text)] underline-offset-2 hover:underline"
                     >
-                      Not sent · Tap to retry
+                      Not sent · tap to retry
                     </button>
                   )}
                   {showSeen && <p className="mt-0.5 text-right text-[11px] text-muted-foreground">Seen</p>}
@@ -433,7 +434,7 @@ function ConversationPanel({
             onClick={scrollToBottom}
             className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--coral-deep)] px-3.5 py-1.5 text-xs text-white shadow"
           >
-            New message{newMessageCount > 1 ? "s" : ""}
+            {pluralWord(newMessageCount, "New message", "New messages")}
           </button>
         )}
       </div>
@@ -453,7 +454,7 @@ function ConversationPanel({
                 setHeicWarning(null);
                 const converted = await convertHeicIfNeeded(picked);
                 if (isHeicFile(converted)) {
-                  setHeicWarning("That photo couldn't be processed — try a different one.");
+                  setHeicWarning("That photo couldn’t be processed — try a different one.");
                   return;
                 }
                 onAttachPhoto(converted);
@@ -500,7 +501,7 @@ function ConversationPanel({
         open={unsendTargetId != null}
         onOpenChange={(open) => !open && setUnsendTargetId(null)}
         title="Unsend this message?"
-        description="Both of you will see “Message deleted” in its place. This can't be undone."
+        description="Both of you will see “Message deleted” in its place. This can’t be undone."
         confirmLabel="Unsend"
         onConfirm={() => {
           if (unsendTargetId != null) onUnsend?.(unsendTargetId);
@@ -719,7 +720,7 @@ export function Messages() {
         setActiveId(id);
       }
       if (error) {
-        setSendError("Couldn't send that. Try again later.");
+        setSendError("Couldn’t send that. Try again later.");
         return;
       }
       setDraft("");
@@ -730,7 +731,7 @@ export function Messages() {
     setSendError(null);
     // Clears right away regardless of outcome — the message itself now
     // appears immediately in the thread (see ConversationPanel), "sending"
-    // or, on failure, "Not sent · Tap to retry" in place. There's nothing
+    // or, on failure, "Not sent · tap to retry" in place. There's nothing
     // left to redo from the composer; a retry taps the message itself.
     setDraft("");
     await social.sendMessage(active.id, draft);
@@ -781,7 +782,7 @@ export function Messages() {
           ) : loading ? (
             <p className="py-6 text-center text-xs text-muted-foreground">Searching…</p>
           ) : results.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">No one found.</p>
+            <p className="py-6 text-center text-xs text-muted-foreground">No one found</p>
           ) : (
             <ul className="max-h-72 space-y-1 overflow-y-auto">
               {results.map((person) => (
@@ -794,7 +795,7 @@ export function Messages() {
                     <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="text-[10px]">{initials(person.displayName)}</AvatarFallback>
                     </Avatar>
-                    {person.displayName}
+                    <span className="min-w-0 truncate">{person.displayName}</span>
                   </button>
                 </li>
               ))}
@@ -820,7 +821,7 @@ export function Messages() {
           </Button>
         </div>
         <p className="mb-6 text-sm text-muted-foreground">
-          People who accepted making or exploring something together, and anyone who's sent or
+          People who accepted making or exploring something together, and anyone who’s sent or
           received a direct message.
         </p>
         {newMessageDialog}
@@ -994,7 +995,7 @@ export function Messages() {
             {requests.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-5 py-14 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Nothing waiting. A first message from someone you don't follow shows up here,
+                  Nothing waiting. A first message from someone you don’t follow shows up here,
                   to accept or ignore.
                 </p>
               </div>

@@ -3,6 +3,7 @@ import { Post } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { deriveProjects } from "../lib/journal";
 import { subHobbyLabel } from "../data/hobbies";
+import { plural } from "../lib/plural";
 
 const WEEK = 7 * 86_400_000;
 
@@ -58,13 +59,13 @@ export function HobbyActivity({
 
   const items = [
     stats.newThisWeek > 0
-      ? `${stats.newThisWeek} new ${stats.newThisWeek === 1 ? "moment" : "moments"} this week`
+      ? `${plural(stats.newThisWeek, "new Moment")} this week`
       : "Nothing new this week",
     stats.upcoming > 0
-      ? `${stats.upcoming} upcoming ${stats.upcoming === 1 ? "activity" : "activities"}`
+      ? plural(stats.upcoming, "upcoming Event")
       : null,
     stats.openProjects > 0
-      ? `${stats.openProjects} ${stats.openProjects === 1 ? "pursuit" : "pursuits"} still moving`
+      ? `${plural(stats.openProjects, "Pursuit")} in progress`
       : null,
   ].filter(Boolean) as string[];
 

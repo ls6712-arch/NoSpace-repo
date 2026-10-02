@@ -119,13 +119,13 @@ export function CartDrawer() {
               size="lg"
               className="w-full cursor-not-allowed opacity-70"
               disabled
-              title="Checkout isn't live yet — the marketplace is coming soon."
+              title="Checkout isn’t live yet — the marketplace is coming soon."
             >
               <Clock className="size-4" />
               Checkout — coming soon
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Buying isn't live yet — the marketplace is coming soon.
+              Buying isn’t live yet — the marketplace is coming soon.
             </p>
           </div>
         )}

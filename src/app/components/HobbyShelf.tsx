@@ -6,6 +6,7 @@ import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
 import { MOMENT_GRID, MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./MomentCard";
+import { formatWhen } from "../lib/dates";
 
 /** The card's own dark ink color — the cream card is a deliberate,
  * contained exception to the app's dark surfaces (same pairing the flat
@@ -163,17 +164,9 @@ export function useSessionsByHobby(): HobbySession[] {
   return sessionsFromPosts(myPosts);
 }
 
-/** "Updated today" reads better than a date for the thing you did this morning. */
+/** "Updated 3h ago", then "Updated Sep 24" — the app's one date format. */
 export function updatedLabel(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days <= 0) return "Updated today";
-  if (days === 1) return "Updated yesterday";
-  if (days < 7) return `Updated ${days} days ago`;
-  if (days < 30) {
-    const w = Math.floor(days / 7);
-    return `Updated ${w} ${w === 1 ? "week" : "weeks"} ago`;
-  }
-  return `Updated ${new Date(ts).toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+  return `Updated ${formatWhen(ts, { ago: true })}`;
 }
 
 /**
@@ -288,7 +281,7 @@ export function HobbyShelf({
       <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
         <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
           {emptyCopy ??
-            "Your shelf is empty. Every hobby you log gets its own tile here, with everything you've made in it inside."}
+            "Your shelf is empty. Every hobby you log gets its own tile here, with everything you’ve made in it inside."}
         </p>
         {emptyCta && (
           <Link

@@ -161,7 +161,7 @@ export function PursuitsInProgressSection({
                 <Compass className="size-5" strokeWidth={1.7} />
               </span>
               <p className="text-sm text-muted-foreground">
-                Nothing in progress right now.{" "}
+                Nothing in progress right now{" "}
                 <Link to="/pursuits/new" className="text-accent hover:underline">
                   Start a Pursuit
                 </Link>

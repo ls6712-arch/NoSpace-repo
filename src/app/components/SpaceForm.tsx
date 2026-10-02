@@ -92,7 +92,8 @@ export function SpaceForm({
       .from("post-media")
       .upload(path, file, { contentType: file.type || undefined, upsert: false });
     if (uploadError) {
-      setError(`That photo didn't upload: ${uploadError.message}`);
+      console.warn("[SpaceForm] cover upload failed:", uploadError);
+      setError("That photo didn’t upload. Try again.");
       setUploading(false);
       return;
     }
@@ -113,7 +114,7 @@ export function SpaceForm({
         .eq("slug", c.slug)
         .maybeSingle();
       if (!data) {
-        setError(`Couldn't find the Corner "${c.name}" — try picking it again.`);
+        setError(`Couldn’t find the Corner “${c.name}” — try picking it again.`);
         return null;
       }
       ids.push(data.id as number);
@@ -124,7 +125,7 @@ export function SpaceForm({
   // A blocklisted name is worded the same everywhere this class of error
   // can surface, regardless of which RPC raised it.
   function friendlyError(message: string) {
-    return message === "That name isn't available." ? "That name isn't allowed." : message;
+    return message === "That name isn't available." ? "That name isn’t allowed." : message;
   }
 
   // update_space's own message once pending requests block a closed->open
@@ -145,7 +146,7 @@ export function SpaceForm({
       errors.location = "Needed for an in-person Space.";
     }
     if (corners.slice(0, cornerSlots).filter(Boolean).length === 0) {
-      errors.corners = "Pick 1-3 Corners.";
+      errors.corners = "Pick 1–3 Corners.";
     }
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -204,7 +205,10 @@ export function SpaceForm({
       }
       const { error: cornersErr } = await setSpaceCorners(space.id, cornerIds);
       setSaving(false);
-      if (cornersErr) return setError(`Space saved, but Corners couldn't be updated: ${cornersErr}`);
+      if (cornersErr) {
+        console.warn("[SpaceForm] setSpaceCorners failed:", cornersErr);
+        return setError("Space saved, but its Corners didn’t update. Try again.");
+      }
       navigate(`/space/${space.slug}`);
     }
   };
@@ -291,12 +295,12 @@ export function SpaceForm({
           value={description}
           maxLength={100}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="What's this Space about?"
+          placeholder="What’s this Space about?"
         />
       </div>
 
       <div>
-        <Label>Corners (1-3) <span className="text-destructive">*</span></Label>
+        <Label>Corners (1–3) <span className="text-destructive">*</span></Label>
         <div className="mt-2 space-y-3">
           {Array.from({ length: cornerSlots }).map((_, i) => (
             <div key={i} className="flex items-start gap-2">
@@ -343,7 +347,7 @@ export function SpaceForm({
         )}
         {fieldErrors.corners && <p className="mt-1 text-xs text-destructive">{fieldErrors.corners}</p>}
         <p className="mt-1 text-[11px] text-muted-foreground">
-          The first Corner is this Space's primary one.
+          The first Corner is this Space’s primary one.
         </p>
       </div>
 
@@ -382,10 +386,10 @@ export function SpaceForm({
             id="space-address"
             value={exactAddress}
             onChange={(e) => setExactAddress(e.target.value)}
-            placeholder="Only shown to members and RSVP'd guests"
+            placeholder="Only shown to members and RSVP’d guests"
           />
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Never shown publicly — only to members, or a specific event's RSVPs.
+            Never shown publicly — only to members, or a specific event’s RSVPs.
           </p>
         </div>
       )}

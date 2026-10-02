@@ -19,6 +19,7 @@ import {
 } from "../../lib/spaces";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { formatDate } from "../../lib/dates";
 
 type JoinRequestRow = {
   user_id: string;
@@ -214,7 +215,7 @@ export function SpaceManageTab({
     const { data: target } = await supabase.from("profiles").select("id").eq("username", inviteUsername.trim()).maybeSingle();
     if (!target) {
       setBusy(null);
-      return setError("No one with that username.");
+      return setError("No one has that username.");
     }
     const { error: err } = await inviteHost(space.id, target.id);
     setBusy(null);
@@ -226,7 +227,7 @@ export function SpaceManageTab({
   const startDeletion = async () => {
     const isSoleHost = members.filter((m) => m.role === "host" && m.status === "active").length <= 1;
     if (isSoleHost && deleteConfirmName.trim() !== space.name) {
-      return setError(`Type "${space.name}" exactly to confirm.`);
+      return setError(`Type “${space.name}” exactly to confirm.`);
     }
     setBusy("delete");
     setError(null);
@@ -295,13 +296,13 @@ export function SpaceManageTab({
       <section>
         <h3 className="mb-2 text-sm font-medium">Pending requests</h3>
         {joinRequests.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending.</p>
+          <p className="text-xs text-muted-foreground">Nothing pending</p>
         ) : (
           <ul className="space-y-2">
             {joinRequests.map((r) => (
               <li key={r.user_id} className="rounded-xl border border-border p-3">
-                <p className="text-sm">{r.displayName}</p>
-                {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">"{r.answers.message}"</p>}
+                <p className="truncate text-sm">{r.displayName}</p>
+                {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">"{r.answers.message}”</p>}
                 {r.postCaption && <p className="mt-1 text-xs text-muted-foreground">Attached: {r.postCaption}</p>}
                 <div className="mt-2 flex gap-2">
                   <Button
@@ -330,7 +331,7 @@ export function SpaceManageTab({
       <section>
         <h3 className="mb-2 text-sm font-medium">Moments waiting for approval</h3>
         {pendingMoments.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending.</p>
+          <p className="text-xs text-muted-foreground">Nothing pending</p>
         ) : (
           <ul className="space-y-2">
             {pendingMoments.map((m) => (
@@ -339,7 +340,7 @@ export function SpaceManageTab({
                   <img src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-md object-cover" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">{m.authorName}</p>
+                  <p className="truncate text-xs text-muted-foreground">{m.authorName}</p>
                   <p className="line-clamp-2 text-sm">{m.caption}</p>
                   <div className="mt-2 flex gap-2">
                     <Button
@@ -370,9 +371,9 @@ export function SpaceManageTab({
         <h3 className="mb-2 text-sm font-medium">Members</h3>
         <ul className="divide-y divide-[var(--hairline)]">
           {members.map((m) => (
-            <li key={m.user_id} className="flex items-center justify-between py-2">
-              <span className="text-sm">
-                {m.displayName}
+            <li key={m.user_id} className="flex items-center justify-between gap-3 py-2">
+              <span className="flex min-w-0 items-center text-sm">
+                <span className="truncate">{m.displayName}</span>
                 {m.role === "host" && <span className="ml-1.5 text-[10px] text-muted-foreground">Host</span>}
                 {m.status === "banned" && <span className="ml-1.5 text-[10px] text-destructive">Banned</span>}
               </span>
@@ -436,7 +437,7 @@ export function SpaceManageTab({
         <h3 className="mb-2 text-sm font-medium text-destructive">Delete this Space</h3>
         {deletion ? (
           <div className="rounded-xl border border-border p-3 text-sm">
-            <p>A deletion request is open, expiring {new Date(deletion.expires_at).toLocaleDateString()}.</p>
+            <p>A deletion request is open, expiring {formatDate(deletion.expires_at)}.</p>
             <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
               {deletion.approvals.map((a) => (
                 <li key={a.host_user_id}>{a.displayName}: {a.decision}</li>
@@ -460,7 +461,7 @@ export function SpaceManageTab({
           <div className="max-w-sm space-y-2">
             {members.filter((m) => m.role === "host" && m.status === "active").length <= 1 && (
               <>
-                <p className="text-xs text-muted-foreground">You're the only host — type the Space's name to delete it now.</p>
+                <p className="text-xs text-muted-foreground">You’re the only host — type the Space’s name to delete it now.</p>
                 <Input value={deleteConfirmName} onChange={(e) => setDeleteConfirmName(e.target.value)} placeholder={space.name} />
               </>
             )}

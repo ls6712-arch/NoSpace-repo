@@ -27,14 +27,14 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
     const ok = await joinWaitlist(email, hobby);
     setSubmitting(false);
     if (!ok) {
-      setError("Couldn't reach the server. Try again.");
+      setError("Couldn’t reach the server. Try again.");
       return;
     }
     setDone(true);
   };
 
   if (done) {
-    return <p className={`text-sm text-muted-foreground ${className}`}>You're on the list.</p>;
+    return <p className={`text-sm text-muted-foreground ${className}`}>You’re on the list.</p>;
   }
 
   return (

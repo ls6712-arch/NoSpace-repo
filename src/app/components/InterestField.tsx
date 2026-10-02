@@ -87,7 +87,7 @@ export function InterestField({
               , or keep typing your own.
             </span>
           ) : (
-            "New one. It'll show up as a suggestion for everyone after this."
+            "New one. It’ll show up as a suggestion for everyone after this."
           )}
         </p>
       )}

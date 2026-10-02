@@ -44,7 +44,7 @@ export const badges: Badge[] = [
   {
     id: "first-session",
     name: "First Session",
-    description: "You showed up once. That's the hard one.",
+    description: "You showed up once. That’s the hard one.",
     icon: "Sprout",
     tint: "var(--pastel-sage)",
     test: (s) => s.postsCreated >= 1,
@@ -92,7 +92,7 @@ export const badges: Badge[] = [
   {
     id: "second-nature",
     name: "Second Nature",
-    description: "A hundred and fifty Moments in. It's part of you now.",
+    description: "A hundred and fifty Moments in. It’s part of you now.",
     icon: "Feather",
     tint: "var(--pastel-sage)",
     test: (s) => s.postsCreated >= 150,
@@ -134,7 +134,7 @@ const CRAFT_NAMES: Record<string, [string, string]> = {
   "strength-training": ["Something Got Heavier", "Strong on Purpose"],
   weightlifting: ["Something Got Heavier", "Strong on Purpose"],
   cooking: ["Cooking Without the Recipe", "The Kitchen Obeys"],
-  baking: ["Warm From the Oven", "Baker's Hands"],
+  baking: ["Warm From the Oven", "Baker’s Hands"],
   sourdough: ["The Starter Lives", "Bread on Instinct"],
   espresso: ["The Shot Ran True", "Dialled In"],
   "home-coffee": ["The Pour Slowed Down", "Dialled In"],

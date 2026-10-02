@@ -19,6 +19,8 @@ import { ShelfRail } from "../components/ShelfRail";
 import { InspiredRail } from "../components/InspiredRail";
 import { NewSpacesRail } from "../components/NewSpacesRail";
 import { WelcomeBanner } from "../components/WelcomeBanner";
+import { formatDate } from "../lib/dates";
+import { plural } from "../lib/plural";
 
 const PAGE_SIZE = 6;
 
@@ -155,11 +157,7 @@ export function MySpaceGrid() {
     setSearchParams(next, { replace: true });
   };
 
-  const dateEyebrow = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).toUpperCase();
+  const dateEyebrow = formatDate(Date.now(), { weekday: "long", month: "long" }).toUpperCase();
 
   const numeral =
     sheet.length === 0
@@ -207,7 +205,7 @@ export function MySpaceGrid() {
               {greeting(profile?.display_name ?? "there")}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {unseen.length} Moment{unseen.length === 1 ? "" : "s"} from the people and Spaces you follow.
+              {plural(unseen.length, "Moment")} from the people and Spaces you follow.
             </p>
           </div>
           {/* Numeral in foreground, not accent — docs/my-space-spec.md
@@ -218,11 +216,11 @@ export function MySpaceGrid() {
             <p className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
               {numeral}
             </p>
-            <p className="ns-section-kicker text-muted-foreground">TODAY'S SHEET</p>
+            <p className="ns-section-kicker text-muted-foreground">TODAY’S SHEET</p>
           </div>
         </div>
         <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
-          {numeral} · TODAY'S SHEET
+          {numeral} · TODAY’S SHEET
         </p>
       </header>
 
@@ -238,7 +236,7 @@ export function MySpaceGrid() {
                   at all — the sheet no longer gates on "since your last
                   visit" (see the unseen memo above), so that copy would be
                   inaccurate here. */}
-              Nothing here yet. Join a Space or follow a person to start your sheet.
+              Nothing here yet. Join a Space or follow a person to start your Contact Sheet.
             </div>
           ) : (
             <div className={MOMENT_GRID}>
@@ -269,7 +267,7 @@ export function MySpaceGrid() {
             <div className="mt-6 rounded-lg border-t border-border pt-4">
               <p className="ns-section-kicker text-muted-foreground">END OF THE SHEET</p>
               <p className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                You're caught up
+                You’re caught up
               </p>
               <Link to="/create" className="mt-2 inline-block text-xs text-accent hover:underline">
                 Log a Moment

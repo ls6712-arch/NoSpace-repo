@@ -88,7 +88,7 @@ export async function createPrivateLog(
     projectId?: string;
   },
 ): Promise<RemoteResult<PrivateLog>> {
-  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
+  if (!supabase) return { data: null, error: "Supabase isn’t configured for this build." };
   const { data, error } = await supabase
     .from("private_logs")
     .insert({
@@ -107,13 +107,13 @@ export async function createPrivateLog(
   }
   if (!data) {
     console.error("[privateLogsRemote] createPrivateLog: insert returned no row and no error");
-    return { data: null, error: "The save didn't come back with a result." };
+    return { data: null, error: "The save didn’t come back with a result." };
   }
   return { data: fromRow(data), error: null };
 }
 
 export async function deletePrivateLog(logId: number): Promise<RemoteResult<true>> {
-  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
+  if (!supabase) return { data: null, error: "Supabase isn’t configured for this build." };
   const { error } = await supabase.from("private_logs").delete().eq("id", logId);
   if (error) {
     console.error("[privateLogsRemote] deletePrivateLog failed:", error);
@@ -126,7 +126,7 @@ export async function updatePrivateLog(
   logId: number,
   input: { note: string },
 ): Promise<RemoteResult<PrivateLog>> {
-  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
+  if (!supabase) return { data: null, error: "Supabase isn’t configured for this build." };
   const { data, error } = await supabase
     .from("private_logs")
     .update({ body: input.note })
@@ -139,7 +139,7 @@ export async function updatePrivateLog(
   }
   if (!data) {
     console.error("[privateLogsRemote] updatePrivateLog: update returned no row and no error");
-    return { data: null, error: "The save didn't come back with a result." };
+    return { data: null, error: "The save didn’t come back with a result." };
   }
   return { data: fromRow(data), error: null };
 }

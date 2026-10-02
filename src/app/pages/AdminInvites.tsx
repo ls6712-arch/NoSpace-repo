@@ -10,6 +10,7 @@ import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { APP_NAME } from "../config";
+import { Time } from "../components/ui/time";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -39,13 +40,6 @@ interface WaitlistRow {
   createdAt: number;
 }
 
-function when(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 60) return `${Math.max(mins, 0)}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 function inviteStatus(row: InviteRow): { label: string; done: boolean } {
   if (row.claimedByName) return { label: `Claimed by ${row.claimedByName}`, done: true };
@@ -89,7 +83,7 @@ export function AdminInvites() {
     ]);
 
     if (invitesErr) {
-      setListError("Couldn't load invites — the columns this page expects may not match the live schema yet.");
+      setListError("Couldn’t load invites — the columns this page expects may not match the live schema yet.");
       setLoading(false);
       return;
     }
@@ -124,7 +118,7 @@ export function AdminInvites() {
   const loadWaiting = async () => {
     const result = await fetchWaitingFirstMoments();
     setWaiting(result.rows);
-    setWaitingError(result.error ? "Couldn't load first moments. Try again in a moment." : null);
+    setWaitingError(result.error ? "Couldn’t load first moments. Try again in a moment." : null);
   };
 
   useEffect(() => {
@@ -159,7 +153,7 @@ export function AdminInvites() {
     const result = await createInvite(note);
     setCreating(false);
     if (result.error || !result.code) {
-      setCreateError(result.error || "Couldn't create that invite.");
+      setCreateError(result.error || "Couldn’t create that invite.");
       return;
     }
     setNewLink(inviteLink(result.code));
@@ -235,7 +229,7 @@ export function AdminInvites() {
               <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
             ) : rows.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-                No invites created yet.
+                No invites created yet
               </div>
             ) : (
               <ul className="space-y-3">
@@ -247,7 +241,7 @@ export function AdminInvites() {
                         <div className="min-w-0 text-sm">
                           <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">{r.code}</p>
                           {r.note && <p className="mt-1 italic text-foreground">“{r.note}”</p>}
-                          <p className="mt-1 text-xs text-muted-foreground">Created {when(r.createdAt)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Created <Time value={r.createdAt} ago /></p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           <span
@@ -294,7 +288,7 @@ export function AdminInvites() {
                     <span className="min-w-0 truncate">{w.email}</span>
                     <span className="text-xs text-muted-foreground">
                       {w.hobby ? `${w.hobby} · ` : ""}
-                      {when(w.createdAt)}
+                      <Time value={w.createdAt} ago />
                     </span>
                   </li>
                 ))}
@@ -304,7 +298,7 @@ export function AdminInvites() {
 
           <TabsContent value="first-moments">
             <p className="mb-4 text-sm text-muted-foreground">
-              New people's first moments from the last 14 days with no thought from anyone yet,
+              New people’s first moments from the last 14 days with no thought from anyone yet,
               oldest first. Anything over 24 hours is ours to answer.
             </p>
             {waitingError && <p className="mb-4 text-sm text-destructive">{waitingError}</p>}

@@ -267,7 +267,7 @@ export function PursuitExpandedPanel({
       <div className="mb-5 border-t border-border pt-4">
         <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Goals</h4>
         {!goal && pastGoals.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No goal set yet.</p>
+          <p className="text-sm text-muted-foreground">No goal set yet</p>
         ) : (
           <ul className="space-y-2">
             {goal && (
@@ -311,7 +311,7 @@ export function PursuitExpandedPanel({
         <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Moments under this Pursuit
         </h4>
-        <WorkGrid posts={attached} onOpen={onOpenPost} emptyLabel="Nothing logged under this Pursuit yet." />
+        <WorkGrid posts={attached} onOpen={onOpenPost} emptyLabel="Nothing logged under this Pursuit yet" />
       </div>
 
       <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={pursuit} />

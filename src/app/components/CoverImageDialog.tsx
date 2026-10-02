@@ -38,7 +38,7 @@ export function CoverImageDialog({
   const pick = (picked: File | null) => {
     setError(null);
     if (picked && !picked.type.startsWith("image/")) {
-      setError("That file isn't a photo — pick an image instead.");
+      setError("That file isn’t a photo — pick an image instead.");
       return;
     }
     if (picked && picked.size > MAX_COVER_BYTES) {
@@ -60,7 +60,7 @@ export function CoverImageDialog({
       }
       const { path: uploaded, error: uploadError } = await uploadMomentFile(user.id, file);
       if (uploadError || !uploaded) {
-        setError(uploadError || "That upload didn't go through — try again.");
+        setError(uploadError || "That upload didn’t go through — try again.");
         setSaving(false);
         return;
       }
@@ -92,7 +92,7 @@ export function CoverImageDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Cover photo</DialogTitle>
-          <DialogDescription>For "{project.title}". Optional — skip anytime.</DialogDescription>
+          <DialogDescription>For “{project.title}”. Optional — skip anytime.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -127,7 +127,7 @@ export function CoverImageDialog({
                 }`}
               >
                 <span className="block font-medium">Latest Moment</span>
-                <span className="block text-muted-foreground">Where it's at now</span>
+                <span className="block text-muted-foreground">Where it’s at now</span>
               </button>
             </div>
           </div>

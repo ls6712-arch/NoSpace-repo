@@ -26,7 +26,7 @@ function ComingSoonDialog({
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>{title}</DialogTitle>
           <DialogDescription>
-            This is coming soon and isn't built yet — nothing happens if you select it.
+            This is coming soon and isn’t built yet — nothing happens if you select it.
           </DialogDescription>
         </DialogHeader>
       </DialogContent>

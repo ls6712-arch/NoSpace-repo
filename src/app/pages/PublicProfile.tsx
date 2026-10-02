@@ -28,6 +28,8 @@ import { useFollowerCount } from "../lib/useFollowerCount";
 import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/profileFollows";
 import { FollowListDialog } from "../components/FollowListDialog";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
+import { formatMonth } from "../lib/dates";
+import { pluralWord } from "../lib/plural";
 
 /** Whichever Corner shows up most in their public Moments — a Corner slug is
  * only unique within its own Space, so this tracks the pair, never the slug
@@ -283,7 +285,7 @@ export function PublicProfile() {
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
           <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-            No shelf here
+            No Shelf here
           </h2>
           <p className="mb-6 text-sm text-muted-foreground">
             Nobody by that name. The link may be out of date.
@@ -339,10 +341,7 @@ export function PublicProfile() {
 
   const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
   const sinceLabel = earliestPostAt
-    ? new Date(earliestPostAt).toLocaleDateString(undefined, {
-        month: "long",
-        year: new Date(earliestPostAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
-      })
+    ? formatMonth(earliestPostAt)
     : null;
 
   return (
@@ -378,8 +377,8 @@ export function PublicProfile() {
               )}
               <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
                 <span>
-                  <strong className="text-foreground">{posts.length}</strong>{" "}
-                  {posts.length === 1 ? "moment" : "moments"} logged
+                  <strong className="text-foreground tabular-nums">{posts.length.toLocaleString("en-US")}</strong>{" "}
+                  {pluralWord(posts.length, "Moment")} logged
                   {sinceLabel ? ` since ${sinceLabel}` : ""}
                 </span>
                 {followerCount !== null && followerCount > 0 && (
@@ -390,8 +389,8 @@ export function PublicProfile() {
                       onClick={() => setFollowListOpen(true)}
                       className="transition-colors hover:text-foreground hover:underline"
                     >
-                      <strong className="text-foreground">{followerCount}</strong>{" "}
-                      {followerCount === 1 ? "follower" : "followers"}
+                      <strong className="text-foreground tabular-nums">{followerCount.toLocaleString("en-US")}</strong>{" "}
+                      {pluralWord(followerCount, "follower")}
                     </button>
                   </>
                 )}
@@ -505,7 +504,7 @@ export function PublicProfile() {
                   {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  A look into the things they've created, explored, and loved.
+                  A look into the things they’ve created, explored, and loved.
                 </p>
               </div>
               {focusTag && (
@@ -522,17 +521,17 @@ export function PublicProfile() {
               posts={shownPosts}
               onOpen={setOpenPost}
               editable={isMe}
-              emptyLabel={`${firstName} hasn't shared any Moments publicly yet.`}
+              emptyLabel={`${firstName} hasn’t shared any Moments publicly yet.`}
             />
           </section>
 
           {sharedPursuits.length > 0 && (
             <section>
               <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                {firstName}'s Pursuits
+                {firstName}’s Pursuits
               </h2>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
-                The things they're bringing to life, that they've chosen to share.
+                The things they’re bringing to life, that they’ve chosen to share.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {sharedPursuits.map((pursuit) => (
@@ -569,7 +568,7 @@ export function PublicProfile() {
               {primaryCorner.name}
             </h2>
             <p className="mb-4 text-sm text-muted-foreground">
-              {firstName}'s Moments tagged {primaryCorner.name}.
+              {firstName}’s Moments tagged {primaryCorner.name}.
             </p>
             <div className={MOMENT_GRID}>
               {cornerMoments.slice(0, 6).map((post) => (
@@ -630,7 +629,7 @@ export function PublicProfile() {
             Start your own shelf
           </h2>
           <p className="mx-auto mb-6 max-w-sm text-sm text-muted-foreground">
-            Pick a hobby, log what you make, and watch it stack up. Free, and there's
+            Pick a hobby, log what you make, and watch it stack up. Free, and there’s
             nothing here that scrolls forever.
           </p>
           <div className="flex flex-col justify-center gap-2.5 sm:flex-row">

@@ -40,7 +40,7 @@ function PasswordChangeRow() {
       return;
     }
     if (next !== confirm) {
-      setError("Those two don't match.");
+      setError("Those two don’t match.");
       return;
     }
     setSaving(true);
@@ -55,7 +55,7 @@ function PasswordChangeRow() {
     });
     if (verifyError) {
       setSaving(false);
-      setError("That current password isn't right.");
+      setError("Your current password isn’t right.");
       return;
     }
     const result = await updatePassword(next);
@@ -170,7 +170,7 @@ export function AccountSection() {
     <section>
       <SectionHeader n={3} eyebrow="ACCOUNT" title="Account" />
       <p className="mb-4 text-sm text-muted-foreground">
-        Your sign-in details, and every device you're signed into.
+        Your sign-in details, and every device you’re signed into.
       </p>
       <SettingsPanel>
         <SettingsRow label="Email" description="Signing in and account notices go here.">
@@ -204,7 +204,7 @@ export function AccountSection() {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Sign out everywhere?"
-        description="This ends every signed-in session for your account, including the one you're using right now."
+        description="This ends every signed-in session for your account, including the one you’re using right now."
         confirmLabel="Sign out everywhere"
         onConfirm={async () => {
           await signOutEverywhere();

@@ -28,6 +28,7 @@ import { SpacesBrowser } from "../components/SpacesBrowser";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
+import { plural } from "../lib/plural";
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
@@ -191,7 +192,7 @@ function MarketplaceTab({ query }: { query: string }) {
   if (matching.length === 0) {
     return (
       <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
-        {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
+        {q ? `No listings match “${query}” yet.` : "Nothing for sale yet"}
       </p>
     );
   }
@@ -682,14 +683,14 @@ export function Discover() {
 
               <p className="mb-6 text-sm text-muted-foreground">
                 {chip === "near"
-                  ? "Location isn't switched on yet."
-                  : `${filtered.length} ${filtered.length === 1 ? "Moment" : "Moments"}${q ? ` matching "${query}"` : ""}.`}
+                  ? "Location isn’t switched on yet."
+                  : `${plural(filtered.length, "Moment")}${q ? ` matching “${query}”` : ""}`}
               </p>
 
               {chip === "near" ? (
                 <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
                   <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                    {APP_NAME} doesn't know where you are, and won't until you tell it.
+                    {APP_NAME} doesn’t know where you are, and won’t until you tell it.
                   </p>
                 </div>
               ) : visible.length === 0 ? (
@@ -718,7 +719,7 @@ export function Discover() {
                   {remaining > 0 ? (
                     <>
                       <p className="mb-4 text-sm text-muted-foreground">
-                        That's {visible.length} of {filtered.length}. Nothing loads on
+                        That’s {visible.length} of {filtered.length}. Nothing loads on
                         its own. Keep going only if you want to.
                       </p>
                       <Button variant="outline" onClick={() => setShown((n) => n + PAGE_SIZE)}>
@@ -728,7 +729,7 @@ export function Discover() {
                   ) : (
                     <>
                       <p className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-                        That's everything here.
+                        That’s everything here.
                       </p>
                       <p className="mb-5 text-sm text-muted-foreground">
                         A good place to stop scrolling and go make something.

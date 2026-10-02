@@ -47,7 +47,7 @@ export function Welcome() {
       return;
     }
     if (result === "error") {
-      setError("Couldn't reach the server. Try again.");
+      setError("Couldn’t reach the server. Try again.");
       setClaiming(false);
       return;
     }

@@ -6,6 +6,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Reviewing what people said was missing.
@@ -19,10 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
  * it's granted by hand in SQL.
  */
 function when(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days < 1) return "today";
-  if (days === 1) return "yesterday";
-  return `${days} days ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 export function AdminCategories() {
@@ -101,7 +99,7 @@ export function AdminCategories() {
           <TabsContent value="pending">
             {pending.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-                <p className="text-sm text-muted-foreground">Nothing waiting.</p>
+                <p className="text-sm text-muted-foreground">Nothing waiting</p>
               </div>
             ) : (
               <ul className="space-y-3">
@@ -191,7 +189,7 @@ export function AdminCategories() {
           <TabsContent value="decided">
             {decided.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-                <p className="text-sm text-muted-foreground">Nothing decided yet.</p>
+                <p className="text-sm text-muted-foreground">Nothing decided yet</p>
               </div>
             ) : (
               <ul className="space-y-2">
@@ -208,7 +206,7 @@ export function AdminCategories() {
                     </span>
                     {s.reviewNote && (
                       <span className="w-full text-xs text-muted-foreground">
-                        "{s.reviewNote}"
+                        "{s.reviewNote}”
                       </span>
                     )}
                   </li>

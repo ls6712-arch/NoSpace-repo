@@ -61,14 +61,14 @@ export function PursuitsRail({
           Start one
         </button>
       </div>
-      <p className="mt-0.5 text-xs text-muted-foreground">The ones you haven't set down yet.</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">The ones you haven’t set down yet.</p>
       <div className="mt-3">
         <PursuitInvitesCard />
       </div>
 
       {pursuits.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          No Pursuits yet.{" "}
+          No Pursuits yet{" "}
           <button type="button" onClick={() => setStarting(true)} className="text-accent hover:underline">
             Start your first
           </button>
@@ -98,7 +98,7 @@ export function PursuitsRail({
           ) : (
             due.length === 0 && (
               <p className="mt-3 text-sm text-muted-foreground">
-                Everything's resting or finished. Pick one back up, or start something new.
+                Everything’s resting or finished. Pick one back up, or start something new.
               </p>
             )
           )}

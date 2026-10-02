@@ -8,10 +8,12 @@ import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal } from "../lib/journal";
 import { setCornerNote, useCornerNote } from "../lib/cornerNotes";
-import { parseArchiveKey, updatedLabel } from "../components/HobbyShelf";
+import { parseArchiveKey } from "../components/HobbyShelf";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { Button } from "../components/ui/button";
+import { formatDate, formatMonth, formatWhen } from "../lib/dates";
+import { plural } from "../lib/plural";
 
 /**
  * One hobby's personal archive — everything logged under that tag, in order.
@@ -31,11 +33,11 @@ type FilterId = (typeof FILTERS)[number]["id"];
 const hasMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
 function monthKey(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return formatMonth(ts);
 }
 
 function dayLabel(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return formatDate(ts);
 }
 
 export function HobbyArchive() {
@@ -92,7 +94,7 @@ export function HobbyArchive() {
     return (
       <SignUpPrompt
         title="This is where your books live"
-        body="Every hobby you log gets a book here, holding every photo, video and note you've put in it. Make an account and yours starts filling up."
+        body="Every hobby you log gets a book here, holding every photo, video and note you’ve put in it. Make an account and yours starts filling up."
         cta="Start my shelf"
       />
     );
@@ -106,10 +108,10 @@ export function HobbyArchive() {
             No such hobby
           </h1>
           <p className="mb-6 text-sm text-muted-foreground">
-            That book isn't on your shelf.
+            That Book isn’t on your Shelf.
           </p>
           <Link to="/you">
-            <Button variant="outline">Back to Your Shelf</Button>
+            <Button variant="outline">Back to your Shelf</Button>
           </Link>
         </div>
       </div>
@@ -148,9 +150,8 @@ export function HobbyArchive() {
         </h1>
         <p className="mt-1 text-muted-foreground">{space.name}</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          {moments.length} {moments.length === 1 ? "moment" : "moments"} · {projects.length}{" "}
-          {projects.length === 1 ? "pursuit" : "pursuits"}
-          {moments.length > 0 ? ` · ${updatedLabel(moments[0].createdAt).toLowerCase()}` : ""}
+          {plural(moments.length, "Moment")} · {plural(projects.length, "Pursuit")}
+          {moments.length > 0 ? ` · updated ${formatWhen(moments[0].createdAt, { ago: true })}` : ""}
         </p>
 
         {/* A short, private note about this Corner — only you ever see it,
@@ -282,7 +283,7 @@ export function HobbyArchive() {
                         {project.title}
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {updates.length} {updates.length === 1 ? "update" : "updates"}
+                        {plural(updates.length, "Moment")}
                         {project.finishedAt ? " · finished" : " · in progress"}
                       </div>
                       {updates.length > 0 && (
@@ -324,7 +325,7 @@ export function HobbyArchive() {
                   <dt className="text-muted-foreground">First logged</dt>
                   <dd>
                     {moments.length > 0
-                      ? new Date(moments[moments.length - 1].createdAt).toLocaleDateString()
+                      ? formatDate(moments[moments.length - 1].createdAt)
                       : "Not yet"}
                   </dd>
                 </div>

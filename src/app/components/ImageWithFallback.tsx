@@ -27,7 +27,7 @@ export function ImageWithFallback(
     >
       <img
         src={ERROR_IMG_SRC}
-        alt="Error loading image"
+        alt="Image didn’t load"
         className="opacity-40"
         {...rest}
         data-original-url={src}

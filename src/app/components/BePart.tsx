@@ -153,7 +153,7 @@ export function BePart({
 
   // The button reflects whichever state you're actually in.
   const state = going
-    ? { label: "You're joining", icon: Check }
+    ? { label: "You’re joining", icon: Check }
     : exploring
       ? { label: `Exploring ${hobbyLabel}`, icon: Sprout }
       : null;
@@ -180,14 +180,14 @@ export function BePart({
         postId,
         intent: text.trim().slice(0, LIMIT),
       });
-      if (result?.error === "self") setError("That's you.");
+      if (result?.error === "self") setError("That’s you.");
       else if (result?.error === "no-recipient")
-        setError("We can't reach this maker yet. Try from their profile.");
+        setError("We can’t reach this maker yet. Try from their profile.");
       else if (result?.error === "failed")
-        setError("That didn't send — you may have already asked. Check your Inbox.");
+        setError("That didn’t send — you may have already asked. Check your Inbox.");
       else setSent(true);
     } catch {
-      setError("That didn't send. Check your connection and try again.");
+      setError("That didn’t send. Check your connection and try again.");
     } finally {
       // Always runs, so the button can never stay stuck on "Sending…".
       setSending(false);
@@ -285,7 +285,7 @@ export function BePart({
               {active.id === "keep_exploring" && (
                 <>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    You'll see more Moments, activities and people around {hobbyLabel}.
+                    You’ll see more Moments, activities and people around {hobbyLabel}.
                   </p>
                   {exploring ? (
                     <>
@@ -318,13 +318,13 @@ export function BePart({
               {active.id === "join_in" && postId && !isActivity && (
                 <>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    Nothing scheduled on this one. It's a moment, not an
+                    Nothing scheduled on this one. It’s a Moment, not an
                     activity. There may be something happening in {hobbyLabel}{" "}
                     you can take part in.
                   </p>
                   <Link to={`/space/${hobbySlug}`} onClick={() => setOpen(false)}>
                     <Button variant="outline" className="w-full">
-                      See what's happening in {hobbyLabel}
+                      See what’s happening in {hobbyLabel}
                     </Button>
                   </Link>
                 </>
@@ -351,13 +351,13 @@ export function BePart({
                     <>
                       <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-stone)_38%,var(--surface-elevated))]">
                         <Check className="size-4" />
-                        You're joining
+                        You’re joining
                       </div>
                       <p className="text-center text-xs text-muted-foreground">
-                        You'll get updates about this activity.
+                        You’ll get updates about this activity.
                       </p>
                       <Button variant="outline" onClick={() => social.leaveActivity(postId)}>
-                        Can't make it
+                        Can’t make it
                       </Button>
                     </>
                   ) : (
@@ -399,12 +399,12 @@ export function BePart({
                         Sent to {personName}.
                       </p>
                       <p className="text-xs leading-relaxed text-muted-foreground">
-                        They'll be notified and can accept. Once accepted, you can message.
+                        They’ll be notified and can accept. Once accepted, you can message.
                       </p>
                     </div>
                   ) : pending ? (
                     <p className="rounded-2xl bg-surface-muted px-4 py-4 text-sm text-muted-foreground">
-                      You've already asked {personName}. Waiting on them.
+                      You’ve already asked {personName}. Waiting on them.
                     </p>
                   ) : (
                     <>
@@ -443,7 +443,7 @@ export function BePart({
                         {sending ? "Sending…" : "Send request"}
                       </Button>
                       <p className="text-center text-xs leading-relaxed text-muted-foreground">
-                        They'll be notified and can accept.
+                        They’ll be notified and can accept.
                         <br />
                         Once accepted, you can message.
                       </p>

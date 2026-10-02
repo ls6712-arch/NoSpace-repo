@@ -23,7 +23,7 @@ function BlockedPeopleSection() {
   if (social.blockedPeople.length === 0) {
     return (
       <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground sm:px-5">
-        You haven't blocked anyone.
+        You haven’t blocked anyone.
       </p>
     );
   }
@@ -111,7 +111,7 @@ function ReadReceiptsRow() {
   return (
     <SettingsRow
       label="Read receipts"
-      description="If you turn this off, people won't see when you've read their messages, and you won't see when they've read yours."
+      description="If you turn this off, people won’t see when you’ve read their messages, and you won’t see when they’ve read yours."
     >
       <Switch
         checked={readReceipts}
@@ -139,8 +139,8 @@ export function PrivacySection() {
         Blocked people
       </h2>
       <p className="mb-4 text-xs text-muted-foreground">
-        They can't message you, follow you, react, or comment on your Moments, and don't see your
-        profile. Unblocking doesn't restore a follow.
+        They can’t message you, follow you, react, or comment on your Moments, and don’t see your
+        profile. Unblocking doesn’t restore a follow.
       </p>
       <SettingsPanel>
         <BlockedPeopleSection />

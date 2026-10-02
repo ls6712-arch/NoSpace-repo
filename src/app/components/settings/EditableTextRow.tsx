@@ -62,7 +62,7 @@ export function EditableTextRow({
     if (saving) return;
     const next = draft.trim();
     if (required && !next) {
-      setError("This can't be empty.");
+      setError("This can’t be empty.");
       return;
     }
     setSaving(true);

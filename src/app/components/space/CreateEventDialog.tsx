@@ -165,7 +165,7 @@ export function CreateEventDialog({
               {fieldErrors.location && <p className="text-xs text-destructive">{fieldErrors.location}</p>}
               <div>
                 <Label htmlFor="event-address">Exact address (optional)</Label>
-                <Input id="event-address" value={exactAddress} onChange={(e) => setExactAddress(e.target.value)} placeholder="Only shown to members and RSVP'd guests" />
+                <Input id="event-address" value={exactAddress} onChange={(e) => setExactAddress(e.target.value)} placeholder="Only shown to members and RSVP’d guests" />
               </div>
             </>
           )}

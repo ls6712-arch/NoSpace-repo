@@ -1,5 +1,6 @@
 import { useContent } from "../context/ContentContext";
 import { subHobbyLabel } from "../data/hobbies";
+import { plural } from "../lib/plural";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -60,21 +61,21 @@ export function milestoneText(label: string | null, firstActivityAt: number, now
 
   if (label === null) {
     if (days < 1) return "Started today";
-    return `Started ${days} ${days === 1 ? "day" : "days"} ago`;
+    return `Started ${plural(days, "day")} ago`;
   }
 
   if (days < 1) return `Day one of ${label}`;
-  if (days < 30) return `${days} ${days === 1 ? "day" : "days"} into ${label}`;
+  if (days < 30) return `${plural(days, "day")} into ${label}`;
 
   // Clamped to at least 1 in both branches: an average month is 30.44 days, so
   // a plain floor turns day 30 into "0 months" and day 365 into "0 years".
   if (days < 365) {
     const months = Math.max(1, Math.floor(days / 30.44));
-    return `${months} ${months === 1 ? "month" : "months"} into ${label}`;
+    return `${plural(months, "month")} into ${label}`;
   }
 
   const years = Math.max(1, Math.floor(days / 365.25));
-  return `${years} ${years === 1 ? "year" : "years"} into ${label}`;
+  return `${plural(years, "year")} into ${label}`;
 }
 
 /**

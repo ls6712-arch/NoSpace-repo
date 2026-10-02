@@ -30,8 +30,8 @@ function EmailPrefixPrompt({ userId, emailPrefix }: { userId: string; emailPrefi
   return (
     <div className="mb-4 flex items-start justify-between gap-4 rounded-btn border border-accent/40 bg-accent/5 p-4">
       <p className="text-sm leading-relaxed">
-        Is this how you'd like to be known? Your name is currently{" "}
-        <span style={{ fontFamily: "var(--font-serif)" }}>"{emailPrefix}"</span> — taken from your
+        Is this how you’d like to be known? Your name is currently{" "}
+        <span style={{ fontFamily: "var(--font-serif)" }}>"{emailPrefix}”</span> — taken from your
         email. You can change it below any time.
       </p>
       <button
@@ -99,7 +99,7 @@ export function ProfileSection() {
           label="Bio"
           description="A short line under your name. Never required."
           value={profile.bio ?? ""}
-          placeholder="What got you into this, and where it's going…"
+          placeholder="What got you into this, and where it’s going…"
           multiline
           maxLength={280}
           emptyLabel="Not set"

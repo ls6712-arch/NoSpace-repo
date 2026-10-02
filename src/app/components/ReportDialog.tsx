@@ -84,7 +84,7 @@ export function ReportDialog({
     if (reportError) {
       submittingRef.current = false;
       setBusy(false);
-      setError("Couldn't send that. Try again later.");
+      setError("Couldn’t send that. Try again later.");
       return;
     }
     if (alsoBlock) {

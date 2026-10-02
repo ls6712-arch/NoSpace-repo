@@ -6,6 +6,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Reports of a profile, message, Moment or Thought, per
@@ -33,11 +34,7 @@ interface ReportRow {
 }
 
 function when(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 60) return `${Math.max(mins, 0)}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 function targetLabel(r: ReportRow) {
@@ -133,7 +130,7 @@ export function AdminReports() {
     const { error: err } = await supabase.from("reports").update({ status }).eq("id", id);
     setBusy(null);
     if (err) {
-      setError("Couldn't do that. Try again.");
+      setError("Couldn’t do that. Try again.");
       return;
     }
     await load();
@@ -208,7 +205,7 @@ export function AdminReports() {
               <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
             ) : open.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-                Nothing open.
+                Nothing open
               </div>
             ) : (
               <ul className="space-y-3">
@@ -222,7 +219,7 @@ export function AdminReports() {
           <TabsContent value="decided">
             {decided.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-                Nothing decided yet.
+                Nothing decided yet
               </div>
             ) : (
               <ul className="space-y-3">

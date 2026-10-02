@@ -15,6 +15,7 @@ import { SOCIAL_STORAGE_KEY } from "./SocialContext";
 import { supabase } from "../../lib/supabase";
 import { deleteMomentFiles, resolvePostMedia, signMomentPaths, uploadMomentFile } from "../lib/momentMedia";
 import { InFlightGuard, InFlightSkipped } from "../lib/inFlightGuard";
+import { plural } from "../lib/plural";
 
 const LISTINGS_KEY = "sushii.listings.v1";
 
@@ -663,12 +664,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
         const noun = input.type === "video" ? "video" : files.length > 1 ? "photos" : "photo";
         if (uploaded.length === 0) {
-          setMediaError(`Your ${noun} didn't upload. The Moment was saved without it.`);
+          setMediaError(`Your ${noun} didn’t upload. The Moment was saved without it.`);
         } else if (failCount > 0) {
           // Some made it, some didn't — the post still saves with whatever
           // succeeded rather than losing the whole Moment over one bad file.
           setMediaError(
-            `${failCount} of ${files.length} photos didn't upload. The Moment was saved with the rest.`,
+            `${failCount} of ${plural(files.length, "photo")} didn’t upload. The Moment was saved with the rest.`,
           );
         } else {
           setMediaError(null);
@@ -741,11 +742,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // copy so nothing typed is thrown away on screen — but that copy lives
       // only in this tab, so the flow must not claim it was saved. Telling
       // someone "Saved." and then losing the post is worse than an error.
-      setSaveError(
-        error?.message
-          ? `This didn't save to your account: ${error.message}`
-          : "This didn't save to your account. It's still on screen, but it will go when you reload.",
-      );
+      if (error) console.warn("[ContentContext] save failed:", error);
+      setSaveError("This didn’t save to your account. It’s still on screen, but it will go when you reload.");
     }
 
     // Local-only fallback — used when accounts aren't set up on this build,

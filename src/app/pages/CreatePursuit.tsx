@@ -33,6 +33,7 @@ import {
 import { MEASURE_KINDS, defaultMeasure, formatAmount, guessSpace, localDateMs, targetText, unitFor } from "../lib/pursuitProgress";
 import { mirrorPursuit, mirrorPursuitMeasure, saveInvites } from "../lib/pursuitsRemote";
 import { Person, fetchPerson, usePeopleSearch } from "../lib/people";
+import { formatDate } from "../lib/dates";
 
 const STEPS = ["Goal", "Measure", "Rules", "People", "Review"];
 /** Screens → which step dot is lit. "Define" is the second screen of Measure. */
@@ -322,7 +323,7 @@ export function CreatePursuit() {
                 <input
                   value={measure.whatCounts ?? ""}
                   onChange={(e) => patch({ whatCounts: e.target.value.slice(0, 140) })}
-                  placeholder={measure.kind === "quantity" ? "Any words included in the manuscript draft" : "A finished piece I'd show someone"}
+                  placeholder={measure.kind === "quantity" ? "Any words included in the manuscript draft" : "A finished piece I’d show someone"}
                   className="h-11 w-full rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
                 />
               </Field>
@@ -361,7 +362,7 @@ export function CreatePursuit() {
                   allowDecimals={measure.allowDecimals}
                 />
               </RuleRow>
-              <RuleRow label="Starting amount" hint="Anything you've already done">
+              <RuleRow label="Starting amount" hint="Anything you’ve already done">
                 <AmountStepper
                   value={measure.startingAmount}
                   onChange={(v) => patch({ startingAmount: v })}
@@ -393,7 +394,7 @@ export function CreatePursuit() {
 
         {screen === 4 && (
           <section>
-            {heading("Who's pursuing this with you?")}
+            {heading("Who’s pursuing this with you?")}
             <div className="mt-6 grid grid-cols-2 gap-2">
               <ChipButton active={participation === "solo"} onClick={() => setParticipation("solo")}>
                 <User className="size-3.5" /> Just me
@@ -459,7 +460,7 @@ export function CreatePursuit() {
                           </button>
                         </li>
                       ))}
-                    {!searching && results.length === 0 && <li className="px-3 py-2 text-xs text-muted-foreground">No one found.</li>}
+                    {!searching && results.length === 0 && <li className="px-3 py-2 text-xs text-muted-foreground">No one found</li>}
                   </ul>
                 )}
 
@@ -525,7 +526,7 @@ export function CreatePursuit() {
                 label="Aim for"
                 value={
                   finalMeasure.targetDate
-                    ? new Date(finalMeasure.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+                    ? formatDate(finalMeasure.targetDate)
                     : "No target date"
                 }
               />
@@ -539,7 +540,7 @@ export function CreatePursuit() {
                 }
               />
             </ul>
-            {inviteError && <p className="mt-3 text-xs text-destructive">Invites didn't send: {inviteError}</p>}
+            {inviteError && <p className="mt-3 text-xs text-destructive">Invites didn’t send: {inviteError}</p>}
           </section>
         )}
       </div>

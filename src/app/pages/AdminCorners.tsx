@@ -6,6 +6,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { plural } from "../lib/plural";
 
 /**
  * Merging, renaming and hiding Corners.
@@ -34,10 +35,6 @@ interface CornerRow {
   name: string;
   moment_count: number;
   hidden: boolean;
-}
-
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 export function AdminCorners() {
@@ -106,7 +103,7 @@ export function AdminCorners() {
     if (err) {
       setError(
         /blocklisted|constraint/i.test(err.message)
-          ? `“${name}” isn't allowed as a Corner name.`
+          ? `“${name}” isn’t allowed as a Corner name.`
           : err.message,
       );
       return;
@@ -177,7 +174,7 @@ export function AdminCorners() {
         </h1>
         <p className="mb-8 mt-2 text-sm text-muted-foreground">
           Merge duplicates, rename, or hide. Merging moves every Moment, Pursuit, Space link and Interest
-          from one Corner to the other, then removes the one merged away — this can't be undone.
+          from one Corner to the other, then removes the one merged away — this can’t be undone.
         </p>
 
         {error && (

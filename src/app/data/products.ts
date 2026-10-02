@@ -123,7 +123,7 @@ export const products: Product[] = [
     image:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     description:
-      "6-part video course on coil, slab, and pinch techniques, shot in Mara's home studio. Watch at your own pace.",
+      "6-part video course on coil, slab, and pinch techniques, shot in Mara’s home studio. Watch at your own pace.",
     rating: 4.9,
     reviews: 64,
     creator: "Mara Chen",

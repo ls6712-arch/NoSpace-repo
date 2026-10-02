@@ -26,6 +26,7 @@ import { groupNotifications, unreadGroupCount } from "../lib/notificationGroupin
 import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
+import { Time } from "./ui/time";
 
 /**
  * Notifications that describe what actually happened — "Reo accepted your Make
@@ -59,14 +60,6 @@ const ICON: Record<string, typeof Bell> = {
   love: Heart,
 };
 
-function ago(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 export function NotificationsMenu() {
   const [open, setOpen] = useState(false);
@@ -152,7 +145,7 @@ export function NotificationsMenu() {
         <Bell className="size-5" />
         {badgeCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white tabular-nums"
             aria-hidden="true"
           >
             {formatBadgeCount(badgeCount)}
@@ -241,7 +234,7 @@ export function NotificationsMenu() {
 
           {groups.length === 0 && incoming.length === 0 && incomingFollows.length === 0 ? (
             <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground">
-              Nothing yet. Thoughts on your moments, people joining your
+              Nothing yet. Thoughts on your Moments, people joining your
               activities, follow requests, and asks to make or explore
               together all turn up here.
             </p>
@@ -255,7 +248,7 @@ export function NotificationsMenu() {
                     <span className="min-w-0">
                       <span className="block text-sm leading-snug">{g.body}</span>
                       <span className="block text-[11px] text-muted-foreground">
-                        {ago(g.createdAt)}
+                        <Time value={g.createdAt} ago />
                       </span>
                     </span>
                   </span>
@@ -293,7 +286,7 @@ export function NotificationsMenu() {
 
           {!social.isShared && (
             <p className="border-t border-[var(--hairline)] px-4 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
-              You're not signed in, so requests can't reach anyone else yet.
+              You’re not signed in, so requests can’t reach anyone else yet.
             </p>
           )}
         </div>

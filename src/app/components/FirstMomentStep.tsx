@@ -87,7 +87,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         if (file && user) {
           const { path, error: uploadError } = await uploadMomentFile(user.id, file);
           if (uploadError || !path) {
-            setError("Your photo didn't upload. Try again.");
+            setError("Your photo didn’t upload. Try again.");
             return;
           }
           media = { path, type: "image", hobbySlug };
@@ -95,7 +95,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         const outcome = await addPrivateLog({ note: text || "My first moment" });
         if (outcome.skipped) return;
         if (!outcome.data) {
-          setError(outcome.error || "That didn't save. Try again?");
+          setError(outcome.error || "That didn’t save. Try again.");
           return;
         }
         if (user) saveMomentDefaults(user.id, { audience });
@@ -118,7 +118,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
       setSaved({ post: entry, privateLogId: null });
       setOfferPursuitName(true);
     } catch {
-      setError("That didn't save. Try again?");
+      setError("That didn’t save. Try again.");
     } finally {
       setSaving(false);
     }
@@ -215,7 +215,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         Add your first moment.
       </h1>
       <p className="mb-6 text-sm text-[var(--ink-soft)]">
-        Anything you're making, practising or learning. Half-done counts.
+        Anything you’re making, practising or learning. Half-done counts.
       </p>
 
       <div className="grid grid-cols-2 gap-3">

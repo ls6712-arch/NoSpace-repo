@@ -5,6 +5,7 @@ import { hobbies } from "../data/hobbies";
 import { guessSpace } from "../lib/pursuitProgress";
 import { bestMatch, MatchResult } from "../lib/tagMatching";
 import { Input } from "./ui/input";
+import { plural } from "../lib/plural";
 
 /**
  * Tags a Moment (or a Space, once Phase 5 wires it up) into a Corner.
@@ -160,7 +161,7 @@ export function CornerTagField({
                 >
                   <span>{c.name}</span>
                   <span className="text-[11px] text-muted-foreground">
-                    {c.momentCount > 0 ? `${c.momentCount} Moments` : "New"}
+                    {c.momentCount > 0 ? plural(c.momentCount, "Moment") : "New"}
                   </span>
                 </button>
               </li>
@@ -175,7 +176,7 @@ export function CornerTagField({
                   className="flex items-center gap-1.5 text-left text-xs text-[var(--coral-text)]"
                 >
                   <Plus className="size-3" />
-                  {creating ? "Creating…" : `Create "${q}" as a new Corner`}
+                  {creating ? "Creating…" : `Create “${q}” as a new Corner`}
                 </button>
               </li>
             )}

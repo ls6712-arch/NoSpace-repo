@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { getHobby } from "../data/hobbies";
 import { useCorners } from "../context/CornersContext";
+import { formatWeekday } from "../lib/dates";
 
 const DAY = 86_400_000;
 
@@ -12,7 +13,7 @@ const DAY = 86_400_000;
 function openedLabel(createdAt: number): string {
   const days = Math.floor((Date.now() - createdAt) / DAY);
   if (days < 1) return "opened today";
-  if (days < 7) return `opened ${new Date(createdAt).toLocaleDateString(undefined, { weekday: "long" })}`;
+  if (days < 7) return `opened ${formatWeekday(createdAt, "long")}`;
   if (days < 14) return "opened last week";
   return `opened ${Math.floor(days / 7)} weeks ago`;
 }
@@ -38,7 +39,7 @@ export function NewSpacesRail() {
       </p>
 
       {corners.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing new to show yet.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Nothing new to show yet</p>
       ) : (
         <ul className="mt-3 space-y-2.5">
           {corners.map((c) => {

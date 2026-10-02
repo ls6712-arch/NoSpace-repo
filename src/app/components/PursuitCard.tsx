@@ -20,14 +20,10 @@ import { PostMedia } from "./PostMedia";
 import { GoalDialog } from "./GoalDialog";
 import { EndingDialog } from "./EndingDialog";
 import { GoalProgressTap } from "./GoalProgressTap";
+import { formatWhen } from "../lib/dates";
 
 function timeAgo(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days < 1) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30.44);
-  return `${months} ${months === 1 ? "month" : "months"} ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 
@@ -192,7 +188,7 @@ export function PursuitCard({
 
       <div className="flex flex-1 flex-col p-4">
         <Link to={`/pursuit/${pursuit.id}`} className="block">
-          <p className="text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+          <p className="line-clamp-2 break-words text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
             {pursuit.title}
           </p>
           {(pursuit.interest || spaceLabel) && (

@@ -14,6 +14,8 @@ import { SpaceMomentsTab } from "../components/space/SpaceMomentsTab";
 import { SpaceEventsTab } from "../components/space/SpaceEventsTab";
 import { SpacePeopleTab } from "../components/space/SpacePeopleTab";
 import { SpaceManageTab } from "../components/space/SpaceManageTab";
+import { plural } from "../lib/plural";
+import { Time } from "../components/ui/time";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string; avatarUrl?: string };
@@ -26,13 +28,6 @@ function initials(name: string) {
  * Closed Space, who can't read space_events directly) both satisfy this. */
 type FeaturedEventLite = { title: string; starts_at: string; timezone: string };
 
-function fmt(iso: string, tz: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: tz });
-  } catch {
-    return new Date(iso).toLocaleString();
-  }
-}
 
 const TABS = ["home", "moments", "events", "people", "manage"] as const;
 
@@ -229,12 +224,12 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       <div className="mx-auto w-full max-w-3xl px-4 pt-5">
         {space.status === "read_only" && (
           <div className="mb-4 rounded-2xl border border-clay/30 bg-clay-soft px-4 py-3 text-sm">
-            This Space is read-only right now — no new members, requests, or events until it's reactivated.
+            This Space is read-only right now — no new members, requests, or events until it’s reactivated.
           </div>
         )}
         {space.status === "deleted" && (
           <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
-            This Space has been deleted. You're seeing it as an admin.
+            This Space has been deleted. You’re seeing it as an admin.
           </div>
         )}
 
@@ -244,7 +239,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
               Space{primaryCorner ? ` · ${primaryCorner.name}` : ""}
             </p>
             <h1
-              className="mt-1 text-[42px] leading-[1.05] sm:text-[48px] lg:text-[76px]"
+              className="mt-1 break-words text-[42px] leading-[1.05] sm:text-[48px] lg:text-[76px]"
               style={{ fontFamily: "var(--font-display)" }}
             >
               {space.name}
@@ -288,8 +283,8 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           )}
         </div>
 
-        <p className="mt-2 text-xs text-muted-foreground">
-          {momentCount ?? 0} Moment{momentCount === 1 ? "" : "s"} this month
+        <p className="mt-2 text-xs text-muted-foreground tabular-nums">
+          {plural(momentCount ?? 0, "Moment")} this month
         </p>
 
         {spaceAddress && (
@@ -307,7 +302,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             <Star className="size-4 shrink-0 fill-current text-clay" />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{featuredEvent.title}</p>
-              <p className="text-xs text-muted-foreground">{fmt(featuredEvent.starts_at, featuredEvent.timezone)}</p>
+              <p className="text-xs text-muted-foreground"><Time value={featuredEvent.starts_at} format="datetime" timeZone={featuredEvent.timezone} /></p>
               {featuredEventAddress && (
                 <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                   <MapPin className="size-3" />

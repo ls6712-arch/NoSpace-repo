@@ -447,7 +447,7 @@ export async function saveInvites(pursuitId: string, ownerId: string, inviteeIds
     const { error } = await supabase.from("pursuit_members").upsert(rows, { onConflict: "pursuit_id,user_id", ignoreDuplicates: true });
     return error ? error.message : null;
   } catch (e: any) {
-    return e?.message ?? "Invites didn't send.";
+    return e?.message ?? "Invites didn’t send.";
   }
 }
 
@@ -561,10 +561,10 @@ export async function getOrCreateInviteLink(pursuitId: string, userId: string): 
       .insert({ pursuit_id: pursuitId, created_by: userId })
       .select("token")
       .single();
-    if (error || !data) return { error: error?.message ?? "Couldn't make a link." };
+    if (error || !data) return { error: error?.message ?? "Couldn’t make a link." };
     return { token: data.token };
   } catch (e: any) {
-    return { error: e?.message ?? "Couldn't make a link." };
+    return { error: e?.message ?? "Couldn’t make a link." };
   }
 }
 
@@ -624,7 +624,7 @@ export async function joinViaLink(token: string): Promise<{ pursuitId?: string; 
     if (error) return { error: error.message };
     return { pursuitId: data as string };
   } catch (e: any) {
-    return { error: e?.message ?? "Couldn't join." };
+    return { error: e?.message ?? "Couldn’t join." };
   }
 }
 
