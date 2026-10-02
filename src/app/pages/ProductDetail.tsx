@@ -54,7 +54,7 @@ export function ProductDetail() {
               size="icon"
               variant="ghost"
               className={`absolute top-5 right-5 rounded-control backdrop-blur-md ${
-                inWishlist ? "bg-[var(--coral)] text-on-brand" : "bg-scrim-solid/40 text-on-media"
+                inWishlist ? "bg-[var(--coral-deep)] text-on-brand" : "bg-scrim-solid/40 text-on-media"
               }`}
               onClick={() => toggleWishlist(product.id)}
             >

@@ -49,7 +49,7 @@ export function ProductCard({ product }: { product: Product }) {
             size="icon"
             variant="ghost"
             className={`absolute bottom-3 right-3 rounded-control backdrop-blur-md ${
-              inWishlist ? "bg-[var(--coral)] text-on-brand" : "bg-scrim-solid/40 text-on-media hover:bg-scrim-solid/60"
+              inWishlist ? "bg-[var(--coral-deep)] text-on-brand" : "bg-scrim-solid/40 text-on-media hover:bg-scrim-solid/60"
             }`}
             onClick={handleWishlistToggle}
           >

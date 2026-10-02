@@ -97,7 +97,7 @@ export function StepDots({ steps, current }: { steps: string[]; current: number 
             <span
               className={`relative z-10 flex size-7 items-center justify-center rounded-full border text-caption ${
                 active
-                  ? "border-[var(--coral)] bg-[var(--coral)] text-on-brand"
+                  ? "border-[var(--coral-deep)] bg-[var(--coral-deep)] text-on-brand"
                   : done
                     ? "border-[var(--coral)] bg-card text-[var(--coral-deep)]"
                     : "border-border bg-card text-muted-foreground"
