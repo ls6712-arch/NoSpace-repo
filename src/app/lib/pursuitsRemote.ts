@@ -2,6 +2,7 @@ import { supabase } from "../../lib/supabase";
 import { Goal, GoalShape, Project, attachEntry, mergeRemoteProjects } from "./journal";
 import type { Measure, PursuitMember, PursuitMode, ProgressEntry } from "./journal";
 import { friendlyError } from "./friendlyError";
+import { ERROR_LINE } from "./stateCopy";
 
 /** Shared by every reader of a `pursuits` row — fetchPursuitById,
  * restoreOwnPursuits — so the goal-column mapping only lives in one place. */
@@ -562,10 +563,10 @@ export async function getOrCreateInviteLink(pursuitId: string, userId: string): 
       .insert({ pursuit_id: pursuitId, created_by: userId })
       .select("token")
       .single();
-    if (error || !data) return { error: error?.message ?? "Couldn’t make a link." };
+    if (error || !data) return { error: error?.message ?? ERROR_LINE };
     return { token: data.token };
   } catch (e: any) {
-    return { error: e?.message ?? "Couldn’t make a link." };
+    return { error: e?.message ?? ERROR_LINE };
   }
 }
 
@@ -625,7 +626,7 @@ export async function joinViaLink(token: string): Promise<{ pursuitId?: string; 
     if (error) return { error: friendlyError(error) };
     return { pursuitId: data as string };
   } catch (e: any) {
-    return { error: e?.message ?? "Couldn’t join." };
+    return { error: e?.message ?? ERROR_LINE };
   }
 }
 

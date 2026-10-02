@@ -14,6 +14,7 @@ import { Time } from "../components/ui/time";
 import { useSubmitGuard } from "../lib/useSubmitGuard";
 import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -121,7 +122,7 @@ export function AdminInvites() {
   const loadWaiting = async () => {
     const result = await fetchWaitingFirstMoments();
     setWaiting(result.rows);
-    setWaitingError(result.error ? "Couldn’t load first moments. Try again in a moment." : null);
+    setWaitingError(result.error ? ERROR_LINE : null);
   };
 
   useEffect(() => {
@@ -154,7 +155,7 @@ export function AdminInvites() {
       setCopied(false);
       const result = await createInvite(note);
       if (result.error || !result.code) {
-        setCreateError(result.error || "Couldn’t create that invite. Try again.");
+        setCreateError(result.error || ERROR_LINE);
         return;
       }
       setNewLink(inviteLink(result.code));

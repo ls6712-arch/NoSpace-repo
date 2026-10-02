@@ -38,6 +38,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { plural } from "../lib/plural";
 import { Time } from "./ui/time";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -145,7 +146,7 @@ function VisibilityDialog({
     });
     setSaving(false);
     if (!ok) {
-      setError("Couldn’t save that. Try again in a moment.");
+      setError(ERROR_LINE);
       return;
     }
     onOpenChange(false);

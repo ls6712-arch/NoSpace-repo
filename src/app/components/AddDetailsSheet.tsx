@@ -10,6 +10,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * Step 3, §5 "Details move after saving": Corner, location, private
@@ -66,7 +67,7 @@ export function AddDetailsSheet({
         visibility: audience,
       });
       if (!ok) {
-        setError("Couldn’t save those details. Try again.");
+        setError(ERROR_LINE);
         return;
       }
       onOpenChange(false);

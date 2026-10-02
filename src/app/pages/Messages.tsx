@@ -30,6 +30,8 @@ import { scrollBehavior } from "../lib/scrollToElement";
 import { Loadable, Skeleton } from "../components/ui/skeleton";
 import { ListSkeleton } from "../components/Skeletons";
 import { EmptyState } from "../components/StateViews";
+import { UPLOAD_COPY } from "../lib/stateCopy";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -465,7 +467,7 @@ function ConversationPanel({
                 setHeicWarning(null);
                 const converted = await convertHeicIfNeeded(picked);
                 if (isHeicFile(converted)) {
-                  setHeicWarning("That photo couldn’t be processed — try a different one.");
+                  setHeicWarning(UPLOAD_COPY.heic);
                   return;
                 }
                 onAttachPhoto(converted);
@@ -731,7 +733,7 @@ export function Messages() {
         setActiveId(id);
       }
       if (error) {
-        setSendError("Couldn’t send that. Try again later.");
+        setSendError(ERROR_LINE);
         return;
       }
       setDraft("");

@@ -7,6 +7,7 @@ import { canAttachInto } from "../lib/messageTabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -52,7 +53,7 @@ export function SendToChatDialog({
           : { error: "failed" as const };
     setSendingTo(null);
     if (result.error) {
-      setError("Couldn’t send that. Try again.");
+      setError(ERROR_LINE);
       return;
     }
     setSentTo(threadId);

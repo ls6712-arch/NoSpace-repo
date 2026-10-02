@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { formatWhen } from "../lib/dates";
 import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * Reports of a profile, message, Moment or Thought, per
@@ -132,7 +133,7 @@ export function AdminReports() {
     const { error: err } = await supabase.from("reports").update({ status }).eq("id", id);
     setBusy(null);
     if (err) {
-      setError("Couldn’t do that. Try again.");
+      setError(ERROR_LINE);
       return;
     }
     await load();

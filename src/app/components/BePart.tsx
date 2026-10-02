@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import { OFFLINE_LINE } from "../lib/stateCopy";
 
 /**
  * One primary action on a post, contextual to it: "Be part" opens a sheet of
@@ -187,7 +188,7 @@ export function BePart({
         setError("That didn’t send — you may have already asked. Check your Inbox.");
       else setSent(true);
     } catch {
-      setError("That didn’t send. Check your connection and try again.");
+      setError(OFFLINE_LINE);
     } finally {
       // Always runs, so the button can never stay stuck on "Sending…".
       setSending(false);

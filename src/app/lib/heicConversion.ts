@@ -1,4 +1,5 @@
 import heic2any from "heic2any";
+import { UPLOAD_COPY } from "./stateCopy";
 
 /** Exported so a caller can re-check a post-conversion result: if it's
  * still HEIC-shaped, conversion silently failed (see convertHeicIfNeeded's
@@ -74,4 +75,14 @@ export async function convertHeicIfNeeded(file: File): Promise<File> {
  * screen's multi-photo picker and "add more" tile actually work with. */
 export async function convertHeicFiles(files: File[]): Promise<File[]> {
   return Promise.all(files.map(convertHeicIfNeeded));
+}
+
+/**
+ * One picked photo, ready to attach: converted if it was HEIC, or an
+ * explanation of what to do if conversion failed. Never throws.
+ */
+export async function preparePickedPhoto(file: File): Promise<{ file: File; error: null } | { file: null; error: string }> {
+  const converted = await convertHeicIfNeeded(file).catch(() => file);
+  if (isHeicFile(converted)) return { file: null, error: UPLOAD_COPY.heic };
+  return { file: converted, error: null };
 }

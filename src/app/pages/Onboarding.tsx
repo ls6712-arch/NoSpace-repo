@@ -13,6 +13,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { fetchInvitesLeft } from "../lib/invites";
 import { Button } from "../components/ui/button";
 import { ENTER } from "../lib/motion";
+import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 
 /** Every chip carried across the wizard shares this layoutId prefix, so
  * Motion can visibly travel a tag from step 1's field into step 2's quiet
@@ -160,7 +161,7 @@ export function Onboarding() {
         cover_tagline: finishTagline.trim() || null,
       });
       if (error) {
-        setFinishError("Couldn’t finish setting up. Try again in a moment.");
+        setFinishError(ERROR_LINE);
         return;
       }
       // onboarding_completed is saved now, so the invite card below is
@@ -176,7 +177,7 @@ export function Onboarding() {
       }
       navigate(redirectTo, { replace: true });
     } catch {
-      setFinishError("Couldn’t reach the server. Try again in a moment.");
+      setFinishError(OFFLINE_LINE);
     } finally {
       setFinishing(false);
     }

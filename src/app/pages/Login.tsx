@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { APP_NAME } from "../config";
+import { OFFLINE_LINE } from "../lib/stateCopy";
 
 export function Login() {
   const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
@@ -117,7 +118,7 @@ export function Login() {
         navigate(redirectTo);
       }
     } catch {
-      setError("Couldn’t reach the server. Check your connection and try again.");
+      setError(OFFLINE_LINE);
     } finally {
       // Without this, a thrown error left the button reading "One sec..."
       // forever and the only way out was reloading the page.

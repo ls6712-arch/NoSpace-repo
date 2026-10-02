@@ -9,6 +9,7 @@ import { targetText } from "../lib/pursuitProgress";
 import { PersonAvatar } from "./CreatePursuit";
 import { APP_NAME } from "../config";
 import { plural, pluralWord } from "../lib/plural";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * /join/:token — where an invite link lands. Works signed out: shows who
@@ -37,7 +38,7 @@ export function JoinPursuit() {
     setError(null);
     const result = await joinViaLink(token);
     if (!result.pursuitId) {
-      setError(result.error ?? "Couldn’t join.");
+      setError(result.error ?? ERROR_LINE);
       setJoining(false);
       return;
     }

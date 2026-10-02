@@ -10,7 +10,7 @@ import { defaultSpaceSlug } from "../data/hobbies";
 import { guessSpace } from "../lib/pursuitProgress";
 import { addProgress, markActivity, pursuitStatus, useJournalSlice } from "../lib/journal";
 import { attachPostToPursuit, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
-import { convertHeicIfNeeded } from "../lib/heicConversion";
+import { preparePickedPhoto } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { formatAmount, hasMeasure, stepFor, summarize, targetText, unitFor } from "../lib/pursuitProgress";
@@ -20,6 +20,7 @@ import { Button } from "../components/ui/button";
 import { AmountStepper, ProgressBar, SoftPanel, Toggle } from "../components/pursuit/ui";
 import { APP_NAME } from "../config";
 import { formatDate } from "../lib/dates";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 type Audience = "private" | "followers" | "public";
 
@@ -126,7 +127,7 @@ export function AddMoment() {
         });
         if (result.skipped) return;
         if (!result.data) {
-          setError(result.error || "That didn’t save. Try again?");
+          setError(result.error || ERROR_LINE);
           return;
         }
         logId = result.data.id;
@@ -159,7 +160,7 @@ export function AddMoment() {
       setAdded({ amount: logged });
       setRefresh((r) => r + 1);
     } catch {
-      setError("That didn’t save. Try again?");
+      setError(ERROR_LINE);
     } finally {
       setSaving(false);
     }
@@ -249,7 +250,11 @@ export function AddMoment() {
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
                   e.target.value = "";
-                  if (f) setFile(await convertHeicIfNeeded(f).catch(() => f));
+                  if (!f) return;
+                  const prepared = await preparePickedPhoto(f);
+                  if (prepared.error) return setError(prepared.error);
+                  setError(null);
+                  setFile(prepared.file);
                 }}
               />
               <div className="min-w-0 flex-1">

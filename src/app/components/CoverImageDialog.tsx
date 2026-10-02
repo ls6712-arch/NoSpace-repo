@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { MediaAttachPicker } from "./MediaAttachPicker";
 import { Button } from "./ui/button";
+import { UPLOAD_COPY } from "../lib/stateCopy";
 
 const MAX_COVER_BYTES = 8 * 1024 * 1024;
 
@@ -42,7 +43,7 @@ export function CoverImageDialog({
       return;
     }
     if (picked && picked.size > MAX_COVER_BYTES) {
-      setError("That photo is too large (8MB max) — pick a smaller one.");
+      setError(UPLOAD_COPY.tooBig(8));
       return;
     }
     setFile(picked);

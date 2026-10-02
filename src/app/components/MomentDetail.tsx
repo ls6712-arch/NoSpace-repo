@@ -55,6 +55,8 @@ import {
 } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { formatDate } from "../lib/dates";
+import { UPLOAD_COPY } from "../lib/stateCopy";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /** The audience words, identical to the ones chosen in the Log flow. */
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
@@ -206,7 +208,7 @@ export function MomentDetail({
       ? (await removePrivateLogEntry(post.privateLogId!)).data === true
       : await deletePost(post.id);
     if (!ok) {
-      setDeleteError("Couldn’t delete that. Try again in a moment.");
+      setDeleteError(ERROR_LINE);
       return;
     }
     setConfirmDeleteOpen(false);
@@ -507,7 +509,7 @@ export function MomentDetail({
                     // unconverted, unrenderable to anyone not on Safari.
                     const file = await convertHeicIfNeeded(raw);
                     if (isHeicFile(file)) {
-                      setSaveError("That photo couldn’t be processed and wasn’t added — try a different photo.");
+                      setSaveError(UPLOAD_COPY.heic);
                       return;
                     }
                     setSaveError(null);

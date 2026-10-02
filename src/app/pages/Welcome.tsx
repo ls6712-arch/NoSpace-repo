@@ -7,6 +7,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { WaitlistForm } from "../components/WaitlistForm";
 import { APP_NAME } from "../config";
+import { OFFLINE_LINE } from "../lib/stateCopy";
 
 /**
  * /#/welcome — Step 2's door screen. Root.tsx routes every signed-in
@@ -47,7 +48,7 @@ export function Welcome() {
       return;
     }
     if (result === "error") {
-      setError("Couldn’t reach the server. Try again.");
+      setError(OFFLINE_LINE);
       setClaiming(false);
       return;
     }

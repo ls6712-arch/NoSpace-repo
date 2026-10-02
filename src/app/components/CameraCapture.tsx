@@ -4,6 +4,7 @@ import { Camera as CameraIcon, Images, Play, SwitchCamera, Type, X } from "lucid
 import { addRecentCapture, useRecentCaptures } from "../lib/recentCaptures";
 import { convertHeicFiles, isHeicFile } from "../lib/heicConversion";
 import { Button } from "./ui/button";
+import { UPLOAD_COPY } from "../lib/stateCopy";
 
 /** Confirmed with product: 60s, matching Instagram-length clips — long enough
  * for a real moment, short enough that this stays a quick-capture tool
@@ -222,8 +223,8 @@ export function CameraCapture({
     if (failedCount > 0) {
       setHeicWarning(
         failedCount === 1
-          ? "One photo couldn’t be processed and wasn’t added — try a different photo."
-          : `${failedCount} photos couldn’t be processed and weren’t added — try different photos.`,
+          ? UPLOAD_COPY.heicMany(1)
+          : UPLOAD_COPY.heicMany(failedCount),
       );
     }
     if (picked.length === 0) return;

@@ -26,6 +26,7 @@ import { APP_NAME } from "../../config";
 import { formatDate } from "../../lib/dates";
 import { plural } from "../../lib/plural";
 import { useSubmitGuard } from "../../lib/useSubmitGuard";
+import { ERROR_LINE } from "../../lib/stateCopy";
 
 /**
  * The top of a measured Pursuit's page, in whichever of the three shapes
@@ -373,7 +374,7 @@ export function InviteDialog({
     if (!token) {
       setLinkState("error");
       console.warn("[PursuitProgressPanel] invite link failed:", error);
-      setStatus("Couldn’t make a link. Try again.");
+      setStatus(ERROR_LINE);
       return;
     }
     const url = inviteUrl(token);
