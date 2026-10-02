@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { useSessionsByHobby, archiveKey } from "./HobbyShelf";
+import { plural } from "../lib/plural";
 
 /** Cycled per spine — the same dark-tuned illustration palette GeneratedArt
  * uses (theme.css's --gen-art-*), not new raw hex. Shared by the bar chart
@@ -48,7 +49,7 @@ export function ShelfRail() {
             {sessions.map((s, i) => (
               <div
                 key={s.key}
-                title={`${s.label}: ${s.sessions} ${s.sessions === 1 ? "moment" : "moments"}`}
+                title={`${s.label}: ${plural(s.sessions, "Moment")}`}
                 className="min-w-0 flex-1 rounded-t-[4px]"
                 style={{
                   height: `${Math.max(6, (s.sessions / max) * 100)}%`,
@@ -79,7 +80,7 @@ export function ShelfRail() {
                     </span>
                   </span>
                   <span className="ns-section-kicker shrink-0 text-muted-foreground">
-                    {s.sessions} {s.sessions === 1 ? "MOMENT" : "MOMENTS"}
+                    {plural(s.sessions, "Moment").toUpperCase()}
                   </span>
                 </Link>
               </li>

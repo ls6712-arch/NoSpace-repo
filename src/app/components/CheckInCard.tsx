@@ -5,13 +5,14 @@ import { Project, dismissCheckIn, pauseProject } from "../lib/journal";
 import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { QuickLog } from "./QuickLog";
 import { EndingDialog } from "./EndingDialog";
+import { plural } from "../lib/plural";
 
 function quietFor(since: number): string {
   const days = Math.floor((Date.now() - since) / 86_400_000);
-  if (days < 14) return `${days} days`;
+  if (days < 14) return plural(days, "day");
   const weeks = Math.round(days / 7);
-  if (weeks < 8) return `${weeks} weeks`;
-  return `${Math.round(days / 30)} months`;
+  if (weeks < 8) return plural(weeks, "week");
+  return plural(Math.round(days / 30), "month");
 }
 
 /**

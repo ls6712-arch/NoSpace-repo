@@ -7,6 +7,7 @@ import { usePeopleSearch, peopleInHobby, browsePeople, type Person } from "../li
 import { PeopleRow } from "../components/PersonCard";
 import { Button } from "../components/ui/button";
 import { APP_NAME } from "../config";
+import { plural } from "../lib/plural";
 
 /**
  * People, found through what they make.
@@ -133,7 +134,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
               ? "Looking…"
               : found.length === 0
                 ? "Nobody by that name yet."
-                : `${found.length} ${found.length === 1 ? "person" : "people"}.`}
+                : plural(found.length, "person", "people")}
           </p>
           {found.length > 0 && <PeopleRow people={found} />}
         </section>

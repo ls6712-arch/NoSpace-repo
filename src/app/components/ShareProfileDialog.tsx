@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
+import { plural } from "../lib/plural";
 
 export function ShareProfileDialog({
   open,
@@ -28,7 +29,7 @@ export function ShareProfileDialog({
 
   const unlocked = badges.filter((b) => unlockedBadgeIds.includes(b.id));
 
-  const summary = `${stats.postsCreated} ${stats.postsCreated === 1 ? "thing" : "things"} created on ${APP_NAME}, ${unlocked.length} quiet ${unlocked.length === 1 ? "milestone" : "milestones"} reached. Create, don't just consume: ${publicUrl}`;
+  const summary = `${plural(stats.postsCreated, "Moment")} logged on ${APP_NAME}, ${plural(unlocked.length, "Quiet Milestone")} reached. Create, don't just consume: ${publicUrl}`;
 
   const handleCopy = async () => {
     try {
@@ -50,7 +51,7 @@ export function ShareProfileDialog({
               <AvatarFallback className="text-lg">YOU</AvatarFallback>
             </Avatar>
             <div className="font-hud text-4xl mb-6 text-gradient-brand">
-              {stats.postsCreated} {stats.postsCreated === 1 ? "thing" : "things"} created
+              {plural(stats.postsCreated, "Moment")} logged
             </div>
 
             {unlocked.length > 0 && (

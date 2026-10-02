@@ -6,6 +6,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { plural } from "../lib/plural";
 
 /**
  * Merging, renaming and hiding Corners.
@@ -34,10 +35,6 @@ interface CornerRow {
   name: string;
   moment_count: number;
   hidden: boolean;
-}
-
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 export function AdminCorners() {

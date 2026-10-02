@@ -28,6 +28,7 @@ import { SpacesBrowser } from "../components/SpacesBrowser";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
+import { plural } from "../lib/plural";
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
@@ -683,7 +684,7 @@ export function Discover() {
               <p className="mb-6 text-sm text-muted-foreground">
                 {chip === "near"
                   ? "Location isn't switched on yet."
-                  : `${filtered.length} ${filtered.length === 1 ? "Moment" : "Moments"}${q ? ` matching "${query}"` : ""}.`}
+                  : `${plural(filtered.length, "Moment")}${q ? ` matching “${query}”` : ""}`}
               </p>
 
               {chip === "near" ? (

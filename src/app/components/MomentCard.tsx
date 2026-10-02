@@ -37,6 +37,7 @@ import {
 } from "./ui/dialog";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { formatDateTime, formatWhen } from "../lib/dates";
+import { plural } from "../lib/plural";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -489,7 +490,7 @@ export function MomentCard({
               </div>
             )}
             <div className="mt-1.5 text-xs text-muted-foreground">
-              {goingCount} {goingCount === 1 ? "person" : "people"} going
+              {plural(goingCount, "person", "people")} going
             </div>
           </div>
         )}

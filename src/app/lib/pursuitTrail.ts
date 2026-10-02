@@ -2,6 +2,7 @@ import { Post } from "../data/posts";
 import type { PrivateLog } from "./privateLogsRemote";
 import { Project, pursuitStatus } from "./journal";
 import { formatDate, formatMonth } from "./dates";
+import { plural } from "./plural";
 
 /**
  * "Still moving" and the trail dots both key off this one number — kept
@@ -54,7 +55,7 @@ export function lastMomentText(lastMomentAt: number | undefined): string {
   const days = Math.floor((Date.now() - lastMomentAt) / DAY_MS);
   if (days <= 0) return "Last Moment today.";
   if (days === 1) return "Last Moment yesterday.";
-  return `Last Moment ${days} days ago.`;
+  return `Last Moment ${plural(days, "day")} ago.`;
 }
 
 /**

@@ -24,6 +24,7 @@ import { PersonAvatar } from "../../pages/CreatePursuit";
 import { ProgressBar, SoftPanel } from "./ui";
 import { APP_NAME } from "../../config";
 import { formatDate } from "../../lib/dates";
+import { plural } from "../../lib/plural";
 
 /**
  * The top of a measured Pursuit's page, in whichever of the three shapes
@@ -166,7 +167,7 @@ export function PursuitProgressPanel({
         <ProgressBar fraction={s.fraction} className="mt-3" />
         <MetaLine percent={s.percent} remaining={s.remaining} unit={measure.unit} done={s.done} targetDate={measure.targetDate} />
         <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Users className="size-3.5" /> {joined.length} contributor{joined.length === 1 ? "" : "s"}
+          <Users className="size-3.5" /> {plural(joined.length, "contributor")}
         </p>
       </div>
 

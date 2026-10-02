@@ -20,6 +20,7 @@ import { InspiredRail } from "../components/InspiredRail";
 import { NewSpacesRail } from "../components/NewSpacesRail";
 import { WelcomeBanner } from "../components/WelcomeBanner";
 import { formatDate } from "../lib/dates";
+import { plural } from "../lib/plural";
 
 const PAGE_SIZE = 6;
 
@@ -204,7 +205,7 @@ export function MySpaceGrid() {
               {greeting(profile?.display_name ?? "there")}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {unseen.length} Moment{unseen.length === 1 ? "" : "s"} from the people and Spaces you follow.
+              {plural(unseen.length, "Moment")} from the people and Spaces you follow.
             </p>
           </div>
           {/* Numeral in foreground, not accent — docs/my-space-spec.md

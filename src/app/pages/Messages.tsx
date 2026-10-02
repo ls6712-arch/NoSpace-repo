@@ -25,6 +25,7 @@ import { BlockConfirmDialog } from "../components/BlockConfirmDialog";
 import { ReportDialog } from "../components/ReportDialog";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SharedContentCard } from "../components/SharedContentCard";
+import { pluralWord } from "../lib/plural";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -433,7 +434,7 @@ function ConversationPanel({
             onClick={scrollToBottom}
             className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--coral-deep)] px-3.5 py-1.5 text-xs text-white shadow"
           >
-            New message{newMessageCount > 1 ? "s" : ""}
+            {pluralWord(newMessageCount, "New message", "New messages")}
           </button>
         )}
       </div>

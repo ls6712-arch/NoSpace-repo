@@ -5,6 +5,7 @@ import { useRewards } from "../../context/RewardsContext";
 import { SectionHeader } from "../ui/section-header";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { formatWhen } from "../../lib/dates";
+import { plural } from "../../lib/plural";
 
 function timeAgo(ts: number) {
   return formatWhen(ts, { ago: true });
@@ -66,7 +67,7 @@ export function DataSection() {
 
       {points > 0 && (
         <p className="mt-4 text-xs text-muted-foreground">
-          {points} {points === 1 ? "point" : "points"} earned so far.
+          {plural(points, "point")} earned so far.
         </p>
       )}
 

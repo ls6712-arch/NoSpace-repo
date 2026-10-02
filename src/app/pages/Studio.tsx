@@ -12,6 +12,7 @@ import { CoverEditor } from "../components/CoverEditor";
 import { Button } from "../components/ui/button";
 import { APP_NAME } from "../config";
 import { formatMonth } from "../lib/dates";
+import { plural } from "../lib/plural";
 
 type Grouping = "chronological" | "tag";
 
@@ -278,7 +279,7 @@ export function Studio() {
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
           <p className="mb-2 text-xs uppercase tracking-[0.16em] text-white/70">
-            {loaded.posts.length} {loaded.posts.length === 1 ? "moment" : "moments"}
+            {plural(loaded.posts.length, "Moment")}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
           <h1

@@ -7,6 +7,7 @@ import { builtInSpace, hobbies, isBuiltInSpace, type Hobby } from "../data/hobbi
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { plural } from "../lib/plural";
 
 /**
  * Creating, shaping, hiding and deleting Spaces.
@@ -35,10 +36,6 @@ interface Confirm {
   plan: DeletePlan;
   /** True when content has to be moved before the delete. */
   move: boolean;
-}
-
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 export function AdminSpaces() {

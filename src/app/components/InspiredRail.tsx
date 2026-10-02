@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { fetchYouInspired, InspiredEntry } from "../lib/youInspired";
 import { subHobbyLabel } from "../data/hobbies";
+import { plural } from "../lib/plural";
 
 function snippet(caption: string): string {
   const trimmed = caption.trim();
@@ -62,7 +63,7 @@ export function InspiredRail() {
         <p className="mt-3 text-sm text-muted-foreground">Nothing yet this month.</p>
       ) : (
         <p className="mt-3 text-sm leading-relaxed text-foreground">
-          This month, {entries.length} {entries.length === 1 ? "person" : "people"} started a
+          This month, {plural(entries.length, "person", "people")} started a
           Pursuit not long after seeing yours — {joinClauses(entries.map(clause))}.
         </p>
       )}

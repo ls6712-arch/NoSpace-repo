@@ -9,6 +9,7 @@ import {
 import { badges, RewardStats } from "../data/badges";
 import { useAuth } from "./AuthContext";
 import { shareMilestone, unshareMilestone } from "../lib/milestonesRemote";
+import { plural } from "../lib/plural";
 
 const STORAGE_KEY = "sushii.rewards.v1";
 
@@ -164,7 +165,7 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
       checkNewBadges(prev, next);
       return next;
     });
-    logActivity(count > 1 ? `Checked out ${count} items` : "Checked out", 10 * count);
+    logActivity(count > 1 ? `Checked out ${plural(count, "item")}` : "Checked out", 10 * count);
   };
 
   const visitHobby = (slug: string) => {

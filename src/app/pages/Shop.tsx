@@ -4,6 +4,7 @@ import { hobbies } from "../data/hobbies";
 import { useContent } from "../context/ContentContext";
 import { ProductCard } from "../components/ProductCard";
 import { Button } from "../components/ui/button";
+import { plural } from "../lib/plural";
 
 export function Shop() {
   const [searchParams] = useSearchParams();
@@ -54,7 +55,7 @@ export function Shop() {
         </div>
 
         <div className="mb-6 text-center text-sm text-muted-foreground">
-          {filtered.length} listing{filtered.length === 1 ? "" : "s"}
+          {plural(filtered.length, "listing")}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

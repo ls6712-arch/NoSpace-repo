@@ -15,6 +15,7 @@ import { SpaceEventsTab } from "../components/space/SpaceEventsTab";
 import { SpacePeopleTab } from "../components/space/SpacePeopleTab";
 import { SpaceManageTab } from "../components/space/SpaceManageTab";
 import { formatDateTime } from "../lib/dates";
+import { plural } from "../lib/plural";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string; avatarUrl?: string };
@@ -286,7 +287,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         </div>
 
         <p className="mt-2 text-xs text-muted-foreground">
-          {momentCount ?? 0} Moment{momentCount === 1 ? "" : "s"} this month
+          {plural(momentCount ?? 0, "Moment")} this month
         </p>
 
         {spaceAddress && (

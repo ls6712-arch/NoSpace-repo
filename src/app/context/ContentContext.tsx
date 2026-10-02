@@ -15,6 +15,7 @@ import { SOCIAL_STORAGE_KEY } from "./SocialContext";
 import { supabase } from "../../lib/supabase";
 import { deleteMomentFiles, resolvePostMedia, signMomentPaths, uploadMomentFile } from "../lib/momentMedia";
 import { InFlightGuard, InFlightSkipped } from "../lib/inFlightGuard";
+import { plural } from "../lib/plural";
 
 const LISTINGS_KEY = "sushii.listings.v1";
 
@@ -668,7 +669,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           // Some made it, some didn't — the post still saves with whatever
           // succeeded rather than losing the whole Moment over one bad file.
           setMediaError(
-            `${failCount} of ${files.length} photos didn't upload. The Moment was saved with the rest.`,
+            `${failCount} of ${plural(files.length, "photo")} didn’t upload. The Moment was saved with the rest.`,
           );
         } else {
           setMediaError(null);

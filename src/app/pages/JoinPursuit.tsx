@@ -8,6 +8,7 @@ import { InvitePreview, fetchInvitePreview, fetchPursuitAsProject, joinViaLink }
 import { targetText } from "../lib/pursuitProgress";
 import { PersonAvatar } from "./CreatePursuit";
 import { APP_NAME } from "../config";
+import { plural, pluralWord } from "../lib/plural";
 
 /**
  * /join/:token — where an invite link lands. Works signed out: shows who
@@ -103,8 +104,10 @@ export function JoinPursuit() {
               ? "Everyone contributes to the same total."
               : "Everyone has their own goal and journey, side by side."}
           </p>
-          {preview.memberCount > 1 && (
-            <p className="pl-[26px] text-xs text-muted-foreground">{preview.memberCount} people are in so far.</p>
+          {preview.memberCount > 0 && (
+            <p className="pl-[26px] text-xs text-muted-foreground tabular-nums">
+              {plural(preview.memberCount, "person", "people")} {pluralWord(preview.memberCount, "is", "are")} in so far.
+            </p>
           )}
         </div>
 

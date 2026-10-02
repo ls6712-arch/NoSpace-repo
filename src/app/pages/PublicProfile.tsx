@@ -29,6 +29,7 @@ import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/p
 import { FollowListDialog } from "../components/FollowListDialog";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
 import { formatMonth } from "../lib/dates";
+import { pluralWord } from "../lib/plural";
 
 /** Whichever Corner shows up most in their public Moments — a Corner slug is
  * only unique within its own Space, so this tracks the pair, never the slug
@@ -376,8 +377,8 @@ export function PublicProfile() {
               )}
               <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
                 <span>
-                  <strong className="text-foreground">{posts.length}</strong>{" "}
-                  {posts.length === 1 ? "moment" : "moments"} logged
+                  <strong className="text-foreground tabular-nums">{posts.length.toLocaleString("en-US")}</strong>{" "}
+                  {pluralWord(posts.length, "Moment")} logged
                   {sinceLabel ? ` since ${sinceLabel}` : ""}
                 </span>
                 {followerCount !== null && followerCount > 0 && (
@@ -388,8 +389,8 @@ export function PublicProfile() {
                       onClick={() => setFollowListOpen(true)}
                       className="transition-colors hover:text-foreground hover:underline"
                     >
-                      <strong className="text-foreground">{followerCount}</strong>{" "}
-                      {followerCount === 1 ? "follower" : "followers"}
+                      <strong className="text-foreground tabular-nums">{followerCount.toLocaleString("en-US")}</strong>{" "}
+                      {pluralWord(followerCount, "follower")}
                     </button>
                   </>
                 )}

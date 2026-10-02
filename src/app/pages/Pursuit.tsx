@@ -46,6 +46,7 @@ import { ProgressBar } from "../components/pursuit/ui";
 import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
 import { formatDate, formatWhen } from "../lib/dates";
+import { plural } from "../lib/plural";
 
 function initials(name: string) {
   return name
@@ -373,7 +374,7 @@ export function Pursuit() {
             <>
               <span aria-hidden="true">·</span>
               <span>
-                {moments.length} Moment{moments.length === 1 ? "" : "s"}
+                {plural(moments.length, "Moment")}
               </span>
             </>
           )}

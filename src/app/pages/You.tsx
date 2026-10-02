@@ -27,6 +27,7 @@ import { ProfileLinksEditor } from "../components/ProfileLinks";
 import { tagsFromPosts } from "../lib/postTags";
 import { useFollowerCount } from "../lib/useFollowerCount";
 import { formatMonth } from "../lib/dates";
+import { pluralWord } from "../lib/plural";
 
 export function You() {
   const { myPosts, posts } = useContent();
@@ -153,8 +154,8 @@ export function You() {
                 )}
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
                   <span>
-                    <strong className="text-foreground">{totalSessions}</strong>{" "}
-                    {totalSessions === 1 ? "moment" : "moments"} logged
+                    <strong className="text-foreground tabular-nums">{totalSessions.toLocaleString("en-US")}</strong>{" "}
+                    {pluralWord(totalSessions, "Moment")} logged
                     {sinceLabel ? ` since ${sinceLabel}` : ""}
                   </span>
                   {followerCount !== null && followerCount > 0 && (
@@ -168,8 +169,8 @@ export function You() {
                         }}
                         className="transition-colors hover:text-foreground hover:underline"
                       >
-                        <strong className="text-foreground">{followerCount}</strong>{" "}
-                        {followerCount === 1 ? "follower" : "followers"}
+                        <strong className="text-foreground tabular-nums">{followerCount.toLocaleString("en-US")}</strong>{" "}
+                        {pluralWord(followerCount, "follower")}
                       </button>
                     </>
                   )}

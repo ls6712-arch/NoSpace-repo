@@ -4,6 +4,7 @@ import { createInvite, inviteLink } from "../lib/invites";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { APP_NAME } from "../config";
+import { plural } from "../lib/plural";
 
 /**
  * Step 3, "one optional invite card at the end of onboarding." Shown by
@@ -80,7 +81,7 @@ export function OnboardingInviteCard({
         {APP_NAME} is invite-only for now.{" "}
         {invitesLeft === null
           ? "Send an invite link to someone you'd like here."
-          : `You have ${invitesLeft} ${invitesLeft === 1 ? "invite" : "invites"} to give.`}
+          : `You have ${plural(invitesLeft, "invite")} to give.`}
       </p>
 
       {!link ? (
