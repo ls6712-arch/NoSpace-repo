@@ -52,7 +52,7 @@ export function Root() {
   // bounced to the landing page for a moment before their session loads.
   if (isConfigured && loading) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-viewport flex-col">
         <PreviewBanner />
         <div className="flex flex-1 items-center justify-center">
           <span className="size-8 rounded-full border-2 border-border border-t-white/70 animate-spin" />
@@ -98,7 +98,7 @@ export function Root() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-viewport">
       <PreviewBanner />
       <Header />
       <main>

@@ -148,7 +148,7 @@ function BackLink({ onClick }: { onClick: () => void }) {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-surface py-10 sm:py-14">
+    <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-lg px-4">{children}</div>
     </div>
   );
@@ -1662,7 +1662,7 @@ export function Log() {
   const isPrivateOnly = mode === "private";
 
   return (
-    <div className="min-h-screen bg-surface py-10 sm:py-14">
+    <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-2xl px-4">
         {pursuitScoped ? (
           <Link

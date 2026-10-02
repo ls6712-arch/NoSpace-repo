@@ -345,7 +345,7 @@ export function Pursuit() {
     : undefined;
 
   return (
-    <div className="min-h-screen bg-surface pb-24">
+    <div className="min-h-viewport bg-surface pb-24">
       <div className="container mx-auto max-w-2xl px-4 pt-8">
         <Link
           to={owner ? "/my-space" : "/discover"}

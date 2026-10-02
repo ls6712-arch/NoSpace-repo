@@ -72,7 +72,7 @@ export function Inbox() {
 
   if (isConfigured && !user) {
     return (
-      <div className="min-h-screen bg-surface py-10">
+      <div className="min-h-viewport bg-surface py-10">
         <div className="container mx-auto max-w-2xl px-4">
           <h1 className="mb-2 text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
             Inbox
@@ -89,7 +89,7 @@ export function Inbox() {
   }
 
   return (
-    <div className="min-h-screen bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
         <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
           Inbox

@@ -346,7 +346,7 @@ export function PublicProfile() {
     : null;
 
   return (
-    <div className="ns-paper-theme ns-public-profile min-h-screen bg-surface py-8 sm:py-10">
+    <div className="ns-paper-theme ns-public-profile min-h-viewport bg-surface py-8 sm:py-10">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="mb-8 flex items-start gap-5 sm:gap-6">
           <Avatar className="size-20 shrink-0 sm:size-28">

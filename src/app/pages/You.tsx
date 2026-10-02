@@ -114,7 +114,7 @@ export function You() {
   }
 
   return (
-    <div className="ns-paper-theme min-h-screen bg-background py-8 sm:py-12">
+    <div className="ns-paper-theme min-h-viewport bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="mb-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
           YOUR SHELF

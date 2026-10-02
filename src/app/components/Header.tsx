@@ -303,7 +303,7 @@ export function Header() {
   }
 
   return (
-    <header className="ns-site-header sticky top-0 z-50 w-full border-b border-[var(--hairline)]">
+    <header className="ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)]">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries

@@ -189,7 +189,7 @@ export function Onboarding() {
   };
 
   return (
-    <div className="ns-paper-theme min-h-screen bg-[var(--paper)] py-10 sm:py-14">
+    <div className="ns-paper-theme min-h-viewport bg-[var(--paper)] py-10 sm:py-14">
       <div className="container mx-auto max-w-3xl px-4">
         <div className="mb-8 flex items-center gap-1.5" aria-hidden="true">
           {[1, 2, 3].map((n) => (

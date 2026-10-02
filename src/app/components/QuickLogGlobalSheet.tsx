@@ -60,7 +60,7 @@ export function QuickLogGlobalSheet() {
       {logged && (
         <div
           role="status"
-          className="fixed inset-x-0 bottom-20 z-50 mx-auto w-[calc(100%-2rem)] max-w-lg animate-in fade-in slide-in-from-bottom-4 rounded-2xl border border-border bg-card p-2.5 shadow-2xl lg:top-[12vh] lg:bottom-auto"
+          className="fixed inset-x-0 bottom-[calc(5rem+var(--safe-bottom))] z-50 mx-auto w-[calc(100%-2rem)] max-w-lg animate-in fade-in slide-in-from-bottom-4 rounded-2xl border border-border bg-card p-2.5 shadow-2xl lg:top-[12vh] lg:bottom-auto"
         >
           <LoggedNotice
             key={logged.key}

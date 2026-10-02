@@ -468,7 +468,7 @@ export function Discover() {
   const remaining = filtered.length - visible.length;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-viewport">
       <section className="relative overflow-hidden py-10 sm:py-12">
         <div className="container relative mx-auto max-w-3xl px-4">
           <div className="ns-discover-search relative">

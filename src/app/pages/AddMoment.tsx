@@ -174,7 +174,7 @@ export function AddMoment() {
   const recent = moments.filter((m) => m.image).slice(-4);
 
   return (
-    <div className="min-h-screen bg-surface pb-44 lg:pb-28">
+    <div className="min-h-viewport bg-surface pb-44 lg:pb-28">
       <div className="container mx-auto max-w-md px-5 pt-6">
         <div className="mb-4 flex items-center justify-between">
           <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="text-muted-foreground hover:text-foreground">
@@ -320,7 +320,7 @@ export function AddMoment() {
       </div>
 
       {!added && (
-        <div className="fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom,0px))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur lg:bottom-0 lg:pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
+        <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur lg:bottom-0 lg:pb-[calc(var(--safe-bottom)+1rem)]">
           <div className="mx-auto max-w-md">
             <Button variant="coral" className="h-11 w-full rounded-xl" disabled={!canSave} onClick={save}>
               {saving ? "Saving…" : "Save Moment"}

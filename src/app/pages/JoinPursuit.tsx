@@ -78,7 +78,7 @@ export function JoinPursuit() {
   const here = `/join/${token}`;
 
   return (
-    <div className="min-h-screen bg-surface px-5 pb-24 pt-10">
+    <div className="min-h-viewport bg-surface px-5 pb-24 pt-10">
       <div className="mx-auto max-w-md text-center">
         <div className="flex justify-center">
           <PersonAvatar name={preview.ownerName} src={preview.ownerAvatar} size="size-16" />

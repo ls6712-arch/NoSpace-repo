@@ -22,7 +22,7 @@ export function PreviewBanner() {
         backgroundColor: "var(--surface-muted)",
         borderColor: "var(--hairline)",
         color: "var(--muted-foreground)",
-        paddingTop: "calc(env(safe-area-inset-top) + 0.3rem)",
+        paddingTop: "calc(var(--safe-top) + 0.3rem)",
         paddingBottom: "0.3rem",
       }}
     >

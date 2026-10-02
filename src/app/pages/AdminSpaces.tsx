@@ -186,7 +186,7 @@ export function AdminSpaces() {
   const moveTargets = (slug: string) => spaces.filter((s) => s.slug !== slug);
 
   return (
-    <div className="min-h-screen bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
         <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
           Spaces

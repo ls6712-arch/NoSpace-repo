@@ -117,7 +117,7 @@ export function Home() {
   const cornerMoments = seedPosts.filter((p) => p.subHobby === "pickleball").slice(0, 4);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-viewport">
       {/* Hero */}
       <section className="ns-home-hero relative isolate overflow-hidden">
         <div className="mx-auto w-full max-w-[1200px] px-5 pb-12 pt-12 text-center sm:px-8 sm:pt-16 lg:pb-16 lg:pt-20">

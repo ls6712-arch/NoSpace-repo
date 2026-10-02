@@ -218,7 +218,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const primaryCorner = corners.find((c) => c.isPrimary) ?? corners[0];
 
   return (
-    <div className="ns-space-theme min-h-screen bg-background pb-24 text-foreground">
+    <div className="ns-space-theme min-h-viewport bg-background pb-24 text-foreground">
       {/* Inset, compact cover — not edge-to-edge */}
       <div className="mx-auto w-full max-w-3xl px-4 pt-4">
         <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-2xl bg-surface-muted sm:aspect-[3/1]">

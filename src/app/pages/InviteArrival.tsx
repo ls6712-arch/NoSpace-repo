@@ -66,7 +66,7 @@ export function InviteArrival() {
 
   if (!preview?.isValid) {
     return (
-      <div className="min-h-screen bg-surface px-5 pb-24 pt-16">
+      <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
         <div className="mx-auto max-w-sm text-center">
           <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
             This invite has expired or was already used.
@@ -80,7 +80,7 @@ export function InviteArrival() {
   }
 
   return (
-    <div className="min-h-screen bg-surface px-5 pb-24 pt-16">
+    <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
       <div className="mx-auto max-w-sm text-center">
         <div className="flex justify-center">
           <Avatar className="size-16">

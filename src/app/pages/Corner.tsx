@@ -41,7 +41,7 @@ export function CornerPage() {
 
   if (!corner) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-viewport flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl mb-4">That corner doesn't exist</h2>
           <Link to="/">
@@ -56,7 +56,7 @@ export function CornerPage() {
   const posts = publicFeed.filter((p) => p.hobbySlug === spaceSlug && postCorner(p) === corner.slug);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-viewport">
       <section className="container mx-auto px-4 pt-14">
         <Link
           to={`/space/${spaceSlug}`}

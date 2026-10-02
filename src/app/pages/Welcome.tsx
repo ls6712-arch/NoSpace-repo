@@ -59,7 +59,7 @@ export function Welcome() {
   };
 
   return (
-    <div className="min-h-screen bg-surface px-5 pb-24 pt-16">
+    <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
       <div className="mx-auto max-w-sm">
         <h1 className="text-center text-[1.75rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
           {APP_NAME} is invite-only for now.

@@ -69,7 +69,7 @@ export function SearchResults() {
   const q = query.trim();
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-viewport bg-surface">
       <div className="container mx-auto max-w-4xl px-4 py-10">
         <div className="ns-section-kicker mb-3">SEARCH</div>
         <h1 className="mb-6 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>

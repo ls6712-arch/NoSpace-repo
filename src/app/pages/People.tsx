@@ -217,7 +217,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
 
 export function People() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-viewport">
       <section className="relative overflow-hidden py-12 sm:py-14">
         <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
         <div className="container mx-auto max-w-5xl px-4 relative">

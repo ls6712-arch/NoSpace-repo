@@ -809,7 +809,7 @@ export function Messages() {
   const requestCount = requests.length;
 
   return (
-    <div className="min-h-screen bg-surface py-10 sm:py-14">
+    <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-4xl px-4">
         <div className="mb-1 flex items-center justify-between gap-3">
           <h1 className="text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>

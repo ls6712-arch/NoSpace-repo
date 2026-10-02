@@ -235,7 +235,7 @@ export function Studio() {
 
   if (!opened) {
     return (
-      <div className="ns-paper-theme relative min-h-screen overflow-hidden bg-[var(--ink)] text-white">
+      <div className="ns-paper-theme relative min-h-viewport overflow-hidden bg-[var(--ink)] text-white">
         <div className="absolute inset-0">
           {coverPost && (
             <PostMedia
@@ -320,7 +320,7 @@ export function Studio() {
   const rest = spread?.items.slice(1, 7) ?? [];
 
   return (
-    <div className="ns-paper-theme min-h-screen bg-[var(--paper)]">
+    <div className="ns-paper-theme min-h-viewport bg-[var(--paper)]">
       <div className="mx-auto max-w-6xl px-6 py-6 sm:px-10">
         <div className="mb-6 flex items-center justify-between gap-4">
           <button

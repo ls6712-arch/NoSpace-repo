@@ -187,7 +187,7 @@ export function AdminInvites() {
   };
 
   return (
-    <div className="min-h-screen bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
         <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
           Invites
