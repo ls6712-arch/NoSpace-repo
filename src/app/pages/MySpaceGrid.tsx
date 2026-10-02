@@ -44,11 +44,11 @@ function greeting(name: string): string {
  * difference from boards 4/5 (which show no rail at all) — kept on an
  * explicit call rather than dropped or moved off this page.
  *
- * PursuitsInProgressSection, full-width above the sheet, is additive to
- * that rail rather than a replacement for it: the rail only ever sits at
- * lg+, so below that this horizontal-scroll strip was the only always-
- * visible surface for "what am I still moving on," previously buried below
- * the whole feed. Its "See all" and the rail's own both smooth-scroll down
+ * PursuitsInProgressSection, in normal flow right below the greeting header,
+ * is additive to the rail rather than a replacement for it: the rail only
+ * ever sits at lg+, so below that this section was the only always-visible
+ * surface for "what am I still moving on," previously buried below the
+ * whole feed. Its "See all" and the rail's own both smooth-scroll down
  * to the one AllPursuitsSection at the bottom of this page (lib/
  * scrollToElement.ts) — real in-page navigation now, not each opening its
  * own copy of the same grouped list in a dialog.
