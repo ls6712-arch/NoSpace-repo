@@ -4,9 +4,6 @@
 Read-only: walks src/**/*.{ts,tsx,css} and counts the raw values the P0
 Foundations token pass replaces. Re-run after each Phase 2 sweep to see what's
 left:  python3 scripts/design-audit.py [--files]
-
-  --check   run only the lint guard (GUARD_RULES below); exits 1 on any
-            violation. Phase 4 wires this into CI.
 """
 import re
 import sys
@@ -17,7 +14,6 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 THEME = SRC / "styles" / "theme.css"
 SHOW_FILES = "--files" in sys.argv
-CHECK = "--check" in sys.argv
 
 files = sorted(p for p in SRC.rglob("*") if p.suffix in {".ts", ".tsx", ".css"})
 code = [p for p in files if p.suffix in {".ts", ".tsx"}]
@@ -62,10 +58,6 @@ for p in files:
         for m in re.finditer(r"font-size:\s*([^;]+);", p.read_text()):
             css_fs[f"{p.name}: {m.group(1).strip()}"] += 1
 report["type"] = (textsz, textsz_files, inline_fs, css_fs)
-
-# text-hero is the landing page's one exception to the type scale.
-HERO_ALLOWED = {"src/app/pages/Home.tsx"}
-hero_misuse = [f for f in textsz_files.get("text-hero", {}) if f not in HERO_ALLOWED]
 
 # ── Raw black/white ────────────────────────────────────────────────────────
 BW = re.compile(r"(?<![\w-])(?:text|bg|border|from|via|to|fill|stroke|ring|outline|decoration|placeholder|shadow|divide)-(?:white|black)(?:/(?:\d+|\[[^\]]+\]))?(?![\w-])")
@@ -163,44 +155,6 @@ def fmt(counter, limit=None):
     return "\n".join(f"  {v:>5}  {k}" for k, v in items)
 
 
-# ── Lint guard (Phase 4) ───────────────────────────────────────────────────
-# Each rule: (name, regex over TS/TSX, why). CSS 100vh is checked separately
-# because there it's allowed as the fallback line of a 100vh/100dvh pair.
-GUARD_RULES = [
-    ("h-screen", re.compile(r"(?<![\w-])(?:min-|max-)?h-screen(?![\w-])"),
-     "bare 100vh; use min-h-viewport / h-viewport (100dvh with a 100vh fallback)"),
-    ("100vh", re.compile(r"100vh"),
-     "bare 100vh; use min-h-viewport / h-viewport, or a 100vh line followed by a 100dvh line in CSS"),
-]
-VH_DECL = re.compile(r"((?:min-|max-)?height)\s*:\s*[^;{}]*\b100vh\b[^;{}]*;")
-
-
-def guard():
-    problems = []
-    for p in code:
-        for i, line in enumerate(p.read_text().split("\n"), 1):
-            for name, rx, why in GUARD_RULES:
-                if rx.search(line):
-                    problems.append(f"{rel(p)}:{i}: {name}: {why}")
-    for p in files:
-        if p.suffix != ".css":
-            continue
-        t = p.read_text()
-        for m in VH_DECL.finditer(t):
-            nxt = re.match(r"\s*" + re.escape(m.group(1)) + r"\s*:[^;{}]*dvh", t[m.end():])
-            if not nxt:
-                line = t.count("\n", 0, m.start()) + 1
-                problems.append(f"{rel(p)}:{line}: 100vh: not followed by a {m.group(1)}: …dvh fallback pair")
-    for f in hero_misuse:
-        problems.append(f"{f}: text-hero: landing page (Home.tsx) only")
-    return problems
-
-
-if CHECK:
-    problems = guard()
-    print("\n".join(problems) if problems else "design-audit --check: clean")
-    sys.exit(1 if problems else 0)
-
 if __name__ == "__main__":
     radius, radius_files, css_radius = report["radius"]
     print("== RADIUS (tsx/ts)", sum(radius.values()))
@@ -210,8 +164,6 @@ if __name__ == "__main__":
     textsz, textsz_files, inline_fs, css_fs = report["type"]
     print("== TEXT SIZE", sum(textsz.values()))
     print(fmt(textsz))
-    if hero_misuse:
-        print("!! text-hero outside the landing page:", ", ".join(hero_misuse))
     print("-- inline fontSize")
     print(fmt(inline_fs))
     print("-- css font-size")

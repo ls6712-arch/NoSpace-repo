@@ -267,3 +267,21 @@ steps** (24, 28, 32, 36, 40, 44, 48, 56, 64, 80, 96, 112px, counting section pad
     (`--text-*: initial`, `--radius-*: initial`, `--shadow-*: initial`) so
     off-scale classes stop compiling? It can't happen in Phase 1 without
     breaking every unswept screen.
+
+## 10. Phase 4 lint guard — rule list
+
+`scripts/design-audit.py` stays a counter. The guard is a separate Phase 4
+deliverable that fails CI; these are the rules it has to enforce (one per
+decision above). Not implemented yet.
+
+| rule | flags | allowed |
+|---|---|---|
+| viewport height | `h-screen`, `min-h-screen`, `max-h-screen` in TS/TSX | `h-viewport`, `min-h-viewport` |
+| viewport height | any `100vh` in TS/TSX | — |
+| viewport height | a CSS `100vh` height/min-height | only as the fallback line directly before a matching `100dvh` line |
+| type scale | `text-xs/sm/base/lg/xl/2xl…9xl`, `text-[Npx]`, `text-[Nrem]` | `text-caption/small/body/lead/title/display` |
+| hero type | `text-hero` | `src/app/pages/Home.tsx` only |
+| radius | `rounded-sm/md/lg/xl/2xl/3xl/btn`, `rounded-[…]` | `rounded-card`, `rounded-control`, `rounded-full` (avatars, dots, knobs, spinners, radio dots, count badges, blobs, decorative icon circles), `rounded-none` |
+| shadow | `shadow-xs…2xl`, bare `shadow`, `shadow-[…]` | `shadow-card`, `shadow-overlay`, `shadow-none` |
+| raw color | `text-white/black`, `bg-white/black` (+ opacity), `border-white/*`, hex/rgb/hsl literals outside theme.css | `text-on-media`, `text-on-brand`, semantic tokens |
+| motion | `duration-<n>` / `[Nms]`, inline ms values | `duration-fast`, `duration-base`; lines marked `// design-token-ignore: <reason>` |
