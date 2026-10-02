@@ -30,7 +30,7 @@ export function EveryoneShareConfirm({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
+      <p className="text-caption font-medium uppercase tracking-[0.06em] text-muted-foreground">
         What strangers will see
       </p>
       <div className="overflow-hidden rounded-card border border-border bg-card">
@@ -40,14 +40,14 @@ export function EveryoneShareConfirm({
         <div className="space-y-1.5 p-3">
           <div className="flex items-center gap-2">
             <Avatar className="size-6">
-              <AvatarFallback className="text-[10px]">{initials(name)}</AvatarFallback>
+              <AvatarFallback className="text-caption">{initials(name)}</AvatarFallback>
             </Avatar>
-            <span className="text-sm font-medium">{name}</span>
-            <span className="text-xs text-muted-foreground">· {cornerLabel}</span>
+            <span className="text-small font-medium">{name}</span>
+            <span className="text-caption text-muted-foreground">· {cornerLabel}</span>
           </div>
-          {caption && <p className="text-sm">{caption}</p>}
+          {caption && <p className="text-small">{caption}</p>}
           {cityLabel && (
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <p className="flex items-center gap-1 text-caption text-muted-foreground">
               <MapPinOff className="size-3" />
               Exact location hidden · shows {cityLabel}
             </p>
@@ -55,7 +55,7 @@ export function EveryoneShareConfirm({
         </div>
       </div>
       <HoldToShareButton onConfirm={onConfirm} disabled={disabled} />
-      <p className="text-center text-xs text-muted-foreground">Your reflection is never shared.</p>
+      <p className="text-center text-caption text-muted-foreground">Your reflection is never shared.</p>
     </div>
   );
 }

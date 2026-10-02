@@ -76,10 +76,10 @@ export function AdminCorners() {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Nothing here for you
           </h2>
-          <p className="mb-6 max-w-sm text-sm text-muted-foreground">This screen is for whoever manages Corners.</p>
+          <p className="mb-6 max-w-sm text-small text-muted-foreground">This screen is for whoever manages Corners.</p>
           <Link to="/discover">
             <Button variant="outline">Back to Discover</Button>
           </Link>
@@ -172,31 +172,31 @@ export function AdminCorners() {
   return (
     <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Corners
         </h1>
-        <p className="mb-8 mt-2 text-sm text-muted-foreground">
+        <p className="mb-8 mt-2 text-small text-muted-foreground">
           Merge duplicates, rename, or hide. Merging moves every Moment, Pursuit, Space link and Interest
           from one Corner to the other, then removes the one merged away — this can't be undone.
         </p>
 
         {error && (
-          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-small">
             {error}
           </p>
         )}
         {notice && (
-          <p className="mb-5 rounded-card border border-border bg-[var(--surface-elevated)] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-border bg-[var(--surface-elevated)] px-4 py-3 text-small">
             {notice}
           </p>
         )}
 
         {loading ? (
-          <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+          <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
             Loading…
           </div>
         ) : rows.length === 0 ? (
-          <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+          <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
             No Corner has a real Moment tagged into it yet.
           </div>
         ) : (
@@ -225,17 +225,17 @@ export function AdminCorners() {
                         </div>
                       ) : (
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className={`text-base font-medium ${row.hidden ? "text-muted-foreground" : ""}`}>
+                          <span className={`text-body font-medium ${row.hidden ? "text-muted-foreground" : ""}`}>
                             {row.name}
                           </span>
                           {row.hidden && (
-                            <span className="rounded-control border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                            <span className="rounded-control border border-border px-2 py-0.5 text-caption text-muted-foreground">
                               Hidden
                             </span>
                           )}
                         </div>
                       )}
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-caption text-muted-foreground">
                         {plural(row.moment_count, "Moment", "Moments")}
                       </p>
                     </div>
@@ -267,10 +267,10 @@ export function AdminCorners() {
                   </div>
 
                   {isMergeSource && (
-                    <div className="mt-4 space-y-3 border-t border-border pt-4 text-sm">
+                    <div className="mt-4 space-y-3 border-t border-border pt-4 text-small">
                       <p>Merge “{row.name}” into which Corner? Everything above moves there and “{row.name}” is removed.</p>
                       <select
-                        className="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm"
+                        className="w-full rounded-control border border-border bg-surface px-3 py-2 text-body"
                         value={mergeInto ?? ""}
                         onChange={(e) => setMergeInto(e.target.value ? Number(e.target.value) : null)}
                       >

@@ -16,8 +16,8 @@ export function LinkPreviewCard({ url }: { url: string }) {
         <Link2 className="size-4" />
       </span>
       <div className="min-w-0">
-        <div className="truncate text-sm">{domain ?? "Link"}</div>
-        <div className="truncate text-xs text-muted-foreground">{url}</div>
+        <div className="truncate text-small">{domain ?? "Link"}</div>
+        <div className="truncate text-caption text-muted-foreground">{url}</div>
       </div>
     </div>
   );

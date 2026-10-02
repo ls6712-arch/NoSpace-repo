@@ -61,7 +61,7 @@ export function Welcome() {
   return (
     <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
       <div className="mx-auto max-w-sm">
-        <h1 className="text-center text-[1.75rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-center text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
           {APP_NAME} is invite-only for now.
         </h1>
 
@@ -78,7 +78,7 @@ export function Welcome() {
             className="text-center tracking-widest"
             maxLength={9}
           />
-          {error && <p className="text-xs text-destructive">{error}</p>}
+          {error && <p className="text-caption text-destructive">{error}</p>}
           <Button
             variant="coral"
             className="h-11 w-full rounded-control"
@@ -90,14 +90,14 @@ export function Welcome() {
         </div>
 
         <div className="mt-10 border-t border-[var(--hairline)] pt-8">
-          <p className="mb-3 text-sm text-muted-foreground">No invite yet?</p>
+          <p className="mb-3 text-small text-muted-foreground">No invite yet?</p>
           <WaitlistForm />
         </div>
 
         <button
           type="button"
           onClick={() => void signOut()}
-          className="mt-10 block w-full text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="mt-10 block w-full text-center text-small text-muted-foreground transition-colors hover:text-foreground"
         >
           Sign out
         </button>

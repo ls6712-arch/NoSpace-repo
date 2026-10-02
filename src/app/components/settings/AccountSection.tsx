@@ -83,10 +83,10 @@ function PasswordChangeRow() {
 
   return (
     <div className="px-4 py-4 sm:px-5">
-      <div className="mb-3 text-sm">Password</div>
+      <div className="mb-3 text-small">Password</div>
       <div className="grid gap-3 sm:max-w-sm">
         <div>
-          <Label htmlFor="pw-current" className="mb-1.5 block text-xs">
+          <Label htmlFor="pw-current" className="mb-1.5 block text-caption">
             Current password
           </Label>
           <Input
@@ -99,7 +99,7 @@ function PasswordChangeRow() {
           />
         </div>
         <div>
-          <Label htmlFor="pw-next" className="mb-1.5 block text-xs">
+          <Label htmlFor="pw-next" className="mb-1.5 block text-caption">
             New password
           </Label>
           <Input
@@ -113,7 +113,7 @@ function PasswordChangeRow() {
           />
         </div>
         <div>
-          <Label htmlFor="pw-confirm" className="mb-1.5 block text-xs">
+          <Label htmlFor="pw-confirm" className="mb-1.5 block text-caption">
             Confirm new password
           </Label>
           <Input
@@ -126,7 +126,7 @@ function PasswordChangeRow() {
           />
         </div>
       </div>
-      {error && <p className="mt-2 text-[11px] text-destructive">{error}</p>}
+      {error && <p className="mt-2 text-caption text-destructive">{error}</p>}
       <div className="mt-3 flex gap-2">
         <Button variant="outline" size="sm" onClick={reset} disabled={saving}>
           Cancel
@@ -143,11 +143,11 @@ function AdminLinkRow({ to, label, badge }: { to: string; label: string; badge?:
   return (
     <Link
       to={to}
-      className="flex min-h-11 items-center justify-between gap-3 px-4 py-4 text-sm transition-colors hover:bg-surface-muted sm:px-5"
+      className="flex min-h-11 items-center justify-between gap-3 px-4 py-4 text-small transition-colors hover:bg-surface-muted sm:px-5"
     >
       <span>
         {label}
-        {!!badge && <span className="ml-2 text-xs text-destructive">{badge} waiting</span>}
+        {!!badge && <span className="ml-2 text-caption text-destructive">{badge} waiting</span>}
       </span>
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
     </Link>
@@ -169,12 +169,12 @@ export function AccountSection() {
   return (
     <section>
       <SectionHeader n={3} eyebrow="ACCOUNT" title="Account" />
-      <p className="mb-4 text-sm text-muted-foreground">
+      <p className="mb-4 text-small text-muted-foreground">
         Your sign-in details, and every device you're signed into.
       </p>
       <SettingsPanel>
         <SettingsRow label="Email" description="Signing in and account notices go here.">
-          <span className="text-sm text-muted-foreground">{user.email}</span>
+          <span className="text-small text-muted-foreground">{user.email}</span>
         </SettingsRow>
         {isEmailAccount && <PasswordChangeRow />}
         <SettingsRow
@@ -189,7 +189,7 @@ export function AccountSection() {
 
       {isAdmin && (
         <>
-          <p className="mb-2 mt-6 text-xs uppercase tracking-[0.08em] text-muted-foreground">Site admin</p>
+          <p className="mb-2 mt-6 text-caption uppercase tracking-[0.08em] text-muted-foreground">Site admin</p>
           <SettingsPanel>
             <AdminLinkRow to="/admin/spaces" label="Manage Spaces" />
             <AdminLinkRow to="/admin/corners" label="Manage Corners" />

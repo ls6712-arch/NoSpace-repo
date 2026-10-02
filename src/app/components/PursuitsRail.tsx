@@ -56,20 +56,20 @@ export function PursuitsRail({
   return (
     <section>
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+        <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
           Pursuits still moving
         </h2>
-        <button type="button" onClick={() => setStarting(true)} className="text-xs text-accent hover:underline">
+        <button type="button" onClick={() => setStarting(true)} className="text-caption text-accent hover:underline">
           Start one
         </button>
       </div>
-      <p className="mt-0.5 text-xs text-muted-foreground">The ones you haven't set down yet.</p>
+      <p className="mt-0.5 text-caption text-muted-foreground">The ones you haven't set down yet.</p>
       <div className="mt-3">
         <PursuitInvitesCard />
       </div>
 
       {pursuits.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
+        <p className="mt-4 text-small text-muted-foreground">
           No Pursuits yet.{" "}
           <button type="button" onClick={() => setStarting(true)} className="text-accent hover:underline">
             Start your first
@@ -99,12 +99,12 @@ export function PursuitsRail({
             </div>
           ) : (
             due.length === 0 && (
-              <p className="mt-3 text-sm text-muted-foreground">
+              <p className="mt-3 text-small text-muted-foreground">
                 Everything's resting or finished. Pick one back up, or start something new.
               </p>
             )
           )}
-          <button type="button" onClick={() => setSeeAll(true)} className="mt-2 text-xs text-accent hover:underline">
+          <button type="button" onClick={() => setSeeAll(true)} className="mt-2 text-caption text-accent hover:underline">
             See all my Pursuits ({pursuits.length})
           </button>
         </>

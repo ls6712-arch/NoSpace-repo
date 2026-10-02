@@ -48,7 +48,7 @@ function CountBadge({ current, target }: { current: number; target: number }) {
           strokeDashoffset={C * (1 - f)}
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-medium text-foreground">
+      <span className="absolute inset-0 flex items-center justify-center text-caption font-medium text-foreground">
         {short(current)}/{short(target)}
       </span>
     </div>
@@ -130,14 +130,14 @@ export function PursuitCompactCard({
       )}
       <span className="min-w-0 flex-1">
         {label && (
-          <span className="block truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <span className="block truncate text-caption font-medium uppercase tracking-wide text-muted-foreground">
             {label}
           </span>
         )}
-        <span className="block truncate text-sm leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+        <span className="block truncate text-small leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
           {pursuit.title}
         </span>
-        <span className="block truncate text-[11px] text-muted-foreground">{progressText ?? status}</span>
+        <span className="block truncate text-caption text-muted-foreground">{progressText ?? status}</span>
       </span>
     </button>
   );
@@ -153,7 +153,7 @@ export function NewPursuitTile({ onClick }: { onClick: () => void }) {
       className="flex min-h-11 items-center justify-center gap-1.5 rounded-card border border-dashed border-border p-3 text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
     >
       <Plus className="size-4" strokeWidth={1.8} />
-      <span className="text-xs">New pursuit</span>
+      <span className="text-caption">New pursuit</span>
     </button>
   );
 }
@@ -217,11 +217,11 @@ export function PursuitExpandedPanel({
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           {(pursuit.interest || spaceLabel) && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-caption text-muted-foreground">
               {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
             </p>
           )}
-          <h3 className="truncate text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+          <h3 className="truncate text-lead" style={{ fontFamily: "var(--font-serif)" }}>
             {pursuit.title}
           </h3>
         </div>
@@ -265,19 +265,19 @@ export function PursuitExpandedPanel({
       </div>
 
       <div className="mb-5 border-t border-border pt-4">
-        <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Goals</h4>
+        <h4 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">Goals</h4>
         {!goal && pastGoals.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No goal set yet.</p>
+          <p className="text-small text-muted-foreground">No goal set yet.</p>
         ) : (
           <ul className="space-y-2">
             {goal && (
-              <li className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border px-3.5 py-2.5 text-sm">
+              <li className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border px-3.5 py-2.5 text-small">
                 <span className="flex flex-wrap items-baseline gap-x-2">
                   <span className={goal.reachedAt ? "line-through decoration-1" : ""}>
                     {goal.shape === "number" ? goalProgressText(goal) : goal.label}
                   </span>
                   {goal.shape === "number" && goalDeadlineText(goal) && (
-                    <span className="text-xs text-muted-foreground">{goalDeadlineText(goal)}</span>
+                    <span className="text-caption text-muted-foreground">{goalDeadlineText(goal)}</span>
                   )}
                 </span>
                 {/* A number goal not yet reached gets the tap-to-log control
@@ -288,7 +288,7 @@ export function PursuitExpandedPanel({
                 {goal.shape === "number" && !goal.reachedAt ? (
                   <GoalProgressTap project={pursuit} goal={goal} />
                 ) : (
-                  <span className="shrink-0 text-xs text-muted-foreground">
+                  <span className="shrink-0 text-caption text-muted-foreground">
                     {goal.reachedAt ? "Reached" : "Current"}
                   </span>
                 )}
@@ -297,10 +297,10 @@ export function PursuitExpandedPanel({
             {pastGoals.map((g) => (
               <li
                 key={g.id}
-                className="flex items-center justify-between gap-3 rounded-card border border-border px-3.5 py-2.5 text-sm text-muted-foreground"
+                className="flex items-center justify-between gap-3 rounded-card border border-border px-3.5 py-2.5 text-small text-muted-foreground"
               >
                 <span>{g.label}</span>
-                <span className="shrink-0 text-xs">{g.reachedAt ? "Reached" : "Replaced"}</span>
+                <span className="shrink-0 text-caption">{g.reachedAt ? "Reached" : "Replaced"}</span>
               </li>
             ))}
           </ul>
@@ -308,7 +308,7 @@ export function PursuitExpandedPanel({
       </div>
 
       <div className="border-t border-border pt-4">
-        <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <h4 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
           Moments under this Pursuit
         </h4>
         <WorkGrid posts={attached} onOpen={onOpenPost} emptyLabel="Nothing logged under this Pursuit yet." />

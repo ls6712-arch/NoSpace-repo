@@ -95,7 +95,7 @@ export function StepDots({ steps, current }: { steps: string[]; current: number 
               />
             )}
             <span
-              className={`relative z-10 flex size-7 items-center justify-center rounded-full border text-xs ${
+              className={`relative z-10 flex size-7 items-center justify-center rounded-full border text-caption ${
                 active
                   ? "border-[var(--coral)] bg-[var(--coral)] text-white"
                   : done
@@ -106,7 +106,7 @@ export function StepDots({ steps, current }: { steps: string[]; current: number 
             >
               {done ? <Check className="size-3.5" /> : i + 1}
             </span>
-            <span className={`mt-1.5 text-[11px] ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
+            <span className={`mt-1.5 text-caption ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
           </li>
         );
       })}
@@ -160,7 +160,7 @@ export function AmountStepper({
           if (Number.isFinite(v)) onChange(round(v));
         }}
         onBlur={() => setText(String(value))}
-        className="h-9 w-20 rounded-control border border-border bg-card text-center text-sm text-foreground outline-none focus:border-[var(--coral-deep)]"
+        className="h-9 w-20 rounded-control border border-border bg-card text-center text-body text-foreground outline-none focus:border-[var(--coral-deep)]"
         aria-label="Amount"
       />
       <button
@@ -171,7 +171,7 @@ export function AmountStepper({
       >
         <Plus className="size-4" />
       </button>
-      <span className="ml-1 text-sm text-foreground">{unit}</span>
+      <span className="ml-1 text-small text-foreground">{unit}</span>
     </div>
   );
 }

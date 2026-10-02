@@ -57,7 +57,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
       <button
         type="button"
         onClick={openPanel}
-        className="inline-flex items-center gap-1.5 rounded-control border px-3.5 py-1.5 text-sm text-white transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-control border px-3.5 py-1.5 text-small text-white transition-colors"
         style={{
           backgroundColor: "rgba(42,36,29,0.35)",
           borderColor: "rgba(248,242,229,0.4)",
@@ -78,7 +78,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-[19px]" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+              <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                 Make it yours
               </h2>
               <button
@@ -91,7 +91,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               </button>
             </div>
 
-            <label className="mb-1 block text-[12.5px] text-[var(--ink-soft)]" htmlFor="cover-title">
+            <label className="mb-1 block text-caption text-[var(--ink-soft)]" htmlFor="cover-title">
               Title
             </label>
             <input
@@ -99,11 +99,11 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={60}
-              className="mb-4 w-full rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[17px] text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-lead text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
               style={{ fontFamily: "var(--font-serif)" }}
             />
 
-            <label className="mb-1 block text-[12.5px] text-[var(--ink-soft)]" htmlFor="cover-tagline">
+            <label className="mb-1 block text-caption text-[var(--ink-soft)]" htmlFor="cover-tagline">
               Tagline
             </label>
             <textarea
@@ -112,13 +112,13 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               onChange={(e) => setTagline(e.target.value)}
               rows={2}
               maxLength={160}
-              className="mb-4 w-full resize-none rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[14.5px] italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full resize-none rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-body italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
               style={{ fontFamily: "var(--font-serif)" }}
             />
 
-            <p className="mb-1.5 text-[12.5px] text-[var(--ink-soft)]">Cover photo</p>
+            <p className="mb-1.5 text-caption text-[var(--ink-soft)]">Cover photo</p>
             {candidates.length === 0 ? (
-              <p className="mb-4 text-xs text-[var(--ink-faint)]">
+              <p className="mb-4 text-caption text-[var(--ink-faint)]">
                 Pin a Moment with a photo first — that's what shows up here.
               </p>
             ) : (
@@ -152,7 +152,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               type="button"
               onClick={save}
               disabled={saving}
-              className="w-full rounded-control px-4 py-2.5 text-sm text-white transition-opacity disabled:opacity-60"
+              className="w-full rounded-control px-4 py-2.5 text-small text-white transition-opacity disabled:opacity-60"
               style={{ backgroundColor: "var(--coral-deep)" }}
             >
               {saving ? "Saving…" : "Done"}

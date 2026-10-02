@@ -35,7 +35,7 @@ export function ProfileLinksRow({ links, className = "" }: { links: ProfileLink[
             href={link.url}
             target="_blank"
             rel="noreferrer noopener"
-            className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
+            className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-1.5 text-caption font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
           >
             <Icon className="size-3.5 shrink-0" strokeWidth={1.8} />
             {link.label}
@@ -102,7 +102,7 @@ export function ProfileLinksEditor({
               return (
                 <span
                   key={link.id}
-                  className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-1.5 text-xs text-foreground"
+                  className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-1.5 text-caption text-foreground"
                 >
                   <Icon className="size-3.5 shrink-0" strokeWidth={1.8} />
                   <a href={link.url} target="_blank" rel="noreferrer noopener" className="hover:text-[var(--coral-text)]">
@@ -133,7 +133,7 @@ export function ProfileLinksEditor({
             + Add link
           </button>
         </div>
-        {error && <p className="mt-1.5 text-xs text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="mt-1.5 text-caption text-[var(--coral-text)]">{error}</p>}
       </div>
     );
   }
@@ -151,8 +151,8 @@ export function ProfileLinksEditor({
               >
                 <Icon className="size-4 shrink-0 text-foreground" strokeWidth={1.8} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm">{link.label}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{link.url}</p>
+                  <p className="truncate text-small">{link.label}</p>
+                  <p className="truncate text-caption text-muted-foreground">{link.url}</p>
                 </div>
                 <button
                   type="button"
@@ -187,8 +187,8 @@ export function ProfileLinksEditor({
           Add
         </Button>
       </div>
-      {error && <p className="mt-1.5 text-xs text-[var(--coral-text)]">{error}</p>}
-      <p className="mt-2 text-[11px] text-muted-foreground">
+      {error && <p className="mt-1.5 text-caption text-[var(--coral-text)]">{error}</p>}
+      <p className="mt-2 text-caption text-muted-foreground">
         Shown on your public profile right away — GitHub, a design studio, a Substack, anything.
       </p>
     </div>

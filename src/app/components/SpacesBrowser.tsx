@@ -41,7 +41,7 @@ export function SpacesBrowser({ query }: { query: string }) {
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
           <div className="ns-section-kicker mb-2">HOST-CREATED COMMUNITIES</div>
-          <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Spaces</h2>
+          <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>Spaces</h2>
         </div>
         <Link to="/create-space">
           <Button variant="outline" size="sm">
@@ -52,7 +52,7 @@ export function SpacesBrowser({ query }: { query: string }) {
       </div>
 
       {matching.length === 0 ? (
-        <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-small text-muted-foreground">
           {q ? "No Spaces match that. Try a broader word." : "No Spaces yet — be the first to start one."}
         </div>
       ) : (
@@ -69,13 +69,13 @@ export function SpacesBrowser({ query }: { query: string }) {
                   alt=""
                   className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
                 />
-                <span className="absolute right-2 top-2 rounded-control bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                <span className="absolute right-2 top-2 rounded-control bg-black/60 px-2 py-0.5 text-caption text-white">
                   {s.access === "open" ? "Open" : "Closed"}
                 </span>
               </div>
               <div className="p-3">
-                <p className="truncate text-sm font-medium">{s.name}</p>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.description}</p>
+                <p className="truncate text-small font-medium">{s.name}</p>
+                <p className="mt-0.5 truncate text-caption text-muted-foreground">{s.description}</p>
               </div>
             </Link>
           ))}

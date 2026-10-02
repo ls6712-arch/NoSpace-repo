@@ -88,7 +88,7 @@ export function PursuitProgressPanel({
         <ProgressBar fraction={s.fraction} className="mt-3" />
         <MetaLine percent={s.percent} remaining={s.remaining} unit={measure.unit} done={s.done} targetDate={measure.targetDate} />
         {measure.kind === "milestones" && <MilestoneList names={measure.milestones ?? []} reached={Math.floor(s.current)} />}
-        {measure.whatCounts && <p className="mt-3 text-xs text-muted-foreground">Counts: {measure.whatCounts}</p>}
+        {measure.whatCounts && <p className="mt-3 text-caption text-muted-foreground">Counts: {measure.whatCounts}</p>}
         {viewerIsOwner && actions}
         <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} onInvited={() => setMembersVersion((v) => v + 1)} />
       </section>
@@ -99,7 +99,7 @@ export function PursuitProgressPanel({
   if (mode === "together") {
     return (
       <section className="mb-6">
-        <p className="mb-3 text-sm text-muted-foreground">Everyone has their own goal and journey.</p>
+        <p className="mb-3 text-small text-muted-foreground">Everyone has their own goal and journey.</p>
         {/* Only people who've joined get a column. Pending invites used to
             take one too, which pushed the second person who actually joined
             onto a new row. */}
@@ -117,17 +117,17 @@ export function PursuitProgressPanel({
             return (
               <div key={m.userId ?? m.displayName} className="min-w-0">
                 <PersonAvatar name={m.displayName} src={m.avatarUrl} size="size-16" />
-                <p className="mt-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                <p className="mt-2 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
                   {nameOf(m)}
                 </p>
                 {m.status === "invited" ? (
-                  <p className="text-xs text-muted-foreground">Invited</p>
+                  <p className="text-caption text-muted-foreground">Invited</p>
                 ) : (
                   <>
-                    <p className="text-sm">
+                    <p className="text-small">
                       {formatAmount(s.current)} / {targetText(measure)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-caption text-muted-foreground">
                       {s.done ? "Goal reached" : `${formatAmount(s.remaining)} remaining`}
                     </p>
                     <ProgressBar fraction={s.fraction} thin className="mt-2" />
@@ -145,7 +145,7 @@ export function PursuitProgressPanel({
           })}
         </div>
         {pendingMembers.length > 0 && (
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="mt-3 text-caption text-muted-foreground">
             Invited, not joined yet: {pendingMembers.map((m) => m.displayName).join(", ")}
           </p>
         )}
@@ -164,12 +164,12 @@ export function PursuitProgressPanel({
         <Headline current={s.current} target={measure.target} unit={measure.unit} />
         <ProgressBar fraction={s.fraction} className="mt-3" />
         <MetaLine percent={s.percent} remaining={s.remaining} unit={measure.unit} done={s.done} targetDate={measure.targetDate} />
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <p className="mt-2 flex items-center gap-1.5 text-caption text-muted-foreground">
           <Users className="size-3.5" /> {joined.length} contributor{joined.length === 1 ? "" : "s"}
         </p>
       </div>
 
-      <h3 className="mb-2 mt-5 text-sm">Contributions</h3>
+      <h3 className="mb-2 mt-5 text-small">Contributions</h3>
       <ul className="divide-y divide-border rounded-card border border-border bg-card">
         {members.map((m) => {
           const theirs = entriesOf(m);
@@ -179,8 +179,8 @@ export function PursuitProgressPanel({
             <li key={m.userId ?? m.displayName} className="flex items-center gap-3 px-4 py-3">
               <PersonAvatar name={m.displayName} src={m.avatarUrl} size="size-9" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm">{nameOf(m)}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-small">{nameOf(m)}</p>
+                <p className="text-caption text-muted-foreground">
                   {m.status === "invited" ? "Invited" : `${formatAmount(total)} ${unitFor(measure, total)}`}
                 </p>
               </div>
@@ -190,7 +190,7 @@ export function PursuitProgressPanel({
         })}
       </ul>
 
-      <h3 className="mb-2 mt-5 text-sm">Our journey</h3>
+      <h3 className="mb-2 mt-5 text-small">Our journey</h3>
       <Journey current={s.current} target={measure.target} unitOf={(n) => unitFor(measure, n)} entries={entries} milestones={measure.milestones} />
       {actions}
       <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} onInvited={() => setMembersVersion((v) => v + 1)} />
@@ -200,8 +200,8 @@ export function PursuitProgressPanel({
 
 function Headline({ current, target, unit }: { current: number; target: number; unit: string }) {
   return (
-    <p className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-      {formatAmount(current)} / {formatAmount(target)} <span className="text-lg">{unit}</span>
+    <p className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
+      {formatAmount(current)} / {formatAmount(target)} <span className="text-lead">{unit}</span>
     </p>
   );
 }
@@ -220,7 +220,7 @@ function MetaLine({
   targetDate?: number;
 }) {
   return (
-    <div className="mt-1.5 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+    <div className="mt-1.5 flex flex-wrap justify-between gap-2 text-caption text-muted-foreground">
       <span>
         {percent}% · {done ? "Goal reached" : `${formatAmount(remaining)} ${unit} remaining`}
       </span>
@@ -233,9 +233,9 @@ function MilestoneList({ names, reached }: { names: string[]; reached: number })
   return (
     <ol className="mt-4 space-y-2">
       {names.map((n, i) => (
-        <li key={i} className="flex items-center gap-2.5 text-sm">
+        <li key={i} className="flex items-center gap-2.5 text-small">
           <span
-            className={`flex size-5 items-center justify-center rounded-full border text-[10px] ${
+            className={`flex size-5 items-center justify-center rounded-full border text-caption ${
               i < reached ? "border-[var(--coral)] bg-[var(--coral)] text-white" : "border-border text-muted-foreground"
             }`}
           >
@@ -292,8 +292,8 @@ function Journey({
               >
                 {reached && <Check className="size-3.5" />}
               </span>
-              <span className="mt-1.5 text-[10px] leading-tight">{m.label}</span>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="mt-1.5 text-caption leading-tight">{m.label}</span>
+              <span className="text-caption text-muted-foreground">
                 {when ? new Date(when).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : reached ? "Start" : ""}
               </span>
             </div>
@@ -400,14 +400,14 @@ export function InviteDialog({
           <DialogDescription>Send a link to anyone, or invite people already on {APP_NAME}.</DialogDescription>
         </DialogHeader>
         <div className="rounded-card border border-border bg-surface-muted/40 p-3">
-          <p className="flex items-center gap-2 text-sm">
+          <p className="flex items-center gap-2 text-small">
             <Link2 className="size-4" /> Invite link
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Works for people who aren't on {APP_NAME} yet — they sign up and land in this Pursuit.</p>
+          <p className="mt-0.5 text-caption text-muted-foreground">Works for people who aren't on {APP_NAME} yet — they sign up and land in this Pursuit.</p>
           {link ? (
             <>
-              <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-control border border-border bg-card px-2 text-xs" />
-              <p className="mt-1.5 text-[11px] text-muted-foreground">This link is on. Anyone who has it can join.</p>
+              <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-control border border-border bg-card px-2 text-body" />
+              <p className="mt-1.5 text-caption text-muted-foreground">This link is on. Anyone who has it can join.</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button variant="coral" size="sm" onClick={makeLink}>
                   <Copy className="size-3.5" /> {linkState === "copied" ? "Copied" : "Copy"}
@@ -417,7 +417,7 @@ export function InviteDialog({
                     <Share2 className="size-3.5" /> Share
                   </Button>
                 )}
-                <button type="button" onClick={turnOff} className="text-xs text-muted-foreground hover:text-foreground">
+                <button type="button" onClick={turnOff} className="text-caption text-muted-foreground hover:text-foreground">
                   Turn off link
                 </button>
               </div>
@@ -428,7 +428,7 @@ export function InviteDialog({
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">Or find someone on {APP_NAME} — they'll get a notification.</p>
+        <p className="text-caption text-muted-foreground">Or find someone on {APP_NAME} — they'll get a notification.</p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -436,7 +436,7 @@ export function InviteDialog({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search people by name"
             autoFocus
-            className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+            className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-3 text-body outline-none focus:border-[var(--coral-deep)]"
           />
         </div>
         <ul className="max-h-60 overflow-y-auto">
@@ -450,16 +450,16 @@ export function InviteDialog({
                   className="flex w-full items-center gap-2.5 rounded-control px-2 py-2 text-left hover:bg-surface-muted"
                 >
                   <PersonAvatar name={p.displayName} src={p.avatarUrl} />
-                  <span className="flex-1 text-sm">{p.displayName}</span>
-                  <span className="text-xs text-accent">Invite</span>
+                  <span className="flex-1 text-small">{p.displayName}</span>
+                  <span className="text-caption text-accent">Invite</span>
                 </button>
               </li>
             ))}
           {query.trim().length >= 2 && !loading && people.length === 0 && (
-            <li className="px-2 py-2 text-xs text-muted-foreground">No one found.</li>
+            <li className="px-2 py-2 text-caption text-muted-foreground">No one found.</li>
           )}
         </ul>
-        {status && <p className="text-xs text-muted-foreground">{status}</p>}
+        {status && <p className="text-caption text-muted-foreground">{status}</p>}
       </DialogContent>
     </Dialog>
   );
@@ -497,12 +497,12 @@ export function PursuitInvitesCard() {
         <div key={inv.pursuitId} className="rounded-card border border-[var(--coral)]/50 bg-card p-4">
           <div className="flex items-center gap-2.5">
             <PersonAvatar name={inv.ownerName} src={inv.ownerAvatar} />
-            <p className="text-sm">
+            <p className="text-small">
               {inv.ownerName} invited you to{" "}
               <span style={{ fontFamily: "var(--font-serif)" }}>{inv.title}</span>
             </p>
           </div>
-          <p className="mt-1 pl-[38px] text-xs text-muted-foreground">
+          <p className="mt-1 pl-[38px] text-caption text-muted-foreground">
             {inv.mode === "group" ? "One shared goal, everyone contributes." : "Side by side — you'll have your own goal and journey."}
           </p>
           <div className="mt-3 flex gap-2 pl-[38px]">

@@ -61,11 +61,11 @@ export function ShareMilestoneDialog({
             >
               <Icon className="size-7" strokeWidth={1.6} />
             </span>
-            <h3 className="mb-1.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            <h3 className="mb-1.5 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               {name}
             </h3>
-            <p className="text-xs text-muted-foreground mb-1">{badge.description}</p>
-            <div className="text-xs text-muted-foreground">Create, Don't Just Consume.</div>
+            <p className="text-caption text-muted-foreground mb-1">{badge.description}</p>
+            <div className="text-caption text-muted-foreground">Create, Don't Just Consume.</div>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export function ShareMilestoneDialog({
             )}
           </Button>
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-3 px-1">
+        <p className="text-center text-caption text-muted-foreground mt-3 px-1">
           {shared
             ? "Visible on your public profile. Screenshot the card above to share it as an image."
             : "Only visible to you until you share it. Screenshot the card above to share it as an image."}

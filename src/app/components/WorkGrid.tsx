@@ -71,8 +71,8 @@ function PinPicker({
                   className="h-full w-full object-cover"
                 />
               </div>
-              <span className="min-w-0 flex-1 truncate text-sm">{post.caption || "Untitled moment"}</span>
-              <span className={`text-xs ${post.pinned ? "text-[var(--coral-deep)]" : "text-muted-foreground"}`}>
+              <span className="min-w-0 flex-1 truncate text-small">{post.caption || "Untitled moment"}</span>
+              <span className={`text-caption ${post.pinned ? "text-[var(--coral-deep)]" : "text-muted-foreground"}`}>
                 {post.pinned ? "Pinned" : "Pin"}
               </span>
             </button>
@@ -115,7 +115,7 @@ export function WorkGrid({
 
   if (posts.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
+      <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-small text-muted-foreground">
         {emptyLabel}
       </div>
     );
@@ -188,7 +188,7 @@ export function WorkGrid({
                   className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                 >
                   <ImagePlus className="size-5" strokeWidth={1.7} />
-                  <span className="text-sm font-medium">Pin a moment</span>
+                  <span className="text-small font-medium">Pin a moment</span>
                 </button>
               )}
             </div>
@@ -205,7 +205,7 @@ export function WorkGrid({
             className="flex aspect-square w-full max-w-xs flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ImagePlus className="size-5" strokeWidth={1.7} />
-            <span className="text-sm font-medium">Pin a moment</span>
+            <span className="text-small font-medium">Pin a moment</span>
           </button>
         )}
       </div>

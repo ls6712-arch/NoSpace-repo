@@ -85,11 +85,11 @@ export const MOMENT_GRID = "grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-
  * tile rather than a breakpoint, and clamps so a long note never changes
  * the tile's shape. */
 export const TILE_CAPTION =
-  "line-clamp-5 text-center italic text-[clamp(15px,4.2cqw+6px,26px)] leading-[1.2]";
+  "line-clamp-5 text-center italic text-title leading-[1.2]";
 
 /** Caption under every card — same size and always two lines tall, so
  * cards in a row line up whether the caption is one word or a paragraph. */
-export const CARD_CAPTION = "line-clamp-2 min-h-[2.6em] italic text-[17px] leading-[1.3] sm:text-[19px]";
+export const CARD_CAPTION = "line-clamp-2 min-h-[2.6em] italic text-lead leading-[1.3]";
 
 export type MomentCardSurface =
   | "mySpace"
@@ -160,7 +160,7 @@ function VisibilityDialog({
           {MOMENT_VISIBILITY_OPTIONS.map((opt) => (
             <label
               key={opt.value}
-              className="flex min-h-11 items-center gap-3 rounded-control border border-border px-3 py-2.5 text-sm has-[[data-state=checked]]:border-[var(--coral-deep)]"
+              className="flex min-h-11 items-center gap-3 rounded-control border border-border px-3 py-2.5 text-small has-[[data-state=checked]]:border-[var(--coral-deep)]"
             >
               <RadioGroupItem value={opt.value} id={`vis-${opt.value}`} />
               <opt.icon className="size-4 shrink-0 text-muted-foreground" />
@@ -168,7 +168,7 @@ function VisibilityDialog({
             </label>
           ))}
         </RadioGroup>
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {error && <p className="text-caption text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
@@ -227,7 +227,7 @@ export function BookmarkOverlay({
       {justAdded && (
         <span
           role="status"
-          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-control bg-[var(--void)] px-2.5 py-1 text-[11px] text-[var(--offwhite)] shadow-md animate-in fade-in"
+          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-control bg-[var(--void)] px-2.5 py-1 text-caption text-[var(--offwhite)] shadow-md animate-in fade-in"
         >
           Saved
         </span>
@@ -238,7 +238,7 @@ export function BookmarkOverlay({
 
 
 const ICON_BTN =
-  "flex h-10 shrink-0 min-w-10 items-center justify-center gap-1 rounded-control px-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
+  "flex h-10 shrink-0 min-w-10 items-center justify-center gap-1 rounded-control px-2 text-small transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
 
 /**
  * The one reaction row — used by every MomentCard and by MomentDetail, so
@@ -456,13 +456,13 @@ export function MomentCard({
           <div className="flex min-h-9 min-w-0 items-center gap-2">
             <Link to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"} className="shrink-0">
               <Avatar className="size-8">
-                <AvatarFallback className="text-[11px]">{initials(post.creator)}</AvatarFallback>
+                <AvatarFallback className="text-caption">{initials(post.creator)}</AvatarFallback>
               </Avatar>
             </Link>
             <span className="min-w-0">
               <Link
                 to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
-                className="block truncate text-[15px] leading-tight transition-colors hover:text-[var(--coral-text)]"
+                className="block truncate text-body leading-tight transition-colors hover:text-[var(--coral-text)]"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 {post.creator}
@@ -480,7 +480,7 @@ export function MomentCard({
 
         {isActivity && (
           <div className="mt-3 rounded-card border border-border bg-surface px-3 py-2.5">
-            <div className="flex items-center gap-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-caption">
               <CalendarDays className="size-3.5 shrink-0 text-foreground" />
               {new Date(post.startsAt!).toLocaleString(undefined, {
                 weekday: "short",
@@ -491,12 +491,12 @@ export function MomentCard({
               })}
             </div>
             {activityPlace && (
-              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="mt-1 flex items-center gap-1.5 text-caption text-muted-foreground">
                 <MapPin className="size-3.5 shrink-0" />
                 <span className="truncate">{activityPlace}</span>
               </div>
             )}
-            <div className="mt-1.5 text-xs text-muted-foreground">
+            <div className="mt-1.5 text-caption text-muted-foreground">
               {goingCount} {goingCount === 1 ? "person" : "people"} going
             </div>
           </div>
@@ -517,14 +517,14 @@ export function MomentCard({
             {/* Step 4c: Count me in → do it together, as a shared Pursuit. */}
             <Link
               to={pursuitTogetherHref(post)}
-              className="text-left text-xs font-medium text-foreground transition-colors hover:underline"
+              className="text-left text-caption font-medium text-foreground transition-colors hover:underline"
             >
               Start a Pursuit with {post.creator}?
             </Link>
             <button
               type="button"
               onClick={() => setAskTogetherOpen(true)}
-              className="text-left text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              className="text-left text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
             >
               Ask {post.creator} to make it together?
             </button>

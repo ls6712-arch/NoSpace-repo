@@ -40,10 +40,10 @@ export function WelcomeBanner() {
       <div className="flex flex-col items-stretch gap-6 p-6 sm:flex-row sm:items-center sm:p-7">
         <div className="min-w-0 flex-1">
           <p className="ns-section-kicker text-gold-text">WELCOME TO MY SPACE</p>
-          <h2 className="mt-2 text-xl leading-snug sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mt-2 text-title leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
             The one page here that is not ranked, curated, or competing for your time
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-3 max-w-2xl text-small leading-relaxed text-muted-foreground">
             Your Contact Sheet holds real days from the people and Spaces you follow.
             Nothing algorithmic, nothing inserted. The Shelf tracks what you have
             actually bound. Both grow only as honestly, and only as quickly, as you do.

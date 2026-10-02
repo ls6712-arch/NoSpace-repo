@@ -57,16 +57,16 @@ export function ProductCard({ product }: { product: Product }) {
           </Button>
         </div>
         <div className="p-4">
-          <div className="text-xs text-muted-foreground mb-1">by {product.creator}</div>
+          <div className="text-caption text-muted-foreground mb-1">by {product.creator}</div>
           <h3 className="mb-2 line-clamp-1">{product.name}</h3>
           <div className="flex items-center gap-2 mb-3">
             <div className="flex items-center">
               <Star className="size-3.5 fill-[var(--mustard)] text-[var(--mustard)]" />
-              <span className="ml-1 text-sm">{product.rating}</span>
+              <span className="ml-1 text-small">{product.rating}</span>
             </div>
-            <span className="text-xs text-muted-foreground">({product.reviews})</span>
+            <span className="text-caption text-muted-foreground">({product.reviews})</span>
           </div>
-          <div className="text-lg text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
+          <div className="text-lead text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
         </div>
       </Card>
     </Link>

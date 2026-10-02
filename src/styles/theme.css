@@ -823,7 +823,7 @@
   .ns-hero-eyebrow,
   .ns-section-kicker {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--text-caption);
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -851,7 +851,7 @@
     background: color-mix(in srgb, var(--violet-electric) 12%, transparent);
     padding: 0.35rem 0.65rem;
     color: var(--offwhite);
-    font-size: 0.72rem;
+    font-size: var(--text-caption);
   }
 
   /* Secondary action: dark/transparent with a quiet border, brightening on
@@ -866,7 +866,7 @@
     background: color-mix(in srgb, var(--void) 45%, transparent);
     padding: 0 1rem;
     color: var(--offwhite);
-    font-size: 0.75rem;
+    font-size: var(--text-caption);
     transition: border-color 180ms ease, transform 180ms ease;
   }
 
@@ -893,7 +893,7 @@
     border-bottom: 1px solid currentColor;
     padding-bottom: 0.16rem;
     color: var(--violet-electric-bright);
-    font-size: 0.875rem;
+    font-size: var(--text-small);
     font-weight: 500;
     transition: color 180ms ease, gap 180ms ease;
   }
@@ -1095,7 +1095,7 @@
     padding: 0.28rem 0.4rem;
     color: var(--offwhite);
     font-family: var(--font-mono);
-    font-size: 0.55rem;
+    font-size: var(--text-caption);
     font-weight: 600;
     letter-spacing: 0.1em;
   }
@@ -1111,7 +1111,7 @@
     left: -1rem;
     content: "✦  ✦  ✦  ✦  ✦";
     color: var(--yellow);
-    font-size: 2rem;
+    font-size: var(--text-display);
     letter-spacing: 3rem;
     opacity: 0.2;
     transform: rotate(-8deg);
@@ -1138,15 +1138,15 @@
 
   .ns-invitation-spark {
     position: absolute;
-    top: -1.1rem;
+    top: -1.5rem;
     left: 50%;
     display: grid;
-    width: 2.2rem;
-    height: 2.2rem;
+    width: 3rem;
+    height: 3rem;
     place-items: center;
     background: var(--surface-elevated);
     color: var(--violet-electric-bright);
-    font-size: 1.6rem;
+    font-size: var(--text-display);
     transform: translateX(-50%);
     box-shadow: 0 0 0 1px var(--hairline), 0 8px 20px -8px color-mix(in srgb, var(--violet-electric) 45%, transparent);
   }
@@ -1175,7 +1175,7 @@
     padding-left: 0.7rem;
     color: var(--lavender-muted);
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: var(--text-caption);
     letter-spacing: 0.14em;
     line-height: 1.5;
     text-align: right;
@@ -1272,7 +1272,7 @@
     padding: 0.25rem 0.38rem;
     color: var(--offwhite);
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: var(--text-caption);
   }
 
   .ns-discover-space-copy {
@@ -1288,7 +1288,7 @@
     flex-shrink: 0;
     color: var(--violet-electric-bright);
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: var(--text-caption);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     transition: transform 180ms ease;
@@ -1355,7 +1355,7 @@
     padding: 0.45rem 0.6rem;
     color: var(--offwhite);
     font-family: var(--font-mono);
-    font-size: 0.56rem;
+    font-size: var(--text-caption);
     line-height: 1.35;
     transform: rotate(-4deg);
   }
@@ -1424,7 +1424,7 @@
     color: var(--foreground);
   }
 
-  .ns-you-sprout { color: var(--coral-deep); font-size: 0.85rem; }
+  .ns-you-sprout { color: var(--coral-deep); font-size: var(--text-small); }
 
   .ns-you-tags {
     /* now lives directly under the card, not in its own panel */
@@ -1453,7 +1453,7 @@
     border: 1px solid var(--line, var(--hairline));
     background: var(--paper-raised, var(--cream));
     padding: 0.32rem 0.75rem;
-    font-size: 0.72rem;
+    font-size: var(--text-caption);
     font-family: var(--font-serif);
     color: var(--ink, var(--forest-ink));
     transition: border-color 150ms ease;
@@ -1494,7 +1494,7 @@
     border: none;
     background: transparent;
     padding: 0;
-    font-size: 0.85rem;
+    font-size: var(--text-small);
     color: var(--muted-foreground);
   }
 
@@ -1504,7 +1504,7 @@
 
   .ns-you-links-row button {
     flex-shrink: 0;
-    font-size: 0.75rem;
+    font-size: var(--text-caption);
     color: var(--coral-text);
   }
 

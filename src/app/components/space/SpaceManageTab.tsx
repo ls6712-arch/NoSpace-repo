@@ -263,10 +263,10 @@ export function SpaceManageTab({
       <div className="py-8 text-center">
         {space.host_handoff_started_at ? (
           <div className="mx-auto max-w-sm rounded-card border border-[var(--coral-deep)]/30 bg-[var(--coral-deep)]/5 p-4">
-            <p className="text-sm">This Space has no host right now.</p>
+            <p className="text-small">This Space has no host right now.</p>
             {eligibleForHandoff ? (
               <>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-caption text-muted-foreground">
                   You were here before it lost its host — you can step up.
                 </p>
                 <Button className="mt-3" variant="coral" size="sm" disabled={busy === "claim"} onClick={claimHosting}>
@@ -274,14 +274,14 @@ export function SpaceManageTab({
                 </Button>
               </>
             ) : (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-caption text-muted-foreground">
                 Only members who were here before this happened can claim it.
               </p>
             )}
-            {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+            {error && <p className="mt-2 text-caption text-destructive">{error}</p>}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Only a host can manage this Space.</p>
+          <p className="text-small text-muted-foreground">Only a host can manage this Space.</p>
         )}
       </div>
     );
@@ -289,20 +289,20 @@ export function SpaceManageTab({
 
   return (
     <div className="space-y-8 py-6">
-      {error && <p className="text-xs text-destructive">{error}</p>}
-      {notice && <p className="text-xs text-muted-foreground">{notice}</p>}
+      {error && <p className="text-caption text-destructive">{error}</p>}
+      {notice && <p className="text-caption text-muted-foreground">{notice}</p>}
 
       <section>
-        <h3 className="mb-2 text-sm font-medium">Pending requests</h3>
+        <h3 className="mb-2 text-small font-medium">Pending requests</h3>
         {joinRequests.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending.</p>
+          <p className="text-caption text-muted-foreground">Nothing pending.</p>
         ) : (
           <ul className="space-y-2">
             {joinRequests.map((r) => (
               <li key={r.user_id} className="rounded-card border border-border p-3">
-                <p className="text-sm">{r.displayName}</p>
-                {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">"{r.answers.message}"</p>}
-                {r.postCaption && <p className="mt-1 text-xs text-muted-foreground">Attached: {r.postCaption}</p>}
+                <p className="text-small">{r.displayName}</p>
+                {r.answers?.message && <p className="mt-1 text-caption text-muted-foreground">"{r.answers.message}"</p>}
+                {r.postCaption && <p className="mt-1 text-caption text-muted-foreground">Attached: {r.postCaption}</p>}
                 <div className="mt-2 flex gap-2">
                   <Button
                     size="sm"
@@ -328,9 +328,9 @@ export function SpaceManageTab({
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-medium">Moments waiting for approval</h3>
+        <h3 className="mb-2 text-small font-medium">Moments waiting for approval</h3>
         {pendingMoments.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending.</p>
+          <p className="text-caption text-muted-foreground">Nothing pending.</p>
         ) : (
           <ul className="space-y-2">
             {pendingMoments.map((m) => (
@@ -339,8 +339,8 @@ export function SpaceManageTab({
                   <img src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-control object-cover" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">{m.authorName}</p>
-                  <p className="line-clamp-2 text-sm">{m.caption}</p>
+                  <p className="text-caption text-muted-foreground">{m.authorName}</p>
+                  <p className="line-clamp-2 text-small">{m.caption}</p>
                   <div className="mt-2 flex gap-2">
                     <Button
                       size="sm"
@@ -367,14 +367,14 @@ export function SpaceManageTab({
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-medium">Members</h3>
+        <h3 className="mb-2 text-small font-medium">Members</h3>
         <ul className="divide-y divide-[var(--hairline)]">
           {members.map((m) => (
             <li key={m.user_id} className="flex items-center justify-between py-2">
-              <span className="text-sm">
+              <span className="text-small">
                 {m.displayName}
-                {m.role === "host" && <span className="ml-1.5 text-[10px] text-muted-foreground">Host</span>}
-                {m.status === "banned" && <span className="ml-1.5 text-[10px] text-destructive">Banned</span>}
+                {m.role === "host" && <span className="ml-1.5 text-caption text-muted-foreground">Host</span>}
+                {m.status === "banned" && <span className="ml-1.5 text-caption text-destructive">Banned</span>}
               </span>
               {m.user_id !== user?.id && (
                 <div className="flex gap-1.5">
@@ -412,32 +412,32 @@ export function SpaceManageTab({
 
       {invites.length > 0 && (
         <section>
-          <h3 className="mb-2 text-sm font-medium">Pending host invites</h3>
+          <h3 className="mb-2 text-small font-medium">Pending host invites</h3>
           <ul className="space-y-1">
             {invites.map((i) => (
-              <li key={i.id} className="text-xs text-muted-foreground">{i.displayName} — waiting on their response</li>
+              <li key={i.id} className="text-caption text-muted-foreground">{i.displayName} — waiting on their response</li>
             ))}
           </ul>
         </section>
       )}
 
       <section>
-        <h3 className="mb-2 text-sm font-medium">Invite a co-host</h3>
+        <h3 className="mb-2 text-small font-medium">Invite a co-host</h3>
         <div className="flex gap-2">
           <Input placeholder="username" value={inviteUsername} onChange={(e) => setInviteUsername(e.target.value)} />
           <Button size="sm" variant="outline" disabled={busy === "invite" || !inviteUsername.trim()} onClick={sendInvite}>
             Invite
           </Button>
         </div>
-        <p className="mt-1 text-[11px] text-muted-foreground">They need to already be a member.</p>
+        <p className="mt-1 text-caption text-muted-foreground">They need to already be a member.</p>
       </section>
 
       <section className="border-t border-[var(--hairline)] pt-6">
-        <h3 className="mb-2 text-sm font-medium text-destructive">Delete this Space</h3>
+        <h3 className="mb-2 text-small font-medium text-destructive">Delete this Space</h3>
         {deletion ? (
-          <div className="rounded-card border border-border p-3 text-sm">
+          <div className="rounded-card border border-border p-3 text-small">
             <p>A deletion request is open, expiring {new Date(deletion.expires_at).toLocaleDateString()}.</p>
-            <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+            <ul className="mt-2 space-y-0.5 text-caption text-muted-foreground">
               {deletion.approvals.map((a) => (
                 <li key={a.host_user_id}>{a.displayName}: {a.decision}</li>
               ))}
@@ -460,7 +460,7 @@ export function SpaceManageTab({
           <div className="max-w-sm space-y-2">
             {members.filter((m) => m.role === "host" && m.status === "active").length <= 1 && (
               <>
-                <p className="text-xs text-muted-foreground">You're the only host — type the Space's name to delete it now.</p>
+                <p className="text-caption text-muted-foreground">You're the only host — type the Space's name to delete it now.</p>
                 <Input value={deleteConfirmName} onChange={(e) => setDeleteConfirmName(e.target.value)} placeholder={space.name} />
               </>
             )}

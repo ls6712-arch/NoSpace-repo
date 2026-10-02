@@ -56,7 +56,7 @@ export function MomentPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
         <ImageOff className="size-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
+        <p className="text-small text-muted-foreground">
           This Moment isn't available — it may be private, deleted, or shared by someone you don't
           follow.
         </p>

@@ -70,13 +70,13 @@ export function PursuitItem({ pursuit, index = 0 }: { pursuit: Project; index?: 
         </ProgressRing>
         <span className="min-w-0">
           <span
-            className="line-clamp-2 block text-sm leading-snug text-foreground"
+            className="line-clamp-2 block text-small leading-snug text-foreground"
             style={{ fontFamily: "var(--font-serif)" }}
             title={pursuit.title}
           >
             {pursuit.title}
           </span>
-          {progressLabel && <span className="mt-0.5 block text-xs text-muted-foreground">{progressLabel}</span>}
+          {progressLabel && <span className="mt-0.5 block text-caption text-muted-foreground">{progressLabel}</span>}
         </span>
       </Link>
 

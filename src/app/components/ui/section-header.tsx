@@ -39,7 +39,7 @@ export function SectionHeader({
         {n} · {eyebrow}
       </p>
       <Heading
-        className={cn("text-2xl", titleClassName)}
+        className={cn("text-title", titleClassName)}
         style={{ fontFamily: "var(--font-serif)" }}
       >
         {title}

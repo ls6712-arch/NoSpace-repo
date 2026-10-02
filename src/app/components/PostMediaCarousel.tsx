@@ -88,7 +88,7 @@ export function PostMediaCarousel({
           onError={() => markFailed(cover)}
           className="h-full w-full object-cover"
         />
-        <span className="pointer-events-none absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-control bg-[var(--void)]/60 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+        <span className="pointer-events-none absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-control bg-[var(--void)]/60 px-1.5 py-0.5 text-caption font-medium text-white backdrop-blur-sm">
           <Images className="size-3" aria-hidden="true" />
           {validUrls.length}
         </span>
@@ -144,7 +144,7 @@ function PhotoTrack({
         ))}
       </div>
 
-      <span className="pointer-events-none absolute bottom-2.5 right-2.5 rounded-control bg-[var(--void)]/60 px-2 py-0.5 text-[11px] text-white backdrop-blur-sm">
+      <span className="pointer-events-none absolute bottom-2.5 right-2.5 rounded-control bg-[var(--void)]/60 px-2 py-0.5 text-caption text-white backdrop-blur-sm">
         {index + 1}/{urls.length}
       </span>
 

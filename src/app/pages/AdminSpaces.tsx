@@ -61,10 +61,10 @@ export function AdminSpaces() {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Nothing here for you
           </h2>
-          <p className="mb-6 max-w-sm text-sm text-muted-foreground">
+          <p className="mb-6 max-w-sm text-small text-muted-foreground">
             This screen is for whoever manages Spaces.
           </p>
           <Link to="/discover">
@@ -188,32 +188,32 @@ export function AdminSpaces() {
   return (
     <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Spaces
         </h1>
-        <p className="mb-8 mt-2 text-sm text-muted-foreground">
+        <p className="mb-8 mt-2 text-small text-muted-foreground">
           Create a Space, reword one, or hide what you don't want people to see. Hiding never
           touches a post. Deleting is only allowed once nothing is left in a Space.
         </p>
 
         {error && (
-          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-small">
             {error}
           </p>
         )}
         {notice && (
-          <p className="mb-5 rounded-card border border-border bg-[var(--surface-elevated)] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-border bg-[var(--surface-elevated)] px-4 py-3 text-small">
             {notice}
           </p>
         )}
 
-        <section className="mb-10 rounded-card border border-dashed border-border bg-[var(--surface-elevated)] p-5 text-sm text-muted-foreground">
+        <section className="mb-10 rounded-card border border-dashed border-border bg-[var(--surface-elevated)] p-5 text-small text-muted-foreground">
           Creating a new Space here is turned off during the Spaces Rework. New
           communities will be made from the Create Space form instead, once
           it ships.
         </section>
 
-        <h2 className="mb-3 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+        <h2 className="mb-3 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
           All Spaces ({spaces.length})
         </h2>
         <ul className="space-y-3">
@@ -231,18 +231,18 @@ export function AdminSpaces() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-base font-medium">{h.name}</span>
-                      <span className="rounded-control border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                      <span className="text-body font-medium">{h.name}</span>
+                      <span className="rounded-control border border-border px-2 py-0.5 text-caption text-muted-foreground">
                         {builtIn ? "Built-in" : "Yours"}
                       </span>
                       {h.hidden && (
-                        <span className="rounded-control bg-[var(--coral-deep)]/15 px-2 py-0.5 text-[11px]">
+                        <span className="rounded-control bg-[var(--coral-deep)]/15 px-2 py-0.5 text-caption">
                           Hidden
                         </span>
                       )}
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">/space/{h.slug}</p>
-                    {h.prompt && <p className="mt-1 text-sm">“{h.prompt}”</p>}
+                    <p className="mt-0.5 text-caption text-muted-foreground">/space/{h.slug}</p>
+                    {h.prompt && <p className="mt-1 text-small">“{h.prompt}”</p>}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -291,7 +291,7 @@ export function AdminSpaces() {
                 {isEditing && (
                   <div className="mt-4 space-y-3 border-t border-border pt-4">
                     <div>
-                      <label className="mb-1.5 block text-xs text-muted-foreground">Name</label>
+                      <label className="mb-1.5 block text-caption text-muted-foreground">Name</label>
                       <Input
                         value={draft.name}
                         maxLength={60}
@@ -299,7 +299,7 @@ export function AdminSpaces() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs text-muted-foreground">One line about it</label>
+                      <label className="mb-1.5 block text-caption text-muted-foreground">One line about it</label>
                       <Input
                         value={draft.description}
                         maxLength={300}
@@ -307,7 +307,7 @@ export function AdminSpaces() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs text-muted-foreground">Prompt at the top</label>
+                      <label className="mb-1.5 block text-caption text-muted-foreground">Prompt at the top</label>
                       <Input
                         value={draft.prompt}
                         maxLength={120}
@@ -328,7 +328,7 @@ export function AdminSpaces() {
                 )}
 
                 {isPlanned && plan && (
-                  <div className="mt-4 space-y-3 border-t border-border pt-4 text-sm">
+                  <div className="mt-4 space-y-3 border-t border-border pt-4 text-small">
                     {total(plan.usage) === 0 ? (
                       <>
                         <p>Nothing is in this Space, so it can be deleted safely.</p>
@@ -357,7 +357,7 @@ export function AdminSpaces() {
                           <select
                             value={plan.moveTo}
                             onChange={(e) => setPlan({ ...plan, moveTo: e.target.value })}
-                            className="rounded-control border border-border bg-background px-2 py-1.5 text-sm"
+                            className="rounded-control border border-border bg-background px-2 py-1.5 text-body"
                             aria-label="Move everything to"
                           >
                             <option value="">Move everything to…</option>

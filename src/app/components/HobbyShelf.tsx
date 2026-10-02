@@ -236,20 +236,20 @@ function CornerTile({
           </div>
         )}
         <span
-          className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-control px-2.5 py-1 text-[10px] font-semibold text-white"
+          className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-control px-2.5 py-1 text-caption font-semibold text-white"
           style={{ backgroundColor: tagTint(item.hobbySlug) }}
         >
           {getHobby(item.hobbySlug)?.shortName ?? item.label}
         </span>
       </div>
       <p
-        className="mt-3 truncate text-[17px] leading-snug transition-colors group-hover:text-[var(--coral-text)] sm:text-[19px]"
+        className="mt-3 truncate text-lead leading-snug transition-colors group-hover:text-[var(--coral-text)]"
         style={{ fontFamily: "var(--font-serif)" }}
         title={item.label}
       >
         {item.label}
       </p>
-      <p className="mt-0.5 min-h-[1.25rem] truncate text-xs text-muted-foreground" title={note ?? undefined}>
+      <p className="mt-0.5 min-h-[1.25rem] truncate text-caption text-muted-foreground" title={note ?? undefined}>
         {note ?? ""}
       </p>
     </Link>
@@ -286,14 +286,14 @@ export function HobbyShelf({
   if (items.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-border px-6 py-12 text-center">
-        <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+        <p className="mx-auto max-w-sm text-small leading-relaxed text-muted-foreground">
           {emptyCopy ??
             "Your shelf is empty. Every hobby you log gets its own tile here, with everything you've made in it inside."}
         </p>
         {emptyCta && (
           <Link
             to="/create"
-            className="mt-4 inline-block rounded-control px-5 py-2 text-sm text-white [background-color:var(--coral-deep)]"
+            className="mt-4 inline-block rounded-control px-5 py-2 text-small text-white [background-color:var(--coral-deep)]"
           >
             Create your first moment
           </Link>

@@ -158,7 +158,7 @@ export function PursuitCard({
             />
           )}
           <span
-            className={`absolute left-2.5 top-2.5 rounded-control px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-md ${
+            className={`absolute left-2.5 top-2.5 rounded-control px-2.5 py-1 text-caption font-medium text-white backdrop-blur-md ${
               pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-[var(--void)]/55"
             }`}
           >
@@ -180,7 +180,7 @@ export function PursuitCard({
             className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-control bg-[var(--void)]/55 px-2.5 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
           >
             {justCopied ? (
-              <span className="text-[10px] font-medium text-white">Copied!</span>
+              <span className="text-caption font-medium text-white">Copied!</span>
             ) : shared ? (
               <Share2 className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
             ) : (
@@ -192,15 +192,15 @@ export function PursuitCard({
 
       <div className="flex flex-1 flex-col p-4">
         <Link to={`/pursuit/${pursuit.id}`} className="block">
-          <p className="text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+          <p className="text-body leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
             {pursuit.title}
           </p>
           {(pursuit.interest || spaceLabel) && (
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="mt-1.5 text-caption text-muted-foreground">
               {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
             </p>
           )}
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-caption text-muted-foreground">
             {pursuit.finishedAt ? `Finished ${timeAgo(moved)}` : `Updated ${timeAgo(moved)}`}
           </p>
         </Link>
@@ -210,7 +210,7 @@ export function PursuitCard({
             <button
               type="button"
               onClick={() => setGoalOpen(true)}
-              className={`flex w-fit min-w-0 items-center gap-2 rounded-control border px-3 py-1.5 text-sm transition-colors ${
+              className={`flex w-fit min-w-0 items-center gap-2 rounded-control border px-3 py-1.5 text-small transition-colors ${
                 goal
                   ? goal.reachedAt
                     ? "border-border bg-surface-muted text-muted-foreground"
@@ -232,7 +232,7 @@ export function PursuitCard({
         {owner && asProject && goal?.shape === "number" && !goal.reachedAt && (
           <div className="mt-2.5">
             {goalDeadlineText(goal) && (
-              <p className="mb-1.5 text-right text-xs text-muted-foreground">{goalDeadlineText(goal)}</p>
+              <p className="mb-1.5 text-right text-caption text-muted-foreground">{goalDeadlineText(goal)}</p>
             )}
             <GoalProgressTap project={asProject} goal={goal} fullWidth />
           </div>
@@ -242,7 +242,7 @@ export function PursuitCard({
           <div className="mt-3 flex items-center gap-2">
             <Link
               to={`/pursuit/${pursuit.id}/moment`}
-              className="flex-1 rounded-control border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
+              className="flex-1 rounded-control border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-caption font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
             >
               Log a Moment
             </Link>

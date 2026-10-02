@@ -100,28 +100,28 @@ export function CreateCornerDialog({
       <DialogContent className="max-w-md">
         <DialogHeader className="text-left">
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Create a Corner</DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription className="text-small text-muted-foreground">
             A specific craft or topic inside {space?.shortName ?? "a Space"}.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="corner-space" className="mb-1.5 block text-xs">
+            <Label htmlFor="corner-space" className="mb-1.5 block text-caption">
               Space
             </Label>
             {/* Suggested, not asked for — you're already standing on the
                 Space this Corner belongs in, so there's nothing to pick. */}
             <div
               id="corner-space"
-              className="flex items-center rounded-card border border-border bg-surface-muted px-3.5 py-2.5 text-sm text-muted-foreground"
+              className="flex items-center rounded-card border border-border bg-surface-muted px-3.5 py-2.5 text-small text-muted-foreground"
             >
               {space?.name ?? spaceSlug}
             </div>
           </div>
 
           <div>
-            <Label htmlFor="corner-name" className="mb-1.5 block text-xs">
+            <Label htmlFor="corner-name" className="mb-1.5 block text-caption">
               Name
             </Label>
             <Input
@@ -141,7 +141,7 @@ export function CreateCornerDialog({
 
           {pendingConfirm && (
             <div className="rounded-card border border-dashed border-border bg-surface p-3.5">
-              <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
+              <p className="mb-2.5 text-caption leading-relaxed text-muted-foreground">
                 Close to “{pendingConfirm.label}”, already in{" "}
                 {space?.shortName ?? "this Space"}. Something different, or the
                 same Corner?
@@ -164,7 +164,7 @@ export function CreateCornerDialog({
           )}
 
           <div>
-            <Label htmlFor="corner-description" className="mb-1.5 block text-xs">
+            <Label htmlFor="corner-description" className="mb-1.5 block text-caption">
               Short description <span className="text-muted-foreground">(optional)</span>
             </Label>
             <Textarea
@@ -177,7 +177,7 @@ export function CreateCornerDialog({
             />
           </div>
 
-          {error && <p className="text-xs text-[var(--coral-text)]">{error}</p>}
+          {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
 
           {!pendingConfirm && (
             <Button variant="coral" className="w-full" disabled={saving} onClick={submit}>

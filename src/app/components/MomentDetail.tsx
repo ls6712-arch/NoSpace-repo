@@ -248,12 +248,12 @@ export function MomentDetail({
           <div className="flex min-w-0 items-center gap-2.5">
             <Link to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"} className="shrink-0">
               <Avatar className="size-9">
-                <AvatarFallback className="text-xs">{initials(post.creator)}</AvatarFallback>
+                <AvatarFallback className="text-caption">{initials(post.creator)}</AvatarFallback>
               </Avatar>
             </Link>
             <Link
               to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
-              className="truncate text-base transition-colors hover:text-[var(--coral-text)]"
+              className="truncate text-body transition-colors hover:text-[var(--coral-text)]"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {post.creator}
@@ -296,14 +296,14 @@ export function MomentDetail({
                 {/* Step 4c: Count me in → do it together, as a shared Pursuit. */}
                 <Link
                   to={pursuitTogetherHref(post)}
-                  className="text-xs font-medium text-foreground transition-colors hover:underline"
+                  className="text-caption font-medium text-foreground transition-colors hover:underline"
                 >
                   Start a Pursuit with {post.creator}?
                 </Link>
                 <button
                   type="button"
                   onClick={() => setAskTogetherOpen(true)}
-                  className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                  className="text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
                 >
                   Ask {post.creator} to make it together?
                 </button>
@@ -324,7 +324,7 @@ export function MomentDetail({
               <button
                 type="button"
                 onClick={() => setInspiredDialogOpen(true)}
-                className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 Start a Pursuit — inspired by this
               </button>
@@ -348,7 +348,7 @@ export function MomentDetail({
               <button
                 type="button"
                 onClick={() => setSendToOpen(true)}
-                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 <Send className="size-3" />
                 Send to…
@@ -373,7 +373,7 @@ export function MomentDetail({
                     `/messages?draftWith=${encodeURIComponent(post.userId!)}&draftName=${encodeURIComponent(post.creator)}&aboutMomentId=${post.id}`,
                   );
                 }}
-                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 <MessageCircle className="size-3" />
                 Message {post.creator} about this
@@ -384,7 +384,7 @@ export function MomentDetail({
               <button
                 type="button"
                 onClick={() => setReportOpen(true)}
-                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 <Flag className="size-3" />
                 Report
@@ -437,7 +437,7 @@ export function MomentDetail({
             {!post.isPrivateLog && (
               <>
                 <div>
-                  <label htmlFor="m-space" className="mb-1.5 block text-xs text-muted-foreground">
+                  <label htmlFor="m-space" className="mb-1.5 block text-caption text-muted-foreground">
                     Space
                   </label>
                   <Select
@@ -463,7 +463,7 @@ export function MomentDetail({
                 </div>
                 {(getHobby(editHobbySlug)?.subItems?.length ?? 0) > 0 && (
                   <div>
-                    <label htmlFor="m-sub-hobby" className="mb-1.5 block text-xs text-muted-foreground">
+                    <label htmlFor="m-sub-hobby" className="mb-1.5 block text-caption text-muted-foreground">
                       What within it
                     </label>
                     <Select value={editSubHobby} onValueChange={setEditSubHobby}>
@@ -484,7 +484,7 @@ export function MomentDetail({
             )}
             {post.type === "photo" && !post.isPrivateLog && (
               <div>
-                <label htmlFor="m-media" className="mb-1.5 block text-xs text-muted-foreground">
+                <label htmlFor="m-media" className="mb-1.5 block text-caption text-muted-foreground">
                   Replace photo
                 </label>
                 <input
@@ -513,7 +513,7 @@ export function MomentDetail({
                     setNewMediaFile(file);
                     setNewMediaPreview(URL.createObjectURL(file));
                   }}
-                  className="block w-full text-xs text-muted-foreground"
+                  className="block w-full text-body text-muted-foreground"
                 />
                 {newMediaPreview && (
                   <img
@@ -525,7 +525,7 @@ export function MomentDetail({
               </div>
             )}
             <div>
-              <label htmlFor="m-caption" className="mb-1.5 block text-xs text-muted-foreground">
+              <label htmlFor="m-caption" className="mb-1.5 block text-caption text-muted-foreground">
                 What you wrote
               </label>
               <Textarea
@@ -535,7 +535,7 @@ export function MomentDetail({
               />
             </div>
             <div>
-              <label htmlFor="m-reflection" className="mb-1.5 block text-xs text-muted-foreground">
+              <label htmlFor="m-reflection" className="mb-1.5 block text-caption text-muted-foreground">
                 Private reflection, only you ever see this
               </label>
               <Textarea
@@ -556,7 +556,7 @@ export function MomentDetail({
         )}
 
         {/* Where it sits */}
-        <dl className="grid gap-2 rounded-card border border-border bg-surface-muted px-4 py-3 text-xs">
+        <dl className="grid gap-2 rounded-card border border-border bg-surface-muted px-4 py-3 text-caption">
           <div className="flex items-center justify-between gap-3">
             <dt className="text-muted-foreground">Hobby</dt>
             <dd>{hobbyLabel ? `${hobbyLabel} · ${space?.shortName}` : space?.name}</dd>
@@ -593,22 +593,22 @@ export function MomentDetail({
             row), so this is the one place in the dialog that reaches
             every "Only you" Moment, not just a real just_me post. */}
         {isOnlyYou(post) && (
-          <p className="-mt-1 text-[11px] text-muted-foreground">Only you Moments can't be shared.</p>
+          <p className="-mt-1 text-caption text-muted-foreground">Only you Moments can't be shared.</p>
         )}
 
         {/* Owner-only: the note they wrote for themselves */}
         {owned && !editing && post.reflection && (
           <div className="rounded-card border border-[var(--hairline)] bg-card px-4 py-3">
-            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className="mb-1.5 flex items-center gap-1.5 text-caption text-muted-foreground">
               <Lock className="size-3" />
               Private reflection, only you
             </div>
-            <p className="whitespace-pre-line text-sm leading-relaxed">{post.reflection}</p>
+            <p className="whitespace-pre-line text-small leading-relaxed">{post.reflection}</p>
           </div>
         )}
 
-        {saveError && <p className="text-xs text-[var(--coral-text)]">{saveError}</p>}
-        {deleteError && <p className="text-xs text-[var(--coral-text)]">{deleteError}</p>}
+        {saveError && <p className="text-caption text-[var(--coral-text)]">{saveError}</p>}
+        {deleteError && <p className="text-caption text-[var(--coral-text)]">{deleteError}</p>}
 
         {/* Actions */}
         {owned && !editing && (
@@ -646,7 +646,7 @@ export function MomentDetail({
           <div className="space-y-2 rounded-card border border-border px-4 py-3">
             {openProjects.length === 0 ? (
               <>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                   You don't have a Pursuit yet. Starting one from here files this
                   moment as its first update.
                 </p>

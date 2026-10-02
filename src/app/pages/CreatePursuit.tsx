@@ -185,10 +185,10 @@ export function CreatePursuit() {
 
   const heading = (text: string, sub?: string) => (
     <>
-      <h1 className="text-[1.9rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+      <h1 className="text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
         {text}
       </h1>
-      {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
+      {sub && <p className="mt-1 text-small text-muted-foreground">{sub}</p>}
     </>
   );
 
@@ -199,7 +199,7 @@ export function CreatePursuit() {
           <button type="button" onClick={back} aria-label="Back" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="size-5" />
           </button>
-          <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
+          <span className="text-body" style={{ fontFamily: "var(--font-serif)" }}>
             {APP_NAME}
           </span>
           <Link to="/my-space" aria-label="Close" className="text-muted-foreground hover:text-foreground">
@@ -219,9 +219,9 @@ export function CreatePursuit() {
               placeholder="Write 20,000 words"
               rows={4}
               autoFocus
-              className="mt-6 w-full resize-none rounded-control border border-border bg-card p-4 text-base text-foreground outline-none focus:border-[var(--coral-deep)]"
+              className="mt-6 w-full resize-none rounded-control border border-border bg-card p-4 text-body text-foreground outline-none focus:border-[var(--coral-deep)]"
             />
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-3 text-caption text-muted-foreground">
               For example: Paint 10 paintings, Run 100 miles, Practice guitar 50 hours
             </p>
           </section>
@@ -250,8 +250,8 @@ export function CreatePursuit() {
                         <Icon className="size-4" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm text-foreground">{m.title}</span>
-                        <span className="block text-xs text-muted-foreground">{m.copy}</span>
+                        <span className="block text-small text-foreground">{m.title}</span>
+                        <span className="block text-caption text-muted-foreground">{m.copy}</span>
                       </span>
                       <span
                         className={`size-4 shrink-0 rounded-full border ${selected ? "border-[5px] border-[var(--coral)]" : "border-border"}`}
@@ -262,7 +262,7 @@ export function CreatePursuit() {
                 );
               })}
             </ul>
-            <p className="mt-3 text-center text-xs text-muted-foreground">You can change this later from the Pursuit.</p>
+            <p className="mt-3 text-center text-caption text-muted-foreground">You can change this later from the Pursuit.</p>
           </section>
         )}
 
@@ -272,11 +272,11 @@ export function CreatePursuit() {
             <div className="mt-6 space-y-4">
               {measure.kind === "milestones" ? (
                 <div>
-                  <label className="mb-1.5 block text-sm">Stepping stones, in order</label>
+                  <label className="mb-1.5 block text-small">Stepping stones, in order</label>
                   <div className="space-y-2">
                     {(measure.milestones ?? []).map((m, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <span className="w-5 text-center text-xs text-muted-foreground">{i + 1}</span>
+                        <span className="w-5 text-center text-caption text-muted-foreground">{i + 1}</span>
                         <input
                           value={m}
                           onChange={(e) => {
@@ -285,7 +285,7 @@ export function CreatePursuit() {
                             patch({ milestones: list });
                           }}
                           placeholder={["Learn three songs", "Play for friends", "First open mic"][i] ?? "Next stepping stone"}
-                          className="h-10 flex-1 rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                          className="h-10 flex-1 rounded-control border border-border bg-card px-3 text-body outline-none focus:border-[var(--coral-deep)]"
                         />
                       </div>
                     ))}
@@ -293,7 +293,7 @@ export function CreatePursuit() {
                   <button
                     type="button"
                     onClick={() => patch({ milestones: [...(measure.milestones ?? []), ""] })}
-                    className="mt-2 text-xs text-accent hover:underline"
+                    className="mt-2 text-caption text-accent hover:underline"
                   >
                     + Add a stepping stone
                   </button>
@@ -305,7 +305,7 @@ export function CreatePursuit() {
                       inputMode="decimal"
                       value={measure.target ? formatAmount(measure.target) : ""}
                       onChange={(e) => patch({ target: Number(e.target.value.replace(/,/g, "")) || 0 })}
-                      className="h-11 w-full rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                      className="h-11 w-full rounded-control border border-border bg-card px-3 text-body outline-none focus:border-[var(--coral-deep)]"
                     />
                   </Field>
                   <Field label="Unit name">
@@ -313,7 +313,7 @@ export function CreatePursuit() {
                       value={measure.unit}
                       onChange={(e) => patch({ unit: e.target.value.slice(0, 30) })}
                       placeholder="words"
-                      className="h-11 w-full rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                      className="h-11 w-full rounded-control border border-border bg-card px-3 text-body outline-none focus:border-[var(--coral-deep)]"
                     />
                   </Field>
                 </>
@@ -323,16 +323,16 @@ export function CreatePursuit() {
                   value={measure.whatCounts ?? ""}
                   onChange={(e) => patch({ whatCounts: e.target.value.slice(0, 140) })}
                   placeholder={measure.kind === "quantity" ? "Any words included in the manuscript draft" : "A finished piece I'd show someone"}
-                  className="h-11 w-full rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                  className="h-11 w-full rounded-control border border-border bg-card px-3 text-body outline-none focus:border-[var(--coral-deep)]"
                 />
               </Field>
-              <SoftPanel className="flex gap-2.5 text-xs text-foreground">
+              <SoftPanel className="flex gap-2.5 text-caption text-foreground">
                 <Lightbulb className="mt-0.5 size-4 shrink-0" />
                 This helps {APP_NAME} understand how to track your progress.
               </SoftPanel>
               <SoftPanel>
-                <p className="text-[11px] text-muted-foreground">Your goal</p>
-                <p className="mt-0.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                <p className="text-caption text-muted-foreground">Your goal</p>
+                <p className="mt-0.5 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
                   {measure.kind === "milestones"
                     ? `${(measure.milestones ?? []).filter((x) => x.trim()).length} stepping stones`
                     : targetText(measure)}
@@ -371,7 +371,7 @@ export function CreatePursuit() {
                 />
               </RuleRow>
             </div>
-            <p className="mb-2 mt-5 text-sm">Aim for</p>
+            <p className="mb-2 mt-5 text-small">Aim for</p>
             <div className="grid grid-cols-2 gap-2">
               <ChipButton active={!hasDeadline} onClick={() => setHasDeadline(false)}>
                 No target date
@@ -385,7 +385,7 @@ export function CreatePursuit() {
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="mt-3 h-11 w-full rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                className="mt-3 h-11 w-full rounded-control border border-border bg-card px-3 text-body outline-none focus:border-[var(--coral-deep)]"
               />
             )}
           </section>
@@ -406,14 +406,14 @@ export function CreatePursuit() {
             {participation === "invite" && (
               <>
                 {!user && (
-                  <p className="mt-4 text-sm text-muted-foreground">
+                  <p className="mt-4 text-small text-muted-foreground">
                     <Link to="/login?redirect=/pursuits/new" className="text-accent hover:underline">
                       Log in
                     </Link>{" "}
                     to invite people.
                   </p>
                 )}
-                <p className="mb-2 mt-5 text-sm">How will you pursue it?</p>
+                <p className="mb-2 mt-5 text-small">How will you pursue it?</p>
                 <div className="space-y-2">
                   <ModeOption
                     active={mode === "together"}
@@ -436,7 +436,7 @@ export function CreatePursuit() {
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search people by name"
                     disabled={!user}
-                    className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-[var(--coral-deep)] disabled:opacity-60"
+                    className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-3 text-body outline-none focus:border-[var(--coral-deep)] disabled:opacity-60"
                   />
                 </div>
                 {query.trim().length >= 2 && (
@@ -454,12 +454,12 @@ export function CreatePursuit() {
                             className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-surface-muted"
                           >
                             <PersonAvatar name={p.displayName} src={p.avatarUrl} />
-                            <span className="text-sm">{p.displayName}</span>
-                            {p.username && <span className="text-xs text-muted-foreground">@{p.username}</span>}
+                            <span className="text-small">{p.displayName}</span>
+                            {p.username && <span className="text-caption text-muted-foreground">@{p.username}</span>}
                           </button>
                         </li>
                       ))}
-                    {!searching && results.length === 0 && <li className="px-3 py-2 text-xs text-muted-foreground">No one found.</li>}
+                    {!searching && results.length === 0 && <li className="px-3 py-2 text-caption text-muted-foreground">No one found.</li>}
                   </ul>
                 )}
 
@@ -468,8 +468,8 @@ export function CreatePursuit() {
                     {invitees.map((p) => (
                       <li key={p.id} className="flex items-center gap-2.5 rounded-card border border-border bg-card px-3 py-2">
                         <PersonAvatar name={p.displayName} src={p.avatarUrl} />
-                        <span className="flex-1 text-sm">{p.displayName}</span>
-                        <span className="rounded-control bg-[color-mix(in_srgb,var(--pastel-stone)_30%,var(--card))] px-2 py-0.5 text-[11px]">
+                        <span className="flex-1 text-small">{p.displayName}</span>
+                        <span className="rounded-control bg-[color-mix(in_srgb,var(--pastel-stone)_30%,var(--card))] px-2 py-0.5 text-caption">
                           Invited
                         </span>
                         <button
@@ -495,16 +495,16 @@ export function CreatePursuit() {
             <div className="mt-5 flex h-28 items-center justify-center rounded-card bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))]">
               <Target className="size-10 text-[var(--coral-deep)]" strokeWidth={1.4} />
             </div>
-            <h2 className="mt-5 text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="mt-5 text-title" style={{ fontFamily: "var(--font-serif)" }}>
               {title.trim()}
             </h2>
             <ProgressBar fraction={finalMeasure.target ? finalMeasure.startingAmount / finalMeasure.target : 0} className="mt-3" />
-            <p className="mt-1.5 text-sm">
+            <p className="mt-1.5 text-small">
               {formatAmount(finalMeasure.startingAmount)} / {targetText(finalMeasure)}
             </p>
-            <p className="text-xs text-muted-foreground">{formatAmount(Math.max(0, finalMeasure.target - finalMeasure.startingAmount))} remaining</p>
+            <p className="text-caption text-muted-foreground">{formatAmount(Math.max(0, finalMeasure.target - finalMeasure.startingAmount))} remaining</p>
 
-            <ul className="mt-5 divide-y divide-border rounded-card border border-border bg-card text-sm">
+            <ul className="mt-5 divide-y divide-border rounded-card border border-border bg-card text-small">
               <ReviewRow icon={Hash} label="Unit" value={finalMeasure.unit} />
               {finalMeasure.whatCounts && <ReviewRow icon={CheckCircle2} label="What counts" value={finalMeasure.whatCounts} />}
               {finalMeasure.kind === "milestones" && (
@@ -539,7 +539,7 @@ export function CreatePursuit() {
                 }
               />
             </ul>
-            {inviteError && <p className="mt-3 text-xs text-destructive">Invites didn't send: {inviteError}</p>}
+            {inviteError && <p className="mt-3 text-caption text-destructive">Invites didn't send: {inviteError}</p>}
           </section>
         )}
       </div>
@@ -564,7 +564,7 @@ export function CreatePursuit() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm">{label}</label>
+      <label className="mb-1.5 block text-small">{label}</label>
       {children}
     </div>
   );
@@ -574,8 +574,8 @@ function RuleRow({ label, hint, children }: { label: string; hint?: string; chil
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3.5">
       <div>
-        <p className="text-sm">{label}</p>
-        {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+        <p className="text-small">{label}</p>
+        {hint && <p className="text-caption text-muted-foreground">{hint}</p>}
       </div>
       {children}
     </div>
@@ -588,7 +588,7 @@ function ChipButton({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-10 items-center justify-center gap-1.5 rounded-control border text-sm transition-colors ${
+      className={`flex h-10 items-center justify-center gap-1.5 rounded-control border text-small transition-colors ${
         active
           ? "border-[var(--coral)] bg-[color-mix(in_srgb,var(--coral)_12%,var(--card))] text-foreground"
           : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -610,8 +610,8 @@ function ModeOption({ active, onClick, title, copy }: { active: boolean; onClick
       }`}
     >
       <span className="min-w-0 flex-1">
-        <span className="block text-sm">{title}</span>
-        <span className="block text-xs text-muted-foreground">{copy}</span>
+        <span className="block text-small">{title}</span>
+        <span className="block text-caption text-muted-foreground">{copy}</span>
       </span>
       <span className={`size-4 shrink-0 rounded-full border ${active ? "border-[5px] border-[var(--coral)]" : "border-border"}`} aria-hidden="true" />
     </button>
@@ -632,7 +632,7 @@ export function PersonAvatar({ name, src, size = "size-7" }: { name: string; src
   return (
     <Avatar className={size}>
       {src && <AvatarImage src={src} alt="" className="object-cover" />}
-      <AvatarFallback className="text-[10px]">{initials(name)}</AvatarFallback>
+      <AvatarFallback className="text-caption">{initials(name)}</AvatarFallback>
     </Avatar>
   );
 }

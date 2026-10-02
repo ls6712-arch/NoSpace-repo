@@ -75,14 +75,14 @@ export function NextSessionCard({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2
           id="next-session-title"
-          className="flex items-center gap-2 text-lg"
+          className="flex items-center gap-2 text-lead"
           style={{ fontFamily: "var(--font-serif)" }}
         >
           <CalendarClock className="size-4 shrink-0 text-muted-foreground" />
           Next session
         </h2>
         {thisWeek !== undefined && project.timesPerWeek && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-small text-muted-foreground">
             {thisWeek} of {project.timesPerWeek} this week
           </span>
         )}
@@ -92,13 +92,13 @@ export function NextSessionCard({
         <>
           {project.nextSessionAt ? (
             <div className="mt-2">
-              <p className="text-base">{sessionLabel(project.nextSessionAt)}</p>
+              <p className="text-body">{sessionLabel(project.nextSessionAt)}</p>
               {project.nextSessionNote && (
-                <p className="mt-0.5 text-sm text-muted-foreground">{project.nextSessionNote}</p>
+                <p className="mt-0.5 text-small text-muted-foreground">{project.nextSessionNote}</p>
               )}
             </div>
           ) : (
-            <p className="mt-2 text-sm text-muted-foreground">Not set yet.</p>
+            <p className="mt-2 text-small text-muted-foreground">Not set yet.</p>
           )}
           <div className="mt-3 flex flex-wrap gap-2">
             <Link to={`/pursuit/${project.id}/moment`}>
@@ -115,13 +115,13 @@ export function NextSessionCard({
       ) : (
         <div className="mt-3 space-y-3">
           <div>
-            <Label htmlFor="next-session-when" className="mb-1.5 block text-xs">
+            <Label htmlFor="next-session-when" className="mb-1.5 block text-caption">
               When
             </Label>
             <Input id="next-session-when" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="next-session-note" className="mb-1.5 block text-xs">
+            <Label htmlFor="next-session-note" className="mb-1.5 block text-caption">
               Note <span className="text-muted-foreground">(optional)</span>
             </Label>
             <Input
@@ -132,14 +132,14 @@ export function NextSessionCard({
             />
           </div>
           <div>
-            <Label htmlFor="next-session-times" className="mb-1.5 block text-xs">
+            <Label htmlFor="next-session-times" className="mb-1.5 block text-caption">
               Times a week <span className="text-muted-foreground">(optional)</span>
             </Label>
             <select
               id="next-session-times"
               value={times}
               onChange={(e) => setTimes(e.target.value)}
-              className="h-9 w-full rounded-control border border-input bg-background px-3 text-sm"
+              className="h-9 w-full rounded-control border border-input bg-background px-3 text-body"
             >
               <option value="">Not set</option>
               {TIMES_A_WEEK.map((n) => (

@@ -32,13 +32,13 @@ export function PersonCard({ person, className = "" }: { person: Person; classNa
     >
       <Avatar className="size-11 shrink-0">
         {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" />}
-        <AvatarFallback className="text-xs">{initials(person.displayName)}</AvatarFallback>
+        <AvatarFallback className="text-caption">{initials(person.displayName)}</AvatarFallback>
       </Avatar>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+        <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }}>
           {person.displayName}
         </span>
-        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+        <span className="mt-0.5 block truncate text-caption text-muted-foreground">
           {hobbies.length > 0
             ? hobbies.join(" · ")
             : person.postCount > 0

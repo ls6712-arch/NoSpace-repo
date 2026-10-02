@@ -254,7 +254,7 @@ export function Pursuit() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-sm text-muted-foreground">Looking…</p>
+        <p className="text-small text-muted-foreground">Looking…</p>
       </div>
     );
   }
@@ -262,10 +262,10 @@ export function Pursuit() {
   if (notFound || !view) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
-        <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
           This Pursuit isn't here.
         </h1>
-        <p className="max-w-sm text-sm text-muted-foreground">
+        <p className="max-w-sm text-small text-muted-foreground">
           It may have been kept private, or the link's out of date.
         </p>
         <Link to="/discover" className="mt-2">
@@ -349,7 +349,7 @@ export function Pursuit() {
       <div className="container mx-auto max-w-2xl px-4 pt-8">
         <Link
           to={owner ? "/my-space" : "/discover"}
-          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           Back
@@ -358,16 +358,16 @@ export function Pursuit() {
         <div className="mb-2 flex items-center gap-2.5">
           <Avatar className="size-7">
             {view.ownerAvatar && <AvatarImage src={view.ownerAvatar} alt="" className="object-cover" />}
-            <AvatarFallback className="text-[10px]">{initials(view.ownerName)}</AvatarFallback>
+            <AvatarFallback className="text-caption">{initials(view.ownerName)}</AvatarFallback>
           </Avatar>
-          <span className="text-sm text-muted-foreground">{view.ownerName}</span>
+          <span className="text-small text-muted-foreground">{view.ownerName}</span>
         </div>
 
-        <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           {view.title}
         </h1>
 
-        <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+        <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted-foreground">
           {view.interest && <span>{view.interest}</span>}
           {view.interest && spaceLabel && <span aria-hidden="true">·</span>}
           {spaceLabel && <span>{spaceLabel}</span>}
@@ -389,14 +389,14 @@ export function Pursuit() {
           <div className="mb-6 rounded-card border border-border bg-card p-5">
             <p className="ns-section-kicker mb-2 text-gold-text">To day one</p>
             {view.endingNote ? (
-              <p className="whitespace-pre-wrap text-lg leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
+              <p className="whitespace-pre-wrap text-lead leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
                 {view.endingNote}
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground">What would you tell yourself on day one?</p>
+              <p className="text-small text-muted-foreground">What would you tell yourself on day one?</p>
             )}
             {owner && (
-              <button type="button" onClick={() => setEndingOpen("edit")} className="mt-3 text-xs text-accent hover:underline">
+              <button type="button" onClick={() => setEndingOpen("edit")} className="mt-3 text-caption text-accent hover:underline">
                 {view.endingNote ? "Edit" : "Write it"}
               </button>
             )}
@@ -405,7 +405,7 @@ export function Pursuit() {
 
         {status === "resting" && owner && (
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
-            <p className="flex items-center gap-2 text-sm">
+            <p className="flex items-center gap-2 text-small">
               <Moon className="size-4 shrink-0 text-muted-foreground" />
               Resting. Nothing's lost, and there's no clock running.
             </p>
@@ -417,7 +417,7 @@ export function Pursuit() {
 
         {status === "let_go" && owner && (
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
-            <p className="flex items-center gap-2 text-sm">
+            <p className="flex items-center gap-2 text-small">
               <Wind className="size-4 shrink-0 text-muted-foreground" />
               Let go. Nothing's lost.
             </p>
@@ -438,7 +438,7 @@ export function Pursuit() {
         )}
         {goal && !(ownProject && hasMeasure(ownProject)) && (
           <div className="mb-4 rounded-card border border-border bg-card p-4">
-            <p className="flex items-center gap-2 text-sm">
+            <p className="flex items-center gap-2 text-small">
               <Target className={`size-4 shrink-0 ${goalReached ? "text-[var(--violet-electric-bright)]" : "text-muted-foreground"}`} />
               {goalReached ? (
                 <span>
@@ -449,7 +449,7 @@ export function Pursuit() {
               )}
             </p>
             {!goalReached && goal.shape === "date" && goal.targetDate && (
-              <p className="mt-1 pl-6 text-xs text-muted-foreground">
+              <p className="mt-1 pl-6 text-caption text-muted-foreground">
                 {new Date(goal.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
               </p>
             )}
@@ -475,10 +475,10 @@ export function Pursuit() {
             thing worth keeping is the nudge to make that one a photo. */}
         {owner && ownProject && moments.length === 0 && (
           <div className={`mb-6 rounded-card border p-4 ${isNew ? "border-[var(--coral-deep)]" : "border-dashed border-border"}`}>
-            <p className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
+            <p className="text-body" style={{ fontFamily: "var(--font-serif)" }}>
               Add your first Moment
             </p>
-            <p className="mt-0.5 text-sm text-muted-foreground">
+            <p className="mt-0.5 text-small text-muted-foreground">
               A photo of where you're starting makes the best before-and-after later.
             </p>
             {!hasMeasure(ownProject) && (
@@ -573,7 +573,7 @@ export function Pursuit() {
             )}
 
             {status === "active" && (
-              <div className="mb-8 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <div className="mb-8 flex flex-wrap items-center gap-2 text-caption text-muted-foreground">
                 <span>Check in with me:</span>
                 {CHECK_IN_OPTIONS.map((o) => {
                   const current = ownProject.checkInDays ?? DEFAULT_CHECK_IN_DAYS;
@@ -611,7 +611,7 @@ export function Pursuit() {
         {moments.length === 0 ? (
           !owner && (
             <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
-              <p className="text-sm text-muted-foreground">No Moments shared yet.</p>
+              <p className="text-small text-muted-foreground">No Moments shared yet.</p>
             </div>
           )
         ) : (
@@ -631,7 +631,7 @@ export function Pursuit() {
                           <PrivateMomentCard moment={m} />
                         )}
                         {measure && owner && (
-                          <p className={`mt-1.5 text-xs ${amount ? "text-foreground" : "text-muted-foreground"}`}>
+                          <p className={`mt-1.5 text-caption ${amount ? "text-foreground" : "text-muted-foreground"}`}>
                             {amount
                               ? `+${formatAmount(amount)} ${unitFor(measure, amount)}`
                               : "Not counted toward progress"}
@@ -697,12 +697,12 @@ function ComparePhotos({
         {latest ? (
           <PhotoTile moment={latest} caption={`Latest · ${shortDate(latest.createdAt)}`} />
         ) : (
-          <div className="flex aspect-square items-center justify-center rounded-card border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+          <div className="flex aspect-square items-center justify-center rounded-card border border-dashed border-border p-3 text-center text-caption text-muted-foreground">
             {owner ? "Your next photo goes here" : "More to come"}
           </div>
         )}
       </div>
-      <figcaption className="mt-2 text-center text-xs text-muted-foreground">
+      <figcaption className="mt-2 text-center text-caption text-muted-foreground">
         {owner ? "Where you started → where you are" : "Where it started → where it is"}
       </figcaption>
     </figure>
@@ -715,7 +715,7 @@ function PhotoTile({ moment, caption }: { moment: PursuitMoment; caption: string
       <div className="aspect-square overflow-hidden rounded-card bg-surface-muted">
         <img src={moment.image} alt={moment.text || caption} className="size-full object-cover" />
       </div>
-      <p className="mt-1 text-center text-[11px] text-muted-foreground">{caption}</p>
+      <p className="mt-1 text-center text-caption text-muted-foreground">{caption}</p>
     </div>
   );
 }
@@ -735,7 +735,7 @@ function MonthHeader({ label, moments }: { label: string; moments: PursuitMoment
 
   return (
     <div className="mb-4">
-      <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+      <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         {label}
       </h2>
       {showLookBack && (
@@ -748,7 +748,7 @@ function MonthHeader({ label, moments }: { label: string; moments: PursuitMoment
             </div>
           )}
           {line && (
-            <p className="min-w-0 text-sm italic text-foreground/90 line-clamp-2">
+            <p className="min-w-0 text-small italic text-foreground/90 line-clamp-2">
               “{line}”
             </p>
           )}
@@ -762,11 +762,11 @@ function MonthHeader({ label, moments }: { label: string; moments: PursuitMoment
 function PrivateMomentCard({ moment }: { moment: PursuitMoment }) {
   return (
     <div className="rounded-card border border-dashed border-border bg-card p-4">
-      <p className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+      <p className="mb-2 flex items-center gap-1.5 text-caption text-muted-foreground">
         <Lock className="size-3" /> Only you · {shortDate(moment.createdAt)}
       </p>
       {moment.image && <img src={moment.image} alt="" className="mb-2 aspect-square w-full rounded-card object-cover" />}
-      <p className="whitespace-pre-wrap text-sm">{moment.text}</p>
+      <p className="whitespace-pre-wrap text-small">{moment.text}</p>
     </div>
   );
 }

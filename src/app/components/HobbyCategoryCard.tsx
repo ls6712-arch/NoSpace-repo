@@ -57,8 +57,8 @@ export function HobbyCategoryCard({
           <div className="absolute inset-x-0 bottom-0 p-5">
             <div className="flex items-end justify-between gap-2">
               <div className="transition-transform duration-300 ease-out group-hover:-translate-y-1 group-focus-visible:-translate-y-1">
-                <h3 className="mb-1 text-2xl leading-none text-white" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h3>
-                <p className="text-sm text-white/80">{hobby.tagline}</p>
+                <h3 className="mb-1 text-title leading-none text-white" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h3>
+                <p className="text-small text-white/80">{hobby.tagline}</p>
               </div>
               <ArrowUpRight className="mb-1 size-5 shrink-0 text-white transition-transform duration-300 ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-focus-visible:translate-x-1 group-focus-visible:-translate-y-1" />
             </div>
@@ -72,11 +72,11 @@ export function HobbyCategoryCard({
             <Link
               key={corner.slug}
               to={`/space/${hobby.slug}?hobby=${corner.slug}`}
-              className="rounded-control border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+              className="rounded-control border border-[var(--hairline)] bg-surface px-2.5 py-1 text-caption text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
             >
               {corner.name}
               {corner.momentCount > 0 && (
-                <span className="ml-1 text-[10px] opacity-60">{corner.momentCount}</span>
+                <span className="ml-1 text-caption opacity-60">{corner.momentCount}</span>
               )}
             </Link>
           ))}
@@ -86,7 +86,7 @@ export function HobbyCategoryCard({
               doesn't need approval. */}
           <Link
             to={`/create?hobby=${hobby.slug}`}
-            className="inline-flex items-center gap-1 rounded-control border border-dashed border-[var(--hairline)] px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+            className="inline-flex items-center gap-1 rounded-control border border-dashed border-[var(--hairline)] px-2.5 py-1 text-caption text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
           >
             <Plus className="size-3" />
             Create a Corner

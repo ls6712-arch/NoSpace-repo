@@ -50,13 +50,13 @@ export function HobbyTile({
           />
         )}
         {!!count && (
-          <span className="absolute top-1.5 right-1.5 rounded-control bg-black/55 px-1.5 py-0.5 text-[10px] leading-none text-white backdrop-blur-sm">
+          <span className="absolute top-1.5 right-1.5 rounded-control bg-black/55 px-1.5 py-0.5 text-caption leading-none text-white backdrop-blur-sm">
             {count}
           </span>
         )}
       </div>
       <span
-        className={`mt-2 block text-center text-xs leading-tight ${
+        className={`mt-2 block text-center text-caption leading-tight ${
           active ? "text-foreground" : "text-muted-foreground"
         }`}
       >

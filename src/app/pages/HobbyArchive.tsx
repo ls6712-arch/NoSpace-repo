@@ -102,10 +102,10 @@ export function HobbyArchive() {
     return (
       <div className="min-h-viewport bg-surface py-16">
         <div className="container mx-auto max-w-2xl px-4 text-center">
-          <h1 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             No such hobby
           </h1>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <p className="mb-6 text-small text-muted-foreground">
             That book isn't on your shelf.
           </p>
           <Link to="/you">
@@ -137,17 +137,17 @@ export function HobbyArchive() {
       <div className="container mx-auto max-w-3xl px-4">
         <Link
           to="/you"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           Your Shelf
         </Link>
 
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           {target.label}
         </h1>
         <p className="mt-1 text-muted-foreground">{space.name}</p>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-small text-muted-foreground">
           {moments.length} {moments.length === 1 ? "moment" : "moments"} · {projects.length}{" "}
           {projects.length === 1 ? "pursuit" : "pursuits"}
           {moments.length > 0 ? ` · ${updatedLabel(moments[0].createdAt).toLowerCase()}` : ""}
@@ -164,7 +164,7 @@ export function HobbyArchive() {
           maxLength={140}
           placeholder="Add a short note about this Corner — only you see it."
           aria-label={`Your private note about ${target.label}`}
-          className="mt-3 w-full max-w-md border-b border-transparent bg-transparent text-sm text-muted-foreground outline-none transition-colors focus:border-border placeholder:text-muted-foreground/60"
+          className="mt-3 w-full max-w-md border-b border-transparent bg-transparent text-body text-muted-foreground outline-none transition-colors focus:border-border placeholder:text-muted-foreground/60"
         />
 
         <div className="mt-5">
@@ -185,7 +185,7 @@ export function HobbyArchive() {
               type="button"
               aria-selected={tab === id}
               onClick={() => setTab(id)}
-              className={`-mb-px border-b-2 px-3 py-2 text-sm capitalize transition-colors ${
+              className={`-mb-px border-b-2 px-3 py-2 text-small capitalize transition-colors ${
                 tab === id
                   ? "border-[var(--coral-deep)] text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -205,7 +205,7 @@ export function HobbyArchive() {
                     type="button"
                     aria-pressed={filter === f.id}
                     onClick={() => setFilter(f.id)}
-                    className={`rounded-control border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                    className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
                       filter === f.id
                         ? "border-transparent text-white [background-color:var(--coral-deep)]"
                         : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
@@ -219,7 +219,7 @@ export function HobbyArchive() {
 
             {filtered.length === 0 ? (
               <div className="mt-6 rounded-card border border-dashed border-border px-5 py-12 text-center">
-                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+                <p className="mx-auto max-w-sm text-small leading-relaxed text-muted-foreground">
                   {moments.length === 0
                     ? `Nothing logged under ${target.label} yet. A photo, or a sentence about how it went, both count.`
                     : `No ${filter === "media" ? "photos or videos" : "notes"} here. Try All.`}
@@ -234,7 +234,7 @@ export function HobbyArchive() {
               <div className="mt-6 space-y-8">
                 {byMonth.map(({ month, items }) => (
                   <section key={month}>
-                    <h2 className="mb-3 text-sm text-muted-foreground">{month}</h2>
+                    <h2 className="mb-3 text-small text-muted-foreground">{month}</h2>
                     <div className={MOMENT_GRID}>
                       {items.map((post) => (
                         <MomentCard
@@ -257,7 +257,7 @@ export function HobbyArchive() {
           <div className="mt-6">
             {projects.length === 0 ? (
               <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
-                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+                <p className="mx-auto max-w-sm text-small leading-relaxed text-muted-foreground">
                   No {target.label.toLowerCase()} pursuits yet. A Pursuit is a
                   thing you come back to. Moments group under it as updates.
                 </p>
@@ -278,17 +278,17 @@ export function HobbyArchive() {
                       key={project.id}
                       className="rounded-card border border-border bg-card p-4"
                     >
-                      <div className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
+                      <div className="text-body" style={{ fontFamily: "var(--font-serif)" }}>
                         {project.title}
                       </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
+                      <div className="mt-1 text-caption text-muted-foreground">
                         {updates.length} {updates.length === 1 ? "update" : "updates"}
                         {project.finishedAt ? " · finished" : " · in progress"}
                       </div>
                       {updates.length > 0 && (
                         <ul className="mt-3 space-y-1">
                           {updates.slice(0, 3).map((u) => (
-                            <li key={u.id} className="truncate text-xs text-muted-foreground">
+                            <li key={u.id} className="truncate text-caption text-muted-foreground">
                               {dayLabel(u.createdAt)}: {u.caption}
                             </li>
                           ))}
@@ -305,21 +305,21 @@ export function HobbyArchive() {
         {tab === "about" && (
           <div className="mt-6 space-y-3">
             <div className="rounded-card border border-border bg-card p-5">
-              <h2 className="mb-1 text-base" style={{ fontFamily: "var(--font-serif)" }}>
+              <h2 className="mb-1 text-body" style={{ fontFamily: "var(--font-serif)" }}>
                 {target.label}
               </h2>
-              <p className="text-sm leading-relaxed text-muted-foreground">
+              <p className="text-small leading-relaxed text-muted-foreground">
                 Part of {space.name}: {space.plainLabel.toLowerCase()}.
               </p>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-3 text-small leading-relaxed text-muted-foreground">
                 {space.description}
               </p>
             </div>
             <div className="rounded-card border border-border bg-card p-5">
-              <h2 className="mb-2 text-base" style={{ fontFamily: "var(--font-serif)" }}>
+              <h2 className="mb-2 text-body" style={{ fontFamily: "var(--font-serif)" }}>
                 This book
               </h2>
-              <dl className="grid gap-1.5 text-sm">
+              <dl className="grid gap-1.5 text-small">
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted-foreground">First logged</dt>
                   <dd>
@@ -343,12 +343,12 @@ export function HobbyArchive() {
               </dl>
             </div>
             <div className="rounded-card border border-border bg-card p-5">
-              <h2 className="mb-2 text-base" style={{ fontFamily: "var(--font-serif)" }}>
+              <h2 className="mb-2 text-body" style={{ fontFamily: "var(--font-serif)" }}>
                 Find others doing this
               </h2>
               <Link
                 to={`/space/${target.hobbySlug}${target.subSlug ? `?hobby=${target.subSlug}` : ""}`}
-                className="text-sm text-[var(--coral-text)] hover:underline"
+                className="text-small text-[var(--coral-text)] hover:underline"
               >
                 Open {target.label} in {space.shortName} →
               </Link>

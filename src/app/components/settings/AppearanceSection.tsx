@@ -42,7 +42,7 @@ export function AppearanceSection() {
   return (
     <section>
       <SectionHeader n={1} eyebrow="APPEARANCE" title="Appearance" />
-      <p className="mb-4 text-sm text-muted-foreground">
+      <p className="mb-4 text-small text-muted-foreground">
         Light is warm paper, dark is warm charcoal. Same identity in either.
       </p>
       <RadioGroup

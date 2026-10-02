@@ -141,7 +141,7 @@ export function GoalDialog({
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>
             {project.goal ? "Change your goal" : "Set a goal"}
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription className="text-small text-muted-foreground">
             For "{project.title}." Optional — skip anytime.
           </DialogDescription>
         </DialogHeader>
@@ -162,8 +162,8 @@ export function GoalDialog({
                 >
                   <Icon className="mt-0.5 size-4 shrink-0 text-foreground" strokeWidth={1.7} />
                   <span>
-                    <span className="block text-sm">{s.title}</span>
-                    <span className="block text-xs text-muted-foreground">{s.example}</span>
+                    <span className="block text-small">{s.title}</span>
+                    <span className="block text-caption text-muted-foreground">{s.example}</span>
                   </span>
                 </button>
               );
@@ -173,7 +173,7 @@ export function GoalDialog({
           {shape === "number" && (
             <>
               <div>
-                <Label htmlFor="goal-quick" className="mb-1.5 block text-xs">
+                <Label htmlFor="goal-quick" className="mb-1.5 block text-caption">
                   Describe it (optional shortcut)
                 </Label>
                 <Input
@@ -193,7 +193,7 @@ export function GoalDialog({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="goal-number" className="mb-1.5 block text-xs">Target</Label>
+                  <Label htmlFor="goal-number" className="mb-1.5 block text-caption">Target</Label>
                   <Input
                     id="goal-number"
                     type="number"
@@ -204,7 +204,7 @@ export function GoalDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="goal-unit" className="mb-1.5 block text-xs">Unit</Label>
+                  <Label htmlFor="goal-unit" className="mb-1.5 block text-caption">Unit</Label>
                   <Input
                     id="goal-unit"
                     value={unit}
@@ -216,7 +216,7 @@ export function GoalDialog({
               </div>
 
               <div>
-                <Label htmlFor="goal-verb" className="mb-1.5 block text-xs">
+                <Label htmlFor="goal-verb" className="mb-1.5 block text-caption">
                   What the tap button says
                 </Label>
                 <Input
@@ -236,8 +236,8 @@ export function GoalDialog({
                   className="flex w-full items-center justify-between gap-3"
                 >
                   <span className="text-left">
-                    <span className="block text-sm">Also aim for a date</span>
-                    <span className="block text-xs text-muted-foreground">
+                    <span className="block text-small">Also aim for a date</span>
+                    <span className="block text-caption text-muted-foreground">
                       Shown next to your count, e.g. "Sep 23"
                     </span>
                   </span>
@@ -266,7 +266,7 @@ export function GoalDialog({
 
           {shape === "date" && (
             <div>
-              <Label htmlFor="goal-date" className="mb-1.5 block text-xs">Target date</Label>
+              <Label htmlFor="goal-date" className="mb-1.5 block text-caption">Target date</Label>
               <Input
                 id="goal-date"
                 type="date"
@@ -278,7 +278,7 @@ export function GoalDialog({
 
           {shape === "feeling" && (
             <div>
-              <Label htmlFor="goal-feeling" className="mb-1.5 block text-xs">What does "there" look like?</Label>
+              <Label htmlFor="goal-feeling" className="mb-1.5 block text-caption">What does "there" look like?</Label>
               <Input
                 id="goal-feeling"
                 value={feeling}
@@ -290,7 +290,7 @@ export function GoalDialog({
           )}
 
           <div>
-            <Label htmlFor="goal-label" className="mb-1.5 block text-xs">
+            <Label htmlFor="goal-label" className="mb-1.5 block text-caption">
               How it'll read on your Pursuit
             </Label>
             <Input
@@ -307,7 +307,7 @@ export function GoalDialog({
           <Button variant="coral" className="w-full" disabled={!canSubmit} onClick={submit}>
             {project.goal ? "Save goal" : "Set goal"}
           </Button>
-          <p className="text-center text-[11px] text-muted-foreground">
+          <p className="text-center text-caption text-muted-foreground">
             Just what you said you're going for. Progress shows on the Pursuit.
           </p>
         </div>

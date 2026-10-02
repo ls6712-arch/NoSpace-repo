@@ -54,20 +54,20 @@ export function InspiredRail() {
 
   return (
     <section>
-      <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+      <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         Quiet, but real
       </h2>
 
       {entries.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing yet this month.</p>
+        <p className="mt-3 text-small text-muted-foreground">Nothing yet this month.</p>
       ) : (
-        <p className="mt-3 text-sm leading-relaxed text-foreground">
+        <p className="mt-3 text-small leading-relaxed text-foreground">
           This month, {entries.length} {entries.length === 1 ? "person" : "people"} started a
           Pursuit not long after seeing yours — {joinClauses(entries.map(clause))}.
         </p>
       )}
 
-      <p className="mt-3 text-xs italic text-muted-foreground">
+      <p className="mt-3 text-caption italic text-muted-foreground">
         Visible only to you. Counted from real follow-throughs, not views. Nothing here is
         ranked against anyone else.
       </p>

@@ -72,7 +72,7 @@ export function SearchResults() {
     <div className="min-h-viewport bg-surface">
       <div className="container mx-auto max-w-4xl px-4 py-10">
         <div className="ns-section-kicker mb-3">SEARCH</div>
-        <h1 className="mb-6 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mb-6 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           {q ? `Results for "${q}"` : `Search ${APP_NAME}`}
         </h1>
 
@@ -84,14 +84,14 @@ export function SearchResults() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search Moments, people, Spaces"
-            className="w-full rounded-control border border-border bg-input-background py-3 pl-11 pr-4 text-sm text-foreground outline-none focus-visible:border-[var(--violet-electric)]"
+            className="w-full rounded-control border border-border bg-input-background py-3 pl-11 pr-4 text-body text-foreground outline-none focus-visible:border-[var(--violet-electric)]"
           />
         </form>
 
         {!q ? (
-          <p className="text-sm text-muted-foreground">Type something above to search.</p>
+          <p className="text-small text-muted-foreground">Type something above to search.</p>
         ) : all.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-small text-muted-foreground">
             {loading ? "Searching…" : `Nothing matches "${q}" yet.`}
           </p>
         ) : (
@@ -102,10 +102,10 @@ export function SearchResults() {
               const Icon = GROUP_ICON[group];
               return (
                 <section key={group}>
-                  <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <h2 className="mb-3 flex items-center gap-2 text-small font-medium text-muted-foreground">
                     <Icon className="size-4" />
                     {title}
-                    <span className="text-xs text-muted-foreground/70">({hits.length})</span>
+                    <span className="text-caption text-muted-foreground/70">({hits.length})</span>
                   </h2>
                   <ul className="grid gap-2 sm:grid-cols-2">
                     {hits.slice(0, 12).map((hit) => (
@@ -117,7 +117,7 @@ export function SearchResults() {
                           {hit.group === "person" ? (
                             <Avatar className="size-8 shrink-0">
                               {hit.avatarUrl && <AvatarImage src={hit.avatarUrl} alt="" className="object-cover" />}
-                              <AvatarFallback className="text-[10px]">{initials(hit.label)}</AvatarFallback>
+                              <AvatarFallback className="text-caption">{initials(hit.label)}</AvatarFallback>
                             </Avatar>
                           ) : (
                             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
@@ -125,9 +125,9 @@ export function SearchResults() {
                             </span>
                           )}
                           <span className="min-w-0">
-                            <span className="block truncate text-sm">{hit.label}</span>
+                            <span className="block truncate text-small">{hit.label}</span>
                             {hit.sub && (
-                              <span className="block truncate text-xs text-muted-foreground">{hit.sub}</span>
+                              <span className="block truncate text-caption text-muted-foreground">{hit.sub}</span>
                             )}
                           </span>
                         </Link>

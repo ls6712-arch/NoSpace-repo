@@ -45,14 +45,14 @@ export function PursuitField({
   if (selected) {
     return (
       <div className="flex items-center gap-2 rounded-card border border-border bg-surface px-4 py-2.5">
-        <span className="min-w-0 flex-1 truncate text-sm">{selected.title}</span>
+        <span className="min-w-0 flex-1 truncate text-small">{selected.title}</span>
         <button
           type="button"
           onClick={() => {
             setManualNew(false);
             onClear();
           }}
-          className="shrink-0 text-xs text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
+          className="shrink-0 text-caption text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
         >
           Change
         </button>
@@ -77,7 +77,7 @@ export function PursuitField({
               setManualNew(false);
               onClear();
             }}
-            className="text-[11px] text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
+            className="text-caption text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
           >
             Choose an existing Pursuit instead
           </button>
@@ -108,7 +108,7 @@ export function PursuitField({
                   setQuery("");
                   setFocused(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                className="w-full px-4 py-2 text-left text-small transition-colors hover:bg-surface-muted"
               >
                 {p.title}
               </button>
@@ -125,7 +125,7 @@ export function PursuitField({
                 setQuery("");
                 setFocused(false);
               }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[var(--coral-deep)] transition-colors hover:bg-surface-muted"
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-small text-[var(--coral-deep)] transition-colors hover:bg-surface-muted"
             >
               <FolderPlus className="size-3.5 shrink-0" />
               {query.trim() ? `Create new: "${query.trim()}"` : "Create new Pursuit"}

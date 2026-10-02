@@ -119,7 +119,7 @@ export function CornerTagField({
               key={`${c.spaceSlug}-${c.slug}`}
               type="button"
               onClick={() => pick(active ? "" : c.slug, c.name, c.spaceSlug)}
-              className={`rounded-control border px-3 py-1 text-xs transition-colors ${
+              className={`rounded-control border px-3 py-1 text-caption transition-colors ${
                 active
                   ? "border-transparent text-white [background-color:var(--coral-deep)]"
                   : "border-border text-muted-foreground hover:border-foreground/30"
@@ -146,7 +146,7 @@ export function CornerTagField({
           placeholder="Type a Corner, e.g. Pasta Making"
         />
 
-        {blockedMessage && <p className="mt-1.5 text-[11px] text-[var(--coral-text)]">{blockedMessage}</p>}
+        {blockedMessage && <p className="mt-1.5 text-caption text-[var(--coral-text)]">{blockedMessage}</p>}
 
         {focused && q && (
           <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-xl">
@@ -156,10 +156,10 @@ export function CornerTagField({
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => pick(c.slug, c.name, c.spaceSlug)}
-                  className="flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                  className="flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-small transition-colors hover:bg-surface-muted"
                 >
                   <span>{c.name}</span>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-caption text-muted-foreground">
                     {c.momentCount > 0 ? `${c.momentCount} Moments` : "New"}
                   </span>
                 </button>
@@ -172,7 +172,7 @@ export function CornerTagField({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={createNew}
                   disabled={creating}
-                  className="flex items-center gap-1.5 text-left text-xs text-[var(--coral-text)]"
+                  className="flex items-center gap-1.5 text-left text-caption text-[var(--coral-text)]"
                 >
                   <Plus className="size-3" />
                   {creating ? "Creating…" : `Create "${q}" as a new Corner`}
@@ -186,7 +186,7 @@ export function CornerTagField({
                 choice proceeds. */}
             {!exact && pendingConfirm && (
               <li className="border-t border-[var(--hairline)] px-4 py-2.5">
-                <p className="mb-2 text-[11px] text-muted-foreground">
+                <p className="mb-2 text-caption text-muted-foreground">
                   Close to “{pendingConfirm.label}” — the same Corner, or something different?
                 </p>
                 <div className="flex gap-2">
@@ -194,7 +194,7 @@ export function CornerTagField({
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={useExistingInstead}
-                    className="rounded-control border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-foreground/30"
+                    className="rounded-control border border-border px-2.5 py-1 text-caption text-foreground transition-colors hover:border-foreground/30"
                   >
                     Use “{pendingConfirm.label}”
                   </button>
@@ -203,7 +203,7 @@ export function CornerTagField({
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={createNew}
                     disabled={creating}
-                    className="rounded-control border border-transparent bg-[var(--coral-deep)] px-2.5 py-1 text-[11px] text-white"
+                    className="rounded-control border border-transparent bg-[var(--coral-deep)] px-2.5 py-1 text-caption text-white"
                   >
                     {creating ? "Creating…" : "Create anyway"}
                   </button>
@@ -211,7 +211,7 @@ export function CornerTagField({
               </li>
             )}
             {exact && (
-              <li className="border-t border-[var(--hairline)] px-4 py-2 text-[11px] text-muted-foreground">
+              <li className="border-t border-[var(--hairline)] px-4 py-2 text-caption text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Check className="size-3 text-foreground" />
                   Already a Corner here. Pick it above to use it.

@@ -48,7 +48,7 @@ function Empty({ icon: Icon, children }: { icon: typeof Bell; children: React.Re
   return (
     <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
       <Icon className="mx-auto mb-3 size-5 text-muted-foreground" />
-      <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">{children}</p>
+      <p className="mx-auto max-w-sm text-small leading-relaxed text-muted-foreground">{children}</p>
     </div>
   );
 }
@@ -74,10 +74,10 @@ export function Inbox() {
     return (
       <div className="min-h-viewport bg-surface py-10">
         <div className="container mx-auto max-w-2xl px-4">
-          <h1 className="mb-2 text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
             Inbox
           </h1>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <p className="mb-6 text-small text-muted-foreground">
             Requests and activity live here once you have an account.
           </p>
           <Link to="/login?next=/inbox">
@@ -91,10 +91,10 @@ export function Inbox() {
   return (
     <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Inbox
         </h1>
-        <p className="mb-8 mt-2 text-sm text-muted-foreground">
+        <p className="mb-8 mt-2 text-small text-muted-foreground">
           Everything addressed to you. Nothing here takes effect until you answer it.
         </p>
 
@@ -117,7 +117,7 @@ export function Inbox() {
               <div className="space-y-6">
                 {followRequests.length > 0 && (
                   <section>
-                    <h2 className="mb-3 text-sm text-muted-foreground">Follow requests</h2>
+                    <h2 className="mb-3 text-small text-muted-foreground">Follow requests</h2>
                     <ul className="space-y-2">
                       {followRequests.map((r) => (
                         <li
@@ -127,12 +127,12 @@ export function Inbox() {
                           <div className="flex items-center gap-3">
                             <Avatar className="size-9 shrink-0">
                               {r.avatarUrl && <AvatarImage src={r.avatarUrl} alt="" />}
-                              <AvatarFallback className="text-[10px]">
+                              <AvatarFallback className="text-caption">
                                 {initials(r.displayName)}
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm">
+                              <p className="text-small">
                                 <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                                   {r.displayName}
                                 </strong>{" "}
@@ -182,13 +182,13 @@ export function Inbox() {
                 {social.notifications.map((n) => (
                   <li
                     key={n.id}
-                    className="rounded-card border border-border bg-card px-4 py-3.5 text-sm"
+                    className="rounded-card border border-border bg-card px-4 py-3.5 text-small"
                   >
                     <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                       {n.actorName ?? "Someone"}{" "}
                     </strong>
                     {n.body}
-                    <span className="ml-2 text-[11px] text-muted-foreground">
+                    <span className="ml-2 text-caption text-muted-foreground">
                       {ago(n.createdAt)}
                     </span>
                   </li>

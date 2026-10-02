@@ -30,15 +30,15 @@ export function NewSpacesRail() {
 
   return (
     <section>
-      <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+      <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         Freshly opened this week
       </h2>
-      <p className="mt-0.5 text-xs text-muted-foreground">
+      <p className="mt-0.5 text-caption text-muted-foreground">
         Real Spaces the community just started. Not personalized, not ranked, just new.
       </p>
 
       {corners.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing new to show yet.</p>
+        <p className="mt-3 text-small text-muted-foreground">Nothing new to show yet.</p>
       ) : (
         <ul className="mt-3 space-y-2.5">
           {corners.map((c) => {
@@ -52,17 +52,17 @@ export function NewSpacesRail() {
                     style={{ backgroundColor: "var(--coral-deep)" }}
                   />
                   <div className="min-w-0 flex-1">
-                    <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                    <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }}>
                       {c.name}
                     </span>
-                    <span className="block truncate text-xs text-muted-foreground">
+                    <span className="block truncate text-caption text-muted-foreground">
                       Inside {space?.shortName ?? c.spaceSlug}
                       {c.createdAt != null ? ` · ${openedLabel(c.createdAt)}` : ""}
                     </span>
                   </div>
                   <Link
                     to={`/corner/${c.slug}`}
-                    className="shrink-0 text-xs text-accent hover:underline"
+                    className="shrink-0 text-caption text-accent hover:underline"
                   >
                     Visit
                   </Link>

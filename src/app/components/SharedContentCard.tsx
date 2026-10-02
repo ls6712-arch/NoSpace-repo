@@ -82,7 +82,7 @@ export function SharedContentCard({
 
   if (state.status === "unavailable") {
     return (
-      <div className="flex w-56 items-center gap-2 rounded-card border border-dashed border-[var(--hairline)] px-3 py-2.5 text-xs text-muted-foreground">
+      <div className="flex w-56 items-center gap-2 rounded-card border border-dashed border-[var(--hairline)] px-3 py-2.5 text-caption text-muted-foreground">
         <ImageOff className="size-3.5 shrink-0" />
         Not available
       </div>
@@ -102,8 +102,8 @@ export function SharedContentCard({
         </span>
       )}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-xs font-medium">{state.title}</span>
-        <span className="block truncate text-[11px] text-muted-foreground">
+        <span className="block truncate text-caption font-medium">{state.title}</span>
+        <span className="block truncate text-caption text-muted-foreground">
           {state.status === "moment" ? "Moment" : "Pursuit"} · {state.owner}
         </span>
       </span>

@@ -37,10 +37,10 @@ export function AdminCategories() {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Nothing here for you
           </h2>
-          <p className="mb-6 max-w-sm text-sm text-muted-foreground">
+          <p className="mb-6 max-w-sm text-small text-muted-foreground">
             This screen is for whoever reviews category suggestions.
           </p>
           <Link to="/discover">
@@ -76,16 +76,16 @@ export function AdminCategories() {
   return (
     <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Category suggestions
         </h1>
-        <p className="mb-8 mt-2 text-sm text-muted-foreground">
+        <p className="mb-8 mt-2 text-small text-muted-foreground">
           What people told us the list was missing. Approving one adds it to
           Discover; nothing here ever changes a post someone already made.
         </p>
 
         {error && (
-          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-small">
             {error}
           </p>
         )}
@@ -101,27 +101,27 @@ export function AdminCategories() {
           <TabsContent value="pending">
             {pending.length === 0 ? (
               <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
-                <p className="text-sm text-muted-foreground">Nothing waiting.</p>
+                <p className="text-small text-muted-foreground">Nothing waiting.</p>
               </div>
             ) : (
               <ul className="space-y-3">
                 {pending.map((s) => (
                   <li key={s.id} className="rounded-card border border-border bg-card p-4">
                     <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-                      <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                      <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
                         {s.name}
                       </h2>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-caption text-muted-foreground">
                         {s.suggesterName ?? "Someone"} · {when(s.createdAt)}
                       </span>
                     </div>
                     {s.description && (
-                      <p className="text-sm leading-relaxed text-muted-foreground">
+                      <p className="text-small leading-relaxed text-muted-foreground">
                         {s.description}
                       </p>
                     )}
                     {s.examples && (
-                      <p className="mt-1.5 text-xs text-muted-foreground">
+                      <p className="mt-1.5 text-caption text-muted-foreground">
                         Examples: {s.examples}
                       </p>
                     )}
@@ -151,7 +151,7 @@ export function AdminCategories() {
                             onChange={(e) =>
                               setMergeTo((m) => ({ ...m, [s.id]: e.target.value }))
                             }
-                            className="rounded-control border border-border bg-surface px-3 py-1.5 text-xs outline-none focus:border-ring"
+                            className="rounded-control border border-border bg-surface px-3 py-1.5 text-body outline-none focus:border-ring"
                           >
                             <option value="">Merge into…</option>
                             {categories.map((c) => (
@@ -191,23 +191,23 @@ export function AdminCategories() {
           <TabsContent value="decided">
             {decided.length === 0 ? (
               <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
-                <p className="text-sm text-muted-foreground">Nothing decided yet.</p>
+                <p className="text-small text-muted-foreground">Nothing decided yet.</p>
               </div>
             ) : (
               <ul className="space-y-2">
                 {decided.map((s) => (
                   <li
                     key={s.id}
-                    className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-card border border-border bg-card px-4 py-3 text-sm"
+                    className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-card border border-border bg-card px-4 py-3 text-small"
                   >
                     <span style={{ fontFamily: "var(--font-serif)" }}>{s.name}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                       {s.status === "merged" && s.mergedInto
                         ? `merged into ${categories.find((c) => c.slug === s.mergedInto)?.name ?? s.mergedInto}`
                         : s.status}
                     </span>
                     {s.reviewNote && (
-                      <span className="w-full text-xs text-muted-foreground">
+                      <span className="w-full text-caption text-muted-foreground">
                         "{s.reviewNote}"
                       </span>
                     )}

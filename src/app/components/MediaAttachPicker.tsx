@@ -109,7 +109,7 @@ export function MediaAttachPicker({
         {converting ? "Preparing…" : label}
       </Button>
       {heicWarning && (
-        <p className="mt-1.5 max-w-[16rem] text-[11px] leading-relaxed text-[var(--coral-text)]">
+        <p className="mt-1.5 max-w-[16rem] text-caption leading-relaxed text-[var(--coral-text)]">
           {heicWarning}
         </p>
       )}

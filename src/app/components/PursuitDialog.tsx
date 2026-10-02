@@ -84,12 +84,12 @@ function CornerField({
         placeholder="Pottery, DJing, bookbinding…"
       />
       {!value.trim() && (
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1.5 text-caption text-muted-foreground">
           Anything you like, not listed? Enter your own.
         </p>
       )}
       {closeMatch && (
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1.5 text-caption text-muted-foreground">
           Close to “{closeMatch.label}” —{" "}
           <button
             type="button"
@@ -113,7 +113,7 @@ function CornerField({
                   onChange(s);
                   setFocused(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                className="w-full px-4 py-2 text-left text-small transition-colors hover:bg-surface-muted"
               >
                 {s}
               </button>
@@ -235,7 +235,7 @@ export function PursuitDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader className="text-left">
-          <DialogTitle className="flex items-center gap-2.5 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+          <DialogTitle className="flex items-center gap-2.5 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
             <span
               className="flex size-8 shrink-0 items-center justify-center rounded-full"
               style={{ backgroundColor: "color-mix(in srgb, var(--pastel-clay) 42%, var(--surface-elevated))" }}
@@ -244,14 +244,14 @@ export function PursuitDialog({
             </span>
             Add to Your Pursuits
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription className="text-small text-muted-foreground">
             Name it. Everything else is optional.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="pursuit-title" className="mb-1.5 block text-xs">
+            <Label htmlFor="pursuit-title" className="mb-1.5 block text-caption">
               What are you pursuing?
             </Label>
             <Input
@@ -266,14 +266,14 @@ export function PursuitDialog({
           </div>
 
           <div>
-            <Label htmlFor="pursuit-corner" className="mb-1.5 block text-xs">
+            <Label htmlFor="pursuit-corner" className="mb-1.5 block text-caption">
               Which Corner does this belong to? <span className="text-muted-foreground">(optional)</span>
             </Label>
             <CornerField spaceSlug={spaceSlug} value={corner} onChange={setCorner} />
           </div>
 
           <div>
-            <Label htmlFor="pursuit-space" className="mb-1.5 block text-xs">
+            <Label htmlFor="pursuit-space" className="mb-1.5 block text-caption">
               Space <span className="text-muted-foreground">(optional)</span>
             </Label>
             <Select value={spaceSlug} onValueChange={setSpaceSlug}>
@@ -304,7 +304,7 @@ export function PursuitDialog({
             <button
               type="button"
               onClick={() => setGoalOpen((v) => !v)}
-              className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left text-small text-muted-foreground transition-colors hover:text-foreground"
             >
               <span>{goalOpen ? "Set a goal" : "+ Set a goal (optional)"}</span>
               <ChevronDown className={`size-4 shrink-0 transition-transform ${goalOpen ? "rotate-180" : ""}`} />
@@ -315,7 +315,7 @@ export function PursuitDialog({
                   <button
                     type="button"
                     onClick={() => setGoalShape("number")}
-                    className={`flex items-center justify-center gap-1.5 rounded-control border px-3 py-2 text-xs transition-colors ${
+                    className={`flex items-center justify-center gap-1.5 rounded-control border px-3 py-2 text-caption transition-colors ${
                       goalShape === "number" ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
                     }`}
                   >
@@ -324,7 +324,7 @@ export function PursuitDialog({
                   <button
                     type="button"
                     onClick={() => setGoalShape("date")}
-                    className={`flex items-center justify-center gap-1.5 rounded-control border px-3 py-2 text-xs transition-colors ${
+                    className={`flex items-center justify-center gap-1.5 rounded-control border px-3 py-2 text-caption transition-colors ${
                       goalShape === "date" ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
                     }`}
                   >
@@ -334,7 +334,7 @@ export function PursuitDialog({
                 {goalShape === "number" ? (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="pursuit-goal-number" className="mb-1.5 block text-xs">Target</Label>
+                      <Label htmlFor="pursuit-goal-number" className="mb-1.5 block text-caption">Target</Label>
                       <Input
                         id="pursuit-goal-number"
                         type="number"
@@ -345,7 +345,7 @@ export function PursuitDialog({
                       />
                     </div>
                     <div>
-                      <Label htmlFor="pursuit-goal-unit" className="mb-1.5 block text-xs">Unit</Label>
+                      <Label htmlFor="pursuit-goal-unit" className="mb-1.5 block text-caption">Unit</Label>
                       <Input
                         id="pursuit-goal-unit"
                         value={goalUnit}
@@ -357,7 +357,7 @@ export function PursuitDialog({
                   </div>
                 ) : (
                   <div>
-                    <Label htmlFor="pursuit-goal-date" className="mb-1.5 block text-xs">Target date</Label>
+                    <Label htmlFor="pursuit-goal-date" className="mb-1.5 block text-caption">Target date</Label>
                     <Input
                       id="pursuit-goal-date"
                       type="date"
@@ -366,7 +366,7 @@ export function PursuitDialog({
                     />
                   </div>
                 )}
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                   You can add or change this later from the Pursuit's own page, too.
                 </p>
               </div>
@@ -374,7 +374,7 @@ export function PursuitDialog({
           </div>
 
           <div>
-            <Label className="mb-1.5 block text-xs">Check in with me</Label>
+            <Label className="mb-1.5 block text-caption">Check in with me</Label>
             <div className="grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Check in with me">
               {CHECK_IN_OPTIONS.map((o) => (
                 <button
@@ -383,7 +383,7 @@ export function PursuitDialog({
                   role="radio"
                   aria-checked={checkIn === o.days}
                   onClick={() => setCheckIn(o.days)}
-                  className={`rounded-control border px-2 py-1.5 text-xs transition-colors ${
+                  className={`rounded-control border px-2 py-1.5 text-caption transition-colors ${
                     checkIn === o.days ? "border-[var(--coral-deep)] bg-surface-muted text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -391,7 +391,7 @@ export function PursuitDialog({
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
+            <p className="mt-1.5 text-caption text-muted-foreground">
               One gentle question if it goes quiet. Never a streak.
             </p>
           </div>
@@ -399,7 +399,7 @@ export function PursuitDialog({
           <Button variant="coral" className="w-full" disabled={!title.trim() || !goalReady} onClick={submit}>
             Create Pursuit
           </Button>
-          <p className="text-center text-[11px] text-muted-foreground">
+          <p className="text-center text-caption text-muted-foreground">
             Private by default. You choose if and when to share it.
           </p>
         </div>

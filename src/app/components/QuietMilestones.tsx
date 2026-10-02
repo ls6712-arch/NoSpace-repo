@@ -55,11 +55,11 @@ function BadgeDetailDialog({
                   >
                     <Icon className="size-7" strokeWidth={1.6} />
                   </span>
-                  <h3 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                  <h3 className="mb-1 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
                     {badgeName(badge, hobbySlug, hobbyLabel)}
                   </h3>
-                  <p className="mb-1 text-sm text-muted-foreground">{badge.description}</p>
-                  {!unlocked && <p className="mt-4 text-xs text-muted-foreground">Not yet. No rush.</p>}
+                  <p className="mb-1 text-small text-muted-foreground">{badge.description}</p>
+                  {!unlocked && <p className="mt-4 text-caption text-muted-foreground">Not yet. No rush.</p>}
                 </>
               );
             })()}
@@ -104,7 +104,7 @@ export function QuietMilestones() {
                   <Icon className="size-6" strokeWidth={1.5} />
                 </span>
                 <span
-                  className={`text-center text-[11.5px] leading-tight ${
+                  className={`text-center text-caption leading-tight ${
                     unlocked ? "text-foreground" : "text-muted-foreground"
                   }`}
                   style={{ fontFamily: "var(--font-serif)" }}
@@ -193,7 +193,7 @@ export function SharedMilestones({
                 <Icon className="size-6" strokeWidth={1.5} />
               </span>
               <span
-                className="text-center text-[11.5px] leading-tight text-foreground"
+                className="text-center text-caption leading-tight text-foreground"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 {badgeName(badge, primary?.slug, primary?.label)}

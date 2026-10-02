@@ -23,32 +23,32 @@ export function DataSection() {
   return (
     <section>
       <SectionHeader n={6} eyebrow="YOUR DATA" title="Your data" />
-      <p className="mb-4 text-sm text-muted-foreground">
+      <p className="mb-4 text-small text-muted-foreground">
         What's kept here, and only here.
       </p>
 
       <div className="rounded-control border border-border bg-card p-4 sm:p-5">
-        <div className="mb-2 flex items-center gap-2 text-sm">
+        <div className="mb-2 flex items-center gap-2 text-small">
           <Lock className="size-4 text-muted-foreground" />
           "Only you" Moments
         </div>
-        <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+        <p className="mb-3 text-caption leading-relaxed text-muted-foreground">
           Kept here and nowhere else. These never appear in a Space, a feed, or your public shelf.
         </p>
         {logs.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing here yet.</p>
+          <p className="text-caption text-muted-foreground">Nothing here yet.</p>
         ) : (
           <ul className="space-y-3">
             {logs.map((entry) => (
               <li key={entry.id} className="rounded-control border border-[var(--hairline)] p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-caption text-muted-foreground">
                     Only you · {timeAgo(entry.createdAt)}
                   </span>
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteId(entry.id)}
-                    className="min-h-11 text-[11px] text-muted-foreground transition-colors hover:text-destructive"
+                    className="min-h-11 text-caption text-muted-foreground transition-colors hover:text-destructive"
                   >
                     Delete
                   </button>
@@ -62,7 +62,7 @@ export function DataSection() {
                     )}
                   </div>
                 )}
-                <p className="whitespace-pre-line text-sm leading-relaxed">{entry.note}</p>
+                <p className="whitespace-pre-line text-small leading-relaxed">{entry.note}</p>
               </li>
             ))}
           </ul>
@@ -70,7 +70,7 @@ export function DataSection() {
       </div>
 
       {points > 0 && (
-        <p className="mt-4 text-xs text-muted-foreground">
+        <p className="mt-4 text-caption text-muted-foreground">
           {points} {points === 1 ? "point" : "points"} earned so far.
         </p>
       )}

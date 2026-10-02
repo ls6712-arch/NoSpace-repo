@@ -200,14 +200,14 @@ export function Studio() {
     if (!username && !user) {
       return (
         <div className="flex min-h-[70vh] items-center justify-center px-4 text-center">
-          <p className="text-sm text-muted-foreground">Sign in to open your own Scrapbook.</p>
+          <p className="text-small text-muted-foreground">Sign in to open your own Scrapbook.</p>
         </div>
       );
     }
     if (remote.status === "missing") {
       return (
         <div className="flex min-h-[70vh] items-center justify-center px-4 text-center">
-          <p className="text-sm text-muted-foreground">No Scrapbook here. The link may be out of date.</p>
+          <p className="text-small text-muted-foreground">No Scrapbook here. The link may be out of date.</p>
         </div>
       );
     }
@@ -266,7 +266,7 @@ export function Studio() {
         </button>
 
         <span
-          className="absolute right-8 top-7 text-sm italic text-white/80"
+          className="absolute right-8 top-7 text-small italic text-white/80"
           style={{ fontFamily: "var(--font-serif)" }}
         >
           {APP_NAME}
@@ -279,19 +279,19 @@ export function Studio() {
         )}
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
-          <p className="mb-2 text-xs uppercase tracking-[0.16em] text-white/70">
+          <p className="mb-2 text-caption uppercase tracking-[0.16em] text-white/70">
             {loaded.posts.length} {loaded.posts.length === 1 ? "moment" : "moments"}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
           <h1
-            className="max-w-xl text-4xl leading-tight sm:text-6xl"
+            className="max-w-xl text-display leading-tight"
             style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
           >
             {coverTitle}
           </h1>
           {coverTagline && (
             <p
-              className="mt-3 max-w-md text-lg italic text-white/85 sm:text-xl"
+              className="mt-3 max-w-md text-lead italic text-white/85 sm:text-title"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {coverTagline}
@@ -304,7 +304,7 @@ export function Studio() {
               setPageIndex(0);
             }}
             disabled={spreads.length === 0}
-            className="mt-7 inline-flex items-center gap-2 rounded-control px-6 py-3 text-sm text-white transition-opacity disabled:opacity-40"
+            className="mt-7 inline-flex items-center gap-2 rounded-control px-6 py-3 text-small text-white transition-opacity disabled:opacity-40"
             style={{ backgroundColor: "var(--coral-deep)" }}
           >
             Open the Scrapbook
@@ -332,7 +332,7 @@ export function Studio() {
             <ArrowLeft className="size-4" />
           </button>
 
-          <div className="flex gap-1 rounded-control border border-[var(--line)] p-0.5 text-xs">
+          <div className="flex gap-1 rounded-control border border-[var(--line)] p-0.5 text-caption">
             {(["chronological", "tag"] as Grouping[]).map((g) => (
               <button
                 key={g}
@@ -352,7 +352,7 @@ export function Studio() {
           </div>
 
           <span
-            className="text-sm italic text-[var(--ink-soft)]"
+            className="text-small italic text-[var(--ink-soft)]"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             {spreads.length === 0 ? "0 / 0" : `${clampedIndex + 1} / ${spreads.length}`}
@@ -361,7 +361,7 @@ export function Studio() {
 
         {spread?.chapter && (
           <h2
-            className="mb-4 text-[22px]"
+            className="mb-4 text-title"
             style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
           >
             {spread.chapter}
@@ -394,7 +394,7 @@ export function Studio() {
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
                   <p
-                    className="absolute inset-x-0 bottom-0 p-5 text-lg italic text-white sm:text-xl"
+                    className="absolute inset-x-0 bottom-0 p-5 text-lead italic text-white sm:text-title"
                     style={{ fontFamily: "var(--font-serif)" }}
                   >
                     {hero.caption}
@@ -413,7 +413,7 @@ export function Studio() {
                       className="h-full w-full object-cover"
                     />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
-                    <p className="absolute inset-x-0 bottom-0 truncate p-2 text-[11px] italic text-white">
+                    <p className="absolute inset-x-0 bottom-0 truncate p-2 text-caption italic text-white">
                       {post.caption}
                     </p>
                   </div>

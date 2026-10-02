@@ -64,7 +64,7 @@ export function PursuitsInProgressSection({
 
   return (
     <section className="mb-8">
-      <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+      <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         Pursuits in progress
       </h2>
 
@@ -80,7 +80,7 @@ export function PursuitsInProgressSection({
           >
             <Compass className="size-5" strokeWidth={1.7} />
           </span>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-small text-muted-foreground">
             Nothing in progress right now.{" "}
             <Link to="/pursuits/new" className="text-accent hover:underline">
               Start a Pursuit
@@ -102,7 +102,7 @@ export function PursuitsInProgressSection({
             type="button"
             onClick={openSeeAll}
             style={{ transitionDelay: `${Math.min(active.length, 7) * 45}ms` }}
-            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-border text-caption text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ArrowRight className="size-4" />
             See all

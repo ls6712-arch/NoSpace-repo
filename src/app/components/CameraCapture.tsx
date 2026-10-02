@@ -258,7 +258,7 @@ export function CameraCapture({
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-surface-muted px-6 text-center">
             <CameraIcon className="size-8 text-muted-foreground" strokeWidth={1.5} />
-            <p className="text-sm text-muted-foreground">{cameraError}</p>
+            <p className="text-small text-muted-foreground">{cameraError}</p>
           </div>
         )}
 
@@ -287,7 +287,7 @@ export function CameraCapture({
             </Button>
           )}
           {recording && (
-            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-control bg-black/50 px-2.5 py-1 text-xs text-white">
+            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-control bg-black/50 px-2.5 py-1 text-caption text-white">
               <span className="size-2 rounded-full bg-[var(--coral)] animate-pulse" />
               {timeLabel}
             </span>
@@ -298,7 +298,7 @@ export function CameraCapture({
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-4 pt-10">
           {cameraAvailable && (
             <div className="mb-4 flex justify-center">
-              <div className="flex rounded-control bg-black/40 p-1 text-xs">
+              <div className="flex rounded-control bg-black/40 p-1 text-caption">
                 <button
                   type="button"
                   onClick={() => !recording && setCaptureMode("photo")}
@@ -376,7 +376,7 @@ export function CameraCapture({
           </div>
 
           {heicWarning && (
-            <p className="mt-3 rounded-control bg-[var(--coral-deep)]/90 px-3 py-1.5 text-center text-xs text-white">
+            <p className="mt-3 rounded-control bg-[var(--coral-deep)]/90 px-3 py-1.5 text-center text-caption text-white">
               {heicWarning}
             </p>
           )}

@@ -53,7 +53,7 @@ export function JoinPursuit() {
   if (preview === undefined || loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-sm text-muted-foreground">Opening your invite…</p>
+        <p className="text-small text-muted-foreground">Opening your invite…</p>
       </div>
     );
   }
@@ -61,10 +61,10 @@ export function JoinPursuit() {
   if (preview === null) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
-        <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
           This invite isn't active.
         </h1>
-        <p className="max-w-sm text-sm text-muted-foreground">
+        <p className="max-w-sm text-small text-muted-foreground">
           The link may have been turned off. Ask whoever sent it for a new one.
         </p>
         <Link to="/">
@@ -83,14 +83,14 @@ export function JoinPursuit() {
         <div className="flex justify-center">
           <PersonAvatar name={preview.ownerName} src={preview.ownerAvatar} size="size-16" />
         </div>
-        <p className="mt-4 text-sm text-muted-foreground">
+        <p className="mt-4 text-small text-muted-foreground">
           {preview.ownerName} invited you to pursue this together
         </p>
-        <h1 className="mt-2 text-[2rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mt-2 text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
           {preview.title}
         </h1>
 
-        <div className="mt-6 space-y-2 rounded-card border border-border bg-card p-4 text-left text-sm">
+        <div className="mt-6 space-y-2 rounded-card border border-border bg-card p-4 text-left text-small">
           {preview.measure && (
             <p className="flex items-center gap-2.5">
               <Target className="size-4 shrink-0 text-muted-foreground" />
@@ -104,7 +104,7 @@ export function JoinPursuit() {
               : "Everyone has their own goal and journey, side by side."}
           </p>
           {preview.memberCount > 1 && (
-            <p className="pl-[26px] text-xs text-muted-foreground">{preview.memberCount} people are in so far.</p>
+            <p className="pl-[26px] text-caption text-muted-foreground">{preview.memberCount} people are in so far.</p>
           )}
         </div>
 
@@ -126,10 +126,10 @@ export function JoinPursuit() {
                   Sign up or log in to join
                 </Button>
               </Link>
-              <p className="mt-3 text-xs text-muted-foreground">Free to join. You'll come right back here.</p>
+              <p className="mt-3 text-caption text-muted-foreground">Free to join. You'll come right back here.</p>
             </>
           )}
-          {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
+          {error && <p className="mt-3 text-caption text-destructive">{error}</p>}
         </div>
       </div>
     </div>

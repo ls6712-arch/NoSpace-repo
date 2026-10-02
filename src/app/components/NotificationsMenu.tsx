@@ -152,7 +152,7 @@ export function NotificationsMenu() {
         <Bell className="size-5" />
         {badgeCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-white"
             aria-hidden="true"
           >
             {formatBadgeCount(badgeCount)}
@@ -162,13 +162,13 @@ export function NotificationsMenu() {
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-popover shadow-xl">
-          <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3 text-sm">
+          <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3 text-small">
             Notifications
             {groupedUnread > 0 && (
               <button
                 type="button"
                 onClick={() => void social.markAllRead()}
-                className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 Mark all read
               </button>
@@ -179,15 +179,15 @@ export function NotificationsMenu() {
             <ul className="border-b border-[var(--hairline)]">
               {incoming.map((p) => (
                 <li key={p.id} className="px-4 py-3">
-                  <p className="text-sm">
+                  <p className="text-small">
                     <strong className="font-normal" style={{ fontFamily: "var(--font-serif)" }}>
                       {p.fromName}
                     </strong>{" "}
                     asked to {p.kind === "make_together" ? "make" : "explore"} together.
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{p.intent}</p>
+                  <p className="mt-0.5 text-caption text-muted-foreground">{p.intent}</p>
                   {p.note && (
-                    <p className="mt-1 text-xs italic text-muted-foreground">“{p.note}”</p>
+                    <p className="mt-1 text-caption italic text-muted-foreground">“{p.note}”</p>
                   )}
                   <div className="mt-2.5 flex gap-2">
                     <Button variant="coral" size="sm" onClick={() => social.respond(p.id, true)}>
@@ -208,7 +208,7 @@ export function NotificationsMenu() {
             <ul className="border-b border-[var(--hairline)]">
               {incomingFollows.map((r) => (
                 <li key={r.followerId} className="px-4 py-3">
-                  <p className="text-sm">
+                  <p className="text-small">
                     <strong className="font-normal" style={{ fontFamily: "var(--font-serif)" }}>
                       {r.displayName}
                     </strong>{" "}
@@ -240,7 +240,7 @@ export function NotificationsMenu() {
           )}
 
           {groups.length === 0 && incoming.length === 0 && incomingFollows.length === 0 ? (
-            <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground">
+            <p className="px-4 py-4 text-caption leading-relaxed text-muted-foreground">
               Nothing yet. Thoughts on your moments, people joining your
               activities, follow requests, and asks to make or explore
               together all turn up here.
@@ -253,8 +253,8 @@ export function NotificationsMenu() {
                   <span className="flex items-start gap-3 px-4 py-2.5">
                     <Icon className="mt-0.5 size-4 shrink-0 text-[var(--violet-electric-bright)]" />
                     <span className="min-w-0">
-                      <span className="block text-sm leading-snug">{g.body}</span>
-                      <span className="block text-[11px] text-muted-foreground">
+                      <span className="block text-small leading-snug">{g.body}</span>
+                      <span className="block text-caption text-muted-foreground">
                         {ago(g.createdAt)}
                       </span>
                     </span>
@@ -292,7 +292,7 @@ export function NotificationsMenu() {
           )}
 
           {!social.isShared && (
-            <p className="border-t border-[var(--hairline)] px-4 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
+            <p className="border-t border-[var(--hairline)] px-4 py-2.5 text-caption leading-relaxed text-muted-foreground">
               You're not signed in, so requests can't reach anyone else yet.
             </p>
           )}

@@ -21,8 +21,8 @@ export function Shop() {
     <div className="min-h-viewport bg-surface py-14">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl mb-3">The marketplace</h1>
-          <p className="text-muted-foreground text-lg">
+          <h1 className="text-display mb-3">The marketplace</h1>
+          <p className="text-muted-foreground text-lead">
             Physical goods, digital guides, and courses, all made by real creators.
           </p>
         </div>
@@ -53,7 +53,7 @@ export function Shop() {
           </div>
         </div>
 
-        <div className="mb-6 text-center text-sm text-muted-foreground">
+        <div className="mb-6 text-center text-small text-muted-foreground">
           {filtered.length} listing{filtered.length === 1 ? "" : "s"}
         </div>
 
@@ -65,7 +65,7 @@ export function Shop() {
 
         {filtered.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-xl text-muted-foreground mb-4">Nothing here yet</p>
+            <p className="text-title text-muted-foreground mb-4">Nothing here yet</p>
             <Button variant="outline" onClick={() => setSelected("all")}>
               View everything
             </Button>

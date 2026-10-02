@@ -20,7 +20,7 @@ export function ProductDetail() {
     return (
       <div className="min-h-viewport flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl mb-4">Listing not found</h2>
+          <h2 className="text-title mb-4">Listing not found</h2>
           <Link to="/shop">
             <Button variant="outline">Back to marketplace</Button>
           </Link>
@@ -64,12 +64,12 @@ export function ProductDetail() {
 
           <div className="glass-panel rounded-card p-8">
             {hobby && (
-              <Link to={`/space/${hobby.slug}`} className="text-sm text-[var(--coral-text)] mb-2 inline-block">
+              <Link to={`/space/${hobby.slug}`} className="text-small text-[var(--coral-text)] mb-2 inline-block">
                 {hobby.name}
               </Link>
             )}
-            <h1 className="text-3xl md:text-4xl mb-2">{product.name}</h1>
-            <div className="text-sm text-muted-foreground mb-4">by {product.creator}</div>
+            <h1 className="text-display mb-2">{product.name}</h1>
+            <div className="text-small text-muted-foreground mb-4">by {product.creator}</div>
 
             <div className="flex items-center gap-4 mb-6">
               <div className="flex items-center">
@@ -82,24 +82,24 @@ export function ProductDetail() {
                   />
                 ))}
               </div>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-small text-muted-foreground">
                 {product.rating} ({product.reviews} reviews)
               </span>
             </div>
 
-            <div className="text-4xl mb-6 text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
+            <div className="text-display mb-6 text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
 
             <p className="text-muted-foreground mb-8 leading-relaxed">{product.description}</p>
 
             {product.colors && product.colors.length > 0 && (
               <div className="mb-6">
-                <h3 className="mb-3 text-sm">Choose a color</h3>
+                <h3 className="mb-3 text-small">Choose a color</h3>
                 <div className="flex gap-2 flex-wrap">
                   {product.colors.map((color) => (
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
-                      className={`px-4 py-2 rounded-control border text-sm transition-all ${
+                      className={`px-4 py-2 rounded-control border text-small transition-all ${
                         selectedColor === color
                           ? "border-transparent text-white [background-image:var(--gradient-brand)]"
                           : "border-border hover:border-foreground/30"
@@ -114,13 +114,13 @@ export function ProductDetail() {
 
             {product.sizes && product.sizes.length > 0 && (
               <div className="mb-8">
-                <h3 className="mb-3 text-sm">Select size</h3>
+                <h3 className="mb-3 text-small">Select size</h3>
                 <div className="flex gap-2 flex-wrap">
                   {product.sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`px-4 py-2 rounded-control border text-sm transition-all ${
+                      className={`px-4 py-2 rounded-control border text-small transition-all ${
                         selectedSize === size
                           ? "border-transparent text-white [background-image:var(--gradient-brand)]"
                           : "border-border hover:border-foreground/30"
@@ -143,7 +143,7 @@ export function ProductDetail() {
               <Clock className="size-4" />
               Coming soon
             </Button>
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-caption text-muted-foreground">
               Buying isn't live yet — the marketplace is coming soon.
             </p>
           </div>
@@ -151,7 +151,7 @@ export function ProductDetail() {
 
         {related.length > 0 && (
           <div>
-            <h2 className="text-3xl mb-6 text-center">More from {hobby?.shortName}</h2>
+            <h2 className="text-display mb-6 text-center">More from {hobby?.shortName}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {related.map((item) => (
                 <Link key={item.id} to={`/product/${item.id}`}>
@@ -164,7 +164,7 @@ export function ProductDetail() {
                       />
                     </div>
                     <div className="p-4">
-                      <h3 className="mb-1 line-clamp-1 text-sm">{item.name}</h3>
+                      <h3 className="mb-1 line-clamp-1 text-small">{item.name}</h3>
                       <div className="text-[var(--coral-text)]">${item.price.toFixed(2)}</div>
                     </div>
                   </div>

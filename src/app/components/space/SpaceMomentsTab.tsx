@@ -47,7 +47,7 @@ export function SpaceMomentsTab({ space, isActiveMember }: { space: SpaceRow; is
 
   if (posts.length === 0) {
     return (
-      <div className="py-16 text-center text-sm text-muted-foreground">
+      <div className="py-16 text-center text-small text-muted-foreground">
         {isActiveMember
           ? "No Moments here yet. Be the first."
           : space.access === "closed"

@@ -282,10 +282,10 @@ export function PublicProfile() {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             No shelf here
           </h2>
-          <p className="mb-6 text-sm text-muted-foreground">
+          <p className="mb-6 text-small text-muted-foreground">
             Nobody by that name. The link may be out of date.
           </p>
           <Link to="/discover">
@@ -351,18 +351,18 @@ export function PublicProfile() {
         <div className="mb-8 flex items-start gap-5 sm:gap-6">
           <Avatar className="size-20 shrink-0 sm:size-28">
             {avatarUrl && <AvatarImage src={avatarUrl} alt="" className="object-cover" />}
-            <AvatarFallback className="text-xl">{initials}</AvatarFallback>
+            <AvatarFallback className="text-title">{initials}</AvatarFallback>
           </Avatar>
             <div className="min-w-0">
               <h1
-                className="truncate text-4xl leading-tight sm:text-5xl"
+                className="truncate text-display leading-tight"
                 style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
               >
                 {displayName}
               </h1>
               {bio && (
                 <p
-                  className="mt-1.5 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg"
+                  className="mt-1.5 max-w-md text-body leading-relaxed text-muted-foreground sm:text-lead"
                   style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
                 >
                   {bio}
@@ -370,13 +370,13 @@ export function PublicProfile() {
               )}
               {tagline && (
                 <p
-                  className="mt-1 max-w-md text-base italic text-muted-foreground sm:text-lg"
+                  className="mt-1 max-w-md text-body italic text-muted-foreground sm:text-lead"
                   style={{ fontFamily: "var(--font-serif)" }}
                 >
                   {tagline}
                 </p>
               )}
-              <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
+              <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-caption text-muted-foreground sm:text-small">
                 <span>
                   <strong className="text-foreground">{posts.length}</strong>{" "}
                   {posts.length === 1 ? "moment" : "moments"} logged
@@ -397,7 +397,7 @@ export function PublicProfile() {
                 )}
               </div>
               {primaryHobby && (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-small text-muted-foreground">
                   {milestoneText(primaryHobby.label, primaryHobby.firstActivityAt)} · Keep going.
                 </p>
               )}
@@ -463,7 +463,7 @@ export function PublicProfile() {
               </div>
               <Link
                 to={`/u/${username}/studio`}
-                className="mt-2 inline-block text-xs text-muted-foreground transition-colors hover:text-foreground"
+                className="mt-2 inline-block text-caption text-muted-foreground transition-colors hover:text-foreground"
               >
                 Open Scrapbook →
               </Link>
@@ -499,12 +499,12 @@ export function PublicProfile() {
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
               <div>
                 <h2
-                  className="text-2xl sm:text-3xl"
+                  className="text-title sm:text-display"
                   style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
                 >
                   {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-small text-muted-foreground">
                   A look into the things they've created, explored, and loved.
                 </p>
               </div>
@@ -512,7 +512,7 @@ export function PublicProfile() {
                 <button
                   type="button"
                   onClick={() => setFocus(null)}
-                  className="text-xs text-[var(--coral-text)] hover:underline"
+                  className="text-caption text-[var(--coral-text)] hover:underline"
                 >
                   Show everything
                 </button>
@@ -528,10 +528,10 @@ export function PublicProfile() {
 
           {sharedPursuits.length > 0 && (
             <section>
-              <h2 className="text-xl sm:text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+              <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
                 {firstName}'s Pursuits
               </h2>
-              <p className="mb-4 mt-1 text-sm text-muted-foreground">
+              <p className="mb-4 mt-1 text-small text-muted-foreground">
                 The things they're bringing to life, that they've chosen to share.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
@@ -549,10 +549,10 @@ export function PublicProfile() {
             owner view, locked milestones included — same as /you. */}
         {(isMe || sharedMilestoneIds.length > 0) && (
           <div className="mb-10">
-            <h2 className="mb-1 flex items-center gap-2 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="mb-1 flex items-center gap-2 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               Quiet Milestones
             </h2>
-            <p className="mb-3 text-sm text-muted-foreground">
+            <p className="mb-3 text-small text-muted-foreground">
               {isMe ? "Non-metric growth that feels good." : `What ${firstName} chose to share.`}
             </p>
             {isMe ? (
@@ -565,10 +565,10 @@ export function PublicProfile() {
 
         {primaryCorner && cornerMoments.length > 0 && (
           <div className="mb-10">
-            <h2 className="mb-1 text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+            <h2 className="mb-1 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               {primaryCorner.name}
             </h2>
-            <p className="mb-4 text-sm text-muted-foreground">
+            <p className="mb-4 text-small text-muted-foreground">
               {firstName}'s Moments tagged {primaryCorner.name}.
             </p>
             <div className={MOMENT_GRID}>
@@ -592,10 +592,10 @@ export function PublicProfile() {
               />
             </div>
             <div className="flex flex-1 flex-wrap items-center justify-between gap-4 p-6">
-              <p className="text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+              <p className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
                 Same hobbies.<br />Brighter days.
               </p>
-              <span className="inline-flex items-center gap-1.5 text-sm text-[var(--coral-text)]">
+              <span className="inline-flex items-center gap-1.5 text-small text-[var(--coral-text)]">
                 Go to {primaryCorner.name}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </span>
@@ -626,10 +626,10 @@ export function PublicProfile() {
 
         {/* The one place this page asks for anything */}
         <div className="ns-profile-cta glass-panel p-7 text-center">
-          <h2 className="mb-2 text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mb-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Start your own shelf
           </h2>
-          <p className="mx-auto mb-6 max-w-sm text-sm text-muted-foreground">
+          <p className="mx-auto mb-6 max-w-sm text-small text-muted-foreground">
             Pick a hobby, log what you make, and watch it stack up. Free, and there's
             nothing here that scrolls forever.
           </p>

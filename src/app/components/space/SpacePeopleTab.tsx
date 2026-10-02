@@ -85,7 +85,7 @@ export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boo
   if (rows === "loading") return <div className="min-h-[30vh]" />;
 
   if (rows.length === 0) {
-    return <p className="py-10 text-center text-sm text-muted-foreground">Nobody to show yet.</p>;
+    return <p className="py-10 text-center text-small text-muted-foreground">Nobody to show yet.</p>;
   }
 
   const otherMemberCount = rows.filter((r) => r.role === "member").length;
@@ -93,17 +93,17 @@ export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boo
   return (
     <div className="py-2">
       {isHost && otherMemberCount === 0 && (
-        <p className="mb-2 text-xs text-muted-foreground">Once people join, you can invite a co-host here.</p>
+        <p className="mb-2 text-caption text-muted-foreground">Once people join, you can invite a co-host here.</p>
       )}
-      {inviteError && <p className="mb-2 text-xs text-destructive">{inviteError}</p>}
+      {inviteError && <p className="mb-2 text-caption text-destructive">{inviteError}</p>}
       <ul className="divide-y divide-[var(--hairline)]">
         {rows.map((r) => (
           <li key={r.user_id} className="flex items-center justify-between py-2.5">
-            <Link to={`/u/${r.username}`} className="text-sm hover:underline">
+            <Link to={`/u/${r.username}`} className="text-small hover:underline">
               {r.displayName}
             </Link>
             {r.role === "host" ? (
-              <span className="rounded-control border border-border px-2 py-0.5 text-[10px] text-muted-foreground">Host</span>
+              <span className="rounded-control border border-border px-2 py-0.5 text-caption text-muted-foreground">Host</span>
             ) : (
               isHost && (
                 <Button
