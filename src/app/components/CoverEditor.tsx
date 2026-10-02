@@ -57,11 +57,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
       <button
         type="button"
         onClick={openPanel}
-        className="inline-flex items-center gap-1.5 rounded-control border px-3.5 py-1.5 text-small text-on-media transition-colors"
-        style={{
-          backgroundColor: "rgba(42,36,29,0.35)",
-          borderColor: "rgba(248,242,229,0.4)",
-        }}
+        className="inline-flex items-center gap-1.5 rounded-control border border-on-media/40 bg-scrim-solid/35 px-3.5 py-1.5 text-small text-on-media transition-colors"
       >
         <Pencil className="size-3.5" />
         Edit cover
@@ -69,8 +65,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
 
       {open && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(20,17,13,0.72)" }}
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-scrim-solid/70 p-4"
           onClick={() => !saving && setOpen(false)}
         >
           <div

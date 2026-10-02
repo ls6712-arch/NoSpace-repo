@@ -247,13 +247,7 @@ export function Studio() {
               className="h-full w-full object-cover"
             />
           )}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(42,36,29,0.72) 0%, rgba(42,36,29,0.15) 45%, rgba(42,36,29,0.35) 100%)",
-            }}
-          />
+          <div className="absolute inset-0 bg-scrim" />
         </div>
 
         <button

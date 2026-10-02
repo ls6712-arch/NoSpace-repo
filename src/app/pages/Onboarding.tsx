@@ -344,13 +344,7 @@ function CoverStep({
             transition={reduceMotion ? { duration: 0 } : SPRING}
           />
         </AnimatePresence>
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to top, rgba(42,36,29,0.75) 0%, rgba(42,36,29,0.2) 45%, rgba(42,36,29,0.1) 100%)",
-          }}
-        />
+        <div className="absolute inset-0 bg-scrim" />
 
         <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
           <motion.div {...settle(0)} className="mb-4 inline-block rounded-card bg-[var(--paper-raised)]/90 p-2.5 backdrop-blur-sm">
@@ -407,11 +401,10 @@ function CoverStep({
                   key={texture.id}
                   type="button"
                   onClick={() => onTextureChange(i)}
-                  className="h-12 w-[72px] shrink-0 overflow-hidden rounded-control"
-                  style={{
-                    background: texture.css,
-                    border: textureIndex === i ? "2px solid var(--coral-deep)" : "1px solid rgba(255,255,255,0.4)",
-                  }}
+                  className={`h-12 w-[72px] shrink-0 overflow-hidden rounded-control ${
+                    textureIndex === i ? "border-2 border-coral-deep" : "border border-on-media/40"
+                  }`}
+                  style={{ background: texture.css }}
                   aria-label={`Use this background`}
                   aria-pressed={textureIndex === i}
                 />

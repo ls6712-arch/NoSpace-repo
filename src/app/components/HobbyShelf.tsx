@@ -14,7 +14,7 @@ import { MOMENT_GRID, MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./MomentC
  * the "By Corner" view still groups by Space/Corner (and so still wants a
  * per-Corner color), since the All-moments grid (WorkGrid.tsx) reads tags
  * with one neutral pill instead — see Fix 1-2. */
-export const INK = "#3A2A1F";
+export { INK } from "./subart/palette";
 
 /** A colored tag per Space, cycling through the brand's warm-hue tokens —
  * same idea as this file's own book-spine colors. A few Spaces get an

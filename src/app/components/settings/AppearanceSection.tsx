@@ -20,19 +20,19 @@ const APPEARANCE_OPTIONS: {
     value: "system",
     label: "System default",
     sublabel: "FOLLOWS YOUR DEVICE",
-    swatch: { bg: "#F6F1E7", card: "#1C1816", ink: "#9A4A34" },
+    swatch: { bg: "var(--theme-light-bg)", card: "var(--theme-dark-bg)", ink: "var(--theme-light-accent)" },
   },
   {
     value: "light",
     label: "Light",
     sublabel: "WARM PAPER",
-    swatch: { bg: "#F6F1E7", card: "#FBF8F1", ink: "#9A4A34" },
+    swatch: { bg: "var(--theme-light-bg)", card: "var(--theme-light-card)", ink: "var(--theme-light-accent)" },
   },
   {
     value: "dark",
     label: "Dark",
     sublabel: "WARM CHARCOAL",
-    swatch: { bg: "#1C1816", card: "#26211D", ink: "#C8674D" },
+    swatch: { bg: "var(--theme-dark-bg)", card: "var(--theme-dark-card)", ink: "var(--theme-dark-accent)" },
   },
 ];
 

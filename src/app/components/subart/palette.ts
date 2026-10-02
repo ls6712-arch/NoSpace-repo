@@ -1,23 +1,26 @@
 import type { ReactElement } from "react";
 
 /**
- * Shared palette for the per-hobby illustrations, kept identical to
- * GeneratedArt.tsx so the small hobby tiles read as the same illustration
- * family as the big category scenes.
+ * The illustration palette, defined once: the values live in theme.css
+ * (--gen-art-*, with dark-tuned overrides under .dark) and these constants
+ * are just `var()` references to them. GeneratedArt.tsx re-exports from
+ * here, so the small hobby tiles and the big category scenes can't drift.
  */
-export const INK = "#3A2A1F";
-export const PAPER = "#F1E3C8";
-export const PAPER_DARK = "#E8D5AC";
-export const TERRACOTTA = "#C96F49";
-export const RUST = "#A8492F";
-export const MUSTARD = "#E3A83E";
-export const MUSTARD_LIGHT = "#F0C572";
-export const OLIVE = "#7C8A54";
-export const SAGE = "#A9B98C";
-export const DENIM = "#5C7C97";
-export const DENIM_LIGHT = "#89A6BC";
-export const BLUSH = "#D98A82";
-export const CREAM = "#FBF3E2";
+export const INK = "var(--gen-art-ink)";
+export const PAPER = "var(--gen-art-paper)";
+export const PAPER_DARK = "var(--gen-art-paper-dark)";
+export const TERRACOTTA = "var(--gen-art-terracotta)";
+export const RUST = "var(--gen-art-rust)";
+export const MUSTARD = "var(--gen-art-mustard)";
+export const MUSTARD_LIGHT = "var(--gen-art-mustard-light)";
+export const OLIVE = "var(--gen-art-olive)";
+export const SAGE = "var(--gen-art-sage)";
+export const DENIM = "var(--gen-art-denim)";
+export const DENIM_LIGHT = "var(--gen-art-denim-light)";
+export const BLUSH = "var(--gen-art-blush)";
+export const CREAM = "var(--gen-art-cream)";
+export const LAVENDER = "var(--gen-art-lavender)";
+export const NIGHT = "var(--gen-art-night)";
 
 /**
  * One hobby's drawing. Returns raw SVG children only — the wrapper in

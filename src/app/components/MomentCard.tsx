@@ -46,8 +46,7 @@ export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(
  * stays a shadow rather than a filled badge behind the icon; on a dark
  * photo the black tones simply have nothing to contrast against, so it
  * never reads as heavy there. */
-const CORNER_ICON_SCRIM =
-  "[filter:drop-shadow(0_0_1px_rgb(0_0_0/0.85))_drop-shadow(0_1px_2px_rgb(0_0_0/0.6))_drop-shadow(0_0_6px_rgb(0_0_0/0.4))]";
+const CORNER_ICON_SCRIM = "icon-halo";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -190,7 +189,7 @@ function VisibilityDialog({
  */
 export function BookmarkOverlay({
   postId,
-  tone = "#fff",
+  tone = "var(--on-media)",
 }: {
   postId: string | number;
   tone?: string;
@@ -422,14 +421,14 @@ export function MomentCard({
               <Lock
                 className={`size-[20px] ${CORNER_ICON_SCRIM}`}
                 strokeWidth={2}
-                style={{ color: hasRealMedia(post) ? "#fff" : tile.fg }}
+                style={{ color: hasRealMedia(post) ? "var(--on-media)" : tile.fg }}
                 aria-hidden="true"
               />
             ) : (
               <Eye
                 className={`size-[20px] ${CORNER_ICON_SCRIM}`}
                 strokeWidth={2}
-                style={{ color: hasRealMedia(post) ? "#fff" : tile.fg }}
+                style={{ color: hasRealMedia(post) ? "var(--on-media)" : tile.fg }}
                 aria-hidden="true"
               />
             )}

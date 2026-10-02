@@ -84,12 +84,18 @@
      component already reading --input/`border-input` — Input, Textarea,
      Select's trigger, RadioGroupItem, the button outline variant — picks
      this up automatically. */
-  --background: #F6F1E7;
-  --card: #FBF8F1;
+  --theme-light-bg: #F6F1E7;
+  --theme-light-card: #FBF8F1;
+  --theme-light-accent: #9A4A34;
+  --theme-dark-bg: #1C1816;
+  --theme-dark-card: #26211D;
+  --theme-dark-accent: #C8674D;
+  --background: var(--theme-light-bg);
+  --card: var(--theme-light-card);
   --foreground: #2B2622;
   --muted-foreground: #6B6259;
   --border: #DDD3C0;
-  --accent: #9A4A34;
+  --accent: var(--theme-light-accent);
   --accent-foreground: #FBF8F1;
   --gold: #B08D4A;
   --gold-text: #7E6535;
@@ -188,6 +194,9 @@
   --gen-art-olive: #7C8A54;
   --gen-art-sage: #A9B98C;
   --gen-art-denim: #5C7C97;
+  --gen-art-denim-light: #89A6BC;
+  --gen-art-lavender: #B9A4CE;
+  --gen-art-night: #1B2733;
   --gen-art-blush: #D98A82;
   --gen-art-cream: #FBF3E2;
   --gen-art-skin-1: #E8B98C;
@@ -312,12 +321,12 @@
    properties resolve against the final cascaded value at use time. */
 .dark {
   color-scheme: dark;
-  --background: #1C1816;
-  --card: #26211D;
+  --background: var(--theme-dark-bg);
+  --card: var(--theme-dark-card);
   --foreground: #EFE8DA;
   --muted-foreground: #A39885;
   --border: #3A332B;
-  --accent: #C8674D;
+  --accent: var(--theme-dark-accent);
   --accent-foreground: #1C1816;
   --gold: #C9A55E;
   --gold-text: #C9A55E;
@@ -353,6 +362,9 @@
   --gen-art-olive: #6B7847;
   --gen-art-sage: #8FA173;
   --gen-art-denim: #4D6980;
+  --gen-art-denim-light: #6B879E;
+  --gen-art-lavender: #8F7BA6;
+  --gen-art-night: #0F171F;
   --gen-art-blush: #B8746D;
   --gen-art-cream: #6B5C45;
 }
@@ -801,6 +813,13 @@
 @utility h-viewport {
   height: 100vh;
   height: 100dvh;
+}
+
+/* Soft dark halo behind a white icon sitting directly on a photo: layered
+   so it stays a shadow, not a filled badge. Reads on light photos; on dark
+   ones the black has nothing to contrast with and never looks heavy. */
+@utility icon-halo {
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.85)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.6)) drop-shadow(0 0 6px rgb(0 0 0 / 0.4));
 }
 
 @layer components {

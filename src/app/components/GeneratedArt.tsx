@@ -52,18 +52,8 @@ export function mulberry32(seed: number) {
 // Values live in theme.css (--gen-art-*), with dark-tuned overrides under
 // .dark — kept as string constants here (not literal hex) so every consumer
 // that already imports these by name adopts both themes automatically.
-export const INK = "var(--gen-art-ink)";
-export const PAPER = "var(--gen-art-paper)";
-export const PAPER_DARK = "var(--gen-art-paper-dark)";
-export const TERRACOTTA = "var(--gen-art-terracotta)";
-export const RUST = "var(--gen-art-rust)";
-export const MUSTARD = "var(--gen-art-mustard)";
-export const MUSTARD_LIGHT = "var(--gen-art-mustard-light)";
-export const OLIVE = "var(--gen-art-olive)";
-export const SAGE = "var(--gen-art-sage)";
-export const DENIM = "var(--gen-art-denim)";
-export const BLUSH = "var(--gen-art-blush)";
-export const CREAM = "var(--gen-art-cream)";
+import { BLUSH, CREAM, DENIM, INK, LAVENDER, MUSTARD, MUSTARD_LIGHT, OLIVE, PAPER, PAPER_DARK, RUST, SAGE, TERRACOTTA } from "./subart/palette";
+export { BLUSH, CREAM, DENIM, INK, MUSTARD, MUSTARD_LIGHT, OLIVE, PAPER, PAPER_DARK, RUST, SAGE, TERRACOTTA };
 const SKIN_TONES = [
   "var(--gen-art-skin-1)",
   "var(--gen-art-skin-2)",
@@ -273,7 +263,7 @@ function TarotCards({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
 function CrystalCluster({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <path d="M -6 30 L -18 -6 L -2 -34 L 14 -10 Z" fill="#B9A4CE" />
+      <path d="M -6 30 L -18 -6 L -2 -34 L 14 -10 Z" fill={LAVENDER} />
       <path d="M 16 30 L 6 -2 L 22 -22 L 34 0 Z" fill={BLUSH} />
       <path d="M -20 30 L -28 6 L -16 -8 L -6 10 Z" fill={SAGE} />
       <line x1={-18} y1={-6} x2={14} y2={-10} stroke={INK} strokeWidth={1} opacity={0.25} />
@@ -618,7 +608,7 @@ const craftingScenes: Scene[] = [
       <>
         <ellipse cx={100} cy={158} rx={52} ry={10} fill={PAPER_DARK} />
         <Figure x={70} y={110} skin={skin} hair={hair} outfit={TERRACOTTA} pose="kneel" scale={1.05} />
-        <ellipse cx={128} cy={156} rx={22} ry={8} fill="#8B5A3C" />
+        <ellipse cx={128} cy={156} rx={22} ry={8} fill="var(--gen-art-skin-3)" />
         <path d="M 112 128 Q 128 116 144 128 Q 148 144 128 150 Q 108 144 112 128 Z" fill={RUST} />
         <Sparkles rand={rand} count={2} avoid={{ x: 100, y: 130, r: 60 }} />
       </>
