@@ -67,7 +67,7 @@ export function HobbyCategoryCard({
       </Link>
 
       {showCorners && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        <div className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-5">
           {topCorners.map((corner) => (
             <Link
               key={corner.slug}
