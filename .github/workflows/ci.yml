@@ -18,6 +18,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Design tokens
+        run: npm run lint
+
       - name: Typecheck
         run: npx tsc --noEmit
 

@@ -272,7 +272,7 @@ steps** (24, 28, 32, 36, 40, 44, 48, 56, 64, 80, 96, 112px, counting section pad
 
 `scripts/design-audit.py` stays a counter. The guard is a separate Phase 4
 deliverable that fails CI; these are the rules it has to enforce (one per
-decision above). Not implemented yet.
+decision above). Implemented as `scripts/check-design-tokens.sh` (`npm run lint`, and the "Design tokens" step in CI), with `scripts/check-design-tokens.selftest.sh` proving every rule still fires. Beyond the table it enforces `bg-scrim-solid` only with a `/NN` modifier and `--scrim-solid` staying `#000`, and rejects a `design-token-ignore` marker with no reason. Comments and test files are not scanned.
 
 | rule | flags | allowed |
 |---|---|---|

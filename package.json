@@ -8,6 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "lint": "npm run lint:tokens",
+    "lint:tokens": "bash scripts/check-design-tokens.sh && bash scripts/check-design-tokens.selftest.sh >/dev/null",
     "visual": "node scripts/visual/run.ts",
     "visual:selftest": "node scripts/visual/run.ts --selftest"
   },

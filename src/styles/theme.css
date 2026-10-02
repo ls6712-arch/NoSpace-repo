@@ -767,8 +767,8 @@
   /* design-token-ignore: theme cross-fade, 400ms by the redesign brief; ThemeContext's 420ms timer pairs with it */
   .theme-transition,
   .theme-transition * {
-    transition: background-color 400ms ease-out, color 400ms ease-out,
-      border-color 400ms ease-out, fill 400ms ease-out, stroke 400ms ease-out !important;
+    transition: background-color 400ms ease-out, color 400ms ease-out, /* design-token-ignore: theme cross-fade, the one 400ms transition */
+      border-color 400ms ease-out, fill 400ms ease-out, stroke 400ms ease-out !important; /* design-token-ignore: theme cross-fade, the one 400ms transition */
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1105,7 +1105,7 @@
     stroke-linecap: round;
     stroke-dasharray: 1 15;
     opacity: 0.5;
-    animation: ns-flow 26s linear infinite;
+    animation: ns-flow 26s linear infinite; /* design-token-ignore: ambient loop */
   }
 
   .ns-world-card {
@@ -1136,12 +1136,12 @@
 
   /* design-token-ignore: ambient loop */
   .ns-world-card:focus-within .ns-world-card-life {
-    animation-duration: 1.6s;
+    animation-duration: 1.6s; /* design-token-ignore: ambient loop */
   }
 
   @media (hover: hover) {
     .ns-world-card:hover .ns-world-card-life {
-      animation-duration: 1.6s;
+      animation-duration: 1.6s; /* design-token-ignore: ambient loop */
     }
   }
 
@@ -1494,19 +1494,19 @@
 
   /* design-token-ignore: ambient loop */
   .animate-float-slow {
-    animation: float 16s ease-in-out infinite;
+    animation: float 16s ease-in-out infinite; /* design-token-ignore: ambient loop */
   }
 
   
 
   /* design-token-ignore: ambient loop */
   .animate-pulse-soft {
-    animation: pulse-soft 3.2s ease-in-out infinite;
+    animation: pulse-soft 3.2s ease-in-out infinite; /* design-token-ignore: ambient loop */
   }
 
   /* design-token-ignore: ambient loop */
   .generated-art-float {
-    animation: generated-art-float 5s ease-in-out infinite;
+    animation: generated-art-float 5s ease-in-out infinite; /* design-token-ignore: ambient loop */
     transform-origin: center;
   }
 
@@ -1536,9 +1536,9 @@
   }
   /* design-token-ignore: stagger delays, not durations */
   .ns-enter-1 { animation-delay: .05s; }
-  .ns-enter-2 { animation-delay: .16s; }
-  .ns-enter-3 { animation-delay: .27s; }
-  .ns-enter-4 { animation-delay: .38s; }
+  .ns-enter-2 { animation-delay: .16s; } /* design-token-ignore: stagger delay */
+  .ns-enter-3 { animation-delay: .27s; } /* design-token-ignore: stagger delay */
+  .ns-enter-4 { animation-delay: .38s; } /* design-token-ignore: stagger delay */
 
   /* Scroll-triggered reveal for everything below the hero (see
      useScrollReveal.ts) — the same rise as ns-enter, but fired by an
@@ -1568,14 +1568,14 @@
   .ns-reveal-grid.is-visible > * { opacity: 1; transform: translateY(0); }
   /* design-token-ignore: stagger delays, not durations */
   .ns-reveal-grid.is-visible > *:nth-child(2) { transition-delay: 45ms; }
-  .ns-reveal-grid.is-visible > *:nth-child(3) { transition-delay: 90ms; }
-  .ns-reveal-grid.is-visible > *:nth-child(4) { transition-delay: 135ms; }
-  .ns-reveal-grid.is-visible > *:nth-child(5) { transition-delay: 180ms; }
-  .ns-reveal-grid.is-visible > *:nth-child(n+6) { transition-delay: 220ms; }
+  .ns-reveal-grid.is-visible > *:nth-child(3) { transition-delay: 90ms; } /* design-token-ignore: stagger delay */
+  .ns-reveal-grid.is-visible > *:nth-child(4) { transition-delay: 135ms; } /* design-token-ignore: stagger delay */
+  .ns-reveal-grid.is-visible > *:nth-child(5) { transition-delay: 180ms; } /* design-token-ignore: stagger delay */
+  .ns-reveal-grid.is-visible > *:nth-child(n+6) { transition-delay: 220ms; } /* design-token-ignore: stagger delay */
 
   /* design-token-ignore: ambient loop */
   .generated-art-sparkle {
-    animation: generated-art-twinkle 2.4s ease-in-out infinite;
+    animation: generated-art-twinkle 2.4s ease-in-out infinite; /* design-token-ignore: ambient loop */
     transform-origin: center;
   }
 }
@@ -1740,8 +1740,8 @@ summary:focus-visible,
   /* Catch-all, so an animation nobody listed above (Tailwind's animate-pulse,
      tw-animate-css enters, a future loop) still respects the setting. */
   *, *::before, *::after {
-    transition-duration: .01ms !important;
-    animation-duration: .01ms !important;
+    transition-duration: .01ms !important; /* design-token-ignore: reduced-motion floor, effectively instant */
+    animation-duration: .01ms !important; /* design-token-ignore: reduced-motion floor, effectively instant */
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }
