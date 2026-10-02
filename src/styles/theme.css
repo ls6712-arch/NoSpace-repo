@@ -673,6 +673,17 @@
     opacity: 0.5;
   }
 
+  /* Love this / Count me in: one quiet press when turned on. The icon dips
+     and settles back; it never grows past its own size, so no bounce. */
+  .ns-react {
+    animation: ns-react var(--duration-base) var(--ease-standard);
+  }
+  @keyframes ns-react {
+    0% { scale: 1; }
+    40% { scale: 0.82; }
+    100% { scale: 1; }
+  }
+
   /* A truncated name or title someone tapped open (lib/truncation.ts). */
   .ns-truncate-open {
     white-space: normal !important;
