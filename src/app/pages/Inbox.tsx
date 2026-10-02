@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Bell, Check, Inbox as InboxIcon, UserPlus, X } from "lucide-react";
+import { Check, Inbox as InboxIcon, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
@@ -8,6 +8,11 @@ import { respondToFollow } from "../lib/profileFollows";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Loadable } from "../components/ui/skeleton";
+import { ListSkeleton } from "../components/Skeletons";
+import { EmptyState } from "../components/StateViews";
+import { notifyError } from "../components/ui/toaster";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * Inbox: everything addressed to you, in one place.
@@ -44,20 +49,12 @@ function ago(ts: number) {
   return `${Math.floor(hrs / 24)}d`;
 }
 
-function Empty({ icon: Icon, children }: { icon: typeof Bell; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-      <Icon className="mx-auto mb-3 size-5 text-muted-foreground" />
-      <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">{children}</p>
-    </div>
-  );
-}
-
 export function Inbox() {
   const { user, isConfigured } = useAuth();
   const social = useSocial();
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
-  const followRequests = useIncomingFollowRequests(user?.id, followRefreshKey) ?? [];
+  const followRequestsOrNull = useIncomingFollowRequests(user?.id, followRefreshKey);
+  const followRequests = followRequestsOrNull ?? [];
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
   const requestCount = followRequests.length;
@@ -65,7 +62,8 @@ export function Inbox() {
   const answerFollow = async (followerId: string, accept: boolean) => {
     if (!user || respondingTo) return;
     setRespondingTo(followerId);
-    await respondToFollow(followerId, user.id, accept);
+    const ok = await respondToFollow(followerId, user.id, accept);
+    if (!ok) notifyError(ERROR_LINE, () => void answerFollow(followerId, accept));
     setFollowRefreshKey((k) => k + 1);
     setRespondingTo(null);
   };
@@ -108,11 +106,13 @@ export function Inbox() {
 
           {/* ── Requests ─────────────────────────────────────────────── */}
           <TabsContent value="requests">
+            <Loadable loading={followRequestsOrNull === null} skeleton={<ListSkeleton count={3} />}>
             {requestCount === 0 ? (
-              <Empty icon={UserPlus}>
-                Nothing waiting on you. Follow requests arrive here, and none
-                of them take effect until you answer.
-              </Empty>
+              <EmptyState
+                line="Nothing waiting on you."
+                hint="Follow requests arrive here, and none of them take effect until you answer."
+                action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }}
+              />
             ) : (
               <div className="space-y-6">
                 {followRequests.length > 0 && (
@@ -168,15 +168,20 @@ export function Inbox() {
                 )}
               </div>
             )}
+            </Loadable>
           </TabsContent>
 
           {/* ── Activity ─────────────────────────────────────────────── */}
           <TabsContent value="activity">
+            <Loadable loading={!social.loaded} skeleton={<ListSkeleton count={5} />}>
             {social.notifications.length === 0 ? (
-              <Empty icon={InboxIcon}>
-                Quiet. Thoughts on your Moments and accepted follows all show up
-                here.
-              </Empty>
+              <EmptyState
+                size={requestCount === 0 ? "page" : "section"}
+                icon={<InboxIcon />}
+                line="Quiet."
+                hint="Thoughts on your Moments and accepted follows all show up here."
+                action={{ label: "Log a Moment", to: "/create" }}
+              />
             ) : (
               <ul className="space-y-2">
                 {social.notifications.map((n) => (
@@ -195,6 +200,7 @@ export function Inbox() {
                 ))}
               </ul>
             )}
+            </Loadable>
           </TabsContent>
         </Tabs>
       </div>

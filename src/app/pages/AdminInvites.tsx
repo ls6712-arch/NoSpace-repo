@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { APP_NAME } from "../config";
 import { Time } from "../components/ui/time";
 import { useSubmitGuard } from "../lib/useSubmitGuard";
+import { Loadable } from "../components/ui/skeleton";
+import { CardListSkeleton } from "../components/Skeletons";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -225,7 +227,7 @@ export function AdminInvites() {
           <TabsContent value="invites">
             {listError && <p className="mb-4 text-sm text-destructive">{listError}</p>}
             {loading ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+              <Loadable loading skeleton={<CardListSkeleton />}>{null}</Loadable>
             ) : rows.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
                 No invites created yet

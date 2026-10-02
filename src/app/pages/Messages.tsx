@@ -27,6 +27,9 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SharedContentCard } from "../components/SharedContentCard";
 import { pluralWord } from "../lib/plural";
 import { scrollBehavior } from "../lib/scrollToElement";
+import { Loadable, Skeleton } from "../components/ui/skeleton";
+import { ListSkeleton } from "../components/Skeletons";
+import { EmptyState } from "../components/StateViews";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -182,6 +185,7 @@ function ConversationPanel({
   messages,
   myId,
   emptyText,
+  loadingMessages = false,
   bannerText,
   composerDisabled,
   composerPlaceholder,
@@ -204,6 +208,8 @@ function ConversationPanel({
   messages: Message[];
   myId: string | undefined;
   emptyText: string;
+  /** First page still on its way: show bubble shapes, not the empty line. */
+  loadingMessages?: boolean;
   bannerText: string | null;
   composerDisabled: boolean;
   composerPlaceholder: string;
@@ -341,7 +347,11 @@ function ConversationPanel({
               {bannerText}
             </p>
           )}
-          {messages.length === 0 ? (
+          {messages.length === 0 && loadingMessages ? (
+            <Loadable loading skeleton={<MessageBubblesSkeleton />}>
+              {null}
+            </Loadable>
+          ) : messages.length === 0 ? (
             <p className="py-8 text-center text-xs text-muted-foreground">{emptyText}</p>
           ) : (
             messages.map((m, i) => {
@@ -836,27 +846,18 @@ export function Messages() {
           </TabsList>
 
           <TabsContent value="chats">
-            {!draftThread && chatThreads.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-14 text-center">
-                <span className="mx-auto mb-5 flex size-14 items-center justify-center rounded-full bg-surface-muted text-foreground">
-                  <MessagesSquare className="size-6" />
-                </span>
-                <h2 className="mb-2 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-                  No open chats
-                </h2>
-                <p className="mx-auto mb-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  Nothing yet. A chat opens when someone accepts a Make together or Explore
-                  together request, or when you send someone a direct message from their profile.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <Link to="/discover">
-                    <Button variant="outline">Find someone to make something with</Button>
-                  </Link>
-                  <Button variant="coral" onClick={openPicker}>
-                    New message
-                  </Button>
-                </div>
-              </div>
+            {!draftThread && !social.loaded ? (
+              <Loadable loading skeleton={<ListSkeleton count={5} />}>
+                {null}
+              </Loadable>
+            ) : !draftThread && chatThreads.length === 0 ? (
+              <EmptyState
+                size="page"
+                icon={<MessagesSquare />}
+                line="No open chats."
+                hint="A chat opens when someone accepts a Make together or Explore together request, or when you send someone a message from their Shelf."
+                action={{ label: "New message", onClick: openPicker }}
+              />
             ) : (
               <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
                 <ul className="space-y-2">
@@ -962,6 +963,7 @@ export function Messages() {
                       messages={messages}
                       myId={user?.id}
                       emptyText={emptyStateFor(active, otherName)}
+                      loadingMessages={social.openThreadLoading}
                       bannerText={isWaiting ? `Waiting for ${otherName} to accept.` : null}
                       composerDisabled={composerDisabled}
                       composerPlaceholder={composerDisabled ? `Waiting for ${otherName} to accept` : `Message ${otherName}`}
@@ -993,13 +995,16 @@ export function Messages() {
           </TabsContent>
 
           <TabsContent value="requests">
-            {requests.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-14 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Nothing waiting. A first message from someone you don’t follow shows up here,
-                  to accept or ignore.
-                </p>
-              </div>
+            {!social.loaded ? (
+              <Loadable loading skeleton={<ListSkeleton count={3} />}>
+                {null}
+              </Loadable>
+            ) : requests.length === 0 ? (
+              <EmptyState
+                line="Nothing waiting."
+                hint="A first message from someone you don’t follow shows up here, to accept or ignore."
+                action={{ label: "Go to Chats", onClick: () => setTab("chats") }}
+              />
             ) : (
               <ul className="space-y-3">
                 {requests.map((r) => (
@@ -1084,5 +1089,25 @@ function RequestCard({ request }: { request: Participation }) {
         personName={request.fromName}
       />
     </li>
+  );
+}
+
+/** Holds a chat's shape while its first page of messages loads. */
+function MessageBubblesSkeleton() {
+  const rows: Array<["start" | "end", string]> = [
+    ["start", "w-40"],
+    ["start", "w-56"],
+    ["end", "w-44"],
+    ["start", "w-32"],
+    ["end", "w-52"],
+  ];
+  return (
+    <div className="space-y-2">
+      {rows.map(([side, width], i) => (
+        <div key={i} className={`flex ${side === "end" ? "justify-end" : "justify-start"}`}>
+          <Skeleton className={`h-9 ${width} max-w-[75%] rounded-2xl`} />
+        </div>
+      ))}
+    </div>
   );
 }

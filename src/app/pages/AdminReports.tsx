@@ -7,6 +7,8 @@ import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { formatWhen } from "../lib/dates";
+import { Loadable } from "../components/ui/skeleton";
+import { CardListSkeleton } from "../components/Skeletons";
 
 /**
  * Reports of a profile, message, Moment or Thought, per
@@ -202,7 +204,7 @@ export function AdminReports() {
 
           <TabsContent value="open">
             {loading ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+              <Loadable loading skeleton={<CardListSkeleton />}>{null}</Loadable>
             ) : open.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
                 Nothing open

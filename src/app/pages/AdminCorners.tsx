@@ -7,6 +7,8 @@ import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { plural } from "../lib/plural";
+import { Loadable } from "../components/ui/skeleton";
+import { CardListSkeleton } from "../components/Skeletons";
 
 /**
  * Merging, renaming and hiding Corners.
@@ -189,9 +191,7 @@ export function AdminCorners() {
         )}
 
         {loading ? (
-          <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-            Loading…
-          </div>
+          <Loadable loading skeleton={<CardListSkeleton />}>{null}</Loadable>
         ) : rows.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
             No Corner has a real Moment tagged into it yet.

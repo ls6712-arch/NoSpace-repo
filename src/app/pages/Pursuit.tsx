@@ -47,6 +47,9 @@ import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
 import { formatDate, formatWhen } from "../lib/dates";
 import { plural } from "../lib/plural";
+import { Loadable } from "../components/ui/skeleton";
+import { EmptyState } from "../components/StateViews";
+import { PursuitHeaderSkeleton } from "../components/Skeletons";
 
 function initials(name: string) {
   return name
@@ -250,9 +253,18 @@ export function Pursuit() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-sm text-muted-foreground">Looking…</p>
-      </div>
+      <Loadable
+        loading
+        className="min-h-screen bg-surface pb-24"
+        skeleton={
+          <div className="container mx-auto max-w-2xl px-4 pt-8">
+            <div className="mb-6 h-5" />
+            <PursuitHeaderSkeleton />
+          </div>
+        }
+      >
+        {null}
+      </Loadable>
     );
   }
 
@@ -607,9 +619,11 @@ export function Pursuit() {
         {/* ── Timeline, grouped by month, newest first ───────────────── */}
         {moments.length === 0 ? (
           !owner && (
-            <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-              <p className="text-sm text-muted-foreground">No Moments shared yet</p>
-            </div>
+            <EmptyState
+              line="No Moments shared yet."
+              hint="New ones show up here as they’re logged."
+              action={{ label: "Go to Discover", to: "/discover" }}
+            />
           )
         ) : (
           <div className="space-y-10">

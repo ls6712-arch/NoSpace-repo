@@ -227,3 +227,14 @@ export function ListSkeleton({ count = 5, className }: { count?: number; classNa
     </div>
   );
 }
+
+/** Admin list cards (Corners, invites, reports): bordered rows in a space-y-3 list. */
+export function CardListSkeleton({ count = 3, rowClassName = "h-24" }: { count?: number; rowClassName?: string }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: count }, (_, i) => (
+        <Skeleton key={i} className={cn("w-full rounded-2xl", rowClassName)} />
+      ))}
+    </div>
+  );
+}
