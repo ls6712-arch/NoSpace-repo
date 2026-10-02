@@ -74,7 +74,7 @@ export function tileTokenFor(postId: number | string) {
  * and device; `size` is kept on the props only so existing call sites
  * don't need to change.
  */
-export const MOMENT_MEDIA = "aspect-square w-full rounded-[var(--radius-moment)]";
+export const MOMENT_MEDIA = "aspect-square w-full rounded-card";
 
 /** The grid every Moment list uses: 2 columns on phones, 3 from large
  * screens up. Import this instead of writing a grid class at a call site,
@@ -160,7 +160,7 @@ function VisibilityDialog({
           {MOMENT_VISIBILITY_OPTIONS.map((opt) => (
             <label
               key={opt.value}
-              className="flex min-h-11 items-center gap-3 rounded-btn border border-border px-3 py-2.5 text-sm has-[[data-state=checked]]:border-[var(--coral-deep)]"
+              className="flex min-h-11 items-center gap-3 rounded-control border border-border px-3 py-2.5 text-sm has-[[data-state=checked]]:border-[var(--coral-deep)]"
             >
               <RadioGroupItem value={opt.value} id={`vis-${opt.value}`} />
               <opt.icon className="size-4 shrink-0 text-muted-foreground" />
@@ -397,7 +397,7 @@ export function MomentCard({
           type="button"
           onClick={onOpen}
           aria-label={`Open: ${post.caption.slice(0, 60)}`}
-          className={`relative block w-full overflow-hidden rounded-[var(--radius-moment)] text-left ${
+          className={`relative block w-full overflow-hidden rounded-card text-left ${
             onlyYou ? "outline outline-2 outline-offset-[5px] outline-dashed outline-[var(--input-border)]" : ""
           }`}
         >

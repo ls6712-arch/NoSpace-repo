@@ -57,7 +57,7 @@ export function AppearanceSection() {
               key={opt.value}
               htmlFor={`appearance-${opt.value}`}
               className={
-                "flex min-h-11 cursor-pointer items-center gap-4 rounded-btn border p-4 transition-colors " +
+                "flex min-h-11 cursor-pointer items-center gap-4 rounded-control border p-4 transition-colors " +
                 (selected ? "border-accent" : "border-border hover:border-muted-foreground")
               }
             >

@@ -205,7 +205,7 @@ function CornerTile({
   return (
     <Link
       to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`}
-      className="group flex min-w-0 flex-col rounded-[var(--radius-moment)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--coral-deep)]"
+      className="group flex min-w-0 flex-col rounded-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--coral-deep)]"
     >
       <div className={`relative overflow-hidden ${MOMENT_MEDIA}`}>
         {item.lastMediaUrl ? (

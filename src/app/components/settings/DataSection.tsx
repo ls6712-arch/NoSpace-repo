@@ -27,7 +27,7 @@ export function DataSection() {
         What's kept here, and only here.
       </p>
 
-      <div className="rounded-btn border border-border bg-card p-4 sm:p-5">
+      <div className="rounded-control border border-border bg-card p-4 sm:p-5">
         <div className="mb-2 flex items-center gap-2 text-sm">
           <Lock className="size-4 text-muted-foreground" />
           "Only you" Moments
@@ -40,7 +40,7 @@ export function DataSection() {
         ) : (
           <ul className="space-y-3">
             {logs.map((entry) => (
-              <li key={entry.id} className="rounded-btn border border-[var(--hairline)] p-3">
+              <li key={entry.id} className="rounded-control border border-[var(--hairline)] p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <span className="text-[11px] text-muted-foreground">
                     Only you · {timeAgo(entry.createdAt)}

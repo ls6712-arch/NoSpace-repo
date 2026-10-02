@@ -33,7 +33,7 @@ export function SettingsRow({
  * already does that). */
 export function SettingsPanel({ children }: { children: ReactNode }) {
   return (
-    <div className="divide-y divide-[var(--hairline)] rounded-btn border border-border bg-card">
+    <div className="divide-y divide-[var(--hairline)] rounded-control border border-border bg-card">
       {children}
     </div>
   );

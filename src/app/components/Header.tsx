@@ -122,12 +122,12 @@ function AccountMenuPopover() {
         aria-label="Account menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 min-w-6 items-center justify-center rounded-btn text-muted-foreground transition-colors hover:text-foreground"
+        className="flex min-h-11 min-w-6 items-center justify-center rounded-control text-muted-foreground transition-colors hover:text-foreground"
       >
         <ChevronDown className="size-3.5" aria-hidden="true" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-btn border border-border bg-popover shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-control border border-border bg-popover shadow-lg">
           <Link
             to="/settings"
             onClick={() => setOpen(false)}
@@ -156,7 +156,7 @@ function AccountMenuPopover() {
           )}
           <div className="border-t border-[var(--hairline)] px-4 py-3">
             <div className="mb-2 text-xs text-muted-foreground">Theme</div>
-            <div className="flex gap-1 rounded-btn border border-border p-0.5">
+            <div className="flex gap-1 rounded-control border border-border p-0.5">
               {THEME_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -343,7 +343,7 @@ export function Header() {
                     type="button"
                     title={item.hint}
                     onClick={openQuickLog}
-                    className="flex items-center gap-1.5 rounded-btn bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
+                    className="flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
                   >
                     <Plus className="size-3.5" aria-hidden="true" />
                     {item.label}
@@ -358,7 +358,7 @@ export function Header() {
                   aria-current={active ? "page" : undefined}
                   className={
                     item.accent
-                      ? "flex items-center gap-1.5 rounded-btn bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
+                      ? "flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-sm text-accent-foreground transition-[filter] hover:brightness-110"
                       : `relative py-1 text-sm transition-colors ${
                           active ? "text-accent" : "text-foreground/75 hover:text-foreground"
                         }`

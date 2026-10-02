@@ -28,7 +28,7 @@ function EmailPrefixPrompt({ userId, emailPrefix }: { userId: string; emailPrefi
   if (dismissed) return null;
 
   return (
-    <div className="mb-4 flex items-start justify-between gap-4 rounded-btn border border-accent/40 bg-accent/5 p-4">
+    <div className="mb-4 flex items-start justify-between gap-4 rounded-control border border-accent/40 bg-accent/5 p-4">
       <p className="text-sm leading-relaxed">
         Is this how you'd like to be known? Your name is currently{" "}
         <span style={{ fontFamily: "var(--font-serif)" }}>"{emailPrefix}"</span> — taken from your
@@ -71,7 +71,7 @@ export function ProfileSection() {
 
       {showEmailPrefixPrompt && <EmailPrefixPrompt userId={user.id} emailPrefix={emailPrefix} />}
 
-      <div className="mb-4 rounded-btn border border-border bg-card p-4 sm:p-5">
+      <div className="mb-4 rounded-control border border-border bg-card p-4 sm:p-5">
         <AvatarPicker
           name={displayName || "You"}
           url={avatar ?? profile.avatar_url}

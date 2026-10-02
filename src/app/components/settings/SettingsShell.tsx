@@ -56,7 +56,7 @@ export function SettingsShell({
                     to={s.path}
                     aria-current={isActive ? "page" : undefined}
                     className={
-                      "flex min-h-11 items-center gap-2.5 rounded-btn px-3 py-2 text-sm transition-colors " +
+                      "flex min-h-11 items-center gap-2.5 rounded-control px-3 py-2 text-sm transition-colors " +
                       (isActive
                         ? "bg-accent/10 text-foreground"
                         : "text-muted-foreground hover:bg-surface-muted hover:text-foreground")
@@ -86,7 +86,7 @@ export function SettingsShell({
             <h1 className="mb-6 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
               Settings
             </h1>
-            <ul className="divide-y divide-[var(--hairline)] rounded-btn border border-border bg-card">
+            <ul className="divide-y divide-[var(--hairline)] rounded-control border border-border bg-card">
               {SETTINGS_SECTIONS.map((s) => (
                 <li key={s.key}>
                   <Link

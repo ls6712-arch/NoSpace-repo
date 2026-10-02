@@ -185,7 +185,7 @@ export function WorkGrid({
                 <button
                   type="button"
                   onClick={() => setPinPickerOpen(true)}
-                  className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                  className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                 >
                   <ImagePlus className="size-5" strokeWidth={1.7} />
                   <span className="text-sm font-medium">Pin a moment</span>
@@ -202,7 +202,7 @@ export function WorkGrid({
           <button
             type="button"
             onClick={() => setPinPickerOpen(true)}
-            className="flex aspect-square w-full max-w-xs flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            className="flex aspect-square w-full max-w-xs flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ImagePlus className="size-5" strokeWidth={1.7} />
             <span className="text-sm font-medium">Pin a moment</span>
