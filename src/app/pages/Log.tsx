@@ -1087,14 +1087,17 @@ export function Log() {
 
         <PursuitDialog open={pursuitDialogOpen} onOpenChange={setPursuitDialogOpen} />
 
-        {/* Never dismissed by clicking outside or Escape — resuming or
-            discarding has to be an actual choice, not an accidental
-            dismissal that quietly leaves an old draft sitting around. */}
+        {/* Never dismissed by clicking outside — resuming or discarding has
+            to be an actual choice, not a stray tap. Escape resumes, the
+            answer that loses nothing. */}
         <Dialog open={!!draftPrompt}>
           <DialogContent
             showCloseButton={false}
             onInteractOutside={(e) => e.preventDefault()}
-            onEscapeKeyDown={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => {
+              e.preventDefault();
+              resumeDraft();
+            }}
           >
             <DialogHeader>
               <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Resume your last draft?</DialogTitle>
@@ -1105,7 +1108,7 @@ export function Log() {
             {draftPrompt && (
               <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5 text-sm text-muted-foreground">
                 {draftPrompt.thought.trim() ? (
-                  <p className="line-clamp-3 text-foreground">"{draftPrompt.thought.trim()}”</p>
+                  <p className="line-clamp-3 text-foreground">“{draftPrompt.thought.trim()}”</p>
                 ) : (
                   <p>No caption yet</p>
                 )}

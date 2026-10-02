@@ -31,7 +31,7 @@ function EmailPrefixPrompt({ userId, emailPrefix }: { userId: string; emailPrefi
     <div className="mb-4 flex items-start justify-between gap-4 rounded-btn border border-accent/40 bg-accent/5 p-4">
       <p className="text-sm leading-relaxed">
         Is this how you’d like to be known? Your name is currently{" "}
-        <span style={{ fontFamily: "var(--font-serif)" }}>"{emailPrefix}”</span> — taken from your
+        <span style={{ fontFamily: "var(--font-serif)" }}>“{emailPrefix}”</span> — taken from your
         email. You can change it below any time.
       </p>
       <button

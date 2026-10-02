@@ -302,7 +302,7 @@ export function SpaceManageTab({
             {joinRequests.map((r) => (
               <li key={r.user_id} className="rounded-xl border border-border p-3">
                 <p className="truncate text-sm">{r.displayName}</p>
-                {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">"{r.answers.message}”</p>}
+                {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">“{r.answers.message}”</p>}
                 {r.postCaption && <p className="mt-1 text-xs text-muted-foreground">Attached: {r.postCaption}</p>}
                 <div className="mt-2 flex gap-2">
                   <Button
