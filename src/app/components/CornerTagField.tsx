@@ -149,7 +149,7 @@ export function CornerTagField({
         {blockedMessage && <p className="mt-1.5 text-caption text-[var(--coral-text)]">{blockedMessage}</p>}
 
         {focused && q && (
-          <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-xl">
+          <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-overlay">
             {matches.map((c) => (
               <li key={`${c.spaceSlug}-${c.slug}`}>
                 <button

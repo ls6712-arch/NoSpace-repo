@@ -127,7 +127,7 @@ function AccountMenuPopover() {
         <ChevronDown className="size-3.5" aria-hidden="true" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-control border border-border bg-popover shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-control border border-border bg-popover shadow-overlay">
           <Link
             to="/settings"
             onClick={() => setOpen(false)}
@@ -398,7 +398,7 @@ export function Header() {
               onKeyDown={onSearchKeyDown}
             />
             {searchOpen && query.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-2 rounded-card border border-border bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+              <div className="absolute top-full left-0 right-0 mt-2 rounded-card border border-border bg-popover/95 backdrop-blur-xl shadow-overlay overflow-hidden z-50">
                 {results.length === 0 ? (
                   <p className="px-4 py-3 text-small text-muted-foreground">
                     No matches for "{query}"

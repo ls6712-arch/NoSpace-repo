@@ -120,7 +120,7 @@ function Trail({
       {hoveredMoment && (
         <div
           role="tooltip"
-          className="absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-control border border-border bg-popover px-2 py-1 text-caption text-popover-foreground shadow-sm"
+          className="absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-control border border-border bg-popover px-2 py-1 text-caption text-popover-foreground shadow-overlay"
         >
           {shortDate(hoveredMoment.createdAt)} · {firstWords(hoveredMoment.caption)}
         </div>

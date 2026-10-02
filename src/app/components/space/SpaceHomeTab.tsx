@@ -538,7 +538,7 @@ export function SpaceHomeTab({
                       Remove from host picks
                     </button>
                   )}
-                  <div className="overflow-hidden rounded-card border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
+                  <div className="overflow-hidden rounded-card border border-line bg-paper shadow-card">
                     <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
                   </div>
                 </div>
@@ -563,7 +563,7 @@ export function SpaceHomeTab({
                           Add to host picks
                         </button>
                       )}
-                      <div className="overflow-hidden rounded-card border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
+                      <div className="overflow-hidden rounded-card border border-line bg-paper shadow-card">
                         <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
                       </div>
                     </div>

@@ -431,7 +431,7 @@ function ConversationPanel({
           <button
             type="button"
             onClick={scrollToBottom}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--coral-deep)] px-3.5 py-1.5 text-caption text-on-brand shadow"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--coral-deep)] px-3.5 py-1.5 text-caption text-on-brand"
           >
             New message{newMessageCount > 1 ? "s" : ""}
           </button>

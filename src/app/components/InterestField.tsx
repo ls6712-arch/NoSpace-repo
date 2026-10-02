@@ -93,7 +93,7 @@ export function InterestField({
       )}
 
       {focused && (suggestions.length > 0 || query.length > 0) && (
-        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-xl">
+        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-overlay">
           {suggestions.map((s) => (
             <li key={s}>
               <button

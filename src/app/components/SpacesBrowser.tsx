@@ -61,7 +61,7 @@ export function SpacesBrowser({ query }: { query: string }) {
             <Link
               key={s.id}
               to={`/space/${s.slug}`}
-              className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+              className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
             >
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
                 <img

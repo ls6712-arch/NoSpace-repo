@@ -97,7 +97,7 @@ export function PursuitField({
         placeholder={placeholder}
       />
       {focused && (
-        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-64 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-xl">
+        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-64 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-overlay">
           {matches.map((p) => (
             <li key={p.id}>
               <button

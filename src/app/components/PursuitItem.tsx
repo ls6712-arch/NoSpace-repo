@@ -40,7 +40,7 @@ export function PursuitItem({ pursuit, index = 0 }: { pursuit: Project; index?: 
 
   return (
     <div
-      className="group relative flex flex-col gap-3 rounded-card border border-border bg-card p-4 shadow-[0_8px_20px_-16px_rgba(43,33,28,0.4)] transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-[0_14px_28px_-16px_rgba(43,33,28,0.45)]"
+      className="group relative flex flex-col gap-3 rounded-card border border-border bg-card p-4 shadow-card transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-overlay"
       style={{ transitionDelay: `${Math.min(index, 7) * 45}ms` }}
     >
       <button
