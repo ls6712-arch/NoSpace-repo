@@ -303,9 +303,15 @@ Counts from `scripts/design-audit.py`, at the start of Phase 2 and now:
 
 ### Tokens added beyond the Phase 1 spec
 
-- `--scrim-solid` (pure black, strength set per use: `bg-scrim-solid/60`) for
-  chips and buttons over media, modal backdrops, the viewfinder. The `--scrim`
-  gradient is for full-bleed text overlays.
+- `--scrim-solid` — **the one token beyond the spec.** Pure black
+  (`#000000`); strength is set per use with an opacity modifier
+  (`bg-scrim-solid/60`), never a hard-coded colour. Exactly three uses:
+  1. chips and buttons over photos,
+  2. modal backdrops,
+  3. the camera viewfinder.
+  The `--scrim` gradient is for full-bleed text overlays. The Phase 4 guard
+  rejects `bg-scrim-solid` without a `/NN` modifier and any change to the
+  token's value.
 - `--theme-{light,dark}-{bg,card,accent}`: the two themes' key colours, declared
   once; `:root`, `.dark` and the Settings > Appearance swatches all read them.
 - `--gen-art-denim-light`, `--gen-art-lavender`, `--gen-art-night` (with dark

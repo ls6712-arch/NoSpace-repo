@@ -37,9 +37,10 @@ Define these under `:root` (light) and `.dark`. Dark is **warm charcoal, never p
 - **Verify contrast** (WCAG AA: 4.5:1 body text, 3:1 large text and UI). Check foreground, muted-foreground, accent-on-background, and accent-foreground-on-accent in both themes. Tune the hex values if any fail, and tell me what you changed.
 
 **Type**
-- Headlines: `--font-serif` (Fraunces). Page openers 56-72px, section titles 28-40px, captions 13-14px. Pull-quotes in italic.
-- Body/UI: `--font-body` (Inter), 15px, line-height 1.6.
-- Labels: small caps, uppercase, 11px, letter-spacing 0.12em. Retune `font-hud` to this.
+- Seven sizes only, from `src/styles/theme.css` (other Tailwind sizes and `text-[Npx]` are locked out): `text-caption` 12px, `text-small` 14px, `text-body` 16px, `text-lead` 18px, `text-title` 22px, `text-display` 28-36px (fluid), `text-hero` 40-76px (fluid; the marketing page `Home.tsx` only).
+- Headlines: `--font-serif` (Fraunces). Page openers (the 56-72px style in the original look) are `text-display`, or `text-hero` on the marketing page only. Section titles are `text-title`. Captions are `text-caption` or `text-small`. Pull-quotes in italic.
+- Body/UI: `--font-body` (Inter), `text-body` (16px; was 15px), line-height 1.5.
+- Labels: small caps, uppercase, `text-caption` (12px; was 11px), letter-spacing 0.12em. Retune `font-hud` to this.
 
 **Shape and space**
 - 8px spacing base (8/16/24/32/48/64/96). Radius 12px cards, 8px buttons and inputs. Retire pill buttons and `rounded-2xl/3xl` in favor of these.
