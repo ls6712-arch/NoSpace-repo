@@ -104,7 +104,7 @@ export function QuietMilestones() {
                   <Icon className="size-6" strokeWidth={1.5} />
                 </span>
                 <span
-                  className={`text-center text-caption leading-tight ${
+                  className={`min-h-8 text-balance text-center text-caption leading-tight ${
                     unlocked ? "text-foreground" : "text-muted-foreground"
                   }`}
                   style={{ fontFamily: "var(--font-serif)" }}
@@ -193,7 +193,7 @@ export function SharedMilestones({
                 <Icon className="size-6" strokeWidth={1.5} />
               </span>
               <span
-                className="text-center text-caption leading-tight text-foreground"
+                className="min-h-8 text-balance text-center text-caption leading-tight text-foreground"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 {badgeName(badge, primary?.slug, primary?.label)}
