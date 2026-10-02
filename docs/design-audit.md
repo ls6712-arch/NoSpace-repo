@@ -174,7 +174,7 @@ Section-scale values (≥24px) anywhere: `mb-6` 59 · `mb-8` 22 · `mt-6` 19 ·
 `mb-10` 12 · `gap-6` 8 · `mt-8` 8 · `mb-7` 5 · `space-y-8` 4 · `mb-14` 4 ·
 `gap-y-8` 4 · `space-y-6` 3 · `mt-10` 3 · `gap-10` 3 · `space-y-10` 2 ·
 `mb-16` 2 · `lg:mb-12` 2 · `gap-8` 2 · plus singletons `mb-9`, `mb-11`, `mb-12`,
-`mt-7`, `mt-12`, `space-y-7`, `lg:gap-12`, `md:gap-20`. That is **14 distinct
+`mt-7`, `mt-12`, `space-y-7`, `lg:gap-12`, `md:gap-20`. That is **12 distinct
 steps** (24, 28, 32, 36, 40, 44, 48, 56, 64, 80, 96, 112px, counting section padding), against the brief's
 8px base (24/32/48/64/96). my-space.css uses `2rem`, `24px` and `32px` gaps.
 
