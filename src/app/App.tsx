@@ -12,6 +12,7 @@ import { CornersProvider } from "./context/CornersContext";
 import { PrivateLogsProvider } from "./context/PrivateLogsContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import { QuickLogProvider } from "./context/QuickLogContext";
+import { Toaster } from "./components/ui/toaster";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
                               where a component checks it itself. */}
                           <MotionConfig reducedMotion="user">
                             <RouterProvider router={router} />
+                            <Toaster />
                           </MotionConfig>
                         </QuickLogProvider>
                       </CartProvider>

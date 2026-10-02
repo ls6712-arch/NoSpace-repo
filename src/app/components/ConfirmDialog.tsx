@@ -75,8 +75,8 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={confirming}>
             {cancelLabel}
           </Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={confirming}>
-            {confirming ? "Deleting…" : confirmLabel}
+          <Button variant="destructive" onClick={handleConfirm} busy={confirming}>
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
