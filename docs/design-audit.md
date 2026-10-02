@@ -357,6 +357,7 @@ pairs at 375px went from 17 to 10.
 | 5px | Discover filters: "New today" and "Pursuits in progress" |
 | 4px | Pursuit actions: "Full form", "Reached it", "Rest it", "Send to…", "Make private"; Space events: "RSVP" and "Cancel event" |
 | 2px | Pursuit cadence: "Weekly" and "Never" |
+| 8px | My Space shelf: "Pottery" / "Drawing" corner links (`ShelfRail.tsx`; exposed by the second fixture Pursuit) |
 | 1px | Log form chip rows: "Add a Corner" / "Followers", "Only you" / "Everyone" |
 
 Inline text links inside a paragraph are exempt (44px around a line of prose
@@ -441,3 +442,39 @@ twice.
   microphone, or realtime channels; those screens are verified by hand.
 - Text over photos and video is listed by the contrast audit, not judged.
 - 10 pairs of touch targets still overlap (section 11); 44px targets were kept.
+
+
+## 14. Merge with main (Oct 2, 2026)
+
+The branch was merged with `main` twice (Pursuit cover photos, the fixed
+"Pursuits in progress" bar, quick-log placement, then the in-page Pursuits list).
+Main's behaviour is kept; our tokens are re-applied on top. `CoverImageDialog`,
+`PursuitItem`, `PursuitsInProgressSection`, `AllPursuitsSection`, `PursuitsRail`
+and `QuickLogGlobalSheet` came in with raw sizes, radii, shadows and durations and
+were brought onto the tokens; the progress ring sweep is 250ms on `--ease-standard`
+(was 700ms `easeOut`) and carries a `design-token-ignore` marker because the motion
+library takes numbers.
+
+### New harness surfaces
+
+`my-space-pursuit-cards` (one card with a custom cover through a signed URL, one
+falling back to its own Moment's photo), `dialog-pursuit-cover`,
+`dialog-pursuit-goal`, `overlay-quicklog` (375/393/412) and
+`overlay-quicklog-desktop` (768/1440), plus `studio-cover` and `home`. The storage
+mock now answers `createSignedUrls` and serves the signed image. Not reachable with
+the Supabase interception: an actual cover upload (file chooser and storage write).
+
+### Fixed chrome (`run.ts --fixed`)
+
+Header, Pursuits bar and bottom tab bar at 375/393, with and without simulated
+safe-area insets (notch 47px, home indicator 34px), at scroll top and bottom:
+
+- Fixed: the Pursuits bar was `top-16`, which ignores the header's safe-area top
+  padding, so on a notched device in standalone mode it sat under the header by
+  the inset. It now follows `calc(4rem + var(--safe-top))`.
+- The bar never overlaps the bottom tab bar on the real devices (SE with no insets;
+  393 and up with insets).
+- **Open, needs a decision (reported as a warning, not a failure):** at scroll top the
+  fixed bar covers the "WELCOME TO MY SPACE" banner, the greeting and the day-two
+  invite card, because those come before the bar's section in the DOM and the bar is
+  fixed at the top of the page. The reserved spacer sits after them.

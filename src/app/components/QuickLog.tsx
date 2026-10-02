@@ -385,7 +385,7 @@ export function QuickLog({
             aria-label={placeholder}
             className="w-full bg-transparent py-1 text-body text-foreground outline-none placeholder:text-muted-foreground"
           />
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-6">
+          <div className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-6">
             {!locked && (
               <Select
                 value={selectedPursuitId || NO_PURSUIT}

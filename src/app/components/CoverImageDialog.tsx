@@ -141,7 +141,7 @@ export function CoverImageDialog({
               type="button"
               onClick={removeCustom}
               disabled={saving}
-              className="flex w-full items-center justify-center gap-1.5 text-caption text-muted-foreground hover:text-foreground"
+              className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 text-caption text-muted-foreground hover:text-foreground"
             >
               <ImageOff className="size-3.5" />
               Remove custom photo
