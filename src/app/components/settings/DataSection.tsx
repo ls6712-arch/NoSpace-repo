@@ -4,15 +4,10 @@ import { usePrivateLogs } from "../../context/PrivateLogsContext";
 import { useRewards } from "../../context/RewardsContext";
 import { SectionHeader } from "../ui/section-header";
 import { ConfirmDialog } from "../ConfirmDialog";
+import { formatWhen } from "../../lib/dates";
 
 function timeAgo(ts: number) {
-  const diff = Math.max(0, Date.now() - ts);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 export function DataSection() {

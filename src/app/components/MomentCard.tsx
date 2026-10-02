@@ -36,6 +36,7 @@ import {
   DialogDescription,
 } from "./ui/dialog";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { formatDateTime, formatWhen } from "../lib/dates";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -382,10 +383,7 @@ export function MomentCard({
   const cornerLine = [corner, pursuitTitle].filter(Boolean).join(" · ");
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   const onlyYou = isOnlyYou(post);
-  const timeLabel = new Date(post.createdAt).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
+  const timeLabel = formatWhen(post.createdAt);
 
   return (
     <article className="flex min-w-0 flex-col">
@@ -482,13 +480,7 @@ export function MomentCard({
           <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2.5">
             <div className="flex items-center gap-1.5 text-xs">
               <CalendarDays className="size-3.5 shrink-0 text-foreground" />
-              {new Date(post.startsAt!).toLocaleString(undefined, {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}
+              {formatDateTime(post.startsAt!)}
             </div>
             {activityPlace && (
               <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">

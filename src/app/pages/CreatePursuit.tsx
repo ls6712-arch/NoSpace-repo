@@ -33,6 +33,7 @@ import {
 import { MEASURE_KINDS, defaultMeasure, formatAmount, guessSpace, localDateMs, targetText, unitFor } from "../lib/pursuitProgress";
 import { mirrorPursuit, mirrorPursuitMeasure, saveInvites } from "../lib/pursuitsRemote";
 import { Person, fetchPerson, usePeopleSearch } from "../lib/people";
+import { formatDate } from "../lib/dates";
 
 const STEPS = ["Goal", "Measure", "Rules", "People", "Review"];
 /** Screens → which step dot is lit. "Define" is the second screen of Measure. */
@@ -525,7 +526,7 @@ export function CreatePursuit() {
                 label="Aim for"
                 value={
                   finalMeasure.targetDate
-                    ? new Date(finalMeasure.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+                    ? formatDate(finalMeasure.targetDate)
                     : "No target date"
                 }
               />

@@ -12,6 +12,7 @@ import { MomentDetail } from "../MomentDetail";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import type { Post } from "../../data/posts";
+import { formatTime, formatWeekday } from "../../lib/dates";
 
 type HostLite = { id: string; name: string; avatarUrl?: string };
 type Attendee = { userId: string; name: string; avatarUrl?: string };
@@ -28,15 +29,11 @@ function initials(name: string) {
 }
 
 function fmtTime(iso: string, tz: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: tz });
-  } catch {
-    return new Date(iso).toLocaleString();
-  }
+  return `${formatWeekday(iso, "short", tz)} ${formatTime(iso, tz)}`;
 }
 
 function fmtDay(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { weekday: "short" });
+  return formatWeekday(iso, "short");
 }
 
 function hoursUntil(iso: string) {

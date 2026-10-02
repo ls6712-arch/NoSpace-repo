@@ -26,6 +26,7 @@ import { groupNotifications, unreadGroupCount } from "../lib/notificationGroupin
 import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Notifications that describe what actually happened — "Reo accepted your Make
@@ -60,12 +61,7 @@ const ICON: Record<string, typeof Bell> = {
 };
 
 function ago(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 export function NotificationsMenu() {

@@ -12,6 +12,7 @@ import { parseArchiveKey, updatedLabel } from "../components/HobbyShelf";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { Button } from "../components/ui/button";
+import { formatDate, formatMonth } from "../lib/dates";
 
 /**
  * One hobby's personal archive — everything logged under that tag, in order.
@@ -31,11 +32,11 @@ type FilterId = (typeof FILTERS)[number]["id"];
 const hasMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
 function monthKey(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return formatMonth(ts);
 }
 
 function dayLabel(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return formatDate(ts);
 }
 
 export function HobbyArchive() {
@@ -324,7 +325,7 @@ export function HobbyArchive() {
                   <dt className="text-muted-foreground">First logged</dt>
                   <dd>
                     {moments.length > 0
-                      ? new Date(moments[moments.length - 1].createdAt).toLocaleDateString()
+                      ? formatDate(moments[moments.length - 1].createdAt)
                       : "Not yet"}
                   </dd>
                 </div>

@@ -12,6 +12,7 @@ import { QuickLog } from "./QuickLog";
 import { ProgressBar } from "./pursuit/ui";
 import { formatAmount, hasMeasure, summarize } from "../lib/pursuitProgress";
 import { useJournalSlice, ProgressEntry } from "../lib/journal";
+import { formatDate } from "../lib/dates";
 
 const NO_PROGRESS: ProgressEntry[] = [];
 
@@ -22,7 +23,7 @@ function spaceLabel(pursuit: Project): string {
 }
 
 function shortDate(ms: number): string {
-  return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return formatDate(ms);
 }
 
 /**

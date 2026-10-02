@@ -19,6 +19,7 @@ import { collectPursuitMoments } from "../lib/pursuitTrail";
 import { Button } from "../components/ui/button";
 import { AmountStepper, ProgressBar, SoftPanel, Toggle } from "../components/pursuit/ui";
 import { APP_NAME } from "../config";
+import { formatDate } from "../lib/dates";
 
 type Audience = "private" | "followers" | "public";
 
@@ -382,7 +383,7 @@ function MomentAdded({
               <figure key={m.key}>
                 <img src={m.image} alt="" className="aspect-square w-full rounded-lg object-cover" />
                 <figcaption className="mt-1 text-center text-[10px] text-muted-foreground">
-                  {new Date(m.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  {formatDate(m.date)}
                 </figcaption>
               </figure>
             ))}

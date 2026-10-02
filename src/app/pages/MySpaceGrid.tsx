@@ -19,6 +19,7 @@ import { ShelfRail } from "../components/ShelfRail";
 import { InspiredRail } from "../components/InspiredRail";
 import { NewSpacesRail } from "../components/NewSpacesRail";
 import { WelcomeBanner } from "../components/WelcomeBanner";
+import { formatDate } from "../lib/dates";
 
 const PAGE_SIZE = 6;
 
@@ -155,11 +156,7 @@ export function MySpaceGrid() {
     setSearchParams(next, { replace: true });
   };
 
-  const dateEyebrow = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).toUpperCase();
+  const dateEyebrow = formatDate(Date.now(), { weekday: "long", month: "long" }).toUpperCase();
 
   const numeral =
     sheet.length === 0

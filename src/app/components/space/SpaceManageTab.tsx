@@ -19,6 +19,7 @@ import {
 } from "../../lib/spaces";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { formatDate } from "../../lib/dates";
 
 type JoinRequestRow = {
   user_id: string;
@@ -436,7 +437,7 @@ export function SpaceManageTab({
         <h3 className="mb-2 text-sm font-medium text-destructive">Delete this Space</h3>
         {deletion ? (
           <div className="rounded-xl border border-border p-3 text-sm">
-            <p>A deletion request is open, expiring {new Date(deletion.expires_at).toLocaleDateString()}.</p>
+            <p>A deletion request is open, expiring {formatDate(deletion.expires_at)}.</p>
             <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
               {deletion.approvals.map((a) => (
                 <li key={a.host_user_id}>{a.displayName}: {a.decision}</li>

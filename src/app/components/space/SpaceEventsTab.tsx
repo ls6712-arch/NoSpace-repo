@@ -15,17 +15,10 @@ import {
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { CreateEventDialog } from "./CreateEventDialog";
+import { formatDateTime } from "../../lib/dates";
 
 function fmt(iso: string, tz: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: tz,
-    });
-  } catch {
-    return new Date(iso).toLocaleString();
-  }
+  return formatDateTime(iso, { timeZone: tz });
 }
 
 function initials(name: string) {

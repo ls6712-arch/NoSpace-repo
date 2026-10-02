@@ -12,11 +12,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "./ui/dialog";
+import { formatMonth } from "../lib/dates";
 
 const PAGE_SIZE = 15;
 
 function monthKey(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return formatMonth(ts);
 }
 
 /**

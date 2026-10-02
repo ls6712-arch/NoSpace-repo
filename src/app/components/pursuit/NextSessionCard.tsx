@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { formatDate, formatTime } from "../../lib/dates";
 
 /**
  * Step 5a · the first thing on an active Pursuit you're part of: when your
@@ -26,10 +27,7 @@ function toLocalInput(ms: number): string {
 }
 
 function sessionLabel(ms: number): string {
-  const d = new Date(ms);
-  const date = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  return `${date} · ${time}`;
+  return `${formatDate(ms, { weekday: "short" })} · ${formatTime(ms)}`;
 }
 
 export function NextSessionCard({

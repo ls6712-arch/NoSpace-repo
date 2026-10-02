@@ -3,14 +3,10 @@ import { Plus } from "lucide-react";
 import { getHobby } from "../data/hobbies";
 import { Project } from "../lib/journal";
 import { startedLabel } from "../lib/pursuitTrail";
+import { formatWhen } from "../lib/dates";
 
 function relative(ms: number): string {
-  const days = Math.floor((Date.now() - ms) / 86_400_000);
-  if (days <= 0) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 30) return `${days} days ago`;
-  const months = Math.round(days / 30.44);
-  return `${months} ${months === 1 ? "month" : "months"} ago`;
+  return formatWhen(ms, { ago: true });
 }
 
 /** One section of the All your Pursuits list. Every row is a real link to

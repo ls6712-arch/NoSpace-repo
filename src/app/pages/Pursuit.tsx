@@ -45,6 +45,7 @@ import { NextSessionCard } from "../components/pursuit/NextSessionCard";
 import { ProgressBar } from "../components/pursuit/ui";
 import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
+import { formatDate, formatWhen } from "../lib/dates";
 
 function initials(name: string) {
   return name
@@ -56,12 +57,7 @@ function initials(name: string) {
 }
 
 function timeAgo(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days < 1) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30.44);
-  return `${months} ${months === 1 ? "month" : "months"} ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 /** What every source (the owner's own local journal, a shared row from
@@ -322,9 +318,9 @@ export function Pursuit() {
     status === "complete"
       ? `Finished ${timeAgo(view.finishedAt!)}`
       : status === "resting"
-        ? `Resting since ${new Date(view.pausedAt!).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+        ? `Resting since ${formatDate(view.pausedAt!)}`
         : status === "let_go"
-          ? `Let go ${new Date(view.letGoAt!).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+          ? `Let go ${formatDate(view.letGoAt!)}`
           : startedLabel(view.startedAt);
 
   // Step 5a: "[N] of [M] this week" counts only this person's own Moments —
@@ -450,7 +446,7 @@ export function Pursuit() {
             </p>
             {!goalReached && goal.shape === "date" && goal.targetDate && (
               <p className="mt-1 pl-6 text-xs text-muted-foreground">
-                {new Date(goal.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                {formatDate(goal.targetDate)}
               </p>
             )}
             {!goalReached && goal.shape === "number" && goal.targetNumber ? (
@@ -672,7 +668,7 @@ export function Pursuit() {
 }
 
 function shortDate(ms: number) {
-  return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return formatDate(ms);
 }
 
 /**

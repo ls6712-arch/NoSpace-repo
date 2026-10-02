@@ -26,6 +26,7 @@ import { mirrorProfileLinks } from "../lib/profileLinksRemote";
 import { ProfileLinksEditor } from "../components/ProfileLinks";
 import { tagsFromPosts } from "../lib/postTags";
 import { useFollowerCount } from "../lib/useFollowerCount";
+import { formatMonth } from "../lib/dates";
 
 export function You() {
   const { myPosts, posts } = useContent();
@@ -90,10 +91,7 @@ export function You() {
     ? Math.min(...myPosts.map((p) => p.createdAt))
     : null;
   const sinceLabel = earliestPostAt
-    ? new Date(earliestPostAt).toLocaleDateString(undefined, {
-        month: "long",
-        year: new Date(earliestPostAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
-      })
+    ? formatMonth(earliestPostAt)
     : null;
   const followerCount = useFollowerCount(user?.id);
 

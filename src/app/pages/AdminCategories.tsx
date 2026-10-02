@@ -6,6 +6,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Reviewing what people said was missing.
@@ -19,10 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
  * it's granted by hand in SQL.
  */
 function when(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days < 1) return "today";
-  if (days === 1) return "yesterday";
-  return `${days} days ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 export function AdminCategories() {

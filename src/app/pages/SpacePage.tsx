@@ -14,6 +14,7 @@ import { SpaceMomentsTab } from "../components/space/SpaceMomentsTab";
 import { SpaceEventsTab } from "../components/space/SpaceEventsTab";
 import { SpacePeopleTab } from "../components/space/SpacePeopleTab";
 import { SpaceManageTab } from "../components/space/SpaceManageTab";
+import { formatDateTime } from "../lib/dates";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string; avatarUrl?: string };
@@ -27,11 +28,7 @@ function initials(name: string) {
 type FeaturedEventLite = { title: string; starts_at: string; timezone: string };
 
 function fmt(iso: string, tz: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: tz });
-  } catch {
-    return new Date(iso).toLocaleString();
-  }
+  return formatDateTime(iso, { timeZone: tz });
 }
 
 const TABS = ["home", "moments", "events", "people", "manage"] as const;

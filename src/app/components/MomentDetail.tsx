@@ -54,6 +54,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { formatDate } from "../lib/dates";
 
 /** The audience words, identical to the ones chosen in the Log flow. */
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
@@ -62,12 +63,7 @@ const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
 };
 
 function fullDate(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDate(ts, { weekday: "long", month: "long" });
 }
 
 function initials(name: string) {

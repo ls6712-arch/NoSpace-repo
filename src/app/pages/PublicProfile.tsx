@@ -28,6 +28,7 @@ import { useFollowerCount } from "../lib/useFollowerCount";
 import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/profileFollows";
 import { FollowListDialog } from "../components/FollowListDialog";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
+import { formatMonth } from "../lib/dates";
 
 /** Whichever Corner shows up most in their public Moments — a Corner slug is
  * only unique within its own Space, so this tracks the pair, never the slug
@@ -339,10 +340,7 @@ export function PublicProfile() {
 
   const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
   const sinceLabel = earliestPostAt
-    ? new Date(earliestPostAt).toLocaleDateString(undefined, {
-        month: "long",
-        year: new Date(earliestPostAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
-      })
+    ? formatMonth(earliestPostAt)
     : null;
 
   return (

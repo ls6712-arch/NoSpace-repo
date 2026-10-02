@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { MediaAttachPicker } from "./MediaAttachPicker";
 import { ReportDialog } from "./ReportDialog";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Thoughts, not comments — short, standalone reflections on a piece of work
@@ -32,12 +33,7 @@ function initials(name: string) {
 const QUICK_STARTERS = ["Keep going", "How did you...?", "Show us the next one"];
 
 function ago(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 export function Thoughts({

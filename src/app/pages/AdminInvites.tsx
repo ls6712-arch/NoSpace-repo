@@ -10,6 +10,7 @@ import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { APP_NAME } from "../config";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -40,11 +41,7 @@ interface WaitlistRow {
 }
 
 function when(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 60) return `${Math.max(mins, 0)}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 function inviteStatus(row: InviteRow): { label: string; done: boolean } {

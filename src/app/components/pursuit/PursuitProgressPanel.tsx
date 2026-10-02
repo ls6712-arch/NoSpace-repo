@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { PersonAvatar } from "../../pages/CreatePursuit";
 import { ProgressBar, SoftPanel } from "./ui";
 import { APP_NAME } from "../../config";
+import { formatDate } from "../../lib/dates";
 
 /**
  * The top of a measured Pursuit's page, in whichever of the three shapes
@@ -224,7 +225,7 @@ function MetaLine({
       <span>
         {percent}% · {done ? "Goal reached" : `${formatAmount(remaining)} ${unit} remaining`}
       </span>
-      {targetDate && <span>by {new Date(targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>}
+      {targetDate && <span>by {formatDate(targetDate)}</span>}
     </div>
   );
 }
@@ -294,7 +295,7 @@ function Journey({
               </span>
               <span className="mt-1.5 text-[10px] leading-tight">{m.label}</span>
               <span className="text-[10px] text-muted-foreground">
-                {when ? new Date(when).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : reached ? "Start" : ""}
+                {when ? formatDate(when) : reached ? "Start" : ""}
               </span>
             </div>
           );

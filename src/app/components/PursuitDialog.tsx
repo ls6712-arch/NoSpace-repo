@@ -13,6 +13,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { formatDate } from "../lib/dates";
 
 const OTHER = "__other__";
 
@@ -217,7 +218,7 @@ export function PursuitDialog({
             }
           : {
               shape: "date" as const,
-              label: `Ready by ${new Date(goalTargetDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`,
+              label: `Ready by ${formatDate(goalTargetDate)}`,
               targetDate: new Date(goalTargetDate).getTime(),
             };
       setProjectGoal(project.id, goal);

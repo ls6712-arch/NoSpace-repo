@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
+import { formatDate } from "../lib/dates";
 
 const SHAPES: { value: GoalShape; title: string; example: string; icon: typeof Hash }[] = [
   { value: "number", title: "A number", example: "Finish 10 pieces, run 3 times a week", icon: Hash },
@@ -21,7 +22,7 @@ function templateLabel(shape: GoalShape, targetNumber: string, unit: string, tar
   }
   if (shape === "date" && targetDate) {
     const d = new Date(localDateMs(targetDate) ?? targetDate);
-    return `Ready by ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+    return `Ready by ${formatDate(d)}`;
   }
   return "";
 }

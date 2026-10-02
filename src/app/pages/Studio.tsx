@@ -11,6 +11,7 @@ import { PostMedia } from "../components/PostMedia";
 import { CoverEditor } from "../components/CoverEditor";
 import { Button } from "../components/ui/button";
 import { APP_NAME } from "../config";
+import { formatMonth } from "../lib/dates";
 
 type Grouping = "chronological" | "tag";
 
@@ -227,10 +228,7 @@ export function Studio() {
   const coverTagline = loaded.coverTagline || loaded.bio;
   const sinceAt = loaded.posts.length ? Math.min(...loaded.posts.map((p) => p.createdAt)) : null;
   const sinceLabel = sinceAt
-    ? new Date(sinceAt).toLocaleDateString(undefined, {
-        month: "long",
-        year: new Date(sinceAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
-      })
+    ? formatMonth(sinceAt)
     : null;
 
   if (!opened) {

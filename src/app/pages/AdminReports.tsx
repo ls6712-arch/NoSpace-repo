@@ -6,6 +6,7 @@ import { useCategories } from "../context/CategoriesContext";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Reports of a profile, message, Moment or Thought, per
@@ -33,11 +34,7 @@ interface ReportRow {
 }
 
 function when(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 60) return `${Math.max(mins, 0)}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  return formatWhen(ts, { ago: true });
 }
 
 function targetLabel(r: ReportRow) {
