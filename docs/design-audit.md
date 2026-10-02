@@ -285,3 +285,67 @@ decision above). Not implemented yet.
 | shadow | `shadow-xs…2xl`, bare `shadow`, `shadow-[…]` | `shadow-card`, `shadow-overlay`, `shadow-none` |
 | raw color | `text-white/black`, `bg-white/black` (+ opacity), `border-white/*`, hex/rgb/hsl literals outside theme.css | `text-on-media`, `text-on-brand`, semantic tokens |
 | motion | `duration-<n>` / `[Nms]`, inline ms values | `duration-fast`, `duration-base`; lines marked `// design-token-ignore: <reason>` |
+
+## 11. Phase 2 outcome (Oct 2, 2026)
+
+Counts from `scripts/design-audit.py`, at the start of Phase 2 and now:
+
+| | start | now |
+|---|---|---|
+| raw `text-white/black`, `bg-white/black`, `border-white`, `fill-white` | 151 | **0** |
+| hex literals outside theme.css | 32 | **0** |
+| rgb/hsl literals outside theme.css | 17 | **0** |
+| raw text sizes (`text-xs…9xl`, `text-[Npx]`, CSS `font-size`) | 1,148 | **0** (all on the scale) |
+| off-scale radius classes | ~450 | **0** (228 card, 214 control, 70 round) |
+| raw shadows (utility, arbitrary, CSS) | 37 | **0** (24 `shadow-card`/`shadow-overlay`) |
+| raw `duration-<n>` and inline durations | 31 + ms values | **0** (25 fast, 12 base; marked exceptions only) |
+| interactive elements below 44×44 on touch (375px) | 444 | **0** |
+
+### Tokens added beyond the Phase 1 spec
+
+- `--scrim-solid` (pure black, strength set per use: `bg-scrim-solid/60`) for
+  chips and buttons over media, modal backdrops, the viewfinder. The `--scrim`
+  gradient is for full-bleed text overlays.
+- `--theme-{light,dark}-{bg,card,accent}`: the two themes' key colours, declared
+  once; `:root`, `.dark` and the Settings > Appearance swatches all read them.
+- `--gen-art-denim-light`, `--gen-art-lavender`, `--gen-art-night` (with dark
+  values). The illustration palette lives in CSS only; `subart/palette.ts` is
+  `var()` references and `GeneratedArt.tsx` re-exports them.
+- `@utility` `min-h-viewport`, `h-viewport` (100dvh, 100vh fallback), `icon-halo`.
+- A dark-elevation base rule: `.dark :is(.shadow-card, .shadow-overlay)` gets
+  `--surface` and a 1px `--border`.
+- A touch-target base rule under `(pointer: coarse)`: a 44×44 invisible `::after`.
+
+### Rules decided during the sweep
+
+- Media up to 96px square is `rounded-control`; larger is `rounded-card`.
+- Dark shadow tokens are `0 0 #0000`, never `none` (Tailwind composes shadows in
+  a list, where `none` invalidates the whole declaration).
+- Text-only Moment tile captions are `text-lead`, not `text-title`: 22px showed
+  50–56% of a typical note on the smallest tiles, 18px shows 56–71%.
+- Every truncated string carries a `title` with its full text.
+- Explicit exceptions carry `design-token-ignore: <reason>`: the camera shutter
+  and library buttons, the shelf spine, the 400ms theme cross-fade and its
+  timer, every ambient loop, stagger delays, and the three motion springs.
+
+### Touch targets: neighbouring hit areas that overlap
+
+All elements have a 44×44 hit area. Where two are closer than that, their areas
+overlap and the later one in the DOM wins the overlap. Measured at 375px; this
+is the list to review by hand on a device.
+
+| overlap | between |
+|---|---|
+| 20px | You header: "LOG A MOMENT" and "PUBLIC SCRAPBOOK ↗" (stacked 17px caption links) |
+| 17px | Log form: "Everyone" and the inline "Open the full form" link |
+| 15px | Log form: "Add a Corner" / "Followers", and "Only you" / "Everyone" (23px chips) |
+| 14px | Header: avatar link and "Account menu" chevron |
+| 14px | You header: "Change photo" and "Take photo" (26px buttons) |
+| 11px | Log form: "Pursuit" select and "Add a Corner" |
+| 9px | You tags: "pottery" and "Add a tag" |
+| 5px | Discover filters: "New today" and "Pursuits in progress" |
+| 4px | Pursuit actions: "Full form", "Reached it", "Rest it", "Send to…", "Make private"; Space events: "RSVP" and "Cancel event" |
+| 2px | Header: "Notifications" and avatar link; Pursuit cadence: "Weekly" and "Never" |
+
+Inline text links inside a paragraph are exempt (44px around a line of prose
+would cover the lines above and below).
