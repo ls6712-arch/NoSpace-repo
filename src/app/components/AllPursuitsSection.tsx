@@ -49,7 +49,7 @@ function AllPursuitsGroup({
                   {p.title}
                 </span>
                 <span className="block truncate text-xs text-foreground/80">
-                  {[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
+                  {[space, startedLabel(p.startedAt), last ? `Last Moment ${relative(last)}` : "No Moments yet"]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>

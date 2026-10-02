@@ -20,6 +20,7 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { formatDate } from "../../lib/dates";
+import { InlineError } from "../StateViews";
 
 type JoinRequestRow = {
   user_id: string;
@@ -290,13 +291,13 @@ export function SpaceManageTab({
 
   return (
     <div className="space-y-8 py-6">
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      <InlineError message={error} />
       {notice && <p className="text-xs text-muted-foreground">{notice}</p>}
 
       <section>
         <h3 className="mb-2 text-sm font-medium">Pending requests</h3>
         {joinRequests.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending</p>
+          <p className="text-xs text-muted-foreground">Nothing pending.</p>
         ) : (
           <ul className="space-y-2">
             {joinRequests.map((r) => (
@@ -331,7 +332,7 @@ export function SpaceManageTab({
       <section>
         <h3 className="mb-2 text-sm font-medium">Moments waiting for approval</h3>
         {pendingMoments.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending</p>
+          <p className="text-xs text-muted-foreground">Nothing pending.</p>
         ) : (
           <ul className="space-y-2">
             {pendingMoments.map((m) => (

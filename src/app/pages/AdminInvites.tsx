@@ -15,6 +15,7 @@ import { useSubmitGuard } from "../lib/useSubmitGuard";
 import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { EmptyState, InlineError } from "../components/StateViews";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -226,13 +227,11 @@ export function AdminInvites() {
           </TabsList>
 
           <TabsContent value="invites">
-            {listError && <p className="mb-4 text-sm text-destructive">{listError}</p>}
+            <InlineError message={listError} className="mb-4" />
             {loading ? (
               <Loadable loading skeleton={<CardListSkeleton />}>{null}</Loadable>
             ) : rows.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-                No invites created yet
-              </div>
+              <EmptyState line="No invites created yet." />
             ) : (
               <ul className="space-y-3">
                 {rows.map((r) => {
@@ -277,9 +276,7 @@ export function AdminInvites() {
 
           <TabsContent value="waitlist">
             {waitlist.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-                Nobody on the waitlist yet.
-              </div>
+              <EmptyState line="Nobody on the waitlist yet." />
             ) : (
               <ul className="space-y-2">
                 {waitlist.map((w, i) => (
@@ -303,11 +300,9 @@ export function AdminInvites() {
               New people’s first moments from the last 14 days with no thought from anyone yet,
               oldest first. Anything over 24 hours is ours to answer.
             </p>
-            {waitingError && <p className="mb-4 text-sm text-destructive">{waitingError}</p>}
+            <InlineError message={waitingError} className="mb-4" />
             {waiting.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-                Every first moment has a thought.
-              </div>
+              <EmptyState line="Every first moment has a thought." />
             ) : (
               <ul className="space-y-3">
                 {waiting.map((m) => {

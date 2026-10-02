@@ -10,6 +10,7 @@ import { plural } from "../lib/plural";
 import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
 import { friendlyError } from "../lib/friendlyError";
+import { EmptyState } from "../components/StateViews";
 
 /**
  * Merging, renaming and hiding Corners.
@@ -196,9 +197,7 @@ export function AdminCorners() {
         {loading ? (
           <Loadable loading skeleton={<CardListSkeleton />}>{null}</Loadable>
         ) : rows.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-            No Corner has a real Moment tagged into it yet.
-          </div>
+          <EmptyState line="No Corner has a real Moment tagged into it yet." />
         ) : (
           <ul className="space-y-3">
             {rows.map((row) => {

@@ -258,9 +258,7 @@ function AllCornersBrowser({ query }: { query: string }) {
     // below is only ever seen when a search genuinely comes up empty.
     if (!q) return null;
     return (
-      <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
-        No Corners match that. Try a broader word.
-      </div>
+      <EmptyState line="No Corners match that." hint="Try a broader word." />
     );
   }
 

@@ -13,6 +13,9 @@ import {
 import { useUnifiedSearch, SEARCH_GROUP_ORDER, type SearchGroup } from "../lib/search";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { APP_NAME } from "../config";
+import { EmptyState } from "../components/StateViews";
+import { Loadable } from "../components/ui/skeleton";
+import { PersonListSkeleton } from "../components/Skeletons";
 
 const GROUP_ICON: Record<SearchGroup, LucideIcon> = {
   space: Compass,
@@ -90,10 +93,14 @@ export function SearchResults() {
 
         {!q ? (
           <p className="text-sm text-muted-foreground">Type something above to search.</p>
+        ) : all.length === 0 && loading ? (
+          <Loadable loading skeleton={<PersonListSkeleton count={4} variant="card" />}>{null}</Loadable>
         ) : all.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {loading ? "Searching…" : `Nothing matches “${q}” yet.`}
-          </p>
+          <EmptyState
+            line={`Nothing matches “${q}” yet.`}
+            hint="Try a broader word."
+            action={{ label: "Go to Discover", to: "/discover" }}
+          />
         ) : (
           <div className="space-y-10">
             {SEARCH_GROUP_ORDER.map(({ group, title }) => {

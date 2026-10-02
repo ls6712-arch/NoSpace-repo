@@ -6,6 +6,7 @@ import { SectionHeader } from "../ui/section-header";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { plural } from "../../lib/plural";
 import { Time } from "../ui/time";
+import { EmptyState } from "../StateViews";
 
 
 export function DataSection() {
@@ -29,7 +30,7 @@ export function DataSection() {
           Kept here and nowhere else. These never appear in a Space, a feed, or your public shelf.
         </p>
         {logs.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing here yet</p>
+          <EmptyState size="rail" className="mt-0" line="Nothing here yet." action={{ label: "Log a Moment", to: "/create" }} />
         ) : (
           <ul className="space-y-3">
             {logs.map((entry) => (

@@ -16,7 +16,8 @@ type Action =
  * ("No Moments here yet."); the hint says what fills it; the action is
  * a glossary verb ("Log a Moment", "Browse Spaces", "Start a Pursuit").
  *
- * `size="inline"` is for a slot inside a card or dialog; `"section"`
+ * `size="rail"` is for a narrow sidebar section (left-aligned, link-style
+ * action); `"inline"` is for a slot inside a card or dialog; `"section"`
  * (default) is the dashed box used for a page section; `"page"` is a
  * first-run screen with an icon and a serif headline.
  */
@@ -32,9 +33,31 @@ export function EmptyState({
   hint?: ReactNode;
   action?: Action;
   icon?: ReactNode;
-  size?: "inline" | "section" | "page";
+  size?: "rail" | "inline" | "section" | "page";
   className?: string;
 }) {
+  if (size === "rail") {
+    const linkClass = "text-xs text-accent hover:underline";
+    return (
+      <div data-slot="empty-state" className={cn("mt-3", className)}>
+        <p className="text-sm text-muted-foreground">
+          {line}
+          {hint ? <> {hint}</> : null}
+        </p>
+        {action &&
+          (action.to ? (
+            <Link to={action.to} className={cn("mt-1 inline-block", linkClass)}>
+              {action.label}
+            </Link>
+          ) : (
+            <button type="button" onClick={action.onClick} className={cn("mt-1", linkClass)}>
+              {action.label}
+            </button>
+          ))}
+      </div>
+    );
+  }
+
   const button =
     action &&
     (action.to ? (

@@ -27,6 +27,7 @@ import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
 import { Time } from "./ui/time";
+import { EmptyState } from "./StateViews";
 
 /**
  * Notifications that describe what actually happened — "Reo accepted your Make
@@ -233,11 +234,13 @@ export function NotificationsMenu() {
           )}
 
           {groups.length === 0 && incoming.length === 0 && incomingFollows.length === 0 ? (
-            <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground">
-              Nothing yet. Thoughts on your Moments, people joining your
-              activities, follow requests, and asks to make or explore
-              together all turn up here.
-            </p>
+            <EmptyState
+              size="rail"
+              className="mt-0 px-4 py-4"
+              line="Nothing yet."
+              hint="Thoughts on your Moments, people joining your activities, follow requests, and asks to make or explore together all turn up here."
+              action={{ label: "Log a Moment", to: "/create" }}
+            />
           ) : (
             <ul className="max-h-80 overflow-y-auto py-1">
               {groups.map((g) => {

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { useSessionsByHobby, archiveKey } from "./HobbyShelf";
 import { plural } from "../lib/plural";
+import { EmptyState } from "./StateViews";
 
 /** Cycled per spine — the same dark-tuned illustration palette GeneratedArt
  * uses (theme.css's --gen-art-*), not new raw hex. Shared by the bar chart
@@ -40,9 +41,7 @@ export function ShelfRail() {
       <p className="mt-0.5 text-xs text-muted-foreground">Where your Moments get bound into Books.</p>
 
       {sessions.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">
-          Nothing on the Shelf yet. Log a Moment to start one.
-        </p>
+        <EmptyState size="rail" line="Nothing on the Shelf yet." action={{ label: "Log a Moment", to: "/create" }} />
       ) : (
         <>
           <div className="mt-3 flex h-16 items-end gap-2" aria-hidden="true">

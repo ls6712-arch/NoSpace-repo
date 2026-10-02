@@ -311,7 +311,12 @@ export function PursuitExpandedPanel({
         <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Moments under this Pursuit
         </h4>
-        <WorkGrid posts={attached} onOpen={onOpenPost} emptyLabel="Nothing logged under this Pursuit yet" />
+        <WorkGrid
+          posts={attached}
+          onOpen={onOpenPost}
+          emptyLabel="Nothing logged under this Pursuit yet."
+          emptyAction={{ label: "Log a Moment", to: `/pursuit/${pursuit.id}/moment` }}
+        />
       </div>
 
       <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={pursuit} />

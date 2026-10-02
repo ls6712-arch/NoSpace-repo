@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { fetchYouInspired, InspiredEntry } from "../lib/youInspired";
 import { subHobbyLabel } from "../data/hobbies";
 import { plural } from "../lib/plural";
+import { EmptyState } from "./StateViews";
 
 function snippet(caption: string): string {
   const trimmed = caption.trim();
@@ -60,7 +61,7 @@ export function InspiredRail() {
       </h2>
 
       {entries.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing yet this month</p>
+        <EmptyState size="rail" line="Nothing yet this month." action={{ label: "Start a Pursuit", to: "/pursuits/new" }} />
       ) : (
         <p className="mt-3 text-sm leading-relaxed text-foreground">
           This month, {plural(entries.length, "person", "people")} started a

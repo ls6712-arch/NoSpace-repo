@@ -8,6 +8,9 @@ import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
+import { EmptyState } from "../components/StateViews";
+import { Loadable } from "../components/ui/skeleton";
+import { MomentGridSkeleton } from "../components/Skeletons";
 
 /**
  * A single Corner's own page — Feed/Moments only, no Home/People/Events/
@@ -17,7 +20,7 @@ import { Button } from "../components/ui/button";
 export function CornerPage() {
   const { slug = "" } = useParams();
   const { cornersFor } = useCorners();
-  const { publicFeed } = useContent();
+  const { publicFeed, postsStatus } = useContent();
   const { user } = useAuth();
   const [openPost, setOpenPost] = useState<Post | null>(null);
 
@@ -70,10 +73,14 @@ export function CornerPage() {
       </section>
 
       <section className="container mx-auto px-4 pt-8 pb-24">
-        {posts.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            No {corner.name.toLowerCase()} Moments yet. Be the first.
-          </div>
+        {postsStatus === "loading" && posts.length === 0 ? (
+          <Loadable loading skeleton={<MomentGridSkeleton count={6} />}>{null}</Loadable>
+        ) : posts.length === 0 ? (
+          <EmptyState
+            line={`No ${corner.name.toLowerCase()} Moments yet.`}
+            hint="Be the first."
+            action={{ label: "Log a Moment", to: "/create" }}
+          />
         ) : (
           <div className={MOMENT_GRID}>
             {posts.map((post) => (
