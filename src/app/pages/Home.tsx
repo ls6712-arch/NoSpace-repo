@@ -190,7 +190,7 @@ export function Home() {
 
       <div className="bg-surface">
         {/* Three value cards — what you actually come here to do. */}
-        <section className="pb-4 pt-16 lg:pb-8 lg:pt-20">
+        <section className="pb-4 pt-12 lg:pb-8 lg:pt-12">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div ref={valueCardsRef} className="ns-reveal grid gap-4 sm:grid-cols-3">
               {VALUE_CARDS.map(({ icon: Icon, title, copy }) => (
@@ -207,7 +207,7 @@ export function Home() {
         </section>
 
         {/* The Loop */}
-        <section id="loop" ref={loopRef} className="ns-reveal py-20 lg:py-28">
+        <section id="loop" ref={loopRef} className="ns-reveal py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="grid items-center gap-10 md:grid-cols-2 md:gap-20">
               <div className="mx-auto max-w-lg lg:mx-0">
@@ -241,7 +241,7 @@ export function Home() {
 
         {/* This Corner */}
         {cornerMoments.length > 0 && (
-          <section ref={cornerRef} className="ns-reveal py-20 lg:py-28">
+          <section ref={cornerRef} className="ns-reveal py-12 lg:py-section-hero">
             <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
               <div className="mb-10 max-w-xl lg:mb-12">
                 <div className="ns-section-kicker mb-4">THIS CORNER, RIGHT NOW</div>
@@ -264,7 +264,7 @@ export function Home() {
         )}
 
         {/* Discover / Spaces grid */}
-        <section ref={discoverRef} className="ns-reveal border-t border-[var(--hairline)] py-20 lg:py-28">
+        <section ref={discoverRef} className="ns-reveal border-t border-[var(--hairline)] py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div className="mb-10 flex items-end justify-between gap-5 lg:mb-12">
               <div className="max-w-xl">
@@ -293,7 +293,7 @@ export function Home() {
         </section>
 
         {/* Quote / proof */}
-        <section ref={quoteRef} className="ns-reveal py-20 [background:var(--atmo-wine)] lg:py-28">
+        <section ref={quoteRef} className="ns-reveal py-12 [background:var(--atmo-wine)] lg:py-section-hero">
           <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
             <Quote className="mx-auto mb-5 size-6 text-[var(--violet-electric-bright)]" />
             <p className="text-title leading-snug text-foreground md:text-display" style={{ fontFamily: "var(--font-serif)" }}>
@@ -304,7 +304,7 @@ export function Home() {
         </section>
 
         {/* Final CTA */}
-        <section ref={finalCtaRef} className="ns-reveal py-20 lg:py-28">
+        <section ref={finalCtaRef} className="ns-reveal py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[900px] px-5 sm:px-8">
             <div className="ns-invitation text-center">
               <div className="ns-invitation-spark" aria-hidden="true">✦</div>
