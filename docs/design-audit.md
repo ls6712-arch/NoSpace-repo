@@ -281,7 +281,7 @@ decision above). Not implemented yet.
 | viewport height | a CSS `100vh` height/min-height | only as the fallback line directly before a matching `100dvh` line |
 | type scale | `text-xs/sm/base/lg/xl/2xl…9xl`, `text-[Npx]`, `text-[Nrem]` | `text-caption/small/body/lead/title/display` |
 | hero type | `text-hero` | `src/app/pages/Home.tsx` only |
-| radius | `rounded-sm/md/lg/xl/2xl/3xl/btn`, `rounded-[…]` | `rounded-card`, `rounded-control`, `rounded-full` (avatars, dots, knobs, spinners, radio dots, count badges, blobs, decorative icon circles), `rounded-none` |
+| radius | `rounded-sm/md/lg/xl/2xl/3xl/btn`, `rounded-[…]` (media up to 96px square is control, larger is card; see the brief) | `rounded-card`, `rounded-control`, `rounded-full` (avatars, dots, knobs, spinners, radio dots, count badges, blobs, decorative icon circles), `rounded-none` |
 | shadow | `shadow-xs…2xl`, bare `shadow`, `shadow-[…]` | `shadow-card`, `shadow-overlay`, `shadow-none` |
 | raw color | `text-white/black`, `bg-white/black` (+ opacity), `border-white/*`, hex/rgb/hsl literals outside theme.css | `text-on-media`, `text-on-brand`, semantic tokens |
 | motion | `duration-<n>` / `[Nms]`, inline ms values | `duration-fast`, `duration-base`; lines marked `// design-token-ignore: <reason>` |

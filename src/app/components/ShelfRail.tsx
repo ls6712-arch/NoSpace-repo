@@ -49,6 +49,7 @@ export function ShelfRail() {
               <div
                 key={s.key}
                 title={`${s.label}: ${s.sessions} ${s.sessions === 1 ? "moment" : "moments"}`}
+                // design-token-ignore: decorative spine
                 className="min-w-0 flex-1 rounded-t-[4px]"
                 style={{
                   height: `${Math.max(6, (s.sessions / max) * 100)}%`,

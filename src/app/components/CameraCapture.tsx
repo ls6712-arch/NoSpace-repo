@@ -338,6 +338,7 @@ export function CameraCapture({
                   captureMode === "photo" ? "Take a photo" : recording ? "Stop recording" : "Start recording"
                 }
                 onClick={handleCapturePress}
+                // design-token-ignore: camera shutter, universal affordance
                 className="flex size-16 items-center justify-center rounded-full border-4 border-white/90 transition-transform active:scale-95"
               >
                 <span
@@ -357,6 +358,7 @@ export function CameraCapture({
                 aria-busy={converting}
                 disabled={converting}
                 onClick={() => libraryInputRef.current?.click()}
+                // design-token-ignore: camera shutter, universal affordance
                 className="flex size-16 items-center justify-center rounded-full border-4 border-white/90 disabled:opacity-50"
               >
                 <Images className="size-6 text-white" />
