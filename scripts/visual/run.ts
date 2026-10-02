@@ -25,6 +25,7 @@ import { cacheFonts } from "./fonts.ts";
 import { detectInPage, diffDetections, INFLATE_CSS, type Detection } from "./detect.ts";
 import { touchAuditInPage, type TouchResult } from "./touch.ts";
 import { contrastInPage, type ContrastResult } from "./contrast.ts";
+import { iosChecksInPage, type IosResult } from "./ios.ts";
 import { FIXTURE_ANON_KEY, FIXTURE_ORIGIN, installSupabaseMock, seededSession } from "./mock-supabase.ts";
 import { SCREENS, type Screen } from "./screens.ts";
 
@@ -138,6 +139,19 @@ async function contrastPass(browser: Browser, o: RunOpts): Promise<Map<string, C
   srv.close(); return out;
 }
 
+async function iosPass(browser: Browser, o: RunOpts): Promise<Map<string, IosResult>> {
+  const srv = await serve(o.dist, o.fontsDir); const out = new Map<string, IosResult>();
+  const ctx = await browser.newContext({ viewport: { width: o.widths[0], height: HEIGHTS[o.widths[0]] ?? 900 }, hasTouch: true, colorScheme: "light", reducedMotion: "reduce", deviceScaleFactor: 1 });
+  await installSupabaseMock(ctx, buildFixtures(), TYPES);
+  await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* storage blocked */ } }, seededSession());
+  const page = await ctx.newPage();
+  for (const s of o.screens) {
+    try { await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page); out.set(`${o.widths[0]}/${s.name}`, await page.evaluate(iosChecksInPage)); }
+    catch (e) { console.log(`note: ios ${o.widths[0]}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
+  }
+  await ctx.close(); srv.close(); return out;
+}
+
 const total = (r: Results) => [...r.values()].reduce((n, d) => n + d.flags.length, 0);
 
 async function main() {
@@ -163,7 +177,7 @@ async function main() {
     // Every device profile, every theme: layout detection, contrast, and (touch devices) the 44px audit.
     // An engine that isn't installed is reported as SKIPPED, never silently run in another engine.
     const launchers: Record<string, BrowserType> = { chromium, webkit };
-    const rows: string[] = []; let bad = 0, skipped = 0, standIn = false;
+    const rows: string[] = []; let bad = 0, skipped = 0, standIn = false; const details: Record<string, unknown>[] = [];
     const want = opt("only");
     for (const p of PROFILES) {
       if (want && !want.split(",").some((n) => p.name.toLowerCase().includes(n.trim().toLowerCase()))) continue;
@@ -176,16 +190,23 @@ async function main() {
       HEIGHTS[p.w] = p.h;
       const o: RunOpts = { ...base, widths: [p.w] };
       const lay = await runPass(b, o); const con = await contrastPass(b, o); const tch = p.touch ? await touchPass(b, o) : undefined;
+      const ios = p.engine === "webkit" ? await iosPass(b, o) : undefined;
       const flags = total(lay.results), hs = [...lay.results].filter(([, d]) => d.hscroll > 0).length;
       const cf = new Set([...con].flatMap(([k, r]) => r.failures.map((f) => `${k.split("/")[0]}|${f.sel}|${f.text}|${f.fg}|${f.bg}`))).size;
       const small = tch ? new Set([...tch].flatMap(([, r]) => r.failing.filter((f) => f.reason === "small").map((f) => `${f.sel} ${f.text}`))).size : -1;
       const ov = tch ? new Set([...tch].flatMap(([, r]) => r.overlaps.map((x) => `${x.a}|${x.b}`))).size : -1;
-      if (hs > 0 || cf > 0 || small > 0) bad++;
-      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}`);
+      const smallInputs = ios ? new Set([...ios].flatMap(([, r]) => r.smallInputs.map((x) => `${x.sel} ${x.fontSize}px`))) : undefined;
+      const safeBad = ios ? [...ios].filter(([, r]) => r.safe && (!r.safe.viewportFitCover || !r.safe.tokenIsEnv || r.safe.barFollowsToken === false)).length : 0;
+      const safeSeen = ios ? [...ios].filter(([, r]) => r.safe?.barFollowsToken === true).length : 0;
+      if (hs > 0 || cf > 0 || small > 0 || (smallInputs?.size ?? 0) > 0 || safeBad > 0 || (ios && safeSeen === 0)) bad++;
+      details.push({ profile: p.name, engine: label, w: p.w, h: p.h, flags, hscroll: hs, contrastFailures: cf, touchSmall: small, overlaps: ov, smallInputs: smallInputs ? [...smallInputs] : null, safeAreaBadViews: ios ? safeBad : null, safeAreaBarViewsChecked: ios ? safeSeen : null });
+      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad === 0 && safeSeen > 0 ? "ok" : "FAIL"} (${safeSeen} views)` : ""}`);
+      if (smallInputs?.size) for (const x of smallInputs) rows.push(`    input under 16px: ${x}`);
       await b.close();
     }
     console.log("\ndevice profiles (light + dark each):"); for (const r of rows) console.log("  " + r);
     if (standIn) console.log("  * chromium stand-in at the iOS viewport sizes: layout only; NOT a WebKit result (run on a Mac/CI with webkit installed)");
+    if (base.outDir) { fs.mkdirSync(base.outDir, { recursive: true }); fs.writeFileSync(path.join(base.outDir, "report.json"), JSON.stringify({ profiles: details, skipped, standIn }, null, 1)); }
     await browser.close(); process.exit(flag("strict") && (bad > 0 || skipped > 0) ? 1 : 0);
   }
 

@@ -1424,7 +1424,7 @@
     border: none;
     background: transparent;
     padding: 0;
-    font-size: var(--text-small);
+    font-size: var(--text-body);
     color: var(--muted-foreground);
   }
 
