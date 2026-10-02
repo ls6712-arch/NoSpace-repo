@@ -25,5 +25,10 @@ export const SCREENS: Screen[] = [
   { name: "space-events", route: `/space/${SPACE_SLUG}?tab=events` },
   { name: "space-people", route: `/space/${SPACE_SLUG}?tab=people` },
   { name: "space-manage", route: `/space/${SPACE_SLUG}?tab=manage` },
-  { name: "overlay-quicklog", route: "/my-space", widths: [375], setup: async (page) => { await page.locator('nav[aria-label="Main"] button:has-text("Create")').first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
+  // Pursuits-in-progress cards: one with a custom cover (signed URL), one falling back to its own Moment's photo.
+  { name: "my-space-pursuit-cards", route: "/my-space", setup: async (page) => { await page.getByText("Pursuits in progress").first().waitFor({ timeout: 8000 }); await page.waitForTimeout(900); } },
+  { name: "dialog-pursuit-cover", route: "/my-space", setup: async (page) => { await page.getByRole("button", { name: /Change the cover photo for Throw 24 bowls/ }).first().click({ timeout: 8000, force: true }); await page.waitForTimeout(700); } },
+  { name: "dialog-pursuit-goal", route: "/my-space", setup: async (page) => { await page.getByRole("button", { name: /Edit the goal for Throw 24 bowls/ }).first().click({ timeout: 8000, force: true }); await page.waitForTimeout(700); } },
+  { name: "overlay-quicklog-desktop", route: "/my-space", widths: [768, 1440], setup: async (page) => { await page.getByRole("button", { name: /Log a Moment/ }).first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
+  { name: "overlay-quicklog", route: "/my-space", widths: [375, 393, 412], setup: async (page) => { await page.locator('nav[aria-label="Main"] button:has-text("Create")').first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
 ];

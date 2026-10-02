@@ -8,6 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
+//   node scripts/visual/run.ts --fixed                header / Pursuits bar / bottom tab bar: no overlap, no covered content, with and without safe-area insets (notch 47px / home indicator 34px, on phones tall enough to have them)
 //   node scripts/visual/run.ts --profiles [--chromium-standin] [--only SE,iPad]  the six device profiles (WebKit for iOS, Chromium for the rest) x light/dark: layout + contrast + touch
 //   node scripts/visual/run.ts --contrast             WCAG contrast of every text/background pair (4.5:1, 3:1 large), light + dark; --strict fails on any
 //   node scripts/visual/run.ts --touch                 touch-target audit: 44x44px hit areas, and overlaps
@@ -26,6 +27,7 @@ import { detectInPage, diffDetections, INFLATE_CSS, type Detection } from "./det
 import { touchAuditInPage, type TouchResult } from "./touch.ts";
 import { contrastInPage, type ContrastResult } from "./contrast.ts";
 import { iosChecksInPage, type IosResult } from "./ios.ts";
+import { fixedBarsInPage, type FixedBarsResult } from "./fixedbars.ts";
 import { FIXTURE_ANON_KEY, FIXTURE_ORIGIN, installSupabaseMock, seededSession } from "./mock-supabase.ts";
 import { SCREENS, type Screen } from "./screens.ts";
 
@@ -85,7 +87,7 @@ async function runPass(browser: Browser, o: RunOpts): Promise<{ results: Results
       if (s.widths && !s.widths.includes(w)) continue;
       const tag = keyFor(theme, w, s.name);
       try {
-        await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1600);
+        await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1600);
         await page.evaluate(() => document.fonts.ready);
         if (s.setup) await s.setup(page);
         if (o.inflate) { await page.addStyleTag({ content: INFLATE_CSS }); await page.waitForTimeout(250); }
@@ -112,7 +114,7 @@ async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, Touc
     for (const s of o.screens) {
       try {
         await page.setViewportSize({ width: W, height: H0 });
-        await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page);
+        await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page);
         const h = await page.evaluate(() => Math.min(document.documentElement.scrollHeight, 20000)); await page.setViewportSize({ width: W, height: Math.max(H0, h) }); await page.waitForTimeout(300);
         out.set(`${theme}/${W}/${s.name}`, await page.evaluate(touchAuditInPage, 44));
       } catch (e) { console.log(`note: touch ${theme}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
@@ -131,7 +133,7 @@ async function contrastPass(browser: Browser, o: RunOpts): Promise<Map<string, C
     const page = await ctx.newPage();
     for (const s of o.screens) {
       if (s.widths && !s.widths.includes(w)) continue;
-      try { await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page); out.set(`${theme}/${w}/${s.name}`, await page.evaluate(contrastInPage)); }
+      try { await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page); out.set(`${theme}/${w}/${s.name}`, await page.evaluate(contrastInPage)); }
       catch (e) { console.log(`note: contrast ${theme}/${w}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
     }
     await ctx.close();
@@ -146,8 +148,26 @@ async function iosPass(browser: Browser, o: RunOpts): Promise<Map<string, IosRes
   await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* storage blocked */ } }, seededSession());
   const page = await ctx.newPage();
   for (const s of o.screens) {
-    try { await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page); out.set(`${o.widths[0]}/${s.name}`, await page.evaluate(iosChecksInPage)); }
+    try { await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page); out.set(`${o.widths[0]}/${s.name}`, await page.evaluate(iosChecksInPage)); }
     catch (e) { console.log(`note: ios ${o.widths[0]}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
+  }
+  await ctx.close(); srv.close(); return out;
+}
+
+async function fixedPass(browser: Browser, o: RunOpts): Promise<Map<string, FixedBarsResult>> {
+  const srv = await serve(o.dist, o.fontsDir); const out = new Map<string, FixedBarsResult>(); const W = o.widths[0];
+  const ctx = await browser.newContext({ viewport: { width: W, height: HEIGHTS[W] ?? 900 }, hasTouch: true, colorScheme: "light", reducedMotion: "reduce", deviceScaleFactor: 1 });
+  await installSupabaseMock(ctx, buildFixtures(), TYPES);
+  await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* storage blocked */ } }, seededSession());
+  const page = await ctx.newPage();
+  for (const s of o.screens) for (const insets of (HEIGHTS[W] ?? 900) >= 800 ? [{ top: 0, bottom: 0 }, { top: 47, bottom: 34 }] : [{ top: 0, bottom: 0 }]) for (const phase of ["top", "bottom"] as const) {
+    try {
+      await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1300); if (s.setup) await s.setup(page);
+      await page.evaluate((ph) => window.scrollTo(0, ph === "top" ? 0 : document.documentElement.scrollHeight), phase); await page.waitForTimeout(500);
+      const key = `${W}/${s.name}/inset${insets.top}-${insets.bottom}/${phase}`;
+      out.set(key, await page.evaluate(fixedBarsInPage, { ...insets, phase }));
+      if (o.outDir && process.env.FIXED_SHOTS) { await page.evaluate(({ top, bottom }) => { document.documentElement.style.setProperty("--safe-top", top + "px"); document.documentElement.style.setProperty("--safe-bottom", bottom + "px"); }, insets); await page.waitForTimeout(400); fs.mkdirSync(o.outDir, { recursive: true }); await page.screenshot({ path: path.join(o.outDir, key.replaceAll("/", "_") + ".png") }); }
+    } catch (e) { console.log(`note: fixed ${W}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
   }
   await ctx.close(); srv.close(); return out;
 }
@@ -173,6 +193,15 @@ async function main() {
     await browser.close(); process.exit(ok ? 0 : 1);
   }
 
+  if (flag("fixed")) {
+    const rows = new Map<string, string[]>(); const warns = new Map<string, string[]>(); let n = 0;
+    for (const w of base.widths) { HEIGHTS[w] = PROFILES.find((p) => p.w === w)?.h ?? HEIGHTS[w] ?? 900; const res = await fixedPass(browser, { ...base, widths: [w] }); n += res.size; for (const [k, r] of res) { for (const wn of r.warnings) { const kk = `${k.split("/")[0]}/${k.split("/")[1]}: ${wn}`; warns.set(kk, [...(warns.get(kk) ?? []), k.split("/").slice(2).join("/")]); } } for (const [k, r] of res) for (const pr of r.problems) rows.set(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`, [...(rows.get(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`) ?? []), k.split("/").slice(2).join("/")]); }
+    console.log(`fixed chrome audit: ${n} states (screens x widths x safe-area insets x scroll top/bottom); ${rows.size} distinct problem(s)`);
+    for (const [k, w] of rows) console.log(`  PROBLEM ${k}  [${w.slice(0, 4).join(", ")}${w.length > 4 ? ` +${w.length - 4}` : ""}]`);
+    for (const [k, w] of warns) console.log(`  WARN    ${k}  [${w.slice(0, 4).join(", ")}${w.length > 4 ? ` +${w.length - 4}` : ""}]`);
+    await browser.close(); process.exit(flag("strict") && rows.size > 0 ? 1 : 0);
+  }
+
   if (flag("profiles")) {
     // Every device profile, every theme: layout detection, contrast, and (touch devices) the 44px audit.
     // An engine that isn't installed is reported as SKIPPED, never silently run in another engine.
@@ -191,6 +220,7 @@ async function main() {
       const o: RunOpts = { ...base, widths: [p.w] };
       const lay = await runPass(b, o); const con = await contrastPass(b, o); const tch = p.touch ? await touchPass(b, o) : undefined;
       const ios = p.engine === "webkit" ? await iosPass(b, o) : undefined;
+      const fx = p.w < 768 ? await fixedPass(b, o) : undefined; const fxProblems = fx ? new Set([...fx].flatMap(([, r]) => r.problems)).size : -1; const fxWarn = fx ? new Set([...fx].flatMap(([, r]) => r.warnings)).size : 0;
       const flags = total(lay.results), hs = [...lay.results].filter(([, d]) => d.hscroll > 0).length;
       const cf = new Set([...con].flatMap(([k, r]) => r.failures.map((f) => `${k.split("/")[0]}|${f.sel}|${f.text}|${f.fg}|${f.bg}`))).size;
       const small = tch ? new Set([...tch].flatMap(([, r]) => r.failing.filter((f) => f.reason === "small").map((f) => `${f.sel} ${f.text}`))).size : -1;
@@ -198,9 +228,9 @@ async function main() {
       const smallInputs = ios ? new Set([...ios].flatMap(([, r]) => r.smallInputs.map((x) => `${x.sel} ${x.fontSize}px`))) : undefined;
       const safeBad = ios ? [...ios].filter(([, r]) => r.safe && (!r.safe.viewportFitCover || !r.safe.tokenIsEnv || r.safe.barFollowsToken === false)).length : 0;
       const safeSeen = ios ? [...ios].filter(([, r]) => r.safe?.barFollowsToken === true).length : 0;
-      if (hs > 0 || cf > 0 || small > 0 || (smallInputs?.size ?? 0) > 0 || safeBad > 0 || (ios && safeSeen === 0)) bad++;
-      details.push({ profile: p.name, engine: label, w: p.w, h: p.h, flags, hscroll: hs, contrastFailures: cf, touchSmall: small, overlaps: ov, smallInputs: smallInputs ? [...smallInputs] : null, safeAreaBadViews: ios ? safeBad : null, safeAreaBarViewsChecked: ios ? safeSeen : null });
-      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad === 0 && safeSeen > 0 ? "ok" : "FAIL"} (${safeSeen} views)` : ""}`);
+      if (hs > 0 || cf > 0 || small > 0 || fxProblems > 0 || (smallInputs?.size ?? 0) > 0 || safeBad > 0 || (ios && safeSeen === 0)) bad++;
+      details.push({ profile: p.name, engine: label, w: p.w, h: p.h, flags, hscroll: hs, contrastFailures: cf, touchSmall: small, overlaps: ov, smallInputs: smallInputs ? [...smallInputs] : null, safeAreaBadViews: ios ? safeBad : null, safeAreaBarViewsChecked: ios ? safeSeen : null, fixedChromeProblems: fxProblems < 0 ? null : fxProblems });
+      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${fxProblems >= 0 ? `  fixed-chrome ${fxProblems} (+${fxWarn} warn)` : ""}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad === 0 && safeSeen > 0 ? "ok" : "FAIL"} (${safeSeen} views)` : ""}`);
       if (smallInputs?.size) for (const x of smallInputs) rows.push(`    input under 16px: ${x}`);
       await b.close();
     }

@@ -10,6 +10,7 @@ const PRIYA = "22222222-2222-4222-8222-222222222202";
 const SAM = "22222222-2222-4222-8222-222222222203";
 const INES = "22222222-2222-4222-8222-222222222204";
 export const PURSUIT_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1";
+export const PURSUIT2_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2";
 export const SPACE_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1";
 export const SPACE_SLUG = "clay-hands";
 export const MEDIA_ORIGIN = "https://fixture.supabase.co/storage/v1/object/public/moments";
@@ -43,6 +44,7 @@ export function buildFixtures(now = new Date()): Fixtures {
     post(1, ME, "Trimmed my first set of mugs tonight. Still wobbly, still proud."),
     post(2, ME, "Bowl number nine. The rim finally sits right.", { pursuit_id: PURSUIT_ID }),
     post(3, ME, "Glaze test tiles, fired and cooled. The celadon came out greener than I hoped.", { pursuit_id: PURSUIT_ID }),
+    post(4, ME, "Morning sketch: the kettle, the window, the light.", { pursuit_id: PURSUIT2_ID, hobby_slug: "crafts-making", sub_hobby: null, corner: "Drawing", interest: "Drawing", tags: ["drawing"] }),
     // Text-only Moments (type "written", no media) — these render as colored tiles with a caption.
     post(4, ME, "Short note.", { type: "written", media_url: "" }),
     post(5, ME, "Wedging for ten minutes before throwing changed everything about how the clay behaves.", { type: "written", media_url: "" }),
@@ -58,11 +60,18 @@ export function buildFixtures(now = new Date()): Fixtures {
   const pursuits: Row<"pursuits">[] = [{
     id: PURSUIT_ID, user_id: ME, title: "Throw 24 bowls by spring", mode: "together", shared: true, hobby_slug: "crafts-making", sub_hobby: "pottery",
     interest: "Pottery", custom_space: null, inspired_by_post_id: null, started_at: ago(30), finished_at: null, paused_at: null, let_go_at: null,
-    ending_note: null, check_in_days: 7, goal_shape: "number", goal_label: "24 bowls", goal_target_number: 24, goal_unit: "bowls", goal_current: 9,
+    ending_note: null, cover_image_path: `${ME}/pursuit-cover-1.jpg`, cover_image_preference: "last", check_in_days: 7, goal_shape: "number", goal_label: "24 bowls", goal_target_number: 24, goal_unit: "bowls", goal_current: 9,
     goal_verb: "throw", goal_target_date: ahead(24 * 60), goal_reached_at: null, updated_at: ago(1),
     measure: { kind: "count", target: 24, unit: "bowls", whatCounts: "A bowl that survives the bisque firing", allowPartial: false, allowDecimals: false, defaultAmount: 1, startingAmount: 0 },
+  }, {
+    // No custom cover: the card falls back to a photo from its own Moments.
+    id: PURSUIT2_ID, user_id: ME, title: "Sketch something every morning", mode: "solo", shared: false, hobby_slug: "crafts-making", sub_hobby: null,
+    interest: "Drawing", custom_space: null, inspired_by_post_id: null, started_at: ago(12), finished_at: null, paused_at: null, let_go_at: null,
+    ending_note: null, cover_image_path: null, cover_image_preference: "first", check_in_days: 7, goal_shape: null, goal_label: null, goal_target_number: null, goal_unit: null,
+    goal_verb: null, goal_target_date: null, goal_reached_at: null, goal_current: null, updated_at: ago(2), measure: null,
   }];
   const pursuit_members: Row<"pursuit_members">[] = [
+    { pursuit_id: PURSUIT2_ID, user_id: ME, role: "owner", status: "joined", invited_by: null, created_at: ago(12) },
     { pursuit_id: PURSUIT_ID, user_id: ME, role: "owner", status: "joined", invited_by: null, created_at: ago(30) },
     { pursuit_id: PURSUIT_ID, user_id: INES, role: "member", status: "joined", invited_by: ME, created_at: ago(28) },
     { pursuit_id: PURSUIT_ID, user_id: THEO, role: "member", status: "invited", invited_by: ME, created_at: ago(2) },

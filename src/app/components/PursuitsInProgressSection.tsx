@@ -140,10 +140,12 @@ export function PursuitsInProgressSection({
     <>
       <section
         ref={barRef}
-        className={`fixed inset-x-0 top-16 z-40 bg-surface pb-5 ${reduceMotion ? "" : "transition-[opacity,transform] duration-base ease-standard"} ${
+        className={`fixed inset-x-0 z-40 bg-surface pb-5 ${reduceMotion ? "" : "transition-[opacity,transform] duration-base ease-standard"} ${
           atTop ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"
         }`}
         aria-hidden={!atTop}
+        // Directly under the sticky header (h-16 plus its safe-area top padding).
+        style={{ top: "calc(4rem + var(--safe-top))" }}
       >
         {/* Mirrors .myspace-shell's own horizontal padding + the 1536px+
             max-width/auto-margin centering (my-space.css), so this fixed bar

@@ -65,7 +65,15 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
       const name = p.split("/").pop() ?? "0";
       return route.fulfill({ status: 200, headers: { ...cors, "content-type": "image/svg+xml", "cache-control": "max-age=3600" }, body: placeholderSvg(name) });
     }
-    if (p.startsWith("/storage/v1/object/sign/")) { const name = p.split("/").pop() ?? "0"; return reply(json(200, { signedURL: `/object/sign/x/${name}` })); }
+    if (p.startsWith("/storage/v1/object/sign/")) {
+      const name = p.split("/").pop() ?? "0";
+      // createSignedUrls is a POST with {paths}; the signed URL it returns is then fetched with GET.
+      if (route.request().method() === "GET") return route.fulfill({ status: 200, headers: { ...cors, "content-type": "image/svg+xml", "cache-control": "max-age=3600" }, body: placeholderSvg(name) });
+      let paths: string[] = [];
+      try { paths = (JSON.parse(route.request().postData() ?? "{}") as { paths?: string[] }).paths ?? []; } catch { /* no body */ }
+      if (paths.length) return reply(json(200, paths.map((path) => ({ path, signedURL: `/object/sign/moment-media/${encodeURIComponent(path.split("/").pop() ?? "0")}?token=fixture`, error: null }))));
+      return reply(json(200, { signedURL: `/object/sign/x/${name}` }));
+    }
     if (p.startsWith("/storage/v1/")) return reply(json(200, []));
     if (p.startsWith("/rest/v1/rpc/")) {
       let args: AnyRow = {}; try { args = JSON.parse(req.postData() || "{}"); } catch { /* no body */ }

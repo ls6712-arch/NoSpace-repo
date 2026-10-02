@@ -1,3 +1,4 @@
+// pursuits.cover_image_path / cover_image_preference hand-added from supabase/migrations/20261011000000_pursuit_cover_image.sql until types are regenerated.
 // Generated from the live project's public schema (Supabase generate_typescript_types).
 // Regenerate rather than hand-edit. Used only to type the visual-test fixtures.
 export type Json =
@@ -1153,6 +1154,8 @@ export type Database = {
       pursuits: {
         Row: {
           check_in_days: number | null
+          cover_image_path: string | null
+          cover_image_preference: string
           custom_space: string | null
           ending_note: string | null
           finished_at: string | null
@@ -1181,6 +1184,8 @@ export type Database = {
         }
         Insert: {
           check_in_days?: number | null
+          cover_image_path?: string | null
+          cover_image_preference?: string
           custom_space?: string | null
           ending_note?: string | null
           finished_at?: string | null
@@ -1209,6 +1214,8 @@ export type Database = {
         }
         Update: {
           check_in_days?: number | null
+          cover_image_path?: string | null
+          cover_image_preference?: string
           custom_space?: string | null
           ending_note?: string | null
           finished_at?: string | null
