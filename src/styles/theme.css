@@ -1086,7 +1086,7 @@
     pointer-events: none;
   }
 
-  /* design-token-ignore: ambient loops below (flow, float, pulse, breathe, sway, drift, marquee, twinkle); long, decorative, off under reduced motion */
+  /* design-token-ignore: ambient loops below (flow, float, pulse, breathe, sway, drift, twinkle); long, decorative, off under reduced motion */
   .ns-worlds-path path {
     fill: none;
     stroke: color-mix(in srgb, var(--coral) 55%, var(--yellow) 45%);
@@ -1474,31 +1474,19 @@
     }
   }
 
-
   .font-hud {
     font-family: var(--font-mono);
     letter-spacing: 0.02em;
   }
 
-  /* design-token-ignore: ambient loop */
-  .text-gradient-animated {
-    background-image: var(--gradient-ink);
-    background-size: 200% 200%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: gradient-shift 12s ease infinite;
-  }
+  
 
   /* design-token-ignore: ambient loop */
   .animate-float-slow {
     animation: float 16s ease-in-out infinite;
   }
 
-  /* design-token-ignore: ambient loop */
-  .animate-float-slower {
-    animation: float 22s ease-in-out infinite reverse;
-  }
+  
 
   /* design-token-ignore: ambient loop */
   .animate-pulse-soft {
@@ -1608,16 +1596,6 @@
   to { stroke-dashoffset: -420; }
 }
 
-@keyframes gradient-shift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
 @keyframes float {
   0%,
   100% {
@@ -1661,29 +1639,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .text-gradient-animated,
   .animate-float-slow,
-  .animate-float-slower,
   .animate-pulse-soft,
   .generated-art-float,
-  .generated-art-sparkle,
-  .animate-marquee {
+  .generated-art-sparkle {
     animation: none;
   }
-}
-
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-/* design-token-ignore: ambient loop */
-.animate-marquee {
-  animation: marquee 24s linear infinite;
 }
 
 /*
@@ -1741,12 +1702,9 @@ summary:focus-visible,
   .generated-art-float,
   .generated-art-sparkle,
   .animate-float-slow,
-  .animate-float-slower,
   .animate-pulse-soft,
-  .animate-marquee,
   .animate-in,
-  .animate-spin,
-  .text-gradient-animated {
+  .animate-spin {
     animation: none !important;
   }
   .ns-enter {

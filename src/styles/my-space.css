@@ -118,9 +118,7 @@
     order: 0;
   }
 
-  .myspace-caption {
-    font-size: var(--text-lead);
-  }
+  
 }
 
 @media (min-width: 1280px) {
@@ -129,9 +127,7 @@
     column-gap: 32px;
   }
 
-  .myspace-caption {
-    font-size: var(--text-title);
-  }
+  
 }
 
 @media (min-width: 1536px) {
