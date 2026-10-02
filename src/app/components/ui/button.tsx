@@ -50,6 +50,8 @@ function Button({
   variant,
   size,
   asChild = false,
+  onClick,
+  disabled,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
@@ -57,10 +59,42 @@ function Button({
   }) {
   const Comp = asChild ? Slot : "button";
 
+  // An async onClick (anything that returns a promise: a save, a join, an
+  // invite) disables the button until it settles, so a double tap can't
+  // send the same write twice. The ref catches a second tap that lands
+  // before React has re-rendered the button disabled.
+  const pending = React.useRef(false);
+  const [busy, setBusy] = React.useState(false);
+  const handleClick = React.useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (pending.current) {
+        e.preventDefault();
+        return;
+      }
+      const result = (onClick as ((e: React.MouseEvent<HTMLButtonElement>) => unknown) | undefined)?.(e);
+      if (result && typeof (result as Promise<unknown>).then === "function") {
+        pending.current = true;
+        setBusy(true);
+        const done = () => {
+          pending.current = false;
+          setBusy(false);
+        };
+        (result as Promise<unknown>).then(done, (err: unknown) => {
+          done();
+          console.error(err);
+        });
+      }
+    },
+    [onClick],
+  );
+
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      onClick={onClick ? handleClick : undefined}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
       {...props}
     />
   );

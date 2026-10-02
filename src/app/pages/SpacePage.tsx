@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { MapPin, Star } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import { useSubmitGuard } from "../lib/useSubmitGuard";
 import { requestOrJoinSpace, cancelJoinRequest, leaveSpace, spaceMomentCount30d, listEventTeasers, type SpaceRow, type SpaceMemberRow } from "../lib/spaces";
 import { capitalizeCornerName } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
@@ -46,7 +47,9 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const [featuredEventAddress, setFeaturedEventAddress] = useState<string | null>(null);
   const [addMomentOpen, setAddMomentOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionBusy, setActionBusy] = useState(false);
+  // One membership change at a time, held through the refetch so the
+  // button can't re-enable while the old state is still showing.
+  const [actionBusy, runAction] = useSubmitGuard();
   // Bumped whenever a Moment is linked into this Space (from the Add
   // Moment dialog) — SpaceHomeTab depends on it to know when to refetch
   // its own Moments list (and, downstream of that, the checklist's
@@ -184,30 +187,28 @@ export function SpacePage({ space }: { space: SpaceRow }) {
 
   const setTab = (next: string) => setSearchParams((p) => ({ ...Object.fromEntries(p), tab: next }), { replace: true });
 
-  const join = async () => {
-    setActionBusy(true);
-    setActionError(null);
-    const { error } = await requestOrJoinSpace(space.id);
-    setActionBusy(false);
-    if (error) return setActionError(error);
-    await refetchMembership();
-  };
-  const cancelRequest = async () => {
-    setActionBusy(true);
-    setActionError(null);
-    const { error } = await cancelJoinRequest(space.id);
-    setActionBusy(false);
-    if (error) return setActionError(error);
-    await refetchMembership();
-  };
-  const leave = async () => {
+  const join = () =>
+    runAction(async () => {
+      setActionError(null);
+      const { error } = await requestOrJoinSpace(space.id);
+      if (error) return setActionError(error);
+      await refetchMembership();
+    });
+  const cancelRequest = () =>
+    runAction(async () => {
+      setActionError(null);
+      const { error } = await cancelJoinRequest(space.id);
+      if (error) return setActionError(error);
+      await refetchMembership();
+    });
+  const leave = () => {
     if (!confirm(`Leave ${space.name}?`)) return;
-    setActionBusy(true);
-    setActionError(null);
-    const { error } = await leaveSpace(space.id);
-    setActionBusy(false);
-    if (error) return setActionError(error);
-    await refetchMembership();
+    return runAction(async () => {
+      setActionError(null);
+      const { error } = await leaveSpace(space.id);
+      if (error) return setActionError(error);
+      await refetchMembership();
+    });
   };
 
   const primaryCorner = corners.find((c) => c.isPrimary) ?? corners[0];
@@ -423,7 +424,7 @@ function RequestToJoinButton({
   const [message, setMessage] = useState("");
   const [posts, setPosts] = useState<{ id: number; caption: string }[]>([]);
   const [postId, setPostId] = useState<number | undefined>(undefined);
-  const [busy, setBusy] = useState(false);
+  const [busy, runSubmit] = useSubmitGuard();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -438,15 +439,14 @@ function RequestToJoinButton({
       .then(({ data }) => setPosts(data ?? []));
   }, [open, user]);
 
-  const submit = async () => {
-    setBusy(true);
-    setError(null);
-    const { error } = await requestOrJoinSpace(spaceId, message.trim() || undefined, postId);
-    setBusy(false);
-    if (error) return setError(error);
-    setOpen(false);
-    onDone();
-  };
+  const submit = () =>
+    runSubmit(async () => {
+      setError(null);
+      const { error } = await requestOrJoinSpace(spaceId, message.trim() || undefined, postId);
+      if (error) return setError(error);
+      await onDone();
+      setOpen(false);
+    });
 
   if (!open) {
     return (

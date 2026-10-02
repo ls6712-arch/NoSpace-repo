@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { joinWaitlist } from "../lib/invites";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -19,7 +19,18 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const submittingRef = useRef(false);
   const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    try {
+      await submitNow(e);
+    } finally {
+      submittingRef.current = false;
+    }
+  };
+  const submitNow = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting || !email.trim()) return;
     setSubmitting(true);

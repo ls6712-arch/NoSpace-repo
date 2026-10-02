@@ -225,7 +225,19 @@ export function QuickLog({
     setSaved(result);
   };
 
+  // A second Enter or tap that lands before the button re-renders disabled
+  // must not start a second save.
+  const savingRef = useRef(false);
   const save = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    try {
+      await saveNow();
+    } finally {
+      savingRef.current = false;
+    }
+  };
+  const saveNow = async () => {
     if (!canPost) return;
     setSaving(true);
     setError(null);

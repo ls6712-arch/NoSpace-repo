@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { APP_NAME } from "../config";
 import { plural } from "../lib/plural";
+import { useSubmitGuard } from "../lib/useSubmitGuard";
 
 /**
  * Step 3, "one optional invite card at the end of onboarding." Shown by
@@ -30,24 +31,22 @@ export function OnboardingInviteCard({
 }) {
   const Heading = variant === "page" ? "h1" : "h2";
   const [note, setNote] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [creating, runCreate] = useSubmitGuard();
   const [error, setError] = useState<string | null>(null);
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
-  const create = async () => {
-    if (creating) return;
-    setCreating(true);
-    setError(null);
-    const result = await createInvite(note);
-    setCreating(false);
-    if (result.error || !result.code) {
-      setError(result.error || "Couldn’t create that invite. Try again in a moment.");
-      return;
-    }
-    setLink(inviteLink(result.code));
-  };
+  const create = () =>
+    runCreate(async () => {
+      setError(null);
+      const result = await createInvite(note);
+      if (result.error || !result.code) {
+        setError(result.error || "Couldn’t create that invite. Try again in a moment.");
+        return;
+      }
+      setLink(inviteLink(result.code));
+    });
 
   const copy = async () => {
     if (!link) return;

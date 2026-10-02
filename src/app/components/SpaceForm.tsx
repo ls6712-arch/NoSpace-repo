@@ -134,7 +134,19 @@ export function SpaceForm({
   // to Manage, not just different wording.
   const pendingRequestsMatch = /^Approve or decline \d+ pending requests? first\.$/.test(error ?? "");
 
+  // One Create/Save at a time, even if Enter and a tap land together.
+  const submittingRef = useRef(false);
   const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    try {
+      await submitNow(e);
+    } finally {
+      submittingRef.current = false;
+    }
+  };
+  const submitNow = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saving) return;
     setError(null);

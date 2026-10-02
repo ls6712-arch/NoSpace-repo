@@ -11,6 +11,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { APP_NAME } from "../config";
 import { Time } from "../components/ui/time";
+import { useSubmitGuard } from "../lib/useSubmitGuard";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -56,7 +57,7 @@ export function AdminInvites() {
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [creating, runCreate] = useSubmitGuard();
   const [createError, setCreateError] = useState<string | null>(null);
   const [newLink, setNewLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -144,22 +145,20 @@ export function AdminInvites() {
     );
   }
 
-  const create = async () => {
-    if (creating) return;
-    setCreating(true);
-    setCreateError(null);
-    setNewLink(null);
-    setCopied(false);
-    const result = await createInvite(note);
-    setCreating(false);
-    if (result.error || !result.code) {
-      setCreateError(result.error || "Couldn’t create that invite.");
-      return;
-    }
-    setNewLink(inviteLink(result.code));
-    setNote("");
-    await load();
-  };
+  const create = () =>
+    runCreate(async () => {
+      setCreateError(null);
+      setNewLink(null);
+      setCopied(false);
+      const result = await createInvite(note);
+      if (result.error || !result.code) {
+        setCreateError(result.error || "Couldn’t create that invite. Try again.");
+        return;
+      }
+      setNewLink(inviteLink(result.code));
+      setNote("");
+      await load();
+    });
 
   const copyLink = async () => {
     if (!newLink) return;

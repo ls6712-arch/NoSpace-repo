@@ -25,6 +25,7 @@ import { ProgressBar, SoftPanel } from "./ui";
 import { APP_NAME } from "../../config";
 import { formatDate } from "../../lib/dates";
 import { plural } from "../../lib/plural";
+import { useSubmitGuard } from "../../lib/useSubmitGuard";
 
 /**
  * The top of a measured Pursuit's page, in whichever of the three shapes
@@ -348,17 +349,23 @@ export function InviteDialog({
     void mirrorPursuitMeasure(project.id, "together", project.measure);
   };
 
-  const invite = async (personId: string, name: string) => {
-    if (!user) return;
-    ensureShared();
-    const err = await saveInvites(project.id, user.id, [personId]);
-    if (err) console.warn("[PursuitProgressPanel] invite failed:", err);
-    setStatus(err ? `Couldn’t invite ${name}. Try again.` : `Invited ${name}.`);
-    if (!err) onInvited?.();
-    setQuery("");
-  };
+  // One invite write at a time: a second tap (on the same person or
+  // another) waits for the first to land instead of sending twice.
+  const [inviting, runInvite] = useSubmitGuard();
+  const invite = (personId: string, name: string) =>
+    runInvite(async () => {
+      if (!user) return;
+      ensureShared();
+      const err = await saveInvites(project.id, user.id, [personId]);
+      if (err) console.warn("[PursuitProgressPanel] invite failed:", err);
+      setStatus(err ? `Couldn’t invite ${name}. Try again.` : `Invited ${name}.`);
+      if (!err) onInvited?.();
+      setQuery("");
+    });
 
-  const makeLink = async () => {
+  const [, runLink] = useSubmitGuard();
+  const makeLink = () => runLink(makeLinkNow);
+  const makeLinkNow = async () => {
     if (!user) return;
     setLinkState("making");
     ensureShared();
@@ -413,7 +420,7 @@ export function InviteDialog({
               <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-lg border border-border bg-card px-2 text-xs" />
               <p className="mt-1.5 text-[11px] text-muted-foreground">This link is on. Anyone who has it can join.</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                <Button variant="coral" size="sm" onClick={makeLink}>
+                <Button variant="coral" size="sm" onClick={makeLink} disabled={linkState === "making"}>
                   <Copy className="size-3.5" /> {linkState === "copied" ? "Copied" : "Copy"}
                 </Button>
                 {typeof navigator !== "undefined" && "share" in navigator && (
@@ -451,6 +458,7 @@ export function InviteDialog({
                 <button
                   type="button"
                   onClick={() => invite(p.id, p.displayName)}
+                  disabled={inviting}
                   className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-surface-muted"
                 >
                   <PersonAvatar name={p.displayName} src={p.avatarUrl} />
