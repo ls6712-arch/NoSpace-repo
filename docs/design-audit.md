@@ -404,8 +404,11 @@ twice.
 | guard: viewport height (`h-screen`, `100vh`) | 0 | **0** |
 | guard total | 1681 | **0** |
 | interactive elements under 44×44 on touch (375px) | 444 | **0** |
-| overlapping 44px hit areas (375px) | n/a (not measured) | 10 pairs, listed above |
-| text/background pairs under 4.5:1 (3:1 large), light + dark, 375 and 1440 | 18 | **0** |
+| overlapping 44px hit areas (375px) | 17 (before the Phase 2 review fixes; Home not yet measured) | 10 pairs, listed above |
+| text/background pairs under 4.5:1 (3:1 large), light + dark, all six widths, 206 views | 18 (at 375/1440, before the landing page was measured) | **0** |
+| section gaps outside 16/24/32/48 | 28 | **0** (landing hero sections use `--spacing-section-hero`, 96px) |
+| focused inputs under 16px (iOS zoom) | 1 (You, Add link) | **0** |
+| bottom tab bar follows `--safe-bottom` (`env(safe-area-inset-bottom)`) | not measured | **ok** on 18 views per iOS profile (Chromium stand-in) |
 | harness views with page-level horizontal scroll | see section 8 | **0** |
 
 ### Accessibility fixes found on the way (all in the PR description)
@@ -430,9 +433,10 @@ twice.
 
 ### Known gaps
 
-- WebKit is not installed in the sandbox this was built in. The iOS sizes (SE, 15,
+- WebKit could not be installed in the sandbox this was built in (the browser download is blocked). The iOS sizes (SE, 15,
   both iPads) were run in Chromium at the same viewports as a stand-in, labelled as
-  such; the WebKit run is for a Mac or CI (`node scripts/visual/run.ts --profiles`).
+  such. The `visual-webkit` CI job (non-blocking, with artifacts) is the follow-up that
+  produces the real WebKit result.
 - The fixture harness cannot reach OAuth sign-in, storage uploads, camera and
   microphone, or realtime channels; those screens are verified by hand.
 - Text over photos and video is listed by the contrast audit, not judged.
