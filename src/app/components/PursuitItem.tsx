@@ -1,25 +1,27 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
-import { Plus, Sparkle, Target } from "lucide-react";
+import { ImagePlus, Plus, Sparkle, Target } from "lucide-react";
 import { Project, useJournalSlice, ProgressEntry } from "../lib/journal";
 import { hasMeasure, summarize } from "../lib/pursuitProgress";
 import { PursuitMoment } from "../lib/pursuitTrail";
 import { ProgressRing, PURSUIT_SPRING } from "./pursuit/ui";
 import { PostMedia } from "./PostMedia";
 import { GoalDialog } from "./GoalDialog";
+import { CoverImageDialog } from "./CoverImageDialog";
 import { track } from "../lib/analytics";
 
 const NO_PROGRESS: ProgressEntry[] = [];
 
 /**
- * One card in the "Pursuits in progress" grid: a real photo from this
- * Pursuit's own latest photo Moment on top (PostMedia already falls back to
- * a GeneratedArt scene on its own when there isn't one — never a stock
- * placeholder), a progress ring badge (the Pursuit's icon at its center)
- * overlapping the photo's bottom-left corner, the title, and a
- * plain-language progress line. A Pursuit with a measurable goal
- * (Goal/Measure/Unit, docs/glossary.md) shows its real completion as "3 of
+ * One card in the "Pursuits in progress" grid: a cover photo on top —
+ * a custom upload if the owner set one (CoverImageDialog), else a real
+ * photo from this Pursuit's own first-or-latest photo Moment (whichever
+ * `coverImagePreference` says), else PostMedia's own GeneratedArt scene —
+ * never a stock placeholder. Below that, a progress ring badge (the
+ * Pursuit's icon at its center) overlapping the photo's bottom-left
+ * corner, the title, and a plain-language progress line. A Pursuit with a
+ * measurable goal (Goal/Measure/Unit, docs/glossary.md) shows its real completion as "3 of
  * 10 pieces" — never a bare percentage, same rule GoalDialog's own progress
  * carries ("Sushii doesn't scoreboard progress"). One without a measure
  * shows an empty ring and no progress line — there's nothing honest to
@@ -40,13 +42,20 @@ export function PursuitItem({
   pursuit,
   moments,
   index = 0,
+  coverUrl,
 }: {
   pursuit: Project;
   /** This Pursuit's own Moments, oldest first — same shape PursuitTrack
-   * already builds via collectPursuitMoments. Used only to find the latest
-   * real photo to show; no fetch of its own. */
+   * already builds via collectPursuitMoments. Used only to find the first
+   * or latest real photo to show; no fetch of its own. */
   moments: PursuitMoment[];
   index?: number;
+  /** The Pursuit's custom cover, already resolved to a signed URL — the
+   * caller batch-signs every visible card's coverImagePath in one
+   * signMomentPaths call (PursuitsInProgressSection), rather than each
+   * card signing its own path. Undefined means no custom cover is set (or
+   * it hasn't resolved yet), and the Moment-photo fallback below applies. */
+  coverUrl?: string;
 }) {
   const reduceMotion = useReducedMotion();
   const allProgress = useJournalSlice((s) => s.progress ?? NO_PROGRESS);
@@ -57,9 +66,13 @@ export function PursuitItem({
   const progressLabel = measured
     ? `${measured.current} of ${measured.target}${pursuit.measure!.unit ? ` ${pursuit.measure!.unit}` : ""}`
     : undefined;
-  const latestImage = [...moments].reverse().find((m) => m.image)?.image;
+  const withImage = moments.filter((m) => m.image);
+  const momentImage =
+    pursuit.coverImagePreference === "first" ? withImage[0]?.image : withImage[withImage.length - 1]?.image;
+  const coverImage = coverUrl ?? momentImage;
 
   const [goalOpen, setGoalOpen] = useState(false);
+  const [coverOpen, setCoverOpen] = useState(false);
 
   return (
     <motion.div
@@ -77,7 +90,7 @@ export function PursuitItem({
           className="absolute inset-0 block"
         >
           <PostMedia
-            media={latestImage}
+            media={coverImage}
             type="photo"
             hobbySlug={pursuit.hobbySlug ?? "crafts-making"}
             seed={pursuit.id}
@@ -88,9 +101,18 @@ export function PursuitItem({
 
         <button
           type="button"
+          onClick={() => setCoverOpen(true)}
+          aria-label={`Change the cover photo for ${pursuit.title}`}
+          className="absolute right-2.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/55 text-white opacity-0 backdrop-blur-md transition-opacity duration-150 hover:bg-[var(--void)]/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+        >
+          <ImagePlus className="size-3.5" strokeWidth={1.9} />
+        </button>
+
+        <button
+          type="button"
           onClick={() => setGoalOpen(true)}
           aria-label={`Edit the goal for ${pursuit.title}`}
-          className="absolute right-2.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/55 text-white opacity-0 backdrop-blur-md transition-opacity duration-150 hover:bg-[var(--void)]/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-11 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/55 text-white opacity-0 backdrop-blur-md transition-opacity duration-150 hover:bg-[var(--void)]/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
         >
           <Target className="size-3.5" strokeWidth={1.9} />
         </button>
@@ -137,6 +159,7 @@ export function PursuitItem({
       </Link>
 
       <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={pursuit} />
+      <CoverImageDialog open={coverOpen} onOpenChange={setCoverOpen} project={pursuit} />
     </motion.div>
   );
 }

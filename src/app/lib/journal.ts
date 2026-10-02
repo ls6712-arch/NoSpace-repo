@@ -186,6 +186,14 @@ export interface Project {
   nextSessionNote?: string;
   /** "Times a week" — what "[N] of [M] this week" counts toward. */
   timesPerWeek?: number;
+  /** A storage path in the moment-media bucket (never a signed URL — those
+   * expire; see lib/momentMedia.ts's signMomentPaths), set only when the
+   * maker explicitly uploaded a custom cover. Unset means "use a Moment's
+   * own photo instead" — see coverImagePreference. */
+  coverImagePath?: string;
+  /** Which Moment's photo stands in for the cover when there's no custom
+   * one: the first ever logged, or the latest. Defaults to "last". */
+  coverImagePreference?: "first" | "last";
 }
 
 /** The check-in interval used when the maker hasn't picked one. Two weeks:
@@ -312,6 +320,29 @@ export function setProjectShared(projectId: string, shared: boolean) {
   commit({
     ...state,
     projects: state.projects.map((p) => (p.id === projectId ? { ...p, shared } : p)),
+  });
+}
+
+/** Sets or clears a Pursuit's custom cover (coverImagePath undefined reverts
+ * to a Moment's own photo) and/or its first/last preference. Local-first,
+ * same as every other Pursuit edit — the caller mirrors to Supabase
+ * separately (mirrorPursuitCoverImage, pursuitsRemote.ts) once this lands. */
+export function setProjectCoverImage(
+  projectId: string,
+  patch: { coverImagePath?: string | null; coverImagePreference?: "first" | "last" },
+) {
+  commit({
+    ...state,
+    projects: state.projects.map((p) => {
+      if (p.id !== projectId) return p;
+      const next = { ...p };
+      if (patch.coverImagePath !== undefined) {
+        if (patch.coverImagePath === null) delete next.coverImagePath;
+        else next.coverImagePath = patch.coverImagePath;
+      }
+      if (patch.coverImagePreference !== undefined) next.coverImagePreference = patch.coverImagePreference;
+      return next;
+    }),
   });
 }
 

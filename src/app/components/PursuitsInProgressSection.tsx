@@ -6,6 +6,7 @@ import { Post } from "../data/posts";
 import { Project, pursuitStatus } from "../lib/journal";
 import { activePursuits, collectPursuitMoments } from "../lib/pursuitTrail";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
+import { signMomentPaths } from "../lib/momentMedia";
 import { PURSUIT_SPRING } from "./pursuit/ui";
 import { PursuitItem } from "./PursuitItem";
 import { AllPursuitsDialog } from "./AllPursuitsDialog";
@@ -52,6 +53,33 @@ export function PursuitsInProgressSection({
     return m.length ? m[m.length - 1].createdAt : undefined;
   };
 
+  // One batched signMomentPaths call for every custom cover on this page,
+  // same convention ContentContext's own post-media signing already
+  // follows — never one signing round trip per card. Keyed off a joined
+  // string, not the `active` array itself: `active` is a fresh array every
+  // render (activePursuits() isn't memoized), so depending on it directly
+  // re-ran this effect — and re-set state — on every render, forever.
+  const [coverUrls, setCoverUrls] = useState<Map<string, string>>(new Map());
+  const coverPathsKey = active.map((p) => p.coverImagePath ?? "").join("|");
+  const coverPaths = useMemo(
+    () => [...new Set(active.map((p) => p.coverImagePath).filter((p): p is string => !!p))],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [coverPathsKey],
+  );
+  useEffect(() => {
+    let cancelled = false;
+    if (coverPaths.length === 0) {
+      setCoverUrls((prev) => (prev.size === 0 ? prev : new Map()));
+      return;
+    }
+    void signMomentPaths(coverPaths).then((signed) => {
+      if (!cancelled) setCoverUrls(signed);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [coverPaths]);
+
   // Impression, once per mount — fired with whatever the count is by the
   // time this first renders, not re-fired on every later recompute.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,7 +125,13 @@ export function PursuitsInProgressSection({
           aria-label="Pursuits in progress"
         >
           {active.map((p, i) => (
-            <PursuitItem key={p.id} pursuit={p} moments={momentsFor(p)} index={i} />
+            <PursuitItem
+              key={p.id}
+              pursuit={p}
+              moments={momentsFor(p)}
+              index={i}
+              coverUrl={p.coverImagePath ? coverUrls.get(p.coverImagePath) : undefined}
+            />
           ))}
           <motion.button
             type="button"
