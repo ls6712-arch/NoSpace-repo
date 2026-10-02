@@ -87,7 +87,7 @@ export function PursuitItem({ pursuit, index = 0 }: { pursuit: Project; index?: 
           track({ name: "pursuits_in_progress_item_tapped", pursuitId: pursuit.id });
         }}
         aria-label={`Log a Moment on ${pursuit.title}`}
-        className="mt-auto flex size-8 items-center justify-center self-end rounded-control text-white transition-transform duration-150 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)]"
+        className="mt-auto flex size-8 items-center justify-center self-end rounded-control text-on-brand transition-transform duration-150 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)]"
         style={{ backgroundColor: "var(--coral-deep)" }}
       >
         <Plus className="size-4" strokeWidth={2.2} />

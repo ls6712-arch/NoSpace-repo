@@ -235,7 +235,7 @@ export function Studio() {
 
   if (!opened) {
     return (
-      <div className="ns-paper-theme relative min-h-viewport overflow-hidden bg-[var(--ink)] text-white">
+      <div className="ns-paper-theme relative min-h-viewport overflow-hidden bg-[var(--ink)] text-on-media">
         <div className="absolute inset-0">
           {coverPost && (
             <PostMedia
@@ -259,14 +259,14 @@ export function Studio() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="absolute left-6 top-6 flex size-9 items-center justify-center rounded-control border border-white/30 bg-black/25 text-white transition-colors hover:border-white/60"
+          className="absolute left-6 top-6 flex size-9 items-center justify-center rounded-control border border-on-media/30 bg-scrim-solid/25 text-on-media transition-colors hover:border-on-media/60"
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />
         </button>
 
         <span
-          className="absolute right-8 top-7 text-small italic text-white/80"
+          className="absolute right-8 top-7 text-small italic text-on-media/80"
           style={{ fontFamily: "var(--font-serif)" }}
         >
           {APP_NAME}
@@ -279,7 +279,7 @@ export function Studio() {
         )}
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
-          <p className="mb-2 text-caption uppercase tracking-[0.16em] text-white/70">
+          <p className="mb-2 text-caption uppercase tracking-[0.16em] text-on-media/70">
             {loaded.posts.length} {loaded.posts.length === 1 ? "moment" : "moments"}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
@@ -291,7 +291,7 @@ export function Studio() {
           </h1>
           {coverTagline && (
             <p
-              className="mt-3 max-w-md text-lead italic text-white/85 sm:text-title"
+              className="mt-3 max-w-md text-lead italic text-on-media/85 sm:text-title"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {coverTagline}
@@ -304,7 +304,7 @@ export function Studio() {
               setPageIndex(0);
             }}
             disabled={spreads.length === 0}
-            className="mt-7 inline-flex items-center gap-2 rounded-control px-6 py-3 text-small text-white transition-opacity disabled:opacity-40"
+            className="mt-7 inline-flex items-center gap-2 rounded-control px-6 py-3 text-small text-on-brand transition-opacity disabled:opacity-40"
             style={{ backgroundColor: "var(--coral-deep)" }}
           >
             Open the Scrapbook
@@ -343,7 +343,7 @@ export function Studio() {
                   setDirection(1);
                 }}
                 className={`rounded-control px-3.5 py-1.5 transition-colors ${
-                  grouping === g ? "bg-[var(--coral-deep)] text-white" : "text-[var(--ink-soft)]"
+                  grouping === g ? "bg-[var(--coral-deep)] text-on-brand" : "text-[var(--ink-soft)]"
                 }`}
               >
                 {g === "chronological" ? "Chronological" : "By tag"}
@@ -392,9 +392,9 @@ export function Studio() {
                     preview
                     className="h-full w-full object-cover"
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-scrim" />
                   <p
-                    className="absolute inset-x-0 bottom-0 p-5 text-lead italic text-white sm:text-title"
+                    className="absolute inset-x-0 bottom-0 p-5 text-lead italic text-on-media sm:text-title"
                     style={{ fontFamily: "var(--font-serif)" }}
                   >
                     {hero.caption}
@@ -412,8 +412,8 @@ export function Studio() {
                       preview
                       className="h-full w-full object-cover"
                     />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
-                    <p className="absolute inset-x-0 bottom-0 truncate p-2 text-caption italic text-white">
+                    <div className="pointer-events-none absolute inset-0 bg-scrim" />
+                    <p className="absolute inset-x-0 bottom-0 truncate p-2 text-caption italic text-on-media">
                       {post.caption}
                     </p>
                   </div>

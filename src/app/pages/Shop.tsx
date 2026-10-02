@@ -28,11 +28,11 @@ export function Shop() {
         </div>
 
         <div className="mb-10 flex justify-center">
-          <div className="flex flex-wrap gap-2 justify-center rounded-card border border-border bg-white/[0.03] p-2">
+          <div className="flex flex-wrap gap-2 justify-center rounded-card border border-border bg-surface-muted p-2">
             <Button
               variant="ghost"
               onClick={() => setSelected("all")}
-              className={selected === "all" ? "text-white [background-image:var(--gradient-brand)]" : "text-muted-foreground"}
+              className={selected === "all" ? "text-on-brand [background-image:var(--gradient-brand)]" : "text-muted-foreground"}
             >
               All
             </Button>
@@ -43,7 +43,7 @@ export function Shop() {
                 onClick={() => setSelected(hobby.slug)}
                 className={
                   selected === hobby.slug
-                    ? "text-white [background-image:var(--gradient-brand)]"
+                    ? "text-on-brand [background-image:var(--gradient-brand)]"
                     : "text-muted-foreground"
                 }
               >

@@ -61,7 +61,7 @@ export function MediaAttachPicker({
           type="button"
           onClick={() => onChange(null)}
           aria-label="Remove attachment"
-          className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-[var(--void)]/70 text-white"
+          className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media"
         >
           <X className="size-3" />
         </button>

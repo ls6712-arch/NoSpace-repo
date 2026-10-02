@@ -57,7 +57,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
       <button
         type="button"
         onClick={openPanel}
-        className="inline-flex items-center gap-1.5 rounded-control border px-3.5 py-1.5 text-small text-white transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-control border px-3.5 py-1.5 text-small text-on-media transition-colors"
         style={{
           backgroundColor: "rgba(42,36,29,0.35)",
           borderColor: "rgba(248,242,229,0.4)",
@@ -152,7 +152,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               type="button"
               onClick={save}
               disabled={saving}
-              className="w-full rounded-control px-4 py-2.5 text-small text-white transition-opacity disabled:opacity-60"
+              className="w-full rounded-control px-4 py-2.5 text-small text-on-brand transition-opacity disabled:opacity-60"
               style={{ backgroundColor: "var(--coral-deep)" }}
             >
               {saving ? "Saving…" : "Done"}

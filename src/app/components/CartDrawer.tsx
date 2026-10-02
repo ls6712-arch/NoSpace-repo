@@ -37,7 +37,7 @@ export function CartDrawer() {
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {justCheckedOut ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-              <span className="flex size-14 items-center justify-center rounded-full text-white [background-image:var(--gradient-brand)]">
+              <span className="flex size-14 items-center justify-center rounded-full text-on-brand [background-image:var(--gradient-brand)]">
                 <Check className="size-7" />
               </span>
               <div className="text-lead">Order placed. Thanks for supporting creators.</div>
@@ -57,7 +57,7 @@ export function CartDrawer() {
               {cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-3 rounded-card border border-border bg-white/[0.03] p-3"
+                  className="flex gap-3 rounded-card border border-border bg-surface-muted p-3"
                 >
                   <div className="size-20 shrink-0 overflow-hidden rounded-control">
                     <GeneratedArt

@@ -236,7 +236,7 @@ function CornerTile({
           </div>
         )}
         <span
-          className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-control px-2.5 py-1 text-caption font-semibold text-white"
+          className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-control px-2.5 py-1 text-caption font-semibold text-on-media"
           style={{ backgroundColor: tagTint(item.hobbySlug) }}
         >
           {getHobby(item.hobbySlug)?.shortName ?? item.label}
@@ -293,7 +293,7 @@ export function HobbyShelf({
         {emptyCta && (
           <Link
             to="/create"
-            className="mt-4 inline-block rounded-control px-5 py-2 text-small text-white [background-color:var(--coral-deep)]"
+            className="mt-4 inline-block rounded-control px-5 py-2 text-small text-on-brand [background-color:var(--coral-deep)]"
           >
             Create your first moment
           </Link>

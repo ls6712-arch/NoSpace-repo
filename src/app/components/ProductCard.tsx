@@ -27,13 +27,13 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link to={`/product/${product.id}`}>
       <Card className="group overflow-hidden hover:border-border transition-all duration-300">
-        <div className="relative aspect-square overflow-hidden bg-white/[0.03]">
+        <div className="relative aspect-square overflow-hidden bg-surface-muted">
           <GeneratedArt
             hobbySlug={product.hobbySlug}
             seed={product.id}
             className="h-full w-full transition-transform duration-500 group-hover:scale-110"
           />
-          <Badge variant="outline" className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border-border">
+          <Badge variant="outline" className="absolute top-3 left-3 bg-scrim-solid/40 backdrop-blur-md border-border">
             <Meta.icon className="size-3" />
             {Meta.label}
           </Badge>
@@ -41,7 +41,7 @@ export function ProductCard({ product }: { product: Product }) {
             size="icon"
             disabled
             title="Selling is coming soon"
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-control bg-white/70 text-black/40 cursor-not-allowed"
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-control bg-surface-muted text-muted-foreground cursor-not-allowed"
           >
             <ShoppingCart className="size-4" />
           </Button>
@@ -49,11 +49,11 @@ export function ProductCard({ product }: { product: Product }) {
             size="icon"
             variant="ghost"
             className={`absolute bottom-3 right-3 rounded-control backdrop-blur-md ${
-              inWishlist ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white hover:bg-black/60"
+              inWishlist ? "bg-[var(--coral)] text-on-brand" : "bg-scrim-solid/40 text-on-media hover:bg-scrim-solid/60"
             }`}
             onClick={handleWishlistToggle}
           >
-            <Heart className={`size-4 ${inWishlist ? "fill-white" : ""}`} />
+            <Heart className={`size-4 ${inWishlist ? "fill-on-media" : ""}`} />
           </Button>
         </div>
         <div className="p-4">

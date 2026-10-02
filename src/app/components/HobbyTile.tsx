@@ -50,7 +50,7 @@ export function HobbyTile({
           />
         )}
         {!!count && (
-          <span className="absolute top-1.5 right-1.5 rounded-control bg-black/55 px-1.5 py-0.5 text-caption leading-none text-white backdrop-blur-sm">
+          <span className="absolute top-1.5 right-1.5 rounded-control bg-scrim-solid/55 px-1.5 py-0.5 text-caption leading-none text-on-media backdrop-blur-sm">
             {count}
           </span>
         )}
@@ -67,8 +67,8 @@ export function HobbyTile({
 
   const className = `group block rounded-card border p-1.5 text-left transition-colors ${
     active
-      ? "border-[var(--coral-text)] bg-white/[0.07]"
-      : "border-border hover:border-foreground/30 hover:bg-white/[0.04]"
+      ? "border-[var(--coral-text)] bg-surface-muted"
+      : "border-border hover:border-foreground/30 hover:bg-surface-muted"
   }`;
 
   if (to) {

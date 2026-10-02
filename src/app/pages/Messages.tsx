@@ -376,7 +376,7 @@ function ConversationPanel({
                           type="button"
                           onClick={() => setUnsendTargetId(m.id)}
                           aria-label="Unsend"
-                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -393,7 +393,7 @@ function ConversationPanel({
                           m.status === "failed"
                             ? "border border-dashed border-[var(--coral-text)] bg-surface-muted text-foreground"
                             : mine
-                              ? `text-white [background-color:var(--coral-deep)] ${m.status === "sending" ? "opacity-60" : ""}`
+                              ? `text-on-brand [background-color:var(--coral-deep)] ${m.status === "sending" ? "opacity-60" : ""}`
                               : "bg-surface-muted"
                         }`}
                       >
@@ -404,7 +404,7 @@ function ConversationPanel({
                           type="button"
                           onClick={() => setUnsendTargetId(m.id)}
                           aria-label="Unsend"
-                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -431,7 +431,7 @@ function ConversationPanel({
           <button
             type="button"
             onClick={scrollToBottom}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--coral-deep)] px-3.5 py-1.5 text-caption text-white shadow"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--coral-deep)] px-3.5 py-1.5 text-caption text-on-brand shadow"
           >
             New message{newMessageCount > 1 ? "s" : ""}
           </button>
@@ -911,7 +911,7 @@ export function Messages() {
                           </span>
                           {unread > 0 && (
                             <span
-                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-white"
+                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand"
                               aria-label={`${unread} unread`}
                             >
                               {formatBadgeCount(unread)}

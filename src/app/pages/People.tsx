@@ -159,7 +159,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
                   onClick={() => setHobbyParam(on ? "" : h.slug)}
                   className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
                     on
-                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                      ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
                       : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
                   }`}
                 >

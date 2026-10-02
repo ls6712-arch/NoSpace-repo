@@ -54,11 +54,11 @@ export function ProductDetail() {
               size="icon"
               variant="ghost"
               className={`absolute top-5 right-5 rounded-control backdrop-blur-md ${
-                inWishlist ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white"
+                inWishlist ? "bg-[var(--coral)] text-on-brand" : "bg-scrim-solid/40 text-on-media"
               }`}
               onClick={() => toggleWishlist(product.id)}
             >
-              <Heart className={`size-5 ${inWishlist ? "fill-white" : ""}`} />
+              <Heart className={`size-5 ${inWishlist ? "fill-on-media" : ""}`} />
             </Button>
           </div>
 
@@ -77,7 +77,7 @@ export function ProductDetail() {
                   <Star
                     key={i}
                     className={`size-4 ${
-                      i < Math.floor(product.rating) ? "fill-[var(--mustard)] text-[var(--mustard)]" : "text-white/20"
+                      i < Math.floor(product.rating) ? "fill-[var(--mustard)] text-[var(--mustard)]" : "text-muted-foreground/40"
                     }`}
                   />
                 ))}
@@ -101,7 +101,7 @@ export function ProductDetail() {
                       onClick={() => setSelectedColor(color)}
                       className={`px-4 py-2 rounded-control border text-small transition-all ${
                         selectedColor === color
-                          ? "border-transparent text-white [background-image:var(--gradient-brand)]"
+                          ? "border-transparent text-on-brand [background-image:var(--gradient-brand)]"
                           : "border-border hover:border-foreground/30"
                       }`}
                     >
@@ -122,7 +122,7 @@ export function ProductDetail() {
                       onClick={() => setSelectedSize(size)}
                       className={`px-4 py-2 rounded-control border text-small transition-all ${
                         selectedSize === size
-                          ? "border-transparent text-white [background-image:var(--gradient-brand)]"
+                          ? "border-transparent text-on-brand [background-image:var(--gradient-brand)]"
                           : "border-border hover:border-foreground/30"
                       }`}
                     >
@@ -156,7 +156,7 @@ export function ProductDetail() {
               {related.map((item) => (
                 <Link key={item.id} to={`/product/${item.id}`}>
                   <div className="group rounded-card overflow-hidden border border-border hover:border-border transition-colors">
-                    <div className="aspect-square overflow-hidden bg-white/[0.03]">
+                    <div className="aspect-square overflow-hidden bg-surface-muted">
                       <GeneratedArt
                         hobbySlug={item.hobbySlug}
                         seed={item.id}

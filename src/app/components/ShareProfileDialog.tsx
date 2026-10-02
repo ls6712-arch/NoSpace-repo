@@ -61,7 +61,7 @@ export function ShareProfileDialog({
                     <span
                       key={b.id}
                       title={badgeName(b, hobbySlug, hobbyLabel)}
-                      className="flex size-9 items-center justify-center rounded-full text-white [background-image:var(--gradient-brand)]"
+                      className="flex size-9 items-center justify-center rounded-full text-on-brand [background-image:var(--gradient-brand)]"
                     >
                       <Icon className="size-4" />
                     </span>

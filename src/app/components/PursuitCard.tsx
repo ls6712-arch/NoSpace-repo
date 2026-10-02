@@ -158,8 +158,8 @@ export function PursuitCard({
             />
           )}
           <span
-            className={`absolute left-2.5 top-2.5 rounded-control px-2.5 py-1 text-caption font-medium text-white backdrop-blur-md ${
-              pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-[var(--void)]/55"
+            className={`absolute left-2.5 top-2.5 rounded-control px-2.5 py-1 text-caption font-medium text-on-media backdrop-blur-md ${
+              pursuit.finishedAt ? "bg-[var(--forest)]/80" : "bg-scrim-solid/55"
             }`}
           >
             {status}
@@ -177,14 +177,14 @@ export function PursuitCard({
                   : "Private (tap to share and copy a link)"
             }
             aria-pressed={shared}
-            className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-control bg-[var(--void)]/55 px-2.5 backdrop-blur-md transition-colors hover:bg-[var(--void)]/75"
+            className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-control bg-scrim-solid/55 px-2.5 backdrop-blur-md transition-colors hover:bg-scrim-solid/75"
           >
             {justCopied ? (
-              <span className="text-caption font-medium text-white">Copied!</span>
+              <span className="text-caption font-medium text-on-media">Copied!</span>
             ) : shared ? (
-              <Share2 className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
+              <Share2 className="size-3.5 text-on-media" strokeWidth={1.9} />
             ) : (
-              <Lock className="size-3.5" strokeWidth={1.9} style={{ color: "white" }} />
+              <Lock className="size-3.5 text-on-media" strokeWidth={1.9} />
             )}
           </button>
         )}

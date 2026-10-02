@@ -144,7 +144,7 @@ export function Inbox() {
                             <Button
                               size="sm"
                               disabled={respondingTo === r.followerId}
-                              className="flex-1 text-white [background-image:var(--gradient-brand)]"
+                              className="flex-1 text-on-brand [background-image:var(--gradient-brand)]"
                               onClick={() => answerFollow(r.followerId, true)}
                             >
                               <Check className="size-3.5" />

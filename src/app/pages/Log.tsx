@@ -1150,7 +1150,7 @@ export function Log() {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="max-w-md rounded-card border border-border bg-card p-10 text-center">
-          <span className="mb-5 inline-flex size-14 items-center justify-center rounded-full text-white [background-color:var(--coral-deep)]">
+          <span className="mb-5 inline-flex size-14 items-center justify-center rounded-full text-on-brand [background-color:var(--coral-deep)]">
             <NotebookPen className="size-7" />
           </span>
           <h2 className="mb-2 text-title">Log in to keep your Moments</h2>
@@ -1309,7 +1309,7 @@ export function Log() {
             <button
               type="button"
               onClick={() => setFiles([])}
-              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-control bg-[var(--void)]/65 text-white"
+              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-control bg-scrim-solid/65 text-on-media"
               aria-label="Remove this video"
             >
               <X className="size-3.5" />
@@ -1328,7 +1328,7 @@ export function Log() {
                 <button
                   type="button"
                   onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                  className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-[var(--void)]/65 text-white"
+                  className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/65 text-on-media"
                   aria-label={`Remove photo ${i + 1}`}
                 >
                   <X className="size-3" />
@@ -1496,7 +1496,7 @@ export function Log() {
                     : "justify-start bg-surface-muted"
                 }`}
               >
-                <span className="size-5 rounded-full bg-white" />
+                <span className="size-5 rounded-full bg-background" />
               </span>
             </button>
 
@@ -1758,7 +1758,7 @@ export function Log() {
                       <button
                         type="button"
                         onClick={() => setFiles([])}
-                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-[var(--void)]/70 text-white"
+                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media"
                         aria-label="Remove file"
                       >
                         <X className="size-3" />
@@ -1882,7 +1882,7 @@ export function Log() {
                     aria-pressed={audience === opt.value}
                     className={`flex flex-col items-center gap-1.5 rounded-control border px-2 py-3 text-center transition-colors ${
                       audience === opt.value
-                        ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                        ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
                         : "border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >

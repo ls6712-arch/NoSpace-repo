@@ -233,7 +233,7 @@ export function AddMoment() {
                       e.stopPropagation();
                       setFile(null);
                     }}
-                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-black/60 text-white"
+                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/60 text-on-media"
                     aria-label="Remove photo"
                   >
                     <X className="size-3" />
@@ -352,7 +352,7 @@ function MomentAdded({
   return (
     <div className="mt-4" role="status">
       <SoftPanel className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--coral)] text-white">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--coral)] text-on-brand">
           <Check className="size-4" />
         </span>
         <div className="min-w-0 flex-1">

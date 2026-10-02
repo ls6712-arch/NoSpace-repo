@@ -357,7 +357,7 @@ function CoverStep({
             <AvatarPicker compact name={displayName} url={avatar} onChange={onAvatarChange} />
           </motion.div>
 
-          <motion.p {...settle(0.05)} className="mb-1 text-caption uppercase tracking-[0.16em] text-white/70">
+          <motion.p {...settle(0.05)} className="mb-1 text-caption uppercase tracking-[0.16em] text-on-media/70">
             Let's set the scene
           </motion.p>
 
@@ -367,7 +367,7 @@ function CoverStep({
               onChange={(e) => onTitleChange(e.target.value)}
               placeholder="Your name"
               maxLength={60}
-              className="w-full max-w-lg border-none bg-transparent text-display leading-tight text-white outline-none placeholder:text-white/50"
+              className="w-full max-w-lg border-none bg-transparent text-display leading-tight text-on-media outline-none placeholder:text-on-media/50"
               style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
             />
           </motion.div>
@@ -378,8 +378,8 @@ function CoverStep({
               onChange={(e) => onTaglineChange(e.target.value)}
               placeholder="What's this about? (optional)"
               maxLength={160}
-              className={`mt-2 w-full max-w-md border-b border-dashed bg-transparent text-body italic text-white outline-none placeholder:text-white/60 focus:border-white/70 sm:text-lead ${
-                tagline ? "border-transparent" : "border-white/40"
+              className={`mt-2 w-full max-w-md border-b border-dashed bg-transparent text-body italic text-on-media outline-none placeholder:text-on-media/60 focus:border-on-media/70 sm:text-lead ${
+                tagline ? "border-transparent" : "border-on-media/40"
               }`}
               style={{ fontFamily: "var(--font-serif)" }}
             />
@@ -391,7 +391,7 @@ function CoverStep({
                 <Chip
                   key={tag}
                   {...chipProps(tag)}
-                  className="rounded-control border border-white/30 bg-black/20 px-2.5 py-1 text-caption text-white/85"
+                  className="rounded-control border border-on-media/30 bg-scrim-solid/20 px-2.5 py-1 text-caption text-on-media/85"
                 >
                   {tag}
                 </Chip>
@@ -400,7 +400,7 @@ function CoverStep({
           )}
 
           <motion.div {...settle(0.25)} className="mt-5">
-            <p className="mb-1.5 text-caption text-white/70">Background</p>
+            <p className="mb-1.5 text-caption text-on-media/70">Background</p>
             <div className="flex gap-2">
               {COVER_TEXTURES.map((texture, i) => (
                 <button

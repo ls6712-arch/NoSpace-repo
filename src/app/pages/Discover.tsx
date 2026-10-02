@@ -588,7 +588,7 @@ export function Discover() {
                           }}
                           className={`rounded-control px-3.5 py-1.5 text-caption font-medium transition-colors ${
                             active
-                              ? "text-white [background-image:var(--gradient-brand)]"
+                              ? "text-on-brand [background-image:var(--gradient-brand)]"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
@@ -615,7 +615,7 @@ export function Discover() {
                         }}
                         className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
                           active
-                            ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                            ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
                             : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
                         }`}
                       >

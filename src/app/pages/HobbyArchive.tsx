@@ -207,7 +207,7 @@ export function HobbyArchive() {
                     onClick={() => setFilter(f.id)}
                     className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
                       filter === f.id
-                        ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                        ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
                         : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
                     }`}
                   >

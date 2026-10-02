@@ -344,7 +344,7 @@ export function You() {
                 type="button"
                 onClick={() => setMomentsView("grid")}
                 className={`rounded-control px-3 py-1 transition-colors ${
-                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                  momentsView === "grid" ? "bg-[var(--coral-deep)] text-on-brand" : "text-muted-foreground"
                 }`}
               >
                 All moments
@@ -353,7 +353,7 @@ export function You() {
                 type="button"
                 onClick={() => setMomentsView("shelf")}
                 className={`rounded-control px-3 py-1 transition-colors ${
-                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
+                  momentsView === "shelf" ? "bg-[var(--coral-deep)] text-on-brand" : "text-muted-foreground"
                 }`}
               >
                 By Corner

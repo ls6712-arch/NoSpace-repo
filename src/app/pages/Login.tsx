@@ -144,7 +144,7 @@ export function Login() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-14">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="inline-flex size-12 items-center justify-center rounded-full text-white mb-4 [background-image:var(--gradient-brand)]">
+          <span className="inline-flex size-12 items-center justify-center rounded-full text-on-brand mb-4 [background-image:var(--gradient-brand)]">
             <Sparkles className="size-5" />
           </span>
           <h1 className="text-title mb-1">

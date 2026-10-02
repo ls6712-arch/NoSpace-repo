@@ -128,7 +128,7 @@ export function QuietMilestones() {
                   title={shared ? "Shared on your profile" : "Share this milestone"}
                   className={`absolute right-1 top-11 flex size-6 items-center justify-center rounded-control border transition-colors ${
                     shared
-                      ? "border-transparent bg-[var(--coral-deep)] text-white"
+                      ? "border-transparent bg-[var(--coral-deep)] text-on-brand"
                       : "border-[var(--hairline)] bg-surface text-muted-foreground hover:text-foreground"
                   }`}
                 >

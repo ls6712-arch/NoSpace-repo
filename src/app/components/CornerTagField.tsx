@@ -121,7 +121,7 @@ export function CornerTagField({
               onClick={() => pick(active ? "" : c.slug, c.name, c.spaceSlug)}
               className={`rounded-control border px-3 py-1 text-caption transition-colors ${
                 active
-                  ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                  ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
                   : "border-border text-muted-foreground hover:border-foreground/30"
               }`}
             >
@@ -203,7 +203,7 @@ export function CornerTagField({
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={createNew}
                     disabled={creating}
-                    className="rounded-control border border-transparent bg-[var(--coral-deep)] px-2.5 py-1 text-caption text-white"
+                    className="rounded-control border border-transparent bg-[var(--coral-deep)] px-2.5 py-1 text-caption text-on-brand"
                   >
                     {creating ? "Creating…" : "Create anyway"}
                   </button>

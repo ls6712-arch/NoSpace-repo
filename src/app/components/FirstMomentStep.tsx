@@ -222,7 +222,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
-          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card bg-[var(--coral-deep)] text-white transition-opacity hover:opacity-90"
+          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card bg-[var(--coral-deep)] text-on-brand transition-opacity hover:opacity-90"
         >
           <Camera className="size-6" />
           <span className="text-small font-medium">Take a photo</span>
@@ -264,7 +264,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
           <button
             type="button"
             onClick={() => setFile(null)}
-            className="absolute right-2 top-2 rounded-control bg-black/60 px-2.5 py-1 text-caption text-white"
+            className="absolute right-2 top-2 rounded-control bg-scrim-solid/60 px-2.5 py-1 text-caption text-on-media"
           >
             Remove
           </button>

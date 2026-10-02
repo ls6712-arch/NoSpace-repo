@@ -236,7 +236,7 @@ function MilestoneList({ names, reached }: { names: string[]; reached: number })
         <li key={i} className="flex items-center gap-2.5 text-small">
           <span
             className={`flex size-5 items-center justify-center rounded-full border text-caption ${
-              i < reached ? "border-[var(--coral)] bg-[var(--coral)] text-white" : "border-border text-muted-foreground"
+              i < reached ? "border-[var(--coral)] bg-[var(--coral)] text-on-brand" : "border-border text-muted-foreground"
             }`}
           >
             {i < reached ? <Check className="size-3" /> : i + 1}
@@ -287,7 +287,7 @@ function Journey({
             <div key={m.at} className="relative z-10 flex w-16 flex-col items-center text-center">
               <span
                 className={`flex size-6 items-center justify-center rounded-full border ${
-                  reached ? "border-[var(--coral)] bg-[var(--coral)] text-white" : "border-border bg-card"
+                  reached ? "border-[var(--coral)] bg-[var(--coral)] text-on-brand" : "border-border bg-card"
                 }`}
               >
                 {reached && <Check className="size-3.5" />}

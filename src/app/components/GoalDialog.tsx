@@ -248,7 +248,7 @@ export function GoalDialog({
                         : "justify-start bg-surface-muted"
                     }`}
                   >
-                    <span className="size-5 rounded-full bg-white" />
+                    <span className="size-5 rounded-full bg-background" />
                   </span>
                 </button>
                 {hasDeadline && (

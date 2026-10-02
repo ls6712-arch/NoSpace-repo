@@ -206,7 +206,7 @@ export function BePart({
           className={`flex w-full items-center justify-center gap-2 rounded-control px-5 py-3 text-small font-medium transition-colors ${
             state
               ? "text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]"
-              : "text-white [background-image:var(--gradient-brand)]"
+              : "text-on-brand [background-image:var(--gradient-brand)]"
           } ${className}`}
         >
           {state ? (
@@ -305,7 +305,7 @@ export function BePart({
                     </>
                   ) : (
                     <Button
-                      className="w-full text-white [background-image:var(--gradient-brand)]"
+                      className="w-full text-on-brand [background-image:var(--gradient-brand)]"
                       onClick={() => social.toggleHobbyFollow(hobbyKey, hobbyLabel)}
                     >
                       Start exploring
@@ -362,7 +362,7 @@ export function BePart({
                     </>
                   ) : (
                     <Button
-                      className="w-full text-white [background-image:var(--gradient-brand)]"
+                      className="w-full text-on-brand [background-image:var(--gradient-brand)]"
                       disabled={joining}
                       onClick={async () => {
                         // isGoing() (which gates joinIn itself) reads
@@ -436,7 +436,7 @@ export function BePart({
                         </p>
                       )}
                       <Button
-                        className="w-full text-white [background-image:var(--gradient-brand)]"
+                        className="w-full text-on-brand [background-image:var(--gradient-brand)]"
                         disabled={!text.trim() || sending}
                         onClick={() => send(active.id as "make_together" | "explore_together")}
                       >

@@ -213,6 +213,12 @@
      --accent-foreground, which goes dark in dark mode). */
   --on-brand: #FFFFFF;
   --scrim: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+  /* Flat dimming layer on or over media: chips and icon buttons sitting on
+     photos, the camera viewfinder, modal backdrops. Pure black in both
+     modes; set the strength at the call site with an opacity modifier
+     (bg-scrim-solid/60). For full-bleed text over a photo use the --scrim
+     gradient (bg-scrim) instead. */
+  --scrim-solid: #000000;
 
   /* Elevation, light mode only. Dark mode has no shadows: elevation there
      is --surface plus a 1px --border (see .dark). */
@@ -571,6 +577,7 @@
 @theme inline {
   --color-on-media: var(--on-media);
   --color-on-brand: var(--on-brand);
+  --color-scrim-solid: var(--scrim-solid);
   /* Registered by reference (not value) so the .dark and reduced-motion
      overrides above reach the utilities at runtime. */
   --shadow-card: var(--shadow-card);

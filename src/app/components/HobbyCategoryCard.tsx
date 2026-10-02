@@ -52,15 +52,15 @@ export function HobbyCategoryCard({
             />
           )}
           <div className={`absolute inset-0 bg-gradient-to-t ${hobby.gradient} opacity-20 mix-blend-multiply`} />
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--void)] via-[var(--void)]/20 to-transparent" />
+          <div className="absolute inset-0 bg-scrim" />
           <div className="ns-space-card-index">OPEN SPACE</div>
           <div className="absolute inset-x-0 bottom-0 p-5">
             <div className="flex items-end justify-between gap-2">
               <div className="transition-transform duration-300 ease-out group-hover:-translate-y-1 group-focus-visible:-translate-y-1">
-                <h3 className="mb-1 text-title leading-none text-white" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h3>
-                <p className="text-small text-white/80">{hobby.tagline}</p>
+                <h3 className="mb-1 text-title leading-none text-on-media" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h3>
+                <p className="text-small text-on-media/80">{hobby.tagline}</p>
               </div>
-              <ArrowUpRight className="mb-1 size-5 shrink-0 text-white transition-transform duration-300 ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-focus-visible:translate-x-1 group-focus-visible:-translate-y-1" />
+              <ArrowUpRight className="mb-1 size-5 shrink-0 text-on-media transition-transform duration-300 ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-focus-visible:translate-x-1 group-focus-visible:-translate-y-1" />
             </div>
           </div>
         </div>
