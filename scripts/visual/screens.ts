@@ -9,6 +9,7 @@ const click = (text: RegExp | string) => async (page: Page) => { await page.getB
 
 export const SCREENS: Screen[] = [
   { name: "my-space", route: "/my-space" },
+  { name: "home", route: "/" },
   { name: "you", route: "/you" },
   { name: "studio-cover", route: "/u/maya/studio" },
   { name: "discover", route: "/discover" },

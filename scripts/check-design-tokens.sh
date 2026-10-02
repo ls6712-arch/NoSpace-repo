@@ -124,6 +124,7 @@ scan type "no arbitrary text sizes; use the type scale" "${B}text-\[[0-9.]+(px|r
 scan type "no arbitrary text sizes; use the type scale" "${B}text-\[clamp\(" '*.ts' '*.tsx' '*.css'
 SKIP_FILES="$SRC/app/pages/Home.tsx"
 scan type "text-hero is for the marketing page (Home.tsx) only" "${B}text-hero${E}" '*.ts' '*.tsx'
+scan spacing "section-hero spacing is for the marketing page (Home.tsx) only" "${B}([a-z0-9]+:)*-?(p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y)-section-hero${E}" '*.ts' '*.tsx'
 SKIP_FILES=""
 
 # ── radius ─────────────────────────────────────────────────────────────────
@@ -140,6 +141,16 @@ SKIP_FILES="$THEME"
 scan color "colour literal outside theme.css; define a token there" '#([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3,4})([^0-9A-Za-z_-]|$)' '*.ts' '*.tsx' '*.css'
 scan color "colour literal outside theme.css; define a token there" '(^|[^A-Za-z-])(rgba?|hsla?)\([[:space:]]*[0-9.]' '*.ts' '*.tsx' '*.css'
 SKIP_FILES=""
+
+# ── spacing ────────────────────────────────────────────────────────────────
+# Section gaps are 16/24/32/48 (and --spacing-section-hero on the landing page):
+# no arbitrary values on stacks, or on a <section>/<main>/<article> wrapper.
+scan spacing "no arbitrary vertical stack spacing; use space-y/gap-y 4, 6, 8 or 12" "${B}(space-y|gap-y|my)-\\[" '*.ts' '*.tsx'
+while IFS= read -r hit; do
+  file="${hit%%:*}"; hit="${hit#*:}"; n="${hit%%:*}"; text="${hit#*:}"
+  if is_ignored "$file" "$n" "$text"; then IGNORED=$((IGNORED + 1)); continue; fi
+  report spacing "no arbitrary spacing on a section wrapper; use 4, 6, 8 or 12" "$file" "$n" "$text"
+done < <(mgrep --include='*.tsx' -e '<(section|main|article)([^>]*)(^|[^A-Za-z0-9_-])(gap|gap-x|mt|mb|py|pt|pb|px)-\[')
 
 # ── scrim-solid ────────────────────────────────────────────────────────────
 # One token beyond the spec, and only ever with an opacity modifier.

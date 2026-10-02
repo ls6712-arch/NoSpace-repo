@@ -605,6 +605,11 @@
   --text-hero: clamp(2.5rem, 1.5rem + 4vw, 4.75rem);
   --text-hero--line-height: 1.05;
 
+  /* Landing-page section gap (Home.tsx only), the way --text-hero is the
+     landing-only type size: py-section-hero, pt-section-hero, … In-app
+     section gaps stay on 16/24/32/48. The guard flags it anywhere else. */
+  --spacing-section-hero: 96px;
+
   /* The one easing curve, for both durations. */
   --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
