@@ -80,7 +80,7 @@ export function NextSessionCard({
           Next session
         </h2>
         {thisWeek !== undefined && project.timesPerWeek && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground tabular-nums">
             {thisWeek} of {project.timesPerWeek} this week
           </span>
         )}

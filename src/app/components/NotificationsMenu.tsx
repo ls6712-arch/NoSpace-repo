@@ -26,7 +26,7 @@ import { groupNotifications, unreadGroupCount } from "../lib/notificationGroupin
 import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
-import { formatWhen } from "../lib/dates";
+import { Time } from "./ui/time";
 
 /**
  * Notifications that describe what actually happened — "Reo accepted your Make
@@ -60,9 +60,6 @@ const ICON: Record<string, typeof Bell> = {
   love: Heart,
 };
 
-function ago(ts: number) {
-  return formatWhen(ts, { ago: true });
-}
 
 export function NotificationsMenu() {
   const [open, setOpen] = useState(false);
@@ -148,7 +145,7 @@ export function NotificationsMenu() {
         <Bell className="size-5" />
         {badgeCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white tabular-nums"
             aria-hidden="true"
           >
             {formatBadgeCount(badgeCount)}
@@ -251,7 +248,7 @@ export function NotificationsMenu() {
                     <span className="min-w-0">
                       <span className="block text-sm leading-snug">{g.body}</span>
                       <span className="block text-[11px] text-muted-foreground">
-                        {ago(g.createdAt)}
+                        <Time value={g.createdAt} ago />
                       </span>
                     </span>
                   </span>

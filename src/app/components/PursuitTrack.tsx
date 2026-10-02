@@ -13,6 +13,7 @@ import { ProgressBar } from "./pursuit/ui";
 import { formatAmount, hasMeasure, summarize } from "../lib/pursuitProgress";
 import { useJournalSlice, ProgressEntry } from "../lib/journal";
 import { formatDate } from "../lib/dates";
+import { Time } from "./ui/time";
 
 const NO_PROGRESS: ProgressEntry[] = [];
 
@@ -123,7 +124,7 @@ function Trail({
           role="tooltip"
           className="absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[11px] text-popover-foreground shadow-sm"
         >
-          {shortDate(hoveredMoment.createdAt)} · {firstWords(hoveredMoment.caption)}
+          <Time value={hoveredMoment.createdAt} format="date" /> · {firstWords(hoveredMoment.caption)}
         </div>
       )}
     </div>

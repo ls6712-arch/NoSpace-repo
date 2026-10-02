@@ -15,11 +15,8 @@ import {
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { CreateEventDialog } from "./CreateEventDialog";
-import { formatDateTime } from "../../lib/dates";
+import { Time } from "../ui/time";
 
-function fmt(iso: string, tz: string) {
-  return formatDateTime(iso, { timeZone: tz });
-}
 
 function initials(name: string) {
   return name
@@ -175,8 +172,8 @@ export function SpaceEventsTab({
           <ul className="space-y-2">
             {teasers.map((t) => (
               <li key={t.id} className="rounded-2xl border border-border px-4 py-3">
-                <p className="text-sm">{t.title}</p>
-                <p className="text-xs text-muted-foreground">{fmt(t.starts_at, t.timezone)}</p>
+                <p className="line-clamp-2 break-words text-sm">{t.title}</p>
+                <p className="text-xs text-muted-foreground"><Time value={t.starts_at} format="datetime" timeZone={t.timezone} /></p>
               </li>
             ))}
           </ul>
@@ -220,7 +217,7 @@ export function SpaceEventsTab({
                       {e.featured === true && <Star className="size-3.5 fill-current text-[var(--coral-deep)]" />}
                       {e.title}
                     </p>
-                    <p className="text-xs text-muted-foreground">{fmt(e.starts_at, e.timezone)}</p>
+                    <p className="text-xs text-muted-foreground"><Time value={e.starts_at} format="datetime" timeZone={e.timezone} /></p>
                     {(e.neighborhood || e.city) && (
                       <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="size-3" />
@@ -277,12 +274,12 @@ export function SpaceEventsTab({
                       {attendees.length > 0 && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                           {attendees.slice(0, 8).map((a) => (
-                            <span key={a.userId} className="flex items-center gap-1.5">
+                            <span key={a.userId} className="flex min-w-0 max-w-full items-center gap-1.5">
                               <Avatar className="size-6">
                                 {a.avatarUrl && <AvatarImage src={a.avatarUrl} alt="" />}
                                 <AvatarFallback className="text-[9px]">{initials(a.name)}</AvatarFallback>
                               </Avatar>
-                              <span className="text-xs text-muted-foreground">{a.name}</span>
+                              <span className="truncate text-xs text-muted-foreground">{a.name}</span>
                             </span>
                           ))}
                           {attendees.length > 8 && (

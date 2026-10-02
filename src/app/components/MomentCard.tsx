@@ -36,8 +36,8 @@ import {
   DialogDescription,
 } from "./ui/dialog";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { formatDateTime, formatWhen } from "../lib/dates";
 import { plural } from "../lib/plural";
+import { Time } from "./ui/time";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -384,7 +384,6 @@ export function MomentCard({
   const cornerLine = [corner, pursuitTitle].filter(Boolean).join(" · ");
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   const onlyYou = isOnlyYou(post);
-  const timeLabel = formatWhen(post.createdAt);
 
   return (
     <article className="flex min-w-0 flex-col">
@@ -448,7 +447,7 @@ export function MomentCard({
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
               {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
               <span className="hidden sm:inline">{visibilityWord(post)} · </span>
-              {timeLabel}
+              <Time value={post.createdAt} />
             </span>
           </div>
         ) : (
@@ -481,7 +480,7 @@ export function MomentCard({
           <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2.5">
             <div className="flex items-center gap-1.5 text-xs">
               <CalendarDays className="size-3.5 shrink-0 text-foreground" />
-              {formatDateTime(post.startsAt!)}
+              <Time value={post.startsAt!} format="datetime" />
             </div>
             {activityPlace && (
               <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">

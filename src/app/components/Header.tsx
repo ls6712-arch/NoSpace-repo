@@ -40,7 +40,7 @@ function MessagesLink() {
         <MessagesSquare className="size-5" />
         {badgeCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white tabular-nums"
             aria-hidden="true"
           >
             {formatBadgeCount(badgeCount)}
@@ -146,7 +146,7 @@ function AccountMenuPopover() {
               Reports
               {!!openReportCount && (
                 <span
-                  className="ml-auto flex size-5 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+                  className="ml-auto flex size-5 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white tabular-nums"
                   aria-label={`${openReportCount} open`}
                 >
                   {formatBadgeCount(openReportCount)}
@@ -452,7 +452,7 @@ export function Header() {
           {cartCount > 0 && (
             <Button variant="ghost" size="icon" onClick={openCart} className="relative" aria-label={`Cart (${cartCount})`}>
               <ShoppingBag className="size-5" />
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white">
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white tabular-nums">
                 {cartCount}
               </span>
             </Button>

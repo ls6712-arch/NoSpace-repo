@@ -284,7 +284,7 @@ export function AddMoment() {
                   <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
                 </div>
                 {summary && (
-                  <p className="mt-2 text-[11px] text-muted-foreground">
+                  <p className="mt-2 text-[11px] text-muted-foreground tabular-nums">
                     {formatAmount(summary.current)} of {targetText(measure)} so far
                   </p>
                 )}

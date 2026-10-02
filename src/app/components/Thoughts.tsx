@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { MediaAttachPicker } from "./MediaAttachPicker";
 import { ReportDialog } from "./ReportDialog";
-import { formatWhen } from "../lib/dates";
+import { Time } from "./ui/time";
 
 /**
  * Thoughts, not comments — short, standalone reflections on a piece of work
@@ -32,9 +32,6 @@ function initials(name: string) {
 // quick starter inside Add a thought rather than gone entirely.
 const QUICK_STARTERS = ["Keep going", "How did you…?", "Show us the next one"];
 
-function ago(ts: number) {
-  return formatWhen(ts, { ago: true });
-}
 
 export function Thoughts({
   postId,
@@ -222,7 +219,7 @@ export function Thoughts({
                   <AvatarFallback className="text-[9px]">{initials(t.authorName)}</AvatarFallback>
                 </Avatar>
                 <span className="text-[11px] text-muted-foreground">
-                  {t.authorName} · {ago(t.createdAt)}
+                  {t.authorName} · <Time value={t.createdAt} ago />
                 </span>
                 {user?.id === t.userId ? (
                   <button

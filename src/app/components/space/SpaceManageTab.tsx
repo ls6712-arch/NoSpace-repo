@@ -301,7 +301,7 @@ export function SpaceManageTab({
           <ul className="space-y-2">
             {joinRequests.map((r) => (
               <li key={r.user_id} className="rounded-xl border border-border p-3">
-                <p className="text-sm">{r.displayName}</p>
+                <p className="truncate text-sm">{r.displayName}</p>
                 {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">"{r.answers.message}”</p>}
                 {r.postCaption && <p className="mt-1 text-xs text-muted-foreground">Attached: {r.postCaption}</p>}
                 <div className="mt-2 flex gap-2">
@@ -340,7 +340,7 @@ export function SpaceManageTab({
                   <img src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-md object-cover" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">{m.authorName}</p>
+                  <p className="truncate text-xs text-muted-foreground">{m.authorName}</p>
                   <p className="line-clamp-2 text-sm">{m.caption}</p>
                   <div className="mt-2 flex gap-2">
                     <Button
@@ -371,9 +371,9 @@ export function SpaceManageTab({
         <h3 className="mb-2 text-sm font-medium">Members</h3>
         <ul className="divide-y divide-[var(--hairline)]">
           {members.map((m) => (
-            <li key={m.user_id} className="flex items-center justify-between py-2">
-              <span className="text-sm">
-                {m.displayName}
+            <li key={m.user_id} className="flex items-center justify-between gap-3 py-2">
+              <span className="flex min-w-0 items-center text-sm">
+                <span className="truncate">{m.displayName}</span>
                 {m.role === "host" && <span className="ml-1.5 text-[10px] text-muted-foreground">Host</span>}
                 {m.status === "banned" && <span className="ml-1.5 text-[10px] text-destructive">Banned</span>}
               </span>

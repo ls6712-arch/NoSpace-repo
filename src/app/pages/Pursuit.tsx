@@ -360,7 +360,7 @@ export function Pursuit() {
           <span className="text-sm text-muted-foreground">{view.ownerName}</span>
         </div>
 
-        <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mb-2 break-words text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
           {view.title}
         </h1>
 
@@ -373,7 +373,7 @@ export function Pursuit() {
           {moments.length > 0 && (
             <>
               <span aria-hidden="true">·</span>
-              <span>
+              <span className="tabular-nums">
                 {plural(moments.length, "Moment")}
               </span>
             </>
@@ -442,7 +442,7 @@ export function Pursuit() {
                   Goal reached — <span className="text-muted-foreground">{goal.label}</span>
                 </span>
               ) : (
-                <span>{goalSentence}</span>
+                <span className="tabular-nums">{goalSentence}</span>
               )}
             </p>
             {!goalReached && goal.shape === "date" && goal.targetDate && (

@@ -398,9 +398,9 @@ export function SpaceHomeTab({
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
         <div className="-mx-4 rounded-2xl bg-bark px-5 py-5 text-paper sm:mx-0">
-          <p className="text-[11px] uppercase tracking-wide text-paper/70">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
-          <p className="mt-1 text-xl" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
-          <p className="mt-1 text-sm text-paper/80">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
+          <p className="text-[11px] uppercase tracking-wide text-paper/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
+          <p className="mt-1 line-clamp-2 break-words text-xl" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
+          <p className="mt-1 text-sm text-paper/80 tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
           {(todayEvent.neighborhood || todayEvent.city || todayAddress) && (
             <p className="mt-1 flex items-center gap-1 text-sm text-paper/80">
               <MapPin className="size-3.5" />

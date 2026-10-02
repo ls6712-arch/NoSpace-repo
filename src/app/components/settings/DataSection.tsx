@@ -4,12 +4,9 @@ import { usePrivateLogs } from "../../context/PrivateLogsContext";
 import { useRewards } from "../../context/RewardsContext";
 import { SectionHeader } from "../ui/section-header";
 import { ConfirmDialog } from "../ConfirmDialog";
-import { formatWhen } from "../../lib/dates";
 import { plural } from "../../lib/plural";
+import { Time } from "../ui/time";
 
-function timeAgo(ts: number) {
-  return formatWhen(ts, { ago: true });
-}
 
 export function DataSection() {
   const { logs, remove } = usePrivateLogs();
@@ -39,7 +36,7 @@ export function DataSection() {
               <li key={entry.id} className="rounded-btn border border-[var(--hairline)] p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <span className="text-[11px] text-muted-foreground">
-                    Only you · {timeAgo(entry.createdAt)}
+                    Only you · <Time value={entry.createdAt} ago />
                   </span>
                   <button
                     type="button"

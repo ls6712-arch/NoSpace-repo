@@ -10,7 +10,7 @@ import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { APP_NAME } from "../config";
-import { formatWhen } from "../lib/dates";
+import { Time } from "../components/ui/time";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -40,9 +40,6 @@ interface WaitlistRow {
   createdAt: number;
 }
 
-function when(ts: number) {
-  return formatWhen(ts, { ago: true });
-}
 
 function inviteStatus(row: InviteRow): { label: string; done: boolean } {
   if (row.claimedByName) return { label: `Claimed by ${row.claimedByName}`, done: true };
@@ -244,7 +241,7 @@ export function AdminInvites() {
                         <div className="min-w-0 text-sm">
                           <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">{r.code}</p>
                           {r.note && <p className="mt-1 italic text-foreground">“{r.note}”</p>}
-                          <p className="mt-1 text-xs text-muted-foreground">Created {when(r.createdAt)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Created <Time value={r.createdAt} ago /></p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           <span
@@ -291,7 +288,7 @@ export function AdminInvites() {
                     <span className="min-w-0 truncate">{w.email}</span>
                     <span className="text-xs text-muted-foreground">
                       {w.hobby ? `${w.hobby} · ` : ""}
-                      {when(w.createdAt)}
+                      <Time value={w.createdAt} ago />
                     </span>
                   </li>
                 ))}

@@ -188,7 +188,7 @@ export function PursuitCard({
 
       <div className="flex flex-1 flex-col p-4">
         <Link to={`/pursuit/${pursuit.id}`} className="block">
-          <p className="text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+          <p className="line-clamp-2 break-words text-base leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
             {pursuit.title}
           </p>
           {(pursuit.interest || spaceLabel) && (

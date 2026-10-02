@@ -576,6 +576,45 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    /* Crisper text on macOS/iOS, and Inter's contextual alternates (an
+       arrow from "->", hyphens and colons that sit right between capitals
+       and figures) plus kerning everywhere. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "calt" 1;
+  }
+
+  /* Numbers that change or line up — counts, dates in lists, timers — use
+     Inter's tabular figures so they don't jiggle as they update. Tailwind's
+     `tabular-nums` sets font-variant-numeric; the feature is repeated here
+     because a component that sets its own font-feature-settings would
+     otherwise drop it. */
+  time,
+  .tabular-nums,
+  [data-tabular] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "kern" 1, "calt" 1, "tnum" 1;
+  }
+
+  /* Headings even out their lines; paragraphs avoid leaving one word alone
+     on the last line. */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+
+  p, li, dd, blockquote, figcaption {
+    text-wrap: pretty;
+  }
+
+  /* A truncated name or title someone tapped open (lib/truncation.ts). */
+  .ns-truncate-open {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
   }
 
   /* Paper-grain — a faint physical texture over the whole app, not a

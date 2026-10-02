@@ -795,7 +795,7 @@ export function Messages() {
                     <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="text-[10px]">{initials(person.displayName)}</AvatarFallback>
                     </Avatar>
-                    {person.displayName}
+                    <span className="min-w-0 truncate">{person.displayName}</span>
                   </button>
                 </li>
               ))}
