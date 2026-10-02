@@ -8,6 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
+//   node scripts/visual/run.ts --contrast             WCAG contrast of every text/background pair (4.5:1, 3:1 large), light + dark; --strict fails on any
 //   node scripts/visual/run.ts --touch                 touch-target audit: 44x44px hit areas, and overlaps
 //
 // Needs a Chromium: set PLAYWRIGHT_CHROMIUM or rely on PLAYWRIGHT_BROWSERS_PATH.
@@ -22,6 +23,7 @@ import { buildFixtures } from "./fixtures.ts";
 import { cacheFonts } from "./fonts.ts";
 import { detectInPage, diffDetections, INFLATE_CSS, type Detection } from "./detect.ts";
 import { touchAuditInPage, type TouchResult } from "./touch.ts";
+import { contrastInPage, type ContrastResult } from "./contrast.ts";
 import { FIXTURE_ANON_KEY, FIXTURE_ORIGIN, installSupabaseMock, seededSession } from "./mock-supabase.ts";
 import { SCREENS, type Screen } from "./screens.ts";
 
@@ -107,6 +109,23 @@ async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, Touc
   srv.close(); return out;
 }
 
+async function contrastPass(browser: Browser, o: RunOpts): Promise<Map<string, ContrastResult>> {
+  const srv = await serve(o.dist, o.fontsDir); const out = new Map<string, ContrastResult>();
+  for (const theme of o.themes) for (const w of o.widths) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: HEIGHTS[w] ?? 900 }, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
+    await installSupabaseMock(ctx, buildFixtures(), TYPES);
+    await ctx.addInitScript(([session, t]) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", t as string); } catch { /* storage blocked */ } }, [seededSession(), theme] as const);
+    const page = await ctx.newPage();
+    for (const s of o.screens) {
+      if (s.widths && !s.widths.includes(w)) continue;
+      try { await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page); out.set(`${theme}/${w}/${s.name}`, await page.evaluate(contrastInPage)); }
+      catch (e) { console.log(`note: contrast ${theme}/${w}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
+    }
+    await ctx.close();
+  }
+  srv.close(); return out;
+}
+
 const total = (r: Results) => [...r.values()].reduce((n, d) => n + d.flags.length, 0);
 
 async function main() {
@@ -126,6 +145,16 @@ async function main() {
     console.log(`selftest: normal ${total(normal.results)} flags / ${hs(normal.results)}px hscroll → +45% type ${total(inflated.results)} flags / ${hs(inflated.results)}px hscroll`);
     console.log(ok ? "selftest PASS: the detector sees inflated type" : "selftest FAIL: the detector did not react to +45% type");
     await browser.close(); process.exit(ok ? 0 : 1);
+  }
+
+  if (flag("contrast")) {
+    const res = await contrastPass(browser, base);
+    let checked = 0; const fails = new Map<string, { f: ContrastResult["failures"][number]; where: Set<string> }>(); const media = new Map<string, number>();
+    for (const [k, r] of res) { checked += r.checked; for (const f of r.failures) { const id = `${k.split("/")[0]}|${f.sel}|${f.text}|${f.fg}|${f.bg}`; const e = fails.get(id) ?? { f, where: new Set() }; e.where.add(k.split("/").slice(1).join("/")); fails.set(id, e); } for (const m of r.overMedia) media.set(m, (media.get(m) ?? 0) + 1); }
+    console.log(`contrast audit: ${res.size} views, ${checked} text elements checked; ${fails.size} distinct pair(s) below 4.5:1 (3:1 for large text)`);
+    for (const [id, { f, where }] of [...fails].sort((a, b) => a[1].f.ratio - b[1].f.ratio)) console.log(`  FAIL ${id.split("|")[0].padEnd(5)} ${f.ratio.toFixed(2)}:1 (need ${f.need}) ${f.fg} on ${f.bg} ${f.size}px  ${f.sel} "${f.text}"  [${[...where].slice(0, 3).join(", ")}${where.size > 3 ? ` +${where.size - 3}` : ""}]`);
+    console.log(`text over photo/video, not judged by CSS (distinct): ${media.size}`); for (const [m, n] of [...media].slice(0, 25)) console.log(`  media ${m}  (${n} views)`);
+    await browser.close(); process.exit(flag("strict") && fails.size > 0 ? 1 : 0);
   }
 
   if (flag("touch")) {
