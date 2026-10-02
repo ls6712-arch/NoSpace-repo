@@ -363,55 +363,29 @@ Inline text links inside a paragraph are exempt (44px around a line of prose
 would cover the lines above and below).
 
 
-## 12. Phase 3: section gaps outside 16 / 24 / 32 / 48 (report only, nothing changed)
+## 12. Phase 3: section gaps onto 16 / 24 / 32 / 48 (applied)
 
 **Scope.** A *section gap* is vertical spacing between page sections: any
 `mt/mb/my/pt/pb/py` on a `<section>`, `<main>` or `<article>` tag, and every
 `space-y-*` / `gap-y-*` of 16px or more anywhere in `src`. Values below 16px
 are the rhythm inside a component (list rows, label/field pairs), not a gap
-between sections, and are out of scope. Regenerate with
-`python3 scripts/design-audit.py --spacing`. Suggestions are the nearest allowed
-value; ties round up (28 → 32, 40 → 48).
+between sections, and are out of scope. `python3 scripts/design-audit.py --spacing`
+lists whatever is left (now none).
 
-**Decision needed.** Everything above 48px (rows 2, 3, 6–18, 21, 24) is either
-the marketing page (`Home.tsx`, 80–112px) or a one-off. 64+ is not in the
-allowed set, so each of those needs a call from you: cap at 48, or add a
-landing-only gap (the way `text-hero` is landing-only). The table suggests 48
-for all of them.
+**Applied (approved).** 28 gaps, in two commits:
 
-| # | file:line | class | on | px | suggest |
-|---|---|---|---|---|---|
-| 1 | `src/app/pages/AdminSpaces.tsx:210` | `mb-10` | section tag | 40 | 48 |
-| 2 | `src/app/pages/Corner.tsx:60` | `pt-14` | section tag | 56 | 48, or a design call: landing-scale gap (>48) |
-| 3 | `src/app/pages/Corner.tsx:72` | `pb-24` | section tag | 96 | 48, or a design call: landing-scale gap (>48) |
-| 4 | `src/app/pages/Discover.tsx:204` | `mb-11` | section tag | 44 | 48 |
-| 5 | `src/app/pages/Discover.tsx:472` | `py-10` | section tag | 40 | 48 |
-| 6 | `src/app/pages/Discover.tsx:534` | `mb-14` | section tag | 56 | 48, or a design call: landing-scale gap (>48) |
-| 7 | `src/app/pages/Home.tsx:193` | `lg:pt-20` | section tag | 80 | 48, or a design call: landing-scale gap (>48) |
-| 8 | `src/app/pages/Home.tsx:193` | `pt-16` | section tag | 64 | 48, or a design call: landing-scale gap (>48) |
-| 9 | `src/app/pages/Home.tsx:210` | `lg:py-28` | section tag | 112 | 48, or a design call: landing-scale gap (>48) |
-| 10 | `src/app/pages/Home.tsx:210` | `py-20` | section tag | 80 | 48, or a design call: landing-scale gap (>48) |
-| 11 | `src/app/pages/Home.tsx:244` | `lg:py-28` | section tag | 112 | 48, or a design call: landing-scale gap (>48) |
-| 12 | `src/app/pages/Home.tsx:244` | `py-20` | section tag | 80 | 48, or a design call: landing-scale gap (>48) |
-| 13 | `src/app/pages/Home.tsx:267` | `lg:py-28` | section tag | 112 | 48, or a design call: landing-scale gap (>48) |
-| 14 | `src/app/pages/Home.tsx:267` | `py-20` | section tag | 80 | 48, or a design call: landing-scale gap (>48) |
-| 15 | `src/app/pages/Home.tsx:296` | `lg:py-28` | section tag | 112 | 48, or a design call: landing-scale gap (>48) |
-| 16 | `src/app/pages/Home.tsx:296` | `py-20` | section tag | 80 | 48, or a design call: landing-scale gap (>48) |
-| 17 | `src/app/pages/Home.tsx:307` | `lg:py-28` | section tag | 112 | 48, or a design call: landing-scale gap (>48) |
-| 18 | `src/app/pages/Home.tsx:307` | `py-20` | section tag | 80 | 48, or a design call: landing-scale gap (>48) |
-| 19 | `src/app/pages/Log.tsx:1687` | `space-y-7` | stack | 28 | 32 |
-| 20 | `src/app/pages/People.tsx:127` | `mb-10` | section tag | 40 | 48 |
-| 21 | `src/app/pages/People.tsx:221` | `sm:py-14` | section tag | 56 | 48, or a design call: landing-scale gap (>48) |
-| 22 | `src/app/pages/Pursuit.tsx:618` | `space-y-10` | stack | 40 | 48 |
-| 23 | `src/app/pages/SearchResults.tsx:98` | `space-y-10` | stack | 40 | 48 |
-| 24 | `src/app/pages/You.tsx:328` | `mb-16` | section tag | 64 | 48, or a design call: landing-scale gap (>48) |
-| 25 | `src/app/pages/You.tsx:401` | `mb-10` | section tag | 40 | 48 |
-| 26 | `src/app/pages/You.tsx:401` | `pt-7` | section tag | 28 | 32 |
-| 27 | `src/app/pages/You.tsx:476` | `mb-10` | section tag | 40 | 48 |
-| 28 | `src/app/pages/You.tsx:476` | `pt-7` | section tag | 28 | 32 |
+- *In-app screens* (16 changes, 8 files): 40/44/56/64/96px → 48 (`*-12`),
+  28px → 32 (`*-8`).
+- *Landing page* (12 changes, `Home.tsx`): 80/64px → 48; the 112px `lg:` gaps →
+  `--spacing-section-hero` (96px), a landing-only token scoped to `Home.tsx` the
+  way `text-hero` is. The guard rejects it anywhere else.
 
-28 section gaps outside 16/24/32/48
+Page-height change in the harness (full page, light): You +8px, Discover ±8px,
+Home −192 to −336px depending on width, everything else unchanged; no new layout
+flags and no horizontal scroll.
 
+The guard also rejects arbitrary `space-y-[…]`, `gap-y-[…]`, `my-[…]` and
+arbitrary `gap/mt/mb/py/pt/pb/px-[…]` on a `<section>`, `<main>` or `<article>`.
 
 ## 13. Phase 5: final before / after
 
