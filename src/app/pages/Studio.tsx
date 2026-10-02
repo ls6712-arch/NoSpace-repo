@@ -235,7 +235,7 @@ export function Studio() {
 
   if (!opened) {
     return (
-      <div className="ns-paper-theme relative min-h-viewport overflow-hidden bg-[var(--ink)] text-on-media">
+      <div className="ns-paper-theme relative min-h-viewport overflow-hidden bg-scrim-solid/100 text-on-media">
         <div className="absolute inset-0">
           {coverPost && (
             <PostMedia
