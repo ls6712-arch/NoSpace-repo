@@ -4,6 +4,7 @@
 Read-only: walks src/**/*.{ts,tsx,css} and counts the raw values the P0
 Foundations token pass replaces. Re-run after each Phase 2 sweep to see what's
 left:  python3 scripts/design-audit.py [--files]
+  python3 scripts/design-audit.py --spacing   Phase 3: section gaps that aren't 16/24/32/48 (markdown table)
 """
 import re
 import sys
@@ -148,6 +149,70 @@ for p in code:
         prop = m.group(0).rsplit("-", 1)[0] if not m.group(1).startswith("[") else m.group(0).split("-[")[0]
         space[prop][m.group(1)] += 1
 report["space"] = space
+
+
+ALLOWED_GAPS = {16, 24, 32, 48}
+SECTION_TAG = re.compile(r"<(section|main|article)\b[^>]*?>", re.S)
+SPACING_UTIL = re.compile(r"(?<![\w-])((?:(?:sm|md|lg|xl|2xl):)*)(space-y|gap-y|gap|my|mt|mb|py|pt|pb)-(\d+(?:\.\d+)?|px|\[[^\]]+\])(?![\w-])")
+STACK_UTIL = re.compile(r"(?<![\w-])((?:(?:sm|md|lg|xl|2xl):)*)(space-y|gap-y)-(\d+(?:\.\d+)?|px|\[[^\]]+\])(?![\w-])")
+
+
+def spacing_report():
+    """Section gaps = vertical spacing on <section>/<main>/<article> tags, plus
+    every space-y-* / gap-y-* of 16px or more (smaller values are the rhythm
+    inside a component, not a gap between sections). Anything not 16, 24, 32 or
+    48px is listed with the nearest allowed value; ties round up."""
+    rows = []
+    for p in code:
+        text = p.read_text()
+        spans = []
+        for m in SECTION_TAG.finditer(text):
+            spans.append((m.start(), m.group(0), "section"))
+        for m in STACK_UTIL.finditer(text):
+            spans.append((m.start(), m.group(0), "stack"))
+        seen = set()
+        for start, frag, kind in spans:
+            for m in SPACING_UTIL.finditer(frag) if kind == "section" else [STACK_UTIL.match(frag)]:
+                if m is None:
+                    continue
+                val = m.group(3)
+                if val.startswith("["):
+                    px = None
+                elif val == "px":
+                    px = 1.0
+                else:
+                    px = float(val) * 4
+                if kind == "stack" and (px is None or px < 16):
+                    continue
+                if px in ALLOWED_GAPS:
+                    continue
+                off = start + (m.start() if kind == "section" else 0)
+                key = (p, off)
+                if key in seen:
+                    continue
+                seen.add(key)
+                line = text.count("\n", 0, off) + 1
+                rows.append((rel(p), line, m.group(0), kind, px))
+    return rows
+
+
+def suggest(px):
+    if px is None:
+        return "arbitrary value: pick 16/24/32/48"
+    if px < 16:
+        return "16" if px >= 12 else "16 (or drop: tight, probably component rhythm)"
+    if px > 48:
+        return "48, or a design call: landing-scale gap (>48)"
+    return str(min(sorted(ALLOWED_GAPS), key=lambda a: (abs(a - px), -a)))
+
+
+if "--spacing" in sys.argv:
+    rows = spacing_report()
+    print(f"| # | file:line | class | on | px | suggest |\n|---|---|---|---|---|---|")
+    for i, (f, ln, cls, kind, px) in enumerate(sorted(rows), 1):
+        print(f"| {i} | `{f}:{ln}` | `{cls}` | {'section tag' if kind == 'section' else 'stack'} | {'-' if px is None else int(px) if px == int(px) else px} | {suggest(px)} |")
+    print(f"\n{len(rows)} section gaps outside 16/24/32/48")
+    sys.exit(0)
 
 
 def fmt(counter, limit=None):
