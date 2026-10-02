@@ -71,7 +71,7 @@ function PinPicker({
                   className="h-full w-full object-cover"
                 />
               </div>
-              <span className="min-w-0 flex-1 truncate text-small">{post.caption || "Untitled moment"}</span>
+              <span className="min-w-0 flex-1 truncate text-small" title={post.caption || "Untitled moment"}>{post.caption || "Untitled moment"}</span>
               <span className={`text-caption ${post.pinned ? "text-[var(--coral-deep)]" : "text-muted-foreground"}`}>
                 {post.pinned ? "Pinned" : "Pin"}
               </span>

@@ -255,7 +255,7 @@ export function MomentDetail({
               to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
               className="truncate text-body transition-colors hover:text-[var(--coral-text)]"
               style={{ fontFamily: "var(--font-serif)" }}
-            >
+             title={post.creator}>
               {post.creator}
             </Link>
           </div>

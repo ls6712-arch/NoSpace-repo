@@ -164,7 +164,7 @@ export function ProductDetail() {
                       />
                     </div>
                     <div className="p-4">
-                      <h3 className="mb-1 line-clamp-1 text-small">{item.name}</h3>
+                      <h3 className="mb-1 line-clamp-1 text-small" title={item.name}>{item.name}</h3>
                       <div className="text-[var(--coral-text)]">${item.price.toFixed(2)}</div>
                     </div>
                   </div>

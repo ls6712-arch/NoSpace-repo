@@ -151,8 +151,8 @@ export function ProfileLinksEditor({
               >
                 <Icon className="size-4 shrink-0 text-foreground" strokeWidth={1.8} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-small">{link.label}</p>
-                  <p className="truncate text-caption text-muted-foreground">{link.url}</p>
+                  <p className="truncate text-small" title={link.label}>{link.label}</p>
+                  <p className="truncate text-caption text-muted-foreground" title={link.url}>{link.url}</p>
                 </div>
                 <button
                   type="button"

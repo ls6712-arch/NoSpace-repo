@@ -321,7 +321,7 @@ function ConversationPanel({
     <div className="flex h-[26rem] flex-col rounded-card border border-border bg-card md:h-[36rem]">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
         <div className="min-w-0">
-          <div className="truncate text-small" style={{ fontFamily: "var(--font-serif)" }}>
+          <div className="truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={person.name}>
             {person.name}
           </div>
           <div className="text-caption text-muted-foreground">{subtitle}</div>
@@ -891,7 +891,7 @@ export function Messages() {
                             <AvatarFallback className="text-caption">{initials(name ?? "?")}</AvatarFallback>
                           </Avatar>
                           <span className="min-w-0 flex-1">
-                            <span className={`block truncate text-small ${unread > 0 ? "font-semibold text-foreground" : ""}`}>
+                            <span className={`block truncate text-small ${unread > 0 ? "font-semibold text-foreground" : ""}`} title={name}>
                               {name}
                             </span>
                             <span
@@ -906,7 +906,7 @@ export function Messages() {
                               ) : (
                                 <MessageCircle className="size-3 shrink-0" />
                               )}
-                              <span className="truncate">{preview}</span>
+                              <span className="truncate" title={preview}>{preview}</span>
                             </span>
                           </span>
                           {unread > 0 && (
@@ -1028,7 +1028,7 @@ function RequestCard({ request }: { request: Participation }) {
           </Avatar>
         </Link>
         <Link to={profilePath({ id: request.fromUser })} className="min-w-0 flex-1">
-          <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }}>
+          <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={request.fromName}>
             {request.fromName}
           </span>
         </Link>

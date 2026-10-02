@@ -357,7 +357,7 @@ export function PublicProfile() {
               <h1
                 className="truncate text-display leading-tight"
                 style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
-              >
+               title={displayName}>
                 {displayName}
               </h1>
               {bio && (

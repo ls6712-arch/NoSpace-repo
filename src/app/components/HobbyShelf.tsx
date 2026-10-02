@@ -238,7 +238,7 @@ function CornerTile({
         <span
           className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-control px-2.5 py-1 text-caption font-semibold text-on-media"
           style={{ backgroundColor: tagTint(item.hobbySlug) }}
-        >
+         title={getHobby(item.hobbySlug)?.shortName ?? item.label}>
           {getHobby(item.hobbySlug)?.shortName ?? item.label}
         </span>
       </div>

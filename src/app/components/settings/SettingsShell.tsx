@@ -97,7 +97,7 @@ export function SettingsShell({
                       <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
                         {s.n} · {s.name}
                       </span>
-                      <span className="mt-0.5 block truncate text-caption text-muted-foreground">
+                      <span className="mt-0.5 block truncate text-caption text-muted-foreground" title={s.summary}>
                         {s.summary}
                       </span>
                     </span>

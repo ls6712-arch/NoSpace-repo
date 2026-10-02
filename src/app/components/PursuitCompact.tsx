@@ -130,14 +130,14 @@ export function PursuitCompactCard({
       )}
       <span className="min-w-0 flex-1">
         {label && (
-          <span className="block truncate text-caption font-medium uppercase tracking-wide text-muted-foreground">
+          <span className="block truncate text-caption font-medium uppercase tracking-wide text-muted-foreground" title={label}>
             {label}
           </span>
         )}
-        <span className="block truncate text-small leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+        <span className="block truncate text-small leading-tight" style={{ fontFamily: "var(--font-serif)" }} title={pursuit.title}>
           {pursuit.title}
         </span>
-        <span className="block truncate text-caption text-muted-foreground">{progressText ?? status}</span>
+        <span className="block truncate text-caption text-muted-foreground" title={progressText ?? status}>{progressText ?? status}</span>
       </span>
     </button>
   );
@@ -221,7 +221,7 @@ export function PursuitExpandedPanel({
               {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
             </p>
           )}
-          <h3 className="truncate text-lead" style={{ fontFamily: "var(--font-serif)" }}>
+          <h3 className="truncate text-lead" style={{ fontFamily: "var(--font-serif)" }} title={pursuit.title}>
             {pursuit.title}
           </h3>
         </div>

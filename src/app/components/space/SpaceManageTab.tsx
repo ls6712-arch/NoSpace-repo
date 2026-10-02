@@ -340,7 +340,7 @@ export function SpaceManageTab({
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-caption text-muted-foreground">{m.authorName}</p>
-                  <p className="line-clamp-2 text-small">{m.caption}</p>
+                  <p className="line-clamp-2 text-small" title={m.caption}>{m.caption}</p>
                   <div className="mt-2 flex gap-2">
                     <Button
                       size="sm"

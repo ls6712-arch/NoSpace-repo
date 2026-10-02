@@ -407,7 +407,7 @@ export function Studio() {
                       className="h-full w-full object-cover"
                     />
                     <div className="pointer-events-none absolute inset-0 bg-scrim" />
-                    <p className="absolute inset-x-0 bottom-0 truncate p-2 text-caption italic text-on-media">
+                    <p className="absolute inset-x-0 bottom-0 truncate p-2 text-caption italic text-on-media" title={post.caption}>
                       {post.caption}
                     </p>
                   </div>

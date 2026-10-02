@@ -211,7 +211,7 @@ export function AdminInvites() {
 
           {newLink && (
             <div className="mt-4 flex items-center gap-2 rounded-card border border-[var(--hairline)] bg-surface-muted px-3 py-2.5">
-              <code className="min-w-0 flex-1 truncate text-caption">{newLink}</code>
+              <code className="min-w-0 flex-1 truncate text-caption" title={newLink}>{newLink}</code>
               <Button variant="outline" size="sm" onClick={copyLink}>
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                 {copied ? "Copied" : "Copy"}
@@ -291,7 +291,7 @@ export function AdminInvites() {
                     key={`${w.email}-${i}`}
                     className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-border bg-card px-4 py-3 text-small"
                   >
-                    <span className="min-w-0 truncate">{w.email}</span>
+                    <span className="min-w-0 truncate" title={w.email}>{w.email}</span>
                     <span className="text-caption text-muted-foreground">
                       {w.hobby ? `${w.hobby} · ` : ""}
                       {when(w.createdAt)}
@@ -321,7 +321,7 @@ export function AdminInvites() {
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 text-small">
                           <p className="font-medium text-foreground">{m.authorName}</p>
-                          {m.caption && <p className="mt-1 line-clamp-2 text-muted-foreground">{m.caption}</p>}
+                          {m.caption && <p className="mt-1 line-clamp-2 text-muted-foreground" title={m.caption}>{m.caption}</p>}
                           <p className="mt-1 text-caption text-muted-foreground">
                             {m.inviterName ? `Invited by ${m.inviterName} · ` : ""}
                             {m.hoursWaiting < 1 ? "Just now" : `${m.hoursWaiting}h waiting`}

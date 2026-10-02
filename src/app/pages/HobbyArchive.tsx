@@ -288,7 +288,7 @@ export function HobbyArchive() {
                       {updates.length > 0 && (
                         <ul className="mt-3 space-y-1">
                           {updates.slice(0, 3).map((u) => (
-                            <li key={u.id} className="truncate text-caption text-muted-foreground">
+                            <li key={u.id} className="truncate text-caption text-muted-foreground" title={`${dayLabel(u.createdAt)}: ${u.caption}`}>
                               {dayLabel(u.createdAt)}: {u.caption}
                             </li>
                           ))}

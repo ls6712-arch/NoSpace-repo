@@ -125,9 +125,9 @@ export function SearchResults() {
                             </span>
                           )}
                           <span className="min-w-0">
-                            <span className="block truncate text-small">{hit.label}</span>
+                            <span className="block truncate text-small" title={hit.label}>{hit.label}</span>
                             {hit.sub && (
-                              <span className="block truncate text-caption text-muted-foreground">{hit.sub}</span>
+                              <span className="block truncate text-caption text-muted-foreground" title={hit.sub}>{hit.sub}</span>
                             )}
                           </span>
                         </Link>

@@ -67,7 +67,7 @@ export function CartDrawer() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-small mb-0.5 line-clamp-1">{item.name}</h4>
+                    <h4 className="text-small mb-0.5 line-clamp-1" title={item.name}>{item.name}</h4>
                     <div className="text-caption text-muted-foreground mb-2">
                       by {item.creator}
                     </div>

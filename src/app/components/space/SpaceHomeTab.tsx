@@ -442,7 +442,7 @@ export function SpaceHomeTab({
           to={`/space/${space.slug}?tab=events`}
           className="-mx-4 flex items-center justify-between gap-3 rounded-card bg-bark px-5 py-3 text-small text-on-bark sm:mx-0"
         >
-          <span className="truncate">
+          <span className="truncate" title={`Next: ${fmtDay(nextEvent.starts_at)} · ${nextEvent.title}`}>
             Next: {fmtDay(nextEvent.starts_at)} · {nextEvent.title}
           </span>
           <ArrowRight className="size-4 shrink-0" />
@@ -504,7 +504,7 @@ export function SpaceHomeTab({
             {myPendingMoments.map((post) => (
               <div key={post.id} className="flex items-center gap-3 rounded-card border border-line bg-paper px-3 py-2">
                 {post.media && <img src={post.media} alt="" className="size-10 shrink-0 rounded-control object-cover" />}
-                <p className="line-clamp-1 flex-1 text-small">{post.caption || `Moment #${post.id}`}</p>
+                <p className="line-clamp-1 flex-1 text-small" title={post.caption || `Moment #${post.id}`}>{post.caption || `Moment #${post.id}`}</p>
               </div>
             ))}
           </div>

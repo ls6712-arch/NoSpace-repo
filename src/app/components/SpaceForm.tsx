@@ -269,7 +269,7 @@ export function SpaceForm({
         <div>
           <Label htmlFor="space-slug">URL</Label>
           <div className="mt-1.5 flex items-center gap-1.5 text-small text-muted-foreground">
-            <span className="truncate">{origin}/#/space/</span>
+            <span className="truncate" title={`${origin}/#/space/`}>{origin}/#/space/</span>
             <Input
               id="space-slug"
               value={slug}

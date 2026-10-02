@@ -748,7 +748,7 @@ function MonthHeader({ label, moments }: { label: string; moments: PursuitMoment
             </div>
           )}
           {line && (
-            <p className="min-w-0 text-small italic text-foreground/90 line-clamp-2">
+            <p className="min-w-0 text-small italic text-foreground/90 line-clamp-2" title={line}>
               “{line}”
             </p>
           )}

@@ -45,7 +45,7 @@ export function PursuitField({
   if (selected) {
     return (
       <div className="flex items-center gap-2 rounded-card border border-border bg-surface px-4 py-2.5">
-        <span className="min-w-0 flex-1 truncate text-small">{selected.title}</span>
+        <span className="min-w-0 flex-1 truncate text-small" title={selected.title}>{selected.title}</span>
         <button
           type="button"
           onClick={() => {

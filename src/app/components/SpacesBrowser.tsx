@@ -74,8 +74,8 @@ export function SpacesBrowser({ query }: { query: string }) {
                 </span>
               </div>
               <div className="p-3">
-                <p className="truncate text-small font-medium">{s.name}</p>
-                <p className="mt-0.5 truncate text-caption text-muted-foreground">{s.description}</p>
+                <p className="truncate text-small font-medium" title={s.name}>{s.name}</p>
+                <p className="mt-0.5 truncate text-caption text-muted-foreground" title={s.description}>{s.description}</p>
               </div>
             </Link>
           ))}

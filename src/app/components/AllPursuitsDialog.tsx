@@ -47,10 +47,12 @@ function AllPursuitsGroup({
                 <span
                   className="block truncate text-body text-foreground group-hover:text-accent"
                   style={{ fontFamily: "var(--font-serif)" }}
-                >
+                 title={p.title}>
                   {p.title}
                 </span>
-                <span className="block truncate text-caption text-foreground/80">
+                <span className="block truncate text-caption text-foreground/80" title={[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
+                    .filter(Boolean)
+                    .join(" · ")}>
                   {[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
                     .filter(Boolean)
                     .join(" · ")}

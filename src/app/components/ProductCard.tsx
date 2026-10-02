@@ -58,7 +58,7 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="p-4">
           <div className="text-caption text-muted-foreground mb-1">by {product.creator}</div>
-          <h3 className="mb-2 line-clamp-1">{product.name}</h3>
+          <h3 className="mb-2 line-clamp-1" title={product.name}>{product.name}</h3>
           <div className="flex items-center gap-2 mb-3">
             <div className="flex items-center">
               <Star className="size-3.5 fill-[var(--mustard)] text-[var(--mustard)]" />

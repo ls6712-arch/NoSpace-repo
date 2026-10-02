@@ -90,7 +90,7 @@ export function SendToChatDialog({
                     <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="text-caption">{initials(name ?? "?")}</AvatarFallback>
                     </Avatar>
-                    <span className="min-w-0 flex-1 truncate">{name}</span>
+                    <span className="min-w-0 flex-1 truncate" title={name}>{name}</span>
                     {done ? (
                       <span className="flex items-center gap-1 text-caption text-muted-foreground">
                         <Check className="size-3.5" /> Sent

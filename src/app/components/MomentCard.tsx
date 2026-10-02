@@ -445,7 +445,7 @@ export function MomentCard({
           <div className="flex min-h-9 min-w-0 items-center justify-between gap-2">
             {/* No Category-name fallback (Spaces Rework follow-up, PR #83):
                 a Moment with no Corner shows no label at all here either. */}
-            <span className="ns-section-kicker min-w-0 truncate text-muted-foreground">{corner}</span>
+            <span className="ns-section-kicker min-w-0 truncate text-muted-foreground" title={corner}>{corner}</span>
             <span className="ns-section-kicker flex shrink-0 items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
               {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
@@ -465,11 +465,11 @@ export function MomentCard({
                 to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
                 className="block truncate text-body leading-tight transition-colors hover:text-[var(--coral-text)]"
                 style={{ fontFamily: "var(--font-serif)" }}
-              >
+               title={post.creator}>
                 {post.creator}
               </Link>
               {cornerLine && (
-                <span className="ns-section-kicker block truncate text-muted-foreground">{cornerLine}</span>
+                <span className="ns-section-kicker block truncate text-muted-foreground" title={cornerLine}>{cornerLine}</span>
               )}
             </span>
           </div>
@@ -494,7 +494,7 @@ export function MomentCard({
             {activityPlace && (
               <div className="mt-1 flex items-center gap-1.5 text-caption text-muted-foreground">
                 <MapPin className="size-3.5 shrink-0" />
-                <span className="truncate">{activityPlace}</span>
+                <span className="truncate" title={activityPlace}>{activityPlace}</span>
               </div>
             )}
             <div className="mt-1.5 text-caption text-muted-foreground">

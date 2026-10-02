@@ -144,7 +144,7 @@ export function AddMomentToSpaceDialog({
                 {p.media && (
                   <img src={p.media} alt="" className="size-10 shrink-0 rounded-control object-cover" />
                 )}
-                <span className="line-clamp-2 flex-1">{p.caption || `Moment #${p.id}`}</span>
+                <span className="line-clamp-2 flex-1" title={p.caption || `Moment #${p.id}`}>{p.caption || `Moment #${p.id}`}</span>
                 {linking === p.id && <span className="text-caption text-muted-foreground">Adding…</span>}
               </button>
             ))}

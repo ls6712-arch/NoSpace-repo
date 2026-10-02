@@ -37,7 +37,7 @@ function BlockedPeopleSection() {
               {p.avatarUrl && <AvatarImage src={p.avatarUrl} alt="" />}
               <AvatarFallback className="text-caption">{initials(p.displayName)}</AvatarFallback>
             </Avatar>
-            <span className="truncate text-small">{p.displayName}</span>
+            <span className="truncate text-small" title={p.displayName}>{p.displayName}</span>
           </span>
           <Button
             variant="outline"

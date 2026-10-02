@@ -425,8 +425,8 @@ export function Header() {
                               </span>
                             )}
                             <span className="min-w-0">
-                              <span className="block text-small truncate">{result.label}</span>
-                              <span className="block text-caption text-muted-foreground truncate">{result.sub}</span>
+                              <span className="block text-small truncate" title={result.label}>{result.label}</span>
+                              <span className="block text-caption text-muted-foreground truncate" title={result.sub}>{result.sub}</span>
                             </span>
                           </button>
                         </li>
@@ -492,8 +492,8 @@ export function Header() {
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-muted"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-small">{result.label}</span>
-                        <span className="block truncate text-caption text-muted-foreground">{result.sub}</span>
+                        <span className="block truncate text-small" title={result.label}>{result.label}</span>
+                        <span className="block truncate text-caption text-muted-foreground" title={result.sub}>{result.sub}</span>
                       </span>
                     </button>
                   </li>

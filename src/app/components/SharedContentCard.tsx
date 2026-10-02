@@ -102,8 +102,8 @@ export function SharedContentCard({
         </span>
       )}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-caption font-medium">{state.title}</span>
-        <span className="block truncate text-caption text-muted-foreground">
+        <span className="block truncate text-caption font-medium" title={state.title}>{state.title}</span>
+        <span className="block truncate text-caption text-muted-foreground" title={`${state.status === "moment" ? "Moment" : "Pursuit"} · ${state.owner}`}>
           {state.status === "moment" ? "Moment" : "Pursuit"} · {state.owner}
         </span>
       </span>

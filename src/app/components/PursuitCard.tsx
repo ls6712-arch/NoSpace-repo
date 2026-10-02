@@ -219,7 +219,7 @@ export function PursuitCard({
               }`}
             >
               <Target className="size-4 shrink-0" strokeWidth={1.8} />
-              <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`}>
+              <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`} title={goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}>
                 {goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}
               </span>
             </button>

@@ -1104,7 +1104,7 @@ export function Log() {
             {draftPrompt && (
               <div className="rounded-card border border-dashed border-border bg-surface p-3.5 text-small text-muted-foreground">
                 {draftPrompt.thought.trim() ? (
-                  <p className="line-clamp-3 text-foreground">"{draftPrompt.thought.trim()}"</p>
+                  <p className="line-clamp-3 text-foreground" title={draftPrompt.thought.trim()}>"{draftPrompt.thought.trim()}"</p>
                 ) : (
                   <p>No caption yet.</p>
                 )}

@@ -35,10 +35,14 @@ export function PersonCard({ person, className = "" }: { person: Person; classNa
         <AvatarFallback className="text-caption">{initials(person.displayName)}</AvatarFallback>
       </Avatar>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }}>
+        <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={person.displayName}>
           {person.displayName}
         </span>
-        <span className="mt-0.5 block truncate text-caption text-muted-foreground">
+        <span className="mt-0.5 block truncate text-caption text-muted-foreground" title={hobbies.length > 0
+            ? hobbies.join(" · ")
+            : person.postCount > 0
+              ? `Sharing Moments on ${APP_NAME}`
+              : "Just joined, nothing shared yet"}>
           {hobbies.length > 0
             ? hobbies.join(" · ")
             : person.postCount > 0

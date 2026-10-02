@@ -200,7 +200,7 @@ export function AddMoment() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-caption text-muted-foreground">Pursuit</span>
-            <span className="block truncate text-small">{project.title}</span>
+            <span className="block truncate text-small" title={project.title}>{project.title}</span>
           </span>
           <ChevronRight className="size-4 text-muted-foreground" />
         </Link>

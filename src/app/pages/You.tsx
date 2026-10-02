@@ -133,7 +133,7 @@ export function You() {
                 <h2
                   className="truncate text-title leading-tight sm:text-display"
                   style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
-                >
+                 title={user ? displayName : "You"}>
                   {user ? displayName : "You"}
                 </h2>
                 {user && (

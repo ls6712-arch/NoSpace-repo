@@ -52,10 +52,13 @@ export function NewSpacesRail() {
                     style={{ backgroundColor: "var(--coral-deep)" }}
                   />
                   <div className="min-w-0 flex-1">
-                    <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }}>
+                    <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={c.name}>
                       {c.name}
                     </span>
-                    <span className="block truncate text-caption text-muted-foreground">
+                    <span
+                      className="block truncate text-caption text-muted-foreground"
+                      title={`Inside ${space?.shortName ?? c.spaceSlug}${c.createdAt != null ? ` · ${openedLabel(c.createdAt)}` : ""}`}
+                    >
                       Inside {space?.shortName ?? c.spaceSlug}
                       {c.createdAt != null ? ` · ${openedLabel(c.createdAt)}` : ""}
                     </span>

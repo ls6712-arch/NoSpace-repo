@@ -306,7 +306,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           >
             <Star className="size-4 shrink-0 fill-current text-clay" />
             <div className="min-w-0">
-              <p className="truncate text-small font-medium">{featuredEvent.title}</p>
+              <p className="truncate text-small font-medium" title={featuredEvent.title}>{featuredEvent.title}</p>
               <p className="text-caption text-muted-foreground">{fmt(featuredEvent.starts_at, featuredEvent.timezone)}</p>
               {featuredEventAddress && (
                 <p className="mt-0.5 flex items-center gap-1 text-caption text-muted-foreground">
