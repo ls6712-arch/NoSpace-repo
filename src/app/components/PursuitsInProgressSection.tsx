@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Compass } from "lucide-react";
@@ -7,6 +7,7 @@ import { Project, pursuitStatus } from "../lib/journal";
 import { activePursuits, collectPursuitMoments } from "../lib/pursuitTrail";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { signMomentPaths } from "../lib/momentMedia";
+import { useAtScrollTop } from "../lib/useAtScrollTop";
 import { PURSUIT_SPRING } from "./pursuit/ui";
 import { PursuitItem } from "./PursuitItem";
 import { AllPursuitsDialog } from "./AllPursuitsDialog";
@@ -23,6 +24,15 @@ import { track } from "../lib/analytics";
  * grouping. Each card fades/rises in on mount, staggered by index
  * (motion/react — PursuitItem itself owns the per-card animation and its
  * own useReducedMotion gate; this just hands it one).
+ *
+ * Sticky at the top of the feed, but only ever visibly so for an instant:
+ * it fades/lifts out (useAtScrollTop) the moment the page moves away from
+ * the very top, and fades back in once scrolled back to it — so by the time
+ * `position: sticky` would actually pin it against Header's own sticky bar,
+ * it has already faded away. `z-40`, one below Header's `z-50`
+ * (ns-site-header), so Header always wins if the two ever do overlap.
+ * aria-hidden + pointer-events-none while faded so it's neither announced
+ * nor tappable while invisible.
  */
 export function PursuitsInProgressSection({
   pursuits,
@@ -36,6 +46,16 @@ export function PursuitsInProgressSection({
   const { logs } = usePrivateLogs();
   const [seeAll, setSeeAll] = useState(false);
   const reduceMotion = useReducedMotion();
+  const atTop = useAtScrollTop();
+  const sectionRef = useRef<HTMLElement>(null);
+  // `inert` isn't in this React version's JSX attribute typings (@types/react
+  // 18.3), so it's set as a real DOM property instead of a prop — it still
+  // does its job either way: while faded out, nothing inside (the card
+  // links, the "+" buttons, "See all") is keyboard-tabbable or hit-testable,
+  // on top of the aria-hidden/pointer-events-none below.
+  useEffect(() => {
+    if (sectionRef.current) sectionRef.current.inert = !atTop;
+  }, [atTop]);
 
   const momentsFor = useMemo(() => {
     const cache = new Map<string, ReturnType<typeof collectPursuitMoments>>();
@@ -93,7 +113,13 @@ export function PursuitsInProgressSection({
   };
 
   return (
-    <section className="mb-8">
+    <section
+      ref={sectionRef}
+      className={`sticky top-0 z-40 mb-8 bg-surface ${reduceMotion ? "" : "transition-[opacity,transform] duration-300 ease-out"} ${
+        atTop ? "opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+      }`}
+      aria-hidden={!atTop}
+    >
       <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
         Pursuits in progress
       </h2>

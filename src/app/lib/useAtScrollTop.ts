@@ -1,0 +1,31 @@
+import { useEffect, useRef, useState } from "react";
+
+/**
+ * Whether the window is scrolled within `thresholdPx` of the top — the same
+ * rAF-throttled window.scrollY pattern useHeroParallax (Home.tsx) already
+ * uses, so a fast scroll never queues more than one state update per frame
+ * no matter how many scroll events fire. A small threshold (rather than
+ * exactly 0) absorbs iOS/Safari's elastic overscroll bounce at the very top,
+ * which would otherwise toggle the result back and forth on its own.
+ */
+export function useAtScrollTop(thresholdPx = 12): boolean {
+  const [atTop, setAtTop] = useState(() => (typeof window === "undefined" ? true : window.scrollY <= thresholdPx));
+  const frame = useRef(0);
+
+  useEffect(() => {
+    const apply = () => {
+      frame.current = 0;
+      setAtTop(window.scrollY <= thresholdPx);
+    };
+    const onScroll = () => {
+      if (!frame.current) frame.current = requestAnimationFrame(apply);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame.current) cancelAnimationFrame(frame.current);
+    };
+  }, [thresholdPx]);
+
+  return atTop;
+}
