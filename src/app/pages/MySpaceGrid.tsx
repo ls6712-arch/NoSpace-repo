@@ -3,7 +3,9 @@ import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
-import { useJournal } from "../lib/journal";
+import { usePrivateLogs } from "../context/PrivateLogsContext";
+import { Project, pursuitStatus, useJournal } from "../lib/journal";
+import { activePursuits, collectPursuitMoments } from "../lib/pursuitTrail";
 import { fetchFollowingIds } from "../lib/profileFollows";
 import { supabase } from "../../lib/supabase";
 import { Post } from "../data/posts";
@@ -12,6 +14,7 @@ import { MomentDetail } from "../components/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
 import { DayTwoInviteCard } from "../components/DayTwoInviteCard";
 import { PursuitsInProgressSection } from "../components/PursuitsInProgressSection";
+import { AllPursuitsSection } from "../components/AllPursuitsSection";
 import { ShelfRail } from "../components/ShelfRail";
 import { InspiredRail } from "../components/InspiredRail";
 import { NewSpacesRail } from "../components/NewSpacesRail";
@@ -43,8 +46,10 @@ function greeting(name: string): string {
  * that rail rather than a replacement for it: the rail only ever sits at
  * lg+, so below that this horizontal-scroll strip was the only always-
  * visible surface for "what am I still moving on," previously buried below
- * the whole feed. It shares its grouped "See all" dialog (AllPursuitsDialog)
- * with the rail's own "See all" rather than duplicating that list.
+ * the whole feed. Its "See all" and the rail's own both smooth-scroll down
+ * to the one AllPursuitsSection at the bottom of this page (lib/
+ * scrollToElement.ts) — real in-page navigation now, not each opening its
+ * own copy of the same grouped list in a dialog.
  *
  * Nav below lg: this app already has a working "reach every section on a
  * small screen" answer — the global BottomTabBar (Root.tsx, every page) —
@@ -57,6 +62,7 @@ export function MySpaceGrid() {
   const { publicFeed, posts } = useContent();
   const social = useSocial();
   const journal = useJournal();
+  const { logs } = usePrivateLogs();
   const [searchParams, setSearchParams] = useSearchParams();
   const [pageIndex, setPageIndex] = useState(0);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
@@ -159,6 +165,28 @@ export function MySpaceGrid() {
     sheet.length === 0
       ? "00–00"
       : `${String(1).padStart(2, "0")}–${String(sheet.length).padStart(2, "0")}`;
+
+  // For AllPursuitsSection, rendered once at the bottom of this page —
+  // both PursuitsInProgressSection's and PursuitsRail's own "See all"
+  // smooth-scroll down to it rather than each opening its own copy of the
+  // same grouped list in a dialog. Same per-Pursuit moments/grouping logic
+  // those two components already compute from their own copies of
+  // pursuits/posts/entryProject; a third copy here rather than threading a
+  // shared selector through three components for this one list.
+  const allMomentsFor = useMemo(() => {
+    const cache = new Map<string, ReturnType<typeof collectPursuitMoments>>();
+    return (p: Project) => {
+      if (!cache.has(p.id)) cache.set(p.id, collectPursuitMoments(p.id, posts, journal.entryProject, logs));
+      return cache.get(p.id)!;
+    };
+  }, [posts, journal.entryProject, logs]);
+  const allActive = activePursuits(journal.projects, allMomentsFor);
+  const allResting = journal.projects.filter((p) => pursuitStatus(p) === "resting");
+  const allComplete = journal.projects.filter((p) => pursuitStatus(p) === "complete");
+  const allLastMomentOf = (p: Project) => {
+    const m = allMomentsFor(p);
+    return m.length ? m[m.length - 1].createdAt : undefined;
+  };
 
   return (
     <div className="myspace-shell px-4 py-6 sm:px-5 lg:px-8">
@@ -277,6 +305,13 @@ export function MySpaceGrid() {
           </div>
         </div>
       </div>
+
+      <AllPursuitsSection
+        active={allActive}
+        resting={allResting}
+        complete={allComplete}
+        lastOf={allLastMomentOf}
+      />
 
       <MomentDetail post={openPost} owned={false} onOpenChange={(o) => !o && closeDetail()} />
     </div>

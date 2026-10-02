@@ -3,25 +3,26 @@ import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Compass } from "lucide-react";
 import { Post } from "../data/posts";
-import { Project, pursuitStatus } from "../lib/journal";
+import { Project } from "../lib/journal";
 import { activePursuits, collectPursuitMoments } from "../lib/pursuitTrail";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { signMomentPaths } from "../lib/momentMedia";
 import { useAtScrollTop } from "../lib/useAtScrollTop";
+import { scrollToElementId } from "../lib/scrollToElement";
+import { ALL_PURSUITS_SECTION_ID } from "./AllPursuitsSection";
 import { PURSUIT_SPRING } from "./pursuit/ui";
 import { PursuitItem } from "./PursuitItem";
-import { AllPursuitsDialog } from "./AllPursuitsDialog";
 import { track } from "../lib/analytics";
 
 /**
  * Home tab, above the Moments feed: a card grid of every ACTIVE Pursuit
  * (same "active" definition PursuitsRail uses — see lib/pursuitTrail's
  * activePursuits), each a PursuitItem card (its own latest photo Moment,
- * a progress ring, title), plus a "See all" tile that opens the same
- * grouped All-your-Pursuits dialog PursuitsRail's own "See all" already
- * uses (AllPursuitsDialog) — one dialog, two entry points, rather than a
- * second screen that duplicates the same In progress/Resting/Completed
- * grouping. Each card fades/rises in on mount, staggered by index
+ * a progress ring, title), plus a "See all" tile that smooth-scrolls down
+ * to AllPursuitsSection — the same In progress/Resting/Completed list
+ * PursuitsRail's own "See all" scrolls to as well, rather than each
+ * opening its own copy of that grouping in a dialog. Each card fades/rises
+ * in on mount, staggered by index
  * (motion/react — PursuitItem itself owns the per-card animation and its
  * own useReducedMotion gate; this just hands it one).
  *
@@ -54,7 +55,6 @@ export function PursuitsInProgressSection({
   entryProject: Record<string, string>;
 }) {
   const { logs } = usePrivateLogs();
-  const [seeAll, setSeeAll] = useState(false);
   const reduceMotion = useReducedMotion();
   const atTop = useAtScrollTop();
   const barRef = useRef<HTMLElement>(null);
@@ -90,12 +90,6 @@ export function PursuitsInProgressSection({
   }, [posts, entryProject, logs]);
 
   const active = activePursuits(pursuits, momentsFor);
-  const resting = pursuits.filter((p) => pursuitStatus(p) === "resting");
-  const complete = pursuits.filter((p) => pursuitStatus(p) === "complete");
-  const lastMomentOf = (p: Project) => {
-    const m = momentsFor(p);
-    return m.length ? m[m.length - 1].createdAt : undefined;
-  };
 
   // One batched signMomentPaths call for every custom cover on this page,
   // same convention ContentContext's own post-media signing already
@@ -133,7 +127,7 @@ export function PursuitsInProgressSection({
 
   const openSeeAll = () => {
     track({ name: "pursuits_in_progress_see_all_tapped", count: pursuits.length });
-    setSeeAll(true);
+    scrollToElementId(ALL_PURSUITS_SECTION_ID);
   };
 
   return (
@@ -204,15 +198,6 @@ export function PursuitsInProgressSection({
               </motion.button>
             </div>
           )}
-
-          <AllPursuitsDialog
-            open={seeAll}
-            onOpenChange={setSeeAll}
-            active={active}
-            resting={resting}
-            complete={complete}
-            lastOf={lastMomentOf}
-          />
         </div>
       </section>
 
