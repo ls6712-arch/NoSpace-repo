@@ -70,7 +70,7 @@ Order matters. Finish and check each before starting the next. After each screen
 
 Hard rules for every screen: one accent-filled primary action, no raw hex, both themes verified, reduced-motion respected, focus rings visible, touch targets at least 44px, no truncation that hides meaningful information (allow two lines instead of an ellipsis).
 
-**Motion:** 200-300ms ease-out for micro-interactions, 500-700ms for page/panel transitions. Cards lift 2px on hover, images zoom 2-3%, scroll reveals fade and rise 8px, staggered 40ms. No bounce, spring, or confetti. Everything is disabled or reduced to opacity-only under `prefers-reduced-motion`.
+**Motion:** two durations only, from the tokens in `src/styles/theme.css`: `duration-fast` (150ms) for hover and press, `duration-base` (250ms) for every enter and exit, page and panel transitions included. One easing curve, `ease-standard`. Cards lift 2px on hover, images zoom 2-3%, scroll reveals fade and rise 8px, staggered 40ms. No bounce, spring, or confetti. Everything is disabled or reduced to opacity-only under `prefers-reduced-motion`.
 
 ## 4. Task C: Settings page
 
