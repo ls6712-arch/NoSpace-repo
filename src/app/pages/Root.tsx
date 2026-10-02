@@ -7,6 +7,7 @@ import { QuickLogGlobalSheet } from "../components/QuickLogGlobalSheet";
 import { BottomTabBar } from "../components/BottomTabBar";
 import { PreviewBanner } from "../components/PreviewBanner";
 import { useTruncationReveal } from "../lib/truncation";
+import { useScrollMemory } from "../lib/useScrollMemory";
 
 // Only the landing page and the login/signup screen are open to a signed-out
 // visitor. Everything else — Discover, Spaces, People, a profile, all of it
@@ -49,6 +50,7 @@ export function Root() {
   const { user, profile, loading, isConfigured } = useAuth();
   const location = useLocation();
   useTruncationReveal();
+  useScrollMemory();
 
   // Still waits for the initial session check, so a signed-in visitor isn't
   // bounced to the landing page for a moment before their session loads.
