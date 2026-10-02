@@ -583,7 +583,7 @@ export function Pursuit() {
                       type="button"
                       aria-pressed={current === o.days}
                       onClick={() => mirror(setCheckInDays(ownProject.id, o.days))}
-                      className={`rounded-full border px-2.5 py-1 transition-colors ${
+                      className={`rounded-control border px-2.5 py-1 transition-colors ${
                         current === o.days ? "border-[var(--coral-deep)] text-foreground" : "border-border hover:text-foreground"
                       }`}
                     >

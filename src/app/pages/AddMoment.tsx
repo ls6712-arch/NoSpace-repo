@@ -233,7 +233,7 @@ export function AddMoment() {
                       e.stopPropagation();
                       setFile(null);
                     }}
-                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/60 text-white"
+                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-black/60 text-white"
                     aria-label="Remove photo"
                   >
                     <X className="size-3" />

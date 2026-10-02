@@ -224,7 +224,7 @@ export function SpaceForm({
               <button
                 type="button"
                 onClick={() => setCoverImage("")}
-                className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white"
+                className="absolute right-2 top-2 rounded-control bg-black/60 p-1.5 text-white"
                 aria-label="Remove cover photo"
               >
                 <X className="size-3.5" />

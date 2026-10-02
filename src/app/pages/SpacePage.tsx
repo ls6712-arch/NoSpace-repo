@@ -251,7 +251,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">{space.description}</p>
           </div>
-          <span className="shrink-0 rounded-full border border-line px-2.5 py-1 text-[11px] text-muted-foreground">
+          <span className="shrink-0 rounded-control border border-line px-2.5 py-1 text-[11px] text-muted-foreground">
             {space.access === "open" ? "Open" : "Closed"}
           </span>
         </div>
@@ -282,7 +282,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             </span>
           )}
           {isActiveMember && (
-            <span className="rounded-full bg-clay-soft px-2 py-0.5 text-[10px] font-medium text-clay-dark">
+            <span className="rounded-control bg-clay-soft px-2 py-0.5 text-[10px] font-medium text-clay-dark">
               {isHost ? "Host" : "Member"}
             </span>
           )}

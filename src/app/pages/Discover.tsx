@@ -573,7 +573,7 @@ export function Discover() {
                   <div className="ns-section-kicker mb-2">Moments from across {APP_NAME}</div>
                   <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>All Moments</h2>
                 </div>
-                <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-full border border-border bg-card p-1">
+                <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-control border border-border bg-card p-1">
                   {FEED_TABS.map(({ id, label }) => {
                     const active = feedTab === id;
                     return (
@@ -586,7 +586,7 @@ export function Discover() {
                             setFeedTab(id);
                             setShown(PAGE_SIZE);
                           }}
-                          className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                          className={`rounded-control px-3.5 py-1.5 text-xs font-medium transition-colors ${
                             active
                               ? "text-white [background-image:var(--gradient-brand)]"
                               : "text-muted-foreground hover:text-foreground"
@@ -613,7 +613,7 @@ export function Discover() {
                           setChip(c.id);
                           setShown(PAGE_SIZE);
                         }}
-                        className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                        className={`rounded-control border px-3.5 py-1.5 text-xs font-medium transition-colors ${
                           active
                             ? "border-transparent text-white [background-color:var(--coral-deep)]"
                             : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"

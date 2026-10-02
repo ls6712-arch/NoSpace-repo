@@ -69,7 +69,7 @@ export function SpacesBrowser({ query }: { query: string }) {
                   alt=""
                   className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
                 />
-                <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                <span className="absolute right-2 top-2 rounded-control bg-black/60 px-2 py-0.5 text-[10px] text-white">
                   {s.access === "open" ? "Open" : "Closed"}
                 </span>
               </div>

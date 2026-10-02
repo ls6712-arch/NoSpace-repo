@@ -215,7 +215,7 @@ export function BookmarkOverlay({
         aria-label={saved ? "Saved. Tap again to remove it" : "Save"}
         title={saved ? "Saved" : "Save"}
         onClick={onClick}
-        className="flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+        className="flex size-10 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
       >
         <Bookmark
           className={`size-[22px] ${CORNER_ICON_SCRIM}`}
@@ -227,7 +227,7 @@ export function BookmarkOverlay({
       {justAdded && (
         <span
           role="status"
-          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-full bg-[var(--void)] px-2.5 py-1 text-[11px] text-[var(--offwhite)] shadow-md animate-in fade-in"
+          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-control bg-[var(--void)] px-2.5 py-1 text-[11px] text-[var(--offwhite)] shadow-md animate-in fade-in"
         >
           Saved
         </span>
@@ -238,7 +238,7 @@ export function BookmarkOverlay({
 
 
 const ICON_BTN =
-  "flex h-10 shrink-0 min-w-10 items-center justify-center gap-1 rounded-full px-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
+  "flex h-10 shrink-0 min-w-10 items-center justify-center gap-1 rounded-control px-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
 
 /**
  * The one reaction row — used by every MomentCard and by MomentDetail, so
@@ -403,7 +403,7 @@ export function MomentCard({
         >
           <MomentMedia post={post} />
           {number && (
-            <span className="ns-section-kicker absolute left-3 top-3 rounded-full bg-card px-2.5 py-1 text-foreground shadow-sm">
+            <span className="ns-section-kicker absolute left-3 top-3 rounded-control bg-card px-2.5 py-1 text-foreground shadow-sm">
               {number}
             </span>
           )}
@@ -416,7 +416,7 @@ export function MomentCard({
             onClick={() => setVisibilityOpen(true)}
             aria-label={`Who sees this: ${visibilityWord(post)}. Change it`}
             title="Who sees this"
-            className="absolute right-1.5 top-1.5 z-[1] flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+            className="absolute right-1.5 top-1.5 z-[1] flex size-10 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
           >
             {onlyYou ? (
               <Lock

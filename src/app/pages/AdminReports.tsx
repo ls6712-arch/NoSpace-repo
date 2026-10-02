@@ -173,7 +173,7 @@ export function AdminReports() {
           </div>
         )}
         {r.status !== "open" && (
-          <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-[11px] capitalize text-muted-foreground">
+          <span className="shrink-0 rounded-control border border-border px-2.5 py-1 text-[11px] capitalize text-muted-foreground">
             {r.status}
           </span>
         )}

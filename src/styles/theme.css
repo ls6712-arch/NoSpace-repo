@@ -847,7 +847,7 @@
     align-items: center;
     margin: 0.2rem 0.2rem 0.2rem 0;
     border: 1px solid var(--hairline);
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     background: color-mix(in srgb, var(--violet-electric) 12%, transparent);
     padding: 0.35rem 0.65rem;
     color: var(--offwhite);
@@ -862,7 +862,7 @@
     height: 2.75rem;
     align-items: center;
     border: 1px solid var(--hairline);
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     background: color-mix(in srgb, var(--void) 45%, transparent);
     padding: 0 1rem;
     color: var(--offwhite);
@@ -1413,7 +1413,7 @@
     width: 1.6rem;
     align-items: center;
     justify-content: center;
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     border: 1px solid var(--hairline);
     background: transparent;
     color: var(--muted-foreground);
@@ -1433,7 +1433,7 @@
 
   .ns-you-tags a,
   .ns-you-tags button {
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     border-color: var(--hairline);
     background: transparent;
     color: var(--foreground);
@@ -1449,7 +1449,7 @@
   .ns-you-tags--pills .ns-pill {
     display: inline-flex;
     align-items: center;
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     border: 1px solid var(--line, var(--hairline));
     background: var(--paper-raised, var(--cream));
     padding: 0.32rem 0.75rem;

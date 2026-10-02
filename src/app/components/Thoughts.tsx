@@ -124,7 +124,7 @@ export function Thoughts({
         <button
           type="button"
           onClick={() => setOpenComposer(true)}
-          className={`mb-3 flex w-full items-center gap-2.5 rounded-full border border-[var(--border)] bg-surface text-left transition-colors hover:border-[var(--foreground)]/30 ${
+          className={`mb-3 flex w-full items-center gap-2.5 rounded-control border border-[var(--border)] bg-surface text-left transition-colors hover:border-[var(--foreground)]/30 ${
             compact ? "px-2.5 py-1.5" : "px-3 py-2.5"
           }`}
         >
@@ -147,7 +147,7 @@ export function Thoughts({
                   key={starter}
                   type="button"
                   onClick={() => setBody(starter)}
-                  className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+                  className="rounded-control border border-border bg-surface px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
                 >
                   {starter}
                 </button>

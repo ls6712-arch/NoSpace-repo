@@ -56,11 +56,11 @@ export function FollowListDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
+        <div className="flex gap-1 rounded-control border border-border p-0.5 text-xs">
           <button
             type="button"
             onClick={() => setTab("followers")}
-            className={`flex-1 rounded-full px-3 py-1 transition-colors ${
+            className={`flex-1 rounded-control px-3 py-1 transition-colors ${
               tab === "followers" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
             }`}
           >
@@ -69,7 +69,7 @@ export function FollowListDialog({
           <button
             type="button"
             onClick={() => setTab("following")}
-            className={`flex-1 rounded-full px-3 py-1 transition-colors ${
+            className={`flex-1 rounded-control px-3 py-1 transition-colors ${
               tab === "following" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
             }`}
           >

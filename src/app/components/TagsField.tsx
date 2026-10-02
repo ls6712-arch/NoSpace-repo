@@ -96,7 +96,7 @@ export function TagsField({
               key={tag}
               layout={chipLayoutIdPrefix && !reduceMotion ? true : undefined}
               layoutId={chipLayoutIdPrefix && !reduceMotion ? `${chipLayoutIdPrefix}${tag}` : undefined}
-              className="flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1 text-xs"
+              className="flex items-center gap-1 rounded-control bg-surface-muted px-2.5 py-1 text-xs"
             >
               {tag}
               <button

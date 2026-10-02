@@ -84,7 +84,7 @@ export function SearchResults() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search Moments, people, Spaces"
-            className="w-full rounded-full border border-border bg-input-background py-3 pl-11 pr-4 text-sm text-foreground outline-none focus-visible:border-[var(--violet-electric)]"
+            className="w-full rounded-control border border-border bg-input-background py-3 pl-11 pr-4 text-sm text-foreground outline-none focus-visible:border-[var(--violet-electric)]"
           />
         </form>
 

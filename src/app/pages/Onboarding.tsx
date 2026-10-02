@@ -391,7 +391,7 @@ function CoverStep({
                 <Chip
                   key={tag}
                   {...chipProps(tag)}
-                  className="rounded-full border border-white/30 bg-black/20 px-2.5 py-1 text-[11px] text-white/85"
+                  className="rounded-control border border-white/30 bg-black/20 px-2.5 py-1 text-[11px] text-white/85"
                 >
                   {tag}
                 </Chip>

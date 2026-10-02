@@ -108,7 +108,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search people by name…"
-            className="w-full rounded-full border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+            className="w-full rounded-control border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
           />
           {query && (
             <button
@@ -157,7 +157,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
                   type="button"
                   aria-pressed={on}
                   onClick={() => setHobbyParam(on ? "" : h.slug)}
-                  className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-control border px-3.5 py-1.5 text-xs font-medium transition-colors ${
                     on
                       ? "border-transparent text-white [background-color:var(--coral-deep)]"
                       : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"

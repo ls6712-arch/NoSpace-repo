@@ -264,7 +264,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
           <button
             type="button"
             onClick={() => setFile(null)}
-            className="absolute right-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-xs text-white"
+            className="absolute right-2 top-2 rounded-control bg-black/60 px-2.5 py-1 text-xs text-white"
           >
             Remove
           </button>
@@ -288,7 +288,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
             type="button"
             onClick={() => setAudience(a)}
             aria-pressed={audience === a}
-            className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+            className={`rounded-control border px-2.5 py-1 text-[11px] transition-colors ${
               audience === a
                 ? "border-[var(--coral-deep)] text-[var(--ink)]"
                 : "border-[var(--line)] text-[var(--ink-soft)] hover:text-[var(--ink)]"

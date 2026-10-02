@@ -53,7 +53,7 @@ export function ProductDetail() {
             <Button
               size="icon"
               variant="ghost"
-              className={`absolute top-5 right-5 rounded-full backdrop-blur-md ${
+              className={`absolute top-5 right-5 rounded-control backdrop-blur-md ${
                 inWishlist ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white"
               }`}
               onClick={() => toggleWishlist(product.id)}
@@ -99,7 +99,7 @@ export function ProductDetail() {
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
-                      className={`px-4 py-2 rounded-full border text-sm transition-all ${
+                      className={`px-4 py-2 rounded-control border text-sm transition-all ${
                         selectedColor === color
                           ? "border-transparent text-white [background-image:var(--gradient-brand)]"
                           : "border-border hover:border-foreground/30"
@@ -120,7 +120,7 @@ export function ProductDetail() {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`px-4 py-2 rounded-full border text-sm transition-all ${
+                      className={`px-4 py-2 rounded-control border text-sm transition-all ${
                         selectedSize === size
                           ? "border-transparent text-white [background-image:var(--gradient-brand)]"
                           : "border-border hover:border-foreground/30"

@@ -41,14 +41,14 @@ export function ProductCard({ product }: { product: Product }) {
             size="icon"
             disabled
             title="Selling is coming soon"
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-full bg-white/70 text-black/40 cursor-not-allowed"
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-control bg-white/70 text-black/40 cursor-not-allowed"
           >
             <ShoppingCart className="size-4" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
-            className={`absolute bottom-3 right-3 rounded-full backdrop-blur-md ${
+            className={`absolute bottom-3 right-3 rounded-control backdrop-blur-md ${
               inWishlist ? "bg-[var(--coral)] text-white" : "bg-black/40 text-white hover:bg-black/60"
             }`}
             onClick={handleWishlistToggle}

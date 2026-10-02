@@ -121,7 +121,7 @@ export function AddDetailsSheet({
                     type="button"
                     onClick={() => setLocationPrivacy(o.value)}
                     aria-pressed={locationPrivacy === o.value}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                    className={`rounded-control border px-2.5 py-1 text-[11px] transition-colors ${
                       locationPrivacy === o.value
                         ? "border-[var(--coral-deep,var(--accent))] text-foreground"
                         : "border-border text-muted-foreground hover:text-foreground"

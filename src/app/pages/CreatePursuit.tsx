@@ -469,7 +469,7 @@ export function CreatePursuit() {
                       <li key={p.id} className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2">
                         <PersonAvatar name={p.displayName} src={p.avatarUrl} />
                         <span className="flex-1 text-sm">{p.displayName}</span>
-                        <span className="rounded-full bg-[color-mix(in_srgb,var(--pastel-stone)_30%,var(--card))] px-2 py-0.5 text-[11px]">
+                        <span className="rounded-control bg-[color-mix(in_srgb,var(--pastel-stone)_30%,var(--card))] px-2 py-0.5 text-[11px]">
                           Invited
                         </span>
                         <button

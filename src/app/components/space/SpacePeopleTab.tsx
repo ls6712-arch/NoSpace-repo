@@ -103,7 +103,7 @@ export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boo
               {r.displayName}
             </Link>
             {r.role === "host" ? (
-              <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">Host</span>
+              <span className="rounded-control border border-border px-2 py-0.5 text-[10px] text-muted-foreground">Host</span>
             ) : (
               isHost && (
                 <Button

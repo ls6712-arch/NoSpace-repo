@@ -151,7 +151,7 @@ export function AdminCategories() {
                             onChange={(e) =>
                               setMergeTo((m) => ({ ...m, [s.id]: e.target.value }))
                             }
-                            className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs outline-none focus:border-ring"
+                            className="rounded-control border border-border bg-surface px-3 py-1.5 text-xs outline-none focus:border-ring"
                           >
                             <option value="">Merge into…</option>
                             {categories.map((c) => (

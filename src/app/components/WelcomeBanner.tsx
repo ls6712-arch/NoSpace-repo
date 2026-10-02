@@ -62,7 +62,7 @@ export function WelcomeBanner() {
           dismiss();
           setDismissed(true);
         }}
-        className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
+        className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-control text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
       >
         <X className="size-4" />
       </button>

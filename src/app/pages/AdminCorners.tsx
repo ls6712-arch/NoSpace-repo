@@ -229,7 +229,7 @@ export function AdminCorners() {
                             {row.name}
                           </span>
                           {row.hidden && (
-                            <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                            <span className="rounded-control border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
                               Hidden
                             </span>
                           )}

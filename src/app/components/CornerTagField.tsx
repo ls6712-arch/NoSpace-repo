@@ -119,7 +119,7 @@ export function CornerTagField({
               key={`${c.spaceSlug}-${c.slug}`}
               type="button"
               onClick={() => pick(active ? "" : c.slug, c.name, c.spaceSlug)}
-              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              className={`rounded-control border px-3 py-1 text-xs transition-colors ${
                 active
                   ? "border-transparent text-white [background-color:var(--coral-deep)]"
                   : "border-border text-muted-foreground hover:border-foreground/30"
@@ -194,7 +194,7 @@ export function CornerTagField({
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={useExistingInstead}
-                    className="rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-foreground/30"
+                    className="rounded-control border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-foreground/30"
                   >
                     Use “{pendingConfirm.label}”
                   </button>
@@ -203,7 +203,7 @@ export function CornerTagField({
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={createNew}
                     disabled={creating}
-                    className="rounded-full border border-transparent bg-[var(--coral-deep)] px-2.5 py-1 text-[11px] text-white"
+                    className="rounded-control border border-transparent bg-[var(--coral-deep)] px-2.5 py-1 text-[11px] text-white"
                   >
                     {creating ? "Creating…" : "Create anyway"}
                   </button>

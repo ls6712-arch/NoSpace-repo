@@ -251,7 +251,7 @@ export function AdminInvites() {
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           <span
-                            className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                            className={`rounded-control border px-2.5 py-1 text-[11px] ${
                               status.done
                                 ? "border-border text-muted-foreground"
                                 : "border-[var(--coral-deep)]/40 text-[var(--coral-deep)]"
@@ -329,7 +329,7 @@ export function AdminInvites() {
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           {overdue && (
-                            <span className="rounded-full border border-destructive/40 px-2.5 py-1 text-[11px] text-destructive">
+                            <span className="rounded-control border border-destructive/40 px-2.5 py-1 text-[11px] text-destructive">
                               Over 24h
                             </span>
                           )}

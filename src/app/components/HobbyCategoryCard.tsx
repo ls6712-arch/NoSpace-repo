@@ -72,7 +72,7 @@ export function HobbyCategoryCard({
             <Link
               key={corner.slug}
               to={`/space/${hobby.slug}?hobby=${corner.slug}`}
-              className="rounded-full border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+              className="rounded-control border border-[var(--hairline)] bg-surface px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
             >
               {corner.name}
               {corner.momentCount > 0 && (
@@ -86,7 +86,7 @@ export function HobbyCategoryCard({
               doesn't need approval. */}
           <Link
             to={`/create?hobby=${hobby.slug}`}
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--hairline)] px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
+            className="inline-flex items-center gap-1 rounded-control border border-dashed border-[var(--hairline)] px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-[var(--foreground)]/35 hover:text-foreground"
           >
             <Plus className="size-3" />
             Create a Corner

@@ -205,7 +205,7 @@ export function HobbyArchive() {
                     type="button"
                     aria-pressed={filter === f.id}
                     onClick={() => setFilter(f.id)}
-                    className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                    className={`rounded-control border px-3.5 py-1.5 text-xs font-medium transition-colors ${
                       filter === f.id
                         ? "border-transparent text-white [background-color:var(--coral-deep)]"
                         : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"

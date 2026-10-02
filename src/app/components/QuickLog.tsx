@@ -393,7 +393,7 @@ export function QuickLog({
               >
                 <SelectTrigger
                   size="sm"
-                  className="h-6 w-auto gap-1 rounded-full border-border px-2 py-0.5 text-[11px]"
+                  className="h-6 w-auto gap-1 rounded-control border-border px-2 py-0.5 text-[11px]"
                   aria-label="Pursuit"
                 >
                   <SelectValue placeholder="No pursuit" />
@@ -423,13 +423,13 @@ export function QuickLog({
                 }}
                 placeholder="Corner"
                 maxLength={60}
-                className="h-6 w-28 rounded-full border border-[var(--coral-deep,var(--accent))] bg-transparent px-2 text-[11px] text-foreground outline-none"
+                className="h-6 w-28 rounded-control border border-[var(--coral-deep,var(--accent))] bg-transparent px-2 text-[11px] text-foreground outline-none"
               />
             ) : (
               <button
                 type="button"
                 onClick={() => setEditingCorner(true)}
-                className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                className="inline-flex items-center gap-1 rounded-control border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
               >
                 {cornerName.trim() || "Add a Corner"}
               </button>
@@ -441,7 +441,7 @@ export function QuickLog({
                 type="button"
                 onClick={() => setAudience(a)}
                 aria-pressed={audience === a}
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                className={`inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-[11px] transition-colors ${
                   audience === a
                     ? "border-[var(--coral-deep,var(--accent))] text-foreground"
                     : "border-border text-muted-foreground hover:text-foreground"

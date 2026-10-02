@@ -287,7 +287,7 @@ export function CameraCapture({
             </Button>
           )}
           {recording && (
-            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 text-xs text-white">
+            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-control bg-black/50 px-2.5 py-1 text-xs text-white">
               <span className="size-2 rounded-full bg-[var(--coral)] animate-pulse" />
               {timeLabel}
             </span>
@@ -298,11 +298,11 @@ export function CameraCapture({
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-4 pt-10">
           {cameraAvailable && (
             <div className="mb-4 flex justify-center">
-              <div className="flex rounded-full bg-black/40 p-1 text-xs">
+              <div className="flex rounded-control bg-black/40 p-1 text-xs">
                 <button
                   type="button"
                   onClick={() => !recording && setCaptureMode("photo")}
-                  className={`rounded-full px-3.5 py-1.5 transition-colors ${
+                  className={`rounded-control px-3.5 py-1.5 transition-colors ${
                     captureMode === "photo" ? "bg-white text-black" : "text-white/80"
                   }`}
                 >
@@ -311,7 +311,7 @@ export function CameraCapture({
                 <button
                   type="button"
                   onClick={() => !recording && setCaptureMode("video")}
-                  className={`rounded-full px-3.5 py-1.5 transition-colors ${
+                  className={`rounded-control px-3.5 py-1.5 transition-colors ${
                     captureMode === "video" ? "bg-white text-black" : "text-white/80"
                   }`}
                 >
@@ -326,7 +326,7 @@ export function CameraCapture({
               type="button"
               aria-label="Text only, no photo or video"
               onClick={onTextOnly}
-              className="flex size-11 flex-col items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60"
+              className="flex size-11 flex-col items-center justify-center rounded-control bg-black/40 text-white transition-colors hover:bg-black/60"
             >
               <Type className="size-4" />
             </button>
@@ -369,14 +369,14 @@ export function CameraCapture({
               aria-busy={converting}
               disabled={converting}
               onClick={() => libraryInputRef.current?.click()}
-              className="flex size-11 flex-col items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 disabled:opacity-50"
+              className="flex size-11 flex-col items-center justify-center rounded-control bg-black/40 text-white transition-colors hover:bg-black/60 disabled:opacity-50"
             >
               <Images className="size-4" />
             </button>
           </div>
 
           {heicWarning && (
-            <p className="mt-3 rounded-full bg-[var(--coral-deep)]/90 px-3 py-1.5 text-center text-xs text-white">
+            <p className="mt-3 rounded-control bg-[var(--coral-deep)]/90 px-3 py-1.5 text-center text-xs text-white">
               {heicWarning}
             </p>
           )}

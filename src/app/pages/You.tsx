@@ -339,11 +339,11 @@ export function You() {
                 this "By space" when the view still had Space headers with
                 Corners stacked inside each one; that structure is gone,
                 so that label would now be the wrong one.) */}
-            <div className="flex gap-1 rounded-full border border-border p-0.5 text-xs">
+            <div className="flex gap-1 rounded-control border border-border p-0.5 text-xs">
               <button
                 type="button"
                 onClick={() => setMomentsView("grid")}
-                className={`rounded-full px-3 py-1 transition-colors ${
+                className={`rounded-control px-3 py-1 transition-colors ${
                   momentsView === "grid" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
                 }`}
               >
@@ -352,7 +352,7 @@ export function You() {
               <button
                 type="button"
                 onClick={() => setMomentsView("shelf")}
-                className={`rounded-full px-3 py-1 transition-colors ${
+                className={`rounded-control px-3 py-1 transition-colors ${
                   momentsView === "shelf" ? "bg-[var(--coral-deep)] text-white" : "text-muted-foreground"
                 }`}
               >

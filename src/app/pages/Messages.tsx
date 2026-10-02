@@ -376,7 +376,7 @@ function ConversationPanel({
                           type="button"
                           onClick={() => setUnsendTargetId(m.id)}
                           aria-label="Unsend"
-                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -404,7 +404,7 @@ function ConversationPanel({
                           type="button"
                           onClick={() => setUnsendTargetId(m.id)}
                           aria-label="Unsend"
-                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -431,7 +431,7 @@ function ConversationPanel({
           <button
             type="button"
             onClick={scrollToBottom}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--coral-deep)] px-3.5 py-1.5 text-xs text-white shadow"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--coral-deep)] px-3.5 py-1.5 text-xs text-white shadow"
           >
             New message{newMessageCount > 1 ? "s" : ""}
           </button>

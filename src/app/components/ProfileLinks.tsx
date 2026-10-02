@@ -35,7 +35,7 @@ export function ProfileLinksRow({ links, className = "" }: { links: ProfileLink[
             href={link.url}
             target="_blank"
             rel="noreferrer noopener"
-            className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
+            className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
           >
             <Icon className="size-3.5 shrink-0" strokeWidth={1.8} />
             {link.label}
@@ -102,7 +102,7 @@ export function ProfileLinksEditor({
               return (
                 <span
                   key={link.id}
-                  className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-foreground"
+                  className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-1.5 text-xs text-foreground"
                 >
                   <Icon className="size-3.5 shrink-0" strokeWidth={1.8} />
                   <a href={link.url} target="_blank" rel="noreferrer noopener" className="hover:text-[var(--coral-text)]">
@@ -158,7 +158,7 @@ export function ProfileLinksEditor({
                   type="button"
                   onClick={() => remove(link.id)}
                   title="Remove link"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-control text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
                 >
                   <X className="size-3.5" />
                 </button>

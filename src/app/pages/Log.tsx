@@ -211,7 +211,7 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
             The physical piece, a digital download, or a course
           </span>
         </span>
-        <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline)] bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+        <span className="flex shrink-0 items-center gap-1.5 rounded-control border border-[var(--hairline)] bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
           <Clock className="size-3" />
           Coming soon
         </span>
@@ -1309,7 +1309,7 @@ export function Log() {
             <button
               type="button"
               onClick={() => setFiles([])}
-              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/65 text-white"
+              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-control bg-[var(--void)]/65 text-white"
               aria-label="Remove this video"
             >
               <X className="size-3.5" />
@@ -1328,7 +1328,7 @@ export function Log() {
                 <button
                   type="button"
                   onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                  className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/65 text-white"
+                  className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-[var(--void)]/65 text-white"
                   aria-label={`Remove photo ${i + 1}`}
                 >
                   <X className="size-3" />
@@ -1758,7 +1758,7 @@ export function Log() {
                       <button
                         type="button"
                         onClick={() => setFiles([])}
-                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/70 text-white"
+                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-[var(--void)]/70 text-white"
                         aria-label="Remove file"
                       >
                         <X className="size-3" />
@@ -1796,7 +1796,7 @@ export function Log() {
                       </p>
                     )}
                     <div className="mb-2 flex gap-2">
-                      <span className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5 rounded-control border border-border px-3 py-1 text-xs text-muted-foreground">
                         {type === "video" ? (
                           <Video className="size-3.5" />
                         ) : (

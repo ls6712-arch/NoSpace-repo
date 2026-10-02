@@ -232,11 +232,11 @@ export function AdminSpaces() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-base font-medium">{h.name}</span>
-                      <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                      <span className="rounded-control border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
                         {builtIn ? "Built-in" : "Yours"}
                       </span>
                       {h.hidden && (
-                        <span className="rounded-full bg-[var(--coral-deep)]/15 px-2 py-0.5 text-[11px]">
+                        <span className="rounded-control bg-[var(--coral-deep)]/15 px-2 py-0.5 text-[11px]">
                           Hidden
                         </span>
                       )}

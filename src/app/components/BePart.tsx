@@ -203,7 +203,7 @@ export function BePart({
           type="button"
           onClick={() => setOpen(true)}
           aria-haspopup="dialog"
-          className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors ${
+          className={`flex w-full items-center justify-center gap-2 rounded-control px-5 py-3 text-sm font-medium transition-colors ${
             state
               ? "text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]"
               : "text-white [background-image:var(--gradient-brand)]"
@@ -289,7 +289,7 @@ export function BePart({
                   </p>
                   {exploring ? (
                     <>
-                      <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]">
+                      <div className="flex items-center justify-center gap-2 rounded-control px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-sage)_38%,var(--surface-elevated))]">
                         <Check className="size-4" />
                         Exploring {hobbyLabel}
                       </div>
@@ -349,7 +349,7 @@ export function BePart({
 
                   {going ? (
                     <>
-                      <div className="flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-stone)_38%,var(--surface-elevated))]">
+                      <div className="flex items-center justify-center gap-2 rounded-control px-5 py-3 text-sm text-foreground [background-color:color-mix(in_srgb,var(--pastel-stone)_38%,var(--surface-elevated))]">
                         <Check className="size-4" />
                         You're joining
                       </div>

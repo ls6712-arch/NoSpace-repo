@@ -180,7 +180,7 @@ export function PursuitTrack({
           <Link
             to={`/pursuit/${pursuit.id}/moment`}
             aria-label={`Log a Moment on ${pursuit.title}`}
-            className="flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-[var(--coral-deep)]"
+            className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-[var(--coral-deep)]"
           >
             <Plus className="size-3" />
             Moment
@@ -191,7 +191,7 @@ export function PursuitTrack({
             onClick={() => setLogging((v) => !v)}
             aria-expanded={logging}
             aria-label={`Log a Moment on ${pursuit.title}`}
-            className="flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-[var(--coral-deep)]"
+            className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-[var(--coral-deep)]"
           >
             <Plus className="size-3" />
             Moment

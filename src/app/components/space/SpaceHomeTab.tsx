@@ -532,7 +532,7 @@ export function SpaceHomeTab({
                       type="button"
                       disabled={pinBusyId === post.id}
                       onClick={() => togglePin(post)}
-                      className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                      className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-control border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
                     >
                       <PinOff className="size-3" />
                       Remove from host picks
@@ -557,7 +557,7 @@ export function SpaceHomeTab({
                           type="button"
                           disabled={pinBusyId === post.id}
                           onClick={() => togglePin(post)}
-                          className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                          className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-control border border-line bg-paper/90 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
                         >
                           <Pin className="size-3" />
                           Add to host picks
@@ -583,7 +583,7 @@ export function SpaceHomeTab({
             {hosts.map((h) => (
               <span
                 key={h.id}
-                className="flex items-center gap-1.5 rounded-full border border-line bg-paper px-2.5 py-1 text-xs"
+                className="flex items-center gap-1.5 rounded-control border border-line bg-paper px-2.5 py-1 text-xs"
               >
                 <Avatar className="size-5">
                   {h.avatarUrl && <AvatarImage src={h.avatarUrl} alt="" />}

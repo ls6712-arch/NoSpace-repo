@@ -60,7 +60,7 @@ function AllPursuitsGroup({
                 to={`/pursuit/${p.id}/moment`}
                 onClick={onNavigate}
                 aria-label={`Log a Moment on ${p.title}`}
-                className="flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground hover:border-[var(--coral-deep)]"
+                className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-[11px] text-foreground hover:border-[var(--coral-deep)]"
               >
                 <Plus className="size-3" /> Add
               </Link>

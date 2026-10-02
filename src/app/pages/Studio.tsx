@@ -259,7 +259,7 @@ export function Studio() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="absolute left-6 top-6 flex size-9 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white transition-colors hover:border-white/60"
+          className="absolute left-6 top-6 flex size-9 items-center justify-center rounded-control border border-white/30 bg-black/25 text-white transition-colors hover:border-white/60"
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />
@@ -304,7 +304,7 @@ export function Studio() {
               setPageIndex(0);
             }}
             disabled={spreads.length === 0}
-            className="mt-7 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm text-white transition-opacity disabled:opacity-40"
+            className="mt-7 inline-flex items-center gap-2 rounded-control px-6 py-3 text-sm text-white transition-opacity disabled:opacity-40"
             style={{ backgroundColor: "var(--coral-deep)" }}
           >
             Open the Scrapbook
@@ -326,13 +326,13 @@ export function Studio() {
           <button
             type="button"
             onClick={() => setOpened(false)}
-            className="flex size-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] transition-colors hover:border-[var(--coral-deep)]"
+            className="flex size-9 items-center justify-center rounded-control border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] transition-colors hover:border-[var(--coral-deep)]"
             aria-label="Back to cover"
           >
             <ArrowLeft className="size-4" />
           </button>
 
-          <div className="flex gap-1 rounded-full border border-[var(--line)] p-0.5 text-xs">
+          <div className="flex gap-1 rounded-control border border-[var(--line)] p-0.5 text-xs">
             {(["chronological", "tag"] as Grouping[]).map((g) => (
               <button
                 key={g}
@@ -342,7 +342,7 @@ export function Studio() {
                   setPageIndex(0);
                   setDirection(1);
                 }}
-                className={`rounded-full px-3.5 py-1.5 transition-colors ${
+                className={`rounded-control px-3.5 py-1.5 transition-colors ${
                   grouping === g ? "bg-[var(--coral-deep)] text-white" : "text-[var(--ink-soft)]"
                 }`}
               >
@@ -426,7 +426,7 @@ export function Studio() {
         <div className="mt-6 flex justify-between">
           <Button
             variant="outline"
-            className="rounded-full disabled:opacity-35"
+            className="rounded-control disabled:opacity-35"
             disabled={clampedIndex === 0}
             onClick={() => goTo(clampedIndex - 1)}
           >
@@ -435,7 +435,7 @@ export function Studio() {
           </Button>
           <Button
             variant="outline"
-            className="rounded-full disabled:opacity-35"
+            className="rounded-control disabled:opacity-35"
             disabled={clampedIndex >= spreads.length - 1}
             onClick={() => goTo(clampedIndex + 1)}
           >
