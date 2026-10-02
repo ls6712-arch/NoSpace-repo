@@ -327,6 +327,14 @@
   --border: #3A332B;
   --accent: var(--theme-dark-accent);
   --accent-foreground: #1C1816;
+  /* Brand-gradient fills carry white --on-brand text, so in dark they sit
+     darker than --accent (#C8674D is only 3.82:1 under white). 85% / 78%
+     of it clears 4.5:1 across the whole gradient. */
+  --gradient-brand: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--accent) 85%, black) 0%,
+    color-mix(in srgb, var(--accent) 78%, black) 100%
+  );
   --gold: #C9A55E;
   --gold-text: #C9A55E;
   --input-border: #847462;
