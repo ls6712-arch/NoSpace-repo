@@ -29,3 +29,47 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # Android and desktop sizes in Chromium: layout, contrast, touch targets.
+  visual-chromium:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright-core install --with-deps chromium
+      - name: Device profiles (Android, desktop)
+        run: node scripts/visual/run.ts --profiles --only "Android,Desktop" --strict --out visual-out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-chromium
+          path: visual-out
+          if-no-files-found: ignore
+
+  # The four iOS sizes in WebKit (iPhone SE, iPhone 15, iPad 768, iPad Pro 834):
+  # layout, contrast, touch targets, no focused input under 16px (iOS zoom),
+  # safe-area padding on the bottom tab bar. Non-blocking until it has been green
+  # on a few runs; then remove continue-on-error and make it required.
+  visual-webkit:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright-core install --with-deps webkit
+      - name: Device profiles (iOS sizes, WebKit)
+        run: node scripts/visual/run.ts --profiles --only "iPhone SE,iPhone 15,iPad" --strict --out visual-out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-webkit
+          path: visual-out
+          if-no-files-found: ignore
