@@ -234,7 +234,7 @@ export function NotificationsMenu() {
 
           {groups.length === 0 && incoming.length === 0 && incomingFollows.length === 0 ? (
             <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground">
-              Nothing yet. Thoughts on your moments, people joining your
+              Nothing yet. Thoughts on your Moments, people joining your
               activities, follow requests, and asks to make or explore
               together all turn up here.
             </p>

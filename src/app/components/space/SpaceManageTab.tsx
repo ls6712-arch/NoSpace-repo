@@ -215,7 +215,7 @@ export function SpaceManageTab({
     const { data: target } = await supabase.from("profiles").select("id").eq("username", inviteUsername.trim()).maybeSingle();
     if (!target) {
       setBusy(null);
-      return setError("No one with that username.");
+      return setError("No one has that username.");
     }
     const { error: err } = await inviteHost(space.id, target.id);
     setBusy(null);

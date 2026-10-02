@@ -318,7 +318,7 @@ export function BePart({
               {active.id === "join_in" && postId && !isActivity && (
                 <>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    Nothing scheduled on this one. It’s a moment, not an
+                    Nothing scheduled on this one. It’s a Moment, not an
                     activity. There may be something happening in {hobbyLabel}{" "}
                     you can take part in.
                   </p>

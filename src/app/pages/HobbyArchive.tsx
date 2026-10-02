@@ -108,7 +108,7 @@ export function HobbyArchive() {
             No such hobby
           </h1>
           <p className="mb-6 text-sm text-muted-foreground">
-            That book isn’t on your shelf.
+            That Book isn’t on your Shelf.
           </p>
           <Link to="/you">
             <Button variant="outline">Back to your Shelf</Button>

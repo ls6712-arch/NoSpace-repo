@@ -55,7 +55,7 @@ function PasswordChangeRow() {
     });
     if (verifyError) {
       setSaving(false);
-      setError("That current password isn’t right.");
+      setError("Your current password isn’t right.");
       return;
     }
     const result = await updatePassword(next);

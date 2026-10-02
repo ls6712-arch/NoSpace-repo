@@ -742,11 +742,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // copy so nothing typed is thrown away on screen — but that copy lives
       // only in this tab, so the flow must not claim it was saved. Telling
       // someone "Saved." and then losing the post is worse than an error.
-      setSaveError(
-        error?.message
-          ? `This didn’t save to your account: ${error.message}`
-          : "This didn’t save to your account. It’s still on screen, but it will go when you reload.",
-      );
+      if (error) console.warn("[ContentContext] save failed:", error);
+      setSaveError("This didn’t save to your account. It’s still on screen, but it will go when you reload.");
     }
 
     // Local-only fallback — used when accounts aren't set up on this build,

@@ -68,7 +68,7 @@ export function PursuitsRail({
 
       {pursuits.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          No Pursuits yet.{" "}
+          No Pursuits yet{" "}
           <button type="button" onClick={() => setStarting(true)} className="text-accent hover:underline">
             Start your first
           </button>

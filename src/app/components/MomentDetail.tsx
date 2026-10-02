@@ -185,9 +185,9 @@ export function MomentDetail({
             ...(uploadedMediaPath ? { mediaPath: uploadedMediaPath } : {}),
           });
       if (ok) setEditing(false);
-      else setSaveError("Couldn’t save that change. Your edit is still here, try again.");
+      else setSaveError("Couldn’t save that change. Your edit is still here. Try again.");
     } catch {
-      setSaveError("Couldn’t reach the server. Your edit is still here, try again.");
+      setSaveError("Couldn’t reach the server. Your edit is still here. Try again.");
     } finally {
       // Always runs, so the button can't stay stuck on "Saving…" and strand
       // an edit the person can no longer submit.

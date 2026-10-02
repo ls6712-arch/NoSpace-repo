@@ -95,7 +95,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         const outcome = await addPrivateLog({ note: text || "My first moment" });
         if (outcome.skipped) return;
         if (!outcome.data) {
-          setError(outcome.error || "That didn’t save. Try again?");
+          setError(outcome.error || "That didn’t save. Try again.");
           return;
         }
         if (user) saveMomentDefaults(user.id, { audience });
@@ -118,7 +118,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
       setSaved({ post: entry, privateLogId: null });
       setOfferPursuitName(true);
     } catch {
-      setError("That didn’t save. Try again?");
+      setError("That didn’t save. Try again.");
     } finally {
       setSaving(false);
     }

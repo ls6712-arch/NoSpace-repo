@@ -352,7 +352,8 @@ export function InviteDialog({
     if (!user) return;
     ensureShared();
     const err = await saveInvites(project.id, user.id, [personId]);
-    setStatus(err ? `Couldn’t invite ${name}: ${err}` : `Invited ${name}.`);
+    if (err) console.warn("[PursuitProgressPanel] invite failed:", err);
+    setStatus(err ? `Couldn’t invite ${name}. Try again.` : `Invited ${name}.`);
     if (!err) onInvited?.();
     setQuery("");
   };
@@ -364,7 +365,8 @@ export function InviteDialog({
     const { token, error } = await getOrCreateInviteLink(project.id, user.id);
     if (!token) {
       setLinkState("error");
-      setStatus(`Couldn’t make a link: ${error}`);
+      console.warn("[PursuitProgressPanel] invite link failed:", error);
+      setStatus("Couldn’t make a link. Try again.");
       return;
     }
     const url = inviteUrl(token);

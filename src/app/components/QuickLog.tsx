@@ -399,7 +399,7 @@ export function QuickLog({
                   <SelectValue placeholder="No pursuit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_PURSUIT}>No pursuit</SelectItem>
+                  <SelectItem value={NO_PURSUIT}>No Pursuit</SelectItem>
                   {openProjects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.title}

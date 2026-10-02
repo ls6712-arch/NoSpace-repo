@@ -285,7 +285,7 @@ export function PublicProfile() {
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
           <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
-            No shelf here
+            No Shelf here
           </h2>
           <p className="mb-6 text-sm text-muted-foreground">
             Nobody by that name. The link may be out of date.

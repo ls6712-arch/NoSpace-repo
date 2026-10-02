@@ -925,7 +925,7 @@ export function Log() {
       setSavedPostId(entry.id);
       setScreen("saved");
     } catch {
-      setError("Something went wrong saving that. Mind trying again?");
+      setError("That didn’t save. Try again.");
     } finally {
       setSaving(false);
     }

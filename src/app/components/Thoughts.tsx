@@ -162,7 +162,7 @@ export function Thoughts({
           )}
           {failed && (
             <p className="mt-2 text-[11px] text-[var(--coral-text)]">
-              That didn’t send. Your words are still here, try again.
+              That didn’t send. Your words are still here. Try again.
             </p>
           )}
           <div className="mt-2 flex items-center justify-between gap-3">

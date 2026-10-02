@@ -70,7 +70,8 @@ export function AvatarPicker({
       .upload(path, file, { contentType: file.type || undefined, upsert: true });
 
     if (uploadError) {
-      setError(`Couldn’t upload that: ${uploadError.message}`);
+      console.warn("[AvatarPicker] upload failed:", uploadError);
+      setError("Couldn’t upload that photo. Try again.");
       setBusy(false);
       return;
     }
@@ -81,7 +82,10 @@ export function AvatarPicker({
       .update({ avatar_url: publicUrl })
       .eq("id", user.id);
 
-    if (saveError) setError(`Uploaded, but couldn’t save it to your profile: ${saveError.message}`);
+    if (saveError) {
+      console.warn("[AvatarPicker] profile update failed:", saveError);
+      setError("Uploaded, but couldn’t add it to your profile. Try again.");
+    }
     else onChange(publicUrl);
     setBusy(false);
   };

@@ -92,7 +92,8 @@ export function SpaceForm({
       .from("post-media")
       .upload(path, file, { contentType: file.type || undefined, upsert: false });
     if (uploadError) {
-      setError(`That photo didn’t upload: ${uploadError.message}`);
+      console.warn("[SpaceForm] cover upload failed:", uploadError);
+      setError("That photo didn’t upload. Try again.");
       setUploading(false);
       return;
     }
@@ -204,7 +205,10 @@ export function SpaceForm({
       }
       const { error: cornersErr } = await setSpaceCorners(space.id, cornerIds);
       setSaving(false);
-      if (cornersErr) return setError(`Space saved, but Corners couldn’t be updated: ${cornersErr}`);
+      if (cornersErr) {
+        console.warn("[SpaceForm] setSpaceCorners failed:", cornersErr);
+        return setError("Space saved, but its Corners didn’t update. Try again.");
+      }
       navigate(`/space/${space.slug}`);
     }
   };
