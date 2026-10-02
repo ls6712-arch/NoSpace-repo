@@ -9,6 +9,10 @@ import { migrateLegacyStorageKeys } from "./app/lib/localData";
 // pre-rebrand "nospace.*" keys instead of silently resetting to empty.
 migrateLegacyStorageKeys();
 
+// iOS Safari only applies :active (the pressed state on every button and
+// link) once the page has a touchstart listener. A no-op one is enough.
+document.addEventListener("touchstart", () => {}, { passive: true });
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

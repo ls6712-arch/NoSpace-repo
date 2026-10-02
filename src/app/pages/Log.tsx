@@ -64,6 +64,7 @@ import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
+import { ENTER } from "../lib/motion";
 
 /**
  * Logging, choose-first:
@@ -1086,14 +1087,17 @@ export function Log() {
 
         <PursuitDialog open={pursuitDialogOpen} onOpenChange={setPursuitDialogOpen} />
 
-        {/* Never dismissed by clicking outside or Escape — resuming or
-            discarding has to be an actual choice, not an accidental
-            dismissal that quietly leaves an old draft sitting around. */}
+        {/* Never dismissed by clicking outside — resuming or discarding has
+            to be an actual choice, not a stray tap. Escape resumes, the
+            answer that loses nothing. */}
         <Dialog open={!!draftPrompt}>
           <DialogContent
             showCloseButton={false}
             onInteractOutside={(e) => e.preventDefault()}
-            onEscapeKeyDown={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => {
+              e.preventDefault();
+              resumeDraft();
+            }}
           >
             <DialogHeader>
               <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Resume your last draft?</DialogTitle>
@@ -1104,7 +1108,7 @@ export function Log() {
             {draftPrompt && (
               <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5 text-sm text-muted-foreground">
                 {draftPrompt.thought.trim() ? (
-                  <p className="line-clamp-3 text-foreground">"{draftPrompt.thought.trim()}”</p>
+                  <p className="line-clamp-3 text-foreground">“{draftPrompt.thought.trim()}”</p>
                 ) : (
                   <p>No caption yet</p>
                 )}
@@ -1229,7 +1233,7 @@ export function Log() {
             // tracked at once, this box hands itself off into position on
             // the Shelf instead of the grid tile just appearing cold.
             layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
-            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            transition={ENTER}
             className={
               savedTileSettled
                 ? "mx-auto my-6 w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
@@ -1240,7 +1244,7 @@ export function Log() {
           </motion.div>
           {savedAs === "shared" && !anySaveError && (
             <p
-              className={`-mt-3 mb-3 text-xs text-muted-foreground transition-opacity duration-300 ${
+              className={`-mt-3 mb-3 text-xs text-muted-foreground transition-opacity duration-base ${
                 savedTileSettled ? "opacity-100" : "opacity-0"
               }`}
             >

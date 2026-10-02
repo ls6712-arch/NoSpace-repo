@@ -1,11 +1,13 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Check, Minus, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { ENTER } from "../../lib/motion";
 
 /** Shared spring for every Pursuit card micro-interaction (hover lift, tap,
  * entrance stagger) — one feel across PursuitItem, PursuitsInProgressSection,
  * same spring Onboarding.tsx's own settle() uses. */
-export const PURSUIT_SPRING = { type: "spring" as const, stiffness: 260, damping: 28 };
+/** Pursuit cards and rows settle on the app's one curve (lib/motion.ts). */
+export const PURSUIT_SPRING = ENTER;
 
 /** Terracotta fill used by every Pursuit progress bar. */
 export function ProgressBar({ fraction, className = "", thin = false }: { fraction: number; className?: string; thin?: boolean }) {
@@ -18,7 +20,7 @@ export function ProgressBar({ fraction, className = "", thin = false }: { fracti
       aria-valuemax={100}
       aria-valuenow={Math.round(pct)}
     >
-      <div className="h-full rounded-full bg-[var(--coral)] transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
+      <div className="h-full rounded-full bg-[var(--coral)] transition-[width] duration-base ease-out" style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -80,7 +82,7 @@ export function ProgressRing({
           strokeDasharray={circumference}
           initial={false}
           animate={{ strokeDashoffset: offset }}
-          transition={reduceMotion ? { duration: 0 } : { duration: 0.7, ease: "easeOut" }}
+          transition={reduceMotion ? { duration: 0 } : ENTER}
         />
       </svg>
       {children && <span className="absolute inset-0 flex items-center justify-center">{children}</span>}

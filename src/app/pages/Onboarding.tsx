@@ -12,6 +12,7 @@ import { useCorners, cornerFollowKey } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
 import { fetchInvitesLeft } from "../lib/invites";
 import { Button } from "../components/ui/button";
+import { ENTER } from "../lib/motion";
 
 /** Every chip carried across the wizard shares this layoutId prefix, so
  * Motion can visibly travel a tag from step 1's field into step 2's quiet
@@ -43,7 +44,7 @@ const COVER_TEXTURES = [
 /** Spring, not linear-ease, everywhere motion appears on this page — the
  * step transition, the tag chips traveling forward, and the cover's own
  * pieces settling into place in step 2. Nowhere else gets motion. */
-const SPRING = { type: "spring" as const, stiffness: 260, damping: 28 };
+const SPRING = ENTER;
 
 /**
  * Shown once, right after signup — see sql/onboarding-v2.sql and Root.tsx's

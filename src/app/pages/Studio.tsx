@@ -13,6 +13,7 @@ import { Button } from "../components/ui/button";
 import { APP_NAME } from "../config";
 import { formatMonth } from "../lib/dates";
 import { plural } from "../lib/plural";
+import { ENTER } from "../lib/motion";
 
 type Grouping = "chronological" | "tag";
 
@@ -374,7 +375,7 @@ export function Studio() {
               initial={reduceMotion ? false : { rotateY: direction > 0 ? 70 : -70, opacity: 0 }}
               animate={{ rotateY: 0, opacity: 1 }}
               exit={reduceMotion ? undefined : { rotateY: direction > 0 ? -70 : 70, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 260, damping: 32 }}
+              transition={ENTER}
               style={{
                 transformStyle: "preserve-3d",
                 transformOrigin: direction > 0 ? "left center" : "right center",

@@ -29,6 +29,7 @@ import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
 import { plural } from "../lib/plural";
+import { scrollBehavior } from "../lib/scrollToElement";
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
@@ -266,13 +267,13 @@ function AllCornersBrowser({ query }: { query: string }) {
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
           to={`/corner/${c.slug}`}
-          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-base ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
         >
           <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
             <DiscoverSpaceArt
               hobbySlug={c.spaceSlug}
               seed={`${c.spaceSlug}-${c.slug}`}
-              className="transition-transform duration-500 ease-out group-hover:scale-110"
+              className="transition-transform duration-base ease-out group-hover:scale-110"
             />
           </div>
           <div className="px-3 py-2.5">
@@ -547,7 +548,7 @@ export function Discover() {
                         // "/all-moments" — a route that doesn't exist, so it
                         // lands on the 404 page instead of scrolling.
                         e.preventDefault();
-                        document.getElementById("all-moments")?.scrollIntoView({ behavior: "smooth" });
+                        document.getElementById("all-moments")?.scrollIntoView({ behavior: scrollBehavior() });
                       }}
                     >
                       See all →

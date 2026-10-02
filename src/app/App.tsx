@@ -1,4 +1,5 @@
 import { RouterProvider } from "react-router";
+import { MotionConfig } from "motion/react";
 import { router } from "./routes";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -25,7 +26,12 @@ export default function App() {
                     <CategoriesProvider>
                       <CartProvider>
                         <QuickLogProvider>
-                          <RouterProvider router={router} />
+                          {/* JS animations (the motion library) follow the OS
+                              reduced-motion setting everywhere, not just
+                              where a component checks it itself. */}
+                          <MotionConfig reducedMotion="user">
+                            <RouterProvider router={router} />
+                          </MotionConfig>
                         </QuickLogProvider>
                       </CartProvider>
                     </CategoriesProvider>

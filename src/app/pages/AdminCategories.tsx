@@ -206,7 +206,7 @@ export function AdminCategories() {
                     </span>
                     {s.reviewNote && (
                       <span className="w-full text-xs text-muted-foreground">
-                        "{s.reviewNote}”
+                        “{s.reviewNote}”
                       </span>
                     )}
                   </li>

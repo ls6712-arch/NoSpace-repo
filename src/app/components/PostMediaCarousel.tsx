@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Images } from "lucide-react";
 import { GeneratedArt } from "./GeneratedArt";
+import { scrollBehavior } from "../lib/scrollToElement";
 
 const isRealUrl = (url?: string) => !!url && /^https?:\/\//.test(url);
 
@@ -114,7 +115,7 @@ function PhotoTrack({
   const scrollToIndex = (i: number) => {
     const el = trackRef.current;
     if (!el) return;
-    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    el.scrollTo({ left: i * el.clientWidth, behavior: scrollBehavior() });
   };
 
   // Tracks which slide is centered as the person swipes, rather than only
@@ -156,7 +157,7 @@ function PhotoTrack({
             aria-label={`Photo ${i + 1} of ${urls.length}`}
             aria-current={i === index}
             onClick={() => scrollToIndex(i)}
-            className={`pointer-events-auto h-1.5 rounded-full transition-all ${
+            className={`pointer-events-auto h-1.5 rounded-full transition-colors ${
               i === index ? "w-4 bg-white" : "w-1.5 bg-white/50"
             }`}
           />

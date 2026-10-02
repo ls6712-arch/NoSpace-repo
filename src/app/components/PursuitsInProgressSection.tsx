@@ -134,7 +134,7 @@ export function PursuitsInProgressSection({
     <>
       <section
         ref={barRef}
-        className={`fixed inset-x-0 top-16 z-40 bg-surface pb-5 ${reduceMotion ? "" : "transition-[opacity,transform] duration-300 ease-out"} ${
+        className={`fixed inset-x-0 top-16 z-40 bg-surface pb-5 ${reduceMotion ? "" : "transition-[opacity,transform] duration-base ease-out"} ${
           atTop ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"
         }`}
         aria-hidden={!atTop}
@@ -161,7 +161,7 @@ export function PursuitsInProgressSection({
                 <Compass className="size-5" strokeWidth={1.7} />
               </span>
               <p className="text-sm text-muted-foreground">
-                Nothing in progress right now{" "}
+                Nothing in progress right now.{" "}
                 <Link to="/pursuits/new" className="text-accent hover:underline">
                   Start a Pursuit
                 </Link>
@@ -208,7 +208,7 @@ export function PursuitsInProgressSection({
       <div
         aria-hidden="true"
         style={{ height: atTop ? barHeight : 0 }}
-        className={reduceMotion ? "" : "transition-[height] duration-300 ease-out"}
+        className={reduceMotion ? "" : "transition-[height] duration-base ease-out"}
       />
     </>
   );

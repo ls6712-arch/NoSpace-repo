@@ -1,6 +1,13 @@
 :root {
   color-scheme: light;
   --font-size: 16px;
+  /* Motion: two durations and one curve, used for every transition and
+     entrance in the app. Fast is for state changes (hover, press, toggles,
+     anything leaving); base is for things arriving (dialogs, sheets,
+     menus, reveals). */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -459,6 +466,14 @@
 }
 
 @theme inline {
+  /* Tailwind's own transition defaults and ease-* utilities all resolve to
+     the app's tokens, so a bare `transition-colors` or `ease-out` is
+     already on-system. */
+  --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-standard);
+  --ease-in: var(--ease-standard);
+  --ease-out: var(--ease-standard);
+  --ease-in-out: var(--ease-standard);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -564,6 +579,17 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* The two motion durations as utilities. Also set --tw-duration so
+   tw-animate-css entrances (animate-in / animate-out) use them. */
+@utility duration-fast {
+  --tw-duration: var(--duration-fast);
+  transition-duration: var(--duration-fast);
+}
+@utility duration-base {
+  --tw-duration: var(--duration-base);
+  transition-duration: var(--duration-base);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -607,6 +633,57 @@
     text-wrap: pretty;
   }
 
+  /* ── Interaction states ───────────────────────────────────────────────
+     Every tappable element gets hover, pressed, focus and disabled states
+     by default (focus rings are further down, outside the layers). These
+     sit in the base layer, so any component's own `active:` / `hover:` /
+     `disabled:` utilities still win. */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="switch"],
+         [role="checkbox"], [role="radio"], summary, select, label[for], a[href]) {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Controls aren't text: a long-press or double tap shouldn't select
+     their label. Links stay selectable (people copy names and titles). */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Pressed: buttons shrink a touch, links dim a touch. `scale` composes
+     with any transform or translate the element already has. */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary) {
+    transition-property: color, background-color, border-color, opacity, box-shadow, scale, filter;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-standard);
+  }
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary):active:not(:disabled):not([aria-disabled="true"]) {
+    scale: 0.98;
+  }
+  :where(a[href]):active {
+    opacity: 0.75;
+  }
+
+  /* Disabled: dimmed, not clickable-looking, and no pressed state. */
+  :where(button, [role="button"], [role="tab"], input, select, textarea):disabled,
+  :where([aria-disabled="true"]) {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Love this / Count me in: one quiet press when turned on. The icon dips
+     and settles back; it never grows past its own size, so no bounce. */
+  .ns-react {
+    animation: ns-react var(--duration-base) var(--ease-standard);
+  }
+  @keyframes ns-react {
+    0% { scale: 1; }
+    40% { scale: 0.82; }
+    100% { scale: 1; }
+  }
+
   /* A truncated name or title someone tapped open (lib/truncation.ts). */
   .ns-truncate-open {
     white-space: normal !important;
@@ -647,8 +724,8 @@
      ThemeContext.tsx around a preference/OS change, never on first paint. */
   .theme-transition,
   .theme-transition * {
-    transition: background-color 400ms ease-out, color 400ms ease-out,
-      border-color 400ms ease-out, fill 400ms ease-out, stroke 400ms ease-out !important;
+    transition: background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard), fill var(--duration-base) var(--ease-standard), stroke var(--duration-base) var(--ease-standard) !important;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -755,7 +832,7 @@
     padding: 0 1rem;
     color: var(--offwhite);
     font-size: 0.75rem;
-    transition: border-color 180ms ease, transform 180ms ease;
+    transition: border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
   }
 
   .ns-hero-secondary-link:hover { border-color: var(--violet-electric); transform: translateY(-1px); }
@@ -783,7 +860,7 @@
     color: var(--violet-electric-bright);
     font-size: 0.875rem;
     font-weight: 500;
-    transition: color 180ms ease, gap 180ms ease;
+    transition: color var(--duration-fast) var(--ease-standard), gap var(--duration-fast) var(--ease-standard);
   }
 
   .ns-text-link:hover { gap: 0.65rem; color: var(--offwhite); }
@@ -819,7 +896,7 @@
     border: 1px solid var(--hairline);
     background: var(--surface-elevated);
     box-shadow: 0 16px 32px -22px rgba(0, 0, 0, 0.6);
-    transition: transform 280ms cubic-bezier(.22,.61,.36,1), box-shadow 280ms ease, border-color 280ms ease;
+    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
   }
 
   .ns-value-card:hover,
@@ -830,7 +907,7 @@
   }
 
   .ns-value-card-icon {
-    transition: transform 280ms cubic-bezier(.22,.61,.36,1);
+    transition: transform var(--duration-base) var(--ease-standard);
   }
 
   .ns-value-card:hover .ns-value-card-icon,
@@ -929,7 +1006,7 @@
     border: 1px solid var(--hairline);
     background: var(--surface-elevated);
     box-shadow: 0 16px 30px -18px rgba(0, 0, 0, 0.55);
-    transition: transform 340ms cubic-bezier(.22,.61,.36,1), box-shadow 340ms ease;
+    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
   }
 
   .ns-world-card:hover,
@@ -964,7 +1041,7 @@
 
   .ns-space-card {
     background: var(--surface-elevated);
-    transition: transform 300ms ease, box-shadow 300ms ease;
+    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
   }
 
   .group:hover .ns-space-card,
@@ -1133,7 +1210,7 @@
     border: 1px solid var(--border);
     background: var(--surface-elevated);
     box-shadow: 0 16px 30px -20px rgba(0, 0, 0, 0.55);
-    transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
   }
 
   .ns-discover-space-card:hover,
@@ -1178,7 +1255,7 @@
     font-size: 0.62rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    transition: transform 180ms ease;
+    transition: transform var(--duration-fast) var(--ease-standard);
   }
 
   .ns-discover-space-card:hover .ns-discover-open { transform: translate(2px, -2px); }
@@ -1343,7 +1420,7 @@
     font-size: 0.72rem;
     font-family: var(--font-serif);
     color: var(--ink, var(--forest-ink));
-    transition: border-color 150ms ease;
+    transition: border-color var(--duration-fast) var(--ease-standard);
   }
 
   .ns-you-tags--pills .ns-pill:hover {
@@ -1537,7 +1614,7 @@
      left parked at opacity 0 if animations never run. */
   .ns-enter {
     opacity: 0;
-    animation: ns-rise .62s cubic-bezier(.22,.61,.36,1) forwards;
+    animation: ns-rise var(--duration-base) var(--ease-standard) forwards;
   }
   .ns-enter-1 { animation-delay: .05s; }
   .ns-enter-2 { animation-delay: .16s; }
@@ -1553,7 +1630,7 @@
   .ns-reveal {
     opacity: 0;
     transform: translateY(18px);
-    transition: opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+    transition: opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
   }
   .ns-reveal.is-visible {
     opacity: 1;
@@ -1739,8 +1816,16 @@ summary:focus-visible,
     transform: none !important;
     transition: none !important;
   }
+  /* Everything else too: every transition and every animation, including
+     Tailwind/tw-animate entrances, dialogs and sheets, the press feedback
+     and anything added later. They still run (so animationend fires and
+     end states apply), just instantly and once. */
   *, *::before, *::after {
     transition-duration: .01ms !important;
+    transition-delay: 0s !important;
+    animation-duration: .01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }
 }
