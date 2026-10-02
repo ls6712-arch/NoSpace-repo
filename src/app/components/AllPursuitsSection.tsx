@@ -134,7 +134,8 @@ export function AllPursuitsSection({
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
 
-  const hasAny = active.length > 0 || resting.length > 0 || complete.length > 0;
+  const total = active.length + resting.length + complete.length;
+  const hasAny = total > 0;
 
   const matchesQuery = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -183,18 +184,22 @@ export function AllPursuitsSection({
         )}
       </div>
 
+      {/* Counts here are the raw, un-searched totals — a stable "at a
+          glance" reference that doesn't flicker as the search box above is
+          typed into. The "N Pursuits matching" line below carries the
+          search-filtered count instead. */}
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Filter by status">
         <StatusChip active={status === "all"} onClick={() => setStatus("all")}>
-          All
+          All · {total}
         </StatusChip>
         <StatusChip active={status === "active"} onClick={() => setStatus("active")}>
-          In progress
+          In progress · {active.length}
         </StatusChip>
         <StatusChip active={status === "resting"} onClick={() => setStatus("resting")}>
-          Resting
+          Resting · {resting.length}
         </StatusChip>
         <StatusChip active={status === "complete"} onClick={() => setStatus("complete")}>
-          Completed
+          Completed · {complete.length}
         </StatusChip>
       </div>
 
