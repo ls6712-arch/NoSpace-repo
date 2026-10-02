@@ -39,6 +39,8 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { plural } from "../lib/plural";
 import { Time } from "./ui/time";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
+import { TOAST } from "../lib/stateCopy";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -199,15 +201,11 @@ export function BookmarkOverlay({
   tone?: string;
 }) {
   const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
-  const [justAdded, setJustAdded] = useState(false);
 
   const onClick = () => {
     const wasSaved = saved;
     toggleSaved(Number(postId));
-    if (!wasSaved) {
-      setJustAdded(true);
-      window.setTimeout(() => setJustAdded(false), 2200);
-    }
+    if (!wasSaved) notify(TOAST.bookmarked);
   };
 
   return (
@@ -227,14 +225,6 @@ export function BookmarkOverlay({
           aria-hidden="true"
         />
       </button>
-      {justAdded && (
-        <span
-          role="status"
-          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-full bg-[var(--void)] px-2.5 py-1 text-[11px] text-[var(--offwhite)] shadow-md animate-in fade-in"
-        >
-          Saved
-        </span>
-      )}
     </div>
   );
 }

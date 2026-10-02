@@ -10,7 +10,8 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
-import { ERROR_LINE } from "../lib/stateCopy";
+import { ERROR_LINE, TOAST } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
 
 /**
  * Step 3, §5 "Details move after saving": Corner, location, private
@@ -70,6 +71,7 @@ export function AddDetailsSheet({
         setError(ERROR_LINE);
         return;
       }
+      notify(TOAST.changesSaved);
       onOpenChange(false);
     } finally {
       setSaving(false);

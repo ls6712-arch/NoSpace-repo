@@ -55,8 +55,9 @@ import {
 } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { formatDate } from "../lib/dates";
-import { UPLOAD_COPY } from "../lib/stateCopy";
+import { TOAST, UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
 
 /** The audience words, identical to the ones chosen in the Log flow. */
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
@@ -191,7 +192,10 @@ export function MomentDetail({
             subHobby: editSubHobby || undefined,
             ...(uploadedMediaPath ? { mediaPath: uploadedMediaPath } : {}),
           });
-      if (ok) setEditing(false);
+      if (ok) {
+        setEditing(false);
+        notify(TOAST.changesSaved);
+      }
       else setSaveError("Couldn’t save that change. Your edit is still here. Try again.");
     } catch {
       setSaveError("Couldn’t reach the server. Your edit is still here. Try again.");

@@ -16,6 +16,8 @@ import { supabase } from "../../lib/supabase";
 import { deleteMomentFiles, resolvePostMedia, signMomentPaths, uploadMomentFile } from "../lib/momentMedia";
 import { InFlightGuard, InFlightSkipped } from "../lib/inFlightGuard";
 import { plural } from "../lib/plural";
+import { notifyError } from "../components/ui/toaster";
+import { friendlyError } from "../lib/friendlyError";
 
 const LISTINGS_KEY = "sushii.listings.v1";
 
@@ -527,13 +529,20 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       ? supabase.from("reactions").delete().eq("post_id", postId).eq("user_id", user.id).eq("type", type)
       : supabase.from("reactions").insert({ post_id: postId, user_id: user.id, type });
 
-    void write.then(({ error }) => {
-      if (error) {
-        setMyReactionsByPostId((prev) => ({ ...prev, [postId]: revertList(prev[postId] ?? []) }));
-        bump(reacted ? 1 : -1);
-      }
-    });
+    const rollback = (err: unknown) => {
+      console.warn("[ContentContext] reaction failed, rolled back:", err);
+      setMyReactionsByPostId((prev) => ({ ...prev, [postId]: revertList(prev[postId] ?? []) }));
+      bump(reacted ? 1 : -1);
+      notifyError(friendlyError(err), () => toggleReactionRef.current(postId, type));
+    };
+    void Promise.resolve(write).then(({ error }) => {
+      if (error) rollback(error);
+    }, rollback);
   };
+  // The retry above calls the latest toggleReaction (fresh state), not the
+  // one captured when the failed tap happened.
+  const toggleReactionRef = useRef(toggleReaction);
+  toggleReactionRef.current = toggleReaction;
 
   const refetchLikedPosts = async () => {
     if (!supabase || !user) {

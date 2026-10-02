@@ -12,6 +12,7 @@ import { restoreOwnPursuits } from "../lib/pursuitsRemote";
 import { takeSavedInviteCode } from "../lib/inviteCode";
 import { claimInvite } from "../lib/invites";
 import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
+import { friendlyError } from "../lib/friendlyError";
 
 export interface Profile {
   id: string;
@@ -407,7 +408,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("profiles")
         .update(fields)
         .eq("id", session.user.id);
-      if (error) return { error: error.message };
+      if (error) {
+        console.warn("[AuthContext] profile update failed:", error);
+        return { error: friendlyError(error) };
+      }
       await loadProfile(session.user.id);
       return { error: null };
     } catch {

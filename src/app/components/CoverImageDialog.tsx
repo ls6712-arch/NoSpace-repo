@@ -7,7 +7,8 @@ import { useAuth } from "../context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { MediaAttachPicker } from "./MediaAttachPicker";
 import { Button } from "./ui/button";
-import { UPLOAD_COPY } from "../lib/stateCopy";
+import { TOAST, UPLOAD_COPY } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
 
 const MAX_COVER_BYTES = 8 * 1024 * 1024;
 
@@ -78,6 +79,7 @@ export function CoverImageDialog({
     );
     setSaving(false);
     setFile(null);
+    notify(TOAST.changesSaved);
     onOpenChange(false);
   };
 

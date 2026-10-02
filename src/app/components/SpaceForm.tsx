@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { notify } from "./ui/toaster";
+import { TOAST } from "../lib/stateCopy";
 
 function slugify(name: string) {
   return name
@@ -221,6 +223,7 @@ export function SpaceForm({
         console.warn("[SpaceForm] setSpaceCorners failed:", cornersErr);
         return setError("Space saved, but its Corners didn’t update. Try again.");
       }
+      notify(TOAST.changesSaved);
       navigate(`/space/${space.slug}`);
     }
   };

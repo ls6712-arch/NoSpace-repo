@@ -32,6 +32,8 @@ import { formatMonth } from "../lib/dates";
 import { pluralWord } from "../lib/plural";
 import { Loadable } from "../components/ui/skeleton";
 import { MomentGridSkeleton, ProfileHeaderSkeleton } from "../components/Skeletons";
+import { notifyError } from "../components/ui/toaster";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /** Whichever Corner shows up most in their public Moments — a Corner slug is
  * only unique within its own Space, so this tracks the pair, never the slug
@@ -419,18 +421,26 @@ export function PublicProfile() {
                 {!isMe && user && (
                   <Button
                     variant={followStatus === "none" || followStatus === "declined" ? "brand" : "outline"}
-                    disabled={followBusy}
-                    onClick={async () => {
+                    onClick={() => {
+                      // Optimistic: the button flips on tap; a failed write
+                      // flips it back and says so. Not async on purpose, so
+                      // the button doesn't go busy for a change already shown.
+                      if (followBusy) return;
+                      const before = followStatus;
+                      const requesting = before === "none" || before === "declined";
+                      setFollowStatus(requesting ? "pending" : "none");
                       setFollowBusy(true);
-                      const requesting = followStatus === "none" || followStatus === "declined";
-                      const ok = requesting
-                        ? await follow(user.id, personId)
-                        : await unfollow(user.id, personId);
-                      if (ok) {
-                        setFollowStatus(requesting ? "pending" : "none");
-                        setFollowRefreshKey((k) => k + 1);
-                      }
-                      setFollowBusy(false);
+                      void (requesting ? follow(user.id, personId) : unfollow(user.id, personId))
+                        .catch(() => false)
+                        .then((ok) => {
+                          setFollowBusy(false);
+                          if (ok) {
+                            setFollowRefreshKey((k) => k + 1);
+                            return;
+                          }
+                          setFollowStatus(before);
+                          notifyError(ERROR_LINE);
+                        });
                     }}
                   >
                     {followStatus === "accepted"
