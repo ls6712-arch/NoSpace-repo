@@ -408,3 +408,55 @@ for all of them.
 | 28 | `src/app/pages/You.tsx:476` | `pt-7` | section tag | 28 | 32 |
 
 28 section gaps outside 16/24/32/48
+
+
+## 13. Phase 5: final before / after
+
+"Before" is the baseline commit `c5b08e7`; "after" is this branch's head. Guard
+rows are lines flagged by `scripts/check-design-tokens.sh` (run against the
+baseline tree with `TOKEN_CHECK_ROOT`), so a line that breaks two patterns counts
+twice.
+
+| measure | before | after |
+|---|---|---|
+| guard: off-scale type (`text-xs…9xl`, `text-[Npx]`) | 1095 | **0** |
+| guard: off-scale radius | 303 | **0** |
+| guard: raw shadows | 27 | **0** |
+| guard: raw black/white and colour literals outside theme.css | 151 | **0** |
+| guard: raw motion (`duration-<n>`, `ease-*`, inline ms) | 104 | **0** (33 lines marked `design-token-ignore: <reason>`) |
+| guard: viewport height (`h-screen`, `100vh`) | 0 | **0** |
+| guard total | 1681 | **0** |
+| interactive elements under 44×44 on touch (375px) | 444 | **0** |
+| overlapping 44px hit areas (375px) | n/a (not measured) | 10 pairs, listed above |
+| text/background pairs under 4.5:1 (3:1 large), light + dark, 375 and 1440 | 18 | **0** |
+| harness views with page-level horizontal scroll | see section 8 | **0** |
+
+### Accessibility fixes found on the way (all in the PR description)
+
+- White text on `--coral` was 2.9:1: coral fills that carry text now use
+  `--coral-deep` (5.15:1, both modes).
+- Brand-gradient fills in dark were 3.82:1 under white: dark now uses the light
+  accent for the gradient (6.17:1); `--on-brand` stays white in both modes.
+- Studio cover: the base was `--ink`, which flips to cream in dark, leaving white
+  text on cream; the title was `--foreground`, dark on a dark scrim in light mode.
+  Both are now on-media on a dark base.
+- `--coral-text` was `#FF8B6E` in light mode (1.9–2.2:1 on cream): light is now
+  `#B83A1F`, dark keeps `#FF8B6E`.
+- Dark `--accent` `#C8674D` → `#D38571` (text on cards 4.2 → 5.6:1; dark text
+  on accent fills 4.6 → 6.2:1). Light `--clay` `#B4532A` → `#A44A23` (4.3 → 5.1:1).
+- Active bottom-tab tint 16% → 10%, and Pursuit `SoftPanel` uses `bg-surface-muted`
+  (muted text was 3.55:1 on the stone tint).
+- `cn()` (tailwind-merge) did not know the new type tokens and dropped the colour
+  from `cn("text-accent-foreground", "text-caption")`, so every avatar fallback
+  rendered dark initials on the accent fill (2.4:1). It now knows the token
+  utilities (`utils.test.ts`).
+
+### Known gaps
+
+- WebKit is not installed in the sandbox this was built in. The iOS sizes (SE, 15,
+  both iPads) were run in Chromium at the same viewports as a stand-in, labelled as
+  such; the WebKit run is for a Mac or CI (`node scripts/visual/run.ts --profiles`).
+- The fixture harness cannot reach OAuth sign-in, storage uploads, camera and
+  microphone, or realtime channels; those screens are verified by hand.
+- Text over photos and video is listed by the contrast audit, not judged.
+- 10 pairs of touch targets still overlap (section 11); 44px targets were kept.
