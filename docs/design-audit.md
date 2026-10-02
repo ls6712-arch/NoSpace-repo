@@ -1,6 +1,7 @@
 # Design audit — P0 Foundations, Phase 0 (Oct 1, 2026)
 
 Read-only inventory of every raw design value the token pass will replace.
+Re-run with `python3 scripts/design-audit.py` (`--files` for per-file detail).
 Scope: `src/**/*.{ts,tsx,css}` (259 TS/TSX files + 6 CSS files). Counts are
 class *occurrences* (one `className` with `sm:rounded-xl rounded-xl` counts
 twice), including variant-prefixed ones (`hover:`, `sm:`, `data-[…]:`).
@@ -39,7 +40,7 @@ Comments are excluded where they produced false hits (noted below).
 | **Font size** (TSX classes) | **1,148** | Tailwind: `text-sm` 401 · `text-xs` 373 · `text-lg` 43 · `text-2xl` 40 · `text-base` 28 · `text-4xl` 26 · `text-3xl` 22 · `text-xl` 18 · `text-5xl` 12 · `text-6xl` 1 · `text-8xl` 1. Arbitrary (184): `[11px]` 106 · `[10px]` 40 · `[9px]` 7 · `[1.05rem]` 4 · `[19px]` 3 · `[12.5px]` 3 · `[17px]` 3 · `[11.5px]` 2 · `[1.9rem]` 2 · `[1.75rem]` 2 · `[8px]`, `[14.5px]`, `[15px]`, `[2rem]`, `[22px]`, `[42px]`, `[48px]`, `[76px]` 1 each · 3 `clamp()` |
 | Font size (CSS) | 25 | theme.css: 0.55, 0.56, 0.6 ×2, 0.62, 0.65, 0.72 ×2, 0.75 ×2, 0.85 ×2, 0.875, 1.6, 2rem; `var(--text-base)` ×4; html `16px`. my-space.css: 1.125rem, 1.375rem |
 | **Raw black/white** | **151** | `text-white` 80 (+ `/50…/85` ×13) · `text-black` 2 (+`/40` 1) · `bg-white` 7 (+ opacity ×8) · `bg-black` 1 (+ `/20…/70` ×25) · `border-white/*` 10 · `fill-white` 3 · gradient stops `from/via-black/*` 5 |
-| **Color literals** outside theme.css | **48** | 32 hex + 16 rgb/rgba, in 11 files (table §4) |
+| **Color literals** outside theme.css | **49** | 32 hex + 17 rgb/rgba, in 11 files (table §4) |
 | **Shadows** | **25 utility + 22 CSS** | Utilities: `shadow-xl` 7 · `shadow-2xl` 5 · `shadow-sm` 3 · `shadow-md` 1 · `shadow-lg` 1 · `shadow-xs` 2 · bare `shadow` 2 · arbitrary ×4. `shadow-none` ×4 not counted. theme.css `box-shadow` ×22, plus 1 `drop-shadow` filter chain (MomentCard icon legibility) |
 | **Motion** | see §6 | `duration-*` 31 · `transition*` 217 · CSS/inline ms or s values 63 · 3 `motion` springs |
 | **Section spacing** | see §7 | 62 `<section>` tags. Section-scale (≥24px) gap, space-y and margin values use 12 distinct steps |
@@ -123,7 +124,7 @@ point of rem tokens.
 | `GeneratedArt.tsx` | 2 | – | `#B9A4CE` (lavender, no token), `#8B5A3C` (= skin-3) |
 | `space/SpaceHomeTab.tsx` | – | 2 | inside arbitrary `shadow-[…]` |
 | `HobbyShelf.tsx` | 1 | – | `INK = "#3A2A1F"` (= `--gen-art-ink`) |
-| `PursuitItem.tsx` | – | 1 | inside arbitrary `shadow-[…]` |
+| `PursuitItem.tsx` | – | 2 | inside arbitrary `shadow-[…]` (rest + hover) |
 
 theme.css itself also has raw `rgba()` inside `box-shadow`s (`.glow-*`,
 `.ns-value-card`, `.ns-world-card`, `.ns-discover-space-card`,
