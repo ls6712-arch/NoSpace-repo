@@ -27,7 +27,7 @@ Define these under `:root` (light) and `.dark`. Dark is **warm charcoal, never p
 | `--foreground` | `#2B2622` | `#EFE8DA` |
 | `--muted-foreground` | `#6B6259` | `#A39885` |
 | `--border` (hairlines) | `#DDD3C0` | `#3A332B` |
-| `--accent` | `#9A4A34` | `#C8674D` |
+| `--accent` | `#9A4A34` | `#D38571` |
 | `--accent-foreground` | `#FBF8F1` | `#1C1816` |
 | `--gold` | `#B08D4A` | `#C9A55E` |
 
