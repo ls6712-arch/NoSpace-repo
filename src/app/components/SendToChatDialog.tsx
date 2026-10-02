@@ -85,7 +85,7 @@ export function SendToChatDialog({
                     type="button"
                     disabled={sendingTo === t.id || done}
                     onClick={() => (done ? navigate(`/messages?thread=${t.id}`) : send(t.id))}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted disabled:cursor-default"
+                    className="flex w-full items-center gap-3 rounded-control px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted disabled:cursor-default"
                   >
                     <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="text-[10px]">{initials(name ?? "?")}</AvatarFallback>

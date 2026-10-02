@@ -240,7 +240,7 @@ export function BePart({
                     <button
                       type="button"
                       onClick={() => setPane(o.id)}
-                      className="flex w-full items-center gap-3.5 rounded-2xl px-2 py-3 text-left transition-colors hover:bg-surface-muted"
+                      className="flex w-full items-center gap-3.5 rounded-control px-2 py-3 text-left transition-colors hover:bg-surface-muted"
                     >
                       <span
                         className="flex size-11 shrink-0 items-center justify-center rounded-full"
@@ -262,7 +262,7 @@ export function BePart({
                 ))}
               </ul>
 
-              <p className="rounded-xl bg-surface-muted px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+              <p className="rounded-card bg-surface-muted px-4 py-3 text-xs leading-relaxed text-muted-foreground">
                 Each interaction helps you go deeper in what you love.
               </p>
             </>
@@ -332,7 +332,7 @@ export function BePart({
 
               {active.id === "join_in" && postId && isActivity && (
                 <>
-                  <div className="rounded-2xl border border-border bg-surface px-4 py-3">
+                  <div className="rounded-card border border-border bg-surface px-4 py-3">
                     <div className="text-sm" style={{ fontFamily: "var(--font-serif)" }}>
                       {activityTitle ?? "This activity"}
                     </div>
@@ -393,7 +393,7 @@ export function BePart({
               {(active.id === "make_together" || active.id === "explore_together") && (
                 <>
                   {sent ? (
-                    <div className="rounded-2xl bg-surface-muted px-4 py-4">
+                    <div className="rounded-card bg-surface-muted px-4 py-4">
                       <p className="mb-1 flex items-center gap-2 text-sm">
                         <Check className="size-4 text-foreground" />
                         Sent to {personName}.
@@ -403,7 +403,7 @@ export function BePart({
                       </p>
                     </div>
                   ) : pending ? (
-                    <p className="rounded-2xl bg-surface-muted px-4 py-4 text-sm text-muted-foreground">
+                    <p className="rounded-card bg-surface-muted px-4 py-4 text-sm text-muted-foreground">
                       You've already asked {personName}. Waiting on them.
                     </p>
                   ) : (
@@ -431,7 +431,7 @@ export function BePart({
                       </div>
 
                       {error && (
-                        <p className="rounded-xl bg-surface-muted px-4 py-2.5 text-xs text-[var(--coral-text)]">
+                        <p className="rounded-card bg-surface-muted px-4 py-2.5 text-xs text-[var(--coral-text)]">
                           {error}
                         </p>
                       )}

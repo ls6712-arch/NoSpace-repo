@@ -142,7 +142,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
   if (saved) {
     return (
       <div className="space-y-3">
-        <div className="flex h-11 items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 text-sm">
+        <div className="flex h-11 items-center justify-between rounded-control border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 text-sm">
           <span>Your first moment is in.</span>
           <button type="button" onClick={undo} className="text-[var(--coral-text,var(--coral-deep))] hover:opacity-80">
             Undo
@@ -188,7 +188,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
 
   if (confirmingEveryone) {
     return (
-      <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper-raised)] p-4">
+      <div className="rounded-card border border-[var(--line)] bg-[var(--paper-raised)] p-4">
         <EveryoneShareConfirm
           name={profile?.display_name?.trim() || "You"}
           cornerLabel="Uncategorized"
@@ -222,7 +222,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
-          className="flex h-32 flex-col items-center justify-center gap-2 rounded-2xl bg-[var(--coral-deep)] text-white transition-opacity hover:opacity-90"
+          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card bg-[var(--coral-deep)] text-white transition-opacity hover:opacity-90"
         >
           <Camera className="size-6" />
           <span className="text-sm font-medium">Take a photo</span>
@@ -230,7 +230,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         <button
           type="button"
           onClick={() => libraryInputRef.current?.click()}
-          className="flex h-32 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--line)] text-[var(--ink-soft)] transition-colors hover:border-[var(--coral-deep)] hover:text-[var(--ink)]"
+          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card border border-dashed border-[var(--line)] text-[var(--ink-soft)] transition-colors hover:border-[var(--coral-deep)] hover:text-[var(--ink)]"
         >
           <Images className="size-6" />
           <span className="text-sm font-medium">Choose a photo</span>
@@ -259,7 +259,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
       />
 
       {preview && (
-        <div className="relative mt-3 overflow-hidden rounded-2xl border border-[var(--line)]">
+        <div className="relative mt-3 overflow-hidden rounded-card border border-[var(--line)]">
           <img src={preview} alt="" className="aspect-[4/3] w-full object-cover" />
           <button
             type="button"
@@ -277,7 +277,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         onChange={(e) => setLine(e.target.value.slice(0, 200))}
         onKeyDown={(e) => e.key === "Enter" && requestSave()}
         placeholder="What are you making, practising or learning?"
-        className="w-full rounded-lg border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 py-2.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--ink-soft)]"
+        className="w-full rounded-control border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 py-2.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--ink-soft)]"
       />
 
       <div className="mt-4 flex items-center gap-1.5">

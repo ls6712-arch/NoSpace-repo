@@ -71,7 +71,7 @@ export function NextSessionCard({
   const thisWeek = project.timesPerWeek ? sessionsThisWeek(myMomentTimes) : undefined;
 
   return (
-    <section aria-labelledby="next-session-title" className="mb-6 rounded-2xl border border-border bg-card p-4 sm:p-5">
+    <section aria-labelledby="next-session-title" className="mb-6 rounded-card border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2
           id="next-session-title"
@@ -139,7 +139,7 @@ export function NextSessionCard({
               id="next-session-times"
               value={times}
               onChange={(e) => setTimes(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 w-full rounded-control border border-input bg-background px-3 text-sm"
             >
               <option value="">Not set</option>
               {TIMES_A_WEEK.map((n) => (

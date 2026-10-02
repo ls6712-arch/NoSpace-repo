@@ -194,7 +194,7 @@ export function Home() {
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
             <div ref={valueCardsRef} className="ns-reveal grid gap-4 sm:grid-cols-3">
               {VALUE_CARDS.map(({ icon: Icon, title, copy }) => (
-                <div key={title} className="ns-value-card rounded-2xl p-6">
+                <div key={title} className="ns-value-card rounded-card p-6">
                   <span className="ns-value-card-icon mb-5 flex size-11 items-center justify-center rounded-full bg-surface-muted">
                     <Icon className="size-5 text-foreground" strokeWidth={1.7} />
                   </span>

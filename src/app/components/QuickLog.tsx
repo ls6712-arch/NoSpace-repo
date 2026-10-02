@@ -87,7 +87,7 @@ export function LoggedNotice({
 
   return (
     <div className="space-y-2.5">
-      <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-card px-3.5 text-sm">
+      <div className="flex h-11 items-center justify-between rounded-control border border-border bg-card px-3.5 text-sm">
         <span>Logged</span>
         <button
           type="button"
@@ -331,7 +331,7 @@ export function QuickLog({
 
   if (confirmingEveryone) {
     return (
-      <div className={`rounded-xl border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
+      <div className={`rounded-card border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
         <EveryoneShareConfirm
           name={profile?.display_name?.trim() || "You"}
           cornerLabel={cornerName.trim() || "Uncategorized"}
@@ -353,12 +353,12 @@ export function QuickLog({
   }
 
   return (
-    <div className={`rounded-xl border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
+    <div className={`rounded-card border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
       <div className="flex items-start gap-2.5">
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep,var(--accent))] hover:text-foreground"
+          className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-control border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep,var(--accent))] hover:text-foreground"
           aria-label={file ? "Change photo" : "Add a photo"}
         >
           {preview ? <img src={preview} alt="" className="size-full object-cover" /> : <Camera className="size-4" />}

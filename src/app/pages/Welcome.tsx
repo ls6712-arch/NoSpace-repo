@@ -81,7 +81,7 @@ export function Welcome() {
           {error && <p className="text-xs text-destructive">{error}</p>}
           <Button
             variant="coral"
-            className="h-11 w-full rounded-xl"
+            className="h-11 w-full rounded-control"
             disabled={claiming || !code.trim()}
             onClick={submit}
           >

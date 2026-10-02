@@ -65,14 +65,14 @@ export function PursuitProgressPanel({
   const actions = (
     <div className="mt-4 grid grid-cols-2 gap-2">
       {viewerIsOwner ? (
-        <Button variant="outline" className="h-11 rounded-xl" onClick={() => setInviting(true)}>
+        <Button variant="outline" className="h-11 rounded-control" onClick={() => setInviting(true)}>
           <UserPlus className="size-4" /> Invite people
         </Button>
       ) : (
         <span />
       )}
       <Link to={`/pursuit/${project.id}/moment`} className={!viewerIsOwner ? "col-span-2" : ""}>
-        <Button variant="coral" className="h-11 w-full rounded-xl">
+        <Button variant="coral" className="h-11 w-full rounded-control">
           <Plus className="size-4" /> Log a Moment
         </Button>
       </Link>
@@ -83,7 +83,7 @@ export function PursuitProgressPanel({
   if (mode === "solo") {
     const s = summarize(measure, entries);
     return (
-      <section className="mb-6 rounded-2xl border border-border bg-card p-5">
+      <section className="mb-6 rounded-card border border-border bg-card p-5">
         <Headline current={s.current} target={measure.target} unit={measure.unit} />
         <ProgressBar fraction={s.fraction} className="mt-3" />
         <MetaLine percent={s.percent} remaining={s.remaining} unit={measure.unit} done={s.done} targetDate={measure.targetDate} />
@@ -136,7 +136,7 @@ export function PursuitProgressPanel({
                 {pieces.length > 0 && (
                   <div className="mt-3 grid grid-cols-3 gap-1.5">
                     {pieces.map((e) => (
-                      <img key={e.id} src={e.image} alt={e.note ?? ""} className="aspect-[3/4] w-full rounded-md object-cover" />
+                      <img key={e.id} src={e.image} alt={e.note ?? ""} className="aspect-[3/4] w-full rounded-card object-cover" />
                     ))}
                   </div>
                 )}
@@ -160,7 +160,7 @@ export function PursuitProgressPanel({
   const joined = members.filter((m) => m.status === "joined");
   return (
     <section className="mb-6">
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="rounded-card border border-border bg-card p-5">
         <Headline current={s.current} target={measure.target} unit={measure.unit} />
         <ProgressBar fraction={s.fraction} className="mt-3" />
         <MetaLine percent={s.percent} remaining={s.remaining} unit={measure.unit} done={s.done} targetDate={measure.targetDate} />
@@ -170,7 +170,7 @@ export function PursuitProgressPanel({
       </div>
 
       <h3 className="mb-2 mt-5 text-sm">Contributions</h3>
-      <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+      <ul className="divide-y divide-border rounded-card border border-border bg-card">
         {members.map((m) => {
           const theirs = entriesOf(m);
           const total = theirs.reduce((sum, e) => sum + e.amount, 0);
@@ -184,7 +184,7 @@ export function PursuitProgressPanel({
                   {m.status === "invited" ? "Invited" : `${formatAmount(total)} ${unitFor(measure, total)}`}
                 </p>
               </div>
-              {last && <img src={last.image} alt="" className="size-10 rounded-md object-cover" />}
+              {last && <img src={last.image} alt="" className="size-10 rounded-control object-cover" />}
             </li>
           );
         })}
@@ -399,14 +399,14 @@ export function InviteDialog({
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Invite people</DialogTitle>
           <DialogDescription>Send a link to anyone, or invite people already on {APP_NAME}.</DialogDescription>
         </DialogHeader>
-        <div className="rounded-xl border border-border bg-surface-muted/40 p-3">
+        <div className="rounded-card border border-border bg-surface-muted/40 p-3">
           <p className="flex items-center gap-2 text-sm">
             <Link2 className="size-4" /> Invite link
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">Works for people who aren't on {APP_NAME} yet — they sign up and land in this Pursuit.</p>
           {link ? (
             <>
-              <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-lg border border-border bg-card px-2 text-xs" />
+              <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-control border border-border bg-card px-2 text-xs" />
               <p className="mt-1.5 text-[11px] text-muted-foreground">This link is on. Anyone who has it can join.</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button variant="coral" size="sm" onClick={makeLink}>
@@ -436,7 +436,7 @@ export function InviteDialog({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search people by name"
             autoFocus
-            className="h-11 w-full rounded-lg border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+            className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-[var(--coral-deep)]"
           />
         </div>
         <ul className="max-h-60 overflow-y-auto">
@@ -447,7 +447,7 @@ export function InviteDialog({
                 <button
                   type="button"
                   onClick={() => invite(p.id, p.displayName)}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-surface-muted"
+                  className="flex w-full items-center gap-2.5 rounded-control px-2 py-2 text-left hover:bg-surface-muted"
                 >
                   <PersonAvatar name={p.displayName} src={p.avatarUrl} />
                   <span className="flex-1 text-sm">{p.displayName}</span>
@@ -494,7 +494,7 @@ export function PursuitInvitesCard() {
   return (
     <div className="mb-4 space-y-2">
       {invites.map((inv) => (
-        <div key={inv.pursuitId} className="rounded-2xl border border-[var(--coral)]/50 bg-card p-4">
+        <div key={inv.pursuitId} className="rounded-card border border-[var(--coral)]/50 bg-card p-4">
           <div className="flex items-center gap-2.5">
             <PersonAvatar name={inv.ownerName} src={inv.ownerAvatar} />
             <p className="text-sm">

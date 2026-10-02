@@ -33,7 +33,7 @@ export function EveryoneShareConfirm({
       <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
         What strangers will see
       </p>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-hidden rounded-card border border-border bg-card">
         {photoPreviewUrl && (
           <img src={photoPreviewUrl} alt="" className="aspect-[4/3] w-full object-cover" />
         )}

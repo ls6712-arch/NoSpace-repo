@@ -33,7 +33,7 @@ export function HobbyTile({
 
   const inner = (
     <>
-      <div className="relative overflow-hidden rounded-xl">
+      <div className="relative overflow-hidden rounded-card">
         {photo ? (
           <img
             src={photo}
@@ -65,7 +65,7 @@ export function HobbyTile({
     </>
   );
 
-  const className = `group block rounded-2xl border p-1.5 text-left transition-colors ${
+  const className = `group block rounded-card border p-1.5 text-left transition-colors ${
     active
       ? "border-[var(--coral-text)] bg-white/[0.07]"
       : "border-border hover:border-foreground/30 hover:bg-white/[0.04]"

@@ -51,7 +51,7 @@ export function MediaAttachPicker({
   if (file && previewUrl) {
     const isVideo = file.type.startsWith("video/");
     return (
-      <div className="relative inline-block overflow-hidden rounded-xl border border-border">
+      <div className="relative inline-block overflow-hidden rounded-card border border-border">
         {isVideo ? (
           <video src={previewUrl} className="h-24 w-24 object-cover" muted />
         ) : (

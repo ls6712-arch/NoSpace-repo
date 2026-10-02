@@ -30,7 +30,7 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--coral-deep)]/40 bg-card p-4">
+    <div className="rounded-card border border-[var(--coral-deep)]/40 bg-card p-4">
       <p className="text-sm">
         <Link to={`/pursuit/${pursuit.id}`} className="hover:text-accent" style={{ fontFamily: "var(--font-serif)" }}>
           {pursuit.title}

@@ -52,7 +52,7 @@ export function SpacesBrowser({ query }: { query: string }) {
       </div>
 
       {matching.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
           {q ? "No Spaces match that. Try a broader word." : "No Spaces yet — be the first to start one."}
         </div>
       ) : (
@@ -61,7 +61,7 @@ export function SpacesBrowser({ query }: { query: string }) {
             <Link
               key={s.id}
               to={`/space/${s.slug}`}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+              className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
             >
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
                 <img

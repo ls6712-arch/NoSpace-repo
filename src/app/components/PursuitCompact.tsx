@@ -117,7 +117,7 @@ export function PursuitCompactCard({
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      className={`flex min-h-11 items-center gap-2.5 rounded-2xl border bg-card p-3 text-left transition-colors ${
+      className={`flex min-h-11 items-center gap-2.5 rounded-card border bg-card p-3 text-left transition-colors ${
         expanded ? "border-[var(--coral-deep)]" : "border-border hover:border-[var(--coral-deep)]"
       }`}
     >
@@ -150,7 +150,7 @@ export function NewPursuitTile({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border p-3 text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+      className="flex min-h-11 items-center justify-center gap-1.5 rounded-card border border-dashed border-border p-3 text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
     >
       <Plus className="size-4" strokeWidth={1.8} />
       <span className="text-xs">New pursuit</span>
@@ -213,7 +213,7 @@ export function PursuitExpandedPanel({
   const reachIt = () => markGoalReached(pursuit.id);
 
   return (
-    <div className="mt-3 rounded-2xl border border-border bg-card p-5">
+    <div className="mt-3 rounded-card border border-border bg-card p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           {(pursuit.interest || spaceLabel) && (
@@ -271,7 +271,7 @@ export function PursuitExpandedPanel({
         ) : (
           <ul className="space-y-2">
             {goal && (
-              <li className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-3.5 py-2.5 text-sm">
+              <li className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border px-3.5 py-2.5 text-sm">
                 <span className="flex flex-wrap items-baseline gap-x-2">
                   <span className={goal.reachedAt ? "line-through decoration-1" : ""}>
                     {goal.shape === "number" ? goalProgressText(goal) : goal.label}
@@ -297,7 +297,7 @@ export function PursuitExpandedPanel({
             {pastGoals.map((g) => (
               <li
                 key={g.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-border px-3.5 py-2.5 text-sm text-muted-foreground"
+                className="flex items-center justify-between gap-3 rounded-card border border-border px-3.5 py-2.5 text-sm text-muted-foreground"
               >
                 <span>{g.label}</span>
                 <span className="shrink-0 text-xs">{g.reachedAt ? "Reached" : "Replaced"}</span>

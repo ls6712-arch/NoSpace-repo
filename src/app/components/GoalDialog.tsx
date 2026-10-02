@@ -156,7 +156,7 @@ export function GoalDialog({
                   key={s.value}
                   type="button"
                   onClick={() => setShape(s.value)}
-                  className={`flex items-start gap-3 rounded-2xl border px-3.5 py-3 text-left transition-colors ${
+                  className={`flex items-start gap-3 rounded-card border px-3.5 py-3 text-left transition-colors ${
                     active ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
                   }`}
                 >
@@ -228,7 +228,7 @@ export function GoalDialog({
                 />
               </div>
 
-              <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+              <div className="rounded-card border border-border bg-surface px-4 py-3.5">
                 <button
                   type="button"
                   onClick={() => setHasDeadline((v) => !v)}

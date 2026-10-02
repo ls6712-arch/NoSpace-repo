@@ -73,16 +73,16 @@ export function SharedContentCard({
 
   if (state.status === "loading") {
     return (
-      <div className="flex w-56 items-center gap-2.5 rounded-xl border border-[var(--hairline)] bg-surface-muted/60 px-3 py-2.5">
-        <div className="size-10 shrink-0 animate-pulse rounded-lg bg-surface-muted" />
-        <div className="h-3 flex-1 animate-pulse rounded bg-surface-muted" />
+      <div className="flex w-56 items-center gap-2.5 rounded-card border border-[var(--hairline)] bg-surface-muted/60 px-3 py-2.5">
+        <div className="size-10 shrink-0 animate-pulse rounded-control bg-surface-muted" />
+        <div className="h-3 flex-1 animate-pulse rounded-control bg-surface-muted" />
       </div>
     );
   }
 
   if (state.status === "unavailable") {
     return (
-      <div className="flex w-56 items-center gap-2 rounded-xl border border-dashed border-[var(--hairline)] px-3 py-2.5 text-xs text-muted-foreground">
+      <div className="flex w-56 items-center gap-2 rounded-card border border-dashed border-[var(--hairline)] px-3 py-2.5 text-xs text-muted-foreground">
         <ImageOff className="size-3.5 shrink-0" />
         Not available
       </div>
@@ -92,12 +92,12 @@ export function SharedContentCard({
   return (
     <Link
       to={state.href}
-      className="flex w-56 items-center gap-2.5 rounded-xl border border-[var(--hairline)] bg-card px-3 py-2.5 transition-colors hover:border-[var(--foreground)]/30"
+      className="flex w-56 items-center gap-2.5 rounded-card border border-[var(--hairline)] bg-card px-3 py-2.5 transition-colors hover:border-[var(--foreground)]/30"
     >
       {state.image ? (
-        <img src={state.image} alt="" className="size-10 shrink-0 rounded-lg object-cover" />
+        <img src={state.image} alt="" className="size-10 shrink-0 rounded-control object-cover" />
       ) : (
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-muted-foreground">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-surface-muted text-muted-foreground">
           <Sparkles className="size-4" />
         </span>
       )}

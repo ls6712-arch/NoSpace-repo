@@ -193,7 +193,7 @@ export function AddMoment() {
 
         <Link
           to={`/pursuit/${project.id}`}
-          className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 hover:border-[var(--coral-deep)]"
+          className="mt-6 flex items-center gap-3 rounded-card border border-border bg-card p-3.5 hover:border-[var(--coral-deep)]"
         >
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--pastel-stone)_30%,var(--card))]">
             <Target className="size-4" />
@@ -217,11 +217,11 @@ export function AddMoment() {
           />
         ) : (
           <>
-            <div className="mt-4 flex gap-3 rounded-xl border border-border bg-card p-3">
+            <div className="mt-4 flex gap-3 rounded-card border border-border bg-card p-3">
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-surface-muted text-muted-foreground hover:text-foreground"
+                className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-control border border-dashed border-border bg-surface-muted text-muted-foreground hover:text-foreground"
                 aria-label={file ? "Change photo" : "Add a photo"}
               >
                 {preview ? <img src={preview} alt="" className="size-full object-cover" /> : <Camera className="size-5" />}
@@ -298,7 +298,7 @@ export function AddMoment() {
                   type="button"
                   onClick={() => setAudience(a.value)}
                   aria-pressed={audience === a.value}
-                  className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs ${
+                  className={`flex h-10 items-center justify-center gap-1.5 rounded-control border text-xs ${
                     audience === a.value
                       ? "border-[var(--coral)] bg-[color-mix(in_srgb,var(--coral)_12%,var(--card))] text-foreground"
                       : "border-border bg-card text-muted-foreground"
@@ -322,7 +322,7 @@ export function AddMoment() {
       {!added && (
         <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur lg:bottom-0 lg:pb-[calc(var(--safe-bottom)+1rem)]">
           <div className="mx-auto max-w-md">
-            <Button variant="coral" className="h-11 w-full rounded-xl" disabled={!canSave} onClick={save}>
+            <Button variant="coral" className="h-11 w-full rounded-control" disabled={!canSave} onClick={save}>
               {saving ? "Saving…" : "Save Moment"}
             </Button>
           </div>
@@ -380,7 +380,7 @@ function MomentAdded({
           <div className="grid grid-cols-4 gap-2">
             {recent.map((m) => (
               <figure key={m.key}>
-                <img src={m.image} alt="" className="aspect-square w-full rounded-lg object-cover" />
+                <img src={m.image} alt="" className="aspect-square w-full rounded-card object-cover" />
                 <figcaption className="mt-1 text-center text-[10px] text-muted-foreground">
                   {new Date(m.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                 </figcaption>
@@ -391,11 +391,11 @@ function MomentAdded({
       )}
 
       <div className="mt-6 grid grid-cols-2 gap-2">
-        <Button variant="outline" className="h-11 rounded-xl" onClick={onAnother}>
+        <Button variant="outline" className="h-11 rounded-control" onClick={onAnother}>
           Add another
         </Button>
         <Link to={`/pursuit/${pursuitId}`}>
-          <Button variant="coral" className="h-11 w-full rounded-xl">
+          <Button variant="coral" className="h-11 w-full rounded-control">
             View Pursuit
           </Button>
         </Link>

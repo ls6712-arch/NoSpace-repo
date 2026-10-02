@@ -85,7 +85,7 @@ export function TagsField({
   return (
     <div className="relative">
       <div
-        className={`flex min-h-11 flex-wrap items-center gap-1.5 rounded-2xl border border-border bg-surface px-3 py-2 transition-colors ${
+        className={`flex min-h-11 flex-wrap items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-2 transition-colors ${
           focused ? "border-[var(--coral-deep)]" : ""
         }`}
       >
@@ -184,7 +184,7 @@ export function TagsField({
       )}
 
       {focused && !atCap && suggestions.length > 0 && (
-        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border border-border bg-popover py-1 shadow-xl">
+        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-xl">
           {suggestions.map((s) => (
             <li key={s}>
               <button

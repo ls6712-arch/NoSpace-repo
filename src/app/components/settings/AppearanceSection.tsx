@@ -62,7 +62,7 @@ export function AppearanceSection() {
               }
             >
               <span
-                className="flex h-10 w-14 shrink-0 overflow-hidden rounded-md border border-border"
+                className="flex h-10 w-14 shrink-0 overflow-hidden rounded-control border border-border"
                 aria-hidden="true"
               >
                 <span className="h-full w-1/2" style={{ backgroundColor: opt.swatch.bg }} />

@@ -331,7 +331,7 @@ function CoverStep({
         };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-[var(--line)]">
+    <div className="relative overflow-hidden rounded-card border border-[var(--line)]">
       <div className="relative aspect-[4/5] w-full sm:aspect-[16/10]">
         <AnimatePresence mode="wait">
           <motion.div
@@ -353,7 +353,7 @@ function CoverStep({
         />
 
         <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
-          <motion.div {...settle(0)} className="mb-4 inline-block rounded-2xl bg-[var(--paper-raised)]/90 p-2.5 backdrop-blur-sm">
+          <motion.div {...settle(0)} className="mb-4 inline-block rounded-card bg-[var(--paper-raised)]/90 p-2.5 backdrop-blur-sm">
             <AvatarPicker compact name={displayName} url={avatar} onChange={onAvatarChange} />
           </motion.div>
 
@@ -407,7 +407,7 @@ function CoverStep({
                   key={texture.id}
                   type="button"
                   onClick={() => onTextureChange(i)}
-                  className="h-12 w-[72px] shrink-0 overflow-hidden rounded"
+                  className="h-12 w-[72px] shrink-0 overflow-hidden rounded-control"
                   style={{
                     background: texture.css,
                     border: textureIndex === i ? "2px solid var(--coral-deep)" : "1px solid rgba(255,255,255,0.4)",

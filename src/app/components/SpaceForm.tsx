@@ -219,7 +219,7 @@ export function SpaceForm({
         <Label>Cover photo <span className="text-destructive">*</span></Label>
         <div className="mt-2">
           {coverImage ? (
-            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border">
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-card border border-border">
               <img src={coverImage} alt="" className="size-full object-cover" />
               <button
                 type="button"
@@ -235,7 +235,7 @@ export function SpaceForm({
               type="button"
               disabled={uploading}
               onClick={() => fileRef.current?.click()}
-              className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm text-muted-foreground hover:border-foreground/30"
+              className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-card border border-dashed border-border text-sm text-muted-foreground hover:border-foreground/30"
             >
               {uploading ? "Uploading…" : (
                 <>

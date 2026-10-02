@@ -57,9 +57,9 @@ export function CartDrawer() {
               {cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-3 rounded-2xl border border-border bg-white/[0.03] p-3"
+                  className="flex gap-3 rounded-card border border-border bg-white/[0.03] p-3"
                 >
-                  <div className="size-20 shrink-0 overflow-hidden rounded-xl">
+                  <div className="size-20 shrink-0 overflow-hidden rounded-control">
                     <GeneratedArt
                       hobbySlug={item.hobbySlug}
                       seed={item.id}

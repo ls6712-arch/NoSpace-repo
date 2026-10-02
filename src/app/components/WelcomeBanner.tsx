@@ -36,7 +36,7 @@ export function WelcomeBanner() {
   if (dismissed) return null;
 
   return (
-    <div className="myspace-welcome relative mb-6 overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="myspace-welcome relative mb-6 overflow-hidden rounded-card border border-border bg-card">
       <div className="flex flex-col items-stretch gap-6 p-6 sm:flex-row sm:items-center sm:p-7">
         <div className="min-w-0 flex-1">
           <p className="ns-section-kicker text-gold-text">WELCOME TO MY SPACE</p>
@@ -52,7 +52,7 @@ export function WelcomeBanner() {
         <GeneratedArt
           hobbySlug="crafts-making"
           seed="myspace-welcome"
-          className="h-28 w-full shrink-0 rounded-xl sm:h-auto sm:w-40"
+          className="h-28 w-full shrink-0 rounded-card sm:h-auto sm:w-40"
         />
       </div>
       <button

@@ -218,7 +218,7 @@ export function HobbyArchive() {
             </ul>
 
             {filtered.length === 0 ? (
-              <div className="mt-6 rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+              <div className="mt-6 rounded-card border border-dashed border-border px-5 py-12 text-center">
                 <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
                   {moments.length === 0
                     ? `Nothing logged under ${target.label} yet. A photo, or a sentence about how it went, both count.`
@@ -256,7 +256,7 @@ export function HobbyArchive() {
         {tab === "pursuits" && (
           <div className="mt-6">
             {projects.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+              <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
                 <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
                   No {target.label.toLowerCase()} pursuits yet. A Pursuit is a
                   thing you come back to. Moments group under it as updates.
@@ -276,7 +276,7 @@ export function HobbyArchive() {
                   return (
                     <li
                       key={project.id}
-                      className="rounded-2xl border border-border bg-card p-4"
+                      className="rounded-card border border-border bg-card p-4"
                     >
                       <div className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
                         {project.title}
@@ -304,7 +304,7 @@ export function HobbyArchive() {
 
         {tab === "about" && (
           <div className="mt-6 space-y-3">
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="rounded-card border border-border bg-card p-5">
               <h2 className="mb-1 text-base" style={{ fontFamily: "var(--font-serif)" }}>
                 {target.label}
               </h2>
@@ -315,7 +315,7 @@ export function HobbyArchive() {
                 {space.description}
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="rounded-card border border-border bg-card p-5">
               <h2 className="mb-2 text-base" style={{ fontFamily: "var(--font-serif)" }}>
                 This book
               </h2>
@@ -342,7 +342,7 @@ export function HobbyArchive() {
                 </div>
               </dl>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="rounded-card border border-border bg-card p-5">
               <h2 className="mb-2 text-base" style={{ fontFamily: "var(--font-serif)" }}>
                 Find others doing this
               </h2>

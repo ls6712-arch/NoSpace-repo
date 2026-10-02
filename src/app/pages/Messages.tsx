@@ -143,19 +143,19 @@ function PhotoBubble({
 
   if (failed) {
     return (
-      <div className="flex h-32 w-52 items-center justify-center gap-2 rounded-xl bg-surface-muted text-xs text-muted-foreground">
+      <div className="flex h-32 w-52 items-center justify-center gap-2 rounded-card bg-surface-muted text-xs text-muted-foreground">
         <ImageOff className="size-4" /> Photo unavailable
       </div>
     );
   }
 
   if (!url) {
-    return <div className="h-32 w-52 animate-pulse rounded-xl bg-surface-muted" />;
+    return <div className="h-32 w-52 animate-pulse rounded-card bg-surface-muted" />;
   }
 
   return (
     <>
-      <button type="button" onClick={() => setLightboxOpen(true)} className="block overflow-hidden rounded-xl">
+      <button type="button" onClick={() => setLightboxOpen(true)} className="block overflow-hidden rounded-card">
         <img
           src={url}
           alt=""
@@ -167,7 +167,7 @@ function PhotoBubble({
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-2xl border-none bg-transparent p-0 shadow-none">
           <DialogTitle className="sr-only">Photo</DialogTitle>
-          <img src={url} alt="" className="max-h-[85vh] w-full rounded-xl object-contain" onError={handleImageError} />
+          <img src={url} alt="" className="max-h-[85vh] w-full rounded-card object-contain" onError={handleImageError} />
         </DialogContent>
       </Dialog>
     </>
@@ -318,7 +318,7 @@ function ConversationPanel({
   };
 
   return (
-    <div className="flex h-[26rem] flex-col rounded-2xl border border-border bg-card md:h-[36rem]">
+    <div className="flex h-[26rem] flex-col rounded-card border border-border bg-card md:h-[36rem]">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
         <div className="min-w-0">
           <div className="truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
@@ -335,7 +335,7 @@ function ConversationPanel({
             <p className="pb-1 text-center text-[11px] text-muted-foreground">Loading earlier messages…</p>
           )}
           {bannerText && (
-            <p className="mb-2 rounded-xl bg-surface-muted px-3.5 py-2.5 text-center text-xs text-muted-foreground">
+            <p className="mb-2 rounded-card bg-surface-muted px-3.5 py-2.5 text-center text-xs text-muted-foreground">
               {bannerText}
             </p>
           )}
@@ -360,7 +360,7 @@ function ConversationPanel({
               return (
                 <div key={m.id} className={`group ${mine ? "ml-auto max-w-[80%]" : "max-w-[80%]"}`}>
                   {renderKind === "deleted" ? (
-                    <p className="rounded-2xl border border-dashed border-[var(--hairline)] px-3.5 py-2 text-sm italic text-muted-foreground">
+                    <p className="rounded-card border border-dashed border-[var(--hairline)] px-3.5 py-2 text-sm italic text-muted-foreground">
                       Message deleted
                     </p>
                   ) : renderKind === "photo" ? (
@@ -389,7 +389,7 @@ function ConversationPanel({
                   ) : (
                     <div className="relative">
                       <div
-                        className={`rounded-2xl px-3.5 py-2 text-sm ${
+                        className={`rounded-card px-3.5 py-2 text-sm ${
                           m.status === "failed"
                             ? "border border-dashed border-[var(--coral-text)] bg-surface-muted text-foreground"
                             : mine
@@ -789,7 +789,7 @@ export function Messages() {
                   <button
                     type="button"
                     onClick={() => startThreadWith({ id: person.id, name: person.displayName })}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                    className="flex w-full items-center gap-3 rounded-control px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
                   >
                     <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="text-[10px]">{initials(person.displayName)}</AvatarFallback>
@@ -835,7 +835,7 @@ export function Messages() {
 
           <TabsContent value="chats">
             {!draftThread && chatThreads.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-14 text-center">
+              <div className="rounded-card border border-dashed border-border px-5 py-14 text-center">
                 <span className="mx-auto mb-5 flex size-14 items-center justify-center rounded-full bg-surface-muted text-foreground">
                   <MessagesSquare className="size-6" />
                 </span>
@@ -883,7 +883,7 @@ export function Messages() {
                             setDraftThread(null);
                             setActiveId(t.id);
                           }}
-                          className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors ${
+                          className={`flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors ${
                             on ? "border-[var(--coral-deep)] bg-card" : "border-border bg-card hover:border-[var(--foreground)]/30"
                           }`}
                         >
@@ -992,7 +992,7 @@ export function Messages() {
 
           <TabsContent value="requests">
             {requests.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-14 text-center">
+              <div className="rounded-card border border-dashed border-border px-5 py-14 text-center">
                 <p className="text-sm text-muted-foreground">
                   Nothing waiting. A first message from someone you don't follow shows up here,
                   to accept or ignore.
@@ -1020,7 +1020,7 @@ function RequestCard({ request }: { request: Participation }) {
   const message = social.messagesFor(request.id)[0];
 
   return (
-    <li className="rounded-2xl border border-border bg-card p-4">
+    <li className="rounded-card border border-border bg-card p-4">
       <div className="flex items-center gap-3">
         <Link to={profilePath({ id: request.fromUser })} className="shrink-0">
           <Avatar className="size-9">
@@ -1034,7 +1034,7 @@ function RequestCard({ request }: { request: Participation }) {
         </Link>
       </div>
       {message && (
-        <p className="mt-2.5 rounded-xl bg-surface-muted px-3.5 py-2.5 text-sm">{message.body}</p>
+        <p className="mt-2.5 rounded-card bg-surface-muted px-3.5 py-2.5 text-sm">{message.body}</p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button

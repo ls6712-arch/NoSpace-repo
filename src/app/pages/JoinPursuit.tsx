@@ -90,7 +90,7 @@ export function JoinPursuit() {
           {preview.title}
         </h1>
 
-        <div className="mt-6 space-y-2 rounded-2xl border border-border bg-card p-4 text-left text-sm">
+        <div className="mt-6 space-y-2 rounded-card border border-border bg-card p-4 text-left text-sm">
           {preview.measure && (
             <p className="flex items-center gap-2.5">
               <Target className="size-4 shrink-0 text-muted-foreground" />
@@ -111,18 +111,18 @@ export function JoinPursuit() {
         <div className="mt-6">
           {isOwner ? (
             <Link to={`/pursuit/${preview.pursuitId}`}>
-              <Button variant="coral" className="h-11 w-full rounded-xl">
+              <Button variant="coral" className="h-11 w-full rounded-control">
                 This is your Pursuit — open it
               </Button>
             </Link>
           ) : user ? (
-            <Button variant="coral" className="h-11 w-full rounded-xl" onClick={join} disabled={joining}>
+            <Button variant="coral" className="h-11 w-full rounded-control" onClick={join} disabled={joining}>
               {joining ? "Joining…" : "Join"}
             </Button>
           ) : (
             <>
               <Link to={`/login?redirect=${encodeURIComponent(here)}`}>
-                <Button variant="coral" className="h-11 w-full rounded-xl">
+                <Button variant="coral" className="h-11 w-full rounded-control">
                   Sign up or log in to join
                 </Button>
               </Link>

@@ -202,7 +202,7 @@ export function Thoughts({
           {thoughts.map((t) => (
             <li
               key={t.id}
-              className="rounded-2xl border border-[var(--hairline)] bg-surface px-3.5 py-3"
+              className="rounded-card border border-[var(--hairline)] bg-surface px-3.5 py-3"
             >
               {t.prompt && (
                 <div className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-[var(--coral-text)]">
@@ -212,7 +212,7 @@ export function Thoughts({
               )}
               <p className="text-sm leading-relaxed">{t.body}</p>
               {t.media && (
-                <div className="mt-2 overflow-hidden rounded-xl border border-[var(--hairline)]">
+                <div className="mt-2 overflow-hidden rounded-card border border-[var(--hairline)]">
                   {/^https?:\/\/.*\.(mp4|webm|mov)$/i.test(t.media) ? (
                     <video src={t.media} controls className="w-full" />
                   ) : (

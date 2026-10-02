@@ -196,7 +196,7 @@ export function AdminInvites() {
           {APP_NAME} is invite-only for now — create a link for someone to join with.
         </p>
 
-        <div className="mb-8 rounded-2xl border border-border bg-card p-4">
+        <div className="mb-8 rounded-card border border-border bg-card p-4">
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 280))}
@@ -210,7 +210,7 @@ export function AdminInvites() {
           </Button>
 
           {newLink && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-[var(--hairline)] bg-surface-muted px-3 py-2.5">
+            <div className="mt-4 flex items-center gap-2 rounded-card border border-[var(--hairline)] bg-surface-muted px-3 py-2.5">
               <code className="min-w-0 flex-1 truncate text-xs">{newLink}</code>
               <Button variant="outline" size="sm" onClick={copyLink}>
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -234,7 +234,7 @@ export function AdminInvites() {
             {loading ? (
               <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
             ) : rows.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
                 No invites created yet.
               </div>
             ) : (
@@ -242,7 +242,7 @@ export function AdminInvites() {
                 {rows.map((r) => {
                   const status = inviteStatus(r);
                   return (
-                    <li key={r.code} className="rounded-2xl border border-border bg-card p-4">
+                    <li key={r.code} className="rounded-card border border-border bg-card p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 text-sm">
                           <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">{r.code}</p>
@@ -281,7 +281,7 @@ export function AdminInvites() {
 
           <TabsContent value="waitlist">
             {waitlist.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
                 Nobody on the waitlist yet.
               </div>
             ) : (
@@ -289,7 +289,7 @@ export function AdminInvites() {
                 {waitlist.map((w, i) => (
                   <li
                     key={`${w.email}-${i}`}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-border bg-card px-4 py-3 text-sm"
                   >
                     <span className="min-w-0 truncate">{w.email}</span>
                     <span className="text-xs text-muted-foreground">
@@ -309,7 +309,7 @@ export function AdminInvites() {
             </p>
             {waitingError && <p className="mb-4 text-sm text-destructive">{waitingError}</p>}
             {waiting.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
                 Every first moment has a thought.
               </div>
             ) : (
@@ -317,7 +317,7 @@ export function AdminInvites() {
                 {waiting.map((m) => {
                   const overdue = m.hoursWaiting >= 24;
                   return (
-                    <li key={m.postId} className="rounded-2xl border border-border bg-card p-4">
+                    <li key={m.postId} className="rounded-card border border-border bg-card p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 text-sm">
                           <p className="font-medium text-foreground">{m.authorName}</p>

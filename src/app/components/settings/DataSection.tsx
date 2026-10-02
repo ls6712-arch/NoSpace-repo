@@ -54,7 +54,7 @@ export function DataSection() {
                   </button>
                 </div>
                 {entry.media && (
-                  <div className="mb-2 overflow-hidden rounded-md border border-[var(--hairline)]">
+                  <div className="mb-2 overflow-hidden rounded-card border border-[var(--hairline)]">
                     {entry.mediaType === "video" ? (
                       <video src={entry.media} controls className="w-full" />
                     ) : (

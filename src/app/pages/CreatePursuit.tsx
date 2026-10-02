@@ -219,7 +219,7 @@ export function CreatePursuit() {
               placeholder="Write 20,000 words"
               rows={4}
               autoFocus
-              className="mt-6 w-full resize-none rounded-xl border border-border bg-card p-4 text-base text-foreground outline-none focus:border-[var(--coral-deep)]"
+              className="mt-6 w-full resize-none rounded-control border border-border bg-card p-4 text-base text-foreground outline-none focus:border-[var(--coral-deep)]"
             />
             <p className="mt-3 text-xs text-muted-foreground">
               For example: Paint 10 paintings, Run 100 miles, Practice guitar 50 hours
@@ -240,13 +240,13 @@ export function CreatePursuit() {
                       type="button"
                       onClick={() => pickKind(m.kind)}
                       aria-pressed={selected}
-                      className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-colors ${
+                      className={`flex w-full items-center gap-3 rounded-card border p-3.5 text-left transition-colors ${
                         selected
                           ? "border-[var(--coral)] bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))]"
                           : "border-border bg-card hover:border-[var(--coral-deep)]"
                       }`}
                     >
-                      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-foreground">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface-muted text-foreground">
                         <Icon className="size-4" />
                       </span>
                       <span className="min-w-0 flex-1">
@@ -285,7 +285,7 @@ export function CreatePursuit() {
                             patch({ milestones: list });
                           }}
                           placeholder={["Learn three songs", "Play for friends", "First open mic"][i] ?? "Next stepping stone"}
-                          className="h-10 flex-1 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                          className="h-10 flex-1 rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
                         />
                       </div>
                     ))}
@@ -305,7 +305,7 @@ export function CreatePursuit() {
                       inputMode="decimal"
                       value={measure.target ? formatAmount(measure.target) : ""}
                       onChange={(e) => patch({ target: Number(e.target.value.replace(/,/g, "")) || 0 })}
-                      className="h-11 w-full rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                      className="h-11 w-full rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
                     />
                   </Field>
                   <Field label="Unit name">
@@ -313,7 +313,7 @@ export function CreatePursuit() {
                       value={measure.unit}
                       onChange={(e) => patch({ unit: e.target.value.slice(0, 30) })}
                       placeholder="words"
-                      className="h-11 w-full rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                      className="h-11 w-full rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
                     />
                   </Field>
                 </>
@@ -323,7 +323,7 @@ export function CreatePursuit() {
                   value={measure.whatCounts ?? ""}
                   onChange={(e) => patch({ whatCounts: e.target.value.slice(0, 140) })}
                   placeholder={measure.kind === "quantity" ? "Any words included in the manuscript draft" : "A finished piece I'd show someone"}
-                  className="h-11 w-full rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                  className="h-11 w-full rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
                 />
               </Field>
               <SoftPanel className="flex gap-2.5 text-xs text-foreground">
@@ -345,7 +345,7 @@ export function CreatePursuit() {
         {screen === 3 && (
           <section>
             {heading("Set your rules", "You can change these anytime.")}
-            <div className="mt-6 divide-y divide-border rounded-xl border border-border bg-card">
+            <div className="mt-6 divide-y divide-border rounded-card border border-border bg-card">
               <RuleRow label="Allow partial amounts" hint={`Log 0.5 of ${/^[aeiou]|^hour/i.test(unitFor(measure, 1) || "thing") ? "an" : "a"} ${unitFor(measure, 1) || "thing"}`}>
                 <Toggle checked={measure.allowPartial} onChange={(v) => patch({ allowPartial: v })} label="Allow partial amounts" />
               </RuleRow>
@@ -385,7 +385,7 @@ export function CreatePursuit() {
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="mt-3 h-11 w-full rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
+                className="mt-3 h-11 w-full rounded-control border border-border bg-card px-3 text-sm outline-none focus:border-[var(--coral-deep)]"
               />
             )}
           </section>
@@ -436,11 +436,11 @@ export function CreatePursuit() {
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search people by name"
                     disabled={!user}
-                    className="h-11 w-full rounded-lg border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-[var(--coral-deep)] disabled:opacity-60"
+                    className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-[var(--coral-deep)] disabled:opacity-60"
                   />
                 </div>
                 {query.trim().length >= 2 && (
-                  <ul className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-border bg-card">
+                  <ul className="mt-2 max-h-56 overflow-y-auto rounded-card border border-border bg-card">
                     {(results ?? [])
                       .filter((p) => p.id !== user?.id && !invitees.some((i) => i.id === p.id))
                       .map((p) => (
@@ -466,7 +466,7 @@ export function CreatePursuit() {
                 {invitees.length > 0 && (
                   <ul className="mt-3 space-y-2">
                     {invitees.map((p) => (
-                      <li key={p.id} className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2">
+                      <li key={p.id} className="flex items-center gap-2.5 rounded-card border border-border bg-card px-3 py-2">
                         <PersonAvatar name={p.displayName} src={p.avatarUrl} />
                         <span className="flex-1 text-sm">{p.displayName}</span>
                         <span className="rounded-control bg-[color-mix(in_srgb,var(--pastel-stone)_30%,var(--card))] px-2 py-0.5 text-[11px]">
@@ -492,7 +492,7 @@ export function CreatePursuit() {
         {screen === 5 && (
           <section>
             {heading("Review your Pursuit")}
-            <div className="mt-5 flex h-28 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))]">
+            <div className="mt-5 flex h-28 items-center justify-center rounded-card bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))]">
               <Target className="size-10 text-[var(--coral-deep)]" strokeWidth={1.4} />
             </div>
             <h2 className="mt-5 text-xl" style={{ fontFamily: "var(--font-serif)" }}>
@@ -504,7 +504,7 @@ export function CreatePursuit() {
             </p>
             <p className="text-xs text-muted-foreground">{formatAmount(Math.max(0, finalMeasure.target - finalMeasure.startingAmount))} remaining</p>
 
-            <ul className="mt-5 divide-y divide-border rounded-xl border border-border bg-card text-sm">
+            <ul className="mt-5 divide-y divide-border rounded-card border border-border bg-card text-sm">
               <ReviewRow icon={Hash} label="Unit" value={finalMeasure.unit} />
               {finalMeasure.whatCounts && <ReviewRow icon={CheckCircle2} label="What counts" value={finalMeasure.whatCounts} />}
               {finalMeasure.kind === "milestones" && (
@@ -547,11 +547,11 @@ export function CreatePursuit() {
       <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur lg:bottom-0 lg:pb-[calc(var(--safe-bottom)+1rem)]">
         <div className="mx-auto max-w-md">
           {screen < 5 ? (
-            <Button variant="coral" className="h-11 w-full rounded-xl" disabled={!canContinue} onClick={next}>
+            <Button variant="coral" className="h-11 w-full rounded-control" disabled={!canContinue} onClick={next}>
               Continue <ArrowRight className="size-4" />
             </Button>
           ) : (
-            <Button variant="coral" className="h-11 w-full rounded-xl" disabled={saving} onClick={begin}>
+            <Button variant="coral" className="h-11 w-full rounded-control" disabled={saving} onClick={begin}>
               {saving ? "Starting…" : "Start a Pursuit"}
             </Button>
           )}
@@ -588,7 +588,7 @@ function ChipButton({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-sm transition-colors ${
+      className={`flex h-10 items-center justify-center gap-1.5 rounded-control border text-sm transition-colors ${
         active
           ? "border-[var(--coral)] bg-[color-mix(in_srgb,var(--coral)_12%,var(--card))] text-foreground"
           : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -605,7 +605,7 @@ function ModeOption({ active, onClick, title, copy }: { active: boolean; onClick
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left ${
+      className={`flex w-full items-center gap-3 rounded-card border p-3 text-left ${
         active ? "border-[var(--coral)] bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))]" : "border-border bg-card"
       }`}
     >

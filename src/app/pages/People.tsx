@@ -174,7 +174,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
           loadingBrowse ? (
             <p className="py-12 text-center text-sm text-muted-foreground">Looking…</p>
           ) : browsed.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+            <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
               <Users className="mx-auto mb-3 size-5 text-muted-foreground" />
               <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
                 Nobody's joined yet — pick a hobby above once people are in it.
@@ -186,7 +186,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
         ) : loadingHobby ? (
           <p className="py-12 text-center text-sm text-muted-foreground">Looking…</p>
         ) : inHobby.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+          <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
             <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
               Nobody's turned up in {hobbyLabel?.toLowerCase()} yet. Share
               something there and you'll be the first.
@@ -202,7 +202,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
         )}
       </section>
 
-      <div className="mt-12 rounded-3xl border border-border bg-card px-6 py-9 text-center">
+      <div className="mt-12 rounded-card border border-border bg-card px-6 py-9 text-center">
         <p className="mx-auto mb-4 max-w-md text-sm leading-relaxed text-muted-foreground">
           No follower counts anywhere on {APP_NAME}, not here, not on a
           profile. People are described by what they do.

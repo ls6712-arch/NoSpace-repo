@@ -77,7 +77,7 @@ export function AddDetailsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-2xl">
+      <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-card">
         <SheetHeader>
           <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>Add details</SheetTitle>
           <SheetDescription>Optional — nothing here was needed to save this Moment.</SheetDescription>
@@ -163,7 +163,7 @@ export function AddDetailsSheet({
                     type="button"
                     onClick={() => setAudience(o.value)}
                     aria-pressed={active}
-                    className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2 text-[11px] transition-colors ${
+                    className={`flex flex-col items-center gap-1 rounded-control border px-2 py-2 text-[11px] transition-colors ${
                       active ? "border-[var(--coral-deep,var(--accent))] text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >

@@ -147,7 +147,7 @@ export function You() {
                   ) : (
                     <Link
                       to="/profile"
-                      className="mt-1 inline-block rounded-lg border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                      className="mt-1 inline-block rounded-control border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                     >
                       Tell your story: what got you into this, and where it's going.
                     </Link>
@@ -308,7 +308,7 @@ export function You() {
         <div className="mb-7 border-t border-[var(--hairline)]" />
 
         {isConfigured && !user && (
-          <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted px-4 py-3">
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-card border border-border bg-surface-muted px-4 py-3">
             <p className="text-xs text-muted-foreground">
               You're not logged in. Sessions here are just local to this browser.
             </p>
@@ -411,7 +411,7 @@ export function You() {
           <p className="mb-5 text-sm text-muted-foreground">The things you're bringing to life.</p>
 
           {myPursuits.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
+            <div className="rounded-card border border-dashed border-border px-5 py-9 text-center">
               <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
                 Nothing yet. Name a thing you're working toward and it lives here.
               </p>

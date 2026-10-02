@@ -519,7 +519,7 @@ export function MomentDetail({
                   <img
                     src={newMediaPreview}
                     alt="New photo preview"
-                    className="mt-2 h-32 w-full rounded-lg object-cover"
+                    className="mt-2 h-32 w-full rounded-card object-cover"
                   />
                 )}
               </div>
@@ -556,7 +556,7 @@ export function MomentDetail({
         )}
 
         {/* Where it sits */}
-        <dl className="grid gap-2 rounded-2xl border border-border bg-surface-muted px-4 py-3 text-xs">
+        <dl className="grid gap-2 rounded-card border border-border bg-surface-muted px-4 py-3 text-xs">
           <div className="flex items-center justify-between gap-3">
             <dt className="text-muted-foreground">Hobby</dt>
             <dd>{hobbyLabel ? `${hobbyLabel} · ${space?.shortName}` : space?.name}</dd>
@@ -598,7 +598,7 @@ export function MomentDetail({
 
         {/* Owner-only: the note they wrote for themselves */}
         {owned && !editing && post.reflection && (
-          <div className="rounded-2xl border border-[var(--hairline)] bg-card px-4 py-3">
+          <div className="rounded-card border border-[var(--hairline)] bg-card px-4 py-3">
             <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Lock className="size-3" />
               Private reflection, only you
@@ -643,7 +643,7 @@ export function MomentDetail({
         )}
 
         {addingTo && (
-          <div className="space-y-2 rounded-2xl border border-border px-4 py-3">
+          <div className="space-y-2 rounded-card border border-border px-4 py-3">
             {openProjects.length === 0 ? (
               <>
                 <p className="text-xs text-muted-foreground">

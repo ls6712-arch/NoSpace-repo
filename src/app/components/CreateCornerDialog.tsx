@@ -114,7 +114,7 @@ export function CreateCornerDialog({
                 Space this Corner belongs in, so there's nothing to pick. */}
             <div
               id="corner-space"
-              className="flex items-center rounded-2xl border border-border bg-surface-muted px-3.5 py-2.5 text-sm text-muted-foreground"
+              className="flex items-center rounded-card border border-border bg-surface-muted px-3.5 py-2.5 text-sm text-muted-foreground"
             >
               {space?.name ?? spaceSlug}
             </div>
@@ -140,7 +140,7 @@ export function CreateCornerDialog({
           </div>
 
           {pendingConfirm && (
-            <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5">
+            <div className="rounded-card border border-dashed border-border bg-surface p-3.5">
               <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
                 Close to “{pendingConfirm.label}”, already in{" "}
                 {space?.shortName ?? "this Space"}. Something different, or the

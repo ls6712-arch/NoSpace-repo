@@ -190,7 +190,7 @@ const SALE_COMING_SOON_COPY = "Marketplace is coming soon.";
 function ForSaleComingSoon({ className = "" }: { className?: string }) {
   const [showNotice, setShowNotice] = useState(false);
   return (
-    <div className={`rounded-2xl border border-dashed border-border bg-surface p-4 opacity-60 ${className}`}>
+    <div className={`rounded-card border border-dashed border-border bg-surface p-4 opacity-60 ${className}`}>
       {/* Not aria-disabled: the control still responds to a tap — it just
           answers with a coming-soon notice instead of the old toggle
           behavior, so it needs to stay a normal, focusable, clickable
@@ -1012,7 +1012,7 @@ export function Log() {
           <button
             type="button"
             onClick={() => setScreen("camera")}
-            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
               <Camera className="size-5" />
@@ -1034,7 +1034,7 @@ export function Log() {
               setFiles([]);
               setScreen("caption");
             }}
-            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
               <PenLine className="size-5" />
@@ -1050,7 +1050,7 @@ export function Log() {
           <button
             type="button"
             onClick={() => setPursuitDialogOpen(true)}
-            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
               <Sparkle className="size-5" />
@@ -1102,7 +1102,7 @@ export function Log() {
               </DialogDescription>
             </DialogHeader>
             {draftPrompt && (
-              <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5 text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border bg-surface p-3.5 text-sm text-muted-foreground">
                 {draftPrompt.thought.trim() ? (
                   <p className="line-clamp-3 text-foreground">"{draftPrompt.thought.trim()}"</p>
                 ) : (
@@ -1149,7 +1149,7 @@ export function Log() {
   if (requiresLogin) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="max-w-md rounded-3xl border border-border bg-card p-10 text-center">
+        <div className="max-w-md rounded-card border border-border bg-card p-10 text-center">
           <span className="mb-5 inline-flex size-14 items-center justify-center rounded-full text-white [background-color:var(--coral-deep)]">
             <NotebookPen className="size-7" />
           </span>
@@ -1181,7 +1181,7 @@ export function Log() {
     const anySaveError = saveError || privateSaveError;
     return (
       <Shell>
-        <div className="rounded-3xl border border-border bg-card px-6 py-10 text-center">
+        <div className="rounded-card border border-border bg-card px-6 py-10 text-center">
           <span className="relative mx-auto mb-5 flex size-16 items-center justify-center">
             {/* A small burst, not confetti */}
             <svg
@@ -1233,7 +1233,7 @@ export function Log() {
             className={
               savedTileSettled
                 ? "mx-auto my-6 w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
-                : "mx-auto my-6 w-40 overflow-hidden rounded-xl border border-border"
+                : "mx-auto my-6 w-40 overflow-hidden rounded-card border border-border"
             }
           >
             <MediaPreview className="aspect-square w-full" />
@@ -1251,14 +1251,14 @@ export function Log() {
           {/* An honest failure beats a cheerful lie: the post is on screen but
               only in this tab, and it will be gone after a reload. */}
           {anySaveError && (
-            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+            <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
               {anySaveError} Nothing you wrote is lost yet. Try again before you
               close this tab.
             </p>
           )}
 
           {mediaError && (
-            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+            <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
               {mediaError}
             </p>
           )}
@@ -1304,7 +1304,7 @@ export function Log() {
             up to 8 of them: one square per photo, its own remove button,
             and a dashed "+" tile to add more. */}
         {type === "video" && files.length > 0 && (
-          <div className="relative mb-4 overflow-hidden rounded-2xl border border-border">
+          <div className="relative mb-4 overflow-hidden rounded-card border border-border">
             <MediaPreview className="aspect-[4/3] w-full" />
             <button
               type="button"
@@ -1322,7 +1322,7 @@ export function Log() {
             {filePreviewUrls.map((url, i) => (
               <div
                 key={i}
-                className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border"
+                className="relative size-20 shrink-0 overflow-hidden rounded-control border border-border"
               >
                 <img src={url} alt="" className="h-full w-full object-cover" />
                 <button
@@ -1340,7 +1340,7 @@ export function Log() {
                 type="button"
                 onClick={() => addMoreInputRef.current?.click()}
                 aria-label="Add another photo"
-                className="flex size-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                className="flex size-20 shrink-0 items-center justify-center rounded-control border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Plus className="size-5" />
               </button>
@@ -1378,7 +1378,7 @@ export function Log() {
         />
 
         {heicWarning && (
-          <p className="mb-4 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+          <p className="mb-4 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
             {heicWarning}
           </p>
         )}
@@ -1476,7 +1476,7 @@ export function Log() {
           </div>
 
           {/* Only a thing that happens at a time needs a time. */}
-          <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+          <div className="rounded-card border border-border bg-surface px-4 py-3.5">
             <button
               type="button"
               onClick={() => setIsActivity((v) => !v)}
@@ -1519,7 +1519,7 @@ export function Log() {
               activity — a photo from a trip or a walk deserves the same
               option. Kept as its own section rather than nested under "This
               is something happening" so it's never gated behind that toggle. */}
-          <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+          <div className="rounded-card border border-border bg-surface px-4 py-3.5">
             <div>
               <Label htmlFor="place" className="mb-1.5 block text-xs">
                 Where (optional)
@@ -1567,7 +1567,7 @@ export function Log() {
                       type="button"
                       aria-pressed={active}
                       onClick={() => chooseAudience(opt.value)}
-                      className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
+                      className={`flex w-full items-center gap-3 rounded-card border px-4 py-3 text-left transition-colors ${
                         active
                           ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface-elevated))]"
                           : "border-border bg-surface hover:border-[var(--foreground)]/30"
@@ -1598,7 +1598,7 @@ export function Log() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card px-4 py-3.5">
+          <div className="rounded-card border border-border bg-card px-4 py-3.5">
             <div className="flex items-center gap-3">
               <FolderPlus className="size-4 shrink-0 text-foreground" />
               <span className="min-w-0 flex-1">
@@ -1683,7 +1683,7 @@ export function Log() {
           {pursuitScoped ? initialPursuit!.title : activeMode.copy}
         </p>
 
-        <div className="space-y-7 rounded-3xl border border-border bg-card p-6 md:p-8">
+        <div className="space-y-7 rounded-card border border-border bg-card p-6 md:p-8">
           {!isPrivateOnly && (
             <>
               {!pursuitScoped && (
@@ -1752,7 +1752,7 @@ export function Log() {
                 </p>
 
                 <div className="mb-3 flex items-center gap-4">
-                  <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border">
+                  <div className="relative size-20 shrink-0 overflow-hidden rounded-control border border-border">
                     <MediaPreview className="h-full w-full" />
                     {files.length > 0 && (
                       <button
@@ -1791,7 +1791,7 @@ export function Log() {
                       }}
                     />
                     {heicWarning && (
-                      <p className="mb-2 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3 py-2 text-left text-[11px] leading-relaxed text-foreground">
+                      <p className="mb-2 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3 py-2 text-left text-[11px] leading-relaxed text-foreground">
                         {heicWarning}
                       </p>
                     )}
@@ -1863,7 +1863,7 @@ export function Log() {
             <button
               type="button"
               onClick={() => setReflectionOpen(true)}
-              className="flex w-full items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-card border border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Lock className="size-3.5" />
               Add a private reflection <span className="text-xs">(only you)</span>
@@ -1880,7 +1880,7 @@ export function Log() {
                     type="button"
                     onClick={() => chooseAudience(opt.value)}
                     aria-pressed={audience === opt.value}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-colors ${
+                    className={`flex flex-col items-center gap-1.5 rounded-control border px-2 py-3 text-center transition-colors ${
                       audience === opt.value
                         ? "border-transparent text-white [background-color:var(--coral-deep)]"
                         : "border-border text-muted-foreground hover:text-foreground"

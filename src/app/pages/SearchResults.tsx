@@ -112,7 +112,7 @@ export function SearchResults() {
                       <li key={hit.key}>
                         <Link
                           to={hit.to}
-                          className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-[var(--violet-electric)]"
+                          className="flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 transition-colors hover:border-[var(--violet-electric)]"
                         >
                           {hit.group === "person" ? (
                             <Avatar className="size-8 shrink-0">

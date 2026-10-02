@@ -128,7 +128,7 @@ export function Login() {
   if (!isConfigured) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <div className="glass-panel rounded-3xl p-8 text-center max-w-sm">
+        <div className="glass-panel rounded-card p-8 text-center max-w-sm">
           <AlertCircle className="size-8 mx-auto mb-3 text-muted-foreground" />
           <h2 className="text-xl mb-2">Accounts aren't set up on this build</h2>
           <p className="text-sm text-muted-foreground">
@@ -158,7 +158,7 @@ export function Login() {
         </div>
 
         {needsConfirmation ? (
-          <div className="glass-panel rounded-3xl p-6 text-center">
+          <div className="glass-panel rounded-card p-6 text-center">
             <p className="text-sm leading-relaxed text-muted-foreground">
               Check <span className="text-foreground">{email}</span> for a confirmation link —
               you'll be signed in once you click it.
@@ -197,7 +197,7 @@ export function Login() {
               <div className="h-px flex-1 bg-[var(--hairline)]" />
             </div>
 
-            <form onSubmit={handleSubmit} className="glass-panel rounded-3xl p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="glass-panel rounded-card p-6 space-y-4">
               {mode === "signup" && (
                 <div>
                   <Label htmlFor="displayName" className="mb-2 block">
@@ -253,14 +253,14 @@ export function Login() {
               </div>
 
               {resetSent && (
-                <p className="rounded-xl border border-[var(--hairline)] bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                <p className="rounded-card border border-[var(--hairline)] bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
                   If there's an account for that address, a reset link is on its way.
                   Check your spam folder if it doesn't arrive.
                 </p>
               )}
 
               {error && (
-                <div className="flex items-start gap-2 rounded-xl border border-[var(--coral)]/30 bg-[var(--coral)]/10 px-3 py-2.5 text-xs text-[var(--coral)]">
+                <div className="flex items-start gap-2 rounded-card border border-[var(--coral)]/30 bg-[var(--coral)]/10 px-3 py-2.5 text-xs text-[var(--coral)]">
                   <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
                   {error}
                 </div>

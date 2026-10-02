@@ -36,7 +36,7 @@ export function QuickLogGlobalSheet() {
             bottom of the page. */}
         <SheetContent
           side="bottom"
-          className="mx-auto max-w-lg rounded-t-2xl lg:inset-x-0 lg:top-[12vh] lg:bottom-auto lg:w-[calc(100%-2rem)] lg:rounded-2xl lg:border lg:data-[state=open]:slide-in-from-bottom-4 lg:data-[state=closed]:slide-out-to-bottom-4 lg:data-[state=open]:fade-in-0 lg:data-[state=closed]:fade-out-0"
+          className="mx-auto max-w-lg rounded-t-card lg:inset-x-0 lg:top-[12vh] lg:bottom-auto lg:w-[calc(100%-2rem)] lg:rounded-card lg:border lg:data-[state=open]:slide-in-from-bottom-4 lg:data-[state=closed]:slide-out-to-bottom-4 lg:data-[state=open]:fade-in-0 lg:data-[state=closed]:fade-out-0"
         >
           <SheetHeader>
             <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>New Moment</SheetTitle>
@@ -60,7 +60,7 @@ export function QuickLogGlobalSheet() {
       {logged && (
         <div
           role="status"
-          className="fixed inset-x-0 bottom-[calc(5rem+var(--safe-bottom))] z-50 mx-auto w-[calc(100%-2rem)] max-w-lg animate-in fade-in slide-in-from-bottom-4 rounded-2xl border border-border bg-card p-2.5 shadow-2xl lg:top-[12vh] lg:bottom-auto"
+          className="fixed inset-x-0 bottom-[calc(5rem+var(--safe-bottom))] z-50 mx-auto w-[calc(100%-2rem)] max-w-lg animate-in fade-in slide-in-from-bottom-4 rounded-card border border-border bg-card p-2.5 shadow-2xl lg:top-[12vh] lg:bottom-auto"
         >
           <LoggedNotice
             key={logged.key}

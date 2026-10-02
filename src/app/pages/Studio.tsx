@@ -383,7 +383,7 @@ export function Studio() {
               className="grid grid-cols-1 gap-3 md:grid-cols-[1.2fr_1fr]"
             >
               {hero && (
-                <div className="relative aspect-[4/5] overflow-hidden rounded-md border border-[var(--line)] md:aspect-auto md:h-[560px]">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-card border border-[var(--line)] md:aspect-auto md:h-[560px]">
                   <PostMedia
                     media={hero.media}
                     type={hero.type}
@@ -403,7 +403,7 @@ export function Studio() {
               )}
               <div className="grid grid-cols-2 grid-rows-3 gap-2 md:h-[560px]">
                 {rest.map((post) => (
-                  <div key={post.id} className="relative overflow-hidden rounded-md border border-[var(--line)]">
+                  <div key={post.id} className="relative overflow-hidden rounded-card border border-[var(--line)]">
                     <PostMedia
                       media={post.media}
                       type={post.type}

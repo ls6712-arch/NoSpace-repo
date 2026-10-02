@@ -582,7 +582,7 @@ export function PublicProfile() {
         {primaryCorner && (
           <Link
             to={`/discover?corner=${primaryCorner.slug}`}
-            className="group mb-10 flex flex-col overflow-hidden rounded-3xl border border-border sm:flex-row sm:items-center"
+            className="group mb-10 flex flex-col overflow-hidden rounded-card border border-border sm:flex-row sm:items-center"
           >
             <div className="h-40 w-full shrink-0 overflow-hidden sm:h-auto sm:w-64">
               <GeneratedArt

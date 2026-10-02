@@ -98,7 +98,7 @@ export function BottomTabBar() {
                 <span className="text-[10px] font-medium leading-none">{tab.label}</span>
               </>
             );
-            const className = `flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl py-1.5 transition-colors ${
+            const className = `flex min-h-12 flex-col items-center justify-center gap-1 rounded-card py-1.5 transition-colors ${
               tint ? "" : "text-muted-foreground"
             }`;
             const style = {

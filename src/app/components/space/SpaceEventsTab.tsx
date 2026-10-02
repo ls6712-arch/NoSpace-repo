@@ -181,7 +181,7 @@ export function SpaceEventsTab({
         ) : (
           <ul className="space-y-2">
             {teasers.map((t) => (
-              <li key={t.id} className="rounded-2xl border border-border px-4 py-3">
+              <li key={t.id} className="rounded-card border border-border px-4 py-3">
                 <p className="text-sm">{t.title}</p>
                 <p className="text-xs text-muted-foreground">{fmt(t.starts_at, t.timezone)}</p>
               </li>
@@ -220,7 +220,7 @@ export function SpaceEventsTab({
             const canEdit = isHost || e.created_by === user?.id;
             const address = addressByEventId.get(e.id);
             return (
-              <li key={e.id} className="rounded-2xl border border-border p-4">
+              <li key={e.id} className="rounded-card border border-border p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="flex items-center gap-1.5 text-sm font-medium">

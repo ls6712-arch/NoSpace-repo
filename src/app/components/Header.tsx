@@ -164,7 +164,7 @@ function AccountMenuPopover() {
                   aria-pressed={preference === opt.value}
                   onClick={() => setPreference(opt.value)}
                   className={
-                    "min-h-8 flex-1 rounded-[6px] px-2 text-xs transition-colors " +
+                    "min-h-8 flex-1 rounded-control px-2 text-xs transition-colors " +
                     (preference === opt.value
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-foreground")
@@ -398,7 +398,7 @@ export function Header() {
               onKeyDown={onSearchKeyDown}
             />
             {searchOpen && query.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl border border-border bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+              <div className="absolute top-full left-0 right-0 mt-2 rounded-card border border-border bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
                 {results.length === 0 ? (
                   <p className="px-4 py-3 text-sm text-muted-foreground">
                     No matches for "{query}"
@@ -477,7 +477,7 @@ export function Header() {
             />
           </div>
           {query.trim() && (
-            <ul className="mt-2 max-h-64 overflow-y-auto rounded-2xl border border-border bg-popover">
+            <ul className="mt-2 max-h-64 overflow-y-auto rounded-card border border-border bg-popover">
               {results.length === 0 ? (
                 <li className="px-4 py-3 text-sm text-muted-foreground">No matches for "{query}"</li>
               ) : (

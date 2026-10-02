@@ -69,7 +69,7 @@ export function PursuitsInProgressSection({
       </h2>
 
       {active.length === 0 ? (
-        <div className="mt-3 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+        <div className="mt-3 flex flex-col items-center gap-3 rounded-card border border-dashed border-border px-5 py-10 text-center">
           <span
             className="flex size-11 items-center justify-center rounded-full"
             style={{
@@ -102,7 +102,7 @@ export function PursuitsInProgressSection({
             type="button"
             onClick={openSeeAll}
             style={{ transitionDelay: `${Math.min(active.length, 7) * 45}ms` }}
-            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ArrowRight className="size-4" />
             See all

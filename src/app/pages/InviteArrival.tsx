@@ -100,11 +100,11 @@ export function InviteArrival() {
         )}
 
         <div className="mt-8 space-y-3">
-          <Button variant="coral" className="h-11 w-full rounded-xl" onClick={startGoogle}>
+          <Button variant="coral" className="h-11 w-full rounded-control" onClick={startGoogle}>
             Continue with Google
           </Button>
           <Link to="/login" onClick={() => saveInviteCode(code)}>
-            <Button variant="outline" className="h-11 w-full rounded-xl">
+            <Button variant="outline" className="h-11 w-full rounded-control">
               Use email
             </Button>
           </Link>

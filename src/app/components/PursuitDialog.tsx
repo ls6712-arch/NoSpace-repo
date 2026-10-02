@@ -103,7 +103,7 @@ function CornerField({
         </p>
       )}
       {focused && suggestions.length > 0 && (
-        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border border-border bg-popover py-1 shadow-xl">
+        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-xl">
           {suggestions.map((s) => (
             <li key={s}>
               <button
@@ -300,7 +300,7 @@ export function PursuitDialog({
             )}
           </div>
 
-          <div className="rounded-2xl border border-dashed border-border">
+          <div className="rounded-card border border-dashed border-border">
             <button
               type="button"
               onClick={() => setGoalOpen((v) => !v)}
@@ -315,7 +315,7 @@ export function PursuitDialog({
                   <button
                     type="button"
                     onClick={() => setGoalShape("number")}
-                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs transition-colors ${
+                    className={`flex items-center justify-center gap-1.5 rounded-control border px-3 py-2 text-xs transition-colors ${
                       goalShape === "number" ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
                     }`}
                   >
@@ -324,7 +324,7 @@ export function PursuitDialog({
                   <button
                     type="button"
                     onClick={() => setGoalShape("date")}
-                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs transition-colors ${
+                    className={`flex items-center justify-center gap-1.5 rounded-control border px-3 py-2 text-xs transition-colors ${
                       goalShape === "date" ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
                     }`}
                   >
@@ -383,7 +383,7 @@ export function PursuitDialog({
                   role="radio"
                   aria-checked={checkIn === o.days}
                   onClick={() => setCheckIn(o.days)}
-                  className={`rounded-xl border px-2 py-1.5 text-xs transition-colors ${
+                  className={`rounded-control border px-2 py-1.5 text-xs transition-colors ${
                     checkIn === o.days ? "border-[var(--coral-deep)] bg-surface-muted text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >

@@ -46,7 +46,7 @@ function ago(ts: number) {
 
 function Empty({ icon: Icon, children }: { icon: typeof Bell; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+    <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
       <Icon className="mx-auto mb-3 size-5 text-muted-foreground" />
       <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">{children}</p>
     </div>
@@ -122,7 +122,7 @@ export function Inbox() {
                       {followRequests.map((r) => (
                         <li
                           key={r.followerId}
-                          className="rounded-2xl border border-border bg-card px-4 py-3.5"
+                          className="rounded-card border border-border bg-card px-4 py-3.5"
                         >
                           <div className="flex items-center gap-3">
                             <Avatar className="size-9 shrink-0">
@@ -182,7 +182,7 @@ export function Inbox() {
                 {social.notifications.map((n) => (
                   <li
                     key={n.id}
-                    className="rounded-2xl border border-border bg-card px-4 py-3.5 text-sm"
+                    className="rounded-card border border-border bg-card px-4 py-3.5 text-sm"
                   >
                     <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                       {n.actorName ?? "Someone"}{" "}

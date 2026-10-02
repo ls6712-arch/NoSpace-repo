@@ -221,19 +221,19 @@ export function SpacePage({ space }: { space: SpaceRow }) {
     <div className="ns-space-theme min-h-viewport bg-background pb-24 text-foreground">
       {/* Inset, compact cover — not edge-to-edge */}
       <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-2xl bg-surface-muted sm:aspect-[3/1]">
+        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-card bg-surface-muted sm:aspect-[3/1]">
           <img src={space.cover_image} alt="" className="size-full object-cover" />
         </div>
       </div>
 
       <div className="mx-auto w-full max-w-3xl px-4 pt-5">
         {space.status === "read_only" && (
-          <div className="mb-4 rounded-2xl border border-clay/30 bg-clay-soft px-4 py-3 text-sm">
+          <div className="mb-4 rounded-card border border-clay/30 bg-clay-soft px-4 py-3 text-sm">
             This Space is read-only right now — no new members, requests, or events until it's reactivated.
           </div>
         )}
         {space.status === "deleted" && (
-          <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+          <div className="mb-4 rounded-card border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
             This Space has been deleted. You're seeing it as an admin.
           </div>
         )}
@@ -302,7 +302,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         {featuredEvent && (
           <Link
             to={`/space/${space.slug}?tab=events`}
-            className="mt-4 flex items-center gap-3 rounded-2xl border border-clay/40 bg-clay-soft px-4 py-3 hover:border-clay"
+            className="mt-4 flex items-center gap-3 rounded-card border border-clay/40 bg-clay-soft px-4 py-3 hover:border-clay"
           >
             <Star className="size-4 shrink-0 fill-current text-clay" />
             <div className="min-w-0">
@@ -462,9 +462,9 @@ function RequestToJoinButton({
   }
 
   return (
-    <div className="w-full rounded-2xl border border-border p-3">
+    <div className="w-full rounded-card border border-border p-3">
       <textarea
-        className="w-full resize-none rounded-lg border border-border bg-transparent p-2 text-sm"
+        className="w-full resize-none rounded-control border border-border bg-transparent p-2 text-sm"
         rows={2}
         maxLength={300}
         placeholder="A short note to the hosts (optional)"
@@ -473,7 +473,7 @@ function RequestToJoinButton({
       />
       {posts.length > 0 && (
         <select
-          className="mt-2 w-full rounded-lg border border-border bg-transparent p-2 text-sm"
+          className="mt-2 w-full rounded-control border border-border bg-transparent p-2 text-sm"
           value={postId ?? ""}
           onChange={(e) => setPostId(e.target.value ? Number(e.target.value) : undefined)}
         >

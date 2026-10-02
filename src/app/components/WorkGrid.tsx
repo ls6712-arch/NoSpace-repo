@@ -59,9 +59,9 @@ function PinPicker({
               type="button"
               disabled={busyId === post.id}
               onClick={() => toggle(post.id)}
-              className="flex w-full items-center gap-3 rounded-xl border border-border px-3 py-2.5 text-left transition-colors hover:border-[var(--coral-deep)] disabled:opacity-50"
+              className="flex w-full items-center gap-3 rounded-card border border-border px-3 py-2.5 text-left transition-colors hover:border-[var(--coral-deep)] disabled:opacity-50"
             >
-              <div className="size-11 shrink-0 overflow-hidden rounded-lg">
+              <div className="size-11 shrink-0 overflow-hidden rounded-control">
                 <PostMedia
                   media={post.media}
                   type={post.type}
@@ -115,7 +115,7 @@ export function WorkGrid({
 
   if (posts.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
+      <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
         {emptyLabel}
       </div>
     );

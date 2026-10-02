@@ -252,7 +252,7 @@ export function CameraCapture({
       />
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-3xl border border-border bg-black">
+      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-card border border-border bg-black">
         {cameraAvailable ? (
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
         ) : (
@@ -343,7 +343,7 @@ export function CameraCapture({
                 <span
                   className={`transition-all ${
                     recording
-                      ? "size-6 rounded-md bg-[var(--coral)]"
+                      ? "size-6 rounded-control bg-[var(--coral)]"
                       : captureMode === "video"
                         ? "size-12 rounded-full bg-[var(--coral)]"
                         : "size-12 rounded-full bg-white"
@@ -393,7 +393,7 @@ export function CameraCapture({
                   key={r.id}
                   type="button"
                   onClick={() => onCaptured(r.file, r.type)}
-                  className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-white/30"
+                  className="relative size-12 shrink-0 overflow-hidden rounded-control border border-white/30"
                 >
                   {r.type === "video" ? (
                     <>

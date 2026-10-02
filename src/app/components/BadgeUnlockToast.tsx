@@ -34,7 +34,7 @@ export function BadgeUnlockToast() {
 
   return (
     <div className="fixed bottom-[calc(1.25rem+var(--safe-bottom))] right-[calc(1.25rem+var(--safe-right))] z-[60] w-[calc(100%-2.5rem)] max-w-sm animate-in slide-in-from-bottom-4 fade-in">
-      <div className="glass-panel glow-violet flex items-start gap-3 rounded-2xl p-4">
+      <div className="glass-panel glow-violet flex items-start gap-3 rounded-card p-4">
         <span
           className="flex size-10 shrink-0 items-center justify-center rounded-full"
           style={{

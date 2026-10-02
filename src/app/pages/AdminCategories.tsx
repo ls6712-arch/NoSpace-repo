@@ -85,7 +85,7 @@ export function AdminCategories() {
         </p>
 
         {error && (
-          <p className="mb-5 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
             {error}
           </p>
         )}
@@ -100,13 +100,13 @@ export function AdminCategories() {
 
           <TabsContent value="pending">
             {pending.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+              <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
                 <p className="text-sm text-muted-foreground">Nothing waiting.</p>
               </div>
             ) : (
               <ul className="space-y-3">
                 {pending.map((s) => (
-                  <li key={s.id} className="rounded-2xl border border-border bg-card p-4">
+                  <li key={s.id} className="rounded-card border border-border bg-card p-4">
                     <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
                       <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
                         {s.name}
@@ -190,7 +190,7 @@ export function AdminCategories() {
 
           <TabsContent value="decided">
             {decided.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+              <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
                 <p className="text-sm text-muted-foreground">Nothing decided yet.</p>
               </div>
             ) : (
@@ -198,7 +198,7 @@ export function AdminCategories() {
                 {decided.map((s) => (
                   <li
                     key={s.id}
-                    className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-2xl border border-border bg-card px-4 py-3 text-sm"
+                    className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-card border border-border bg-card px-4 py-3 text-sm"
                   >
                     <span style={{ fontFamily: "var(--font-serif)" }}>{s.name}</span>
                     <span className="text-xs text-muted-foreground">

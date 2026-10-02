@@ -400,7 +400,7 @@ export function SpaceHomeTab({
     <div className="space-y-8 py-6">
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
-        <div className="-mx-4 rounded-2xl bg-bark px-5 py-5 text-on-bark sm:mx-0">
+        <div className="-mx-4 rounded-card bg-bark px-5 py-5 text-on-bark sm:mx-0">
           <p className="text-[11px] uppercase tracking-wide text-on-bark/70">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
           <p className="mt-1 text-xl" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
           <p className="mt-1 text-sm text-on-bark/80">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
@@ -440,7 +440,7 @@ export function SpaceHomeTab({
       {isActiveMember && !todayEvent && nextEvent && nextWithinWeek && (
         <Link
           to={`/space/${space.slug}?tab=events`}
-          className="-mx-4 flex items-center justify-between gap-3 rounded-2xl bg-bark px-5 py-3 text-sm text-on-bark sm:mx-0"
+          className="-mx-4 flex items-center justify-between gap-3 rounded-card bg-bark px-5 py-3 text-sm text-on-bark sm:mx-0"
         >
           <span className="truncate">
             Next: {fmtDay(nextEvent.starts_at)} · {nextEvent.title}
@@ -451,7 +451,7 @@ export function SpaceHomeTab({
 
       {/* ── Settling in / Set up your Space ───────────────────────────── */}
       {isActiveMember && checklistReady && !checklistComplete && !dismissed && (
-        <div className="relative rounded-2xl border border-line bg-paper p-5">
+        <div className="relative rounded-card border border-line bg-paper p-5">
           <button
             type="button"
             onClick={dismiss}
@@ -502,8 +502,8 @@ export function SpaceHomeTab({
           <div className="mt-4 space-y-2">
             <p className="ns-section-kicker text-muted-foreground">Waiting for a host to approve</p>
             {myPendingMoments.map((post) => (
-              <div key={post.id} className="flex items-center gap-3 rounded-xl border border-line bg-paper px-3 py-2">
-                {post.media && <img src={post.media} alt="" className="size-10 shrink-0 rounded-md object-cover" />}
+              <div key={post.id} className="flex items-center gap-3 rounded-card border border-line bg-paper px-3 py-2">
+                {post.media && <img src={post.media} alt="" className="size-10 shrink-0 rounded-control object-cover" />}
                 <p className="line-clamp-1 flex-1 text-sm">{post.caption || `Moment #${post.id}`}</p>
               </div>
             ))}
@@ -538,7 +538,7 @@ export function SpaceHomeTab({
                       Remove from host picks
                     </button>
                   )}
-                  <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
+                  <div className="overflow-hidden rounded-card border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
                     <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
                   </div>
                 </div>
@@ -563,7 +563,7 @@ export function SpaceHomeTab({
                           Add to host picks
                         </button>
                       )}
-                      <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
+                      <div className="overflow-hidden rounded-card border border-line bg-paper shadow-[0_10px_20px_-14px_rgba(43,33,28,0.35)]">
                         <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
                       </div>
                     </div>

@@ -57,7 +57,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
       <button
         type="button"
         onClick={openPanel}
-        className="inline-flex items-center gap-1.5 rounded-[20px] border px-3.5 py-1.5 text-sm text-white transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-control border px-3.5 py-1.5 text-sm text-white transition-colors"
         style={{
           backgroundColor: "rgba(42,36,29,0.35)",
           borderColor: "rgba(248,242,229,0.4)",
@@ -74,7 +74,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
           onClick={() => !saving && setOpen(false)}
         >
           <div
-            className="ns-paper-theme w-full max-w-[620px] rounded-md border border-[var(--line)] bg-[var(--paper-raised)] p-8"
+            className="ns-paper-theme w-full max-w-[620px] rounded-control border border-[var(--line)] bg-[var(--paper-raised)] p-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between">
@@ -99,7 +99,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={60}
-              className="mb-4 w-full rounded border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[17px] text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[17px] text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
               style={{ fontFamily: "var(--font-serif)" }}
             />
 
@@ -112,7 +112,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               onChange={(e) => setTagline(e.target.value)}
               rows={2}
               maxLength={160}
-              className="mb-4 w-full resize-none rounded border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[14.5px] italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full resize-none rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[14.5px] italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
               style={{ fontFamily: "var(--font-serif)" }}
             />
 
@@ -128,7 +128,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
                     key={post.id}
                     type="button"
                     onClick={() => setPostId(post.id)}
-                    className="h-16 w-[90px] shrink-0 overflow-hidden rounded"
+                    className="h-16 w-[90px] shrink-0 overflow-hidden rounded-control"
                     style={{
                       border: postId === post.id ? "2px solid var(--coral-deep)" : "1px solid var(--line)",
                     }}
@@ -152,7 +152,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               type="button"
               onClick={save}
               disabled={saving}
-              className="w-full rounded px-4 py-2.5 text-sm text-white transition-opacity disabled:opacity-60"
+              className="w-full rounded-control px-4 py-2.5 text-sm text-white transition-opacity disabled:opacity-60"
               style={{ backgroundColor: "var(--coral-deep)" }}
             >
               {saving ? "Saving…" : "Done"}

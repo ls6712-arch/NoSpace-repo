@@ -386,7 +386,7 @@ export function Pursuit() {
         {/* The ending note — "What would you tell yourself on day one?" —
             leads a finished Pursuit, above everything else. */}
         {status === "complete" && (view.endingNote || owner) && (
-          <div className="mb-6 rounded-2xl border border-border bg-card p-5">
+          <div className="mb-6 rounded-card border border-border bg-card p-5">
             <p className="ns-section-kicker mb-2 text-gold-text">To day one</p>
             {view.endingNote ? (
               <p className="whitespace-pre-wrap text-lg leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
@@ -404,7 +404,7 @@ export function Pursuit() {
         )}
 
         {status === "resting" && owner && (
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-sm">
               <Moon className="size-4 shrink-0 text-muted-foreground" />
               Resting. Nothing's lost, and there's no clock running.
@@ -416,7 +416,7 @@ export function Pursuit() {
         )}
 
         {status === "let_go" && owner && (
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-sm">
               <Wind className="size-4 shrink-0 text-muted-foreground" />
               Let go. Nothing's lost.
@@ -437,7 +437,7 @@ export function Pursuit() {
           <PursuitProgressPanel project={ownProject} viewerIsOwner={ownProject.role !== "member"} />
         )}
         {goal && !(ownProject && hasMeasure(ownProject)) && (
-          <div className="mb-4 rounded-2xl border border-border bg-card p-4">
+          <div className="mb-4 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-sm">
               <Target className={`size-4 shrink-0 ${goalReached ? "text-[var(--violet-electric-bright)]" : "text-muted-foreground"}`} />
               {goalReached ? (
@@ -474,7 +474,7 @@ export function Pursuit() {
             already uses whichever Moment has the first photo, so the only
             thing worth keeping is the nudge to make that one a photo. */}
         {owner && ownProject && moments.length === 0 && (
-          <div className={`mb-6 rounded-2xl border p-4 ${isNew ? "border-[var(--coral-deep)]" : "border-dashed border-border"}`}>
+          <div className={`mb-6 rounded-card border p-4 ${isNew ? "border-[var(--coral-deep)]" : "border-dashed border-border"}`}>
             <p className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
               Add your first Moment
             </p>
@@ -610,7 +610,7 @@ export function Pursuit() {
         {/* ── Timeline, grouped by month, newest first ───────────────── */}
         {moments.length === 0 ? (
           !owner && (
-            <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+            <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
               <p className="text-sm text-muted-foreground">No Moments shared yet.</p>
             </div>
           )
@@ -697,7 +697,7 @@ function ComparePhotos({
         {latest ? (
           <PhotoTile moment={latest} caption={`Latest · ${shortDate(latest.createdAt)}`} />
         ) : (
-          <div className="flex aspect-square items-center justify-center rounded-xl border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+          <div className="flex aspect-square items-center justify-center rounded-card border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
             {owner ? "Your next photo goes here" : "More to come"}
           </div>
         )}
@@ -712,7 +712,7 @@ function ComparePhotos({
 function PhotoTile({ moment, caption }: { moment: PursuitMoment; caption: string }) {
   return (
     <div>
-      <div className="aspect-square overflow-hidden rounded-xl bg-surface-muted">
+      <div className="aspect-square overflow-hidden rounded-card bg-surface-muted">
         <img src={moment.image} alt={moment.text || caption} className="size-full object-cover" />
       </div>
       <p className="mt-1 text-center text-[11px] text-muted-foreground">{caption}</p>
@@ -739,12 +739,12 @@ function MonthHeader({ label, moments }: { label: string; moments: PursuitMoment
         {label}
       </h2>
       {showLookBack && (
-        <div className="mt-2 flex items-center gap-3 rounded-xl border border-border bg-card p-3">
+        <div className="mt-2 flex items-center gap-3 rounded-card border border-border bg-card p-3">
           {withImage.length > 1 && (
             <div className="flex shrink-0 items-center gap-1">
-              <img src={oldest.image} alt="" className="size-10 rounded-md object-cover" />
+              <img src={oldest.image} alt="" className="size-10 rounded-control object-cover" />
               <ArrowRight className="size-3 text-muted-foreground" aria-hidden="true" />
-              <img src={newest.image} alt="" className="size-10 rounded-md object-cover" />
+              <img src={newest.image} alt="" className="size-10 rounded-control object-cover" />
             </div>
           )}
           {line && (
@@ -761,11 +761,11 @@ function MonthHeader({ label, moments }: { label: string; moments: PursuitMoment
 /** An "Only you" Moment — owner's eyes only, marked as such. */
 function PrivateMomentCard({ moment }: { moment: PursuitMoment }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card p-4">
+    <div className="rounded-card border border-dashed border-border bg-card p-4">
       <p className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
         <Lock className="size-3" /> Only you · {shortDate(moment.createdAt)}
       </p>
-      {moment.image && <img src={moment.image} alt="" className="mb-2 aspect-square w-full rounded-xl object-cover" />}
+      {moment.image && <img src={moment.image} alt="" className="mb-2 aspect-square w-full rounded-card object-cover" />}
       <p className="whitespace-pre-wrap text-sm">{moment.text}</p>
     </div>
   );

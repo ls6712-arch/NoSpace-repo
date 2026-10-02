@@ -143,7 +143,7 @@ export function AmountStepper({
       <button
         type="button"
         onClick={() => onChange(round(value - step))}
-        className="flex size-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
+        className="flex size-9 items-center justify-center rounded-control border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
         aria-label="Less"
       >
         <Minus className="size-4" />
@@ -160,13 +160,13 @@ export function AmountStepper({
           if (Number.isFinite(v)) onChange(round(v));
         }}
         onBlur={() => setText(String(value))}
-        className="h-9 w-20 rounded-lg border border-border bg-card text-center text-sm text-foreground outline-none focus:border-[var(--coral-deep)]"
+        className="h-9 w-20 rounded-control border border-border bg-card text-center text-sm text-foreground outline-none focus:border-[var(--coral-deep)]"
         aria-label="Amount"
       />
       <button
         type="button"
         onClick={() => onChange(round(value + step))}
-        className="flex size-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
+        className="flex size-9 items-center justify-center rounded-control border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
         aria-label="More"
       >
         <Plus className="size-4" />
@@ -179,7 +179,7 @@ export function AmountStepper({
 /** Lavender panel — the tip boxes and selected rows in the mockups. */
 export function SoftPanel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))] p-3.5 ${className}`}>{children}</div>
+    <div className={`rounded-card bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))] p-3.5 ${className}`}>{children}</div>
   );
 }
 

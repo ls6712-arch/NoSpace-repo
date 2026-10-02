@@ -49,8 +49,8 @@ export function ShareMilestoneDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
         <DialogTitle className="sr-only">Share this milestone</DialogTitle>
-        <div className="rounded-3xl p-[1.5px] [background-image:var(--gradient-brand)]">
-          <div className="rounded-[calc(1.5rem-1.5px)] bg-[var(--surface)] p-7 text-center">
+        <div className="rounded-card p-[1.5px] [background-image:var(--gradient-brand)]">
+          <div className="rounded-card bg-[var(--surface)] p-7 text-center">
             <span
               className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full"
               style={{

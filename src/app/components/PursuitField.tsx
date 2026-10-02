@@ -44,7 +44,7 @@ export function PursuitField({
 
   if (selected) {
     return (
-      <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-2.5">
+      <div className="flex items-center gap-2 rounded-card border border-border bg-surface px-4 py-2.5">
         <span className="min-w-0 flex-1 truncate text-sm">{selected.title}</span>
         <button
           type="button"
@@ -97,7 +97,7 @@ export function PursuitField({
         placeholder={placeholder}
       />
       {focused && (
-        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-64 overflow-y-auto rounded-2xl border border-border bg-popover py-1 shadow-xl">
+        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-64 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-xl">
           {matches.map((p) => (
             <li key={p.id}>
               <button

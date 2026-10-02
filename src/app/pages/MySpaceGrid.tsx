@@ -205,7 +205,7 @@ export function MySpaceGrid() {
       <div className="myspace-body">
         <div className="myspace-feed">
           {sheet.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            <div className="rounded-card border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               {/* Genuinely empty now only means zero eligible Moments exist
                   at all — the sheet no longer gates on "since your last
                   visit" (see the unseen memo above), so that copy would be
@@ -238,7 +238,7 @@ export function MySpaceGrid() {
           )}
 
           {sheet.length > 0 && (
-            <div className="mt-6 rounded-lg border-t border-border pt-4">
+            <div className="mt-6 rounded-card border-t border-border pt-4">
               <p className="ns-section-kicker text-muted-foreground">END OF THE SHEET</p>
               <p className="mt-1 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
                 You're caught up

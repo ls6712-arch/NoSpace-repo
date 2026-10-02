@@ -197,17 +197,17 @@ export function AdminSpaces() {
         </p>
 
         {error && (
-          <p className="mb-5 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
             {error}
           </p>
         )}
         {notice && (
-          <p className="mb-5 rounded-xl border border-border bg-[var(--surface-elevated)] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-border bg-[var(--surface-elevated)] px-4 py-3 text-sm">
             {notice}
           </p>
         )}
 
-        <section className="mb-10 rounded-2xl border border-dashed border-border bg-[var(--surface-elevated)] p-5 text-sm text-muted-foreground">
+        <section className="mb-10 rounded-card border border-dashed border-border bg-[var(--surface-elevated)] p-5 text-sm text-muted-foreground">
           Creating a new Space here is turned off during the Spaces Rework. New
           communities will be made from the Create Space form instead, once
           it ships.
@@ -224,7 +224,7 @@ export function AdminSpaces() {
             return (
               <li
                 key={h.slug}
-                className={`rounded-2xl border border-border bg-[var(--surface-elevated)] p-4 ${
+                className={`rounded-card border border-border bg-[var(--surface-elevated)] p-4 ${
                   h.hidden ? "opacity-70" : ""
                 }`}
               >
@@ -357,7 +357,7 @@ export function AdminSpaces() {
                           <select
                             value={plan.moveTo}
                             onChange={(e) => setPlan({ ...plan, moveTo: e.target.value })}
-                            className="rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                            className="rounded-control border border-border bg-background px-2 py-1.5 text-sm"
                             aria-label="Move everything to"
                           >
                             <option value="">Move everything to…</option>

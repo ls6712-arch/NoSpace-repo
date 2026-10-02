@@ -91,7 +91,7 @@ export function FollowListDialog({
                   <Link
                     to={profilePath(person)}
                     onClick={() => onOpenChange(false)}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                    className="flex w-full items-center gap-3 rounded-control px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
                   >
                     <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="text-[10px]">{initials(person.displayName)}</AvatarFallback>

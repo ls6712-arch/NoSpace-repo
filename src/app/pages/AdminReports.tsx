@@ -143,7 +143,7 @@ export function AdminReports() {
   const decided = rows.filter((r) => r.status !== "open");
 
   const Row = ({ r }: { r: ReportRow }) => (
-    <li className="rounded-2xl border border-border bg-card p-4">
+    <li className="rounded-card border border-border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 text-sm">
           <p>
@@ -192,7 +192,7 @@ export function AdminReports() {
         </p>
 
         {error && (
-          <p className="mb-5 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
+          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-sm">
             {error}
           </p>
         )}
@@ -207,7 +207,7 @@ export function AdminReports() {
             {loading ? (
               <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
             ) : open.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
                 Nothing open.
               </div>
             ) : (
@@ -221,7 +221,7 @@ export function AdminReports() {
 
           <TabsContent value="decided">
             {decided.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
                 Nothing decided yet.
               </div>
             ) : (

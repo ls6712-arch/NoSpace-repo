@@ -139,10 +139,10 @@ export function AddMomentToSpaceDialog({
                 type="button"
                 disabled={linking !== null}
                 onClick={() => link(p.id)}
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-surface-muted disabled:opacity-50"
+                className="flex w-full items-center gap-3 rounded-control px-2 py-2 text-left text-sm hover:bg-surface-muted disabled:opacity-50"
               >
                 {p.media && (
-                  <img src={p.media} alt="" className="size-10 shrink-0 rounded-md object-cover" />
+                  <img src={p.media} alt="" className="size-10 shrink-0 rounded-control object-cover" />
                 )}
                 <span className="line-clamp-2 flex-1">{p.caption || `Moment #${p.id}`}</span>
                 {linking === p.id && <span className="text-xs text-muted-foreground">Adding…</span>}

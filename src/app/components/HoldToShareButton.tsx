@@ -72,7 +72,7 @@ export function HoldToShareButton({
         type="button"
         disabled={disabled}
         onClick={onConfirm}
-        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-semibold text-accent-foreground transition-colors hover:brightness-110 disabled:pointer-events-none disabled:opacity-50"
+        className="flex h-12 w-full items-center justify-center gap-2 rounded-control bg-accent text-sm font-semibold text-accent-foreground transition-colors hover:brightness-110 disabled:pointer-events-none disabled:opacity-50"
       >
         <Globe2 className="size-4" />
         Share with everyone
@@ -97,7 +97,7 @@ export function HoldToShareButton({
         }
       }}
       aria-label={label}
-      className="relative flex h-12 w-full select-none items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-semibold text-accent-foreground [background:color-mix(in_srgb,var(--accent)_55%,var(--foreground)_15%)] disabled:pointer-events-none disabled:opacity-50"
+      className="relative flex h-12 w-full select-none items-center justify-center gap-2 overflow-hidden rounded-control text-sm font-semibold text-accent-foreground [background:color-mix(in_srgb,var(--accent)_55%,var(--foreground)_15%)] disabled:pointer-events-none disabled:opacity-50"
     >
       <span
         className="absolute inset-y-0 left-0 bg-accent"

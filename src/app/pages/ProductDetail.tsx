@@ -44,7 +44,7 @@ export function ProductDetail() {
         </Button>
 
         <div className="grid md:grid-cols-2 gap-10 mb-16">
-          <div className="relative aspect-square rounded-3xl overflow-hidden border border-border">
+          <div className="relative aspect-square rounded-card overflow-hidden border border-border">
             <GeneratedArt
               hobbySlug={product.hobbySlug}
               seed={product.id}
@@ -62,7 +62,7 @@ export function ProductDetail() {
             </Button>
           </div>
 
-          <div className="glass-panel rounded-3xl p-8">
+          <div className="glass-panel rounded-card p-8">
             {hobby && (
               <Link to={`/space/${hobby.slug}`} className="text-sm text-[var(--coral-text)] mb-2 inline-block">
                 {hobby.name}
@@ -155,7 +155,7 @@ export function ProductDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {related.map((item) => (
                 <Link key={item.id} to={`/product/${item.id}`}>
-                  <div className="group rounded-2xl overflow-hidden border border-border hover:border-border transition-colors">
+                  <div className="group rounded-card overflow-hidden border border-border hover:border-border transition-colors">
                     <div className="aspect-square overflow-hidden bg-white/[0.03]">
                       <GeneratedArt
                         hobbySlug={item.hobbySlug}

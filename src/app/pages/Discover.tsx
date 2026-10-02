@@ -190,7 +190,7 @@ function MarketplaceTab({ query }: { query: string }) {
 
   if (matching.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+      <p className="rounded-card border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
         {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
       </p>
     );
@@ -253,7 +253,7 @@ function AllCornersBrowser({ query }: { query: string }) {
     // below is only ever seen when a search genuinely comes up empty.
     if (!q) return null;
     return (
-      <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
+      <div className="rounded-card border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
         No Corners match that. Try a broader word.
       </div>
     );
@@ -265,7 +265,7 @@ function AllCornersBrowser({ query }: { query: string }) {
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
           to={`/corner/${c.slug}`}
-          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+          className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
         >
           <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
             <DiscoverSpaceArt
@@ -687,13 +687,13 @@ export function Discover() {
               </p>
 
               {chip === "near" ? (
-                <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+                <div className="rounded-card border border-dashed border-border px-5 py-10 text-center">
                   <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
                     {APP_NAME} doesn't know where you are, and won't until you tell it.
                   </p>
                 </div>
               ) : visible.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
+                <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
                   {feedTab === "following"
                     ? "Nothing from your Interests yet. Tag a Moment with a Corner to start building your list."
                     : "Nothing matches that yet. Try a broader word or a different filter."}
@@ -714,7 +714,7 @@ export function Discover() {
 
               {/* The end of the gallery — an intentional choice, not more scroll */}
               {visible.length > 0 && (
-                <div className="mt-10 rounded-3xl border border-border bg-card px-6 py-9 text-center">
+                <div className="mt-10 rounded-card border border-border bg-card px-6 py-9 text-center">
                   {remaining > 0 ? (
                     <>
                       <p className="mb-4 text-sm text-muted-foreground">

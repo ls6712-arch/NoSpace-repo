@@ -479,7 +479,7 @@ export function MomentCard({
         </p>
 
         {isActivity && (
-          <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2.5">
+          <div className="mt-3 rounded-card border border-border bg-surface px-3 py-2.5">
             <div className="flex items-center gap-1.5 text-xs">
               <CalendarDays className="size-3.5 shrink-0 text-foreground" />
               {new Date(post.startsAt!).toLocaleString(undefined, {

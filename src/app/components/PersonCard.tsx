@@ -28,7 +28,7 @@ export function PersonCard({ person, className = "" }: { person: Person; classNa
   return (
     <Link
       to={profilePath(person)}
-      className={`flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] ${className}`}
+      className={`flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3.5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] ${className}`}
     >
       <Avatar className="size-11 shrink-0">
         {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" />}

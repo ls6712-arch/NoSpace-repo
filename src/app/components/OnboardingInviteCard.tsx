@@ -108,7 +108,7 @@ export function OnboardingInviteCard({
         </>
       ) : (
         <>
-          <div className="mb-6 flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-2.5">
+          <div className="mb-6 flex items-center gap-2 rounded-card border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-2.5">
             <code className="min-w-0 flex-1 truncate text-xs">{link}</code>
             <Button variant="outline" size="sm" onClick={copy}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}

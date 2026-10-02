@@ -262,7 +262,7 @@ export function SpaceManageTab({
     return (
       <div className="py-8 text-center">
         {space.host_handoff_started_at ? (
-          <div className="mx-auto max-w-sm rounded-2xl border border-[var(--coral-deep)]/30 bg-[var(--coral-deep)]/5 p-4">
+          <div className="mx-auto max-w-sm rounded-card border border-[var(--coral-deep)]/30 bg-[var(--coral-deep)]/5 p-4">
             <p className="text-sm">This Space has no host right now.</p>
             {eligibleForHandoff ? (
               <>
@@ -299,7 +299,7 @@ export function SpaceManageTab({
         ) : (
           <ul className="space-y-2">
             {joinRequests.map((r) => (
-              <li key={r.user_id} className="rounded-xl border border-border p-3">
+              <li key={r.user_id} className="rounded-card border border-border p-3">
                 <p className="text-sm">{r.displayName}</p>
                 {r.answers?.message && <p className="mt-1 text-xs text-muted-foreground">"{r.answers.message}"</p>}
                 {r.postCaption && <p className="mt-1 text-xs text-muted-foreground">Attached: {r.postCaption}</p>}
@@ -334,9 +334,9 @@ export function SpaceManageTab({
         ) : (
           <ul className="space-y-2">
             {pendingMoments.map((m) => (
-              <li key={m.postId} className="flex items-start gap-3 rounded-xl border border-border p-3">
+              <li key={m.postId} className="flex items-start gap-3 rounded-card border border-border p-3">
                 {m.mediaUrl && (
-                  <img src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-md object-cover" />
+                  <img src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-control object-cover" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted-foreground">{m.authorName}</p>
@@ -435,7 +435,7 @@ export function SpaceManageTab({
       <section className="border-t border-[var(--hairline)] pt-6">
         <h3 className="mb-2 text-sm font-medium text-destructive">Delete this Space</h3>
         {deletion ? (
-          <div className="rounded-xl border border-border p-3 text-sm">
+          <div className="rounded-card border border-border p-3 text-sm">
             <p>A deletion request is open, expiring {new Date(deletion.expires_at).toLocaleDateString()}.</p>
             <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
               {deletion.approvals.map((a) => (
