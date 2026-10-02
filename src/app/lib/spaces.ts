@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { friendlyError } from "./friendlyError";
 
 /**
  * Thin RPC wrappers for the Spaces Rework backend (Phases 2-5). Every RPC
@@ -63,7 +64,10 @@ export type SpaceEventRow = {
 async function call<T = null>(fn: string, args: Record<string, unknown>): Promise<{ data: T | null; error: string | null }> {
   if (!supabase) return { data: null, error: "Not signed in." };
   const { data, error } = await supabase.rpc(fn, args);
-  if (error) return { data: null, error: error.message };
+  if (error) {
+    console.warn(`[spaces] ${fn} failed:`, error);
+    return { data: null, error: friendlyError(error) };
+  }
   return { data: (data as T) ?? null, error: null };
 }
 

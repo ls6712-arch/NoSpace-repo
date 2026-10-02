@@ -31,6 +31,17 @@ describe("friendlyError", () => {
     expect(friendlyError({ message: "mime type image/heic is not supported" })).toBe(UPLOAD_COPY.wrongType);
   });
 
+  it("lets our own plain-language SQL exceptions through", () => {
+    expect(friendlyError({ code: "P0001", message: "This Space is full." })).toBe("This Space is full.");
+  });
+
+  it("hides SQL exceptions that read as technical", () => {
+    expect(friendlyError({ code: "P0001", message: "Demote them as a host (demote_host) before banning them." })).toBe(
+      ERROR_LINE,
+    );
+    expect(friendlyError({ code: "P0001", message: "Not a recognized notification kind: %" })).toBe(ERROR_LINE);
+  });
+
   it("handles empty input", () => {
     expect(friendlyError(undefined)).toBe(ERROR_LINE);
     expect(friendlyError(null)).toBe(ERROR_LINE);

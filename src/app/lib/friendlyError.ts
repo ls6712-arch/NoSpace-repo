@@ -6,6 +6,11 @@ import { ERROR_LINE, OFFLINE_LINE, UPLOAD_COPY } from "./stateCopy";
  * person to read. Raw database text never reaches the screen: anything
  * this doesn't recognise becomes the one shared error line. The original
  * error should still go to console.warn at the call site for debugging.
+ *
+ * The one exception: messages our own SQL functions raise on purpose
+ * (`raise exception 'This Space is full.'`, sqlstate P0001) are already
+ * written for people, so they pass through, unless they read as
+ * technical (an identifier, a placeholder, brackets).
  */
 export function friendlyError(err: unknown, fallback: string = ERROR_LINE): string {
   const text = errorText(err).toLowerCase();
@@ -21,7 +26,19 @@ export function friendlyError(err: unknown, fallback: string = ERROR_LINE): stri
   if (status === 415 || /mime type|invalid_mime|not supported/.test(text)) {
     return UPLOAD_COPY.wrongType;
   }
+  const authored = authoredMessage(err);
+  if (authored) return authored;
   return fallback;
+}
+
+function authoredMessage(err: unknown): string | null {
+  if (!err || typeof err !== "object") return null;
+  const e = err as { code?: unknown; message?: unknown };
+  if (e.code !== "P0001" || typeof e.message !== "string") return null;
+  const msg = e.message.trim();
+  if (!msg || msg.length > 160) return null;
+  if (/[_%(){}[\]<>]|\b(null|uuid|sqlstate|function|relation|column)\b/i.test(msg)) return null;
+  return msg;
 }
 
 function errorText(err: unknown): string {
