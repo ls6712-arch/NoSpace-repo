@@ -323,8 +323,8 @@ export function AddMoment() {
       {!added && (
         <div className="fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom,0px))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur lg:bottom-0 lg:pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
           <div className="mx-auto max-w-md">
-            <Button variant="coral" className="h-11 w-full rounded-xl" disabled={!canSave} onClick={save}>
-              {saving ? "Saving…" : "Save Moment"}
+            <Button busy={saving} variant="coral" className="h-11 w-full rounded-xl" disabled={!canSave} onClick={save}>
+              Save Moment
             </Button>
           </div>
         </div>

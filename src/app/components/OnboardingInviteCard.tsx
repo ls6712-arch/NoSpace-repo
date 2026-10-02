@@ -101,8 +101,8 @@ export function OnboardingInviteCard({
             <Button variant="outline" onClick={onDone}>
               Not now
             </Button>
-            <Button variant="coral" disabled={creating} onClick={create}>
-              {creating ? "Creating…" : "Create invite link"}
+            <Button busy={creating} variant="coral" disabled={creating} onClick={create}>
+              Create invite link
             </Button>
           </div>
         </>

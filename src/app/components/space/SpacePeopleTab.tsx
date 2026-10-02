@@ -109,10 +109,11 @@ export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boo
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={inviteBusyId === r.user_id || invitedIds.has(r.user_id)}
+                  busy={inviteBusyId === r.user_id}
+                  disabled={invitedIds.has(r.user_id)}
                   onClick={() => invite(r.user_id)}
                 >
-                  {invitedIds.has(r.user_id) ? "Invited" : inviteBusyId === r.user_id ? "Inviting…" : "Invite as co-host"}
+                  {invitedIds.has(r.user_id) ? "Invited" : "Invite as co-host"}
                 </Button>
               )
             )}

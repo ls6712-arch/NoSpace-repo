@@ -428,8 +428,8 @@ function CoverStep({
           <Button variant="outline" size="lg" disabled={finishing} onClick={onSkip}>
             Start with a blank page
           </Button>
-          <Button variant="coral" size="lg" disabled={finishing} onClick={onContinue}>
-            {finishing ? "Finishing…" : "Continue"}
+          <Button busy={finishing} variant="coral" size="lg" disabled={finishing} onClick={onContinue}>
+            Continue
           </Button>
         </div>
       </div>

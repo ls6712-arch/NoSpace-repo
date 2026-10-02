@@ -5,6 +5,7 @@ import { captureOpener, restoreFocus } from "../lib/returnFocus";
 import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
 import { PostMedia } from "./PostMedia";
+import { Button } from "./ui/button";
 
 /** True only for a real, loadable upload — a placeholder illustration makes
  * a poor cover photo, so it never shows up as a swatch option here. */
@@ -159,15 +160,9 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={save}
-              disabled={saving}
-              className="w-full rounded px-4 py-2.5 text-sm text-white transition-opacity disabled:opacity-60"
-              style={{ backgroundColor: "var(--coral-deep)" }}
-            >
-              {saving ? "Saving…" : "Done"}
-            </button>
+            <Button type="button" variant="coral" className="h-auto w-full py-2.5" onClick={save} busy={saving}>
+              Done
+            </Button>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>

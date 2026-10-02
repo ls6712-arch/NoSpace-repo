@@ -119,8 +119,8 @@ export function JoinPursuit() {
               </Button>
             </Link>
           ) : user ? (
-            <Button variant="coral" className="h-11 w-full rounded-xl" onClick={join} disabled={joining}>
-              {joining ? "Joining…" : "Join"}
+            <Button busy={joining} variant="coral" className="h-11 w-full rounded-xl" onClick={join} disabled={joining}>
+              Join
             </Button>
           ) : (
             <>

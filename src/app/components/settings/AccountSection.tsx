@@ -131,8 +131,8 @@ function PasswordChangeRow() {
         <Button variant="outline" size="sm" onClick={reset} disabled={saving}>
           Cancel
         </Button>
-        <Button size="sm" onClick={save} disabled={saving}>
-          {saving ? "Saving…" : "Change password"}
+        <Button busy={saving} size="sm" onClick={save} disabled={saving}>
+          Change password
         </Button>
       </div>
     </div>

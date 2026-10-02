@@ -480,7 +480,7 @@ function RequestToJoinButton({
       )}
       <div className="mt-2 flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
-        <Button variant="coral" size="sm" onClick={submit} disabled={busy}>{busy ? "Sending…" : "Send request"}</Button>
+        <Button busy={busy} variant="coral" size="sm" onClick={submit} disabled={busy}>Send request</Button>
       </div>
     </div>
   );

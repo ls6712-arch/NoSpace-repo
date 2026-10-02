@@ -434,8 +434,15 @@ export function InviteDialog({
               </div>
             </>
           ) : (
-            <Button variant="coral" size="sm" className="mt-2" onClick={makeLink} disabled={!user || linkState === "making"}>
-              <Copy className="size-3.5" /> {linkState === "making" ? "Making link…" : "Copy invite link"}
+            <Button
+              variant="coral"
+              size="sm"
+              className="mt-2"
+              onClick={makeLink}
+              busy={linkState === "making"}
+              disabled={!user}
+            >
+              <Copy className="size-3.5" /> Copy invite link
             </Button>
           )}
         </div>

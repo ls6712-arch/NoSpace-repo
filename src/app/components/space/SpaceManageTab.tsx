@@ -270,8 +270,8 @@ export function SpaceManageTab({
                 <p className="mt-1 text-xs text-muted-foreground">
                   You were here before it lost its host — you can step up.
                 </p>
-                <Button className="mt-3" variant="coral" size="sm" disabled={busy === "claim"} onClick={claimHosting}>
-                  {busy === "claim" ? "Claiming…" : "Claim hosting"}
+                <Button busy={busy === "claim"} className="mt-3" variant="coral" size="sm" disabled={busy === "claim"} onClick={claimHosting}>
+                  Claim hosting
                 </Button>
               </>
             ) : (
@@ -465,8 +465,8 @@ export function SpaceManageTab({
                 <Input value={deleteConfirmName} onChange={(e) => setDeleteConfirmName(e.target.value)} placeholder={space.name} />
               </>
             )}
-            <Button size="sm" variant="outline" className="text-destructive" disabled={busy === "delete"} onClick={startDeletion}>
-              {busy === "delete" ? "Working…" : "Request deletion"}
+            <Button busy={busy === "delete"} size="sm" variant="outline" className="text-destructive" disabled={busy === "delete"} onClick={startDeletion}>
+              Request deletion
             </Button>
           </div>
         )}

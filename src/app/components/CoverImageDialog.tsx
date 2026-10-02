@@ -132,8 +132,8 @@ export function CoverImageDialog({
             </div>
           </div>
 
-          <Button variant="coral" className="w-full" disabled={saving} onClick={save}>
-            {saving ? "Saving…" : "Save"}
+          <Button busy={saving} variant="coral" className="w-full" disabled={saving} onClick={save}>
+            Save
           </Button>
 
           {project.coverImagePath && (

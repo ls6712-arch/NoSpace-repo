@@ -80,12 +80,13 @@ export function Welcome() {
           />
           {error && <p className="text-xs text-destructive">{error}</p>}
           <Button
+            busy={claiming}
             variant="coral"
             className="h-11 w-full rounded-xl"
             disabled={claiming || !code.trim()}
             onClick={submit}
           >
-            {claiming ? "Checking…" : "Continue"}
+            Continue
           </Button>
         </div>
 

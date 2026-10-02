@@ -1166,8 +1166,8 @@ export function Log() {
             <Link to="/login?redirect=/create">
               <Button variant="coral">Log in or sign up</Button>
             </Link>
-            <Button variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
-              {saving ? "Saving…" : "Just keep it for myself"}
+            <Button busy={saving} variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
+              Just keep it for myself
             </Button>
           </div>
         </div>
@@ -1640,13 +1640,14 @@ export function Log() {
             separate "Save this moment" that produced the same private
             result as "Share this moment → Only you". */}
         <Button
+          busy={saving}
           variant="coral"
           size="lg"
           className="w-full"
           disabled={!hasSomething || saving}
           onClick={publish}
         >
-          {saving ? "Saving…" : audience === "private" ? "Keep it private" : "Share"}
+          {audience === "private" ? "Keep it private" : "Share"}
         </Button>
 
         {!hasSomething && (

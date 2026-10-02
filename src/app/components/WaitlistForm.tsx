@@ -76,8 +76,8 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
         />
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
-      <Button type="submit" variant="outline" className="w-full" disabled={submitting || !email.trim()}>
-        {submitting ? "Joining…" : "Join the waitlist"}
+      <Button busy={submitting} type="submit" variant="outline" className="w-full" disabled={submitting || !email.trim()}>
+        Join the waitlist
       </Button>
     </form>
   );

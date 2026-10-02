@@ -474,8 +474,8 @@ export function SpaceForm({
         <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={saving}>
           Cancel
         </Button>
-        <Button type="submit" variant="coral" disabled={saving || uploading}>
-          {saving ? "Saving…" : mode === "create" ? "Create Space" : "Save changes"}
+        <Button busy={saving} type="submit" variant="coral" disabled={saving || uploading}>
+          {mode === "create" ? "Create Space" : "Save changes"}
         </Button>
       </div>
     </form>

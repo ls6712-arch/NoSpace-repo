@@ -175,8 +175,8 @@ function VisibilityDialog({
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button variant="coral" size="sm" onClick={save} disabled={saving}>
-            {saving ? "Saving…" : "Save"}
+          <Button busy={saving} variant="coral" size="sm" onClick={save} disabled={saving}>
+            Save
           </Button>
         </div>
       </DialogContent>

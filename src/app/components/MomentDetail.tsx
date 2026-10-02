@@ -546,8 +546,8 @@ export function MomentDetail({
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="coral" size="sm" onClick={save} disabled={saving}>
-                {saving ? "Saving…" : "Save changes"}
+              <Button busy={saving} variant="coral" size="sm" onClick={save} disabled={saving}>
+                Save changes
               </Button>
               <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
                 Cancel

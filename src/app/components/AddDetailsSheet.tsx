@@ -176,8 +176,8 @@ export function AddDetailsSheet({
           </div>
 
           {error && <p className="text-xs text-destructive">{error}</p>}
-          <Button variant="coral" className="w-full" disabled={saving} onClick={save}>
-            {saving ? "Saving…" : "Save details"}
+          <Button busy={saving} variant="coral" className="w-full" disabled={saving} onClick={save}>
+            Save details
           </Button>
         </div>
       </SheetContent>
