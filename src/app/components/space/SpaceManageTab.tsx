@@ -370,7 +370,7 @@ export function SpaceManageTab({
         <h3 className="mb-2 text-small font-medium">Members</h3>
         <ul className="divide-y divide-[var(--hairline)]">
           {members.map((m) => (
-            <li key={m.user_id} className="flex items-center justify-between py-2">
+            <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 py-2">
               <span className="text-small">
                 {m.displayName}
                 {m.role === "host" && <span className="ml-1.5 text-caption text-muted-foreground">Host</span>}
