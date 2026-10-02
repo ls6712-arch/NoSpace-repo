@@ -1,8 +1,14 @@
 :root {
   color-scheme: light;
-  --font-size: 16px;
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  /* 100%, not 16px: a px root ignores the reader's browser/OS default text
+     size, which would make every rem token below fixed in practice. */
+  --font-size: 100%;
+  /* Each webfont is followed by a metric-matched local fallback (fonts.css)
+     and then the platform UI fonts, so the swap from fallback to webfont
+     doesn't reflow the page and Android, iOS and desktop all land on the
+     same family once it loads. */
+  --font-heading: 'Space Grotesk', 'Space Grotesk Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   /* Warm high-contrast serif — used for the wordmark, people's names, and
      hobby titles, where the app should feel like a well-made object rather
@@ -193,6 +199,38 @@
   --gen-art-hair-3: #1E1512;
   --gen-art-hair-4: #8A5A32;
 
+  /* ── P0 Foundations tokens (docs/design-audit.md) ────────────────────────
+     The one scale every screen uses. Type, radius and easing don't change
+     between modes, so they live in the @theme block below; everything here
+     either changes in dark (.dark) or under reduced motion. */
+
+  /* Text and icons on photos and video. Identical in both modes — the media
+     underneath doesn't change with the theme — and always sits on a
+     bg-scrim layer, never bare on an image. */
+  --on-media: #FFFFFF;
+  /* Text and icons on --coral-deep or --gradient-brand fills. Those fills
+     keep their color in both modes, so this does too (deliberately not
+     --accent-foreground, which goes dark in dark mode). */
+  --on-brand: #FFFFFF;
+  --scrim: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+
+  /* Elevation, light mode only. Dark mode has no shadows: elevation there
+     is --surface plus a 1px --border (see .dark). */
+  --shadow-card: 0 8px 24px rgb(43 38 34 / 0.06);
+  --shadow-overlay: 0 16px 40px -12px rgb(43 38 34 / 0.24), 0 2px 8px rgb(43 38 34 / 0.06);
+
+  /* Motion: fast = hover/press, base = enter/exit (pages and panels too).
+     Both drop to 0ms under prefers-reduced-motion (end of file). */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+
+  /* Device safe areas (notch, home indicator, rounded corners). Needs
+     viewport-fit=cover in index.html; 0px everywhere else. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
   /* ── shadcn/ui mappings ───────────────────────────────────────────────────
      The ui/ primitives consume these names, so pointing them at the semantic
      tokens above converts every button, dialog, select, tab and input at once
@@ -281,6 +319,12 @@
   --destructive: #D9776A;
   --destructive-foreground: #1C1816;
   --surface-elevated: #2E2822;
+
+  /* No shadows in dark. `0 0 #0000` rather than `none` because Tailwind
+     composes --tw-shadow into a comma list with ring shadows, where a bare
+     `none` would invalidate the whole box-shadow (rings included). */
+  --shadow-card: 0 0 #0000;
+  --shadow-overlay: 0 0 #0000;
 
   /* Lightened from the light-theme value so the "ink" tile still reads as
      its own block against the dark background (#1C1816) instead of nearly
@@ -458,7 +502,53 @@
   background: var(--cream);
 }
 
+/* `dark:` follows the in-app theme (the .dark class ThemeContext puts on
+   <html>), not the OS setting — Tailwind v4's default is the media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Radius: cards vs. controls (buttons, inputs, chips, tabs). rounded-full
+     stays for avatars, dots, knobs, spinners and other true circles only. */
+  --radius-card: 12px;
+  --radius-control: 8px;
+
+  /* Type, in rem so the reader's text-size setting scales all of it.
+     Nothing below 12px. text-body is also the size of every form field
+     (iOS zooms the page on focus below 16px). */
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.4;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.45;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.4;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.3;
+  --text-display: clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem);
+  --text-display--line-height: 1.2;
+  /* Marketing landing page (Home.tsx) only — the one exception to the scale
+     above; scripts/design-audit.py flags it anywhere else. */
+  --text-hero: clamp(2.5rem, 1.5rem + 4vw, 4.75rem);
+  --text-hero--line-height: 1.05;
+
+  /* The one easing curve, for both durations. */
+  --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
 @theme inline {
+  --color-on-media: var(--on-media);
+  --color-on-brand: var(--on-brand);
+  /* Registered by reference (not value) so the .dark and reduced-motion
+     overrides above reach the utilities at runtime. */
+  --shadow-card: var(--shadow-card);
+  --shadow-overlay: var(--shadow-overlay);
+  --transition-duration-fast: var(--duration-fast);
+  --transition-duration-base: var(--duration-base);
+  /* Bare `transition`/`transition-colors` (no duration-*) default to the
+     hover/press token instead of Tailwind's own 150ms + easing. */
+  --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-standard);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -542,17 +632,10 @@
   --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
-  /* Redesign-brief scale (docs/CLAUDE-redesign-brief.md §1: "Radius 12px
-     cards, 8px buttons and inputs. Retire pill buttons and rounded-2xl/3xl")
-     — named tokens rather than retuning --radius itself, since that base
-     scale still drives every not-yet-restyled screen; retuning it directly
-     would ripple past this primitives pass into every rounded-xl/2xl/3xl
-     usage app-wide. Primitives restyled under Task B opt into these
-     explicitly (rounded-btn, rounded-card) instead. */
+  /* Retired — kept only until the Phase 2 radius sweeps move their users
+     over: rounded-btn → rounded-control, rounded-[var(--radius-moment)] →
+     rounded-card. Deleted in the same commits. */
   --radius-btn: 8px;
-  --radius-card: 12px;
-  /* MomentCard's own media radius (docs/moment-card-and-reactions-spec.md
-     §2.1: "radius 22px, define one radius token, do not scatter values"). */
   --radius-moment: 22px;
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -571,11 +654,23 @@
 
   html {
     font-size: var(--font-size);
+    /* Stops iOS inflating text in landscape; the reader's own text-size
+       setting still applies through the rem scale. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* In-flow content clears a landscape notch; fixed bars add their own
+       --safe-* padding. */
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
   }
 
   /* Paper-grain — a faint physical texture over the whole app, not a
@@ -627,28 +722,49 @@
   }
 
   h4 {
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
   label {
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
   button {
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  input {
-    font-size: var(--text-base);
+  input,
+  textarea,
+  select {
+    font-size: var(--text-body);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+}
+
+/* Readability layer for text on photos and video; pair with text-on-media.
+   A gradient, so it's a utility rather than a --color-* token. */
+@utility bg-scrim {
+  background-image: var(--scrim);
+}
+
+/* Full-height layouts: 100dvh tracks the mobile browser's collapsing
+   toolbars; the 100vh line is the fallback for browsers without dvh.
+   (Tailwind's own min-h-screen is a bare 100vh and can't be overridden.) */
+@utility min-h-viewport {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+@utility h-viewport {
+  height: 100vh;
+  height: 100dvh;
 }
 
 @layer components {
@@ -826,6 +942,7 @@
     top: 0;
     display: flex;
     height: 100vh;
+    height: 100dvh;
     align-items: center;
     /* Stays hidden (inherited from the base rule above) — this is the
        viewport-width "window" the track's translateX moves the cards
@@ -1724,5 +1841,14 @@ summary:focus-visible,
   *, *::before, *::after {
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Both motion tokens collapse to 0ms, so anything timed with them (and every
+   bare transition, via --default-transition-duration) is instant. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
   }
 }
