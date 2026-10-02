@@ -40,14 +40,14 @@ export function PursuitItem({ pursuit, index = 0 }: { pursuit: Project; index?: 
 
   return (
     <div
-      className="group relative flex flex-col gap-3 rounded-card border border-border bg-card p-4 shadow-card transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-overlay"
+      className="group relative flex flex-col gap-3 rounded-card border border-border bg-card p-4 shadow-card transition-[border-color,transform,box-shadow] duration-fast hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-overlay"
       style={{ transitionDelay: `${Math.min(index, 7) * 45}ms` }}
     >
       <button
         type="button"
         onClick={() => setGoalOpen(true)}
         aria-label={`Edit the goal for ${pursuit.title}`}
-        className="absolute right-3 top-3 z-10 flex size-7 items-center justify-center rounded-control border border-border bg-card text-muted-foreground opacity-0 transition-opacity duration-150 hover:text-foreground focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+        className="absolute right-3 top-3 z-10 flex size-7 items-center justify-center rounded-control border border-border bg-card text-muted-foreground opacity-0 transition-opacity duration-fast hover:text-foreground focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
       >
         <Target className="size-3.5" strokeWidth={1.8} />
       </button>
@@ -87,7 +87,7 @@ export function PursuitItem({ pursuit, index = 0 }: { pursuit: Project; index?: 
           track({ name: "pursuits_in_progress_item_tapped", pursuitId: pursuit.id });
         }}
         aria-label={`Log a Moment on ${pursuit.title}`}
-        className="mt-auto flex size-8 items-center justify-center self-end rounded-control text-on-brand transition-transform duration-150 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)]"
+        className="mt-auto flex size-8 items-center justify-center self-end rounded-control text-on-brand transition-transform duration-fast hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)]"
         style={{ backgroundColor: "var(--coral-deep)" }}
       >
         <Plus className="size-4" strokeWidth={2.2} />

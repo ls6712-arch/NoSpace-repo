@@ -215,7 +215,7 @@ function CornerTile({
             hobbySlug={item.hobbySlug}
             seed={item.lastMediaId ?? item.key}
             preview
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] motion-reduce:transition-none"
+            className="h-full w-full object-cover transition-transform duration-fast group-hover:scale-[1.02] motion-reduce:transition-none"
           />
         ) : item.subSlug ? (
           <SubHobbyArt

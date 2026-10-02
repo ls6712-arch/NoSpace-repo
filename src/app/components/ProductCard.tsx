@@ -26,12 +26,12 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link to={`/product/${product.id}`}>
-      <Card className="group overflow-hidden hover:border-border transition-all duration-300">
+      <Card className="group overflow-hidden hover:border-border transition-all duration-fast">
         <div className="relative aspect-square overflow-hidden bg-surface-muted">
           <GeneratedArt
             hobbySlug={product.hobbySlug}
             seed={product.id}
-            className="h-full w-full transition-transform duration-500 group-hover:scale-110"
+            className="h-full w-full transition-transform duration-fast group-hover:scale-110"
           />
           <Badge variant="outline" className="absolute top-3 left-3 bg-scrim-solid/40 backdrop-blur-md border-border">
             <Meta.icon className="size-3" />

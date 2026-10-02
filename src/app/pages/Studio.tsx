@@ -369,6 +369,7 @@ export function Studio() {
               initial={reduceMotion ? false : { rotateY: direction > 0 ? 70 : -70, opacity: 0 }}
               animate={{ rotateY: 0, opacity: 1 }}
               exit={reduceMotion ? undefined : { rotateY: direction > 0 ? -70 : 70, opacity: 0 }}
+              // design-token-ignore: spring, not a fixed duration; initial/exit are off under reduced motion
               transition={{ type: "spring", stiffness: 260, damping: 32 }}
               style={{
                 transformStyle: "preserve-3d",

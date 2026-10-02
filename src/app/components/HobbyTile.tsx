@@ -40,13 +40,13 @@ export function HobbyTile({
             alt=""
             loading="lazy"
             onError={() => setPhotoFailed(true)}
-            className="h-auto w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-[1.06]"
+            className="h-auto w-full aspect-square object-cover transition-transform duration-fast group-hover:scale-[1.06]"
           />
         ) : (
           <SubHobbyArt
             hobbySlug={hobbySlug}
             subSlug={subSlug}
-            className="w-full h-auto aspect-square transition-transform duration-300 group-hover:scale-[1.06]"
+            className="w-full h-auto aspect-square transition-transform duration-fast group-hover:scale-[1.06]"
           />
         )}
         {!!count && (

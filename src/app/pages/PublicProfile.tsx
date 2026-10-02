@@ -588,7 +588,7 @@ export function PublicProfile() {
               <GeneratedArt
                 hobbySlug={primaryCorner.spaceSlug}
                 seed={primaryCorner.slug}
-                className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+                className="h-full w-full transition-transform duration-fast group-hover:scale-105"
               />
             </div>
             <div className="flex flex-1 flex-wrap items-center justify-between gap-4 p-6">

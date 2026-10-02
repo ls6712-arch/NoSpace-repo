@@ -43,6 +43,7 @@ const COVER_TEXTURES = [
 /** Spring, not linear-ease, everywhere motion appears on this page — the
  * step transition, the tag chips traveling forward, and the cover's own
  * pieces settling into place in step 2. Nowhere else gets motion. */
+// design-token-ignore: spring, not a fixed duration; every use below is switched off by reduceMotion
 const SPRING = { type: "spring" as const, stiffness: 260, damping: 28 };
 
 /**

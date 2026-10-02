@@ -33,7 +33,7 @@ export function BadgeUnlockToast() {
   const shared = isBadgeShared(badge.id);
 
   return (
-    <div className="fixed bottom-[calc(1.25rem+var(--safe-bottom))] right-[calc(1.25rem+var(--safe-right))] z-[60] w-[calc(100%-2.5rem)] max-w-sm animate-in slide-in-from-bottom-4 fade-in">
+    <div className="fixed bottom-[calc(1.25rem+var(--safe-bottom))] right-[calc(1.25rem+var(--safe-right))] z-[60] w-[calc(100%-2.5rem)] max-w-sm animate-in duration-base slide-in-from-bottom-4 fade-in">
       <div className="glass-panel shadow-overlay flex items-start gap-3 rounded-card p-4">
         <span
           className="flex size-10 shrink-0 items-center justify-center rounded-full"

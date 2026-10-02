@@ -61,13 +61,13 @@ export function SpacesBrowser({ query }: { query: string }) {
             <Link
               key={s.id}
               to={`/space/${s.slug}`}
-              className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
+              className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-fast ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
             >
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
                 <img
                   src={s.cover_image}
                   alt=""
-                  className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                  className="size-full object-cover transition-transform duration-fast ease-standard group-hover:scale-110"
                 />
                 <span className="absolute right-2 top-2 rounded-control bg-scrim-solid/60 px-2 py-0.5 text-caption text-on-media">
                   {s.access === "open" ? "Open" : "Closed"}

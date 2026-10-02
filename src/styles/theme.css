@@ -749,6 +749,7 @@
 
   /* Theme changes cross-fade rather than snap — toggled for ~400ms by
      ThemeContext.tsx around a preference/OS change, never on first paint. */
+  /* design-token-ignore: theme cross-fade, 400ms by the redesign brief; ThemeContext's 420ms timer pairs with it */
   .theme-transition,
   .theme-transition * {
     transition: background-color 400ms ease-out, color 400ms ease-out,
@@ -875,10 +876,14 @@
     padding: 0 1rem;
     color: var(--offwhite);
     font-size: var(--text-caption);
-    transition: border-color 180ms ease, transform 180ms ease;
+    transition: border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-hero-secondary-link:hover { border-color: var(--violet-electric); transform: translateY(-1px); }
+  @media (hover: hover) {
+    .ns-hero-secondary-link:hover {
+   border-color: var(--violet-electric); transform: translateY(-1px); 
+    }
+  }
 
   /* The hero's single large illustration — a real image now
      (src/assets/hero-worlds.png), a big generously-rounded window rather
@@ -901,10 +906,14 @@
     color: var(--violet-electric-bright);
     font-size: var(--text-small);
     font-weight: 500;
-    transition: color 180ms ease, gap 180ms ease;
+    transition: color var(--duration-fast) var(--ease-standard), gap var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-text-link:hover { gap: 0.65rem; color: var(--offwhite); }
+  @media (hover: hover) {
+    .ns-text-link:hover {
+   gap: 0.65rem; color: var(--offwhite); 
+    }
+  }
 
   .ns-paper-panel {
     position: relative;
@@ -937,23 +946,35 @@
     border: 1px solid var(--hairline);
     background: var(--surface-elevated);
     box-shadow: var(--shadow-card);
-    transition: transform 280ms cubic-bezier(.22,.61,.36,1), box-shadow 280ms ease, border-color 280ms ease;
+    transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-value-card:hover,
   .ns-value-card:focus-within {
     transform: translate(0, -4px);
     border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
     box-shadow: var(--shadow-overlay);
   }
 
-  .ns-value-card-icon {
-    transition: transform 280ms cubic-bezier(.22,.61,.36,1);
+  @media (hover: hover) {
+    .ns-value-card:hover {
+      transform: translate(0, -4px);
+      border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
+      box-shadow: var(--shadow-overlay);
+    }
   }
 
-  .ns-value-card:hover .ns-value-card-icon,
+  .ns-value-card-icon {
+    transition: transform var(--duration-fast) var(--ease-standard);
+  }
+
   .ns-value-card:focus-within .ns-value-card-icon {
     transform: translateY(-3px) rotate(-4deg);
+  }
+
+  @media (hover: hover) {
+    .ns-value-card:hover .ns-value-card-icon {
+      transform: translateY(-3px) rotate(-4deg);
+    }
   }
 
   /* ── Whatever pulls you in — the Worlds section ─────────────────────────
@@ -1027,6 +1048,7 @@
     pointer-events: none;
   }
 
+  /* design-token-ignore: ambient loops below (flow, float, pulse, breathe, sway, drift, marquee, twinkle); long, decorative, off under reduced motion */
   .ns-worlds-path path {
     fill: none;
     stroke: color-mix(in srgb, var(--coral) 55%, var(--yellow) 45%);
@@ -1048,25 +1070,42 @@
     border: 1px solid var(--hairline);
     background: var(--surface-elevated);
     box-shadow: var(--shadow-card);
-    transition: transform 340ms cubic-bezier(.22,.61,.36,1), box-shadow 340ms ease;
+    transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-world-card:hover,
   .ns-world-card:focus-within {
     transform: translateY(-10px) scale(1.015);
     box-shadow: var(--shadow-overlay);
   }
 
-  .ns-world-card:hover .ns-world-card-life,
+  @media (hover: hover) {
+    .ns-world-card:hover {
+      transform: translateY(-10px) scale(1.015);
+      box-shadow: var(--shadow-overlay);
+    }
+  }
+
+  /* design-token-ignore: ambient loop */
   .ns-world-card:focus-within .ns-world-card-life {
     animation-duration: 1.6s;
   }
 
+  @media (hover: hover) {
+    .ns-world-card:hover .ns-world-card-life {
+      animation-duration: 1.6s;
+    }
+  }
+
   /* Real photo cards get the same gentle push-in HobbyCategoryCard's Space
      photos use, instead of the illustrated fallback's idle breathe/sway. */
-  .ns-world-card:hover img,
   .ns-world-card:focus-within img {
     transform: scale(1.06);
+  }
+
+  @media (hover: hover) {
+    .ns-world-card:hover img {
+      transform: scale(1.06);
+    }
   }
 
   .ns-world-card-label {
@@ -1083,13 +1122,19 @@
 
   .ns-space-card {
     background: var(--surface-elevated);
-    transition: transform 300ms ease, box-shadow 300ms ease;
+    transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
   }
 
-  .group:hover .ns-space-card,
   .group:focus-visible .ns-space-card {
     box-shadow: var(--shadow-overlay);
     transform: translate(-3px, -3px);
+  }
+
+  @media (hover: hover) {
+    .group:hover .ns-space-card {
+      box-shadow: var(--shadow-overlay);
+      transform: translate(-3px, -3px);
+    }
   }
 
   .ns-space-card-index {
@@ -1257,9 +1302,11 @@
     color: var(--muted-foreground);
   }
 
-  .ns-you-avatar-icon-row button:hover {
-    border-color: var(--foreground);
-    color: var(--foreground);
+  @media (hover: hover) {
+    .ns-you-avatar-icon-row button:hover {
+      border-color: var(--foreground);
+      color: var(--foreground);
+    }
   }
 
   
@@ -1294,11 +1341,13 @@
     font-size: var(--text-caption);
     font-family: var(--font-serif);
     color: var(--ink, var(--forest-ink));
-    transition: border-color 150ms ease;
+    transition: border-color var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-you-tags--pills .ns-pill:hover {
-    border-color: color-mix(in srgb, var(--coral-deep) 45%, var(--line, var(--hairline)));
+  @media (hover: hover) {
+    .ns-you-tags--pills .ns-pill:hover {
+      border-color: color-mix(in srgb, var(--coral-deep) 45%, var(--line, var(--hairline)));
+    }
   }
 
   
@@ -1348,7 +1397,6 @@
     
     
     
-    
   }
 
   
@@ -1382,7 +1430,11 @@
     transform: rotate(-12deg);
   }
 
-  .ns-wordmark:hover .ns-wordmark-mark { background: var(--coral-deep); }
+  @media (hover: hover) {
+    .ns-wordmark:hover .ns-wordmark-mark {
+   background: var(--coral-deep); 
+    }
+  }
 
 
   .font-hud {
@@ -1390,6 +1442,7 @@
     letter-spacing: 0.02em;
   }
 
+  /* design-token-ignore: ambient loop */
   .text-gradient-animated {
     background-image: var(--gradient-ink);
     background-size: 200% 200%;
@@ -1399,18 +1452,22 @@
     animation: gradient-shift 12s ease infinite;
   }
 
+  /* design-token-ignore: ambient loop */
   .animate-float-slow {
     animation: float 16s ease-in-out infinite;
   }
 
+  /* design-token-ignore: ambient loop */
   .animate-float-slower {
     animation: float 22s ease-in-out infinite reverse;
   }
 
+  /* design-token-ignore: ambient loop */
   .animate-pulse-soft {
     animation: pulse-soft 3.2s ease-in-out infinite;
   }
 
+  /* design-token-ignore: ambient loop */
   .generated-art-float {
     animation: generated-art-float 5s ease-in-out infinite;
     transform-origin: center;
@@ -1425,8 +1482,11 @@
     transform-origin: center;
     will-change: transform;
   }
+  /* design-token-ignore: ambient loop */
   .ns-breathe { animation: ns-breathe 6.5s ease-in-out infinite; }
+  /* design-token-ignore: ambient loop */
   .ns-sway    { transform-origin: bottom center; animation: ns-sway 7.5s ease-in-out infinite; }
+  /* design-token-ignore: ambient loop */
   .ns-drift   { animation: ns-drift 34s ease-in-out infinite alternate; }
   
 
@@ -1435,8 +1495,9 @@
      left parked at opacity 0 if animations never run. */
   .ns-enter {
     opacity: 0;
-    animation: ns-rise .62s cubic-bezier(.22,.61,.36,1) forwards;
+    animation: ns-rise var(--duration-base) var(--ease-standard) forwards;
   }
+  /* design-token-ignore: stagger delays, not durations */
   .ns-enter-1 { animation-delay: .05s; }
   .ns-enter-2 { animation-delay: .16s; }
   .ns-enter-3 { animation-delay: .27s; }
@@ -1451,7 +1512,7 @@
   .ns-reveal {
     opacity: 0;
     transform: translateY(18px);
-    transition: opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+    transition: opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
   }
   .ns-reveal.is-visible {
     opacity: 1;
@@ -1465,15 +1526,17 @@
   .ns-reveal-grid > * {
     opacity: 0;
     transform: translateY(14px);
-    transition: opacity .5s cubic-bezier(.22,.61,.36,1), transform .5s cubic-bezier(.22,.61,.36,1);
+    transition: opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
   }
   .ns-reveal-grid.is-visible > * { opacity: 1; transform: translateY(0); }
+  /* design-token-ignore: stagger delays, not durations */
   .ns-reveal-grid.is-visible > *:nth-child(2) { transition-delay: 45ms; }
   .ns-reveal-grid.is-visible > *:nth-child(3) { transition-delay: 90ms; }
   .ns-reveal-grid.is-visible > *:nth-child(4) { transition-delay: 135ms; }
   .ns-reveal-grid.is-visible > *:nth-child(5) { transition-delay: 180ms; }
   .ns-reveal-grid.is-visible > *:nth-child(n+6) { transition-delay: 220ms; }
 
+  /* design-token-ignore: ambient loop */
   .generated-art-sparkle {
     animation: generated-art-twinkle 2.4s ease-in-out infinite;
     transform-origin: center;
@@ -1580,6 +1643,7 @@
   }
 }
 
+/* design-token-ignore: ambient loop */
 .animate-marquee {
   animation: marquee 24s linear infinite;
 }
@@ -1666,8 +1730,12 @@ summary:focus-visible,
     transform: none !important;
     transition: none !important;
   }
+  /* Catch-all, so an animation nobody listed above (Tailwind's animate-pulse,
+     tw-animate-css enters, a future loop) still respects the setting. */
   *, *::before, *::after {
     transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }
 }

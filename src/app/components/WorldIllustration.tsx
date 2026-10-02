@@ -259,7 +259,7 @@ export function WorldIllustration({
           alt=""
           loading="lazy"
           onError={() => setPhotoFailed(true)}
-          className="h-full w-full object-cover transition-transform duration-[700ms] ease-out"
+          className="h-full w-full object-cover transition-transform duration-fast ease-standard"
         />
       </div>
     );

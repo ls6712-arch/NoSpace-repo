@@ -160,7 +160,7 @@ export function ProductDetail() {
                       <GeneratedArt
                         hobbySlug={item.hobbySlug}
                         seed={item.id}
-                        className="w-full h-full transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full transition-transform duration-fast group-hover:scale-110"
                       />
                     </div>
                     <div className="p-4">

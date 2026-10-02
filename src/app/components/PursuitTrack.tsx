@@ -110,7 +110,8 @@ function Trail({
                 style={
                   reducedMotion
                     ? undefined
-                    : { animation: `ns-rise 500ms ease-out both`, animationDelay: `${i * 30}ms` }
+                    // design-token-ignore: stagger delay, not a duration
+                    : { animation: "ns-rise var(--duration-base) var(--ease-standard) both", animationDelay: `${i * 30}ms` }
                 }
               />
             );

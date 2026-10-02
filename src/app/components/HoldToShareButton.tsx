@@ -101,7 +101,7 @@ export function HoldToShareButton({
     >
       <span
         className="absolute inset-y-0 left-0 bg-accent"
-        style={{ width: `${pct * 100}%`, transition: pct === 0 ? "width 120ms ease-out" : "none" }}
+        style={{ width: `${pct * 100}%`, transition: pct === 0 ? "width var(--duration-fast) var(--ease-standard)" : "none" }}
         aria-hidden="true"
       />
       <span className="relative flex items-center gap-2">

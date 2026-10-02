@@ -1229,6 +1229,7 @@ export function Log() {
             // tracked at once, this box hands itself off into position on
             // the Shelf instead of the grid tile just appearing cold.
             layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
+            // design-token-ignore: spring, not a fixed duration; layout/layoutId are off under reduced motion
             transition={{ type: "spring", stiffness: 260, damping: 28 }}
             className={
               savedTileSettled
@@ -1240,7 +1241,7 @@ export function Log() {
           </motion.div>
           {savedAs === "shared" && !anySaveError && (
             <p
-              className={`-mt-3 mb-3 text-caption text-muted-foreground transition-opacity duration-300 ${
+              className={`-mt-3 mb-3 text-caption text-muted-foreground transition-opacity duration-base ${
                 savedTileSettled ? "opacity-100" : "opacity-0"
               }`}
             >

@@ -12,7 +12,7 @@ export function ProgressBar({ fraction, className = "", thin = false }: { fracti
       aria-valuemax={100}
       aria-valuenow={Math.round(pct)}
     >
-      <div className="h-full rounded-full bg-[var(--coral)] transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
+      <div className="h-full rounded-full bg-[var(--coral)] transition-[width] duration-base ease-standard" style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -71,7 +71,7 @@ export function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={circumference * (1 - pct)}
-          className="transition-[stroke-dashoffset] duration-700 ease-out motion-reduce:transition-none"
+          className="transition-[stroke-dashoffset] duration-base ease-standard motion-reduce:transition-none"
         />
       </svg>
       {children && <span className="absolute inset-0 flex items-center justify-center">{children}</span>}

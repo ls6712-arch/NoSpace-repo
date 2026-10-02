@@ -448,11 +448,11 @@ export function You() {
                 style={{
                   display: "grid",
                   gridTemplateRows: expandedPursuitId ? "1fr" : "0fr",
-                  transition: "grid-template-rows 280ms ease",
+                  transition: "grid-template-rows var(--duration-base) var(--ease-standard)",
                 }}
               >
                 <div style={{ overflow: "hidden" }}>
-                  <div style={{ opacity: expandedPursuitId ? 1 : 0, transition: "opacity 200ms ease" }}>
+                  <div style={{ opacity: expandedPursuitId ? 1 : 0, transition: "opacity var(--duration-base) var(--ease-standard)" }}>
                     {(() => {
                       const renderedPursuit = myPursuits.find((p) => p.id === renderedPursuitId);
                       return (

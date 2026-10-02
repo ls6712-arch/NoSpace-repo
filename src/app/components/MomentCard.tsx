@@ -228,7 +228,7 @@ export function BookmarkOverlay({
       {justAdded && (
         <span
           role="status"
-          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-control bg-[var(--void)] px-2.5 py-1 text-caption text-[var(--offwhite)] shadow-overlay animate-in fade-in"
+          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-control bg-[var(--void)] px-2.5 py-1 text-caption text-[var(--offwhite)] shadow-overlay animate-in duration-base fade-in"
         >
           Saved
         </span>
