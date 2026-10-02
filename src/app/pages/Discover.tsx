@@ -266,13 +266,13 @@ function AllCornersBrowser({ query }: { query: string }) {
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
           to={`/corner/${c.slug}`}
-          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+          className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-base ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
         >
           <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
             <DiscoverSpaceArt
               hobbySlug={c.spaceSlug}
               seed={`${c.spaceSlug}-${c.slug}`}
-              className="transition-transform duration-500 ease-out group-hover:scale-110"
+              className="transition-transform duration-base ease-out group-hover:scale-110"
             />
           </div>
           <div className="px-3 py-2.5">

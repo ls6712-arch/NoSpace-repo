@@ -98,7 +98,7 @@ export function QuietMilestones() {
                 className="flex flex-col items-center gap-2.5"
               >
                 <span
-                  className="flex size-16 items-center justify-center rounded-full transition-opacity duration-200 hover:opacity-80"
+                  className="flex size-16 items-center justify-center rounded-full transition-opacity duration-fast hover:opacity-80"
                   style={badgeDiscStyle(unlocked)}
                 >
                   <Icon className="size-6" strokeWidth={1.5} />
@@ -187,7 +187,7 @@ export function SharedMilestones({
               className="flex w-[82px] shrink-0 flex-col items-center gap-2.5"
             >
               <span
-                className="flex size-16 items-center justify-center rounded-full transition-transform duration-200 hover:scale-105"
+                className="flex size-16 items-center justify-center rounded-full transition-transform duration-fast hover:scale-105"
                 style={badgeDiscStyle(true)}
               >
                 <Icon className="size-6" strokeWidth={1.5} />

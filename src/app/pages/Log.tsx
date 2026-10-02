@@ -64,6 +64,7 @@ import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
+import { ENTER } from "../lib/motion";
 
 /**
  * Logging, choose-first:
@@ -1229,7 +1230,7 @@ export function Log() {
             // tracked at once, this box hands itself off into position on
             // the Shelf instead of the grid tile just appearing cold.
             layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
-            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            transition={ENTER}
             className={
               savedTileSettled
                 ? "mx-auto my-6 w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
@@ -1240,7 +1241,7 @@ export function Log() {
           </motion.div>
           {savedAs === "shared" && !anySaveError && (
             <p
-              className={`-mt-3 mb-3 text-xs text-muted-foreground transition-opacity duration-300 ${
+              className={`-mt-3 mb-3 text-xs text-muted-foreground transition-opacity duration-base ${
                 savedTileSettled ? "opacity-100" : "opacity-0"
               }`}
             >

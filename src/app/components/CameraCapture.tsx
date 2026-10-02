@@ -341,12 +341,14 @@ export function CameraCapture({
                 className="flex size-16 items-center justify-center rounded-full border-4 border-white/90 transition-transform active:scale-95"
               >
                 <span
-                  className={`transition-all ${
+                  // Always 48px and scaled down while recording, so the change
+                  // animates on the compositor instead of re-laying out.
+                  className={`size-12 transition-[transform,border-radius,background-color] ${
                     recording
-                      ? "size-6 rounded-md bg-[var(--coral)]"
+                      ? "scale-50 rounded-xl bg-[var(--coral)]"
                       : captureMode === "video"
-                        ? "size-12 rounded-full bg-[var(--coral)]"
-                        : "size-12 rounded-full bg-white"
+                        ? "rounded-full bg-[var(--coral)]"
+                        : "rounded-full bg-white"
                   }`}
                 />
               </button>

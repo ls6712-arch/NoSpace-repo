@@ -133,7 +133,7 @@ export function PursuitCard({
 
   return (
     <div
-      className={`group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors duration-200 hover:border-[var(--coral-deep)] ${className}`}
+      className={`group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors duration-fast hover:border-[var(--coral-deep)] ${className}`}
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden">
         <Link to={`/pursuit/${pursuit.id}`} className="absolute inset-0 block" aria-label={`Open ${pursuit.title}`}>

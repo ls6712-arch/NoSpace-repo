@@ -156,7 +156,7 @@ function PhotoTrack({
             aria-label={`Photo ${i + 1} of ${urls.length}`}
             aria-current={i === index}
             onClick={() => scrollToIndex(i)}
-            className={`pointer-events-auto h-1.5 rounded-full transition-all ${
+            className={`pointer-events-auto h-1.5 rounded-full transition-colors ${
               i === index ? "w-4 bg-white" : "w-1.5 bg-white/50"
             }`}
           />
