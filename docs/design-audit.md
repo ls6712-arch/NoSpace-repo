@@ -296,7 +296,7 @@ Counts from `scripts/design-audit.py`, at the start of Phase 2 and now:
 | hex literals outside theme.css | 32 | **0** |
 | rgb/hsl literals outside theme.css | 17 | **0** |
 | raw text sizes (`text-xs…9xl`, `text-[Npx]`, CSS `font-size`) | 1,148 | **0** (all on the scale) |
-| off-scale radius classes | ~450 | **0** (228 card, 214 control, 70 round) |
+| off-scale radius classes (xl, 2xl, 3xl, lg, md, bare, arbitrary, rounded-btn) | ~335 | **0** (228 card, 214 control, 70 round) |
 | raw shadows (utility, arbitrary, CSS) | 37 | **0** (24 `shadow-card`/`shadow-overlay`) |
 | raw `duration-<n>` and inline durations | 31 + ms values | **0** (25 fast, 12 base; marked exceptions only) |
 | interactive elements below 44×44 on touch (375px) | 444 | **0** |
