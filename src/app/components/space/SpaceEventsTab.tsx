@@ -224,7 +224,7 @@ export function SpaceEventsTab({
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="flex items-center gap-1.5 text-small font-medium">
-                      {e.featured === true && <Star className="size-3.5 fill-current text-[var(--coral-deep)]" />}
+                      {e.featured === true && <Star className="size-3.5 fill-current text-accent" />}
                       {e.title}
                     </p>
                     <p className="text-caption text-muted-foreground">{fmt(e.starts_at, e.timezone)}</p>
@@ -236,7 +236,7 @@ export function SpaceEventsTab({
                     )}
                     {address && (
                       <p className="mt-1 flex items-center gap-1 text-caption">
-                        <MapPin className="size-3 text-[var(--coral-deep)]" />
+                        <MapPin className="size-3 text-accent" />
                         {address}
                       </p>
                     )}

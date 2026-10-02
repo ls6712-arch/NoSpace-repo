@@ -262,7 +262,7 @@ export function SpaceManageTab({
     return (
       <div className="py-8 text-center">
         {space.host_handoff_started_at ? (
-          <div className="mx-auto max-w-sm rounded-card border border-[var(--coral-deep)]/30 bg-[var(--coral-deep)]/5 p-4">
+          <div className="mx-auto max-w-sm rounded-card border border-accent/30 bg-accent/5 p-4">
             <p className="text-small">This Space has no host right now.</p>
             {eligibleForHandoff ? (
               <>
