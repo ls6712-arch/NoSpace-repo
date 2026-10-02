@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "./utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-btn text-sm font-medium transition-colors duration-fast ease-out disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-btn text-sm font-medium select-none transition-[color,background-color,border-color,box-shadow,filter,scale] duration-fast ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
@@ -22,14 +22,14 @@ const buttonVariants = cva(
         brand: "bg-accent text-accent-foreground hover:brightness-110 active:brightness-95",
         coral: "bg-accent text-accent-foreground hover:brightness-110 active:brightness-95",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:brightness-95 focus-visible:ring-destructive/20",
         // Text button secondary (brief §3.1) — a hairline border, no fill.
         outline:
-          "border border-input bg-transparent text-foreground hover:bg-accent/10 hover:border-accent/50",
+          "border border-input bg-transparent text-foreground hover:bg-accent/10 hover:border-accent/50 active:bg-accent/15",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-surface-muted hover:text-foreground",
-        link: "text-accent underline-offset-4 hover:underline",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:brightness-95",
+        ghost: "hover:bg-surface-muted hover:text-foreground active:bg-surface-muted",
+        link: "text-accent underline-offset-4 hover:underline active:opacity-75",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

@@ -633,6 +633,46 @@
     text-wrap: pretty;
   }
 
+  /* ── Interaction states ───────────────────────────────────────────────
+     Every tappable element gets hover, pressed, focus and disabled states
+     by default (focus rings are further down, outside the layers). These
+     sit in the base layer, so any component's own `active:` / `hover:` /
+     `disabled:` utilities still win. */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="switch"],
+         [role="checkbox"], [role="radio"], summary, select, label[for], a[href]) {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Controls aren't text: a long-press or double tap shouldn't select
+     their label. Links stay selectable (people copy names and titles). */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Pressed: buttons shrink a touch, links dim a touch. `scale` composes
+     with any transform or translate the element already has. */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary) {
+    transition-property: color, background-color, border-color, opacity, box-shadow, scale, filter;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-standard);
+  }
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary):active:not(:disabled):not([aria-disabled="true"]) {
+    scale: 0.98;
+  }
+  :where(a[href]):active {
+    opacity: 0.75;
+  }
+
+  /* Disabled: dimmed, not clickable-looking, and no pressed state. */
+  :where(button, [role="button"], [role="tab"], input, select, textarea):disabled,
+  :where([aria-disabled="true"]) {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
   /* A truncated name or title someone tapped open (lib/truncation.ts). */
   .ns-truncate-open {
     white-space: normal !important;
