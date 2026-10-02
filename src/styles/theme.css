@@ -398,12 +398,6 @@
   font-family: 'Work Sans', sans-serif;
 }
 
-/* The one dark-theme flourish that leaks through the semantic layer above —
-   a literal --yellow border accent, not a token that repoints itself. */
-.ns-paper-theme .ns-you-profile-card {
-  border-top-color: var(--line);
-}
-
 /* Live-test fix (Sep 27): .ns-paper-theme's own raw palette above had no
    dark-mode counterpart at all, so You/Studio/PublicProfile/the cover
    editor stayed on their light cream-and-ink values even with the rest of
@@ -838,21 +832,9 @@
     color: var(--lavender-muted);
   }
 
-  .ns-hero-claims {
-    gap: 0;
-  }
+  
 
-  .ns-hero-claims li {
-    display: inline-flex;
-    align-items: center;
-    margin: 0.2rem 0.2rem 0.2rem 0;
-    border: 1px solid var(--hairline);
-    border-radius: var(--radius-control);
-    background: color-mix(in srgb, var(--violet-electric) 12%, transparent);
-    padding: 0.35rem 0.65rem;
-    color: var(--offwhite);
-    font-size: var(--text-caption);
-  }
+  
 
   /* Secondary action: dark/transparent with a quiet border, brightening on
      hover rather than filling in — the primary action is the only one that
@@ -920,7 +902,7 @@
 
   .ns-process-step:last-child { border-bottom: 0; }
 
-  .ns-portfolio-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 26%, transparent); }
+  
 
   /* ── Value cards — "Create moments / Document / Explore," right below the
      hero. Dark-plum elevated surfaces with a soft violet-tinted shadow, and
@@ -1100,35 +1082,17 @@
     letter-spacing: 0.1em;
   }
 
-  .ns-maker-notes {
-    position: relative;
-    overflow: hidden;
-  }
+  
 
-  .ns-maker-notes::before {
-    position: absolute;
-    top: -3rem;
-    left: -1rem;
-    content: "✦  ✦  ✦  ✦  ✦";
-    color: var(--yellow);
-    font-size: var(--text-display);
-    letter-spacing: 3rem;
-    opacity: 0.2;
-    transform: rotate(-8deg);
-  }
+  
 
-  .ns-maker-note {
-    border: 1px solid color-mix(in srgb, var(--violet-electric) 20%, transparent);
-    background: var(--surface-elevated);
-    padding: 1.5rem;
-    box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--violet-electric) 35%, transparent);
-  }
+  
 
-  .ns-maker-note:nth-child(even) { transform: rotate(0.45deg); }
-  .ns-maker-note:nth-child(odd) { transform: rotate(-0.25deg); }
+  
+  
 
-  .ns-principle { background: color-mix(in srgb, var(--surface-elevated) 84%, transparent); }
-  .ns-principle:nth-child(2) { background: color-mix(in srgb, var(--surface-elevated) 60%, transparent); }
+  
+  
 
   .ns-invitation {
     position: relative;
@@ -1151,56 +1115,19 @@
     box-shadow: 0 0 0 1px var(--hairline), 0 8px 20px -8px color-mix(in srgb, var(--violet-electric) 45%, transparent);
   }
 
-  .ns-myspace-page {
-    background-image:
-      radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px),
-      linear-gradient(90deg, transparent 0 8%, color-mix(in srgb, var(--violet-electric) 5%, transparent) 8.1% 8.2%, transparent 8.3% 100%),
-      radial-gradient(ellipse 60% 45% at 90% 0%, color-mix(in srgb, var(--violet-electric-bright) 14%, transparent), transparent),
-      radial-gradient(ellipse 55% 40% at 5% 100%, color-mix(in srgb, var(--plum) 45%, transparent), transparent);
-    background-size: 26px 26px, 100% 100%, auto, auto;
-    background-color: var(--plum-night);
-  }
+  
 
-  .ns-myspace-masthead {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    border-bottom: 1px solid var(--hairline);
-    padding-bottom: 1.4rem;
-  }
+  
 
-  .ns-myspace-mark {
-    border-left: 1px solid var(--violet-electric);
-    padding-left: 0.7rem;
-    color: var(--lavender-muted);
-    font-family: var(--font-mono);
-    font-size: var(--text-caption);
-    letter-spacing: 0.14em;
-    line-height: 1.5;
-    text-align: right;
-  }
+  
 
-  .ns-myspace-mark span { color: var(--violet-electric-bright); }
+  
 
-  .ns-myspace-today {
-    border: 1px solid var(--border);
-    background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
-    padding: clamp(1rem, 3vw, 1.5rem);
-  }
+  
 
-  .ns-myspace-feed > .group {
-    border-color: var(--hairline);
-    border-radius: var(--radius-card);
-    box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 30%, transparent);
-  }
+  
 
-  .ns-myspace-projects a {
-    border-radius: var(--radius-card);
-    border-color: var(--border);
-    background: color-mix(in srgb, var(--surface) 82%, transparent);
-    box-shadow: 0 12px 22px -14px color-mix(in srgb, var(--violet-electric) 26%, transparent);
-  }
+  
 
   .ns-public-profile {
     background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px);
@@ -1208,27 +1135,15 @@
     background-color: var(--void);
   }
 
-  .ns-profile-header {
-    border-block: 1px solid var(--hairline);
-    padding-block: 1.25rem;
-  }
+  
 
-  .ns-profile-shelf {
-    border-top: 1px solid var(--hairline);
-    padding-top: 1.25rem;
-  }
+  
 
-  .ns-profile-grid {
-    grid-auto-rows: clamp(8rem, 20vw, 13rem);
-  }
+  
 
-  .ns-profile-tile {
-    min-height: 0;
-    border: 1px solid var(--hairline);
-    background: var(--surface-muted);
-  }
+  
 
-  .ns-profile-feature { grid-row: span 2; }
+  
 
   .ns-profile-cta {
     border-color: var(--border);
@@ -1241,64 +1156,21 @@
     background: color-mix(in srgb, var(--void) 45%, transparent);
   }
 
-  .ns-discover-space-card {
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background: var(--surface-elevated);
-    box-shadow: 0 16px 30px -20px rgba(0, 0, 0, 0.55);
-    transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
-  }
+  
 
-  .ns-discover-space-card:hover,
-  .ns-discover-space-card:focus-visible {
-    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
-    box-shadow: 0 22px 40px -18px color-mix(in srgb, var(--violet-electric) 38%, transparent);
-    transform: translate(-3px, -3px);
-  }
+  
 
-  .ns-discover-space-art {
-    position: relative;
-    aspect-ratio: 1.55;
-    overflow: hidden;
-    background: var(--surface-muted);
-  }
+  
 
-  .ns-discover-space-number {
-    position: absolute;
-    top: 0.8rem;
-    left: 0.8rem;
-    border: 1px solid var(--hairline);
-    background: color-mix(in srgb, var(--void) 70%, transparent);
-    padding: 0.25rem 0.38rem;
-    color: var(--offwhite);
-    font-family: var(--font-mono);
-    font-size: var(--text-caption);
-  }
+  
 
-  .ns-discover-space-copy {
-    display: flex;
-    min-height: 7.2rem;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.1rem 1.15rem;
-  }
+  
 
-  .ns-discover-open {
-    flex-shrink: 0;
-    color: var(--violet-electric-bright);
-    font-family: var(--font-mono);
-    font-size: var(--text-caption);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    transition: transform 180ms ease;
-  }
+  
 
-  .ns-discover-space-card:hover .ns-discover-open { transform: translate(2px, -2px); }
+  
 
-  .ns-discover-wayfinder {
-    box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 28%, transparent);
-  }
+  
 
   .ns-discover-filters button {
     border-radius: var(--radius-control);
@@ -1315,84 +1187,25 @@
     color: var(--ink-on-violet);
   }
 
-  .ns-space-hero {
-    background: var(--atmo-green);
-    isolation: isolate;
-  }
+  
 
-  .ns-space-hero-grid {
-    background-image:
-      linear-gradient(color-mix(in srgb, var(--violet-electric) 8%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--violet-electric) 8%, transparent) 1px, transparent 1px);
-    background-size: 42px 42px;
-    mask-image: linear-gradient(90deg, black, transparent 85%);
-    opacity: 0.55;
-    pointer-events: none;
-  }
+  
 
-  .ns-space-hero-art {
-    position: relative;
-    border: 1px solid var(--hairline);
-    background: var(--surface-muted);
-    box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--violet-electric) 35%, transparent);
-    transform: rotate(2deg);
-  }
+  
 
-  .ns-space-hero-art::before {
-    position: absolute;
-    inset: 0.8rem;
-    border: 1px dashed color-mix(in srgb, var(--violet-electric) 32%, transparent);
-    content: "";
-    pointer-events: none;
-  }
+  
 
-  .ns-space-hero-caption {
-    position: absolute;
-    right: -0.7rem;
-    bottom: -1.1rem;
-    border: 1px solid var(--hairline);
-    background: var(--surface-elevated);
-    padding: 0.45rem 0.6rem;
-    color: var(--offwhite);
-    font-family: var(--font-mono);
-    font-size: var(--text-caption);
-    line-height: 1.35;
-    transform: rotate(-4deg);
-  }
+  
 
-  .ns-space-corner-grid > * {
-    min-width: 0;
-  }
+  
 
-  .ns-you-profile-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1.1rem;
-    padding: 1.4rem 1.6rem;
-    border: 1px solid var(--border);
-    border-top: 2px solid var(--yellow);
-    background: var(--surface);
-    /* was: box-shadow: 8px 8px 0 ...; drop the hard-shadow, it's what reads as "loud" */
-  }
+  
 
-  .ns-you-profile-card--compact {
-    gap: 0.75rem;
-    padding: 1rem 1.15rem;
-  }
+  
 
-  .ns-you-profile-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
+  
 
-  .ns-you-profile-identity {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.9rem;
-    min-width: 0;
-  }
+  
 
   .ns-you-avatar-compact {
     display: flex;
@@ -1424,7 +1237,7 @@
     color: var(--foreground);
   }
 
-  .ns-you-sprout { color: var(--coral-deep); font-size: var(--text-small); }
+  
 
   .ns-you-tags {
     /* now lives directly under the card, not in its own panel */
@@ -1463,13 +1276,7 @@
     border-color: color-mix(in srgb, var(--coral-deep) 45%, var(--line, var(--hairline)));
   }
 
-  /* Same specificity as the base rule above (two classes) — defined after
-     it so source order breaks the tie in its favor. */
-  .ns-you-tags--pills .ns-pill.ns-pill--ghost {
-    background: transparent;
-    border: 1px dashed var(--line, var(--hairline));
-    color: var(--ink-faint, var(--muted-foreground));
-  }
+  
 
   /* The tag currently narrowing Your Moments below — the one place this
      row spends the single accent. */
@@ -1508,67 +1315,31 @@
     color: var(--coral-text);
   }
 
-  .ns-you-tabs [data-slot="tabs-trigger"] {
-    border-radius: 0;
-    border-bottom: 1px solid var(--hairline);
-    padding-inline: 0.75rem;
-    color: var(--muted-foreground);
-  }
+  
 
-  .ns-you-tabs [data-slot="tabs-trigger"][data-state="active"] {
-    border-bottom-color: var(--violet-electric);
-    background: transparent;
-    color: var(--foreground);
-  }
+  
 
   @media (max-width: 639px) {
-    .ns-discover-space-copy { display: block; min-height: 8.5rem; }
-    .ns-discover-open { display: block; margin-top: 0.9rem; }
-    .ns-space-hero-art { width: calc(100% - 1rem); margin-right: 0.5rem; }
-    .ns-space-hero-caption { right: -0.35rem; }
+    
+    
+    
+    
   }
 
-  .ns-marquee {
-    border-block: 1px solid var(--hairline);
-    background: var(--surface);
-    mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent);
-  }
+  
 
-  .ns-marquee-art {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    opacity: 0.18;
-    pointer-events: none;
-  }
+  
 
-  .ns-marquee-hobby {
-    position: absolute;
-    width: 9rem;
-    height: 5.7rem;
-    overflow: hidden;
-    border: 3px solid var(--surface-elevated);
-    box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--violet-electric) 30%, transparent);
-    mix-blend-mode: normal;
-    animation: ns-marquee-float 8s ease-in-out infinite;
-  }
+  
 
-  .ns-marquee-hobby-one { top: -1.5rem; left: 7%; transform: rotate(-8deg); }
-  .ns-marquee-hobby-two { right: 24%; bottom: -1.8rem; transform: rotate(6deg); animation-delay: -2s; }
-  .ns-marquee-hobby-three { top: -1.8rem; right: 7%; transform: rotate(4deg); animation-delay: -4s; }
-  .ns-marquee-hobby-four { bottom: -1.6rem; left: 34%; transform: rotate(-5deg); animation-delay: -6s; }
+  
+  
+  
+  
 
-  .ns-marquee .animate-marquee {
-    align-items: center;
-    will-change: transform;
-  }
+  
 
-  .ns-marquee-mark {
-    display: inline-block;
-    color: var(--violet-electric-bright);
-    animation: ns-twinkle 3.4s ease-in-out infinite;
-    text-shadow: 0 0 0 var(--violet-electric-bright), 0 0 15px color-mix(in srgb, var(--violet-electric) 55%, transparent);
-  }
+  
 
   .ns-site-header {
     background-color: color-mix(in srgb, var(--void) 86%, transparent);
@@ -1635,7 +1406,9 @@
 
   /* Applied to groups inside hero illustrations. transform-box keeps the
      transform origin on the shape itself rather than the whole SVG canvas. */
-  .ns-breathe, .ns-sway, .ns-drift, .ns-twinkle {
+  .ns-breathe,
+  .ns-sway,
+  .ns-drift {
     transform-box: fill-box;
     transform-origin: center;
     will-change: transform;
@@ -1643,7 +1416,7 @@
   .ns-breathe { animation: ns-breathe 6.5s ease-in-out infinite; }
   .ns-sway    { transform-origin: bottom center; animation: ns-sway 7.5s ease-in-out infinite; }
   .ns-drift   { animation: ns-drift 34s ease-in-out infinite alternate; }
-  .ns-twinkle { animation: ns-twinkle 3.4s ease-in-out infinite; }
+  
 
   /* Hero entrance: headline, copy, CTA, then the illustration. Each step
      starts from a visible resting state on the last frame, so nothing is
@@ -1700,14 +1473,6 @@
    breathe, plants sway, clouds drift, sparkles pulse — each on a different
    period so the scene never falls into lockstep. All of it is switched off
    wholesale under prefers-reduced-motion at the bottom of this file. */
-@keyframes ns-marquee-float {
-  0%, 100% { transform: translateY(0) rotate(-4deg); }
-  50% { transform: translateY(7px) rotate(4deg); }
-}
-@keyframes ns-orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 @keyframes ns-breathe {
   0%, 100% { transform: translateY(0) scale(1); }
   50%      { transform: translateY(-1.5px) scale(1.012); }
@@ -1719,10 +1484,6 @@
 @keyframes ns-drift {
   0%   { transform: translateX(0); }
   100% { transform: translateX(26px); }
-}
-@keyframes ns-twinkle {
-  0%, 100% { opacity: .45; transform: scale(.86); }
-  50%      { opacity: 1;   transform: scale(1.1); }
 }
 @keyframes ns-rise {
   from { opacity: 0; transform: translateY(14px); }
@@ -1846,12 +1607,18 @@ summary:focus-visible,
 /* Honour the OS setting: no continuous loops, no parallax, no entrance
    offsets — everything simply present. */
 @media (prefers-reduced-motion: reduce) {
-  .ns-breathe, .ns-sway, .ns-drift, .ns-twinkle,
-  .generated-art-float, .generated-art-sparkle,
-  .animate-float-slow, .animate-float-slower, .animate-pulse-soft,
-  .animate-marquee, .animate-in, .animate-spin,
-  .text-gradient-animated, .ns-marquee-mark,
-  .ns-marquee-hobby {
+  .ns-breathe,
+  .ns-sway,
+  .ns-drift,
+  .generated-art-float,
+  .generated-art-sparkle,
+  .animate-float-slow,
+  .animate-float-slower,
+  .animate-pulse-soft,
+  .animate-marquee,
+  .animate-in,
+  .animate-spin,
+  .text-gradient-animated {
     animation: none !important;
   }
   .ns-enter {
@@ -1860,7 +1627,7 @@ summary:focus-visible,
     transform: none !important;
   }
   .ns-parallax { transform: none !important; }
-  .ns-maker-note { transform: none !important; }
+  
   .ns-worlds-path path { animation: none !important; }
   .ns-worlds-track { transform: none !important; }
   .ns-reveal {
