@@ -1616,6 +1616,20 @@ summary:focus-visible,
   outline-offset: 2px !important;
 }
 
+/* ── Dark elevation ──────────────────────────────────────────────────────
+   Dark mode has no shadows (--shadow-card and --shadow-overlay are
+   transparent), so cards and overlays lift off the page the other way: the
+   --surface fill plus a 1px --border. It is keyed off the same two
+   utilities, so every card, dialog, sheet, select list, menu, tooltip and
+   suggestion list picks it up without a per-component edit, and a new one
+   does too the moment it uses shadow-card or shadow-overlay.
+   Unlayered on purpose: it has to beat the bg-* and border-* utilities
+   those elements already carry. Light mode is untouched. */
+.dark :is(.shadow-card, .shadow-overlay) {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+}
+
 /* Honour the OS setting: no continuous loops, no parallax, no entrance
    offsets — everything simply present. */
 @media (prefers-reduced-motion: reduce) {
