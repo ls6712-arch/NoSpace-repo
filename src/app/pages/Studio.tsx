@@ -247,6 +247,7 @@ export function Studio() {
               className="h-full w-full object-cover"
             />
           )}
+          <div className="absolute inset-0 bg-scrim-solid/25" />
           <div className="absolute inset-0 bg-scrim" />
         </div>
 
@@ -278,7 +279,7 @@ export function Studio() {
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
           <h1
-            className="max-w-xl text-display leading-tight"
+            className="max-w-xl text-display leading-tight text-on-media"
             style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
           >
             {coverTitle}

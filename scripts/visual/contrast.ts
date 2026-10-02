@@ -36,6 +36,7 @@ export function contrastInPage(): ContrastResult {
     if (["SCRIPT", "STYLE", "NOSCRIPT", "OPTION"].includes(el.tagName)) continue;
     done.add(el);
     const cs = getComputedStyle(el);
+    if (el.closest("[aria-hidden=true]")) { out.skipped++; continue; } // decorative (separator dots) or hidden from assistive tech
     if (cs.visibility === "hidden" || cs.display === "none" || (el as HTMLButtonElement).disabled || el.closest("[disabled],[aria-disabled=true],[inert]")) { out.skipped++; continue; }
     const range = document.createRange(); range.selectNodeContents(n); const r = range.getBoundingClientRect();
     if (r.width < 1 || r.height < 1 || r.bottom < 0 || r.right < 0 || r.top > innerHeight * 40) { out.skipped++; continue; }
@@ -49,6 +50,8 @@ export function contrastInPage(): ContrastResult {
     let i = stack.indexOf(el); if (i < 0) i = stack.findIndex((e) => el.contains(e));
     if (i < 0 && cs.pointerEvents === "none") i = stack.findIndex((e) => e.contains(el));
     if (i < 0) { out.skipped++; continue; }
+    // Something unrelated sits above it with a fill (a dialog's dimming overlay): the user isn't reading this text right now.
+    if (stack.slice(0, i).some((e) => !e.contains(el) && !el.contains(e) && straight(getComputedStyle(e).backgroundColor)[3] > 0.2)) { out.skipped++; continue; }
     // Walk down from the text's own element collecting fills until one is opaque.
     let cands: RGBA[] = [[0, 0, 0, 0]]; let media = false; let opaque = false;
     const layers: { color: RGBA; stops: RGBA[] }[] = [];

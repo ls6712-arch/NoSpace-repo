@@ -105,7 +105,7 @@ export function BottomTabBar() {
               color: tint,
               backgroundColor:
                 tab.accent && active
-                  ? "color-mix(in srgb, var(--violet-electric) 16%, transparent)"
+                  ? "color-mix(in srgb, var(--violet-electric) 10%, transparent)"
                   : undefined,
             };
 

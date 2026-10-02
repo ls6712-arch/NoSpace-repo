@@ -179,7 +179,7 @@ export function AmountStepper({
 /** Lavender panel — the tip boxes and selected rows in the mockups. */
 export function SoftPanel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-card bg-[color-mix(in_srgb,var(--pastel-stone)_22%,var(--card))] p-3.5 ${className}`}>{children}</div>
+    <div className={`rounded-card bg-surface-muted p-3.5 ${className}`}>{children}</div>
   );
 }
 

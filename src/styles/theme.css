@@ -89,7 +89,7 @@
   --theme-light-accent: #9A4A34;
   --theme-dark-bg: #1C1816;
   --theme-dark-card: #26211D;
-  --theme-dark-accent: #C8674D;
+  --theme-dark-accent: #D38571;
   --background: var(--theme-light-bg);
   --card: var(--theme-light-card);
   --foreground: #2B2622;
@@ -161,7 +161,9 @@
   --forest-ink: #0B3E2E;
   --coral: #FF6B4A;
   --coral-deep: #C43F22;
-  --coral-text: #FF8B6E;
+  /* Coral as text. Light mode needs the deeper shade (#FF8B6E was 1.9-2.2:1
+     on cream); .dark restores the bright one. */
+  --coral-text: #B83A1F;
   --yellow: #F5C542;
   --mustard: var(--yellow);
   --cream: #F8F4EB;
@@ -327,13 +329,14 @@
   --border: #3A332B;
   --accent: var(--theme-dark-accent);
   --accent-foreground: #1C1816;
-  /* Brand-gradient fills carry white --on-brand text, so in dark they sit
-     darker than --accent (#C8674D is only 3.82:1 under white). 85% / 78%
-     of it clears 4.5:1 across the whole gradient. */
+  --coral-text: #FF8B6E;
+  /* Brand-gradient fills carry white --on-brand text and keep their colour in
+     both modes, so dark uses the light accent (6.17:1 under white) rather
+     than the lighter dark --accent (3.4:1). */
   --gradient-brand: linear-gradient(
     120deg,
-    color-mix(in srgb, var(--accent) 85%, black) 0%,
-    color-mix(in srgb, var(--accent) 78%, black) 100%
+    var(--theme-light-accent) 0%,
+    color-mix(in srgb, var(--theme-light-accent) 88%, black) 100%
   );
   --gold: #C9A55E;
   --gold-text: #C9A55E;
@@ -477,7 +480,7 @@
   --sand: #EADFCF;
   --line: #E0D4C3;
   --ink: #2B211C;
-  --clay: #B4532A;
+  --clay: #A44A23;
   --clay-dark: #93411F;
   --clay-soft: #F3E0D3;
   --bark: #5E3B28;
