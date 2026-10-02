@@ -309,8 +309,11 @@ Counts from `scripts/design-audit.py`, at the start of Phase 2 and now:
   1. chips and buttons over photos,
   2. modal backdrops,
   3. the camera viewfinder.
+  A scrim is translucent: `bg-scrim-solid/100` is rejected by the guard. A
+  fully opaque dark base under media is `--media-base` (`bg-media-base`, dark in
+  both modes), used by the Studio cover and the camera viewfinder.
   The `--scrim` gradient is for full-bleed text overlays. The Phase 4 guard
-  rejects `bg-scrim-solid` without a `/NN` modifier and any change to the
+  rejects `bg-scrim-solid` without a `/NN` modifier (and `/100`) and any change to the
   token's value.
 - `--theme-{light,dark}-{bg,card,accent}`: the two themes' key colours, declared
   once; `:root`, `.dark` and the Settings > Appearance swatches all read them.

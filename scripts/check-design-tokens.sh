@@ -144,6 +144,7 @@ SKIP_FILES=""
 # ── scrim-solid ────────────────────────────────────────────────────────────
 # One token beyond the spec, and only ever with an opacity modifier.
 scan scrim "bg-scrim-solid needs an opacity modifier: bg-scrim-solid/40" "${B}bg-scrim-solid([^/A-Za-z0-9_-]|\$)" '*.ts' '*.tsx' '*.css'
+scan scrim "bg-scrim-solid/100 is not a scrim; use bg-media-base" "${B}bg-scrim-solid/(100|\[100%?\])${E}" '*.ts' '*.tsx' '*.css'
 scan scrim "bg-scrim-solid takes /NN only, never a colour" "${B}bg-scrim-solid/\[?(#|rgb|hsl|oklch|var)" '*.ts' '*.tsx' '*.css'
 if [ -f "$THEME" ]; then
   def="$(grep -E '^[[:space:]]*--scrim-solid:' "$THEME" | head -1)"

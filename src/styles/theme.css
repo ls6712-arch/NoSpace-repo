@@ -230,6 +230,10 @@
      (bg-scrim-solid/60). For full-bleed text over a photo use the --scrim
      gradient (bg-scrim) instead. */
   --scrim-solid: #000000;
+  /* Opaque dark base under photo/video surfaces (Studio cover, camera
+     viewfinder). Dark in both modes, like --on-media. Not a scrim: a scrim
+     is translucent, so a fully opaque one is this token instead. */
+  --media-base: #0B0A09;
 
   /* Elevation, light mode only. Dark mode has no shadows: elevation there
      is --surface plus a 1px --border (see .dark). */
@@ -609,6 +613,7 @@
   --color-on-media: var(--on-media);
   --color-on-brand: var(--on-brand);
   --color-scrim-solid: var(--scrim-solid);
+  --color-media-base: var(--media-base);
   /* Registered by reference (not value) so the .dark and reduced-motion
      overrides above reach the utilities at runtime. */
   --shadow-card: var(--shadow-card);

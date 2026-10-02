@@ -18,7 +18,7 @@ export const Bad = () => (
     <i className="rounded-lg" /> <i className="rounded" />
     <i className="shadow-md" /> <i className="shadow" />
     <i className="text-white" /> <i style={{ color: "#ff00aa" }} /> <i style={{ color: "rgb(1, 2, 3)" }} />
-    <i className="bg-scrim-solid" /> <i className="bg-scrim-solid/[#fff]" />
+    <i className="bg-scrim-solid" /> <i className="bg-scrim-solid/[#fff]" /> <i className="bg-scrim-solid/100" />
     <i className="duration-300" /> <i className="ease-out" /> <i style={{ transition: "opacity 300ms" }} />
     {/* design-token-ignore: */}
   </div>

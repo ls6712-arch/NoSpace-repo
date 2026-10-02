@@ -252,7 +252,7 @@ export function CameraCapture({
       />
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-card border border-border bg-scrim-solid/100">
+      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-card border border-border bg-media-base">
         {cameraAvailable ? (
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
         ) : (
