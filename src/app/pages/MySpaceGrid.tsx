@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
@@ -67,11 +67,6 @@ export function MySpaceGrid() {
   // membership is what actually gates a Space's Moments — see
   // 20261010000000_space_moment_sharing.sql).
   const [mySpaceMomentPostIds, setMySpaceMomentPostIds] = useState<Set<number>>(new Set());
-  // .myspace-feed is a plain block below lg (the window scrolls) but its
-  // own independently-scrolling region at lg and up (my-space.css) — handed
-  // to PursuitsInProgressSection so its hide-on-scroll behavior watches
-  // whichever one is actually moving at the current breakpoint.
-  const feedScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -205,15 +200,10 @@ export function MySpaceGrid() {
 
       <DayTwoInviteCard />
 
-      <PursuitsInProgressSection
-        pursuits={journal.projects}
-        posts={posts}
-        entryProject={journal.entryProject}
-        feedScrollRef={feedScrollRef}
-      />
+      <PursuitsInProgressSection pursuits={journal.projects} posts={posts} entryProject={journal.entryProject} />
 
       <div className="myspace-body">
-        <div className="myspace-feed" ref={feedScrollRef}>
+        <div className="myspace-feed">
           {sheet.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               {/* Genuinely empty now only means zero eligible Moments exist
