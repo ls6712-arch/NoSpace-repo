@@ -29,14 +29,13 @@ export function QuickLogGlobalSheet() {
   return (
     <>
       <Sheet open={open} onOpenChange={(next) => !next && closeQuickLog()}>
-        {/* Phones: a bottom sheet, thumb-reachable above the tab bar.
-            Desktop (where the header's "Log a Moment" opens it): a centered
-            card near the top of the window — pinned to the bottom edge of a
-            large screen it showed up far from the button, at the very
-            bottom of the page. */}
+        {/* Opens near the top at every window size, not docked to the bottom
+            edge: on a big screen a bottom-docked sheet appeared at the very
+            bottom of the page, far from the button, and on a phone the
+            keyboard would cover it. */}
         <SheetContent
           side="bottom"
-          className="mx-auto max-w-lg rounded-t-card lg:inset-x-0 lg:top-[12vh] lg:bottom-auto lg:w-[calc(100%-2rem)] lg:rounded-card lg:border lg:data-[state=open]:slide-in-from-bottom-4 lg:data-[state=closed]:slide-out-to-bottom-4 lg:data-[state=open]:fade-in-0 lg:data-[state=closed]:fade-out-0"
+          className="inset-x-0 top-[12vh] bottom-auto mx-auto w-[calc(100%-2rem)] max-w-lg rounded-card border data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
         >
           <SheetHeader>
             <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>New Moment</SheetTitle>
@@ -60,7 +59,7 @@ export function QuickLogGlobalSheet() {
       {logged && (
         <div
           role="status"
-          className="fixed inset-x-0 bottom-[calc(5rem+var(--safe-bottom))] z-50 mx-auto w-[calc(100%-2rem)] max-w-lg animate-in duration-base fade-in slide-in-from-bottom-4 rounded-card border border-border bg-card p-2.5 shadow-overlay lg:top-[12vh] lg:bottom-auto"
+          className="fixed inset-x-0 z-50 mx-auto w-[calc(100%-2rem)] max-w-lg animate-in fade-in slide-in-from-bottom-4 rounded-card border border-border bg-card p-2.5 shadow-overlay top-[12vh] bottom-auto"
         >
           <LoggedNotice
             key={logged.key}

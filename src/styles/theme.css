@@ -1566,24 +1566,6 @@
     transform: translateY(0);
   }
 
-  /* Same scroll-triggered reveal as .ns-reveal, but staggered per child
-     (the "Pursuits in progress" grid) rather than fading the whole block
-     in as one unit — a handful of nth-child delays, capped, so a longer
-     grid doesn't leave its last rows waiting on a long queue. */
-  .ns-reveal-grid > * {
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
-  }
-  .ns-reveal-grid.is-visible > * { opacity: 1; transform: translateY(0); }
-  /* design-token-ignore: stagger delays, not durations */
-  .ns-reveal-grid.is-visible > *:nth-child(2) { transition-delay: 45ms; }
-  .ns-reveal-grid.is-visible > *:nth-child(3) { transition-delay: 90ms; } /* design-token-ignore: stagger delay */
-  .ns-reveal-grid.is-visible > *:nth-child(4) { transition-delay: 135ms; } /* design-token-ignore: stagger delay */
-  .ns-reveal-grid.is-visible > *:nth-child(5) { transition-delay: 180ms; } /* design-token-ignore: stagger delay */
-  .ns-reveal-grid.is-visible > *:nth-child(n+6) { transition-delay: 220ms; } /* design-token-ignore: stagger delay */
-
-  /* design-token-ignore: ambient loop */
   .generated-art-sparkle {
     animation: generated-art-twinkle 2.4s ease-in-out infinite; /* design-token-ignore: ambient loop */
     transform-origin: center;
@@ -1742,13 +1724,6 @@ summary:focus-visible,
     transform: none !important;
     transition: none !important;
   }
-  .ns-reveal-grid > * {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
-  /* Catch-all, so an animation nobody listed above (Tailwind's animate-pulse,
-     tw-animate-css enters, a future loop) still respects the setting. */
   *, *::before, *::after {
     transition-duration: .01ms !important; /* design-token-ignore: reduced-motion floor, effectively instant */
     animation-duration: .01ms !important; /* design-token-ignore: reduced-motion floor, effectively instant */

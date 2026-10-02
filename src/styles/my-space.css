@@ -40,9 +40,9 @@
   order: -1;
 }
 
-/* md (768–1023): tablet. Single column, whole page scrolls (no independent
-   scroll areas yet — those start at lg). Rail becomes a 2-column grid:
-   [Shelf] | [Pursuits]. */
+/* md (768–1023): tablet. Single column, whole page scrolls — same as every
+   other size; nothing here ever carves out its own independently-scrolling
+   region. Rail becomes a 2-column grid: [Shelf] | [Pursuits]. */
 @media (min-width: 768px) {
   .myspace-rail {
     display: grid;
@@ -76,17 +76,17 @@
 }
 
 @media (min-width: 1024px) {
-  .myspace-shell {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 4rem);
-    height: calc(100dvh - 4rem);
-  }
-
+  /* Used to cap .myspace-shell to the viewport height and hand scrolling to
+     .myspace-feed/.myspace-rail independently (each its own overflow-y:
+     auto region) at this breakpoint and up, while the window itself barely
+     scrolled. The Pursuits section needed to tell which of several scroll
+     sources was actually live depending on screen width — removed so the
+     window is the one scroll source for the whole page at every
+     breakpoint, the same way it already was below lg (base .myspace-shell
+     rule: min-height, not height — content can run taller than the
+     viewport and the window scrolls to it, same as here now). */
   .myspace-body {
     display: grid;
-    flex: 1;
-    min-height: 0;
     /* One fewer column than before: the contact-sheet strip is gone,
        folded into the feed itself (board 4's lead + grid), kept as a
        right sidebar per an explicit product call rather than boards 4/5's
@@ -98,7 +98,6 @@
 
   .myspace-feed {
     grid-area: feed;
-    overflow-y: auto;
   }
 
   .myspace-rail {
@@ -106,7 +105,6 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    overflow-y: auto;
     border-left: 1px solid var(--hairline);
     padding-left: 24px;
   }

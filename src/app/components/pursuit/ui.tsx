@@ -1,5 +1,11 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Check, Minus, Plus } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+
+/** Shared spring for every Pursuit card micro-interaction (hover lift, tap,
+ * entrance stagger) — one feel across PursuitItem, PursuitsInProgressSection,
+ * same spring Onboarding.tsx's own settle() uses. */
+export const PURSUIT_SPRING = { type: "spring" as const, stiffness: 260, damping: 28 };
 
 /** Terracotta fill used by every Pursuit progress bar. */
 export function ProgressBar({ fraction, className = "", thin = false }: { fraction: number; className?: string; thin?: boolean }) {
@@ -16,6 +22,9 @@ export function ProgressBar({ fraction, className = "", thin = false }: { fracti
     </div>
   );
 }
+
+// design-token-ignore: motion/react takes numbers; these mirror --duration-base and --ease-standard
+const RING_SWEEP = { duration: 0.25, ease: [0.22, 0.61, 0.36, 1] } as const;
 
 /** Circular variant of ProgressBar — same terracotta fill, same "no
  * percentage" rule: the ring's sweep communicates the fraction visually,
@@ -35,9 +44,11 @@ export function ProgressRing({
   className?: string;
   children?: ReactNode;
 }) {
+  const reduceMotion = useReducedMotion();
   const pct = Math.max(0, Math.min(1, fraction));
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - pct);
   return (
     <div
       className={`relative inline-flex shrink-0 items-center justify-center ${className}`}
@@ -61,7 +72,7 @@ export function ProgressRing({
           stroke="color-mix(in srgb, var(--coral) 14%, var(--surface-muted))"
           strokeWidth={strokeWidth}
         />
-        <circle
+        <motion.circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -70,8 +81,9 @@ export function ProgressRing({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - pct)}
-          className="transition-[stroke-dashoffset] duration-base ease-standard motion-reduce:transition-none"
+          initial={false}
+          animate={{ strokeDashoffset: offset }}
+          transition={reduceMotion ? { duration: 0 } : RING_SWEEP}
         />
       </svg>
       {children && <span className="absolute inset-0 flex items-center justify-center">{children}</span>}
