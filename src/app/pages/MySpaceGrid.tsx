@@ -21,6 +21,10 @@ import { NewSpacesRail } from "../components/NewSpacesRail";
 import { WelcomeBanner } from "../components/WelcomeBanner";
 import { formatDate } from "../lib/dates";
 import { plural } from "../lib/plural";
+import { Sparkles } from "lucide-react";
+import { Loadable } from "../components/ui/skeleton";
+import { MomentGridSkeleton } from "../components/Skeletons";
+import { EmptyState, ErrorNotice } from "../components/StateViews";
 
 const PAGE_SIZE = 6;
 
@@ -61,7 +65,7 @@ function greeting(name: string): string {
  */
 export function MySpaceGrid() {
   const { user, profile } = useAuth();
-  const { publicFeed, posts } = useContent();
+  const { publicFeed, posts, myPosts, postsStatus, reloadPosts } = useContent();
   const social = useSocial();
   const journal = useJournal();
   const { logs } = usePrivateLogs();
@@ -75,10 +79,16 @@ export function MySpaceGrid() {
   // membership is what actually gates a Space's Moments — see
   // 20261010000000_space_moment_sharing.sql).
   const [mySpaceMomentPostIds, setMySpaceMomentPostIds] = useState<Set<number>>(new Set());
+  // Both sources below have to land before an empty sheet means "empty"
+  // rather than "still loading".
+  const [followingLoaded, setFollowingLoaded] = useState(!user);
+  const [spaceMomentsLoaded, setSpaceMomentsLoaded] = useState(!user || !supabase);
 
   useEffect(() => {
     if (!user) return;
-    fetchFollowingIds(user.id).then(setFollowingIds);
+    fetchFollowingIds(user.id)
+      .then(setFollowingIds)
+      .finally(() => setFollowingLoaded(true));
   }, [user?.id]);
 
   useEffect(() => {
@@ -93,7 +103,10 @@ export function MySpaceGrid() {
         .eq("status", "active");
       const spaceIds = (memberships ?? []).map((m) => m.space_id as string);
       if (spaceIds.length === 0) {
-        if (!cancelled) setMySpaceMomentPostIds(new Set());
+        if (!cancelled) {
+          setMySpaceMomentPostIds(new Set());
+          setSpaceMomentsLoaded(true);
+        }
         return;
       }
       const { data: moments } = await client
@@ -102,8 +115,14 @@ export function MySpaceGrid() {
         .in("space_id", spaceIds)
         .eq("status", "approved")
         .eq("removed_by_host", false);
-      if (!cancelled) setMySpaceMomentPostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
-    })();
+      if (!cancelled) {
+        setMySpaceMomentPostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
+        setSpaceMomentsLoaded(true);
+      }
+    })().catch((err) => {
+      console.warn("[MySpaceGrid] Space Moments load failed:", err);
+      if (!cancelled) setSpaceMomentsLoaded(true);
+    });
     return () => {
       cancelled = true;
     };
@@ -230,28 +249,44 @@ export function MySpaceGrid() {
 
       <div className="myspace-body">
         <div className="myspace-feed">
-          {sheet.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              {/* Genuinely empty now only means zero eligible Moments exist
-                  at all — the sheet no longer gates on "since your last
-                  visit" (see the unseen memo above), so that copy would be
-                  inaccurate here. */}
-              Nothing here yet. Join a Space or follow a person to start your Contact Sheet.
-            </div>
-          ) : (
-            <div className={MOMENT_GRID}>
-              {sheet.map((post, i) => (
-                <MomentCard
-                  key={post.id}
-                  post={post}
-                  surface="mySpace"
-                  size="standard"
-                  number={String(i + 1).padStart(2, "0")}
-                  onOpen={() => openDetail(post)}
+          <Loadable
+            loading={postsStatus === "loading" || !followingLoaded || !spaceMomentsLoaded}
+            skeleton={<MomentGridSkeleton count={PAGE_SIZE} />}
+          >
+            {postsStatus === "error" && sheet.length === 0 ? (
+              <ErrorNotice onRetry={reloadPosts} />
+            ) : sheet.length === 0 ? (
+              myPosts.length === 0 ? (
+                // First run: a brand-new account with nothing logged yet.
+                <EmptyState
+                  size="page"
+                  icon={<Sparkles />}
+                  line="Nothing here yet."
+                  hint="Log your first Moment, then join a Space or follow a person to fill your Contact Sheet."
+                  action={{ label: "Log a Moment", to: "/create" }}
                 />
-              ))}
-            </div>
-          )}
+              ) : (
+                <EmptyState
+                  line="Nothing here yet."
+                  hint="Join a Space or follow a person to start your Contact Sheet."
+                  action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }}
+                />
+              )
+            ) : (
+              <div className={MOMENT_GRID}>
+                {sheet.map((post, i) => (
+                  <MomentCard
+                    key={post.id}
+                    post={post}
+                    surface="mySpace"
+                    size="standard"
+                    number={String(i + 1).padStart(2, "0")}
+                    onOpen={() => openDetail(post)}
+                  />
+                ))}
+              </div>
+            )}
+          </Loadable>
 
           {hasMore && (
             <button

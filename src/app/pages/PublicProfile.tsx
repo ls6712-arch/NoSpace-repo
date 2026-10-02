@@ -30,6 +30,8 @@ import { FollowListDialog } from "../components/FollowListDialog";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
 import { formatMonth } from "../lib/dates";
 import { pluralWord } from "../lib/plural";
+import { Loadable } from "../components/ui/skeleton";
+import { MomentGridSkeleton, ProfileHeaderSkeleton } from "../components/Skeletons";
 
 /** Whichever Corner shows up most in their public Moments — a Corner slug is
  * only unique within its own Space, so this tracks the pair, never the slug
@@ -274,9 +276,18 @@ export function PublicProfile() {
 
   if (state.status === "loading") {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <span className="size-8 animate-spin rounded-full border-2 border-border border-t-white/70" />
-      </div>
+      <Loadable
+        loading
+        className="ns-paper-theme ns-public-profile min-h-screen bg-surface py-8 sm:py-10"
+        skeleton={
+          <div className="container mx-auto max-w-5xl px-4">
+            <ProfileHeaderSkeleton />
+            <MomentGridSkeleton count={6} />
+          </div>
+        }
+      >
+        {null}
+      </Loadable>
     );
   }
 
@@ -521,7 +532,8 @@ export function PublicProfile() {
               posts={shownPosts}
               onOpen={setOpenPost}
               editable={isMe}
-              emptyLabel={`${firstName} hasn’t shared any Moments publicly yet.`}
+              emptyLabel={isMe ? "Nothing logged yet." : `${firstName} hasn’t shared any Moments publicly yet.`}
+              emptyAction={isMe ? { label: "Log a Moment", to: "/create" } : { label: "Go to Discover", to: "/discover" }}
             />
           </section>
 

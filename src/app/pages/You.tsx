@@ -28,9 +28,10 @@ import { tagsFromPosts } from "../lib/postTags";
 import { useFollowerCount } from "../lib/useFollowerCount";
 import { formatMonth } from "../lib/dates";
 import { pluralWord } from "../lib/plural";
+import { EmptyState } from "../components/StateViews";
 
 export function You() {
-  const { myPosts, posts } = useContent();
+  const { myPosts, posts, postsStatus } = useContent();
   const journal = useJournal();
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const { user, profile, isConfigured } = useAuth();
@@ -378,8 +379,7 @@ export function You() {
           {momentsView === "shelf" ? (
             <HobbyShelf
               items={sessions}
-              emptyCta={false}
-              emptyCopy="Nothing logged yet. Create something and it’ll show up here."
+              emptyCopy="Nothing logged yet."
             />
           ) : (
             <WorkGrid
@@ -392,7 +392,10 @@ export function You() {
               }
               onOpen={setOpenPost}
               editable
-              emptyLabel="Nothing logged yet. Create something and it’ll show up here."
+              loading={postsStatus === "loading"}
+              emptyLabel="Nothing logged yet."
+              emptyHint="Your Moments show up here, newest first."
+              emptyAction={{ label: "Log a Moment", to: "/create" }}
             />
           )}
         </section>
@@ -410,14 +413,11 @@ export function You() {
           <p className="mb-5 text-sm text-muted-foreground">The things you’re bringing to life.</p>
 
           {myPursuits.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border px-5 py-9 text-center">
-              <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                Nothing yet. Name a thing you’re working toward and it lives here.
-              </p>
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => setPursuitDialog(true)}>
-                Start a Pursuit
-              </Button>
-            </div>
+            <EmptyState
+              line="No Pursuits yet."
+              hint="Name a thing you’re working toward and it lives here."
+              action={{ label: "Start a Pursuit", onClick: () => setPursuitDialog(true) }}
+            />
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

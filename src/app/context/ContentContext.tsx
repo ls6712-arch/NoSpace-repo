@@ -199,6 +199,11 @@ export function rowToPost(row: any, creatorName: string): Post {
 
 interface ContentContextType {
   posts: Post[];
+  /** First load of Moments for this session: "loading" until it lands,
+   * "error" if it failed (retry with reloadPosts). Later refreshes don't
+   * flip this back to "loading", so a page never re-skeletons under you. */
+  postsStatus: "loading" | "ready" | "error";
+  reloadPosts: () => Promise<void>;
   myPosts: Post[];
   publicFeed: Post[];
   publicFeedByHobby: (slug: string) => Post[];
@@ -345,8 +350,22 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     readLocalFollowedSpaceSlugs(),
   );
 
-  const refetchRealPosts = async () => {
-    if (!supabase) return;
+  const [postsStatus, setPostsStatus] = useState<"loading" | "ready" | "error">(supabase ? "loading" : "ready");
+
+  const reloadPosts = async () => {
+    setPostsStatus((s) => (s === "ready" ? s : "loading"));
+    try {
+      const ok = await refetchRealPosts();
+      setPostsStatus((s) => (ok ? "ready" : s === "ready" ? s : "error"));
+    } catch (err) {
+      console.warn("[ContentContext] posts load failed:", err);
+      setPostsStatus((s) => (s === "ready" ? s : "error"));
+    }
+  };
+
+  /** Returns false when the posts query itself failed. */
+  const refetchRealPosts = async (): Promise<boolean> => {
+    if (!supabase) return true;
     let { data, error } = await supabase
       .from("posts")
       .select(POST_COLUMNS)
@@ -370,7 +389,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         .select(POST_COLUMNS)
         .order("created_at", { ascending: false }));
     }
-    if (error || !data) return;
+    if (error || !data) {
+      if (error) console.warn("[ContentContext] posts select failed:", error);
+      return false;
+    }
 
     const userIds = [...new Set(data.map((row: any) => row.user_id as string))];
     const { data: profilesData } = userIds.length
@@ -419,6 +441,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     } else {
       setOwnCounts({});
     }
+    return true;
   };
 
   /**
@@ -544,7 +567,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    refetchRealPosts();
+    void reloadPosts();
     refetchLikedPosts();
     refetchMyReactions();
     refetchActiveHobbies();
@@ -996,6 +1019,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     <ContentContext.Provider
       value={{
         posts,
+        postsStatus,
+        reloadPosts,
         myPosts,
         publicFeed,
         publicFeedByHobby,
