@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Compass } from "lucide-react";
@@ -33,20 +33,30 @@ import { track } from "../lib/analytics";
  * (ns-site-header), so Header always wins if the two ever do overlap.
  * aria-hidden + pointer-events-none while faded so it's neither announced
  * nor tappable while invisible.
+ *
+ * `feedScrollRef` is MySpaceGrid's own ref to `.myspace-feed` — below lg
+ * that element doesn't scroll on its own (my-space.css: the whole page
+ * does), but at lg and up it becomes the actual scrolling region while the
+ * window itself barely moves, so useAtScrollTop needs that ref to watch the
+ * right thing at each breakpoint. Optional only so this component still
+ * renders (minus the hide-on-scroll behavior) if ever used somewhere
+ * without that layout.
  */
 export function PursuitsInProgressSection({
   pursuits,
   posts,
   entryProject,
+  feedScrollRef,
 }: {
   pursuits: Project[];
   posts: Post[];
   entryProject: Record<string, string>;
+  feedScrollRef?: RefObject<HTMLElement | null>;
 }) {
   const { logs } = usePrivateLogs();
   const [seeAll, setSeeAll] = useState(false);
   const reduceMotion = useReducedMotion();
-  const atTop = useAtScrollTop();
+  const atTop = useAtScrollTop(feedScrollRef);
   const sectionRef = useRef<HTMLElement>(null);
   // `inert` isn't in this React version's JSX attribute typings (@types/react
   // 18.3), so it's set as a real DOM property instead of a prop — it still
