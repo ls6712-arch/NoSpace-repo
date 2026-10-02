@@ -500,7 +500,7 @@ export function Discover() {
               horizontally (edge-to-edge, bleeding past the container's own
               padding) instead of overflowing the screen or wrapping into a
               second, layout-shifting row. */}
-          <div className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
+          <div className="-mx-4 -mt-2.5 mb-3.5 overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
             <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
               {VISIBLE_DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
                 const active = tab === id;

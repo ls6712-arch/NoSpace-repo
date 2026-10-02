@@ -358,7 +358,8 @@ export function SpacePage({ space }: { space: SpaceRow }) {
 
       <div className="mx-auto w-full max-w-3xl px-4 pt-6">
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="max-w-full justify-start overflow-x-auto">
+          <div className="-my-1.5 overflow-x-auto py-1.5">
+          <TabsList className="w-max justify-start">
             <TabsTrigger value="home">Table</TabsTrigger>
             <TabsTrigger value="moments">Moments</TabsTrigger>
             <TabsTrigger value="people">People</TabsTrigger>
@@ -369,6 +370,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
               </TabsTrigger>
             )}
           </TabsList>
+          </div>
           <TabsContent value="home">
             <SpaceHomeTab
               space={space}

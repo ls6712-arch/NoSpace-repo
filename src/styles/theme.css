@@ -763,6 +763,40 @@
     }
   }
 
+  /* ── Touch targets ────────────────────────────────────────────────────────
+     On touch devices every tappable element gets an invisible hit area of at
+     least 44×44px, centred on it, so a 20px icon stays 20px to the eye and
+     still takes a thumb. Only (pointer: coarse); a mouse sees none of this.
+     The element itself is never enlarged: the area is an ::after that is
+     max(100%, 44px), so anything already big enough is untouched.
+     :where() keeps specificity at zero, so absolute / fixed / sticky from a
+     utility still wins over the position: relative this needs. Known limits,
+     each handled where it occurs: overflow:hidden on the element clips its
+     own hit area, inline text links inside a paragraph are left alone (44px
+     around a line of prose would cover the lines above and below), and text
+     inputs can't have pseudo-elements so they get a 44px min-height. */
+  @media (pointer: coarse) {
+    :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="option"],
+        [role="checkbox"], [role="switch"], [role="radio"], summary, a[href]:not(:where(p, label) > a)) {
+      position: relative;
+    }
+
+    :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="option"],
+        [role="checkbox"], [role="switch"], [role="radio"], summary, a[href]:not(:where(p, label) > a))::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+
+    :where(input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"], [type="file"]), select, textarea) {
+      min-height: 44px;
+    }
+  }
+
   h1, h2, h3 {
     font-family: var(--font-heading);
     font-weight: var(--font-weight-medium);

@@ -216,7 +216,7 @@ export function BookmarkOverlay({
         aria-label={saved ? "Saved. Tap again to remove it" : "Save"}
         title={saved ? "Saved" : "Save"}
         onClick={onClick}
-        className="flex size-10 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+        className="flex size-11 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
       >
         <Bookmark
           className={`size-[22px] ${CORNER_ICON_SCRIM}`}
@@ -239,7 +239,7 @@ export function BookmarkOverlay({
 
 
 const ICON_BTN =
-  "flex h-10 shrink-0 min-w-10 items-center justify-center gap-1 rounded-control px-2 text-small transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
+  "flex h-11 shrink-0 min-w-11 items-center justify-center gap-1 rounded-control px-2 text-small transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
 
 /**
  * The one reaction row — used by every MomentCard and by MomentDetail, so
@@ -417,7 +417,7 @@ export function MomentCard({
             onClick={() => setVisibilityOpen(true)}
             aria-label={`Who sees this: ${visibilityWord(post)}. Change it`}
             title="Who sees this"
-            className="absolute right-1.5 top-1.5 z-[1] flex size-10 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+            className="absolute right-1 top-1 z-[1] flex size-11 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
           >
             {onlyYou ? (
               <Lock
@@ -455,7 +455,7 @@ export function MomentCard({
           </div>
         ) : (
           <div className="flex min-h-9 min-w-0 items-center gap-2">
-            <Link to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"} className="shrink-0">
+            <Link to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"} className="-my-1.5 -mr-3 shrink-0 py-1.5 pr-3">
               <Avatar className="size-8">
                 <AvatarFallback className="text-caption">{initials(post.creator)}</AvatarFallback>
               </Avatar>
@@ -463,7 +463,7 @@ export function MomentCard({
             <span className="min-w-0">
               <Link
                 to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
-                className="block truncate text-body leading-tight transition-colors hover:text-[var(--coral-text)]"
+                className="-my-3 block truncate py-3 text-body leading-tight transition-colors hover:text-[var(--coral-text)]"
                 style={{ fontFamily: "var(--font-serif)" }}
                title={post.creator}>
                 {post.creator}

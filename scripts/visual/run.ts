@@ -8,6 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
+//   node scripts/visual/run.ts --touch                 touch-target audit: 44x44px hit areas, and overlaps
 //
 // Needs a Chromium: set PLAYWRIGHT_CHROMIUM or rely on PLAYWRIGHT_BROWSERS_PATH.
 import { execFileSync, spawnSync } from "node:child_process";
@@ -20,6 +21,7 @@ import { chromium, type Browser, type Page } from "playwright-core";
 import { buildFixtures } from "./fixtures.ts";
 import { cacheFonts } from "./fonts.ts";
 import { detectInPage, diffDetections, INFLATE_CSS, type Detection } from "./detect.ts";
+import { touchAuditInPage, type TouchResult } from "./touch.ts";
 import { FIXTURE_ANON_KEY, FIXTURE_ORIGIN, installSupabaseMock, seededSession } from "./mock-supabase.ts";
 import { SCREENS, type Screen } from "./screens.ts";
 
@@ -85,6 +87,26 @@ async function runPass(browser: Browser, o: RunOpts): Promise<{ results: Results
   return { results, unserved: [...unserved], unhandledRpc: [...unhandled], notes };
 }
 
+async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, TouchResult>> {
+  const srv = await serve(o.dist, o.fontsDir); const out = new Map<string, TouchResult>();
+  for (const theme of o.themes) {
+    const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
+    await installSupabaseMock(ctx, buildFixtures(), TYPES);
+    await ctx.addInitScript(([session, t]) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", t as string); } catch { /* storage blocked */ } }, [seededSession(), theme] as const);
+    const page = await ctx.newPage();
+    for (const s of o.screens) {
+      try {
+        await page.setViewportSize({ width: 375, height: 812 });
+        await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page);
+        const h = await page.evaluate(() => Math.min(document.documentElement.scrollHeight, 20000)); await page.setViewportSize({ width: 375, height: Math.max(812, h) }); await page.waitForTimeout(300);
+        out.set(`${theme}/375/${s.name}`, await page.evaluate(touchAuditInPage, 44));
+      } catch (e) { console.log(`note: touch ${theme}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
+    }
+    await ctx.close();
+  }
+  srv.close(); return out;
+}
+
 const total = (r: Results) => [...r.values()].reduce((n, d) => n + d.flags.length, 0);
 
 async function main() {
@@ -106,6 +128,17 @@ async function main() {
     await browser.close(); process.exit(ok ? 0 : 1);
   }
 
+  if (flag("touch")) {
+    const res = await touchPass(browser, { ...base, widths: [375] });
+    const seen = new Map<string, { n: number; w: number; h: number; inline: boolean; reason: string; by?: string; bottom?: number }>(); let total = 0, fails = 0;
+    const overlaps = new Map<string, number>();
+    for (const [, r] of res) { total += r.total; fails += r.failing.length; for (const f of r.failing) { const k = `${f.sel} "${f.text}"`; const e = seen.get(k); seen.set(k, { n: (e?.n ?? 0) + 1, w: f.w, h: f.h, inline: f.inline, reason: f.reason, by: f.stolenBy, bottom: f.fromBottom }); } for (const o of r.overlaps) overlaps.set(`${o.a}  ⟷  ${o.b}`, Math.max(o.px, overlaps.get(`${o.a}  ⟷  ${o.b}`) ?? 0)); }
+    const small = [...seen.values()].filter((e) => e.reason === "small").length;
+    console.log(`touch audit @375 (hasTouch): interactive elements ${total}; no 44x44 hit area: ${small} distinct; corners shared with a neighbour: ${seen.size - small} distinct; overlapping 44px areas: ${overlaps.size} distinct pair(s)`);
+    for (const [k, e] of [...seen].sort((a, b) => b[1].n - a[1].n)) console.log(`  ${e.reason === "overlap" ? "SHARED" : "SMALL "} ${String(e.w).padStart(3)}x${String(e.h).padEnd(3)} ${e.inline ? "inline " : "       "} ${k}${e.by ? "  (hit lands on " + e.by + ")" : ""}  [${e.n} screen-runs${e.reason === "small" && e.bottom !== undefined ? `, ${e.bottom}px above page bottom` : ""}]`);
+    for (const [k, px] of overlaps) console.log(`  OVERLAP ${px}px  ${k}`);
+    await browser.close(); process.exit(flag("strict") && small > 0 ? 1 : 0);
+  }
   const after = await runPass(browser, base);
   const before = opt("baseline") ? await runPass(browser, { ...base, dist: path.resolve(opt("baseline")!), outDir: undefined }) : undefined;
   console.log(`\nscreens×widths×themes visited: ${after.results.size}   flagged elements: ${total(after.results)}   page-level horizontal scroll: ${[...after.results].filter(([, d]) => d.hscroll > 0).map(([k, d]) => `${k} (${d.hscroll}px)`).join(", ") || "none"}`);
