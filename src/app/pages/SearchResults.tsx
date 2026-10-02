@@ -95,7 +95,7 @@ export function SearchResults() {
             {loading ? "Searching…" : `Nothing matches "${q}" yet.`}
           </p>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-12">
             {SEARCH_GROUP_ORDER.map(({ group, title }) => {
               const hits = groups[group];
               if (hits.length === 0) return null;

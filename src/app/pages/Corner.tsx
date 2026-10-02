@@ -57,7 +57,7 @@ export function CornerPage() {
 
   return (
     <div className="min-h-viewport">
-      <section className="container mx-auto px-4 pt-14">
+      <section className="container mx-auto px-4 pt-12">
         <Link
           to={`/space/${spaceSlug}`}
           className="mb-3 inline-block text-caption text-muted-foreground hover:text-foreground"
@@ -69,7 +69,7 @@ export function CornerPage() {
         </h1>
       </section>
 
-      <section className="container mx-auto px-4 pt-8 pb-24">
+      <section className="container mx-auto px-4 pt-8 pb-12">
         {posts.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             No {corner.name.toLowerCase()} Moments yet. Be the first.

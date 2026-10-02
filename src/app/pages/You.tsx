@@ -325,7 +325,7 @@ export function You() {
             less padding, so the page reads as one important thing plus
             supporting ones rather than equal blocks.
             Order: Moments, Pursuits, Quiet Milestones. */}
-        <section className="mb-16">
+        <section className="mb-12">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-title sm:text-display" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
               Every moment
@@ -398,7 +398,7 @@ export function You() {
           )}
         </section>
 
-        <section className="mb-10 border-t border-[var(--line,var(--border))] pt-7">
+        <section className="mb-12 border-t border-[var(--line,var(--border))] pt-8">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-body sm:text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               Your Pursuits
@@ -473,7 +473,7 @@ export function You() {
           )}
         </section>
 
-        <section className="mb-10 border-t border-[var(--line,var(--border))] pt-7">
+        <section className="mb-12 border-t border-[var(--line,var(--border))] pt-8">
           <div className="mb-1 flex items-baseline justify-between gap-4">
             <h2 className="flex items-center gap-2 text-body sm:text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />

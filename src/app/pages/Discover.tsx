@@ -201,7 +201,7 @@ function MarketplaceTab({ query }: { query: string }) {
       {[...bySpace.entries()].map(([hobbySlug, list]) => {
         const hobby = hobbies.find((h) => h.slug === hobbySlug);
         return (
-          <section key={hobbySlug} className="mb-11">
+          <section key={hobbySlug} className="mb-12">
             <div className="mb-3 flex items-end justify-between gap-4">
               <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
                 {hobby?.name ?? hobbySlug}
@@ -469,7 +469,7 @@ export function Discover() {
 
   return (
     <div className="min-h-viewport">
-      <section className="relative overflow-hidden py-10 sm:py-12">
+      <section className="relative overflow-hidden py-12 sm:py-12">
         <div className="container relative mx-auto max-w-3xl px-4">
           <div className="ns-discover-search relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
@@ -531,7 +531,7 @@ export function Discover() {
 
               {/* Spotlight */}
               {featured.length > 0 && (
-                <section className="mb-14">
+                <section className="mb-12">
                   <div className="mb-5 flex items-end justify-between gap-4">
                     <div>
                       <div className="ns-section-kicker mb-2">Popular Moments from across {APP_NAME}</div>

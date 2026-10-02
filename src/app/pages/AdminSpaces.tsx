@@ -207,7 +207,7 @@ export function AdminSpaces() {
           </p>
         )}
 
-        <section className="mb-10 rounded-card border border-dashed border-border bg-[var(--surface-elevated)] p-5 text-small text-muted-foreground">
+        <section className="mb-12 rounded-card border border-dashed border-border bg-[var(--surface-elevated)] p-5 text-small text-muted-foreground">
           Creating a new Space here is turned off during the Spaces Rework. New
           communities will be made from the Create Space form instead, once
           it ships.

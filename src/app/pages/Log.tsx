@@ -1684,7 +1684,7 @@ export function Log() {
           {pursuitScoped ? initialPursuit!.title : activeMode.copy}
         </p>
 
-        <div className="space-y-7 rounded-card border border-border bg-card p-6 md:p-8">
+        <div className="space-y-8 rounded-card border border-border bg-card p-6 md:p-8">
           {!isPrivateOnly && (
             <>
               {!pursuitScoped && (

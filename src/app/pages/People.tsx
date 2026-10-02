@@ -124,7 +124,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
       )}
 
       {searching2 ? (
-        <section className="mb-10">
+        <section className="mb-12">
           <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Matching "{query}"
           </h2>
@@ -218,7 +218,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
 export function People() {
   return (
     <div className="min-h-viewport">
-      <section className="relative overflow-hidden py-12 sm:py-14">
+      <section className="relative overflow-hidden py-12 sm:py-12">
         <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
         <div className="container mx-auto max-w-5xl px-4 relative">
           <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>

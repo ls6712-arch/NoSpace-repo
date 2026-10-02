@@ -615,7 +615,7 @@ export function Pursuit() {
             </div>
           )
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-12">
             {months.map((month) => (
               <section key={month.key}>
                 <MonthHeader label={month.label} moments={month.moments} />
