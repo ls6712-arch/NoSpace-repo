@@ -320,9 +320,14 @@
   --destructive-foreground: #1C1816;
   --surface-elevated: #2E2822;
 
-  /* No shadows in dark. `0 0 #0000` rather than `none` because Tailwind
-     composes --tw-shadow into a comma list with ring shadows, where a bare
-     `none` would invalidate the whole box-shadow (rings included). */
+  /* No shadows in dark — elevation there comes from --surface plus a 1px
+     --border (see "Dark elevation" in the base layer).
+     DO NOT "simplify" these to `none`. Tailwind composes box-shadow as a
+     comma-separated list (inset, ring-offset, ring and --tw-shadow layers),
+     and `none` is not valid inside a list: one `none` makes the whole
+     declaration invalid, so every ring on that element vanishes too.
+     `0 0 #0000` is a real, fully transparent, zero-size shadow: it draws
+     nothing and keeps the list valid. */
   --shadow-card: 0 0 #0000;
   --shadow-overlay: 0 0 #0000;
 
