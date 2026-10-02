@@ -29,6 +29,7 @@ import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
 import { plural } from "../lib/plural";
+import { scrollBehavior } from "../lib/scrollToElement";
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
@@ -547,7 +548,7 @@ export function Discover() {
                         // "/all-moments" — a route that doesn't exist, so it
                         // lands on the 404 page instead of scrolling.
                         e.preventDefault();
-                        document.getElementById("all-moments")?.scrollIntoView({ behavior: "smooth" });
+                        document.getElementById("all-moments")?.scrollIntoView({ behavior: scrollBehavior() });
                       }}
                     >
                       See all →

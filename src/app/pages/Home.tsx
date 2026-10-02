@@ -13,6 +13,7 @@ import { useAuth } from "../context/AuthContext";
 import { WaitlistForm } from "../components/WaitlistForm";
 import heroWorldsImg from "../../assets/hero-worlds.png";
 import { APP_NAME } from "../config";
+import { scrollBehavior } from "../lib/scrollToElement";
 
 /**
  * Desktop-only parallax on the hero collage: it drifts up a little more
@@ -158,7 +159,7 @@ export function Home() {
                 // route that doesn't exist, so it lands on the 404 page
                 // instead of scrolling. Scroll manually and skip that.
                 e.preventDefault();
-                document.getElementById("loop")?.scrollIntoView({ behavior: "smooth" });
+                document.getElementById("loop")?.scrollIntoView({ behavior: scrollBehavior() });
               }}
             >
               See how it works

@@ -26,6 +26,7 @@ import { ReportDialog } from "../components/ReportDialog";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SharedContentCard } from "../components/SharedContentCard";
 import { pluralWord } from "../lib/plural";
+import { scrollBehavior } from "../lib/scrollToElement";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -315,7 +316,7 @@ function ConversationPanel({
   const scrollToBottom = () => {
     setNewMessageCount(0);
     setAtBottom(true);
-    endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    endRef.current?.scrollIntoView({ block: "end", behavior: scrollBehavior() });
   };
 
   return (
