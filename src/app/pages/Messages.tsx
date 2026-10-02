@@ -857,7 +857,7 @@ export function Messages() {
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
-                <ul className="space-y-2">
+                <ul className="min-w-0 space-y-2">
                   {chatThreads.map((t) => {
                     const name = user && t.fromUser === user.id ? t.toName ?? "Them" : t.fromName;
                     const on = !draftThread && String(t.id) === String(active?.id);
