@@ -37,10 +37,12 @@ export function MomentCardSkeleton() {
           <Line className="h-3.5 w-2/3" />
         </div>
         {/* Reaction row: pt-1.5 + h-10 */}
-        <div className="mt-auto flex h-10 items-center gap-3 pt-1.5">
-          <Line className="h-4 w-8" />
-          <Line className="h-4 w-8" />
-          <Line className="h-4 w-8" />
+        <div className="mt-auto pt-1.5">
+          <div className="flex h-10 items-center gap-3">
+            <Line className="h-4 w-8" />
+            <Line className="h-4 w-8" />
+            <Line className="h-4 w-8" />
+          </div>
         </div>
       </div>
     </div>
