@@ -55,6 +55,9 @@ import {
 } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { formatDate } from "../lib/dates";
+import { TOAST, UPLOAD_COPY } from "../lib/stateCopy";
+import { ERROR_LINE } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
 
 /** The audience words, identical to the ones chosen in the Log flow. */
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
@@ -189,7 +192,10 @@ export function MomentDetail({
             subHobby: editSubHobby || undefined,
             ...(uploadedMediaPath ? { mediaPath: uploadedMediaPath } : {}),
           });
-      if (ok) setEditing(false);
+      if (ok) {
+        setEditing(false);
+        notify(TOAST.changesSaved);
+      }
       else setSaveError("Couldn’t save that change. Your edit is still here. Try again.");
     } catch {
       setSaveError("Couldn’t reach the server. Your edit is still here. Try again.");
@@ -206,7 +212,7 @@ export function MomentDetail({
       ? (await removePrivateLogEntry(post.privateLogId!)).data === true
       : await deletePost(post.id);
     if (!ok) {
-      setDeleteError("Couldn’t delete that. Try again in a moment.");
+      setDeleteError(ERROR_LINE);
       return;
     }
     setConfirmDeleteOpen(false);
@@ -507,7 +513,7 @@ export function MomentDetail({
                     // unconverted, unrenderable to anyone not on Safari.
                     const file = await convertHeicIfNeeded(raw);
                     if (isHeicFile(file)) {
-                      setSaveError("That photo couldn’t be processed and wasn’t added — try a different photo.");
+                      setSaveError(UPLOAD_COPY.heic);
                       return;
                     }
                     setSaveError(null);
@@ -546,8 +552,8 @@ export function MomentDetail({
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="coral" size="sm" onClick={save} disabled={saving}>
-                {saving ? "Saving…" : "Save changes"}
+              <Button busy={saving} variant="coral" size="sm" onClick={save} disabled={saving}>
+                Save changes
               </Button>
               <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
                 Cancel

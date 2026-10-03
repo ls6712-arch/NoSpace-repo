@@ -6,6 +6,8 @@ import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { createEvent, updateEvent, type SpaceRow, type SpaceEventRow } from "../../lib/spaces";
+import { notify } from "../ui/toaster";
+import { TOAST } from "../../lib/stateCopy";
 
 function toLocalInput(iso: string) {
   const d = new Date(iso);
@@ -107,6 +109,7 @@ export function CreateEventDialog({
       : await createEvent({ spaceId: space.id, ...payload });
     setSaving(false);
     if (err) return setError(err);
+    if (isEdit) notify(TOAST.changesSaved);
     onOpenChange(false);
     onSaved();
   };
@@ -173,8 +176,8 @@ export function CreateEventDialog({
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button variant="coral" size="sm" onClick={submit} disabled={saving}>
-            {saving ? "Saving…" : isEdit ? "Save changes" : "Create event"}
+          <Button busy={saving} variant="coral" size="sm" onClick={submit} disabled={saving}>
+            {isEdit ? "Save changes" : "Create event"}
           </Button>
         </div>
       </DialogContent>

@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { APP_NAME } from "../config";
+import { OFFLINE_LINE } from "../lib/stateCopy";
 
 export function Login() {
   const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
@@ -117,7 +118,7 @@ export function Login() {
         navigate(redirectTo);
       }
     } catch {
-      setError("Couldn’t reach the server. Check your connection and try again.");
+      setError(OFFLINE_LINE);
     } finally {
       // Without this, a thrown error left the button reading "One sec..."
       // forever and the only way out was reloading the page.
@@ -170,13 +171,14 @@ export function Login() {
             </p>
             {error && <p className="mt-2 text-xs text-[var(--coral-text)]">{error}</p>}
             <Button
+              busy={resending}
               variant="outline"
               size="sm"
               className="mt-3"
               disabled={resending}
               onClick={resend}
             >
-              {resending ? "Sending…" : "Resend confirmation email"}
+              Resend confirmation email
             </Button>
           </div>
         ) : (
@@ -266,8 +268,8 @@ export function Login() {
                 </div>
               )}
 
-              <Button type="submit" variant="brand" size="lg" className="w-full" disabled={submitting}>
-                {submitting ? "One sec…" : mode === "signup" ? "Sign up" : "Log in"}
+              <Button busy={submitting} type="submit" variant="brand" size="lg" className="w-full" disabled={submitting}>
+                {mode === "signup" ? "Sign up" : "Log in"}
               </Button>
             </form>
 

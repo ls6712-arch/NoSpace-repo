@@ -25,6 +25,9 @@ import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { SpacesBrowser } from "../components/SpacesBrowser";
+import { Loadable, useDelayedFlag } from "../components/ui/skeleton";
+import { MomentCardSkeleton, MomentGridSkeleton } from "../components/Skeletons";
+import { EmptyState, ErrorNotice } from "../components/StateViews";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
@@ -255,9 +258,7 @@ function AllCornersBrowser({ query }: { query: string }) {
     // below is only ever seen when a search genuinely comes up empty.
     if (!q) return null;
     return (
-      <div className="rounded-2xl border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">
-        No Corners match that. Try a broader word.
-      </div>
+      <EmptyState line="No Corners match that." hint="Try a broader word." />
     );
   }
 
@@ -285,8 +286,28 @@ function AllCornersBrowser({ query }: { query: string }) {
   );
 }
 
+/** Holds Spotlight's place while Moments load: same heading, a row of cards. */
+function SpotlightSkeleton() {
+  const show = useDelayedFlag(true);
+  return (
+    <section className={`mb-14 ${show ? "" : "invisible"}`} aria-busy="true">
+      <div className="mb-5">
+        <div className="ns-section-kicker mb-2">Popular Moments from across {APP_NAME}</div>
+        <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Spotlight</h2>
+      </div>
+      <div className="flex gap-4 overflow-hidden pb-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="w-64 shrink-0">
+            <MomentCardSkeleton />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function Discover() {
-  const { publicFeed } = useContent();
+  const { publicFeed, postsStatus, reloadPosts } = useContent();
   const { user } = useAuth();
   // Subscribing re-renders this page when admin Space changes load.
   const { spaceRows } = useCategories();
@@ -532,6 +553,7 @@ export function Discover() {
               <AllCornersBrowser query={query} />
 
               {/* Spotlight */}
+              {postsStatus === "loading" && <SpotlightSkeleton />}
               {featured.length > 0 && (
                 <section className="mb-14">
                   <div className="mb-5 flex items-end justify-between gap-4">
@@ -688,18 +710,24 @@ export function Discover() {
                   : `${plural(filtered.length, "Moment")}${q ? ` matching “${query}”` : ""}`}
               </p>
 
-              {chip === "near" ? (
-                <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
-                  <p className="mx-auto mb-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                    {APP_NAME} doesn’t know where you are, and won’t until you tell it.
-                  </p>
-                </div>
+              <Loadable loading={postsStatus === "loading"} skeleton={<MomentGridSkeleton count={6} />}>
+              {postsStatus === "error" && publicFeed.length === 0 ? (
+                <ErrorNotice onRetry={reloadPosts} />
+              ) : chip === "near" ? (
+                <EmptyState
+                  line={`${APP_NAME} doesn’t know where you are, and won’t until you tell it.`}
+                  action={{ label: "Browse Moments", onClick: () => setChip("all") }}
+                />
               ) : visible.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted-foreground">
-                  {feedTab === "following"
-                    ? "Nothing from your Interests yet. Tag a Moment with a Corner to start building your list."
-                    : "Nothing matches that yet. Try a broader word or a different filter."}
-                </div>
+                feedTab === "following" ? (
+                  <EmptyState
+                    line="Nothing from your Interests yet."
+                    hint="Tag a Moment with a Corner to start building your list."
+                    action={{ label: "Log a Moment", to: "/create" }}
+                  />
+                ) : (
+                  <EmptyState line="Nothing matches that yet." hint="Try a broader word or a different filter." />
+                )
               ) : (
                 <div className={MOMENT_GRID}>
                   {visible.map((post) => (
@@ -713,6 +741,7 @@ export function Discover() {
                   ))}
                 </div>
               )}
+              </Loadable>
 
               {/* The end of the gallery — an intentional choice, not more scroll */}
               {visible.length > 0 && (

@@ -16,6 +16,10 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { CreateEventDialog } from "./CreateEventDialog";
 import { Time } from "../ui/time";
+import { ConfirmDialog } from "../ConfirmDialog";
+import { Loadable } from "../ui/skeleton";
+import { CardListSkeleton } from "../Skeletons";
+import { EmptyState, InlineError } from "../StateViews";
 
 
 function initials(name: string) {
@@ -140,12 +144,16 @@ export function SpaceEventsTab({
     if (err) return setError(err);
     refetch();
   };
-  const cancel = async (eventId: number) => {
-    if (!confirm("Cancel this event? Everyone who RSVP’d will be notified.")) return;
+  const [cancelId, setCancelId] = useState<number | null>(null);
+  const cancel = (eventId: number) => setCancelId(eventId);
+  const confirmCancel = async () => {
+    if (cancelId == null) return;
+    const eventId = cancelId;
     setBusyId(eventId);
     setError(null);
     const { error: err } = await cancelEvent(eventId);
     setBusyId(null);
+    setCancelId(null);
     if (err) return setError(err);
     refetch();
   };
@@ -165,9 +173,9 @@ export function SpaceEventsTab({
           Join this Space to see event details and RSVP.
         </p>
         {teasers === "loading" ? (
-          <div className="min-h-[20vh]" />
+          <Loadable loading skeleton={<CardListSkeleton count={2} rowClassName="h-14" />}>{null}</Loadable>
         ) : teasers.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events</p>
+          <EmptyState size="inline" line="No upcoming events." />
         ) : (
           <ul className="space-y-2">
             {teasers.map((t) => (
@@ -182,7 +190,13 @@ export function SpaceEventsTab({
     );
   }
 
-  if (events === "loading") return <div className="min-h-[30vh]" />;
+  if (events === "loading") {
+    return (
+      <Loadable loading className="py-6" skeleton={<CardListSkeleton count={3} rowClassName="h-28" />}>
+        {null}
+      </Loadable>
+    );
+  }
 
   const now = Date.now();
   const upcoming = events
@@ -199,10 +213,11 @@ export function SpaceEventsTab({
           <Button variant="coral" size="sm" onClick={() => setCreateOpen(true)}>Create event</Button>
         </div>
       )}
-      {error && <p className="mb-3 text-xs text-destructive">{error}</p>}
+      <InlineError message={error} className="mb-3" />
 
       {ordered.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">No upcoming events</p>
+        // When you can create one, "Create event" sits right above.
+        <EmptyState size="inline" line="No upcoming events." />
       ) : (
         <ul className="space-y-3">
           {ordered.map((e) => {
@@ -307,6 +322,16 @@ export function SpaceEventsTab({
           onSaved={refetch}
         />
       )}
+
+      <ConfirmDialog
+        open={cancelId != null}
+        onOpenChange={(o) => !o && setCancelId(null)}
+        title="Cancel this event?"
+        description="Everyone who RSVP’d will be notified."
+        confirmLabel="Cancel event"
+        cancelLabel="Keep it"
+        onConfirm={confirmCancel}
+      />
     </div>
   );
 }

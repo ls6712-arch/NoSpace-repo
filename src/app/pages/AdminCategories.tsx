@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { formatWhen } from "../lib/dates";
+import { EmptyState } from "../components/StateViews";
 
 /**
  * Reviewing what people said was missing.
@@ -98,9 +99,7 @@ export function AdminCategories() {
 
           <TabsContent value="pending">
             {pending.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-                <p className="text-sm text-muted-foreground">Nothing waiting</p>
-              </div>
+              <EmptyState line="Nothing waiting." />
             ) : (
               <ul className="space-y-3">
                 {pending.map((s) => (
@@ -188,9 +187,7 @@ export function AdminCategories() {
 
           <TabsContent value="decided">
             {decided.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-                <p className="text-sm text-muted-foreground">Nothing decided yet</p>
-              </div>
+              <EmptyState line="Nothing decided yet." />
             ) : (
               <ul className="space-y-2">
                 {decided.map((s) => (

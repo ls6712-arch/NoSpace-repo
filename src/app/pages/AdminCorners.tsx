@@ -7,6 +7,10 @@ import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { plural } from "../lib/plural";
+import { Loadable } from "../components/ui/skeleton";
+import { CardListSkeleton } from "../components/Skeletons";
+import { friendlyError } from "../lib/friendlyError";
+import { EmptyState } from "../components/StateViews";
 
 /**
  * Merging, renaming and hiding Corners.
@@ -104,7 +108,7 @@ export function AdminCorners() {
       setError(
         /blocklisted|constraint/i.test(err.message)
           ? `“${name}” isn’t allowed as a Corner name.`
-          : err.message,
+          : friendlyError(err),
       );
       return;
     }
@@ -123,7 +127,8 @@ export function AdminCorners() {
     });
     setBusy(null);
     if (err) {
-      setError(err.message);
+      console.warn("[AdminCorners] action failed:", err);
+      setError(friendlyError(err));
       return;
     }
     setNotice(row.hidden ? `“${row.name}” is visible again.` : `“${row.name}” is hidden from Discover.`);
@@ -150,7 +155,8 @@ export function AdminCorners() {
     });
     setBusy(null);
     if (err) {
-      setError(err.message);
+      console.warn("[AdminCorners] action failed:", err);
+      setError(friendlyError(err));
       return;
     }
     const moved = (data ?? {}) as { moments?: number; pursuits?: number; spaces?: number; interests?: number };
@@ -189,13 +195,9 @@ export function AdminCorners() {
         )}
 
         {loading ? (
-          <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-            Loading…
-          </div>
+          <Loadable loading skeleton={<CardListSkeleton />}>{null}</Loadable>
         ) : rows.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-            No Corner has a real Moment tagged into it yet.
-          </div>
+          <EmptyState line="No Corner has a real Moment tagged into it yet." />
         ) : (
           <ul className="space-y-3">
             {rows.map((row) => {

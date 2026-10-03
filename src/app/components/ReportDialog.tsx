@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 const REASONS: { value: ReportReason; label: string }[] = [
   { value: "spam", label: "Spam" },
@@ -84,7 +85,7 @@ export function ReportDialog({
     if (reportError) {
       submittingRef.current = false;
       setBusy(false);
-      setError("Couldn’t send that. Try again later.");
+      setError(ERROR_LINE);
       return;
     }
     if (alsoBlock) {

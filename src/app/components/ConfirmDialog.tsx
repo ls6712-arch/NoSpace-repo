@@ -32,7 +32,7 @@ export function ConfirmDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   /** Can be async — the dialog stays open and the confirm button shows a
@@ -69,14 +69,18 @@ export function ConfirmDialog({
       >
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          {description ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : (
+            <DialogDescription className="sr-only">{title}</DialogDescription>
+          )}
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={confirming}>
             {cancelLabel}
           </Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={confirming}>
-            {confirming ? "Deleting…" : confirmLabel}
+          <Button variant="destructive" onClick={handleConfirm} busy={confirming}>
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

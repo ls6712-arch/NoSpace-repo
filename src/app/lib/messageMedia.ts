@@ -1,4 +1,6 @@
 import { supabase } from "../../lib/supabase";
+import { friendlyError } from "./friendlyError";
+import { UPLOAD_COPY } from "./stateCopy";
 
 /** Phase 4's private bucket for chat photos (public = false — see
  * supabase/migrations/20261005000000_communication_phase4_rich.sql). Every
@@ -34,7 +36,7 @@ export async function uploadMessagePhoto(
   const { error } = await supabase.storage
     .from(MESSAGE_MEDIA_BUCKET)
     .upload(path, file, { contentType: file.type || undefined, upsert: false });
-  if (error) return { path: null, error: error.message };
+  if (error) return { path: null, error: friendlyError(error, UPLOAD_COPY.failed) };
   return { path, error: null };
 }
 

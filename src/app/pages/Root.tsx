@@ -6,6 +6,7 @@ import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
 import { QuickLogGlobalSheet } from "../components/QuickLogGlobalSheet";
 import { BottomTabBar } from "../components/BottomTabBar";
 import { PreviewBanner } from "../components/PreviewBanner";
+import { NetworkBanner } from "../components/NetworkBanner";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 
@@ -104,6 +105,7 @@ export function Root() {
   return (
     <div className="min-h-screen">
       <PreviewBanner />
+      <NetworkBanner />
       <Header />
       <main>
         <Outlet />

@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { isMissingCountColumn } from "../context/ContentContext";
 import { signMomentPaths } from "../lib/momentMedia";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { friendlyError } from "../lib/friendlyError";
+import { Loadable, Skeleton } from "./ui/skeleton";
+import { EmptyState } from "./StateViews";
 
 /** Links one of the member's own existing Moments into this Space —
  * space_moments' own "the poster or a host links/unlinks" policy already
@@ -31,6 +34,7 @@ export function AddMomentToSpaceDialog({
   onAdded?: () => void;
 }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<{ id: number; caption: string; media: string | null }[] | "loading">("loading");
   const [linking, setLinking] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +106,13 @@ export function AddMomentToSpaceDialog({
       .select("status")
       .single();
     setLinking(null);
-    if (insertError) return setError(insertError.message);
+    if (insertError) {
+      console.warn("[AddMomentToSpaceDialog] add failed:", insertError);
+      // A duplicate means it's already here — say that, not the constraint name.
+      return setError(
+        insertError.code === "23505" ? "That Moment is already in this Space." : friendlyError(insertError),
+      );
+    }
     setDonePending(data?.status === "pending");
     setDone(true);
     onAdded?.();
@@ -123,14 +133,33 @@ export function AddMomentToSpaceDialog({
             {donePending ? "Sent to the hosts for approval." : "Added."}
           </p>
         ) : posts === "loading" ? (
-          <div className="py-6" />
+          <Loadable
+            loading
+            skeleton={
+              <div className="space-y-1">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-xl px-2 py-2">
+                    <Skeleton className="size-12 shrink-0 rounded-lg" />
+                    <Skeleton className="h-3 w-40 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            }
+          >
+            {null}
+          </Loadable>
         ) : posts.length === 0 ? (
-          <div className="py-4 text-center">
-            <p className="text-sm text-muted-foreground">You don’t have any Moments yet.</p>
-            <Link to={`/create?space=${spaceId}`} onClick={() => onOpenChange(false)} className="mt-3 inline-block">
-              <Button variant="coral" size="sm">Log a new Moment</Button>
-            </Link>
-          </div>
+          <EmptyState
+            size="inline"
+            line="You don’t have any Moments yet."
+            action={{
+              label: "Log a Moment",
+              onClick: () => {
+                onOpenChange(false);
+                navigate(`/create?space=${spaceId}`);
+              },
+            }}
+          />
         ) : (
           <div className="max-h-80 space-y-1 overflow-y-auto">
             {posts.map((p) => (

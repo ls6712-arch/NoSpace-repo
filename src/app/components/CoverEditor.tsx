@@ -5,6 +5,10 @@ import { captureOpener, restoreFocus } from "../lib/returnFocus";
 import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
 import { PostMedia } from "./PostMedia";
+import { Button } from "./ui/button";
+import { notify } from "./ui/toaster";
+import { TOAST } from "../lib/stateCopy";
+import { InlineError } from "./StateViews";
 
 /** True only for a real, loadable upload — a placeholder illustration makes
  * a poor cover photo, so it never shows up as a swatch option here. */
@@ -27,6 +31,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
   const [tagline, setTagline] = useState("");
   const [postId, setPostId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const opener = useRef<HTMLElement | null>(null);
 
   const candidates = (() => {
@@ -46,12 +51,16 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
   const save = async () => {
     if (saving) return;
     setSaving(true);
-    await updateProfile({
+    setError(null);
+    const result = await updateProfile({
       cover_title: title.trim() || null,
       cover_tagline: tagline.trim() || null,
       cover_post_id: postId,
     });
     setSaving(false);
+    // Keep the dialog (and what was typed) open on failure.
+    if (result?.error) return setError(result.error);
+    notify(TOAST.changesSaved);
     setOpen(false);
   };
 
@@ -159,15 +168,10 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={save}
-              disabled={saving}
-              className="w-full rounded px-4 py-2.5 text-sm text-white transition-opacity disabled:opacity-60"
-              style={{ backgroundColor: "var(--coral-deep)" }}
-            >
-              {saving ? "Saving…" : "Done"}
-            </button>
+            <InlineError message={error} className="mb-2 text-center" />
+            <Button type="button" variant="coral" className="h-auto w-full py-2.5" onClick={save} busy={saving}>
+              Done
+            </Button>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>

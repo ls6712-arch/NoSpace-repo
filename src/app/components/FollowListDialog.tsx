@@ -4,6 +4,8 @@ import { fetchFollowers, fetchFollowing, type FollowListPerson } from "../lib/pr
 import { profilePath } from "../lib/people";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Loadable, Skeleton } from "./ui/skeleton";
+import { EmptyState } from "./StateViews";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -79,11 +81,31 @@ export function FollowListDialog({
 
         <div className="mt-2">
           {loading ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">Loading…</p>
+            <Loadable
+              loading
+              skeleton={
+                <div className="space-y-1">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-3 px-3 py-2">
+                      <Skeleton className="size-7 shrink-0 rounded-full" />
+                      <Skeleton className="h-3 w-32 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              }
+            >
+              {null}
+            </Loadable>
           ) : people.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
-              {tab === "followers" ? "No followers yet" : "Not following anyone yet"}
-            </p>
+            tab === "followers" ? (
+              <EmptyState size="inline" line="No followers yet." />
+            ) : (
+              <EmptyState
+                size="inline"
+                line="Not following anyone yet."
+                action={{ label: "Go to Discover", to: "/discover" }}
+              />
+            )
           ) : (
             <ul className="max-h-72 space-y-1 overflow-y-auto">
               {people.map((person) => (

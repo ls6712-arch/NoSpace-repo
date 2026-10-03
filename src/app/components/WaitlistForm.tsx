@@ -3,6 +3,7 @@ import { joinWaitlist } from "../lib/invites";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { OFFLINE_LINE } from "../lib/stateCopy";
 
 /**
  * Step 2 (invite-only sign-up)'s one waitlist form, shared by the door
@@ -38,7 +39,7 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
     const ok = await joinWaitlist(email, hobby);
     setSubmitting(false);
     if (!ok) {
-      setError("Couldn’t reach the server. Try again.");
+      setError(OFFLINE_LINE);
       return;
     }
     setDone(true);
@@ -76,8 +77,8 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
         />
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
-      <Button type="submit" variant="outline" className="w-full" disabled={submitting || !email.trim()}>
-        {submitting ? "Joining…" : "Join the waitlist"}
+      <Button busy={submitting} type="submit" variant="outline" className="w-full" disabled={submitting || !email.trim()}>
+        Join the waitlist
       </Button>
     </form>
   );

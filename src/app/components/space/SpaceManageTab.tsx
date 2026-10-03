@@ -20,6 +20,7 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { formatDate } from "../../lib/dates";
+import { InlineError } from "../StateViews";
 
 type JoinRequestRow = {
   user_id: string;
@@ -270,8 +271,8 @@ export function SpaceManageTab({
                 <p className="mt-1 text-xs text-muted-foreground">
                   You were here before it lost its host — you can step up.
                 </p>
-                <Button className="mt-3" variant="coral" size="sm" disabled={busy === "claim"} onClick={claimHosting}>
-                  {busy === "claim" ? "Claiming…" : "Claim hosting"}
+                <Button busy={busy === "claim"} className="mt-3" variant="coral" size="sm" disabled={busy === "claim"} onClick={claimHosting}>
+                  Claim hosting
                 </Button>
               </>
             ) : (
@@ -290,13 +291,13 @@ export function SpaceManageTab({
 
   return (
     <div className="space-y-8 py-6">
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      <InlineError message={error} />
       {notice && <p className="text-xs text-muted-foreground">{notice}</p>}
 
       <section>
         <h3 className="mb-2 text-sm font-medium">Pending requests</h3>
         {joinRequests.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending</p>
+          <p className="text-xs text-muted-foreground">Nothing pending.</p>
         ) : (
           <ul className="space-y-2">
             {joinRequests.map((r) => (
@@ -331,7 +332,7 @@ export function SpaceManageTab({
       <section>
         <h3 className="mb-2 text-sm font-medium">Moments waiting for approval</h3>
         {pendingMoments.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing pending</p>
+          <p className="text-xs text-muted-foreground">Nothing pending.</p>
         ) : (
           <ul className="space-y-2">
             {pendingMoments.map((m) => (
@@ -465,8 +466,8 @@ export function SpaceManageTab({
                 <Input value={deleteConfirmName} onChange={(e) => setDeleteConfirmName(e.target.value)} placeholder={space.name} />
               </>
             )}
-            <Button size="sm" variant="outline" className="text-destructive" disabled={busy === "delete"} onClick={startDeletion}>
-              {busy === "delete" ? "Working…" : "Request deletion"}
+            <Button busy={busy === "delete"} size="sm" variant="outline" className="text-destructive" disabled={busy === "delete"} onClick={startDeletion}>
+              Request deletion
             </Button>
           </div>
         )}

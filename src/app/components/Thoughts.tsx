@@ -182,8 +182,8 @@ export function Thoughts({
               >
                 Cancel
               </Button>
-              <Button variant="coral" size="sm" disabled={!body.trim() || saving} onClick={submit}>
-                {saving ? "Adding…" : "Add thought"}
+              <Button busy={saving} variant="coral" size="sm" disabled={!body.trim() || saving} onClick={submit}>
+                Add thought
               </Button>
             </span>
           </div>

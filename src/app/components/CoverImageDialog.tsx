@@ -7,6 +7,8 @@ import { useAuth } from "../context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { MediaAttachPicker } from "./MediaAttachPicker";
 import { Button } from "./ui/button";
+import { TOAST, UPLOAD_COPY } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
 
 const MAX_COVER_BYTES = 8 * 1024 * 1024;
 
@@ -42,7 +44,7 @@ export function CoverImageDialog({
       return;
     }
     if (picked && picked.size > MAX_COVER_BYTES) {
-      setError("That photo is too large (8MB max) — pick a smaller one.");
+      setError(UPLOAD_COPY.tooBig(8));
       return;
     }
     setFile(picked);
@@ -77,6 +79,7 @@ export function CoverImageDialog({
     );
     setSaving(false);
     setFile(null);
+    notify(TOAST.changesSaved);
     onOpenChange(false);
   };
 
@@ -132,8 +135,8 @@ export function CoverImageDialog({
             </div>
           </div>
 
-          <Button variant="coral" className="w-full" disabled={saving} onClick={save}>
-            {saving ? "Saving…" : "Save"}
+          <Button busy={saving} variant="coral" className="w-full" disabled={saving} onClick={save}>
+            Save
           </Button>
 
           {project.coverImagePath && (

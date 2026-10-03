@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
+import { UPLOAD_COPY } from "../lib/stateCopy";
 
 /**
  * A small, reusable "attach a photo or video" control — the same picked
@@ -83,7 +84,7 @@ export function MediaAttachPicker({
     // Still HEIC-shaped means conversion failed — don't hand back a file
     // nothing but Safari can ever render; say so instead.
     if (isHeicFile(converted)) {
-      setHeicWarning("That photo couldn’t be processed and wasn’t added — try a different photo.");
+      setHeicWarning(UPLOAD_COPY.heic);
       return;
     }
     onChange(converted);

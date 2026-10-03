@@ -7,6 +7,7 @@ import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
 import { MOMENT_GRID, MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./MomentCard";
 import { formatWhen } from "../lib/dates";
+import { EmptyState } from "./StateViews";
 
 /** The card's own dark ink color — the cream card is a deliberate,
  * contained exception to the app's dark surfaces (same pairing the flat
@@ -278,20 +279,11 @@ export function HobbyShelf({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
-        <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-          {emptyCopy ??
-            "Your shelf is empty. Every hobby you log gets its own tile here, with everything you’ve made in it inside."}
-        </p>
-        {emptyCta && (
-          <Link
-            to="/create"
-            className="mt-4 inline-block rounded-full px-5 py-2 text-sm text-white [background-color:var(--coral-deep)]"
-          >
-            Create your first moment
-          </Link>
-        )}
-      </div>
+      <EmptyState
+        line={emptyCopy ?? "Your Shelf is empty."}
+        hint={emptyCopy ? undefined : "Every Corner you log in gets its own Book here."}
+        action={emptyCta ? { label: "Log a Moment", to: "/create" } : undefined}
+      />
     );
   }
 

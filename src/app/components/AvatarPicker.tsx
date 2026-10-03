@@ -4,6 +4,8 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { friendlyError } from "../lib/friendlyError";
+import { UPLOAD_COPY } from "../lib/stateCopy";
 
 /**
  * A picture of you, or your initials. Both are fine — the initials are a real
@@ -71,7 +73,7 @@ export function AvatarPicker({
 
     if (uploadError) {
       console.warn("[AvatarPicker] upload failed:", uploadError);
-      setError("Couldn’t upload that photo. Try again.");
+      setError(friendlyError(uploadError, UPLOAD_COPY.failed));
       setBusy(false);
       return;
     }
@@ -98,7 +100,12 @@ export function AvatarPicker({
         .from("profiles")
         .update({ avatar_url: null })
         .eq("id", user.id);
-      if (saveError) setError(saveError.message);
+      if (saveError) {
+        console.warn("[AvatarPicker] remove failed:", saveError);
+        setError(friendlyError(saveError));
+        setBusy(false);
+        return;
+      }
     }
     onChange(undefined);
     setBusy(false);

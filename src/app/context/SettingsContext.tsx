@@ -12,6 +12,7 @@ import {
   NotificationPreferences,
   withMutedCategory,
 } from "../lib/notificationPreferences";
+import { friendlyError } from "../lib/friendlyError";
 
 export type DefaultVisibility = "private" | "public";
 
@@ -126,7 +127,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       .upsert({ user_id: user.id, default_visibility: next }, { onConflict: "user_id" });
     if (error) {
       setDefaultVisibilityState(prev);
-      return { error: error.message };
+      console.warn("[SettingsContext] save failed:", error);
+      return { error: friendlyError(error) };
     }
     return { error: null };
   };
@@ -140,7 +142,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       .upsert({ user_id: user.id, read_receipts: next }, { onConflict: "user_id" });
     if (error) {
       setReadReceiptsState(prev);
-      return { error: error.message };
+      console.warn("[SettingsContext] save failed:", error);
+      return { error: friendlyError(error) };
     }
     return { error: null };
   };
@@ -159,7 +162,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       .upsert({ user_id: user.id, notification_preferences: next }, { onConflict: "user_id" });
     if (error) {
       setNotificationPreferencesState(prev);
-      return { error: error.message };
+      console.warn("[SettingsContext] save failed:", error);
+      return { error: friendlyError(error) };
     }
     return { error: null };
   };

@@ -65,6 +65,8 @@ import { CameraCapture } from "../components/CameraCapture";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
 import { ENTER } from "../lib/motion";
+import { UPLOAD_COPY } from "../lib/stateCopy";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * Logging, choose-first:
@@ -926,7 +928,7 @@ export function Log() {
       setSavedPostId(entry.id);
       setScreen("saved");
     } catch {
-      setError("That didn’t save. Try again.");
+      setError(ERROR_LINE);
     } finally {
       setSaving(false);
     }
@@ -1166,8 +1168,8 @@ export function Log() {
             <Link to="/login?redirect=/create">
               <Button variant="coral">Log in or sign up</Button>
             </Link>
-            <Button variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
-              {saving ? "Saving…" : "Just keep it for myself"}
+            <Button busy={saving} variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
+              Just keep it for myself
             </Button>
           </div>
         </div>
@@ -1371,8 +1373,8 @@ export function Log() {
             if (failedCount > 0) {
               setHeicWarning(
                 failedCount === 1
-                  ? "One photo couldn’t be processed and wasn’t added — try a different photo."
-                  : `${failedCount} photos couldn’t be processed and weren’t added — try different photos.`,
+                  ? UPLOAD_COPY.heicMany(1)
+                  : UPLOAD_COPY.heicMany(failedCount),
               );
             }
             if (picked.length === 0) return;
@@ -1640,13 +1642,14 @@ export function Log() {
             separate "Save this moment" that produced the same private
             result as "Share this moment → Only you". */}
         <Button
+          busy={saving}
           variant="coral"
           size="lg"
           className="w-full"
           disabled={!hasSomething || saving}
           onClick={publish}
         >
-          {saving ? "Saving…" : audience === "private" ? "Keep it private" : "Share"}
+          {audience === "private" ? "Keep it private" : "Share"}
         </Button>
 
         {!hasSomething && (
@@ -1786,7 +1789,7 @@ export function Log() {
                         const picked = await convertHeicIfNeeded(raw);
                         if (isHeicFile(picked)) {
                           setHeicWarning(
-                            "That photo couldn’t be processed and wasn’t added — try a different photo.",
+                            UPLOAD_COPY.heic,
                           );
                           return;
                         }

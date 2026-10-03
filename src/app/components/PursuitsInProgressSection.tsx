@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, Compass } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Post } from "../data/posts";
 import { Project } from "../lib/journal";
 import { activePursuits, collectPursuitMoments } from "../lib/pursuitTrail";
@@ -12,6 +11,7 @@ import { ALL_PURSUITS_SECTION_ID } from "./AllPursuitsSection";
 import { PURSUIT_SPRING } from "./pursuit/ui";
 import { PursuitItem } from "./PursuitItem";
 import { track } from "../lib/analytics";
+import { EmptyState } from "./StateViews";
 
 /**
  * Home tab, above the Moments feed: a card grid of every ACTIVE Pursuit
@@ -105,25 +105,11 @@ export function PursuitsInProgressSection({
       </h2>
 
       {active.length === 0 ? (
-        <div className="mt-3 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-5 py-10 text-center">
-          <span
-            className="flex size-11 items-center justify-center rounded-full"
-            style={{
-              backgroundColor: "color-mix(in srgb, var(--coral) 14%, var(--surface-muted))",
-              color: "var(--coral-deep)",
-            }}
-            aria-hidden="true"
-          >
-            <Compass className="size-5" strokeWidth={1.7} />
-          </span>
-          <p className="text-sm text-muted-foreground">
-            Nothing in progress right now.{" "}
-            <Link to="/pursuits/new" className="text-accent hover:underline">
-              Start a Pursuit
-            </Link>
-            .
-          </p>
-        </div>
+        <EmptyState
+          className="mt-3"
+          line="Nothing in progress right now."
+          action={{ label: "Start a Pursuit", to: "/pursuits/new" }}
+        />
       ) : (
         <div
           className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"

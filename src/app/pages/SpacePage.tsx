@@ -17,6 +17,9 @@ import { SpacePeopleTab } from "../components/space/SpacePeopleTab";
 import { SpaceManageTab } from "../components/space/SpaceManageTab";
 import { plural } from "../lib/plural";
 import { Time } from "../components/ui/time";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { notify } from "../components/ui/toaster";
+import { TOAST } from "../lib/stateCopy";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string; avatarUrl?: string };
@@ -201,15 +204,17 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       if (error) return setActionError(error);
       await refetchMembership();
     });
-  const leave = () => {
-    if (!confirm(`Leave ${space.name}?`)) return;
-    return runAction(async () => {
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const leave = () => setLeaveOpen(true);
+  const confirmLeave = () =>
+    runAction(async () => {
       setActionError(null);
       const { error } = await leaveSpace(space.id);
+      setLeaveOpen(false);
       if (error) return setActionError(error);
+      notify(TOAST.leftSpace(space.name));
       await refetchMembership();
     });
-  };
 
   const primaryCorner = corners.find((c) => c.isPrimary) ?? corners[0];
 
@@ -403,6 +408,16 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         onOpenChange={setAddMomentOpen}
         onAdded={handleMomentAdded}
       />
+
+      <ConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        title={`Leave ${space.name}?`}
+        confirmLabel="Leave"
+        onConfirm={async () => {
+          await confirmLeave();
+        }}
+      />
     </div>
   );
 }
@@ -480,7 +495,7 @@ function RequestToJoinButton({
       )}
       <div className="mt-2 flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
-        <Button variant="coral" size="sm" onClick={submit} disabled={busy}>{busy ? "Sending…" : "Send request"}</Button>
+        <Button busy={busy} variant="coral" size="sm" onClick={submit} disabled={busy}>Send request</Button>
       </div>
     </div>
   );

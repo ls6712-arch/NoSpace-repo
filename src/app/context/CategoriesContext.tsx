@@ -10,6 +10,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { CATEGORIES, type Category } from "../data/categories";
 import { applySpaceRows, isBuiltInSpace, type SpaceRow } from "../data/hobbies";
+import { OFFLINE_LINE } from "../lib/stateCopy";
 
 /**
  * The category list, plus the way people tell us it's incomplete.
@@ -210,7 +211,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null };
     } catch {
-      return { error: "Couldn’t reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
@@ -260,7 +261,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null };
     } catch {
-      return { error: "Couldn’t reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
@@ -303,7 +304,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null, slug };
     } catch {
-      return { error: "Couldn’t reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
@@ -316,7 +317,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null };
     } catch {
-      return { error: "Couldn’t reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
@@ -341,7 +342,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
         },
       };
     } catch {
-      return { error: "Couldn’t reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
@@ -356,7 +357,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       await refresh();
       return { error: null };
     } catch {
-      return { error: "Couldn’t reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
@@ -378,7 +379,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
         },
       };
     } catch {
-      return { error: "Couldn’t reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 

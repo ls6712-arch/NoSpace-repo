@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { getHobby } from "../data/hobbies";
 import { useCorners } from "../context/CornersContext";
 import { formatWeekday } from "../lib/dates";
+import { EmptyState } from "./StateViews";
 
 const DAY = 86_400_000;
 
@@ -39,7 +40,7 @@ export function NewSpacesRail() {
       </p>
 
       {corners.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing new to show yet</p>
+        <EmptyState size="rail" line="Nothing new to show yet." action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }} />
       ) : (
         <ul className="mt-3 space-y-2.5">
           {corners.map((c) => {

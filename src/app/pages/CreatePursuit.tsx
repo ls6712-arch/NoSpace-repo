@@ -552,8 +552,8 @@ export function CreatePursuit() {
               Continue <ArrowRight className="size-4" />
             </Button>
           ) : (
-            <Button variant="coral" className="h-11 w-full rounded-xl" disabled={saving} onClick={begin}>
-              {saving ? "Starting…" : "Start a Pursuit"}
+            <Button busy={saving} variant="coral" className="h-11 w-full rounded-xl" disabled={saving} onClick={begin}>
+              Start a Pursuit
             </Button>
           )}
         </div>

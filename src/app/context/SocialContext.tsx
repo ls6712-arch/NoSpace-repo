@@ -309,6 +309,12 @@ interface SocialContextType {
    * Chats-tab half of the header/tab-bar badge (the other half is
    * messageRequests.length). */
   chatsUnreadCount: number;
+  /** True once the first load for this account has landed (chats,
+   * requests, notifications). Before that, empty lists mean "not yet",
+   * not "none". */
+  loaded: boolean;
+  /** The open chat's first page of messages is still on its way. */
+  openThreadLoading: boolean;
   /** Marks the given (accepted) thread read as of now. Silently does
    * nothing for a pending thread or one you're not in — the database
    * enforces that; the UI should just never call it in those cases. */
@@ -454,6 +460,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
    * it's stale and drop its result instead of clobbering the new thread's.
    */
   const [openThreadId, setOpenThreadId] = useState<number | string | null>(null);
+  const [openThreadLoading, setOpenThreadLoading] = useState(false);
   const openThreadIdRef = useRef<number | string | null>(null);
   const [openMessages, setOpenMessages] = useState<Message[]>([]);
   const [hasMoreOlderMessages, setHasMoreOlderMessages] = useState(false);
@@ -704,6 +711,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       setHasMoreOlderMessages(false);
       setSeenAt(null);
       if (!supabase || !user) return;
+      setOpenThreadLoading(true);
       (async () => {
         const { data, error } = await supabase
           .from("messages")
@@ -715,7 +723,9 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         // The user may have switched threads (or left Messages) while this
         // was in flight — a stale result must never clobber the thread
         // that's actually open now.
-        if (openThreadIdRef.current !== participationId || error || !data) return;
+        if (openThreadIdRef.current !== participationId) return;
+        setOpenThreadLoading(false);
+        if (error || !data) return;
         const page = data.slice(0, MESSAGE_PAGE_SIZE).reverse().map(mapMessageRow);
         setOpenMessages(page);
         setHasMoreOlderMessages(data.length > MESSAGE_PAGE_SIZE);
@@ -727,6 +737,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
   const closeConversation = useCallback(() => {
     openThreadIdRef.current = null;
+    setOpenThreadLoading(false);
     setOpenThreadId(null);
     setOpenMessages([]);
     setHasMoreOlderMessages(false);
@@ -877,9 +888,17 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
   }, [user?.id, refresh, reloadOpenConversation, refreshSeenAt]);
 
+  // Which account the first load has finished for — so a switch of
+  // accounts shows loading again instead of the last account's emptiness.
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
   useEffect(() => {
-    refresh();
+    const forUser = user?.id ?? null;
+    Promise.resolve(refresh())
+      .catch((err) => console.warn("[SocialContext] first load failed:", err))
+      .finally(() => setLoadedFor(forUser));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refresh]);
+  const loaded = !shared || loadedFor === (user?.id ?? null);
 
   /* ── Notifying ──────────────────────────────────────────────────────── */
 
@@ -1858,6 +1877,8 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         addThought,
         removeThought,
         notifications: visibleNotifications,
+        loaded,
+        openThreadLoading,
         unreadCount,
         markAllRead,
         markNotificationsRead,

@@ -14,6 +14,7 @@ import { MomentDetail } from "../components/MomentDetail";
 import { Button } from "../components/ui/button";
 import { formatDate, formatMonth, formatWhen } from "../lib/dates";
 import { plural } from "../lib/plural";
+import { EmptyState } from "../components/StateViews";
 
 /**
  * One hobby's personal archive — everything logged under that tag, in order.
@@ -219,18 +220,21 @@ export function HobbyArchive() {
             </ul>
 
             {filtered.length === 0 ? (
-              <div className="mt-6 rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  {moments.length === 0
-                    ? `Nothing logged under ${target.label} yet. A photo, or a sentence about how it went, both count.`
-                    : `No ${filter === "media" ? "photos or videos" : "notes"} here. Try All.`}
-                </p>
-                <Link to={logTo} className="mt-4 inline-block">
-                  <Button variant="outline" size="sm">
-                    Create something
-                  </Button>
-                </Link>
-              </div>
+              moments.length === 0 ? (
+                <EmptyState
+                  className="mt-6"
+                  line={`Nothing logged under ${target.label} yet.`}
+                  hint="A photo, or a sentence about how it went, both count."
+                  action={{ label: "Log a Moment", to: logTo }}
+                />
+              ) : (
+                <EmptyState
+                  className="mt-6"
+                  line={`No ${filter === "media" ? "photos or videos" : "notes"} here.`}
+                  hint="Try All."
+                  action={{ label: "Log a Moment", to: logTo }}
+                />
+              )
             ) : (
               <div className="mt-6 space-y-8">
                 {byMonth.map(({ month, items }) => (
@@ -257,17 +261,11 @@ export function HobbyArchive() {
         {tab === "pursuits" && (
           <div className="mt-6">
             {projects.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                  No {target.label.toLowerCase()} pursuits yet. A Pursuit is a
-                  thing you come back to. Moments group under it as updates.
-                </p>
-                <Link to={logTo} className="mt-4 inline-block">
-                  <Button variant="outline" size="sm">
-                    Start a Pursuit
-                  </Button>
-                </Link>
-              </div>
+              <EmptyState
+                line={`No ${target.label.toLowerCase()} Pursuits yet.`}
+                hint="A Pursuit is a thing you come back to. Moments group under it as updates."
+                action={{ label: "Start a Pursuit", to: "/pursuits/new" }}
+              />
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
                 {projects.map((project) => {

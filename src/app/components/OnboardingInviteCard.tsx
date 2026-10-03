@@ -6,6 +6,7 @@ import { Textarea } from "./ui/textarea";
 import { APP_NAME } from "../config";
 import { plural } from "../lib/plural";
 import { useSubmitGuard } from "../lib/useSubmitGuard";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * Step 3, "one optional invite card at the end of onboarding." Shown by
@@ -42,7 +43,7 @@ export function OnboardingInviteCard({
       setError(null);
       const result = await createInvite(note);
       if (result.error || !result.code) {
-        setError(result.error || "Couldn’t create that invite. Try again in a moment.");
+        setError(result.error || ERROR_LINE);
         return;
       }
       setLink(inviteLink(result.code));
@@ -101,8 +102,8 @@ export function OnboardingInviteCard({
             <Button variant="outline" onClick={onDone}>
               Not now
             </Button>
-            <Button variant="coral" disabled={creating} onClick={create}>
-              {creating ? "Creating…" : "Create invite link"}
+            <Button busy={creating} variant="coral" disabled={creating} onClick={create}>
+              Create invite link
             </Button>
           </div>
         </>

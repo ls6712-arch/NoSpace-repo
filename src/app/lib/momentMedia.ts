@@ -1,5 +1,7 @@
 import { supabase } from "../../lib/supabase";
 import { Post } from "../data/posts";
+import { friendlyError } from "./friendlyError";
+import { UPLOAD_COPY } from "./stateCopy";
 
 /**
  * Step 1's private bucket for Moment photos (public = false — see
@@ -48,7 +50,7 @@ export async function uploadMomentFile(
   const { error } = await supabase.storage
     .from(MOMENT_MEDIA_BUCKET)
     .upload(path, file, { contentType: file.type || undefined, upsert: false });
-  if (error) return { path: null, error: error.message };
+  if (error) return { path: null, error: friendlyError(error, UPLOAD_COPY.failed) };
   return { path, error: null };
 }
 

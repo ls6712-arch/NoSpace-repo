@@ -8,6 +8,9 @@ import { PeopleRow } from "../components/PersonCard";
 import { Button } from "../components/ui/button";
 import { APP_NAME } from "../config";
 import { plural } from "../lib/plural";
+import { Loadable } from "../components/ui/skeleton";
+import { PersonListSkeleton } from "../components/Skeletons";
+import { EmptyState } from "../components/StateViews";
 
 /**
  * People, found through what they make.
@@ -136,7 +139,11 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
                 ? "Nobody by that name yet."
                 : plural(found.length, "person", "people")}
           </p>
-          {found.length > 0 && <PeopleRow people={found} />}
+          {searching ? (
+            <Loadable loading skeleton={<PersonListSkeleton count={3} variant="card" />}>{null}</Loadable>
+          ) : (
+            found.length > 0 && <PeopleRow people={found} />
+          )}
         </section>
       ) : null}
 
@@ -173,31 +180,24 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
 
         {!hobby ? (
           loadingBrowse ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">Looking…</p>
+            <Loadable loading skeleton={<PersonListSkeleton count={6} variant="card" />}>{null}</Loadable>
           ) : browsed.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-              <Users className="mx-auto mb-3 size-5 text-muted-foreground" />
-              <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-                Nobody’s joined yet — pick a hobby above once people are in it.
-              </p>
-            </div>
+            <EmptyState
+              line="Nobody’s joined yet."
+              hint="Pick a hobby above once people are in it."
+              action={{ label: "Log a Moment", to: "/create" }}
+            />
           ) : (
             <PeopleRow people={browsed} />
           )
         ) : loadingHobby ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">Looking…</p>
+          <Loadable loading skeleton={<PersonListSkeleton count={6} variant="card" />}>{null}</Loadable>
         ) : inHobby.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-            <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Nobody’s turned up in {hobbyLabel?.toLowerCase()} yet. Share
-              something there and you’ll be the first.
-            </p>
-            <Link to={`/create?hobby=${hobby}`} className="mt-4 inline-block">
-              <Button variant="outline" size="sm">
-                Create something
-              </Button>
-            </Link>
-          </div>
+          <EmptyState
+            line={`Nobody’s turned up in ${hobbyLabel?.toLowerCase() ?? "this"} yet.`}
+            hint="Share something there and you’ll be the first."
+            action={{ label: "Log a Moment", to: `/create?hobby=${hobby}` }}
+          />
         ) : (
           <PeopleRow people={inHobby} />
         )}

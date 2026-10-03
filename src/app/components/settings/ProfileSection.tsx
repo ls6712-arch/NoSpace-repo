@@ -5,6 +5,7 @@ import { SectionHeader } from "../ui/section-header";
 import { AvatarPicker } from "../AvatarPicker";
 import { SettingsPanel } from "./SettingsRow";
 import { EditableTextRow } from "./EditableTextRow";
+import { friendlyError } from "../../lib/friendlyError";
 
 function nameDismissKey(userId: string) {
   return `sushii-name-prompt-dismissed-${userId}`;
@@ -92,7 +93,7 @@ export function ProfileSection() {
               .update({ display_name: next })
               .eq("id", user.id);
             if (!error) await refreshProfile();
-            return { error: error?.message ?? null };
+            return { error: error ? friendlyError(error) : null };
           }}
         />
         <EditableTextRow
@@ -109,7 +110,7 @@ export function ProfileSection() {
               .update({ bio: next || null })
               .eq("id", user.id);
             if (!error) await refreshProfile();
-            return { error: error?.message ?? null };
+            return { error: error ? friendlyError(error) : null };
           }}
         />
       </SettingsPanel>

@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { isInFlightSkipped } from "../lib/inFlightGuard";
-import { convertHeicIfNeeded } from "../lib/heicConversion";
+import { preparePickedPhoto } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { defaultSpaceSlug } from "../data/hobbies";
 import { saveMomentDefaults } from "../lib/momentDefaults";
@@ -13,6 +13,7 @@ import { EveryoneShareConfirm } from "./EveryoneShareConfirm";
 import { IsThisPartOfSomething } from "./IsThisPartOfSomething";
 import { AddDetailsSheet } from "./AddDetailsSheet";
 import { Button } from "./ui/button";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 type Audience = "private" | "followers" | "public";
 
@@ -68,11 +69,12 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
   const pick = async (f: File | undefined) => {
     if (!f) return;
     setError(null);
-    try {
-      setFile(await convertHeicIfNeeded(f));
-    } catch {
-      setFile(f);
+    const prepared = await preparePickedPhoto(f);
+    if (prepared.error) {
+      setError(prepared.error);
+      return;
     }
+    setFile(prepared.file);
   };
 
   const save = async () => {
@@ -95,7 +97,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         const outcome = await addPrivateLog({ note: text || "My first moment" });
         if (outcome.skipped) return;
         if (!outcome.data) {
-          setError(outcome.error || "That didn’t save. Try again.");
+          setError(outcome.error || ERROR_LINE);
           return;
         }
         if (user) saveMomentDefaults(user.id, { audience });
@@ -118,7 +120,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
       setSaved({ post: entry, privateLogId: null });
       setOfferPursuitName(true);
     } catch {
-      setError("That didn’t save. Try again.");
+      setError(ERROR_LINE);
     } finally {
       setSaving(false);
     }
