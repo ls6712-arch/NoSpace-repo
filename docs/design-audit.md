@@ -556,3 +556,53 @@ widths with no horizontal scroll and no clipped text without a title; contrast 0
 failures; touch targets under 44px 0 (also at 375x667); 11 overlapping pairs (the
 same list); images audit 0 resized boxes, 0 shift, 0 non-lazy, 0 broken glyphs;
 carousel 11 of 11; tests 261 pass.
+
+### Review of the merge (Oct 4)
+
+A lost-edit scan (each main change since the branch point, normalised for class
+tokens, searched for in the merged file) plus a code review of the new image code
+found what the audits could not:
+
+- The merge had dropped `bg-scrim-solid/50` from the carousel's previous-photo
+  arrow, and main's reduced-motion `scrollBehavior()` from its `scrollTo`; the
+  camera timer chip said `text-on-brand` (white on a scrim) instead of `text-on-media`.
+  All fixed; the carousel check now asserts both arrows have a scrim.
+- `ImageWithFallback` reset its state in an effect (a reused slot could download the
+  original, or flash the failure tile, for a frame): now derived from `src` in render.
+  A decorative photo (`alt=""`) that fails stays hidden from screen readers; no new
+  copy was introduced (the glossary has no image wording). `imgClassName` goes
+  through `cn()`; requested widths are capped at Storage's 2500px limit.
+- `PostMedia` remembered one failure forever; it now remembers the URL that failed.
+  `isRealMediaUrl` is shared by `PostMedia` and `PostMediaCarousel`. The carousel
+  keeps its counter on a real slide when a photo drops out and has the video poster
+  frame trick.
+- Unused locals/imports: 20 before the merge on `main`, 20 after.
+- `run.ts --flows` clicks through quick log, a Moment and Send to…, the Pursuit
+  cover and goal dialogs, a Pursuit, Space tabs, Messages and the theme switch at
+  393 touch and 1440 mouse: 20 of 20, no page or console errors.
+
+### Open: Pursuit card actions on touch
+
+Each Pursuit card has three round buttons (share, goal, cover) that are
+`opacity-0` until hover or focus. On a touch screen they never appear, but they are
+still there: on an iPhone SE the card is 166px wide and the three buttons occupy
+x = 75–171 (58% of the card) with their 44px hit areas overlapping by about 10px,
+so a tap on the top right of the card photo opens a dialog instead of the Pursuit,
+with nothing on screen explaining why. Options: show one "more" button on coarse
+pointers that opens the three actions; or show the three always but smaller and
+spaced to 44px pitch (it won't fit a 166px card); or hide them on touch
+(`pointer-coarse:hidden`) and keep goal and share on the Pursuit page (cover has no
+other home today). The icon-only buttons also have no `title`, so a mouse user gets
+no label on hover. Not changed: it is a product call.
+
+### Deploy notes
+
+- No migrations come from this branch. `main` has two migration files with the
+  same version, `20261011000000_pending_cannot_join_pursuit_link.sql` (applied live)
+  and `20261011000000_pursuit_cover_image.sql` (not applied: `pursuits` has no
+  `cover_image_path` or `cover_image_preference` live). Reads are safe
+  (`select("*")`, fields default to undefined) but saving a cover will fail until the
+  migration is applied under a unique version. The file hasn't run, so renaming it
+  does not edit applied history.
+- New dependency from `main`: `sonner` (the lockfile has it; CI uses `npm ci`).
+- `VITE_IMAGE_TRANSFORMS` is optional and unset; leave it so.
