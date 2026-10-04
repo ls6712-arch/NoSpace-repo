@@ -19,6 +19,7 @@ import { collectPursuitMoments } from "../lib/pursuitTrail";
 import { Button } from "../components/ui/button";
 import { AmountStepper, ProgressBar, SoftPanel, Toggle } from "../components/pursuit/ui";
 import { APP_NAME } from "../config";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 type Audience = "private" | "followers" | "public";
 
@@ -224,7 +225,7 @@ export function AddMoment() {
                 className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-control border border-dashed border-border bg-surface-muted text-muted-foreground hover:text-foreground"
                 aria-label={file ? "Change photo" : "Add a photo"}
               >
-                {preview ? <img src={preview} alt="" className="size-full object-cover" /> : <Camera className="size-5" />}
+                {preview ? <ImageWithFallback src={preview} alt="" className="size-full" /> : <Camera className="size-5" />}
                 {file && (
                   <span
                     role="button"
@@ -380,7 +381,7 @@ function MomentAdded({
           <div className="grid grid-cols-4 gap-2">
             {recent.map((m) => (
               <figure key={m.key}>
-                <img src={m.image} alt="" className="aspect-square w-full rounded-card object-cover" />
+                <ImageWithFallback src={m.image} alt="" className="aspect-square w-full rounded-card" />
                 <figcaption className="mt-1 text-center text-caption text-muted-foreground">
                   {new Date(m.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                 </figcaption>

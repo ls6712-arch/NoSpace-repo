@@ -27,6 +27,7 @@ import {
 import { hobbyPhoto } from "../data/hobbyPhotos";
 import { NIGHT } from "./subart/palette";
 import type { WorldSpace } from "../data/worldSpaces";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * Each World's real photo, borrowed from the same warm/muted Unsplash set
@@ -254,13 +255,7 @@ export function WorldIllustration({
   if (photo) {
     return (
       <div className={`relative overflow-hidden ${className ?? ""}`} style={{ backgroundColor: PAPER }}>
-        <img
-          src={photo}
-          alt=""
-          loading="lazy"
-          onError={() => setPhotoFailed(true)}
-          className="h-full w-full object-cover transition-transform duration-fast ease-standard"
-        />
+        <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className="h-full w-full" imgClassName="transition-transform duration-fast ease-standard" />
       </div>
     );
   }

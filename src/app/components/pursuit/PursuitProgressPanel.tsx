@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { PersonAvatar } from "../../pages/CreatePursuit";
 import { ProgressBar, SoftPanel } from "./ui";
 import { APP_NAME } from "../../config";
+import { ImageWithFallback } from "../ImageWithFallback";
 
 /**
  * The top of a measured Pursuit's page, in whichever of the three shapes
@@ -136,7 +137,7 @@ export function PursuitProgressPanel({
                 {pieces.length > 0 && (
                   <div className="mt-3 grid grid-cols-3 gap-1.5">
                     {pieces.map((e) => (
-                      <img key={e.id} src={e.image} alt={e.note ?? ""} className="aspect-[3/4] w-full rounded-card object-cover" />
+                      <ImageWithFallback key={e.id} src={e.image} alt={e.note ?? ""} className="aspect-[3/4] w-full rounded-card" />
                     ))}
                   </div>
                 )}
@@ -184,7 +185,7 @@ export function PursuitProgressPanel({
                   {m.status === "invited" ? "Invited" : `${formatAmount(total)} ${unitFor(measure, total)}`}
                 </p>
               </div>
-              {last && <img src={last.image} alt="" className="size-10 rounded-control object-cover" />}
+              {last && <ImageWithFallback src={last.image} alt="" className="size-10 rounded-control" />}
             </li>
           );
         })}

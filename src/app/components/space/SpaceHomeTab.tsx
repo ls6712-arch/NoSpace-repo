@@ -12,6 +12,7 @@ import { MomentDetail } from "../MomentDetail";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import type { Post } from "../../data/posts";
+import { ImageWithFallback } from "../ImageWithFallback";
 
 type HostLite = { id: string; name: string; avatarUrl?: string };
 type Attendee = { userId: string; name: string; avatarUrl?: string };
@@ -503,7 +504,7 @@ export function SpaceHomeTab({
             <p className="ns-section-kicker text-muted-foreground">Waiting for a host to approve</p>
             {myPendingMoments.map((post) => (
               <div key={post.id} className="flex items-center gap-3 rounded-card border border-line bg-paper px-3 py-2">
-                {post.media && <img src={post.media} alt="" className="size-10 shrink-0 rounded-control object-cover" />}
+                {post.media && <ImageWithFallback src={post.media} alt="" className="size-10 shrink-0 rounded-control" />}
                 <p className="line-clamp-1 flex-1 text-small" title={post.caption || `Moment #${post.id}`}>{post.caption || `Moment #${post.id}`}</p>
               </div>
             ))}

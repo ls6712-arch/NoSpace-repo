@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { ImageOff, Sparkles } from "lucide-react";
 import { fetchSharedMoment, fetchSharedPursuit } from "../lib/sharedContent";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 type CardState =
   | { status: "loading" }
@@ -95,7 +96,7 @@ export function SharedContentCard({
       className="flex w-56 items-center gap-2.5 rounded-card border border-[var(--hairline)] bg-card px-3 py-2.5 transition-colors hover:border-[var(--foreground)]/30"
     >
       {state.image ? (
-        <img src={state.image} alt="" className="size-10 shrink-0 rounded-control object-cover" />
+        <ImageWithFallback src={state.image} alt="" className="size-10 shrink-0 rounded-control" />
       ) : (
         <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-surface-muted text-muted-foreground">
           <Sparkles className="size-4" />

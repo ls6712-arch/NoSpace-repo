@@ -14,6 +14,7 @@ import { SpaceMomentsTab } from "../components/space/SpaceMomentsTab";
 import { SpaceEventsTab } from "../components/space/SpaceEventsTab";
 import { SpacePeopleTab } from "../components/space/SpacePeopleTab";
 import { SpaceManageTab } from "../components/space/SpaceManageTab";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string; avatarUrl?: string };
@@ -222,7 +223,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       {/* Inset, compact cover — not edge-to-edge */}
       <div className="mx-auto w-full max-w-3xl px-4 pt-4">
         <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-card bg-surface-muted sm:aspect-[3/1]">
-          <img src={space.cover_image} alt="" className="size-full object-cover" />
+          <ImageWithFallback src={space.cover_image} alt="" className="size-full" />
         </div>
       </div>
 

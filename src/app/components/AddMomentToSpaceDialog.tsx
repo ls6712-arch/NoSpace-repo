@@ -6,6 +6,7 @@ import { isMissingCountColumn } from "../context/ContentContext";
 import { signMomentPaths } from "../lib/momentMedia";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /** Links one of the member's own existing Moments into this Space —
  * space_moments' own "the poster or a host links/unlinks" policy already
@@ -142,7 +143,7 @@ export function AddMomentToSpaceDialog({
                 className="flex w-full items-center gap-3 rounded-control px-2 py-2 text-left text-small hover:bg-surface-muted disabled:opacity-50"
               >
                 {p.media && (
-                  <img src={p.media} alt="" className="size-10 shrink-0 rounded-control object-cover" />
+                  <ImageWithFallback src={p.media} alt="" className="size-10 shrink-0 rounded-control" />
                 )}
                 <span className="line-clamp-2 flex-1" title={p.caption || `Moment #${p.id}`}>{p.caption || `Moment #${p.id}`}</span>
                 {linking === p.id && <span className="text-caption text-muted-foreground">Adding…</span>}

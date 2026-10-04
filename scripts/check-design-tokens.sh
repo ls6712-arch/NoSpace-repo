@@ -142,6 +142,12 @@ scan color "colour literal outside theme.css; define a token there" '#([0-9A-Fa-
 scan color "colour literal outside theme.css; define a token there" '(^|[^A-Za-z-])(rgba?|hsla?)\([[:space:]]*[0-9.]' '*.ts' '*.tsx' '*.css'
 SKIP_FILES=""
 
+# ── images ─────────────────────────────────────────────────────────────────
+# Photos go through ImageWithFallback (fixed box, placeholder + fade-in, lazy, fallback).
+SKIP_FILES="$SRC/app/components/ImageWithFallback.tsx"
+scan image "use <ImageWithFallback>, not a bare <img>" '<img([[:space:]/>]|$)' '*.tsx'
+SKIP_FILES=""
+
 # ── spacing ────────────────────────────────────────────────────────────────
 # Section gaps are 16/24/32/48 (and --spacing-section-hero on the landing page):
 # no arbitrary values on stacks, or on a <section>/<main>/<article> wrapper.

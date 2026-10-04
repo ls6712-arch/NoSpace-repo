@@ -54,6 +54,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /** The audience words, identical to the ones chosen in the Log flow. */
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
@@ -516,11 +517,7 @@ export function MomentDetail({
                   className="block w-full text-body text-muted-foreground"
                 />
                 {newMediaPreview && (
-                  <img
-                    src={newMediaPreview}
-                    alt="New photo preview"
-                    className="mt-2 h-32 w-full rounded-card object-cover"
-                  />
+                  <ImageWithFallback src={newMediaPreview} alt="New photo preview" className="mt-2 h-32 w-full rounded-card" />
                 )}
               </div>
             )}

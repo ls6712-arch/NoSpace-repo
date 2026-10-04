@@ -13,6 +13,7 @@ import { useAuth } from "../context/AuthContext";
 import { WaitlistForm } from "../components/WaitlistForm";
 import heroWorldsImg from "../../assets/hero-worlds.png";
 import { APP_NAME } from "../config";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
  * Desktop-only parallax on the hero collage: it drifts up a little more
@@ -175,11 +176,7 @@ export function Home() {
 
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-12 sm:px-8 lg:px-12 lg:pb-20 xl:px-16">
           <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
-            <img
-              src={heroWorldsImg}
-              alt="Small illustrated worlds of people playing music, painting, sculpting, gardening, reading, and coding, connected by soft glowing paths."
-              className="ns-hero-worlds-art aspect-[1376/768] w-full object-cover"
-            />
+            <ImageWithFallback src={heroWorldsImg} alt="Small illustrated worlds of people playing music, painting, sculpting, gardening, reading, and coding, connected by soft glowing paths." className="ns-hero-worlds-art aspect-[1376/768] w-full" priority />
           </div>
         </div>
 

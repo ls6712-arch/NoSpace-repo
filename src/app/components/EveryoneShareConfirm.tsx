@@ -2,6 +2,7 @@ import { MapPinOff } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { initials } from "./pursuit/ui";
 import { HoldToShareButton } from "./HoldToShareButton";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * Step 3, §3 "Friction only for Everyone": before a Moment actually goes out
@@ -35,7 +36,7 @@ export function EveryoneShareConfirm({
       </p>
       <div className="overflow-hidden rounded-card border border-border bg-card">
         {photoPreviewUrl && (
-          <img src={photoPreviewUrl} alt="" className="aspect-[4/3] w-full object-cover" />
+          <ImageWithFallback src={photoPreviewUrl} alt="" className="aspect-[4/3] w-full" />
         )}
         <div className="space-y-1.5 p-3">
           <div className="flex items-center gap-2">

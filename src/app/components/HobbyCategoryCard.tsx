@@ -5,6 +5,7 @@ import { Hobby } from "../data/hobbies";
 import { spacePhoto } from "../data/hobbyPhotos";
 import { GeneratedArt } from "./GeneratedArt";
 import { useCorners, isDiscoverable } from "../context/CornersContext";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * Hover is a single coordinated gesture: the space lifts, the artwork pushes
@@ -37,13 +38,7 @@ export function HobbyCategoryCard({
       >
         <div title={`${hobby.shortName}: ${hobby.tagline}`} className="ns-space-card relative aspect-[4/5] overflow-hidden border border-border">
           {photo ? (
-            <img
-              src={photo}
-              alt=""
-              loading="lazy"
-              onError={() => setPhotoFailed(true)}
-              className="h-full w-full object-cover transition-transform duration-fast ease-standard group-hover:scale-[1.06] group-focus-visible:scale-[1.06]"
-            />
+            <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className="h-full w-full" imgClassName="transition-transform duration-fast ease-standard group-hover:scale-[1.06] group-focus-visible:scale-[1.06]" />
           ) : (
             <GeneratedArt
               hobbySlug={hobby.slug}

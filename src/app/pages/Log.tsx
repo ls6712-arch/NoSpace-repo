@@ -64,6 +64,7 @@ import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
  * Logging, choose-first:
@@ -171,7 +172,7 @@ function Preview({
   return type === "video" ? (
     <video src={url} className={`${className} object-cover`} muted playsInline />
   ) : (
-    <img src={url} alt="" className={`${className} object-cover`} />
+    <ImageWithFallback src={url} alt="" className={`${className}`} />
   );
 }
 
@@ -1325,7 +1326,7 @@ export function Log() {
                 key={i}
                 className="relative size-20 shrink-0 overflow-hidden rounded-control border border-border"
               >
-                <img src={url} alt="" className="h-full w-full object-cover" />
+                <ImageWithFallback src={url} alt="" className="h-full w-full" />
                 <button
                   type="button"
                   onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}

@@ -4,6 +4,7 @@ import { usePrivateLogs } from "../../context/PrivateLogsContext";
 import { useRewards } from "../../context/RewardsContext";
 import { SectionHeader } from "../ui/section-header";
 import { ConfirmDialog } from "../ConfirmDialog";
+import { ImageWithFallback } from "../ImageWithFallback";
 
 function timeAgo(ts: number) {
   const diff = Math.max(0, Date.now() - ts);
@@ -58,7 +59,7 @@ export function DataSection() {
                     {entry.mediaType === "video" ? (
                       <video src={entry.media} controls className="w-full" />
                     ) : (
-                      <img src={entry.media} alt="" className="w-full" />
+                      <ImageWithFallback src={entry.media} alt="" aspect="4 / 3" className="w-full" />
                     )}
                   </div>
                 )}

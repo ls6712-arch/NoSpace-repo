@@ -25,6 +25,7 @@ import { BlockConfirmDialog } from "../components/BlockConfirmDialog";
 import { ReportDialog } from "../components/ReportDialog";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SharedContentCard } from "../components/SharedContentCard";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -156,18 +157,12 @@ function PhotoBubble({
   return (
     <>
       <button type="button" onClick={() => setLightboxOpen(true)} className="block overflow-hidden rounded-card">
-        <img
-          src={url}
-          alt=""
-          className={`max-h-64 w-52 object-cover ${uploading ? "opacity-70" : ""}`}
-          onError={handleImageError}
-          onLoad={onLoad}
-        />
+        <ImageWithFallback src={url} alt="" onError={handleImageError} onLoad={onLoad} aspect="4 / 5" className={`w-52 ${uploading ? "opacity-70" : ""}`} />
       </button>
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-2xl border-none bg-transparent p-0 shadow-none">
           <DialogTitle className="sr-only">Photo</DialogTitle>
-          <img src={url} alt="" className="max-h-[85vh] w-full rounded-card object-contain" onError={handleImageError} />
+          <ImageWithFallback src={url} alt="" onError={handleImageError} aspect="4 / 3" fit="contain" className="max-h-[85vh] w-full rounded-card" />
         </DialogContent>
       </Dialog>
     </>

@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Button } from "./ui/button";
 import type { SpaceRow } from "../lib/spaces";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /** Discover's "Spaces" tab — host-created communities, Phase 5 of the
  * Spaces Rework. No member counts anywhere in this app's Spaces UI, same
@@ -64,11 +65,7 @@ export function SpacesBrowser({ query }: { query: string }) {
               className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-fast ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
             >
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
-                <img
-                  src={s.cover_image}
-                  alt=""
-                  className="size-full object-cover transition-transform duration-fast ease-standard group-hover:scale-110"
-                />
+                <ImageWithFallback src={s.cover_image} alt="" className="size-full" imgClassName="transition-transform duration-fast ease-standard group-hover:scale-110" />
                 <span className="absolute right-2 top-2 rounded-control bg-scrim-solid/60 px-2 py-0.5 text-caption text-on-media">
                   {s.access === "open" ? "Open" : "Closed"}
                 </span>

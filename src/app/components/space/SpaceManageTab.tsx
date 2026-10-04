@@ -19,6 +19,7 @@ import {
 } from "../../lib/spaces";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { ImageWithFallback } from "../ImageWithFallback";
 
 type JoinRequestRow = {
   user_id: string;
@@ -336,7 +337,7 @@ export function SpaceManageTab({
             {pendingMoments.map((m) => (
               <li key={m.postId} className="flex items-start gap-3 rounded-card border border-border p-3">
                 {m.mediaUrl && (
-                  <img src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-control object-cover" />
+                  <ImageWithFallback src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-control" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-caption text-muted-foreground">{m.authorName}</p>

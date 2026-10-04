@@ -4,6 +4,7 @@ import { Camera as CameraIcon, Images, Play, SwitchCamera, Type, X } from "lucid
 import { addRecentCapture, useRecentCaptures } from "../lib/recentCaptures";
 import { convertHeicFiles, isHeicFile } from "../lib/heicConversion";
 import { Button } from "./ui/button";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /** Confirmed with product: 60s, matching Instagram-length clips — long enough
  * for a real moment, short enough that this stays a quick-capture tool
@@ -405,7 +406,7 @@ export function CameraCapture({
                       </span>
                     </>
                   ) : (
-                    <img src={r.url} alt="" className="h-full w-full object-cover" />
+                    <ImageWithFallback src={r.url} alt="" className="h-full w-full" />
                   )}
                 </button>
               ))}

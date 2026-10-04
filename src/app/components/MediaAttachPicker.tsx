@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * A small, reusable "attach a photo or video" control — the same picked
@@ -55,7 +56,7 @@ export function MediaAttachPicker({
         {isVideo ? (
           <video src={previewUrl} className="h-24 w-24 object-cover" muted />
         ) : (
-          <img src={previewUrl} alt="" className="h-24 w-24 object-cover" />
+          <ImageWithFallback src={previewUrl} alt="" className="h-24 w-24" />
         )}
         <button
           type="button"

@@ -45,6 +45,7 @@ import { NextSessionCard } from "../components/pursuit/NextSessionCard";
 import { ProgressBar } from "../components/pursuit/ui";
 import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 function initials(name: string) {
   return name
@@ -713,7 +714,7 @@ function PhotoTile({ moment, caption }: { moment: PursuitMoment; caption: string
   return (
     <div>
       <div className="aspect-square overflow-hidden rounded-card bg-surface-muted">
-        <img src={moment.image} alt={moment.text || caption} className="size-full object-cover" />
+        <ImageWithFallback src={moment.image} alt={moment.text || caption} className="size-full" />
       </div>
       <p className="mt-1 text-center text-caption text-muted-foreground">{caption}</p>
     </div>
@@ -742,9 +743,9 @@ function MonthHeader({ label, moments }: { label: string; moments: PursuitMoment
         <div className="mt-2 flex items-center gap-3 rounded-card border border-border bg-card p-3">
           {withImage.length > 1 && (
             <div className="flex shrink-0 items-center gap-1">
-              <img src={oldest.image} alt="" className="size-10 rounded-control object-cover" />
+              <ImageWithFallback src={oldest.image} alt="" className="size-10 rounded-control" />
               <ArrowRight className="size-3 text-muted-foreground" aria-hidden="true" />
-              <img src={newest.image} alt="" className="size-10 rounded-control object-cover" />
+              <ImageWithFallback src={newest.image} alt="" className="size-10 rounded-control" />
             </div>
           )}
           {line && (
@@ -765,7 +766,7 @@ function PrivateMomentCard({ moment }: { moment: PursuitMoment }) {
       <p className="mb-2 flex items-center gap-1.5 text-caption text-muted-foreground">
         <Lock className="size-3" /> Only you · {shortDate(moment.createdAt)}
       </p>
-      {moment.image && <img src={moment.image} alt="" className="mb-2 aspect-square w-full rounded-card object-cover" />}
+      {moment.image && <ImageWithFallback src={moment.image} alt="" className="mb-2 aspect-square w-full rounded-card" />}
       <p className="whitespace-pre-wrap text-small">{moment.text}</p>
     </div>
   );

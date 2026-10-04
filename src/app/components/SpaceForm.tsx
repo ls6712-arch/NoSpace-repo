@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 function slugify(name: string) {
   return name
@@ -220,7 +221,7 @@ export function SpaceForm({
         <div className="mt-2">
           {coverImage ? (
             <div className="relative aspect-[16/9] w-full overflow-hidden rounded-card border border-border">
-              <img src={coverImage} alt="" className="size-full object-cover" />
+              <ImageWithFallback src={coverImage} alt="" className="size-full" />
               <button
                 type="button"
                 onClick={() => setCoverImage("")}

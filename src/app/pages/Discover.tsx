@@ -28,6 +28,7 @@ import { SpacesBrowser } from "../components/SpacesBrowser";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
@@ -120,13 +121,7 @@ function DiscoverSpaceArt({
   }
 
   return (
-    <img
-      src={photo}
-      alt=""
-      loading="lazy"
-      onError={() => setPhotoFailed(true)}
-      className={`h-full w-full object-cover ${className ?? ""}`}
-    />
+    <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className={`h-full w-full ${className ?? ""}`} />
   );
 }
 

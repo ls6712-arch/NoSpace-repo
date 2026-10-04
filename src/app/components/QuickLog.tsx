@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 type Audience = "private" | "followers" | "public";
 
@@ -361,7 +362,7 @@ export function QuickLog({
           className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-control border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep,var(--accent))] hover:text-foreground"
           aria-label={file ? "Change photo" : "Add a photo"}
         >
-          {preview ? <img src={preview} alt="" className="size-full object-cover" /> : <Camera className="size-4" />}
+          {preview ? <ImageWithFallback src={preview} alt="" className="size-full" /> : <Camera className="size-4" />}
         </button>
         <input
           ref={fileRef}

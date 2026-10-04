@@ -5,6 +5,7 @@ import { Textarea } from "./ui/textarea";
 import { useAuth } from "../context/AuthContext";
 import { Project, finishProject, setEndingNote } from "../lib/journal";
 import { mirrorPursuit } from "../lib/pursuitsRemote";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * Marking a Pursuit complete asks one question: "What would you tell
@@ -54,7 +55,7 @@ export function EndingDialog({
         </DialogHeader>
         {firstImage && (
           <figure className="flex items-center gap-3">
-            <img src={firstImage} alt="" className="size-16 rounded-control object-cover" />
+            <ImageWithFallback src={firstImage} alt="" className="size-16 rounded-control" />
             <figcaption className="text-caption text-muted-foreground">Where you started.</figcaption>
           </figure>
         )}

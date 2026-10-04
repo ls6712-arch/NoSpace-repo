@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { useState } from "react";
 import { hobbyPhoto } from "../data/hobbyPhotos";
 import { SubHobbyArt } from "./SubHobbyArt";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * One hobby, as a picture. Used both inside a space (where it filters that
@@ -35,13 +36,7 @@ export function HobbyTile({
     <>
       <div className="relative overflow-hidden rounded-card">
         {photo ? (
-          <img
-            src={photo}
-            alt=""
-            loading="lazy"
-            onError={() => setPhotoFailed(true)}
-            className="h-auto w-full aspect-square object-cover transition-transform duration-fast group-hover:scale-[1.06]"
-          />
+          <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className="h-auto w-full aspect-square" imgClassName="transition-transform duration-fast group-hover:scale-[1.06]" />
         ) : (
           <SubHobbyArt
             hobbySlug={hobbySlug}

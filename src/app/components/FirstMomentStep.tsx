@@ -13,6 +13,7 @@ import { EveryoneShareConfirm } from "./EveryoneShareConfirm";
 import { IsThisPartOfSomething } from "./IsThisPartOfSomething";
 import { AddDetailsSheet } from "./AddDetailsSheet";
 import { Button } from "./ui/button";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 type Audience = "private" | "followers" | "public";
 
@@ -260,7 +261,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
 
       {preview && (
         <div className="relative mt-3 overflow-hidden rounded-card border border-[var(--line)]">
-          <img src={preview} alt="" className="aspect-[4/3] w-full object-cover" />
+          <ImageWithFallback src={preview} alt="" className="aspect-[4/3] w-full" />
           <button
             type="button"
             onClick={() => setFile(null)}
