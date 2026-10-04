@@ -1,4 +1,7 @@
--- Rollback for 20261011000000_pursuit_cover_image.sql.
+-- Rollback for 20261015000000_pursuit_cover_image_reapply.sql.
+-- Restores the storage policy to its previous two-branch body, then drops the
+-- cover constraints and columns. Dropping the columns discards any custom
+-- cover paths that were saved.
 drop policy if exists "moment-media: see photos of moments you can see" on storage.objects;
 create policy "moment-media: see photos of moments you can see"
   on storage.objects for select to anon, authenticated
