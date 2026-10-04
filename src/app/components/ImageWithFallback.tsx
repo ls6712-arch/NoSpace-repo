@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ImgHTMLAttributes, type ReactNode } from "react";
+import { useCallback, useState, type ImgHTMLAttributes, type ReactNode } from "react";
 import { ImageOff } from "lucide-react";
 import { variantSrcSet, variantUrl } from "../lib/imageVariants";
 import { cn } from "./ui/utils";
@@ -34,7 +34,7 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "loading" | "widt
  * unless `priority`, asks for a resized copy when image transforms are on, and
  * degrades the same way everywhere when the photo is missing or broken: the
  * resized copy falls back to the original, the original falls back to
- * `fallback` (or a quiet "photo unavailable" tile), never a broken-image glyph.
+ * `fallback` (or a quiet muted tile with an icon), never a broken-image glyph.
  */
 export function ImageWithFallback({
   src,
@@ -54,19 +54,24 @@ export function ImageWithFallback({
 }: Props) {
   const original = src ?? "";
   const resized = width && original ? variantUrl(original, { width }) : original;
-  const [stage, setStage] = useState<"resized" | "original" | "failed">(original ? "resized" : "failed");
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement | null>(null);
-
-  useEffect(() => {
-    setStage(original ? "resized" : "failed");
-    setLoaded(false);
-  }, [original]);
+  type Stage = "resized" | "original" | "failed";
+  const initial = (): { src: string; stage: Stage; loaded: boolean } => ({ src: original, stage: original ? "resized" : "failed", loaded: false });
+  const [state, setState] = useState(initial);
+  let { stage, loaded } = state;
+  if (state.src !== original) {
+    // A new photo: start over in this render, not after an effect, so the old one's
+    // stage never leaks into it (no double download, no flash of the failure tile).
+    const fresh = initial();
+    setState(fresh);
+    stage = fresh.stage;
+    loaded = false;
+  }
+  const setStage = (s: Stage) => setState((p) => ({ ...p, stage: s }));
+  const setLoaded = () => setState((p) => (p.loaded ? p : { ...p, loaded: true }));
 
   // A cached photo is already complete before React attaches onLoad; show it at once, no fade.
   const setImg = useCallback((el: HTMLImageElement | null) => {
-    imgRef.current = el;
-    if (el && el.complete && el.naturalWidth > 0) setLoaded(true);
+    if (el && el.complete && el.naturalWidth > 0) setState((p) => (p.loaded ? p : { ...p, loaded: true }));
   }, []);
 
   const handleError: ImgHTMLAttributes<HTMLImageElement>["onError"] = (e) => {
@@ -84,8 +89,8 @@ export function ImageWithFallback({
   if (stage === "failed") {
     return (
       <span
-        role="img"
-        aria-label={alt || "Photo unavailable"}
+        // Decorative (alt="") stays hidden from screen readers when it fails too; a described photo keeps its description.
+        {...(alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}
         className={cn("relative flex items-center justify-center overflow-hidden bg-surface-muted text-muted-foreground", className)}
         style={boxStyle}
       >
@@ -107,11 +112,11 @@ export function ImageWithFallback({
         decoding="async"
         {...(priority ? { fetchPriority: "high" as const } : null)}
         onLoad={(e) => {
-          setLoaded(true);
+          setLoaded();
           onLoad?.(e);
         }}
         onError={handleError}
-        className={`size-full transition-opacity duration-base ease-standard ${fit === "contain" ? "object-contain" : "object-cover"} ${loaded ? "opacity-100" : "opacity-0"} ${imgClassName}`}
+        className={cn("size-full transition-opacity duration-base ease-standard", fit === "contain" ? "object-contain" : "object-cover", loaded ? "opacity-100" : "opacity-0", imgClassName)}
       />
     </span>
   );

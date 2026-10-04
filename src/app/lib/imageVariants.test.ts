@@ -23,6 +23,10 @@ describe("variantUrl", () => {
       expect(variantUrl(u, { width: 400 }, true)).toBe(u);
     }
   });
+  it("never asks for more than the transformation limit", () => {
+    expect(new URL(variantUrl(SIGNED, { width: 4000 }, true)).searchParams.get("width")).toBe("2500");
+    expect(variantSrcSet(SIGNED, 1400, true)).toBe(variantUrl(SIGNED, { width: 1400 }, true));
+  });
   it("builds a 1x/2x srcset", () => {
     expect(variantSrcSet(SIGNED, 200, true)).toMatch(/width=200.* 1x, .*width=400.* 2x$/);
   });

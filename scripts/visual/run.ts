@@ -287,6 +287,12 @@ async function main() {
         const next = page.getByRole("button", { name: "Next photo" });
         const visible = await next.isVisible().catch(() => false);
         ok(pointer ? "mouse arrows are hidden on touch" : "mouse arrows are shown with a fine pointer", pointer ? !visible : visible);
+        if (!pointer) {
+          // Both arrows sit on the photo: each needs its own dark backing (the left one lost it once in a merge).
+          const alpha = (name: string) => page.getByRole("button", { name }).evaluate((el) => { const m = getComputedStyle(el).backgroundColor.match(/[\d.]+/g) ?? []; return m.length > 3 ? parseFloat(m[3]) : 1; }).catch(() => -1);
+          ok("Next arrow has a scrim", (await alpha("Next photo")) > 0.2);
+          ok("Previous arrow has a scrim", (await alpha("Previous photo")) > 0.2);
+        }
         if (!pointer) { const before = await track.evaluate((el) => el.scrollLeft); await next.click(); await page.waitForTimeout(700); ok("Next photo button moves", (await track.evaluate((el) => el.scrollLeft)) > before); }
         const dots = await page.locator('[aria-roledescription="carousel"] [aria-hidden="true"].pointer-events-none.absolute.inset-x-0 > span').count();
         ok("three dots, none of them buttons", dots === 3 && (await page.locator('[aria-roledescription="carousel"] button[aria-label^="Photo "]').count()) === 0, `${dots} dots`);

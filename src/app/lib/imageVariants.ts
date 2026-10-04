@@ -17,6 +17,9 @@ export function imageTransformsEnabled(): boolean {
   return import.meta.env.VITE_IMAGE_TRANSFORMS === "on";
 }
 
+/** Storage image transformations refuse anything wider than this. */
+export const MAX_VARIANT_WIDTH = 2500;
+
 export interface VariantOptions {
   /** Width in CSS pixels at 1x. */
   width: number;
@@ -33,7 +36,7 @@ export function variantUrl(url: string, { width, quality = 75 }: VariantOptions,
   else if (u.pathname.startsWith(OBJECT_SIGN)) path = RENDER_SIGN + u.pathname.slice(OBJECT_SIGN.length);
   else return url;
   u.pathname = path;
-  u.searchParams.set("width", String(Math.round(width)));
+  u.searchParams.set("width", String(Math.min(MAX_VARIANT_WIDTH, Math.round(width))));
   u.searchParams.set("quality", String(quality));
   u.searchParams.set("resize", "cover");
   return u.toString();
@@ -43,5 +46,7 @@ export function variantUrl(url: string, { width, quality = 75 }: VariantOptions,
 export function variantSrcSet(url: string, width: number, enabled = imageTransformsEnabled()): string | undefined {
   const one = variantUrl(url, { width }, enabled);
   if (one === url) return undefined;
+  // No 2x candidate past the cap: it would be refused and send the image back to the original.
+  if (width * 2 > MAX_VARIANT_WIDTH) return one;
   return `${one} 1x, ${variantUrl(url, { width: width * 2 }, enabled)} 2x`;
 }

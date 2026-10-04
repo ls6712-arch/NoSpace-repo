@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { GeneratedArt } from "./GeneratedArt";
 import { scrollBehavior } from "../lib/scrollToElement";
+import { isRealMediaUrl } from "../lib/mediaUrl";
 import { ImageWithFallback } from "./ImageWithFallback";
 
-const isRealUrl = (url?: string) => !!url && /^https?:\/\//.test(url);
 
 /**
  * Drop-in replacement for PostMedia that also handles a Moment carrying more
@@ -50,7 +50,7 @@ export function PostMediaCarousel({
   // Same degrade-to-illustration rule as PostMedia: a dead link, an
   // unreachable host, or a removed file is treated the same as no photo at
   // all, rather than showing a broken-image glyph or an empty slide.
-  const validUrls = media.filter((url) => isRealUrl(url) && !failedUrls.has(url));
+  const validUrls = media.filter((url) => isRealMediaUrl(url) && !failedUrls.has(url));
 
   if (validUrls.length === 0) {
     return <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />;
@@ -61,7 +61,9 @@ export function PostMediaCarousel({
     const url = validUrls[0];
     return (
       <video
-        src={url}
+        // A bare <video> with no poster paints black until something decodes it; #t=0.1 seeks to a frame
+        // (same trick as PostMedia, which this component stands in for).
+        src={preview ? `${url}#t=0.1` : url}
         controls={!preview}
         muted={preview}
         playsInline
@@ -110,6 +112,16 @@ function PhotoTrack({
   const trackRef = useRef<HTMLDivElement>(null);
   const frame = useRef(0);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
+
+  // A slide that fails to load drops out of `urls`: keep the counter, the dots and the track on a real slide.
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el || urls.length === 0) return;
+    const last = urls.length - 1;
+    if (index > last) setIndex(last);
+    el.scrollTo({ left: Math.min(index, last) * el.clientWidth, behavior: "auto" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urls.length]);
 
   const goTo = (i: number) => {
     const el = trackRef.current;
@@ -168,7 +180,7 @@ function PhotoTrack({
       </div>
 
       {index > 0 && (
-        <button type="button" aria-label="Previous photo" onClick={() => goTo(index - 1)} className="absolute left-2 top-1/2 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full transition-colors text-on-media backdrop-blur-sm pointer-fine:flex">
+        <button type="button" aria-label="Previous photo" onClick={() => goTo(index - 1)} className="absolute left-2 top-1/2 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-scrim-solid/50 text-on-media backdrop-blur-sm pointer-fine:flex">
           <ChevronLeft className="size-4" aria-hidden="true" />
         </button>
       )}

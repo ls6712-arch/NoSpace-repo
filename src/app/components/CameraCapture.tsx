@@ -289,7 +289,7 @@ export function CameraCapture({
             </Button>
           )}
           {recording && (
-            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-control bg-scrim-solid/50 px-2.5 py-1 text-caption text-on-brand tabular-nums">
+            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-control bg-scrim-solid/50 px-2.5 py-1 text-caption text-on-media tabular-nums">
               <span className="size-2 rounded-full bg-[var(--coral)] animate-pulse" />
               {timeLabel}
             </span>

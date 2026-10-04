@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { GeneratedArt } from "./GeneratedArt";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { isRealMediaUrl } from "../lib/mediaUrl";
 
 /**
  * Renders a post/product's actual uploaded photo or video when there is one
@@ -39,8 +40,10 @@ export function PostMedia({
   /** Above the fold: load now instead of lazily. */
   priority?: boolean;
 }) {
-  const [failed, setFailed] = useState(false);
-  const isRealMedia = !failed && !!media && /^https?:\/\//.test(media);
+  // The URL that failed, not a flag: the same slot given a different photo gets a fresh try.
+  const [failedUrl, setFailedUrl] = useState<string>();
+  const failed = failedUrl === media;
+  const isRealMedia = !failed && isRealMediaUrl(media);
 
   if (isRealMedia && type === "video") {
     // A bare <video> with no poster shows solid black until something
@@ -56,7 +59,7 @@ export function PostMedia({
         muted={preview}
         playsInline
         preload="metadata"
-        onError={() => setFailed(true)}
+        onError={() => setFailedUrl(media)}
         className={`${className ?? ""} object-cover [background-color:var(--void)]`}
       />
     );
@@ -70,7 +73,7 @@ export function PostMedia({
         className={className}
         width={width}
         priority={priority}
-        onFail={() => setFailed(true)}
+        onFail={() => setFailedUrl(media)}
       />
     );
   }
