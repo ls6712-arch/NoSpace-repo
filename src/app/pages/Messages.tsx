@@ -17,7 +17,7 @@ import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { getMessagePhotoUrl, MESSAGE_MEDIA_URL_TTL_SECONDS } from "../lib/messageMedia";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
@@ -205,7 +205,7 @@ function ConversationPanel({
   attachDisabled,
   onUnsend,
 }: {
-  person: { id: string; name: string };
+  person: { id: string; name: string; avatar?: string };
   subtitle: string;
   messages: Message[];
   myId: string | undefined;
@@ -330,11 +330,17 @@ function ConversationPanel({
   return (
     <div className="flex h-[26rem] flex-col rounded-2xl border border-border bg-card md:h-[36rem]">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
-        <div className="min-w-0">
-          <div className="truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
-            {person.name}
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Avatar className="size-9 shrink-0">
+            {person.avatar && <AvatarImage src={person.avatar} alt="" />}
+            <AvatarFallback className="text-[10px]">{initials(person.name)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <div className="truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+              {person.name}
+            </div>
+            <div className="text-[11px] text-muted-foreground">{subtitle}</div>
           </div>
-          <div className="text-[11px] text-muted-foreground">{subtitle}</div>
         </div>
         <PersonActionsMenu personId={person.id} personName={person.name} />
       </div>
@@ -540,9 +546,11 @@ export function Messages() {
   // message" picker below. Cleared the moment the real thread exists
   // (its first message sent, or it turns out one already existed after
   // all — see the effect below).
-  const [draftThread, setDraftThread] = useState<{ id: string; name: string } | null>(() => {
+  const [draftThread, setDraftThread] = useState<{ id: string; name: string; avatar?: string } | null>(() => {
     const id = searchParams.get("draftWith");
     const name = searchParams.get("draftName");
+    // No avatar from a URL param — falls back to initials, same as any
+    // other profile this app can't resolve a photo for.
     return id && name ? { id, name } : null;
   });
   // "Message about this" from a Moment, into a brand-new draft — just
@@ -703,6 +711,14 @@ export function Messages() {
       : active
         ? active.toName ?? active.fromName
         : "";
+  const otherAvatar =
+    active && user
+      ? active.fromUser === user.id
+        ? active.toAvatar
+        : active.fromAvatar
+      : active
+        ? (active.toAvatar ?? active.fromAvatar)
+        : undefined;
 
   const composerDisabled = draftThread ? false : active ? !canSendInto(active, user?.id ?? "", hasMessages) : true;
   // Only worth announcing once there's actually a message sitting in the
@@ -756,7 +772,7 @@ export function Messages() {
     setPickerOpen(true);
   };
 
-  const startThreadWith = (person: { id: string; name: string }) => {
+  const startThreadWith = (person: { id: string; name: string; avatar?: string }) => {
     setStartError(null);
     // Same rule as PublicProfile.tsx's "Message" button: only jump straight
     // into a thread that's actually reachable as a chat. A request of
@@ -768,7 +784,7 @@ export function Messages() {
       setTab("chats");
       setActiveId(existing.id);
     } else {
-      setDraftThread({ id: person.id, name: person.name });
+      setDraftThread({ id: person.id, name: person.name, avatar: person.avatar });
       setTab("chats");
       setActiveId(null);
     }
@@ -802,10 +818,11 @@ export function Messages() {
                 <li key={person.id}>
                   <button
                     type="button"
-                    onClick={() => startThreadWith({ id: person.id, name: person.displayName })}
+                    onClick={() => startThreadWith({ id: person.id, name: person.displayName, avatar: person.avatarUrl })}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
                   >
                     <Avatar className="size-7 shrink-0">
+                      {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" />}
                       <AvatarFallback className="text-[10px]">{initials(person.displayName)}</AvatarFallback>
                     </Avatar>
                     <span className="min-w-0 truncate">{person.displayName}</span>
@@ -865,6 +882,7 @@ export function Messages() {
                 <ul className="space-y-2">
                   {chatThreads.map((t) => {
                     const name = user && t.fromUser === user.id ? t.toName ?? "Them" : t.fromName;
+                    const avatar = user && t.fromUser === user.id ? t.toAvatar : t.fromAvatar;
                     const on = !draftThread && String(t.id) === String(active?.id);
                     const waiting =
                       t.kind === "direct_message" &&
@@ -892,7 +910,8 @@ export function Messages() {
                             on ? "border-[var(--coral-deep)] bg-card" : "border-border bg-card hover:border-[var(--foreground)]/30"
                           }`}
                         >
-                          <Avatar className="size-8 shrink-0">
+                          <Avatar className="size-10 shrink-0">
+                            {avatar && <AvatarImage src={avatar} alt="" />}
                             <AvatarFallback className="text-[10px]">{initials(name ?? "?")}</AvatarFallback>
                           </Avatar>
                           <span className="min-w-0 flex-1">
@@ -960,7 +979,7 @@ export function Messages() {
                 ) : (
                   active && (
                     <ConversationPanel
-                      person={{ id: otherId ?? "", name: otherName }}
+                      person={{ id: otherId ?? "", name: otherName, avatar: otherAvatar }}
                       subtitle={subtitleFor(active)}
                       messages={messages}
                       myId={user?.id}
@@ -1032,7 +1051,8 @@ function RequestCard({ request }: { request: Participation }) {
     <li className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-center gap-3">
         <Link to={profilePath({ id: request.fromUser })} className="shrink-0">
-          <Avatar className="size-9">
+          <Avatar className="size-10">
+            {request.fromAvatar && <AvatarImage src={request.fromAvatar} alt="" />}
             <AvatarFallback className="text-[10px]">{initials(request.fromName)}</AvatarFallback>
           </Avatar>
         </Link>
