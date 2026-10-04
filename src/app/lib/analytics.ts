@@ -8,7 +8,13 @@
 export type AnalyticsEvent =
   | { name: "pursuits_in_progress_viewed"; count: number }
   | { name: "pursuits_in_progress_item_tapped"; pursuitId: string }
-  | { name: "pursuits_in_progress_see_all_tapped"; count: number };
+  | { name: "pursuits_in_progress_see_all_tapped"; count: number }
+  | { name: "pursuit_share_opened"; pursuitId: string; from: "pursuit_page" | "pursuit_item" | "all_pursuits_row" }
+  | { name: "pursuit_share_link_copied"; pursuitId: string }
+  | { name: "pursuit_share_native_sheet_opened"; pursuitId: string }
+  | { name: "discover_for_you_personalized"; signalCount: number }
+  | { name: "moment_double_tap_loved"; postId: number }
+  | { name: "moment_quick_react_opened"; postId: number };
 
 function sendToConsole(event: AnalyticsEvent) {
   if (import.meta.env.DEV) {

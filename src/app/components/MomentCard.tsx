@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { pursuitTogetherHref } from "../lib/pursuitsRemote";
 import {
   Heart,
@@ -41,6 +42,8 @@ import { Time } from "./ui/time";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { notify } from "./ui/toaster";
 import { TOAST } from "../lib/stateCopy";
+import { PURSUIT_SPRING } from "./pursuit/ui";
+import { track } from "../lib/analytics";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -246,10 +249,16 @@ export function MomentActions({
   post,
   mine,
   onThoughts,
+  onLoved,
 }: {
   post: Post;
   mine: boolean;
   onThoughts?: () => void;
+  /** Fires only when Love goes from off to on — MomentCard's own cue to
+   * play its bigger on-photo heart burst, so that flourish plays whether
+   * Love was pressed here or from the media's own long-press quick-react
+   * tray, without this row needing to know that tray exists. */
+  onLoved?: () => void;
 }) {
   const { posts, ownCounts } = useContent();
   const { mine: myReactions, toggle } = useReactionState(post.id);
@@ -267,6 +276,7 @@ export function MomentActions({
   const press = (kind: "love" | "in", wasOn: boolean) => {
     setJustPressed(wasOn ? null : kind);
     toggle(kind);
+    if (kind === "love" && !wasOn) onLoved?.();
   };
 
   // Zero shows as the bare icon, not "0".
@@ -367,6 +377,12 @@ export function MomentMedia({ post, className = "" }: { post: Post; className?: 
   );
 }
 
+/** 450ms, with a 10px move tolerance — long enough that a normal tap or the
+ * start of a scroll never trips it, short enough that it still reads as
+ * "press and hold" rather than a timeout. */
+const LONG_PRESS_MS = 450;
+const LONG_PRESS_MOVE_CANCEL_PX = 10;
+
 export function MomentCard({
   post,
   surface: _surface,
@@ -375,11 +391,90 @@ export function MomentCard({
 }: MomentCardProps) {
   const { user } = useAuth();
   const social = useSocial();
+  const reduceMotion = useReducedMotion();
   const mine = !!user && post.userId === user.id;
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [thoughtsOpen, setThoughtsOpen] = useState(false);
   const [askTogetherOpen, setAskTogetherOpen] = useState(false);
-  const { mine: myReactions } = useReactionState(post.id);
+  const { mine: myReactions, toggle } = useReactionState(post.id);
+  const loved = myReactions.includes("love");
+
+  // Long-press on the photo opens a quick-react tray right where the
+  // finger/cursor is, without taking anything away from the normal single
+  // tap that opens the Moment — this is additive, not a swap. A real swipe
+  // gesture here would fight the multi-photo carousel's own horizontal
+  // scroll (PostMediaCarousel), so long-press (an axis the carousel never
+  // uses) is the gesture that's actually free. Suppressed entirely for
+  // `mine`, same as the rest of MomentActions: reacting to your own Moment
+  // isn't a thing this app offers anywhere else either.
+  const [quickReactAt, setQuickReactAt] = useState<{ x: number; y: number } | null>(null);
+  const [heartBurst, setHeartBurst] = useState(false);
+  const pressTimerRef = useRef<number | null>(null);
+  const pressStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressNextClickRef = useRef(false);
+
+  const clearPressTimer = () => {
+    if (pressTimerRef.current != null) {
+      window.clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+  useEffect(() => clearPressTimer, []);
+
+  const fireHeartBurst = () => {
+    if (reduceMotion) return;
+    setHeartBurst(true);
+    window.setTimeout(() => setHeartBurst(false), 650);
+  };
+
+  const onMediaPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (mine || e.pointerType === "mouse") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    pressStartRef.current = { x: e.clientX, y: e.clientY };
+    const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+    const yPct = ((e.clientY - rect.top) / rect.height) * 100;
+    clearPressTimer();
+    pressTimerRef.current = window.setTimeout(() => {
+      suppressNextClickRef.current = true;
+      setQuickReactAt({ x: xPct, y: yPct });
+      pressTimerRef.current = null;
+    }, LONG_PRESS_MS);
+  };
+  const onMediaPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!pressStartRef.current) return;
+    const dx = e.clientX - pressStartRef.current.x;
+    const dy = e.clientY - pressStartRef.current.y;
+    if (Math.hypot(dx, dy) > LONG_PRESS_MOVE_CANCEL_PX) clearPressTimer();
+  };
+  const onMediaPointerUp = () => {
+    clearPressTimer();
+    pressStartRef.current = null;
+  };
+
+  const handleOpen = () => {
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false;
+      return;
+    }
+    onOpen?.();
+  };
+
+  const quickLove = () => {
+    if (!loved) {
+      toggle("love");
+      fireHeartBurst();
+      track({ name: "moment_double_tap_loved", postId: post.id });
+    }
+    setQuickReactAt(null);
+  };
+  const quickIn = () => {
+    toggle("in");
+    setQuickReactAt(null);
+  };
+  const quickThought = () => {
+    setQuickReactAt(null);
+    setThoughtsOpen(true);
+  };
 
   const isActivity = !!post.startsAt;
   const activityPlace = displayLocation(post.locationName, post.locationPrivacy);
@@ -394,16 +489,31 @@ export function MomentCard({
   const cornerLine = [corner, pursuitTitle].filter(Boolean).join(" · ");
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   const onlyYou = isOnlyYou(post);
+  // "01".."06" only on My Space's sheet (see MomentCardProps' own doc
+  // comment) — the one place this card's entrance gets a stagger, since
+  // that's this app's actual activity feed; every other surface renders
+  // exactly as it did before.
+  const staggerIndex = number ? Math.max(0, parseInt(number, 10) - 1) : undefined;
 
   return (
-    <article className="flex min-w-0 flex-col">
+    <motion.article
+      className="flex min-w-0 flex-col"
+      initial={staggerIndex == null || reduceMotion ? false : { opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(staggerIndex ?? 0, 7) * 0.05 }}
+    >
       {/* The open button and the Save icon are siblings, never nested —
           a button inside a button isn't valid, and Save must not also
           open the Moment. */}
       <div className="relative">
         <button
           type="button"
-          onClick={onOpen}
+          onClick={handleOpen}
+          onPointerDown={onMediaPointerDown}
+          onPointerMove={onMediaPointerMove}
+          onPointerUp={onMediaPointerUp}
+          onPointerLeave={onMediaPointerUp}
+          onPointerCancel={onMediaPointerUp}
           aria-label={`Open: ${post.caption.slice(0, 60)}`}
           className={`relative block w-full overflow-hidden rounded-[var(--radius-moment)] text-left ${
             onlyYou ? "outline outline-2 outline-offset-[5px] outline-dashed outline-[var(--input-border)]" : ""
@@ -415,7 +525,89 @@ export function MomentCard({
               {number}
             </span>
           )}
+          {!reduceMotion && (
+            <AnimatePresence>
+              {heartBurst && (
+                <motion.div
+                  key="heart-burst"
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1, 1] }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.65, times: [0, 0.3, 0.75, 1] }}
+                >
+                  <Heart
+                    className="size-20 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+                    style={{ color: "var(--coral-deep)" }}
+                    fill="currentColor"
+                    strokeWidth={0}
+                    aria-hidden="true"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </button>
+        {!mine && (
+          <AnimatePresence>
+            {quickReactAt && (
+              <>
+                {/* A full-card backdrop, invisible, just to catch the "tap
+                    anywhere else closes it" dismissal — same convention a
+                    popover/menu always needs. */}
+                <button
+                  type="button"
+                  aria-label="Close quick reactions"
+                  className="absolute inset-0 z-20"
+                  onClick={() => setQuickReactAt(null)}
+                />
+                <motion.div
+                  key="quick-react-tray"
+                  role="menu"
+                  aria-label="Quick react"
+                  className="absolute z-30 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-[var(--void)]/85 p-1.5 shadow-lg backdrop-blur-md"
+                  style={{ left: `${quickReactAt.x}%`, top: `${quickReactAt.y}%` }}
+                  initial={reduceMotion ? false : { opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.7 }}
+                  transition={PURSUIT_SPRING}
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={quickLove}
+                    aria-label="Love this"
+                    className="flex size-10 items-center justify-center rounded-full text-white hover:bg-white/15"
+                  >
+                    <Heart className="size-[18px]" fill={loved ? "currentColor" : "none"} strokeWidth={1.9} />
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={quickIn}
+                    aria-label="Count me in"
+                    className="flex size-10 items-center justify-center rounded-full text-white hover:bg-white/15"
+                  >
+                    <Hand
+                      className="size-[18px]"
+                      fill={myReactions.includes("in") ? "currentColor" : "none"}
+                      strokeWidth={1.9}
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={quickThought}
+                    aria-label="Add a thought"
+                    className="flex size-10 items-center justify-center rounded-full text-white hover:bg-white/15"
+                  >
+                    <MessageCircle className="size-[18px]" strokeWidth={1.9} />
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        )}
         {/* The top-right corner is "your action on this Moment": Save for
             someone else's, who-sees-this for your own. */}
         {mine ? (
@@ -511,6 +703,7 @@ export function MomentCard({
             post={post}
             mine={mine}
             onThoughts={() => setThoughtsOpen(true)}
+            onLoved={fireHeartBurst}
           />
         </div>
 
@@ -566,6 +759,6 @@ export function MomentCard({
           />
         </>
       )}
-    </article>
+    </motion.article>
   );
 }
