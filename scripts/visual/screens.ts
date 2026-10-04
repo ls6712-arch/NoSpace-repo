@@ -28,6 +28,8 @@ export const SCREENS: Screen[] = [
   { name: "space-manage", route: `/space/${SPACE_SLUG}?tab=manage` },
   // Pursuits-in-progress cards: one with a custom cover (signed URL), one falling back to its own Moment's photo.
   { name: "my-space-pursuit-cards", route: "/my-space", setup: async (page) => { await page.getByText("Pursuits in progress").first().waitFor({ timeout: 8000 }); await page.waitForTimeout(900); } },
+  // A typed query shows the search box's own clear button (24px visible, 44px hit area on touch).
+  { name: "my-space-search-clear", route: "/my-space", setup: async (page) => { const q = page.getByLabel("Search your Pursuits"); await q.scrollIntoViewIfNeeded({ timeout: 8000 }); await q.fill("pot"); await page.waitForTimeout(500); } },
   { name: "dialog-pursuit-cover", route: "/my-space", setup: async (page) => { await page.getByRole("button", { name: /Change the cover photo for Throw 24 bowls/ }).first().click({ timeout: 8000, force: true }); await page.waitForTimeout(700); } },
   { name: "dialog-pursuit-goal", route: "/my-space", setup: async (page) => { await page.getByRole("button", { name: /Edit the goal for Throw 24 bowls/ }).first().click({ timeout: 8000, force: true }); await page.waitForTimeout(700); } },
   { name: "overlay-quicklog-desktop", route: "/my-space", widths: [768, 1440], setup: async (page) => { await page.getByRole("button", { name: /Log a Moment/ }).first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
