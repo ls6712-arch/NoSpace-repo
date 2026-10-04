@@ -478,3 +478,53 @@ safe-area insets (notch 47px, home indicator 34px), at scroll top and bottom:
   fixed bar covers the "WELCOME TO MY SPACE" banner, the greeting and the day-two
   invite card, because those come before the bar's section in the DOM and the bar is
   fixed at the top of the page. The reserved spacer sits after them.
+
+
+## 15. P2: images and media (Oct 4, 2026)
+
+`ImageWithFallback` is now the one way to show a photo (the guard rejects a bare
+`<img>`): a box that keeps its size, a soft placeholder colour (`--surface-muted`)
+the photo fades in over, lazy unless `priority`, `decoding="async"`, an optional
+resized copy, and one fallback behaviour everywhere. `PostMedia`,
+`PostMediaCarousel` and 33 other `<img>` sites go through it.
+
+| measure (harness, light, photos held then released) | before | after |
+|---|---|---|
+| `<img>` tags outside the primitive | 40 | **0** |
+| `loading="lazy"` | 8 of 40 | all except `priority` (landing hero, Moment view photo, Studio cover) |
+| below-the-fold images that are not lazy (375px, 22 views) | 4 | **0** |
+| boxes that resize when the photo arrives | 0 on the fixtures; 3 unsized sites existed (Thoughts, Settings data export, chat photos) | **0**; all three have an aspect ratio |
+| layout shift when the photos arrive | 0.000 | **0.000** |
+| views where every photo 404s and a broken-image glyph shows | 12 of 22 | **0** of 46 |
+| illustrations that glow in dark (more than 8% of pixels at 70% grey or brighter) | 1 (landing hero, 19.2%) | **0** (1.9%) |
+| text over a photo or illustration below 4.5:1 against a very bright (#E6E6E6) or black photo, 84 views | 14 | **0** |
+| landing hero image | 2.07 MB PNG | 109 KB WebP (PSNR 35.7 dB) |
+
+**Resized images.** `lib/imageVariants.ts` rewrites a Supabase Storage URL to the
+render endpoint (`/storage/v1/render/image/...?width=&quality=`) and
+`ImageWithFallback` asks for a copy sized to the box (1x and 2x), retrying the
+original if that fails. Cards pass `width` (Moment cards 640, tiles 96–400); the
+Moment view passes nothing and loads the original. **It is off.** Storage image
+transformations are a Pro-plan feature and this organisation is on the free plan,
+so it ships behind `VITE_IMAGE_TRANSFORMS=on`. Not verified against a live Pro
+project: whether a *signed* URL's token is honoured by the render endpoint.
+
+**Scrims.** `--scrim` is heavier (0.78 at the bottom edge, 0.5 at the middle) and
+there is a `--scrim-top`/`bg-scrim-top` for wordmarks and controls at the top of a
+photo (Studio cover). `text-on-media` over a photo is `/90` or full (the guard
+rejects lower). The contrast audit now judges text over media against the scrim
+above it.
+
+**Carousel.** Dots are indicators, not 6px buttons that overlapped; the current
+photo is announced ("Photo 2 of 5", `role="status"`), the track is focusable and
+scrolls with the arrow keys, there are previous/next arrows for a fine pointer
+only, `overscroll-x-contain` keeps a swipe from going back a page, and the
+scroll handler runs once per frame. `run.ts --carousel` asserts all of it with a
+three-photo Moment.
+
+**Dark.** Generated art already had dark palette overrides (none glow); the
+bundled landing hero sits a step down (`filter: brightness(.78) saturate(.88)`).
+`run.ts --art` crops every illustration in both themes and measures the bright
+share. Avatars keep Radix's circle crop and initials fallback and now fade in.
+
+New harness modes: `--images`, `--carousel`, `--art`; CI runs all three.
