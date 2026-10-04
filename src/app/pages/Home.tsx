@@ -11,7 +11,7 @@ import { useScrollReveal } from "../lib/useScrollReveal";
 import { useCategories } from "../context/CategoriesContext";
 import { useAuth } from "../context/AuthContext";
 import { WaitlistForm } from "../components/WaitlistForm";
-import heroWorldsImg from "../../assets/hero-worlds.png";
+import heroWorldsImg from "../../assets/hero-worlds.webp";
 import { APP_NAME } from "../config";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
