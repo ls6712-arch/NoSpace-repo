@@ -256,7 +256,9 @@ async function main() {
   if (fontsDir && !fs.existsSync(path.join(fontsDir, "fonts.css"))) { console.log(`caching webfonts into ${fontsDir}`); cacheFonts(fontsDir, path.join(ROOT, "src/styles/fonts.css")); }
   const dist = path.resolve(opt("dist") ?? buildApp(fs.mkdtempSync(path.join(os.tmpdir(), "visual-dist-"))));
   const exe = process.env.PLAYWRIGHT_CHROMIUM ?? (() => { try { return execFileSync("bash", ["-lc", "ls -d ${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}/chromium-*/chrome-linux/chrome | head -1"], { encoding: "utf8" }).trim(); } catch { return undefined; } })();
-  const browser = await chromium.launch({ executablePath: exe || undefined });
+  // --profiles launches each profile's own engine. A CI job that installed only WebKit has no Chromium to
+  // start here (that was the visual-webkit job's exit 2), so the top-level browser is skipped for it.
+  const browser: Browser = flag("profiles") ? ({ close: async () => undefined } as unknown as Browser) : await chromium.launch({ executablePath: exe || undefined });
   const picked = list("screens", "all"); const screens = picked[0] === "all" ? SCREENS : SCREENS.filter((s) => picked.includes(s.name));
   const base: RunOpts = { dist, fontsDir, screens, widths: list("widths", "375,768,1440").map(Number), themes: list("themes", "light,dark"), outDir: opt("out") ? path.resolve(opt("out")!) : undefined };
 
