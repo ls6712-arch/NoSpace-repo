@@ -25,6 +25,13 @@ import { BlockConfirmDialog } from "../components/BlockConfirmDialog";
 import { ReportDialog } from "../components/ReportDialog";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SharedContentCard } from "../components/SharedContentCard";
+import { pluralWord } from "../lib/plural";
+import { scrollBehavior } from "../lib/scrollToElement";
+import { Loadable, Skeleton } from "../components/ui/skeleton";
+import { ListSkeleton } from "../components/Skeletons";
+import { EmptyState } from "../components/StateViews";
+import { UPLOAD_COPY } from "../lib/stateCopy";
+import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
@@ -61,7 +68,7 @@ function initials(name: string) {
  * pair of quotes when intent is missing. */
 function emptyStateFor(active: Participation | null, otherName: string): string {
   if (active && (active.kind === "make_together" || active.kind === "explore_together") && active.intent) {
-    return `You both agreed to "${active.intent}", this is where that happens.`;
+    return `You both agreed to “${active.intent}”, this is where that happens.`;
   }
   return `Say hi to ${otherName}.`;
 }
@@ -175,6 +182,7 @@ function ConversationPanel({
   messages,
   myId,
   emptyText,
+  loadingMessages = false,
   bannerText,
   composerDisabled,
   composerPlaceholder,
@@ -197,6 +205,8 @@ function ConversationPanel({
   messages: Message[];
   myId: string | undefined;
   emptyText: string;
+  /** First page still on its way: show bubble shapes, not the empty line. */
+  loadingMessages?: boolean;
   bannerText: string | null;
   composerDisabled: boolean;
   composerPlaceholder: string;
@@ -309,7 +319,7 @@ function ConversationPanel({
   const scrollToBottom = () => {
     setNewMessageCount(0);
     setAtBottom(true);
-    endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    endRef.current?.scrollIntoView({ block: "end", behavior: scrollBehavior() });
   };
 
   return (
@@ -334,7 +344,11 @@ function ConversationPanel({
               {bannerText}
             </p>
           )}
-          {messages.length === 0 ? (
+          {messages.length === 0 && loadingMessages ? (
+            <Loadable loading skeleton={<MessageBubblesSkeleton />}>
+              {null}
+            </Loadable>
+          ) : messages.length === 0 ? (
             <p className="py-8 text-center text-caption text-muted-foreground">{emptyText}</p>
           ) : (
             messages.map((m, i) => {
@@ -412,7 +426,7 @@ function ConversationPanel({
                       onClick={() => onRetry(m.clientId!)}
                       className="mt-0.5 block text-caption text-[var(--coral-text)] underline-offset-2 hover:underline"
                     >
-                      Not sent · Tap to retry
+                      Not sent · tap to retry
                     </button>
                   )}
                   {showSeen && <p className="mt-0.5 text-right text-caption text-muted-foreground">Seen</p>}
@@ -428,7 +442,7 @@ function ConversationPanel({
             onClick={scrollToBottom}
             className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--coral-deep)] px-3.5 py-1.5 text-caption text-on-brand"
           >
-            New message{newMessageCount > 1 ? "s" : ""}
+            {pluralWord(newMessageCount, "New message", "New messages")}
           </button>
         )}
       </div>
@@ -448,7 +462,7 @@ function ConversationPanel({
                 setHeicWarning(null);
                 const converted = await convertHeicIfNeeded(picked);
                 if (isHeicFile(converted)) {
-                  setHeicWarning("That photo couldn't be processed — try a different one.");
+                  setHeicWarning(UPLOAD_COPY.heic);
                   return;
                 }
                 onAttachPhoto(converted);
@@ -495,7 +509,7 @@ function ConversationPanel({
         open={unsendTargetId != null}
         onOpenChange={(open) => !open && setUnsendTargetId(null)}
         title="Unsend this message?"
-        description="Both of you will see “Message deleted” in its place. This can't be undone."
+        description="Both of you will see “Message deleted” in its place. This can’t be undone."
         confirmLabel="Unsend"
         onConfirm={() => {
           if (unsendTargetId != null) onUnsend?.(unsendTargetId);
@@ -714,7 +728,7 @@ export function Messages() {
         setActiveId(id);
       }
       if (error) {
-        setSendError("Couldn't send that. Try again later.");
+        setSendError(ERROR_LINE);
         return;
       }
       setDraft("");
@@ -725,7 +739,7 @@ export function Messages() {
     setSendError(null);
     // Clears right away regardless of outcome — the message itself now
     // appears immediately in the thread (see ConversationPanel), "sending"
-    // or, on failure, "Not sent · Tap to retry" in place. There's nothing
+    // or, on failure, "Not sent · tap to retry" in place. There's nothing
     // left to redo from the composer; a retry taps the message itself.
     setDraft("");
     await social.sendMessage(active.id, draft);
@@ -776,7 +790,7 @@ export function Messages() {
           ) : loading ? (
             <p className="py-6 text-center text-caption text-muted-foreground">Searching…</p>
           ) : results.length === 0 ? (
-            <p className="py-6 text-center text-caption text-muted-foreground">No one found.</p>
+            <p className="py-6 text-center text-caption text-muted-foreground">No one found</p>
           ) : (
             <ul className="max-h-72 space-y-1 overflow-y-auto">
               {results.map((person) => (
@@ -789,7 +803,7 @@ export function Messages() {
                     <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="text-caption">{initials(person.displayName)}</AvatarFallback>
                     </Avatar>
-                    {person.displayName}
+                    <span className="min-w-0 truncate">{person.displayName}</span>
                   </button>
                 </li>
               ))}
@@ -815,7 +829,7 @@ export function Messages() {
           </Button>
         </div>
         <p className="mb-6 text-small text-muted-foreground">
-          People who accepted making or exploring something together, and anyone who's sent or
+          People who accepted making or exploring something together, and anyone who’s sent or
           received a direct message.
         </p>
         {newMessageDialog}
@@ -829,27 +843,18 @@ export function Messages() {
           </TabsList>
 
           <TabsContent value="chats">
-            {!draftThread && chatThreads.length === 0 ? (
-              <div className="rounded-card border border-dashed border-border px-5 py-14 text-center">
-                <span className="mx-auto mb-5 flex size-14 items-center justify-center rounded-full bg-surface-muted text-foreground">
-                  <MessagesSquare className="size-6" />
-                </span>
-                <h2 className="mb-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-                  No open chats
-                </h2>
-                <p className="mx-auto mb-6 max-w-sm text-small leading-relaxed text-muted-foreground">
-                  Nothing yet. A chat opens when someone accepts a Make together or Explore
-                  together request, or when you send someone a direct message from their profile.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <Link to="/discover">
-                    <Button variant="outline">Find someone to make something with</Button>
-                  </Link>
-                  <Button variant="coral" onClick={openPicker}>
-                    New message
-                  </Button>
-                </div>
-              </div>
+            {!draftThread && !social.loaded ? (
+              <Loadable loading skeleton={<ListSkeleton count={5} />}>
+                {null}
+              </Loadable>
+            ) : !draftThread && chatThreads.length === 0 ? (
+              <EmptyState
+                size="page"
+                icon={<MessagesSquare />}
+                line="No open chats."
+                hint="A chat opens when someone accepts a Make together or Explore together request, or when you send someone a message from their Shelf."
+                action={{ label: "New message", onClick: openPicker }}
+              />
             ) : (
               <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
                 <ul className="min-w-0 space-y-2">
@@ -955,6 +960,7 @@ export function Messages() {
                       messages={messages}
                       myId={user?.id}
                       emptyText={emptyStateFor(active, otherName)}
+                      loadingMessages={social.openThreadLoading}
                       bannerText={isWaiting ? `Waiting for ${otherName} to accept.` : null}
                       composerDisabled={composerDisabled}
                       composerPlaceholder={composerDisabled ? `Waiting for ${otherName} to accept` : `Message ${otherName}`}
@@ -986,13 +992,16 @@ export function Messages() {
           </TabsContent>
 
           <TabsContent value="requests">
-            {requests.length === 0 ? (
-              <div className="rounded-card border border-dashed border-border px-5 py-14 text-center">
-                <p className="text-small text-muted-foreground">
-                  Nothing waiting. A first message from someone you don't follow shows up here,
-                  to accept or ignore.
-                </p>
-              </div>
+            {!social.loaded ? (
+              <Loadable loading skeleton={<ListSkeleton count={3} />}>
+                {null}
+              </Loadable>
+            ) : requests.length === 0 ? (
+              <EmptyState
+                line="Nothing waiting."
+                hint="A first message from someone you don’t follow shows up here, to accept or ignore."
+                action={{ label: "Go to Chats", onClick: () => setTab("chats") }}
+              />
             ) : (
               <ul className="space-y-3">
                 {requests.map((r) => (
@@ -1077,5 +1086,25 @@ function RequestCard({ request }: { request: Participation }) {
         personName={request.fromName}
       />
     </li>
+  );
+}
+
+/** Holds a chat's shape while its first page of messages loads. */
+function MessageBubblesSkeleton() {
+  const rows: Array<["start" | "end", string]> = [
+    ["start", "w-40"],
+    ["start", "w-56"],
+    ["end", "w-44"],
+    ["start", "w-32"],
+    ["end", "w-52"],
+  ];
+  return (
+    <div className="space-y-2">
+      {rows.map(([side, width], i) => (
+        <div key={i} className={`flex ${side === "end" ? "justify-end" : "justify-start"}`}>
+          <Skeleton className={`h-9 ${width} max-w-[75%] rounded-card`} />
+        </div>
+      ))}
+    </div>
   );
 }

@@ -6,6 +6,8 @@ import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
 import { MOMENT_GRID, MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./MomentCard";
+import { formatWhen } from "../lib/dates";
+import { EmptyState } from "./StateViews";
 
 /** The card's own dark ink color — the cream card is a deliberate,
  * contained exception to the app's dark surfaces (same pairing the flat
@@ -163,17 +165,9 @@ export function useSessionsByHobby(): HobbySession[] {
   return sessionsFromPosts(myPosts);
 }
 
-/** "Updated today" reads better than a date for the thing you did this morning. */
+/** "Updated 3h ago", then "Updated Sep 24" — the app's one date format. */
 export function updatedLabel(ts: number) {
-  const days = Math.floor((Date.now() - ts) / 86_400_000);
-  if (days <= 0) return "Updated today";
-  if (days === 1) return "Updated yesterday";
-  if (days < 7) return `Updated ${days} days ago`;
-  if (days < 30) {
-    const w = Math.floor(days / 7);
-    return `Updated ${w} ${w === 1 ? "week" : "weeks"} ago`;
-  }
-  return `Updated ${new Date(ts).toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+  return `Updated ${formatWhen(ts, { ago: true })}`;
 }
 
 /**
@@ -216,7 +210,7 @@ function CornerTile({
             seed={item.lastMediaId ?? item.key}
             preview
             width={320}
-            className="h-full w-full object-cover transition-transform duration-fast group-hover:scale-[1.02] motion-reduce:transition-none"
+            className="h-full w-full object-cover transition-transform duration-base group-hover:scale-[1.02] motion-reduce:transition-none"
           />
         ) : item.subSlug ? (
           <SubHobbyArt
@@ -286,20 +280,11 @@ export function HobbyShelf({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-border px-6 py-12 text-center">
-        <p className="mx-auto max-w-sm text-small leading-relaxed text-muted-foreground">
-          {emptyCopy ??
-            "Your shelf is empty. Every hobby you log gets its own tile here, with everything you've made in it inside."}
-        </p>
-        {emptyCta && (
-          <Link
-            to="/create"
-            className="mt-4 inline-block rounded-control px-5 py-2 text-small text-on-brand [background-color:var(--coral-deep)]"
-          >
-            Create your first moment
-          </Link>
-        )}
-      </div>
+      <EmptyState
+        line={emptyCopy ?? "Your Shelf is empty."}
+        hint={emptyCopy ? undefined : "Every Corner you log in gets its own Book here."}
+        action={emptyCta ? { label: "Log a Moment", to: "/create" } : undefined}
+      />
     );
   }
 

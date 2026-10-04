@@ -28,6 +28,12 @@ import { useFollowerCount } from "../lib/useFollowerCount";
 import { fetchFollowStatus, follow, unfollow, type FollowStatus } from "../lib/profileFollows";
 import { FollowListDialog } from "../components/FollowListDialog";
 import { PersonActionsMenu } from "../components/PersonActionsMenu";
+import { formatMonth } from "../lib/dates";
+import { pluralWord } from "../lib/plural";
+import { Loadable } from "../components/ui/skeleton";
+import { MomentGridSkeleton, ProfileHeaderSkeleton } from "../components/Skeletons";
+import { notifyError } from "../components/ui/toaster";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /** Whichever Corner shows up most in their public Moments — a Corner slug is
  * only unique within its own Space, so this tracks the pair, never the slug
@@ -272,9 +278,18 @@ export function PublicProfile() {
 
   if (state.status === "loading") {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <span className="size-8 animate-spin rounded-full border-2 border-border border-t-white/70" />
-      </div>
+      <Loadable
+        loading
+        className="ns-paper-theme ns-public-profile min-h-viewport bg-surface py-8 sm:py-10"
+        skeleton={
+          <div className="container mx-auto max-w-5xl px-4">
+            <ProfileHeaderSkeleton />
+            <MomentGridSkeleton count={6} />
+          </div>
+        }
+      >
+        {null}
+      </Loadable>
     );
   }
 
@@ -283,7 +298,7 @@ export function PublicProfile() {
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
           <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            No shelf here
+            No Shelf here
           </h2>
           <p className="mb-6 text-small text-muted-foreground">
             Nobody by that name. The link may be out of date.
@@ -339,10 +354,7 @@ export function PublicProfile() {
 
   const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;
   const sinceLabel = earliestPostAt
-    ? new Date(earliestPostAt).toLocaleDateString(undefined, {
-        month: "long",
-        year: new Date(earliestPostAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
-      })
+    ? formatMonth(earliestPostAt)
     : null;
 
   return (
@@ -378,8 +390,8 @@ export function PublicProfile() {
               )}
               <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-caption text-muted-foreground sm:text-small">
                 <span>
-                  <strong className="text-foreground">{posts.length}</strong>{" "}
-                  {posts.length === 1 ? "moment" : "moments"} logged
+                  <strong className="text-foreground tabular-nums">{posts.length.toLocaleString("en-US")}</strong>{" "}
+                  {pluralWord(posts.length, "Moment")} logged
                   {sinceLabel ? ` since ${sinceLabel}` : ""}
                 </span>
                 {followerCount !== null && followerCount > 0 && (
@@ -390,8 +402,8 @@ export function PublicProfile() {
                       onClick={() => setFollowListOpen(true)}
                       className="transition-colors hover:text-foreground hover:underline"
                     >
-                      <strong className="text-foreground">{followerCount}</strong>{" "}
-                      {followerCount === 1 ? "follower" : "followers"}
+                      <strong className="text-foreground tabular-nums">{followerCount.toLocaleString("en-US")}</strong>{" "}
+                      {pluralWord(followerCount, "follower")}
                     </button>
                   </>
                 )}
@@ -409,18 +421,26 @@ export function PublicProfile() {
                 {!isMe && user && (
                   <Button
                     variant={followStatus === "none" || followStatus === "declined" ? "brand" : "outline"}
-                    disabled={followBusy}
-                    onClick={async () => {
+                    onClick={() => {
+                      // Optimistic: the button flips on tap; a failed write
+                      // flips it back and says so. Not async on purpose, so
+                      // the button doesn't go busy for a change already shown.
+                      if (followBusy) return;
+                      const before = followStatus;
+                      const requesting = before === "none" || before === "declined";
+                      setFollowStatus(requesting ? "pending" : "none");
                       setFollowBusy(true);
-                      const requesting = followStatus === "none" || followStatus === "declined";
-                      const ok = requesting
-                        ? await follow(user.id, personId)
-                        : await unfollow(user.id, personId);
-                      if (ok) {
-                        setFollowStatus(requesting ? "pending" : "none");
-                        setFollowRefreshKey((k) => k + 1);
-                      }
-                      setFollowBusy(false);
+                      void (requesting ? follow(user.id, personId) : unfollow(user.id, personId))
+                        .catch(() => false)
+                        .then((ok) => {
+                          setFollowBusy(false);
+                          if (ok) {
+                            setFollowRefreshKey((k) => k + 1);
+                            return;
+                          }
+                          setFollowStatus(before);
+                          notifyError(ERROR_LINE);
+                        });
                     }}
                   >
                     {followStatus === "accepted"
@@ -505,7 +525,7 @@ export function PublicProfile() {
                   {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
                 </h2>
                 <p className="mt-1 text-small text-muted-foreground">
-                  A look into the things they've created, explored, and loved.
+                  A look into the things they’ve created, explored, and loved.
                 </p>
               </div>
               {focusTag && (
@@ -522,17 +542,18 @@ export function PublicProfile() {
               posts={shownPosts}
               onOpen={setOpenPost}
               editable={isMe}
-              emptyLabel={`${firstName} hasn't shared any Moments publicly yet.`}
+              emptyLabel={isMe ? "Nothing logged yet." : `${firstName} hasn’t shared any Moments publicly yet.`}
+              emptyAction={isMe ? { label: "Log a Moment", to: "/create" } : { label: "Go to Discover", to: "/discover" }}
             />
           </section>
 
           {sharedPursuits.length > 0 && (
             <section>
               <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-                {firstName}'s Pursuits
+                {firstName}’s Pursuits
               </h2>
               <p className="mb-4 mt-1 text-small text-muted-foreground">
-                The things they're bringing to life, that they've chosen to share.
+                The things they’re bringing to life, that they’ve chosen to share.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {sharedPursuits.map((pursuit) => (
@@ -569,7 +590,7 @@ export function PublicProfile() {
               {primaryCorner.name}
             </h2>
             <p className="mb-4 text-small text-muted-foreground">
-              {firstName}'s Moments tagged {primaryCorner.name}.
+              {firstName}’s Moments tagged {primaryCorner.name}.
             </p>
             <div className={MOMENT_GRID}>
               {cornerMoments.slice(0, 6).map((post) => (
@@ -588,7 +609,7 @@ export function PublicProfile() {
               <GeneratedArt
                 hobbySlug={primaryCorner.spaceSlug}
                 seed={primaryCorner.slug}
-                className="h-full w-full transition-transform duration-fast group-hover:scale-105"
+                className="h-full w-full transition-transform duration-base group-hover:scale-105"
               />
             </div>
             <div className="flex flex-1 flex-wrap items-center justify-between gap-4 p-6">
@@ -630,7 +651,7 @@ export function PublicProfile() {
             Start your own shelf
           </h2>
           <p className="mx-auto mb-6 max-w-sm text-small text-muted-foreground">
-            Pick a hobby, log what you make, and watch it stack up. Free, and there's
+            Pick a hobby, log what you make, and watch it stack up. Free, and there’s
             nothing here that scrolls forever.
           </p>
           <div className="flex flex-col justify-center gap-2.5 sm:flex-row">

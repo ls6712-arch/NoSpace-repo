@@ -16,3 +16,9 @@ export function scrollToElementId(id: string): void {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
 }
+
+/** "smooth", or "auto" under prefers-reduced-motion — for any scrollTo or
+ * scrollIntoView call that would otherwise animate. */
+export function scrollBehavior(): ScrollBehavior {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+}

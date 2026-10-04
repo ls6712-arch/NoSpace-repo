@@ -10,7 +10,7 @@ import { defaultSpaceSlug } from "../data/hobbies";
 import { guessSpace } from "../lib/pursuitProgress";
 import { addProgress, markActivity, pursuitStatus, useJournalSlice } from "../lib/journal";
 import { attachPostToPursuit, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
-import { convertHeicIfNeeded } from "../lib/heicConversion";
+import { preparePickedPhoto } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { formatAmount, hasMeasure, stepFor, summarize, targetText, unitFor } from "../lib/pursuitProgress";
@@ -19,6 +19,8 @@ import { collectPursuitMoments } from "../lib/pursuitTrail";
 import { Button } from "../components/ui/button";
 import { AmountStepper, ProgressBar, SoftPanel, Toggle } from "../components/pursuit/ui";
 import { APP_NAME } from "../config";
+import { formatDate } from "../lib/dates";
+import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
 type Audience = "private" | "followers" | "public";
@@ -85,7 +87,7 @@ export function AddMoment() {
   if (!project) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
-        <p className="text-small text-muted-foreground">That Pursuit isn't in your list.</p>
+        <p className="text-small text-muted-foreground">That Pursuit isn’t in your list.</p>
         <Link to="/my-space">
           <Button variant="outline">Back to Home</Button>
         </Link>
@@ -114,7 +116,7 @@ export function AddMoment() {
         if (file && user) {
           const { path, error: uploadError } = await uploadMomentFile(user.id, file);
           if (uploadError || !path) {
-            setError("Your photo didn't upload. Try again.");
+            setError("Your photo didn’t upload. Try again.");
             return;
           }
           media = { path, type: "image", hobbySlug: project.hobbySlug };
@@ -126,7 +128,7 @@ export function AddMoment() {
         });
         if (result.skipped) return;
         if (!result.data) {
-          setError(result.error || "That didn't save. Try again?");
+          setError(result.error || ERROR_LINE);
           return;
         }
         logId = result.data.id;
@@ -159,7 +161,7 @@ export function AddMoment() {
       setAdded({ amount: logged });
       setRefresh((r) => r + 1);
     } catch {
-      setError("That didn't save. Try again?");
+      setError(ERROR_LINE);
     } finally {
       setSaving(false);
     }
@@ -249,7 +251,11 @@ export function AddMoment() {
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
                   e.target.value = "";
-                  if (f) setFile(await convertHeicIfNeeded(f).catch(() => f));
+                  if (!f) return;
+                  const prepared = await preparePickedPhoto(f);
+                  if (prepared.error) return setError(prepared.error);
+                  setError(null);
+                  setFile(prepared.file);
                 }}
               />
               <div className="min-w-0 flex-1">
@@ -284,7 +290,7 @@ export function AddMoment() {
                   <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
                 </div>
                 {summary && (
-                  <p className="mt-2 text-caption text-muted-foreground">
+                  <p className="mt-2 text-caption text-muted-foreground tabular-nums">
                     {formatAmount(summary.current)} of {targetText(measure)} so far
                   </p>
                 )}
@@ -323,8 +329,8 @@ export function AddMoment() {
       {!added && (
         <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur lg:bottom-0 lg:pb-[calc(var(--safe-bottom)+1rem)]">
           <div className="mx-auto max-w-md">
-            <Button variant="coral" className="h-11 w-full rounded-control" disabled={!canSave} onClick={save}>
-              {saving ? "Saving…" : "Save Moment"}
+            <Button busy={saving} variant="coral" className="h-11 w-full rounded-control" disabled={!canSave} onClick={save}>
+              Save Moment
             </Button>
           </div>
         </div>
@@ -383,7 +389,7 @@ function MomentAdded({
               <figure key={m.key}>
                 <ImageWithFallback src={m.image} alt="" className="aspect-square w-full rounded-card" />
                 <figcaption className="mt-1 text-center text-caption text-muted-foreground">
-                  {new Date(m.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  {formatDate(m.date)}
                 </figcaption>
               </figure>
             ))}

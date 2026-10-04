@@ -255,7 +255,7 @@ export function WorldIllustration({
   if (photo) {
     return (
       <div className={`relative overflow-hidden ${className ?? ""}`} style={{ backgroundColor: PAPER }}>
-        <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className="h-full w-full" imgClassName="transition-transform duration-fast ease-standard" />
+        <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className="h-full w-full" imgClassName="transition-transform duration-base ease-standard" />
       </div>
     );
   }

@@ -62,7 +62,7 @@ export function EditableTextRow({
     if (saving) return;
     const next = draft.trim();
     if (required && !next) {
-      setError("This can't be empty.");
+      setError("This can’t be empty.");
       return;
     }
     setSaving(true);
@@ -144,8 +144,8 @@ export function EditableTextRow({
           <Button variant="outline" size="sm" onClick={cancel} disabled={saving}>
             Cancel
           </Button>
-          <Button size="sm" onClick={save} disabled={!canSave}>
-            {saving ? "Saving…" : "Save"}
+          <Button busy={saving} size="sm" onClick={save} disabled={!canSave}>
+            Save
           </Button>
         </div>
       </div>

@@ -12,11 +12,15 @@ import {
   DialogTitle,
   DialogDescription,
 } from "./ui/dialog";
+import { formatMonth } from "../lib/dates";
+import { Loadable, Skeleton } from "./ui/skeleton";
+import { MomentGridSkeleton } from "./Skeletons";
+import { EmptyState } from "./StateViews";
 
 const PAGE_SIZE = 15;
 
 function monthKey(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return formatMonth(ts);
 }
 
 /**
@@ -102,11 +106,18 @@ export function WorkGrid({
   posts,
   onOpen,
   emptyLabel,
+  emptyHint,
+  emptyAction,
+  loading = false,
   editable = false,
 }: {
   posts: Post[];
   onOpen: (post: Post) => void;
   emptyLabel: string;
+  emptyHint?: string;
+  emptyAction?: { label: string; to: string };
+  /** Moments haven't arrived yet: show the grid's shape instead of the empty state. */
+  loading?: boolean;
   /** Only the owner can pin/unpin — a visitor's WorkGrid (PublicProfile) still
    * sorts pinned Moments first, it just can't change which ones are. */
   editable?: boolean;
@@ -114,12 +125,27 @@ export function WorkGrid({
   const [shown, setShown] = useState(PAGE_SIZE);
   const [pinPickerOpen, setPinPickerOpen] = useState(false);
 
-  if (posts.length === 0) {
+  if (loading && posts.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-small text-muted-foreground">
-        {emptyLabel}
-      </div>
+      <Loadable
+        loading
+        skeleton={
+          <>
+            <div className="mb-4 flex h-4 items-center gap-3">
+              <Skeleton className="h-2.5 w-20 rounded-full" />
+              <span className="h-px flex-1 bg-[var(--line,var(--hairline))]" aria-hidden="true" />
+            </div>
+            <MomentGridSkeleton count={6} />
+          </>
+        }
+      >
+        {null}
+      </Loadable>
     );
+  }
+
+  if (posts.length === 0) {
+    return <EmptyState line={emptyLabel} hint={emptyHint} action={emptyAction} />;
   }
 
   // Stable sort: pinned first, everything else keeps the order it arrived

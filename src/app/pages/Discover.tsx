@@ -25,9 +25,14 @@ import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { GeneratedArt } from "../components/GeneratedArt";
 import { SpacesBrowser } from "../components/SpacesBrowser";
+import { Loadable, useDelayedFlag } from "../components/ui/skeleton";
+import { MomentCardSkeleton, MomentGridSkeleton } from "../components/Skeletons";
+import { EmptyState, ErrorNotice } from "../components/StateViews";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
+import { plural } from "../lib/plural";
+import { scrollBehavior } from "../lib/scrollToElement";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
@@ -186,7 +191,7 @@ function MarketplaceTab({ query }: { query: string }) {
   if (matching.length === 0) {
     return (
       <p className="rounded-card border border-dashed border-border px-5 py-6 text-center text-small text-muted-foreground">
-        {q ? `No listings match "${query}" yet.` : "Nothing for sale yet."}
+        {q ? `No listings match “${query}” yet.` : "Nothing for sale yet"}
       </p>
     );
   }
@@ -248,9 +253,7 @@ function AllCornersBrowser({ query }: { query: string }) {
     // below is only ever seen when a search genuinely comes up empty.
     if (!q) return null;
     return (
-      <div className="rounded-card border border-dashed border-border px-5 py-6 text-center text-small text-muted-foreground">
-        No Corners match that. Try a broader word.
-      </div>
+      <EmptyState line="No Corners match that." hint="Try a broader word." />
     );
   }
 
@@ -260,13 +263,13 @@ function AllCornersBrowser({ query }: { query: string }) {
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
           to={`/corner/${c.slug}`}
-          className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-fast ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
+          className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-base ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
         >
           <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
             <DiscoverSpaceArt
               hobbySlug={c.spaceSlug}
               seed={`${c.spaceSlug}-${c.slug}`}
-              className="transition-transform duration-fast ease-standard group-hover:scale-110"
+              className="transition-transform duration-base ease-standard group-hover:scale-110"
             />
           </div>
           <div className="px-3 py-2.5">
@@ -278,8 +281,28 @@ function AllCornersBrowser({ query }: { query: string }) {
   );
 }
 
+/** Holds Spotlight's place while Moments load: same heading, a row of cards. */
+function SpotlightSkeleton() {
+  const show = useDelayedFlag(true);
+  return (
+    <section className={`mb-14 ${show ? "" : "invisible"}`} aria-busy="true">
+      <div className="mb-5">
+        <div className="ns-section-kicker mb-2">Popular Moments from across {APP_NAME}</div>
+        <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>Spotlight</h2>
+      </div>
+      <div className="flex gap-4 overflow-hidden pb-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="w-64 shrink-0">
+            <MomentCardSkeleton />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function Discover() {
-  const { publicFeed } = useContent();
+  const { publicFeed, postsStatus, reloadPosts } = useContent();
   const { user } = useAuth();
   // Subscribing re-renders this page when admin Space changes load.
   const { spaceRows } = useCategories();
@@ -525,6 +548,7 @@ export function Discover() {
               <AllCornersBrowser query={query} />
 
               {/* Spotlight */}
+              {postsStatus === "loading" && <SpotlightSkeleton />}
               {featured.length > 0 && (
                 <section className="mb-12">
                   <div className="mb-5 flex items-end justify-between gap-4">
@@ -541,7 +565,7 @@ export function Discover() {
                         // "/all-moments" — a route that doesn't exist, so it
                         // lands on the 404 page instead of scrolling.
                         e.preventDefault();
-                        document.getElementById("all-moments")?.scrollIntoView({ behavior: "smooth" });
+                        document.getElementById("all-moments")?.scrollIntoView({ behavior: scrollBehavior() });
                       }}
                     >
                       See all →
@@ -677,22 +701,28 @@ export function Discover() {
 
               <p className="mb-6 text-small text-muted-foreground">
                 {chip === "near"
-                  ? "Location isn't switched on yet."
-                  : `${filtered.length} ${filtered.length === 1 ? "Moment" : "Moments"}${q ? ` matching "${query}"` : ""}.`}
+                  ? "Location isn’t switched on yet."
+                  : `${plural(filtered.length, "Moment")}${q ? ` matching “${query}”` : ""}`}
               </p>
 
-              {chip === "near" ? (
-                <div className="rounded-card border border-dashed border-border px-5 py-10 text-center">
-                  <p className="mx-auto mb-5 max-w-sm text-small leading-relaxed text-muted-foreground">
-                    {APP_NAME} doesn't know where you are, and won't until you tell it.
-                  </p>
-                </div>
+              <Loadable loading={postsStatus === "loading"} skeleton={<MomentGridSkeleton count={6} />}>
+              {postsStatus === "error" && publicFeed.length === 0 ? (
+                <ErrorNotice onRetry={reloadPosts} />
+              ) : chip === "near" ? (
+                <EmptyState
+                  line={`${APP_NAME} doesn’t know where you are, and won’t until you tell it.`}
+                  action={{ label: "Browse Moments", onClick: () => setChip("all") }}
+                />
               ) : visible.length === 0 ? (
-                <div className="rounded-card border border-dashed border-border px-5 py-10 text-center text-small text-muted-foreground">
-                  {feedTab === "following"
-                    ? "Nothing from your Interests yet. Tag a Moment with a Corner to start building your list."
-                    : "Nothing matches that yet. Try a broader word or a different filter."}
-                </div>
+                feedTab === "following" ? (
+                  <EmptyState
+                    line="Nothing from your Interests yet."
+                    hint="Tag a Moment with a Corner to start building your list."
+                    action={{ label: "Log a Moment", to: "/create" }}
+                  />
+                ) : (
+                  <EmptyState line="Nothing matches that yet." hint="Try a broader word or a different filter." />
+                )
               ) : (
                 <div className={MOMENT_GRID}>
                   {visible.map((post) => (
@@ -706,6 +736,7 @@ export function Discover() {
                   ))}
                 </div>
               )}
+              </Loadable>
 
               {/* The end of the gallery — an intentional choice, not more scroll */}
               {visible.length > 0 && (
@@ -713,7 +744,7 @@ export function Discover() {
                   {remaining > 0 ? (
                     <>
                       <p className="mb-4 text-small text-muted-foreground">
-                        That's {visible.length} of {filtered.length}. Nothing loads on
+                        That’s {visible.length} of {filtered.length}. Nothing loads on
                         its own. Keep going only if you want to.
                       </p>
                       <Button variant="outline" onClick={() => setShown((n) => n + PAGE_SIZE)}>
@@ -723,7 +754,7 @@ export function Discover() {
                   ) : (
                     <>
                       <p className="mb-1 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
-                        That's everything here.
+                        That’s everything here.
                       </p>
                       <p className="mb-5 text-small text-muted-foreground">
                         A good place to stop scrolling and go make something.

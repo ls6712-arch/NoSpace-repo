@@ -6,6 +6,11 @@ import { useCategories } from "../context/CategoriesContext";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { plural } from "../lib/plural";
+import { Loadable } from "../components/ui/skeleton";
+import { CardListSkeleton } from "../components/Skeletons";
+import { friendlyError } from "../lib/friendlyError";
+import { EmptyState } from "../components/StateViews";
 
 /**
  * Merging, renaming and hiding Corners.
@@ -34,10 +39,6 @@ interface CornerRow {
   name: string;
   moment_count: number;
   hidden: boolean;
-}
-
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 export function AdminCorners() {
@@ -106,8 +107,8 @@ export function AdminCorners() {
     if (err) {
       setError(
         /blocklisted|constraint/i.test(err.message)
-          ? `“${name}” isn't allowed as a Corner name.`
-          : err.message,
+          ? `“${name}” isn’t allowed as a Corner name.`
+          : friendlyError(err),
       );
       return;
     }
@@ -126,7 +127,8 @@ export function AdminCorners() {
     });
     setBusy(null);
     if (err) {
-      setError(err.message);
+      console.warn("[AdminCorners] action failed:", err);
+      setError(friendlyError(err));
       return;
     }
     setNotice(row.hidden ? `“${row.name}” is visible again.` : `“${row.name}” is hidden from Discover.`);
@@ -153,7 +155,8 @@ export function AdminCorners() {
     });
     setBusy(null);
     if (err) {
-      setError(err.message);
+      console.warn("[AdminCorners] action failed:", err);
+      setError(friendlyError(err));
       return;
     }
     const moved = (data ?? {}) as { moments?: number; pursuits?: number; spaces?: number; interests?: number };
@@ -177,7 +180,7 @@ export function AdminCorners() {
         </h1>
         <p className="mb-8 mt-2 text-small text-muted-foreground">
           Merge duplicates, rename, or hide. Merging moves every Moment, Pursuit, Space link and Interest
-          from one Corner to the other, then removes the one merged away — this can't be undone.
+          from one Corner to the other, then removes the one merged away — this can’t be undone.
         </p>
 
         {error && (
@@ -192,13 +195,9 @@ export function AdminCorners() {
         )}
 
         {loading ? (
-          <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
-            Loading…
-          </div>
+          <Loadable loading skeleton={<CardListSkeleton />}>{null}</Loadable>
         ) : rows.length === 0 ? (
-          <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
-            No Corner has a real Moment tagged into it yet.
-          </div>
+          <EmptyState line="No Corner has a real Moment tagged into it yet." />
         ) : (
           <ul className="space-y-3">
             {rows.map((row) => {

@@ -1,11 +1,13 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Check, Minus, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { ENTER } from "../../lib/motion";
 
 /** Shared spring for every Pursuit card micro-interaction (hover lift, tap,
  * entrance stagger) — one feel across PursuitItem, PursuitsInProgressSection,
  * same spring Onboarding.tsx's own settle() uses. */
-export const PURSUIT_SPRING = { type: "spring" as const, stiffness: 260, damping: 28 };
+/** Pursuit cards and rows settle on the app's one curve (lib/motion.ts). */
+export const PURSUIT_SPRING = ENTER;
 
 /** Terracotta fill used by every Pursuit progress bar. */
 export function ProgressBar({ fraction, className = "", thin = false }: { fraction: number; className?: string; thin?: boolean }) {
@@ -23,14 +25,23 @@ export function ProgressBar({ fraction, className = "", thin = false }: { fracti
   );
 }
 
-// design-token-ignore: motion/react takes numbers; these mirror --duration-base and --ease-standard
-const RING_SWEEP = { duration: 0.25, ease: [0.22, 0.61, 0.36, 1] } as const;
-
 /** Circular variant of ProgressBar — same terracotta fill, same "no
  * percentage" rule: the ring's sweep communicates the fraction visually,
- * same as the linear bar's fill width does. `children` renders centered
- * inside the ring (this card uses it for the Pursuit's icon, never a
- * number). */
+ * same as the linear bar's fill width does, never a number. `children`
+ * renders centered inside the ring (this card uses it for the Pursuit's
+ * icon).
+ *
+ * The sweep is a coral → gold gradient (same two accent colors the rest of
+ * the app already uses, theme.css) rather than a flat fill — since the
+ * gradient sits fixed across the ring's own bounding box, more of it
+ * reveals itself as the arc grows longer, so a Pursuit further along
+ * visibly warms toward gold without any number ever appearing. A small,
+ * one-time spring "settle" bounce plays when the ring first reaches full
+ * (fraction crosses 1) — still just a shape animating, the same honest
+ * signal the sweep itself already gives, not a celebratory badge or score.
+ * Both the sweep's fill and the settle bounce skip entirely under
+ * prefers-reduced-motion.
+ */
 export function ProgressRing({
   fraction,
   size = 44,
@@ -45,14 +56,29 @@ export function ProgressRing({
   children?: ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
+  const gradientId = useId();
   const pct = Math.max(0, Math.min(1, fraction));
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - pct);
+
+  const wasComplete = useRef(pct >= 1);
+  const [justCompleted, setJustCompleted] = useState(false);
+  useEffect(() => {
+    if (pct >= 1 && !wasComplete.current && !reduceMotion) {
+      setJustCompleted(true);
+      const t = setTimeout(() => setJustCompleted(false), 500);
+      return () => clearTimeout(t);
+    }
+    wasComplete.current = pct >= 1;
+  }, [pct, reduceMotion]);
+
   return (
-    <div
+    <motion.div
       className={`relative inline-flex shrink-0 items-center justify-center ${className}`}
       style={{ width: size, height: size }}
+      animate={justCompleted ? { scale: [1, 1.16, 1] } : { scale: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
     >
       <svg
         width={size}
@@ -64,6 +90,12 @@ export function ProgressRing({
         aria-valuemax={100}
         aria-valuenow={Math.round(pct * 100)}
       >
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--coral)" />
+            <stop offset="100%" stopColor="var(--gold)" />
+          </linearGradient>
+        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -77,17 +109,17 @@ export function ProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="var(--coral)"
+          stroke={`url(#${gradientId})`}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
           initial={false}
           animate={{ strokeDashoffset: offset }}
-          transition={reduceMotion ? { duration: 0 } : RING_SWEEP}
+          transition={reduceMotion ? { duration: 0 } : ENTER}
         />
       </svg>
       {children && <span className="absolute inset-0 flex items-center justify-center">{children}</span>}
-    </div>
+    </motion.div>
   );
 }
 

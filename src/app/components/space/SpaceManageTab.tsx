@@ -19,6 +19,8 @@ import {
 } from "../../lib/spaces";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { formatDate } from "../../lib/dates";
+import { InlineError } from "../StateViews";
 import { ImageWithFallback } from "../ImageWithFallback";
 
 type JoinRequestRow = {
@@ -215,7 +217,7 @@ export function SpaceManageTab({
     const { data: target } = await supabase.from("profiles").select("id").eq("username", inviteUsername.trim()).maybeSingle();
     if (!target) {
       setBusy(null);
-      return setError("No one with that username.");
+      return setError("No one has that username.");
     }
     const { error: err } = await inviteHost(space.id, target.id);
     setBusy(null);
@@ -227,7 +229,7 @@ export function SpaceManageTab({
   const startDeletion = async () => {
     const isSoleHost = members.filter((m) => m.role === "host" && m.status === "active").length <= 1;
     if (isSoleHost && deleteConfirmName.trim() !== space.name) {
-      return setError(`Type "${space.name}" exactly to confirm.`);
+      return setError(`Type “${space.name}” exactly to confirm.`);
     }
     setBusy("delete");
     setError(null);
@@ -270,8 +272,8 @@ export function SpaceManageTab({
                 <p className="mt-1 text-caption text-muted-foreground">
                   You were here before it lost its host — you can step up.
                 </p>
-                <Button className="mt-3" variant="coral" size="sm" disabled={busy === "claim"} onClick={claimHosting}>
-                  {busy === "claim" ? "Claiming…" : "Claim hosting"}
+                <Button busy={busy === "claim"} className="mt-3" variant="coral" size="sm" disabled={busy === "claim"} onClick={claimHosting}>
+                  Claim hosting
                 </Button>
               </>
             ) : (
@@ -290,7 +292,7 @@ export function SpaceManageTab({
 
   return (
     <div className="space-y-8 py-6">
-      {error && <p className="text-caption text-destructive">{error}</p>}
+      <InlineError message={error} />
       {notice && <p className="text-caption text-muted-foreground">{notice}</p>}
 
       <section>
@@ -301,8 +303,8 @@ export function SpaceManageTab({
           <ul className="space-y-2">
             {joinRequests.map((r) => (
               <li key={r.user_id} className="rounded-card border border-border p-3">
-                <p className="text-small">{r.displayName}</p>
-                {r.answers?.message && <p className="mt-1 text-caption text-muted-foreground">"{r.answers.message}"</p>}
+                <p className="truncate text-small">{r.displayName}</p>
+                {r.answers?.message && <p className="mt-1 text-caption text-muted-foreground">“{r.answers.message}”</p>}
                 {r.postCaption && <p className="mt-1 text-caption text-muted-foreground">Attached: {r.postCaption}</p>}
                 <div className="mt-2 flex gap-2">
                   <Button
@@ -340,7 +342,7 @@ export function SpaceManageTab({
                   <ImageWithFallback src={m.mediaUrl} alt="" className="size-12 shrink-0 rounded-control" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-caption text-muted-foreground">{m.authorName}</p>
+                  <p className="truncate text-caption text-muted-foreground">{m.authorName}</p>
                   <p className="line-clamp-2 text-small" title={m.caption}>{m.caption}</p>
                   <div className="mt-2 flex gap-2">
                     <Button
@@ -371,9 +373,9 @@ export function SpaceManageTab({
         <h3 className="mb-2 text-small font-medium">Members</h3>
         <ul className="divide-y divide-[var(--hairline)]">
           {members.map((m) => (
-            <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-              <span className="text-small">
-                {m.displayName}
+            <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-3 py-2">
+              <span className="flex min-w-0 items-center text-small">
+                <span className="truncate">{m.displayName}</span>
                 {m.role === "host" && <span className="ml-1.5 text-caption text-muted-foreground">Host</span>}
                 {m.status === "banned" && <span className="ml-1.5 text-caption text-destructive">Banned</span>}
               </span>
@@ -437,7 +439,7 @@ export function SpaceManageTab({
         <h3 className="mb-2 text-small font-medium text-destructive">Delete this Space</h3>
         {deletion ? (
           <div className="rounded-card border border-border p-3 text-small">
-            <p>A deletion request is open, expiring {new Date(deletion.expires_at).toLocaleDateString()}.</p>
+            <p>A deletion request is open, expiring {formatDate(deletion.expires_at)}.</p>
             <ul className="mt-2 space-y-0.5 text-caption text-muted-foreground">
               {deletion.approvals.map((a) => (
                 <li key={a.host_user_id}>{a.displayName}: {a.decision}</li>
@@ -461,12 +463,12 @@ export function SpaceManageTab({
           <div className="max-w-sm space-y-2">
             {members.filter((m) => m.role === "host" && m.status === "active").length <= 1 && (
               <>
-                <p className="text-caption text-muted-foreground">You're the only host — type the Space's name to delete it now.</p>
+                <p className="text-caption text-muted-foreground">You’re the only host — type the Space’s name to delete it now.</p>
                 <Input value={deleteConfirmName} onChange={(e) => setDeleteConfirmName(e.target.value)} placeholder={space.name} />
               </>
             )}
-            <Button size="sm" variant="outline" className="text-destructive" disabled={busy === "delete"} onClick={startDeletion}>
-              {busy === "delete" ? "Working…" : "Request deletion"}
+            <Button busy={busy === "delete"} size="sm" variant="outline" className="text-destructive" disabled={busy === "delete"} onClick={startDeletion}>
+              Request deletion
             </Button>
           </div>
         )}

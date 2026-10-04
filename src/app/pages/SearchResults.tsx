@@ -13,6 +13,9 @@ import {
 import { useUnifiedSearch, SEARCH_GROUP_ORDER, type SearchGroup } from "../lib/search";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { APP_NAME } from "../config";
+import { EmptyState } from "../components/StateViews";
+import { Loadable } from "../components/ui/skeleton";
+import { PersonListSkeleton } from "../components/Skeletons";
 
 const GROUP_ICON: Record<SearchGroup, LucideIcon> = {
   space: Compass,
@@ -73,7 +76,7 @@ export function SearchResults() {
       <div className="container mx-auto max-w-4xl px-4 py-10">
         <div className="ns-section-kicker mb-3">SEARCH</div>
         <h1 className="mb-6 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-          {q ? `Results for "${q}"` : `Search ${APP_NAME}`}
+          {q ? `Results for “${q}"` : `Search ${APP_NAME}`}
         </h1>
 
         <form onSubmit={onSubmit} className="relative mb-8 max-w-xl">
@@ -90,10 +93,14 @@ export function SearchResults() {
 
         {!q ? (
           <p className="text-small text-muted-foreground">Type something above to search.</p>
+        ) : all.length === 0 && loading ? (
+          <Loadable loading skeleton={<PersonListSkeleton count={4} variant="card" />}>{null}</Loadable>
         ) : all.length === 0 ? (
-          <p className="text-small text-muted-foreground">
-            {loading ? "Searching…" : `Nothing matches "${q}" yet.`}
-          </p>
+          <EmptyState
+            line={`Nothing matches “${q}” yet.`}
+            hint="Try a broader word."
+            action={{ label: "Go to Discover", to: "/discover" }}
+          />
         ) : (
           <div className="space-y-12">
             {SEARCH_GROUP_ORDER.map(({ group, title }) => {

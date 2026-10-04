@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { GeneratedArt } from "./GeneratedArt";
+import { scrollBehavior } from "../lib/scrollToElement";
 import { ImageWithFallback } from "./ImageWithFallback";
 
 const isRealUrl = (url?: string) => !!url && /^https?:\/\//.test(url);
@@ -114,7 +115,7 @@ function PhotoTrack({
     const el = trackRef.current;
     if (!el) return;
     const next = Math.max(0, Math.min(urls.length - 1, i));
-    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    el.scrollTo({ left: next * el.clientWidth, behavior: scrollBehavior() });
   };
 
   // Which slide is centred as the thumb drags: read once per frame (a scroll
@@ -167,7 +168,7 @@ function PhotoTrack({
       </div>
 
       {index > 0 && (
-        <button type="button" aria-label="Previous photo" onClick={() => goTo(index - 1)} className="absolute left-2 top-1/2 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-scrim-solid/50 text-on-media backdrop-blur-sm pointer-fine:flex">
+        <button type="button" aria-label="Previous photo" onClick={() => goTo(index - 1)} className="absolute left-2 top-1/2 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full transition-colors text-on-media backdrop-blur-sm pointer-fine:flex">
           <ChevronLeft className="size-4" aria-hidden="true" />
         </button>
       )}

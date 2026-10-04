@@ -105,6 +105,27 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Waitlist / You're on the list | Asking to join without an invite |
 | Welcome to Soosh | The inviter's button on "[Name] added their first moment": opens it with the reply box ready |
 
+## Saving, states and confirmations
+
+All of these live in `src/app/lib/stateCopy.ts`; use them from there.
+
+| Term | Meaning |
+|---|---|
+| One sec… | Label beside the spinner while a button's save is in flight |
+| Something went wrong. Mind trying again? / Try again | The one error line and its retry |
+| Something went wrong loading this. Mind trying again? | The same, when content didn't load |
+| You're offline. Anything you've typed stays put. | Banner while offline |
+| This is taking a while. Still trying. | Banner when a request runs past 8 seconds |
+| Changes saved / Saved / Link copied / Invite sent / You left [Space] | Toasts. "Saved" alone is only for bookmarking |
+| That iPhone photo couldn't be converted. Try again, or export it as a JPG first. | HEIC failure |
+| That file is too big. Try a smaller one. / That file is over [N] MB. Try a smaller one. | Size failure |
+| That upload didn't finish. Check your connection and try again. | Upload failure |
+| That Moment is already in this Space. | Adding a Moment twice |
+| Keep it | The back-out button on "Cancel this event?" |
+| Browse Spaces / Browse Moments / Go to Chats | Empty-state actions, alongside Log a Moment, Start a Pursuit, Go to Discover |
+
+Empty states: a short line ending in a period, an optional one-line hint, one action.
+
 ## Writing rules
 
 - Capitalize Soosh's own nouns: Moment, Pursuit, Space, Corner, Reflection,

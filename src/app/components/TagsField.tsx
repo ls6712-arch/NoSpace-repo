@@ -147,7 +147,7 @@ export function TagsField({
 
       {atCap && (
         <p className="mt-1.5 text-caption text-muted-foreground">
-          Up to {max} tags per Moment — that's plenty to find by.
+          Up to {max} tags per Moment — that’s plenty to find by.
         </p>
       )}
 
@@ -172,7 +172,7 @@ export function TagsField({
               , or press Enter to keep your own.
             </span>
           ) : (
-            "New one. Press Enter to add it — it'll suggest itself to others after this."
+            "New one. Press Enter to add it — it’ll suggest itself to others after this."
           )}
         </p>
       )}

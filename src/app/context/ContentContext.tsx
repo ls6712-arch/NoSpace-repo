@@ -15,6 +15,9 @@ import { SOCIAL_STORAGE_KEY } from "./SocialContext";
 import { supabase } from "../../lib/supabase";
 import { deleteMomentFiles, resolvePostMedia, signMomentPaths, uploadMomentFile } from "../lib/momentMedia";
 import { InFlightGuard, InFlightSkipped } from "../lib/inFlightGuard";
+import { plural } from "../lib/plural";
+import { notifyError } from "../components/ui/toaster";
+import { friendlyError } from "../lib/friendlyError";
 
 const LISTINGS_KEY = "sushii.listings.v1";
 
@@ -198,6 +201,11 @@ export function rowToPost(row: any, creatorName: string): Post {
 
 interface ContentContextType {
   posts: Post[];
+  /** First load of Moments for this session: "loading" until it lands,
+   * "error" if it failed (retry with reloadPosts). Later refreshes don't
+   * flip this back to "loading", so a page never re-skeletons under you. */
+  postsStatus: "loading" | "ready" | "error";
+  reloadPosts: () => Promise<void>;
   myPosts: Post[];
   publicFeed: Post[];
   publicFeedByHobby: (slug: string) => Post[];
@@ -344,8 +352,22 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     readLocalFollowedSpaceSlugs(),
   );
 
-  const refetchRealPosts = async () => {
-    if (!supabase) return;
+  const [postsStatus, setPostsStatus] = useState<"loading" | "ready" | "error">(supabase ? "loading" : "ready");
+
+  const reloadPosts = async () => {
+    setPostsStatus((s) => (s === "ready" ? s : "loading"));
+    try {
+      const ok = await refetchRealPosts();
+      setPostsStatus((s) => (ok ? "ready" : s === "ready" ? s : "error"));
+    } catch (err) {
+      console.warn("[ContentContext] posts load failed:", err);
+      setPostsStatus((s) => (s === "ready" ? s : "error"));
+    }
+  };
+
+  /** Returns false when the posts query itself failed. */
+  const refetchRealPosts = async (): Promise<boolean> => {
+    if (!supabase) return true;
     let { data, error } = await supabase
       .from("posts")
       .select(POST_COLUMNS)
@@ -369,7 +391,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         .select(POST_COLUMNS)
         .order("created_at", { ascending: false }));
     }
-    if (error || !data) return;
+    if (error || !data) {
+      if (error) console.warn("[ContentContext] posts select failed:", error);
+      return false;
+    }
 
     const userIds = [...new Set(data.map((row: any) => row.user_id as string))];
     const { data: profilesData } = userIds.length
@@ -418,6 +443,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     } else {
       setOwnCounts({});
     }
+    return true;
   };
 
   /**
@@ -503,13 +529,20 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       ? supabase.from("reactions").delete().eq("post_id", postId).eq("user_id", user.id).eq("type", type)
       : supabase.from("reactions").insert({ post_id: postId, user_id: user.id, type });
 
-    void write.then(({ error }) => {
-      if (error) {
-        setMyReactionsByPostId((prev) => ({ ...prev, [postId]: revertList(prev[postId] ?? []) }));
-        bump(reacted ? 1 : -1);
-      }
-    });
+    const rollback = (err: unknown) => {
+      console.warn("[ContentContext] reaction failed, rolled back:", err);
+      setMyReactionsByPostId((prev) => ({ ...prev, [postId]: revertList(prev[postId] ?? []) }));
+      bump(reacted ? 1 : -1);
+      notifyError(friendlyError(err), () => toggleReactionRef.current(postId, type));
+    };
+    void Promise.resolve(write).then(({ error }) => {
+      if (error) rollback(error);
+    }, rollback);
   };
+  // The retry above calls the latest toggleReaction (fresh state), not the
+  // one captured when the failed tap happened.
+  const toggleReactionRef = useRef(toggleReaction);
+  toggleReactionRef.current = toggleReaction;
 
   const refetchLikedPosts = async () => {
     if (!supabase || !user) {
@@ -543,7 +576,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    refetchRealPosts();
+    void reloadPosts();
     refetchLikedPosts();
     refetchMyReactions();
     refetchActiveHobbies();
@@ -663,12 +696,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
         const noun = input.type === "video" ? "video" : files.length > 1 ? "photos" : "photo";
         if (uploaded.length === 0) {
-          setMediaError(`Your ${noun} didn't upload. The Moment was saved without it.`);
+          setMediaError(`Your ${noun} didn’t upload. The Moment was saved without it.`);
         } else if (failCount > 0) {
           // Some made it, some didn't — the post still saves with whatever
           // succeeded rather than losing the whole Moment over one bad file.
           setMediaError(
-            `${failCount} of ${files.length} photos didn't upload. The Moment was saved with the rest.`,
+            `${failCount} of ${plural(files.length, "photo")} didn’t upload. The Moment was saved with the rest.`,
           );
         } else {
           setMediaError(null);
@@ -741,11 +774,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // copy so nothing typed is thrown away on screen — but that copy lives
       // only in this tab, so the flow must not claim it was saved. Telling
       // someone "Saved." and then losing the post is worse than an error.
-      setSaveError(
-        error?.message
-          ? `This didn't save to your account: ${error.message}`
-          : "This didn't save to your account. It's still on screen, but it will go when you reload.",
-      );
+      if (error) console.warn("[ContentContext] save failed:", error);
+      setSaveError("This didn’t save to your account. It’s still on screen, but it will go when you reload.");
     }
 
     // Local-only fallback — used when accounts aren't set up on this build,
@@ -998,6 +1028,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     <ContentContext.Provider
       value={{
         posts,
+        postsStatus,
+        reloadPosts,
         myPosts,
         publicFeed,
         publicFeedByHobby,

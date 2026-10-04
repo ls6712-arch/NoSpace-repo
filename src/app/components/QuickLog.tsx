@@ -11,7 +11,7 @@ import { Project, markActivity, useJournal } from "../lib/journal";
 import { defaultSpaceSlug, subHobbyLabel } from "../data/hobbies";
 import { guessSpace } from "../lib/pursuitProgress";
 import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
-import { convertHeicIfNeeded } from "../lib/heicConversion";
+import { preparePickedPhoto } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { Post } from "../data/posts";
@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "./ImageWithFallback";
 
 type Audience = "private" | "followers" | "public";
@@ -203,11 +204,12 @@ export function QuickLog({
   const pick = async (f: File | undefined) => {
     if (!f) return;
     setError(null);
-    try {
-      setFile(await convertHeicIfNeeded(f));
-    } catch {
-      setFile(f);
+    const prepared = await preparePickedPhoto(f);
+    if (prepared.error) {
+      setError(prepared.error);
+      return;
     }
+    setFile(prepared.file);
   };
 
   const finishSave = (result: SavedMoment) => {
@@ -226,7 +228,19 @@ export function QuickLog({
     setSaved(result);
   };
 
+  // A second Enter or tap that lands before the button re-renders disabled
+  // must not start a second save.
+  const savingRef = useRef(false);
   const save = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    try {
+      await saveNow();
+    } finally {
+      savingRef.current = false;
+    }
+  };
+  const saveNow = async () => {
     if (!canPost) return;
     setSaving(true);
     setError(null);
@@ -257,7 +271,7 @@ export function QuickLog({
         if (file && user) {
           const { path, error: uploadError } = await uploadMomentFile(user.id, file);
           if (uploadError || !path) {
-            setError("Your photo didn't upload. Try again.");
+            setError("Your photo didn’t upload. Try again.");
             return;
           }
           media = { path, type: "image", hobbySlug };
@@ -265,7 +279,7 @@ export function QuickLog({
         const outcome = await addPrivateLog({ note: text, projectId: effectivePursuit?.id, media });
         if (outcome.skipped) return;
         if (!outcome.data) {
-          setError(outcome.error || "That didn't save. Try again?");
+          setError(outcome.error || ERROR_LINE);
           return;
         }
         rewards.recordPostCreated(cornerRef?.slug ?? (hobbySlug ? `space:${hobbySlug}` : undefined));
@@ -302,7 +316,7 @@ export function QuickLog({
 
       finishSave(result);
     } catch {
-      setError("That didn't save. Try again?");
+      setError(ERROR_LINE);
     } finally {
       setSaving(false);
     }
@@ -400,7 +414,7 @@ export function QuickLog({
                   <SelectValue placeholder="No pursuit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_PURSUIT}>No pursuit</SelectItem>
+                  <SelectItem value={NO_PURSUIT}>No Pursuit</SelectItem>
                   {openProjects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.title}

@@ -90,12 +90,14 @@ describe("isStillMoving", () => {
 
 describe("lastMomentText", () => {
   it("has neutral wording with no Moments", () => {
-    expect(lastMomentText(undefined)).toBe("No Moments yet.");
+    expect(lastMomentText(undefined)).toBe("No Moments yet");
   });
 
   it("has neutral wording for a long gap — no warning, no nudge", () => {
-    const text = lastMomentText(Date.now() - 400 * DAY_MS);
-    expect(text).toBe("Last Moment 400 days ago.");
+    const now = new Date(2026, 9, 2, 12).getTime();
+    const text = lastMomentText(now - 400 * DAY_MS, now);
+    expect(text).toBe("Last Moment Aug 28, 2025");
+    expect(lastMomentText(now - 3 * DAY_MS, now)).toBe("Last Moment 3d ago");
     expect(text).not.toMatch(/hasn't moved|come back|nudge/i);
   });
 });

@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { MediaAttachPicker } from "./MediaAttachPicker";
 import { ReportDialog } from "./ReportDialog";
+import { Time } from "./ui/time";
 import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
@@ -30,16 +31,8 @@ function initials(name: string) {
 // "Keep going" was a reaction button before docs/moment-card-and-
 // reactions-spec.md section 1 retired it as one — it survives here, a
 // quick starter inside Add a thought rather than gone entirely.
-const QUICK_STARTERS = ["Keep going", "How did you...?", "Show us the next one"];
+const QUICK_STARTERS = ["Keep going", "How did you…?", "Show us the next one"];
 
-function ago(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 export function Thoughts({
   postId,
@@ -170,7 +163,7 @@ export function Thoughts({
           )}
           {failed && (
             <p className="mt-2 text-caption text-[var(--coral-text)]">
-              That didn't send. Your words are still here, try again.
+              That didn’t send. Your words are still here. Try again.
             </p>
           )}
           <div className="mt-2 flex items-center justify-between gap-3">
@@ -190,8 +183,8 @@ export function Thoughts({
               >
                 Cancel
               </Button>
-              <Button variant="coral" size="sm" disabled={!body.trim() || saving} onClick={submit}>
-                {saving ? "Adding…" : "Add thought"}
+              <Button busy={saving} variant="coral" size="sm" disabled={!body.trim() || saving} onClick={submit}>
+                Add thought
               </Button>
             </span>
           </div>
@@ -227,7 +220,7 @@ export function Thoughts({
                   <AvatarFallback className="text-caption">{initials(t.authorName)}</AvatarFallback>
                 </Avatar>
                 <span className="text-caption text-muted-foreground">
-                  {t.authorName} · {ago(t.createdAt)}
+                  {t.authorName} · <Time value={t.createdAt} ago />
                 </span>
                 {user?.id === t.userId ? (
                   <button
@@ -264,7 +257,7 @@ export function Thoughts({
         open={confirmDeleteId !== null}
         onOpenChange={(o) => !o && setConfirmDeleteId(null)}
         title="Delete this thought?"
-        description="This can't be undone — it's gone for whoever else could see it too."
+        description="This can’t be undone — it’s gone for whoever else could see it too."
         onConfirm={async () => {
           if (confirmDeleteId !== null) await social.removeThought(confirmDeleteId);
           setConfirmDeleteId(null);

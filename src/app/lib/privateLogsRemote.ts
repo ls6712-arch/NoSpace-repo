@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { friendlyError } from "./friendlyError";
 
 /**
  * Private Logs, for a signed-in owner, live only in the `private_logs`
@@ -73,7 +74,7 @@ export async function fetchPrivateLogs(userId: string): Promise<RemoteResult<Pri
     .order("created_at", { ascending: false });
   if (error) {
     console.error("[privateLogsRemote] fetchPrivateLogs failed:", error);
-    return { data: null, error: error.message };
+    return { data: null, error: friendlyError(error) };
   }
   return { data: (data ?? []).map(fromRow), error: null };
 }
@@ -88,7 +89,7 @@ export async function createPrivateLog(
     projectId?: string;
   },
 ): Promise<RemoteResult<PrivateLog>> {
-  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
+  if (!supabase) return { data: null, error: "Supabase isn’t configured for this build." };
   const { data, error } = await supabase
     .from("private_logs")
     .insert({
@@ -103,21 +104,21 @@ export async function createPrivateLog(
     .single();
   if (error) {
     console.error("[privateLogsRemote] createPrivateLog failed:", error);
-    return { data: null, error: error.message };
+    return { data: null, error: friendlyError(error) };
   }
   if (!data) {
     console.error("[privateLogsRemote] createPrivateLog: insert returned no row and no error");
-    return { data: null, error: "The save didn't come back with a result." };
+    return { data: null, error: "The save didn’t come back with a result." };
   }
   return { data: fromRow(data), error: null };
 }
 
 export async function deletePrivateLog(logId: number): Promise<RemoteResult<true>> {
-  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
+  if (!supabase) return { data: null, error: "Supabase isn’t configured for this build." };
   const { error } = await supabase.from("private_logs").delete().eq("id", logId);
   if (error) {
     console.error("[privateLogsRemote] deletePrivateLog failed:", error);
-    return { data: null, error: error.message };
+    return { data: null, error: friendlyError(error) };
   }
   return { data: true, error: null };
 }
@@ -126,7 +127,7 @@ export async function updatePrivateLog(
   logId: number,
   input: { note: string },
 ): Promise<RemoteResult<PrivateLog>> {
-  if (!supabase) return { data: null, error: "Supabase isn't configured for this build." };
+  if (!supabase) return { data: null, error: "Supabase isn’t configured for this build." };
   const { data, error } = await supabase
     .from("private_logs")
     .update({ body: input.note })
@@ -135,11 +136,11 @@ export async function updatePrivateLog(
     .single();
   if (error) {
     console.error("[privateLogsRemote] updatePrivateLog failed:", error);
-    return { data: null, error: error.message };
+    return { data: null, error: friendlyError(error) };
   }
   if (!data) {
     console.error("[privateLogsRemote] updatePrivateLog: update returned no row and no error");
-    return { data: null, error: "The save didn't come back with a result." };
+    return { data: null, error: "The save didn’t come back with a result." };
   }
   return { data: fromRow(data), error: null };
 }

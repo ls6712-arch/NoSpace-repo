@@ -1,6 +1,7 @@
 import { Post } from "../data/posts";
 import type { PrivateLog } from "./privateLogsRemote";
 import { Project, pursuitStatus } from "./journal";
+import { formatDate, formatMonth, formatWhen } from "./dates";
 
 /**
  * "Still moving" and the trail dots both key off this one number — kept
@@ -47,13 +48,11 @@ export function pursuitMoments(
     .map((p) => ({ id: p.id, createdAt: p.createdAt, visibility: p.visibility, caption: p.caption ?? "" }));
 }
 
-/** "Last Moment 3 days ago" — neutral wording only, no matter how long. */
-export function lastMomentText(lastMomentAt: number | undefined): string {
-  if (lastMomentAt == null) return "No Moments yet.";
-  const days = Math.floor((Date.now() - lastMomentAt) / DAY_MS);
-  if (days <= 0) return "Last Moment today.";
-  if (days === 1) return "Last Moment yesterday.";
-  return `Last Moment ${days} days ago.`;
+/** "Last Moment 3d ago", then "Last Moment Sep 24" — neutral wording only,
+ * no matter how long. One-line helper text, so no period. */
+export function lastMomentText(lastMomentAt: number | undefined, now = Date.now()): string {
+  if (lastMomentAt == null) return "No Moments yet";
+  return `Last Moment ${formatWhen(lastMomentAt, { ago: true, now })}`;
 }
 
 /**
@@ -70,11 +69,7 @@ export function startedLabel(startedAt: number, now = Date.now()): string {
   const dayDiff = Math.round((startOfDay(today) - startOfDay(d)) / DAY_MS);
   if (dayDiff <= 0) return "Started today";
   if (dayDiff === 1) return "Started yesterday";
-  const sameYear = d.getFullYear() === today.getFullYear();
-  const date = d.toLocaleDateString(undefined, sameYear
-    ? { month: "short", day: "numeric" }
-    : { month: "short", day: "numeric", year: "numeric" });
-  return `Started ${date}`;
+  return `Started ${formatDate(d, { now })}`;
 }
 
 /** Kept for any caller still expecting the uppercase kicker form — now just
@@ -140,12 +135,11 @@ export function groupByMonth(moments: PursuitMoment[]): { key: string; label: st
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     groups.set(key, [...(groups.get(key) ?? []), m]);
   }
-  const thisYear = new Date().getFullYear();
   return [...groups.entries()]
     .sort(([a], [b]) => (a < b ? 1 : -1))
     .map(([key, list]) => {
       const d = new Date(list[0].createdAt);
-      const label = d.toLocaleDateString(undefined, d.getFullYear() === thisYear ? { month: "long" } : { month: "long", year: "numeric" });
+      const label = formatMonth(d);
       return { key, label, moments: [...list].sort((a, b) => b.createdAt - a.createdAt) };
     });
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { pursuitTogetherHref } from "../lib/pursuitsRemote";
 import {
@@ -54,6 +54,10 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { formatDate } from "../lib/dates";
+import { TOAST, UPLOAD_COPY } from "../lib/stateCopy";
+import { ERROR_LINE } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
 import { ImageWithFallback } from "./ImageWithFallback";
 
 /** The audience words, identical to the ones chosen in the Log flow. */
@@ -63,12 +67,7 @@ const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
 };
 
 function fullDate(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDate(ts, { weekday: "long", month: "long" });
 }
 
 function initials(name: string) {
@@ -84,7 +83,7 @@ function initials(name: string) {
  * a read-only view.
  */
 export function MomentDetail({
-  post,
+  post: openPost,
   owned,
   onOpenChange,
   replyOpen = false,
@@ -95,6 +94,11 @@ export function MomentDetail({
   /** Open with the reply box already showing (MomentPage's ?reply=1). */
   replyOpen?: boolean;
 }) {
+  // Keep showing the last Moment while the dialog animates closed; without
+  // this the parent clearing `post` unmounts it mid-exit.
+  const lastPost = useRef<Post | null>(openPost);
+  if (openPost) lastPost.current = openPost;
+  const post = openPost ?? lastPost.current;
   const { updatePost, deletePost } = useContent();
   const { update: updatePrivateLogEntry, remove: removePrivateLogEntry } = usePrivateLogs();
   const { user } = useAuth();
@@ -173,7 +177,7 @@ export function MomentDetail({
         const { path, error: uploadError } = await uploadMomentFile(user.id, newMediaFile);
         setUploadingMedia(false);
         if (uploadError || !path) {
-          setSaveError("Your photo didn't upload. Try again.");
+          setSaveError("Your photo didn’t upload. Try again.");
           setSaving(false);
           return;
         }
@@ -189,10 +193,13 @@ export function MomentDetail({
             subHobby: editSubHobby || undefined,
             ...(uploadedMediaPath ? { mediaPath: uploadedMediaPath } : {}),
           });
-      if (ok) setEditing(false);
-      else setSaveError("Couldn't save that change. Your edit is still here, try again.");
+      if (ok) {
+        setEditing(false);
+        notify(TOAST.changesSaved);
+      }
+      else setSaveError("Couldn’t save that change. Your edit is still here. Try again.");
     } catch {
-      setSaveError("Couldn't reach the server. Your edit is still here, try again.");
+      setSaveError("Couldn’t reach the server. Your edit is still here. Try again.");
     } finally {
       // Always runs, so the button can't stay stuck on "Saving…" and strand
       // an edit the person can no longer submit.
@@ -206,7 +213,7 @@ export function MomentDetail({
       ? (await removePrivateLogEntry(post.privateLogId!)).data === true
       : await deletePost(post.id);
     if (!ok) {
-      setDeleteError("Couldn't delete that. Try again in a moment.");
+      setDeleteError(ERROR_LINE);
       return;
     }
     setConfirmDeleteOpen(false);
@@ -225,12 +232,12 @@ export function MomentDetail({
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } catch {
-      setSaveError("Couldn't copy the link. Your browser blocked clipboard access.");
+      setSaveError("Couldn’t copy the link. Your browser blocked clipboard access.");
     }
   };
 
   return (
-    <Dialog open={!!post} onOpenChange={onOpenChange}>
+    <Dialog open={!!openPost} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>
@@ -507,7 +514,7 @@ export function MomentDetail({
                     // unconverted, unrenderable to anyone not on Safari.
                     const file = await convertHeicIfNeeded(raw);
                     if (isHeicFile(file)) {
-                      setSaveError("That photo couldn't be processed and wasn't added — try a different photo.");
+                      setSaveError(UPLOAD_COPY.heic);
                       return;
                     }
                     setSaveError(null);
@@ -542,8 +549,8 @@ export function MomentDetail({
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="coral" size="sm" onClick={save} disabled={saving}>
-                {saving ? "Saving…" : "Save changes"}
+              <Button busy={saving} variant="coral" size="sm" onClick={save} disabled={saving}>
+                Save changes
               </Button>
               <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
                 Cancel
@@ -590,7 +597,7 @@ export function MomentDetail({
             row), so this is the one place in the dialog that reaches
             every "Only you" Moment, not just a real just_me post. */}
         {isOnlyYou(post) && (
-          <p className="-mt-1 text-caption text-muted-foreground">Only you Moments can't be shared.</p>
+          <p className="-mt-1 text-caption text-muted-foreground">Only you Moments can’t be shared.</p>
         )}
 
         {/* Owner-only: the note they wrote for themselves */}
@@ -644,7 +651,7 @@ export function MomentDetail({
             {openProjects.length === 0 ? (
               <>
                 <p className="text-caption text-muted-foreground">
-                  You don't have a Pursuit yet. Starting one from here files this
+                  You don’t have a Pursuit yet. Starting one from here files this
                   moment as its first update.
                 </p>
                 <Button
@@ -660,7 +667,7 @@ export function MomentDetail({
                     setAddingTo(false);
                   }}
                 >
-                  Start "{hobbyLabel ?? space?.shortName}" as a Pursuit
+                  Start “{hobbyLabel ?? space?.shortName}” as a Pursuit
                 </Button>
               </>
             ) : (
@@ -691,7 +698,7 @@ export function MomentDetail({
         open={confirmDeleteOpen}
         onOpenChange={setConfirmDeleteOpen}
         title="Delete this Moment?"
-        description="This can't be undone — the photo, caption, and any thoughts on it are gone for good."
+        description="This can’t be undone — the photo, caption, and any thoughts on it are gone for good."
         onConfirm={handleDelete}
       />
       <AddDetailsSheet post={post} open={detailsOpen} onOpenChange={setDetailsOpen} />

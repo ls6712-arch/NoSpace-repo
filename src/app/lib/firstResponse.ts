@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { friendlyError } from "./friendlyError";
 
 /**
  * Step 4 · the team's backup queue — every new person's first moment from
@@ -18,7 +19,7 @@ export interface WaitingFirstMoment {
 export async function fetchWaitingFirstMoments(): Promise<{ rows: WaitingFirstMoment[]; error: string | null }> {
   if (!supabase) return { rows: [], error: null };
   const { data, error } = await supabase.rpc("admin_first_moments_waiting");
-  if (error) return { rows: [], error: error.message };
+  if (error) return { rows: [], error: friendlyError(error) };
   return {
     rows: (data ?? []).map((r: any) => ({
       postId: Number(r.post_id),

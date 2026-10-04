@@ -13,6 +13,7 @@ import { useAuth } from "../context/AuthContext";
 import { WaitlistForm } from "../components/WaitlistForm";
 import heroWorldsImg from "../../assets/hero-worlds.webp";
 import { APP_NAME } from "../config";
+import { scrollBehavior } from "../lib/scrollToElement";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
@@ -159,7 +160,7 @@ export function Home() {
                 // route that doesn't exist, so it lands on the 404 page
                 // instead of scrolling. Scroll manually and skip that.
                 e.preventDefault();
-                document.getElementById("loop")?.scrollIntoView({ behavior: "smooth" });
+                document.getElementById("loop")?.scrollIntoView({ behavior: scrollBehavior() });
               }}
             >
               See how it works
@@ -215,7 +216,7 @@ export function Home() {
                 <p className="max-w-md text-body leading-relaxed text-muted-foreground">
                   Take a photo, write a quick note, or add a reflection nobody
                   else will ever see. Every Moment adds to your Shelf, the
-                  full record of what you've actually done.
+                  full record of what you’ve actually done.
                 </p>
               </div>
               <div className="ns-paper-panel ns-process-panel">
@@ -247,8 +248,8 @@ export function Home() {
                 </h2>
                 <p className="text-body leading-relaxed text-muted-foreground">
                   A Corner is the specific thing inside a Space, like Pickleball
-                  inside Sports &amp; Fitness. Here's an example, shown with
-                  real Moments from {APP_NAME}'s sample content.
+                  inside Sports &amp; Fitness. Here’s an example, shown with
+                  real Moments from {APP_NAME}’s sample content.
                 </p>
               </div>
               <div className={MOMENT_GRID}>
@@ -271,8 +272,8 @@ export function Home() {
                 </h2>
                 <p className="text-body leading-relaxed text-muted-foreground">
                   Fifteen Spaces today. Inside each one, tag a Moment
-                  anything you like — "Pasta Making," "Food Photography,"
-                  both at once — and it's there. No fixed list, no approval
+                  anything you like — “Pasta Making,” “Food Photography,”
+                  both at once — and it’s there. No fixed list, no approval
                   queue.
                 </p>
               </div>
@@ -307,12 +308,12 @@ export function Home() {
               <div className="ns-invitation-spark" aria-hidden="true">✦</div>
               <div className="ns-section-kicker mb-5">START WHERE YOU ARE</div>
               <h2 className="mb-5 text-display leading-[1.02]" style={{ fontFamily: "var(--font-serif)" }}>
-                Whatever you're curious about,<br />it's worth keeping.
+                Whatever you’re curious about,<br />it’s worth keeping.
               </h2>
               {signedOut ? (
                 <>
                   <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
-                    {APP_NAME} is invite-only for now. Private by default once you're
+                    {APP_NAME} is invite-only for now. Private by default once you’re
                     in — share only the Moments you choose, with exactly the
                     people you choose.
                   </p>
@@ -343,7 +344,7 @@ export function Home() {
           <div className="text-center sm:text-left">
             <span className="text-lead text-foreground" style={{ fontFamily: "var(--font-serif)" }}>{APP_NAME}</span>
             <p className="mt-1 max-w-xs text-small text-muted-foreground">
-              One place for everything you're living, doing, and making.
+              One place for everything you’re living, doing, and making.
             </p>
           </div>
           <nav aria-label="Product" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">

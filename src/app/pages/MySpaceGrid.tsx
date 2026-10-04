@@ -19,6 +19,12 @@ import { ShelfRail } from "../components/ShelfRail";
 import { InspiredRail } from "../components/InspiredRail";
 import { NewSpacesRail } from "../components/NewSpacesRail";
 import { WelcomeBanner } from "../components/WelcomeBanner";
+import { formatDate } from "../lib/dates";
+import { plural } from "../lib/plural";
+import { Sparkles } from "lucide-react";
+import { Loadable } from "../components/ui/skeleton";
+import { MomentGridSkeleton } from "../components/Skeletons";
+import { EmptyState, ErrorNotice } from "../components/StateViews";
 
 const PAGE_SIZE = 6;
 
@@ -42,11 +48,11 @@ function greeting(name: string): string {
  * difference from boards 4/5 (which show no rail at all) — kept on an
  * explicit call rather than dropped or moved off this page.
  *
- * PursuitsInProgressSection, full-width above the sheet, is additive to
- * that rail rather than a replacement for it: the rail only ever sits at
- * lg+, so below that this horizontal-scroll strip was the only always-
- * visible surface for "what am I still moving on," previously buried below
- * the whole feed. Its "See all" and the rail's own both smooth-scroll down
+ * PursuitsInProgressSection, in normal flow right below the greeting header,
+ * is additive to the rail rather than a replacement for it: the rail only
+ * ever sits at lg+, so below that this section was the only always-visible
+ * surface for "what am I still moving on," previously buried below the
+ * whole feed. Its "See all" and the rail's own both smooth-scroll down
  * to the one AllPursuitsSection at the bottom of this page (lib/
  * scrollToElement.ts) — real in-page navigation now, not each opening its
  * own copy of the same grouped list in a dialog.
@@ -59,7 +65,7 @@ function greeting(name: string): string {
  */
 export function MySpaceGrid() {
   const { user, profile } = useAuth();
-  const { publicFeed, posts } = useContent();
+  const { publicFeed, posts, myPosts, postsStatus, reloadPosts } = useContent();
   const social = useSocial();
   const journal = useJournal();
   const { logs } = usePrivateLogs();
@@ -73,10 +79,16 @@ export function MySpaceGrid() {
   // membership is what actually gates a Space's Moments — see
   // 20261010000000_space_moment_sharing.sql).
   const [mySpaceMomentPostIds, setMySpaceMomentPostIds] = useState<Set<number>>(new Set());
+  // Both sources below have to land before an empty sheet means "empty"
+  // rather than "still loading".
+  const [followingLoaded, setFollowingLoaded] = useState(!user);
+  const [spaceMomentsLoaded, setSpaceMomentsLoaded] = useState(!user || !supabase);
 
   useEffect(() => {
     if (!user) return;
-    fetchFollowingIds(user.id).then(setFollowingIds);
+    fetchFollowingIds(user.id)
+      .then(setFollowingIds)
+      .finally(() => setFollowingLoaded(true));
   }, [user?.id]);
 
   useEffect(() => {
@@ -91,7 +103,10 @@ export function MySpaceGrid() {
         .eq("status", "active");
       const spaceIds = (memberships ?? []).map((m) => m.space_id as string);
       if (spaceIds.length === 0) {
-        if (!cancelled) setMySpaceMomentPostIds(new Set());
+        if (!cancelled) {
+          setMySpaceMomentPostIds(new Set());
+          setSpaceMomentsLoaded(true);
+        }
         return;
       }
       const { data: moments } = await client
@@ -100,8 +115,14 @@ export function MySpaceGrid() {
         .in("space_id", spaceIds)
         .eq("status", "approved")
         .eq("removed_by_host", false);
-      if (!cancelled) setMySpaceMomentPostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
-    })();
+      if (!cancelled) {
+        setMySpaceMomentPostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
+        setSpaceMomentsLoaded(true);
+      }
+    })().catch((err) => {
+      console.warn("[MySpaceGrid] Space Moments load failed:", err);
+      if (!cancelled) setSpaceMomentsLoaded(true);
+    });
     return () => {
       cancelled = true;
     };
@@ -155,11 +176,7 @@ export function MySpaceGrid() {
     setSearchParams(next, { replace: true });
   };
 
-  const dateEyebrow = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).toUpperCase();
+  const dateEyebrow = formatDate(Date.now(), { weekday: "long", month: "long" }).toUpperCase();
 
   const numeral =
     sheet.length === 0
@@ -207,7 +224,7 @@ export function MySpaceGrid() {
               {greeting(profile?.display_name ?? "there")}
             </h1>
             <p className="mt-1 text-small text-muted-foreground">
-              {unseen.length} Moment{unseen.length === 1 ? "" : "s"} from the people and Spaces you follow.
+              {plural(unseen.length, "Moment")} from the people and Spaces you follow.
             </p>
           </div>
           {/* Numeral in foreground, not accent — docs/my-space-spec.md
@@ -218,11 +235,11 @@ export function MySpaceGrid() {
             <p className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
               {numeral}
             </p>
-            <p className="ns-section-kicker text-muted-foreground">TODAY'S SHEET</p>
+            <p className="ns-section-kicker text-muted-foreground">TODAY’S SHEET</p>
           </div>
         </div>
         <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
-          {numeral} · TODAY'S SHEET
+          {numeral} · TODAY’S SHEET
         </p>
       </header>
 
@@ -232,28 +249,44 @@ export function MySpaceGrid() {
 
       <div className="myspace-body">
         <div className="myspace-feed">
-          {sheet.length === 0 ? (
-            <div className="rounded-card border border-dashed border-border p-6 text-center text-small text-muted-foreground">
-              {/* Genuinely empty now only means zero eligible Moments exist
-                  at all — the sheet no longer gates on "since your last
-                  visit" (see the unseen memo above), so that copy would be
-                  inaccurate here. */}
-              Nothing here yet. Join a Space or follow a person to start your sheet.
-            </div>
-          ) : (
-            <div className={MOMENT_GRID}>
-              {sheet.map((post, i) => (
-                <MomentCard
-                  key={post.id}
-                  post={post}
-                  surface="mySpace"
-                  size="standard"
-                  number={String(i + 1).padStart(2, "0")}
-                  onOpen={() => openDetail(post)}
+          <Loadable
+            loading={postsStatus === "loading" || !followingLoaded || !spaceMomentsLoaded}
+            skeleton={<MomentGridSkeleton count={PAGE_SIZE} />}
+          >
+            {postsStatus === "error" && sheet.length === 0 ? (
+              <ErrorNotice onRetry={reloadPosts} />
+            ) : sheet.length === 0 ? (
+              myPosts.length === 0 ? (
+                // First run: a brand-new account with nothing logged yet.
+                <EmptyState
+                  size="page"
+                  icon={<Sparkles />}
+                  line="Nothing here yet."
+                  hint="Log your first Moment, then join a Space or follow a person to fill your Contact Sheet."
+                  action={{ label: "Log a Moment", to: "/create" }}
                 />
-              ))}
-            </div>
-          )}
+              ) : (
+                <EmptyState
+                  line="Nothing here yet."
+                  hint="Join a Space or follow a person to start your Contact Sheet."
+                  action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }}
+                />
+              )
+            ) : (
+              <div className={MOMENT_GRID}>
+                {sheet.map((post, i) => (
+                  <MomentCard
+                    key={post.id}
+                    post={post}
+                    surface="mySpace"
+                    size="standard"
+                    number={String(i + 1).padStart(2, "0")}
+                    onOpen={() => openDetail(post)}
+                  />
+                ))}
+              </div>
+            )}
+          </Loadable>
 
           {hasMore && (
             <button
@@ -269,7 +302,7 @@ export function MySpaceGrid() {
             <div className="mt-6 rounded-card border-t border-border pt-4">
               <p className="ns-section-kicker text-muted-foreground">END OF THE SHEET</p>
               <p className="mt-1 text-small" style={{ fontFamily: "var(--font-serif)" }}>
-                You're caught up
+                You’re caught up
               </p>
               <Link to="/create" className="mt-2 inline-block text-caption text-accent hover:underline">
                 Log a Moment

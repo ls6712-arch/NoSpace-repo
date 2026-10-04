@@ -1,6 +1,8 @@
 import { supabase } from "../../lib/supabase";
 import { Goal, GoalShape, Project, attachEntry, mergeRemoteProjects } from "./journal";
 import type { Measure, PursuitMember, PursuitMode, ProgressEntry } from "./journal";
+import { friendlyError } from "./friendlyError";
+import { ERROR_LINE } from "./stateCopy";
 
 /** Shared by every reader of a `pursuits` row — fetchPursuitById,
  * restoreOwnPursuits — so the goal-column mapping only lives in one place. */
@@ -445,9 +447,9 @@ export async function saveInvites(pursuitId: string, ownerId: string, inviteeIds
         .map((id) => ({ pursuit_id: pursuitId, user_id: id, role: "member", status: "invited", invited_by: ownerId })),
     ];
     const { error } = await supabase.from("pursuit_members").upsert(rows, { onConflict: "pursuit_id,user_id", ignoreDuplicates: true });
-    return error ? error.message : null;
+    return error ? friendlyError(error) : null;
   } catch (e: any) {
-    return e?.message ?? "Invites didn't send.";
+    return e?.message ?? "Invites didn’t send.";
   }
 }
 
@@ -561,10 +563,10 @@ export async function getOrCreateInviteLink(pursuitId: string, userId: string): 
       .insert({ pursuit_id: pursuitId, created_by: userId })
       .select("token")
       .single();
-    if (error || !data) return { error: error?.message ?? "Couldn't make a link." };
+    if (error || !data) return { error: error?.message ?? ERROR_LINE };
     return { token: data.token };
   } catch (e: any) {
-    return { error: e?.message ?? "Couldn't make a link." };
+    return { error: e?.message ?? ERROR_LINE };
   }
 }
 
@@ -621,10 +623,10 @@ export async function joinViaLink(token: string): Promise<{ pursuitId?: string; 
   if (!supabase) return { error: "Joining needs an account." };
   try {
     const { data, error } = await supabase.rpc("join_pursuit_via_link", { invite_token: token });
-    if (error) return { error: error.message };
+    if (error) return { error: friendlyError(error) };
     return { pursuitId: data as string };
   } catch (e: any) {
-    return { error: e?.message ?? "Couldn't join." };
+    return { error: e?.message ?? ERROR_LINE };
   }
 }
 

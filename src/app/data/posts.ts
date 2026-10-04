@@ -244,7 +244,7 @@ export const seedPosts: Post[] = [
     media:
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
     creator: "Kayla Byrne",
-    caption: "Post-match recap: we're 3-1 this season.",
+    caption: "Post-match recap: we’re 3–1 this season.",
     likes: 156,
     createdAt: hoursAgo(280),
     visibility: PUBLIC,
@@ -312,7 +312,7 @@ export const seedPosts: Post[] = [
     media:
       "https://images.unsplash.com/photo-1577590835286-1cdd24c08fd7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
     creator: "Ines Moreau",
-    caption: "Microfoam PSA: it's all in the wrist.",
+    caption: "Microfoam PSA: it’s all in the wrist.",
     likes: 167,
     createdAt: hoursAgo(300),
     visibility: PUBLIC,
@@ -327,7 +327,7 @@ export const seedPosts: Post[] = [
     media:
       "https://images.unsplash.com/photo-1767338718786-92f7934e925e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
     creator: "Sam Okafor",
-    caption: "Shelf reorganized by color. Don't ask how long this took.",
+    caption: "Shelf reorganized by color. Don’t ask how long this took.",
     likes: 289,
     createdAt: hoursAgo(12),
     visibility: PUBLIC,
@@ -379,7 +379,7 @@ export const seedPosts: Post[] = [
     media:
       "https://images.unsplash.com/photo-1688126753535-0ca32e3b5cbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
     creator: "Bea Lindqvist",
-    caption: "Made a tote from fabric scraps I couldn't bear to throw out.",
+    caption: "Made a tote from fabric scraps I couldn’t bear to throw out.",
     likes: 143,
     createdAt: hoursAgo(330),
     visibility: PUBLIC,

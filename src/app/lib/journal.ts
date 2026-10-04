@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { Post } from "../data/posts";
 import { LOCAL_CLEARED_EVENT } from "./localData";
+import { formatDate } from "./dates";
 
 /**
  * The journal layer: the concepts Sushii is actually built around, kept
@@ -500,7 +501,7 @@ export function goalProgressText(goal: Goal): string | undefined {
  * this). "Sep 23," no year — same short form templateLabel already uses. */
 export function goalDeadlineText(goal: Goal): string | undefined {
   if (!goal.targetDate) return undefined;
-  return new Date(goal.targetDate).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return formatDate(goal.targetDate);
 }
 
 /** Applies a patch to one Pursuit and returns the updated copy, for the

@@ -79,7 +79,7 @@ export function ProfileLinksEditor({
     }
     const added = addProfileLink(label, url);
     if (!added) {
-      setError("That doesn't look like a working link — check it and try again.");
+      setError("That doesn’t look like a working link — check it and try again.");
       return;
     }
     setLabel("");

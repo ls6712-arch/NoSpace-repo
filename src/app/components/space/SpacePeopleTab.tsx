@@ -3,6 +3,11 @@ import { Link } from "react-router";
 import { supabase } from "../../../lib/supabase";
 import { inviteHost, type SpaceRow } from "../../lib/spaces";
 import { Button } from "../ui/button";
+import { Loadable } from "../ui/skeleton";
+import { PersonListSkeleton } from "../Skeletons";
+import { EmptyState, InlineError } from "../StateViews";
+import { notify } from "../ui/toaster";
+import { TOAST } from "../../lib/stateCopy";
 
 type Row = { user_id: string; role: "host" | "member"; username: string; displayName: string };
 
@@ -80,12 +85,21 @@ export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boo
     setInviteBusyId(null);
     if (error) return setInviteError(error);
     setInvitedIds((prev) => new Set(prev).add(userId));
+    notify(TOAST.inviteSent);
   };
 
-  if (rows === "loading") return <div className="min-h-[30vh]" />;
+  if (rows === "loading") {
+    return (
+      <Loadable loading className="py-6" skeleton={<PersonListSkeleton count={5} />}>
+        {null}
+      </Loadable>
+    );
+  }
 
   if (rows.length === 0) {
-    return <p className="py-10 text-center text-small text-muted-foreground">Nobody to show yet.</p>;
+    return (
+      <EmptyState size="inline" line="Nobody to show yet." />
+    );
   }
 
   const otherMemberCount = rows.filter((r) => r.role === "member").length;
@@ -95,11 +109,11 @@ export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boo
       {isHost && otherMemberCount === 0 && (
         <p className="mb-2 text-caption text-muted-foreground">Once people join, you can invite a co-host here.</p>
       )}
-      {inviteError && <p className="mb-2 text-caption text-destructive">{inviteError}</p>}
+      <InlineError message={inviteError} className="mb-2" />
       <ul className="divide-y divide-[var(--hairline)]">
         {rows.map((r) => (
-          <li key={r.user_id} className="flex items-center justify-between py-2.5">
-            <Link to={`/u/${r.username}`} className="text-small hover:underline">
+          <li key={r.user_id} className="flex items-center justify-between gap-3 py-2.5">
+            <Link to={`/u/${r.username}`} className="min-w-0 truncate text-small hover:underline">
               {r.displayName}
             </Link>
             {r.role === "host" ? (
@@ -109,10 +123,11 @@ export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boo
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={inviteBusyId === r.user_id || invitedIds.has(r.user_id)}
+                  busy={inviteBusyId === r.user_id}
+                  disabled={invitedIds.has(r.user_id)}
                   onClick={() => invite(r.user_id)}
                 >
-                  {invitedIds.has(r.user_id) ? "Invited" : inviteBusyId === r.user_id ? "Inviting…" : "Invite as co-host"}
+                  {invitedIds.has(r.user_id) ? "Invited" : "Invite as co-host"}
                 </Button>
               )
             )}

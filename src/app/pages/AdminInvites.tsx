@@ -10,6 +10,12 @@ import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { APP_NAME } from "../config";
+import { Time } from "../components/ui/time";
+import { useSubmitGuard } from "../lib/useSubmitGuard";
+import { Loadable } from "../components/ui/skeleton";
+import { CardListSkeleton } from "../components/Skeletons";
+import { ERROR_LINE } from "../lib/stateCopy";
+import { EmptyState, InlineError } from "../components/StateViews";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -39,13 +45,6 @@ interface WaitlistRow {
   createdAt: number;
 }
 
-function when(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 60) return `${Math.max(mins, 0)}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 function inviteStatus(row: InviteRow): { label: string; done: boolean } {
   if (row.claimedByName) return { label: `Claimed by ${row.claimedByName}`, done: true };
@@ -62,7 +61,7 @@ export function AdminInvites() {
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [creating, runCreate] = useSubmitGuard();
   const [createError, setCreateError] = useState<string | null>(null);
   const [newLink, setNewLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -89,7 +88,7 @@ export function AdminInvites() {
     ]);
 
     if (invitesErr) {
-      setListError("Couldn't load invites — the columns this page expects may not match the live schema yet.");
+      setListError("Couldn’t load invites — the columns this page expects may not match the live schema yet.");
       setLoading(false);
       return;
     }
@@ -124,7 +123,7 @@ export function AdminInvites() {
   const loadWaiting = async () => {
     const result = await fetchWaitingFirstMoments();
     setWaiting(result.rows);
-    setWaitingError(result.error ? "Couldn't load first moments. Try again in a moment." : null);
+    setWaitingError(result.error ? ERROR_LINE : null);
   };
 
   useEffect(() => {
@@ -150,22 +149,20 @@ export function AdminInvites() {
     );
   }
 
-  const create = async () => {
-    if (creating) return;
-    setCreating(true);
-    setCreateError(null);
-    setNewLink(null);
-    setCopied(false);
-    const result = await createInvite(note);
-    setCreating(false);
-    if (result.error || !result.code) {
-      setCreateError(result.error || "Couldn't create that invite.");
-      return;
-    }
-    setNewLink(inviteLink(result.code));
-    setNote("");
-    await load();
-  };
+  const create = () =>
+    runCreate(async () => {
+      setCreateError(null);
+      setNewLink(null);
+      setCopied(false);
+      const result = await createInvite(note);
+      if (result.error || !result.code) {
+        setCreateError(result.error || ERROR_LINE);
+        return;
+      }
+      setNewLink(inviteLink(result.code));
+      setNote("");
+      await load();
+    });
 
   const copyLink = async () => {
     if (!newLink) return;
@@ -205,8 +202,8 @@ export function AdminInvites() {
           />
           <div className="mb-3 text-right text-caption text-muted-foreground">{note.length}/280</div>
           {createError && <p className="mb-3 text-caption text-destructive">{createError}</p>}
-          <Button variant="coral" disabled={creating} onClick={create}>
-            {creating ? "Creating…" : "Create invite"}
+          <Button busy={creating} variant="coral" disabled={creating} onClick={create}>
+            Create invite
           </Button>
 
           {newLink && (
@@ -230,13 +227,11 @@ export function AdminInvites() {
           </TabsList>
 
           <TabsContent value="invites">
-            {listError && <p className="mb-4 text-small text-destructive">{listError}</p>}
+            <InlineError message={listError} className="mb-4" />
             {loading ? (
-              <p className="py-12 text-center text-small text-muted-foreground">Loading…</p>
+              <Loadable loading skeleton={<CardListSkeleton />}>{null}</Loadable>
             ) : rows.length === 0 ? (
-              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
-                No invites created yet.
-              </div>
+              <EmptyState line="No invites created yet." />
             ) : (
               <ul className="space-y-3">
                 {rows.map((r) => {
@@ -247,7 +242,7 @@ export function AdminInvites() {
                         <div className="min-w-0 text-small">
                           <p className="font-mono text-caption uppercase tracking-wide text-muted-foreground">{r.code}</p>
                           {r.note && <p className="mt-1 italic text-foreground">“{r.note}”</p>}
-                          <p className="mt-1 text-caption text-muted-foreground">Created {when(r.createdAt)}</p>
+                          <p className="mt-1 text-caption text-muted-foreground">Created <Time value={r.createdAt} ago /></p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           <span
@@ -281,9 +276,7 @@ export function AdminInvites() {
 
           <TabsContent value="waitlist">
             {waitlist.length === 0 ? (
-              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
-                Nobody on the waitlist yet.
-              </div>
+              <EmptyState line="Nobody on the waitlist yet." />
             ) : (
               <ul className="space-y-2">
                 {waitlist.map((w, i) => (
@@ -294,7 +287,7 @@ export function AdminInvites() {
                     <span className="min-w-0 truncate" title={w.email}>{w.email}</span>
                     <span className="text-caption text-muted-foreground">
                       {w.hobby ? `${w.hobby} · ` : ""}
-                      {when(w.createdAt)}
+                      <Time value={w.createdAt} ago />
                     </span>
                   </li>
                 ))}
@@ -304,14 +297,12 @@ export function AdminInvites() {
 
           <TabsContent value="first-moments">
             <p className="mb-4 text-small text-muted-foreground">
-              New people's first moments from the last 14 days with no thought from anyone yet,
+              New people’s first moments from the last 14 days with no thought from anyone yet,
               oldest first. Anything over 24 hours is ours to answer.
             </p>
-            {waitingError && <p className="mb-4 text-small text-destructive">{waitingError}</p>}
+            <InlineError message={waitingError} className="mb-4" />
             {waiting.length === 0 ? (
-              <div className="rounded-card border border-dashed border-border px-6 py-12 text-center text-small text-muted-foreground">
-                Every first moment has a thought.
-              </div>
+              <EmptyState line="Every first moment has a thought." />
             ) : (
               <ul className="space-y-3">
                 {waiting.map((m) => {

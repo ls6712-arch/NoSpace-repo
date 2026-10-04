@@ -1,4 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
+import { notify } from "../ui/toaster";
+import { TOAST } from "../../lib/stateCopy";
 
 /**
  * The one row pattern every setting in the redesigned /settings uses:
@@ -42,21 +44,16 @@ export function SettingsPanel({ children }: { children: ReactNode }) {
 /** "Saved" — small caps, fades out after 3s. Call `flash()` right after a
  * successful save; every save-on-change control (Switch, radio, select)
  * uses this same confirmation rather than each inventing its own. */
+/**
+ * A settings change landed. Confirms with the app's quiet toast
+ * ("Changes saved") rather than an inline word, so every save in the app
+ * confirms the same way. `saved`/SavedFlash stay for existing call sites
+ * and now render nothing.
+ */
 export function useSavedFlash() {
-  const [saved, setSaved] = useState(false);
-  useEffect(() => {
-    if (!saved) return;
-    const t = window.setTimeout(() => setSaved(false), 3000);
-    return () => window.clearTimeout(t);
-  }, [saved]);
-  return { saved, flash: () => setSaved(true) };
+  return { saved: false, flash: () => notify(TOAST.changesSaved) };
 }
 
-export function SavedFlash({ show }: { show: boolean }) {
-  if (!show) return null;
-  return (
-    <span className="ns-section-kicker text-muted-foreground" role="status">
-      Saved
-    </span>
-  );
+export function SavedFlash(_props: { show: boolean }) {
+  return null;
 }

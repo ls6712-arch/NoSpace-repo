@@ -16,9 +16,9 @@ import { Button } from "./ui/button";
  * way, rather than each delete button growing its own slightly different
  * confirmation.
  *
- * Never dismissable by clicking outside or Escape — same reasoning as the
- * draft resume/discard prompt in Log.tsx: a decision this final has to be
- * an actual choice, not something that quietly falls away.
+ * Never dismissed by clicking outside — a decision this final has to be an
+ * actual choice, not something a stray tap makes fall away. Escape is the
+ * same as Cancel (the safe answer), so keyboard users can always back out.
  */
 export function ConfirmDialog({
   open,
@@ -32,7 +32,7 @@ export function ConfirmDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   /** Can be async — the dialog stays open and the confirm button shows a
@@ -63,18 +63,24 @@ export function ConfirmDialog({
         className="max-w-sm"
         showCloseButton={false}
         onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => {
+          if (confirming) e.preventDefault();
+        }}
       >
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          {description ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : (
+            <DialogDescription className="sr-only">{title}</DialogDescription>
+          )}
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={confirming}>
             {cancelLabel}
           </Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={confirming}>
-            {confirming ? "Deleting…" : confirmLabel}
+          <Button variant="destructive" onClick={handleConfirm} busy={confirming}>
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

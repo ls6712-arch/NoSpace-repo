@@ -4,17 +4,11 @@ import { usePrivateLogs } from "../../context/PrivateLogsContext";
 import { useRewards } from "../../context/RewardsContext";
 import { SectionHeader } from "../ui/section-header";
 import { ConfirmDialog } from "../ConfirmDialog";
+import { plural } from "../../lib/plural";
+import { Time } from "../ui/time";
+import { EmptyState } from "../StateViews";
 import { ImageWithFallback } from "../ImageWithFallback";
 
-function timeAgo(ts: number) {
-  const diff = Math.max(0, Date.now() - ts);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 export function DataSection() {
   const { logs, remove } = usePrivateLogs();
@@ -25,26 +19,26 @@ export function DataSection() {
     <section>
       <SectionHeader n={6} eyebrow="YOUR DATA" title="Your data" />
       <p className="mb-4 text-small text-muted-foreground">
-        What's kept here, and only here.
+        What’s kept here, and only here.
       </p>
 
       <div className="rounded-control border border-border bg-card p-4 sm:p-5">
         <div className="mb-2 flex items-center gap-2 text-small">
           <Lock className="size-4 text-muted-foreground" />
-          "Only you" Moments
+          “Only you” Moments
         </div>
         <p className="mb-3 text-caption leading-relaxed text-muted-foreground">
           Kept here and nowhere else. These never appear in a Space, a feed, or your public shelf.
         </p>
         {logs.length === 0 ? (
-          <p className="text-caption text-muted-foreground">Nothing here yet.</p>
+          <EmptyState size="rail" className="mt-0" line="Nothing here yet." action={{ label: "Log a Moment", to: "/create" }} />
         ) : (
           <ul className="space-y-3">
             {logs.map((entry) => (
               <li key={entry.id} className="rounded-control border border-[var(--hairline)] p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <span className="text-caption text-muted-foreground">
-                    Only you · {timeAgo(entry.createdAt)}
+                    Only you · <Time value={entry.createdAt} ago />
                   </span>
                   <button
                     type="button"
@@ -72,7 +66,7 @@ export function DataSection() {
 
       {points > 0 && (
         <p className="mt-4 text-caption text-muted-foreground">
-          {points} {points === 1 ? "point" : "points"} earned so far.
+          {plural(points, "point")} earned so far.
         </p>
       )}
 
@@ -80,7 +74,7 @@ export function DataSection() {
         open={confirmDeleteId !== null}
         onOpenChange={(o) => !o && setConfirmDeleteId(null)}
         title="Delete this?"
-        description="This can't be undone — nobody else ever saw it, and once it's gone there's no copy left anywhere."
+        description="This can’t be undone — nobody else ever saw it, and once it’s gone there’s no copy left anywhere."
         onConfirm={async () => {
           if (confirmDeleteId !== null) await remove(confirmDeleteId);
           setConfirmDeleteId(null);

@@ -5,6 +5,7 @@ import { SectionHeader } from "../ui/section-header";
 import { AvatarPicker } from "../AvatarPicker";
 import { SettingsPanel } from "./SettingsRow";
 import { EditableTextRow } from "./EditableTextRow";
+import { friendlyError } from "../../lib/friendlyError";
 
 function nameDismissKey(userId: string) {
   return `sushii-name-prompt-dismissed-${userId}`;
@@ -30,8 +31,8 @@ function EmailPrefixPrompt({ userId, emailPrefix }: { userId: string; emailPrefi
   return (
     <div className="mb-4 flex items-start justify-between gap-4 rounded-control border border-accent/40 bg-accent/5 p-4">
       <p className="text-small leading-relaxed">
-        Is this how you'd like to be known? Your name is currently{" "}
-        <span style={{ fontFamily: "var(--font-serif)" }}>"{emailPrefix}"</span> — taken from your
+        Is this how you’d like to be known? Your name is currently{" "}
+        <span style={{ fontFamily: "var(--font-serif)" }}>“{emailPrefix}”</span> — taken from your
         email. You can change it below any time.
       </p>
       <button
@@ -92,14 +93,14 @@ export function ProfileSection() {
               .update({ display_name: next })
               .eq("id", user.id);
             if (!error) await refreshProfile();
-            return { error: error?.message ?? null };
+            return { error: error ? friendlyError(error) : null };
           }}
         />
         <EditableTextRow
           label="Bio"
           description="A short line under your name. Never required."
           value={profile.bio ?? ""}
-          placeholder="What got you into this, and where it's going…"
+          placeholder="What got you into this, and where it’s going…"
           multiline
           maxLength={280}
           emptyLabel="Not set"
@@ -109,7 +110,7 @@ export function ProfileSection() {
               .update({ bio: next || null })
               .eq("id", user.id);
             if (!error) await refreshProfile();
-            return { error: error?.message ?? null };
+            return { error: error ? friendlyError(error) : null };
           }}
         />
       </SettingsPanel>

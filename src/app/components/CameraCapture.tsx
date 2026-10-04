@@ -4,6 +4,7 @@ import { Camera as CameraIcon, Images, Play, SwitchCamera, Type, X } from "lucid
 import { addRecentCapture, useRecentCaptures } from "../lib/recentCaptures";
 import { convertHeicFiles, isHeicFile } from "../lib/heicConversion";
 import { Button } from "./ui/button";
+import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ImageWithFallback } from "./ImageWithFallback";
 
 /** Confirmed with product: 60s, matching Instagram-length clips — long enough
@@ -96,7 +97,7 @@ export function CameraCapture({
     let cancelled = false;
 
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Camera isn't available in this browser.");
+      setCameraError("Camera isn’t available in this browser.");
       return;
     }
 
@@ -112,7 +113,7 @@ export function CameraCapture({
         if (videoRef.current) videoRef.current.srcObject = stream;
       })
       .catch(() => {
-        if (!cancelled) setCameraError("Camera access isn't available — pick a photo or video instead.");
+        if (!cancelled) setCameraError("Camera access isn’t available — pick a photo or video instead.");
       });
 
     return () => {
@@ -223,8 +224,8 @@ export function CameraCapture({
     if (failedCount > 0) {
       setHeicWarning(
         failedCount === 1
-          ? "One photo couldn't be processed and wasn't added — try a different photo."
-          : `${failedCount} photos couldn't be processed and weren't added — try different photos.`,
+          ? UPLOAD_COPY.heicMany(1)
+          : UPLOAD_COPY.heicMany(failedCount),
       );
     }
     if (picked.length === 0) return;
@@ -288,7 +289,7 @@ export function CameraCapture({
             </Button>
           )}
           {recording && (
-            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-control bg-scrim-solid/50 px-2.5 py-1 text-caption text-on-media">
+            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-control bg-scrim-solid/50 px-2.5 py-1 text-caption text-on-brand tabular-nums">
               <span className="size-2 rounded-full bg-[var(--coral)] animate-pulse" />
               {timeLabel}
             </span>
@@ -343,12 +344,14 @@ export function CameraCapture({
                 className="flex size-16 items-center justify-center rounded-full border-4 border-on-media/90 transition-transform active:scale-95"
               >
                 <span
-                  className={`transition-all ${
+                  // Always 48px and scaled down while recording, so the change
+                  // animates on the compositor instead of re-laying out.
+                  className={`size-12 transition-[transform,border-radius,background-color] ${
                     recording
-                      ? "size-6 rounded-control bg-[var(--coral)]"
+                      ? "scale-50 rounded-card bg-[var(--coral)]"
                       : captureMode === "video"
-                        ? "size-12 rounded-full bg-[var(--coral)]"
-                        : "size-12 rounded-full bg-coral-deep"
+                        ? "rounded-full bg-[var(--coral)]"
+                        : "rounded-full bg-coral-deep"
                   }`}
                 />
               </button>

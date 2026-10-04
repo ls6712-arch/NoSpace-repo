@@ -64,6 +64,9 @@ import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
+import { ENTER } from "../lib/motion";
+import { UPLOAD_COPY } from "../lib/stateCopy";
+import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
@@ -113,7 +116,7 @@ const AUDIENCE: {
   icon: typeof Globe2;
 }[] = [
   { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
-  { value: "followers", label: "Followers", copy: "People who follow you, once you've accepted them", icon: UserRound },
+  { value: "followers", label: "Followers", copy: "People who follow you, once you’ve accepted them", icon: UserRound },
   { value: "public", label: "Everyone", copy: "Anyone browsing this space can find it", icon: Globe2 },
 ];
 
@@ -667,7 +670,7 @@ export function Log() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Discard this moment?</DialogTitle>
-          <DialogDescription>Leaving now won't keep what you've added.</DialogDescription>
+          <DialogDescription>Leaving now won’t keep what you’ve added.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={stayInComposer}>
@@ -783,7 +786,7 @@ export function Log() {
       if (user) {
         const { path, error: uploadError } = await uploadMomentFile(user.id, files[0]);
         if (uploadError || !path) {
-          setPrivateSaveError("Your photo didn't upload. Try again.");
+          setPrivateSaveError("Your photo didn’t upload. Try again.");
           setSavedAs("private");
           setScreen("saved");
           return;
@@ -811,7 +814,7 @@ export function Log() {
     // screen either way — same shape as the public-post path below, which
     // shows "Not saved." there rather than staying put.
     if (!result.data) {
-      setPrivateSaveError(result.error || "This didn't save.");
+      setPrivateSaveError(result.error || "This didn’t save.");
       setSavedAs("private");
       setScreen("saved");
       return;
@@ -926,7 +929,7 @@ export function Log() {
       setSavedPostId(entry.id);
       setScreen("saved");
     } catch {
-      setError("Something went wrong saving that. Mind trying again?");
+      setError(ERROR_LINE);
     } finally {
       setSaving(false);
     }
@@ -1061,7 +1064,7 @@ export function Log() {
                 Start a Pursuit
               </span>
               <span className="block text-caption text-muted-foreground">
-                Something you're bringing to life over time.
+                Something you’re bringing to life over time.
               </span>
             </span>
           </button>
@@ -1087,27 +1090,30 @@ export function Log() {
 
         <PursuitDialog open={pursuitDialogOpen} onOpenChange={setPursuitDialogOpen} />
 
-        {/* Never dismissed by clicking outside or Escape — resuming or
-            discarding has to be an actual choice, not an accidental
-            dismissal that quietly leaves an old draft sitting around. */}
+        {/* Never dismissed by clicking outside — resuming or discarding has
+            to be an actual choice, not a stray tap. Escape resumes, the
+            answer that loses nothing. */}
         <Dialog open={!!draftPrompt}>
           <DialogContent
             showCloseButton={false}
             onInteractOutside={(e) => e.preventDefault()}
-            onEscapeKeyDown={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => {
+              e.preventDefault();
+              resumeDraft();
+            }}
           >
             <DialogHeader>
               <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Resume your last draft?</DialogTitle>
               <DialogDescription>
-                You started a Moment you didn't finish.
+                You started a Moment you didn’t finish.
               </DialogDescription>
             </DialogHeader>
             {draftPrompt && (
               <div className="rounded-card border border-dashed border-border bg-surface p-3.5 text-small text-muted-foreground">
                 {draftPrompt.thought.trim() ? (
-                  <p className="line-clamp-3 text-foreground" title={draftPrompt.thought.trim()}>"{draftPrompt.thought.trim()}"</p>
+                  <p className="line-clamp-3 text-foreground" title={draftPrompt.thought.trim()}>“{draftPrompt.thought.trim()}”</p>
                 ) : (
-                  <p>No caption yet.</p>
+                  <p>No caption yet</p>
                 )}
                 {draftPrompt.mediaType && !draftPromptMedia && (
                   <p className="mt-2 text-caption">
@@ -1156,15 +1162,15 @@ export function Log() {
           </span>
           <h2 className="mb-2 text-title">Log in to keep your Moments</h2>
           <p className="mb-6 text-muted-foreground">
-            Your moments are tied to your account, so they're still here next
+            Your moments are tied to your account, so they’re still here next
             time, not just in this browser tab.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link to="/login?redirect=/create">
               <Button variant="coral">Log in or sign up</Button>
             </Link>
-            <Button variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
-              {saving ? "Saving…" : "Just keep it for myself"}
+            <Button busy={saving} variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
+              Just keep it for myself
             </Button>
           </div>
         </div>
@@ -1231,7 +1237,7 @@ export function Log() {
             // the Shelf instead of the grid tile just appearing cold.
             layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
             // design-token-ignore: spring, not a fixed duration; layout/layoutId are off under reduced motion
-            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            transition={ENTER}
             className={
               savedTileSettled
                 ? "mx-auto my-6 w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
@@ -1369,8 +1375,8 @@ export function Log() {
             if (failedCount > 0) {
               setHeicWarning(
                 failedCount === 1
-                  ? "One photo couldn't be processed and wasn't added — try a different photo."
-                  : `${failedCount} photos couldn't be processed and weren't added — try different photos.`,
+                  ? UPLOAD_COPY.heicMany(1)
+                  : UPLOAD_COPY.heicMany(failedCount),
               );
             }
             if (picked.length === 0) return;
@@ -1595,7 +1601,7 @@ export function Log() {
                 : `This will appear in ${
                     audience === "public"
                       ? `${cornerLabel}`
-                      : "Home for people you've connected with"
+                      : "Home for people you’ve connected with"
                   }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
             </p>
           </div>
@@ -1638,13 +1644,14 @@ export function Log() {
             separate "Save this moment" that produced the same private
             result as "Share this moment → Only you". */}
         <Button
+          busy={saving}
           variant="coral"
           size="lg"
           className="w-full"
           disabled={!hasSomething || saving}
           onClick={publish}
         >
-          {saving ? "Saving…" : audience === "private" ? "Keep it private" : "Share"}
+          {audience === "private" ? "Keep it private" : "Share"}
         </Button>
 
         {!hasSomething && (
@@ -1695,7 +1702,7 @@ export function Log() {
                     {mode === "update"
                       ? "Choose the Pursuit this belongs to."
                       : mode === "project"
-                        ? "Give it a name you'll recognise in six months."
+                        ? "Give it a name you’ll recognise in six months."
                         : "Where does this sit?"}
                   </p>
 
@@ -1748,7 +1755,7 @@ export function Log() {
               )}
 
               <section>
-                <h2 className="mb-1 text-small">Show where it's at</h2>
+                <h2 className="mb-1 text-small">Show where it’s at</h2>
                 <p className="mb-3 text-caption text-muted-foreground">
                   Add a photo, video, or short note.
                 </p>
@@ -1784,7 +1791,7 @@ export function Log() {
                         const picked = await convertHeicIfNeeded(raw);
                         if (isHeicFile(picked)) {
                           setHeicWarning(
-                            "That photo couldn't be processed and wasn't added — try a different photo.",
+                            UPLOAD_COPY.heic,
                           );
                           return;
                         }
@@ -1821,7 +1828,7 @@ export function Log() {
 
                 <Textarea
                   id="progress"
-                  placeholder="Where it's at right now"
+                  placeholder="Where it’s at right now"
                   value={progress}
                   onChange={(e) => setProgress(e.target.value)}
                 />

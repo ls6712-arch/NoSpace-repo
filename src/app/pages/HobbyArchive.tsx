@@ -8,10 +8,13 @@ import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal } from "../lib/journal";
 import { setCornerNote, useCornerNote } from "../lib/cornerNotes";
-import { parseArchiveKey, updatedLabel } from "../components/HobbyShelf";
+import { parseArchiveKey } from "../components/HobbyShelf";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { Button } from "../components/ui/button";
+import { formatDate, formatMonth, formatWhen } from "../lib/dates";
+import { plural } from "../lib/plural";
+import { EmptyState } from "../components/StateViews";
 
 /**
  * One hobby's personal archive — everything logged under that tag, in order.
@@ -31,11 +34,11 @@ type FilterId = (typeof FILTERS)[number]["id"];
 const hasMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
 function monthKey(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return formatMonth(ts);
 }
 
 function dayLabel(ts: number) {
-  return new Date(ts).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return formatDate(ts);
 }
 
 export function HobbyArchive() {
@@ -92,7 +95,7 @@ export function HobbyArchive() {
     return (
       <SignUpPrompt
         title="This is where your books live"
-        body="Every hobby you log gets a book here, holding every photo, video and note you've put in it. Make an account and yours starts filling up."
+        body="Every hobby you log gets a book here, holding every photo, video and note you’ve put in it. Make an account and yours starts filling up."
         cta="Start my shelf"
       />
     );
@@ -106,10 +109,10 @@ export function HobbyArchive() {
             No such hobby
           </h1>
           <p className="mb-6 text-small text-muted-foreground">
-            That book isn't on your shelf.
+            That Book isn’t on your Shelf.
           </p>
           <Link to="/you">
-            <Button variant="outline">Back to Your Shelf</Button>
+            <Button variant="outline">Back to your Shelf</Button>
           </Link>
         </div>
       </div>
@@ -148,9 +151,8 @@ export function HobbyArchive() {
         </h1>
         <p className="mt-1 text-muted-foreground">{space.name}</p>
         <p className="mt-2 text-small text-muted-foreground">
-          {moments.length} {moments.length === 1 ? "moment" : "moments"} · {projects.length}{" "}
-          {projects.length === 1 ? "pursuit" : "pursuits"}
-          {moments.length > 0 ? ` · ${updatedLabel(moments[0].createdAt).toLowerCase()}` : ""}
+          {plural(moments.length, "Moment")} · {plural(projects.length, "Pursuit")}
+          {moments.length > 0 ? ` · updated ${formatWhen(moments[0].createdAt, { ago: true })}` : ""}
         </p>
 
         {/* A short, private note about this Corner — only you ever see it,
@@ -218,18 +220,21 @@ export function HobbyArchive() {
             </ul>
 
             {filtered.length === 0 ? (
-              <div className="mt-6 rounded-card border border-dashed border-border px-5 py-12 text-center">
-                <p className="mx-auto max-w-sm text-small leading-relaxed text-muted-foreground">
-                  {moments.length === 0
-                    ? `Nothing logged under ${target.label} yet. A photo, or a sentence about how it went, both count.`
-                    : `No ${filter === "media" ? "photos or videos" : "notes"} here. Try All.`}
-                </p>
-                <Link to={logTo} className="mt-4 inline-block">
-                  <Button variant="outline" size="sm">
-                    Create something
-                  </Button>
-                </Link>
-              </div>
+              moments.length === 0 ? (
+                <EmptyState
+                  className="mt-6"
+                  line={`Nothing logged under ${target.label} yet.`}
+                  hint="A photo, or a sentence about how it went, both count."
+                  action={{ label: "Log a Moment", to: logTo }}
+                />
+              ) : (
+                <EmptyState
+                  className="mt-6"
+                  line={`No ${filter === "media" ? "photos or videos" : "notes"} here.`}
+                  hint="Try All."
+                  action={{ label: "Log a Moment", to: logTo }}
+                />
+              )
             ) : (
               <div className="mt-6 space-y-8">
                 {byMonth.map(({ month, items }) => (
@@ -256,17 +261,11 @@ export function HobbyArchive() {
         {tab === "pursuits" && (
           <div className="mt-6">
             {projects.length === 0 ? (
-              <div className="rounded-card border border-dashed border-border px-5 py-12 text-center">
-                <p className="mx-auto max-w-sm text-small leading-relaxed text-muted-foreground">
-                  No {target.label.toLowerCase()} pursuits yet. A Pursuit is a
-                  thing you come back to. Moments group under it as updates.
-                </p>
-                <Link to={logTo} className="mt-4 inline-block">
-                  <Button variant="outline" size="sm">
-                    Start a Pursuit
-                  </Button>
-                </Link>
-              </div>
+              <EmptyState
+                line={`No ${target.label.toLowerCase()} Pursuits yet.`}
+                hint="A Pursuit is a thing you come back to. Moments group under it as updates."
+                action={{ label: "Start a Pursuit", to: "/pursuits/new" }}
+              />
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
                 {projects.map((project) => {
@@ -282,7 +281,7 @@ export function HobbyArchive() {
                         {project.title}
                       </div>
                       <div className="mt-1 text-caption text-muted-foreground">
-                        {updates.length} {updates.length === 1 ? "update" : "updates"}
+                        {plural(updates.length, "Moment")}
                         {project.finishedAt ? " · finished" : " · in progress"}
                       </div>
                       {updates.length > 0 && (
@@ -324,7 +323,7 @@ export function HobbyArchive() {
                   <dt className="text-muted-foreground">First logged</dt>
                   <dd>
                     {moments.length > 0
-                      ? new Date(moments[moments.length - 1].createdAt).toLocaleDateString()
+                      ? formatDate(moments[moments.length - 1].createdAt)
                       : "Not yet"}
                   </dd>
                 </div>

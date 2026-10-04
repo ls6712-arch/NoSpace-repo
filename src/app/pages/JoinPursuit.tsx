@@ -8,6 +8,8 @@ import { InvitePreview, fetchInvitePreview, fetchPursuitAsProject, joinViaLink }
 import { targetText } from "../lib/pursuitProgress";
 import { PersonAvatar } from "./CreatePursuit";
 import { APP_NAME } from "../config";
+import { plural, pluralWord } from "../lib/plural";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * /join/:token — where an invite link lands. Works signed out: shows who
@@ -36,7 +38,7 @@ export function JoinPursuit() {
     setError(null);
     const result = await joinViaLink(token);
     if (!result.pursuitId) {
-      setError(result.error ?? "Couldn't join.");
+      setError(result.error ?? ERROR_LINE);
       setJoining(false);
       return;
     }
@@ -62,7 +64,7 @@ export function JoinPursuit() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-          This invite isn't active.
+          This invite isn’t active.
         </h1>
         <p className="max-w-sm text-small text-muted-foreground">
           The link may have been turned off. Ask whoever sent it for a new one.
@@ -103,8 +105,10 @@ export function JoinPursuit() {
               ? "Everyone contributes to the same total."
               : "Everyone has their own goal and journey, side by side."}
           </p>
-          {preview.memberCount > 1 && (
-            <p className="pl-[26px] text-caption text-muted-foreground">{preview.memberCount} people are in so far.</p>
+          {preview.memberCount > 0 && (
+            <p className="pl-[26px] text-caption text-muted-foreground tabular-nums">
+              {plural(preview.memberCount, "person", "people")} {pluralWord(preview.memberCount, "is", "are")} in so far.
+            </p>
           )}
         </div>
 
@@ -116,8 +120,8 @@ export function JoinPursuit() {
               </Button>
             </Link>
           ) : user ? (
-            <Button variant="coral" className="h-11 w-full rounded-control" onClick={join} disabled={joining}>
-              {joining ? "Joining…" : "Join"}
+            <Button busy={joining} variant="coral" className="h-11 w-full rounded-control" onClick={join} disabled={joining}>
+              Join
             </Button>
           ) : (
             <>
@@ -126,7 +130,7 @@ export function JoinPursuit() {
                   Sign up or log in to join
                 </Button>
               </Link>
-              <p className="mt-3 text-caption text-muted-foreground">Free to join. You'll come right back here.</p>
+              <p className="mt-3 text-caption text-muted-foreground">Free to join. You’ll come right back here.</p>
             </>
           )}
           {error && <p className="mt-3 text-caption text-destructive">{error}</p>}

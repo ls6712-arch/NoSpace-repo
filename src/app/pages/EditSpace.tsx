@@ -66,7 +66,7 @@ export function EditSpace() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-center">
         <div>
-          <h2 className="text-title mb-4">That Space doesn't exist</h2>
+          <h2 className="text-title mb-4">That Space doesn’t exist</h2>
           <Link to="/discover"><Button variant="outline">Back to Discover</Button></Link>
         </div>
       </div>

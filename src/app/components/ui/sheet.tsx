@@ -5,6 +5,7 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 
 import { cn } from "./utils";
+import { captureOpener, restoreFocus } from "../../lib/returnFocus";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -36,7 +37,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "data-[state=open]:animate-in duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-scrim-solid/70 backdrop-blur-sm",
+        "data-[state=open]:animate-in duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-scrim-solid/70 backdrop-blur-sm ease-standard data-[state=open]:duration-base data-[state=closed]:duration-fast",
         className,
       )}
       {...props}
@@ -48,17 +49,20 @@ function SheetContent({
   className,
   children,
   side = "right",
+  onOpenAutoFocus,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
 }) {
+  const opener = React.useRef<HTMLElement | null>(null);
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          "bg-card data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-overlay transition ease-standard data-[state=closed]:duration-base data-[state=open]:duration-base",
+          "bg-card overflow-y-auto overscroll-contain data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-overlay ease-standard data-[state=open]:duration-base data-[state=closed]:duration-fast",
           side === "right" &&
             "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l border-border pt-[var(--safe-top)] pr-[var(--safe-right)] pb-[var(--safe-bottom)] sm:max-w-sm",
           side === "left" &&
@@ -69,6 +73,14 @@ function SheetContent({
             "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t border-border pb-[var(--safe-bottom)]",
           className,
         )}
+        onOpenAutoFocus={(e) => {
+          opener.current = captureOpener();
+          onOpenAutoFocus?.(e);
+        }}
+        onCloseAutoFocus={(e) => {
+          onCloseAutoFocus?.(e);
+          if (!e.defaultPrevented && restoreFocus(opener.current)) e.preventDefault();
+        }}
         {...props}
       >
         {children}

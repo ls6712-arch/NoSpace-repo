@@ -4,6 +4,8 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { friendlyError } from "../lib/friendlyError";
+import { UPLOAD_COPY } from "../lib/stateCopy";
 
 /**
  * A picture of you, or your initials. Both are fine — the initials are a real
@@ -70,7 +72,8 @@ export function AvatarPicker({
       .upload(path, file, { contentType: file.type || undefined, upsert: true });
 
     if (uploadError) {
-      setError(`Couldn't upload that: ${uploadError.message}`);
+      console.warn("[AvatarPicker] upload failed:", uploadError);
+      setError(friendlyError(uploadError, UPLOAD_COPY.failed));
       setBusy(false);
       return;
     }
@@ -81,7 +84,10 @@ export function AvatarPicker({
       .update({ avatar_url: publicUrl })
       .eq("id", user.id);
 
-    if (saveError) setError(`Uploaded, but couldn't save it to your profile: ${saveError.message}`);
+    if (saveError) {
+      console.warn("[AvatarPicker] profile update failed:", saveError);
+      setError("Uploaded, but couldn’t add it to your profile. Try again.");
+    }
     else onChange(publicUrl);
     setBusy(false);
   };
@@ -94,7 +100,12 @@ export function AvatarPicker({
         .from("profiles")
         .update({ avatar_url: null })
         .eq("id", user.id);
-      if (saveError) setError(saveError.message);
+      if (saveError) {
+        console.warn("[AvatarPicker] remove failed:", saveError);
+        setError(friendlyError(saveError));
+        setBusy(false);
+        return;
+      }
     }
     onChange(undefined);
     setBusy(false);

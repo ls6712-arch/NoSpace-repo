@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSocial } from "../context/SocialContext";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
+import { ERROR_LINE } from "../lib/stateCopy";
 
 /**
  * One sentence of what blocking actually does, per
@@ -32,7 +33,7 @@ export function BlockConfirmDialog({
     const { error: err } = await social.block(personId);
     setBusy(false);
     if (err) {
-      setError("Couldn't do that. Try again later.");
+      setError(ERROR_LINE);
       return;
     }
     onOpenChange(false);
@@ -50,7 +51,7 @@ export function BlockConfirmDialog({
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Block {personName}?</DialogTitle>
           <DialogDescription>
-            {personName} won't be able to message you, follow you, or see your Moments. They won't be
+            {personName} won’t be able to message you, follow you, or see your Moments. They won’t be
             told.
           </DialogDescription>
         </DialogHeader>

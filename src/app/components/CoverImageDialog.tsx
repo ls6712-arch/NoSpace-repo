@@ -7,6 +7,8 @@ import { useAuth } from "../context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { MediaAttachPicker } from "./MediaAttachPicker";
 import { Button } from "./ui/button";
+import { TOAST, UPLOAD_COPY } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
 
 const MAX_COVER_BYTES = 8 * 1024 * 1024;
 
@@ -38,11 +40,11 @@ export function CoverImageDialog({
   const pick = (picked: File | null) => {
     setError(null);
     if (picked && !picked.type.startsWith("image/")) {
-      setError("That file isn't a photo — pick an image instead.");
+      setError("That file isn’t a photo — pick an image instead.");
       return;
     }
     if (picked && picked.size > MAX_COVER_BYTES) {
-      setError("That photo is too large (8MB max) — pick a smaller one.");
+      setError(UPLOAD_COPY.tooBig(8));
       return;
     }
     setFile(picked);
@@ -60,7 +62,7 @@ export function CoverImageDialog({
       }
       const { path: uploaded, error: uploadError } = await uploadMomentFile(user.id, file);
       if (uploadError || !uploaded) {
-        setError(uploadError || "That upload didn't go through — try again.");
+        setError(uploadError || "That upload didn’t go through — try again.");
         setSaving(false);
         return;
       }
@@ -77,6 +79,7 @@ export function CoverImageDialog({
     );
     setSaving(false);
     setFile(null);
+    notify(TOAST.changesSaved);
     onOpenChange(false);
   };
 
@@ -92,7 +95,7 @@ export function CoverImageDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Cover photo</DialogTitle>
-          <DialogDescription>For "{project.title}". Optional — skip anytime.</DialogDescription>
+          <DialogDescription>For “{project.title}”. Optional — skip anytime.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -127,13 +130,13 @@ export function CoverImageDialog({
                 }`}
               >
                 <span className="block font-medium">Latest Moment</span>
-                <span className="block text-muted-foreground">Where it's at now</span>
+                <span className="block text-muted-foreground">Where it’s at now</span>
               </button>
             </div>
           </div>
 
-          <Button variant="coral" className="w-full" disabled={saving} onClick={save}>
-            {saving ? "Saving…" : "Save"}
+          <Button busy={saving} variant="coral" className="w-full" disabled={saving} onClick={save}>
+            Save
           </Button>
 
           {project.coverImagePath && (

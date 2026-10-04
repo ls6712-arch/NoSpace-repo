@@ -156,8 +156,8 @@ export function CreateCornerDialog({
                 >
                   Use “{pendingConfirm.label}”
                 </Button>
-                <Button variant="coral" size="sm" className="flex-1" disabled={saving} onClick={submit}>
-                  {saving ? "Creating…" : "Create anyway"}
+                <Button busy={saving} variant="coral" size="sm" className="flex-1" disabled={saving} onClick={submit}>
+                  Create anyway
                 </Button>
               </div>
             </div>
@@ -180,8 +180,8 @@ export function CreateCornerDialog({
           {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
 
           {!pendingConfirm && (
-            <Button variant="coral" className="w-full" disabled={saving} onClick={submit}>
-              {saving ? "Creating…" : "Create Corner"}
+            <Button busy={saving} variant="coral" className="w-full" disabled={saving} onClick={submit}>
+              Create Corner
             </Button>
           )}
         </div>

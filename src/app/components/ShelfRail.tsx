@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import { useSessionsByHobby, archiveKey } from "./HobbyShelf";
+import { plural } from "../lib/plural";
+import { EmptyState } from "./StateViews";
 
 /** Cycled per spine — the same dark-tuned illustration palette GeneratedArt
  * uses (theme.css's --gen-art-*), not new raw hex. Shared by the bar chart
@@ -39,16 +41,14 @@ export function ShelfRail() {
       <p className="mt-0.5 text-caption text-muted-foreground">Where your Moments get bound into Books.</p>
 
       {sessions.length === 0 ? (
-        <p className="mt-3 text-small text-muted-foreground">
-          Nothing on the Shelf yet. Log a Moment to start one.
-        </p>
+        <EmptyState size="rail" line="Nothing on the Shelf yet." action={{ label: "Log a Moment", to: "/create" }} />
       ) : (
         <>
           <div className="mt-3 flex h-16 items-end gap-2" aria-hidden="true">
             {sessions.map((s, i) => (
               <div
                 key={s.key}
-                title={`${s.label}: ${s.sessions} ${s.sessions === 1 ? "moment" : "moments"}`}
+                title={`${s.label}: ${plural(s.sessions, "Moment")}`}
                 // design-token-ignore: decorative spine
                 className="min-w-0 flex-1 rounded-t-[4px]"
                 style={{
@@ -80,7 +80,7 @@ export function ShelfRail() {
                     </span>
                   </span>
                   <span className="ns-section-kicker shrink-0 text-muted-foreground">
-                    {s.sessions} {s.sessions === 1 ? "MOMENT" : "MOMENTS"}
+                    {plural(s.sessions, "Moment").toUpperCase()}
                   </span>
                 </Link>
               </li>

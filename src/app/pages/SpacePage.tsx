@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { MapPin, Star } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import { useSubmitGuard } from "../lib/useSubmitGuard";
 import { requestOrJoinSpace, cancelJoinRequest, leaveSpace, spaceMomentCount30d, listEventTeasers, type SpaceRow, type SpaceMemberRow } from "../lib/spaces";
 import { capitalizeCornerName } from "../context/CornersContext";
 import { Button } from "../components/ui/button";
@@ -14,6 +15,11 @@ import { SpaceMomentsTab } from "../components/space/SpaceMomentsTab";
 import { SpaceEventsTab } from "../components/space/SpaceEventsTab";
 import { SpacePeopleTab } from "../components/space/SpacePeopleTab";
 import { SpaceManageTab } from "../components/space/SpaceManageTab";
+import { plural } from "../lib/plural";
+import { Time } from "../components/ui/time";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { notify } from "../components/ui/toaster";
+import { TOAST } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
@@ -27,13 +33,6 @@ function initials(name: string) {
  * Closed Space, who can't read space_events directly) both satisfy this. */
 type FeaturedEventLite = { title: string; starts_at: string; timezone: string };
 
-function fmt(iso: string, tz: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: tz });
-  } catch {
-    return new Date(iso).toLocaleString();
-  }
-}
 
 const TABS = ["home", "moments", "events", "people", "manage"] as const;
 
@@ -52,7 +51,9 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const [featuredEventAddress, setFeaturedEventAddress] = useState<string | null>(null);
   const [addMomentOpen, setAddMomentOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionBusy, setActionBusy] = useState(false);
+  // One membership change at a time, held through the refetch so the
+  // button can't re-enable while the old state is still showing.
+  const [actionBusy, runAction] = useSubmitGuard();
   // Bumped whenever a Moment is linked into this Space (from the Add
   // Moment dialog) — SpaceHomeTab depends on it to know when to refetch
   // its own Moments list (and, downstream of that, the checklist's
@@ -190,31 +191,31 @@ export function SpacePage({ space }: { space: SpaceRow }) {
 
   const setTab = (next: string) => setSearchParams((p) => ({ ...Object.fromEntries(p), tab: next }), { replace: true });
 
-  const join = async () => {
-    setActionBusy(true);
-    setActionError(null);
-    const { error } = await requestOrJoinSpace(space.id);
-    setActionBusy(false);
-    if (error) return setActionError(error);
-    await refetchMembership();
-  };
-  const cancelRequest = async () => {
-    setActionBusy(true);
-    setActionError(null);
-    const { error } = await cancelJoinRequest(space.id);
-    setActionBusy(false);
-    if (error) return setActionError(error);
-    await refetchMembership();
-  };
-  const leave = async () => {
-    if (!confirm(`Leave ${space.name}?`)) return;
-    setActionBusy(true);
-    setActionError(null);
-    const { error } = await leaveSpace(space.id);
-    setActionBusy(false);
-    if (error) return setActionError(error);
-    await refetchMembership();
-  };
+  const join = () =>
+    runAction(async () => {
+      setActionError(null);
+      const { error } = await requestOrJoinSpace(space.id);
+      if (error) return setActionError(error);
+      await refetchMembership();
+    });
+  const cancelRequest = () =>
+    runAction(async () => {
+      setActionError(null);
+      const { error } = await cancelJoinRequest(space.id);
+      if (error) return setActionError(error);
+      await refetchMembership();
+    });
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const leave = () => setLeaveOpen(true);
+  const confirmLeave = () =>
+    runAction(async () => {
+      setActionError(null);
+      const { error } = await leaveSpace(space.id);
+      setLeaveOpen(false);
+      if (error) return setActionError(error);
+      notify(TOAST.leftSpace(space.name));
+      await refetchMembership();
+    });
 
   const primaryCorner = corners.find((c) => c.isPrimary) ?? corners[0];
 
@@ -230,12 +231,12 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       <div className="mx-auto w-full max-w-3xl px-4 pt-5">
         {space.status === "read_only" && (
           <div className="mb-4 rounded-card border border-clay/30 bg-clay-soft px-4 py-3 text-small">
-            This Space is read-only right now — no new members, requests, or events until it's reactivated.
+            This Space is read-only right now — no new members, requests, or events until it’s reactivated.
           </div>
         )}
         {space.status === "deleted" && (
           <div className="mb-4 rounded-card border border-destructive/30 bg-destructive/5 px-4 py-3 text-small">
-            This Space has been deleted. You're seeing it as an admin.
+            This Space has been deleted. You’re seeing it as an admin.
           </div>
         )}
 
@@ -245,7 +246,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
               Space{primaryCorner ? ` · ${primaryCorner.name}` : ""}
             </p>
             <h1
-              className="mt-1 text-display leading-[1.05]"
+              className="mt-1 break-words text-display"
               style={{ fontFamily: "var(--font-display)" }}
             >
               {space.name}
@@ -289,8 +290,8 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           )}
         </div>
 
-        <p className="mt-2 text-caption text-muted-foreground">
-          {momentCount ?? 0} Moment{momentCount === 1 ? "" : "s"} this month
+        <p className="mt-2 text-caption text-muted-foreground tabular-nums">
+          {plural(momentCount ?? 0, "Moment")} this month
         </p>
 
         {spaceAddress && (
@@ -308,7 +309,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             <Star className="size-4 shrink-0 fill-current text-clay" />
             <div className="min-w-0">
               <p className="truncate text-small font-medium" title={featuredEvent.title}>{featuredEvent.title}</p>
-              <p className="text-caption text-muted-foreground">{fmt(featuredEvent.starts_at, featuredEvent.timezone)}</p>
+              <p className="text-caption text-muted-foreground"><Time value={featuredEvent.starts_at} format="datetime" timeZone={featuredEvent.timezone} /></p>
               {featuredEventAddress && (
                 <p className="mt-0.5 flex items-center gap-1 text-caption text-muted-foreground">
                   <MapPin className="size-3" />
@@ -410,6 +411,16 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         onOpenChange={setAddMomentOpen}
         onAdded={handleMomentAdded}
       />
+
+      <ConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        title={`Leave ${space.name}?`}
+        confirmLabel="Leave"
+        onConfirm={async () => {
+          await confirmLeave();
+        }}
+      />
     </div>
   );
 }
@@ -431,7 +442,7 @@ function RequestToJoinButton({
   const [message, setMessage] = useState("");
   const [posts, setPosts] = useState<{ id: number; caption: string }[]>([]);
   const [postId, setPostId] = useState<number | undefined>(undefined);
-  const [busy, setBusy] = useState(false);
+  const [busy, runSubmit] = useSubmitGuard();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -446,15 +457,14 @@ function RequestToJoinButton({
       .then(({ data }) => setPosts(data ?? []));
   }, [open, user]);
 
-  const submit = async () => {
-    setBusy(true);
-    setError(null);
-    const { error } = await requestOrJoinSpace(spaceId, message.trim() || undefined, postId);
-    setBusy(false);
-    if (error) return setError(error);
-    setOpen(false);
-    onDone();
-  };
+  const submit = () =>
+    runSubmit(async () => {
+      setError(null);
+      const { error } = await requestOrJoinSpace(spaceId, message.trim() || undefined, postId);
+      if (error) return setError(error);
+      await onDone();
+      setOpen(false);
+    });
 
   if (!open) {
     return (
@@ -488,7 +498,7 @@ function RequestToJoinButton({
       )}
       <div className="mt-2 flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
-        <Button variant="coral" size="sm" onClick={submit} disabled={busy}>{busy ? "Sending…" : "Send request"}</Button>
+        <Button busy={busy} variant="coral" size="sm" onClick={submit} disabled={busy}>Send request</Button>
       </div>
     </div>
   );

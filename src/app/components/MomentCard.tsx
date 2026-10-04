@@ -36,6 +36,11 @@ import {
   DialogDescription,
 } from "./ui/dialog";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { plural } from "../lib/plural";
+import { Time } from "./ui/time";
+import { ERROR_LINE } from "../lib/stateCopy";
+import { notify } from "./ui/toaster";
+import { TOAST } from "../lib/stateCopy";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
 
@@ -144,7 +149,7 @@ function VisibilityDialog({
     });
     setSaving(false);
     if (!ok) {
-      setError("Couldn't save that. Try again in a moment.");
+      setError(ERROR_LINE);
       return;
     }
     onOpenChange(false);
@@ -174,8 +179,8 @@ function VisibilityDialog({
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button variant="coral" size="sm" onClick={save} disabled={saving}>
-            {saving ? "Saving…" : "Save"}
+          <Button busy={saving} variant="coral" size="sm" onClick={save} disabled={saving}>
+            Save
           </Button>
         </div>
       </DialogContent>
@@ -197,15 +202,11 @@ export function BookmarkOverlay({
   tone?: string;
 }) {
   const saved = useJournalSlice((s) => s.saved.includes(Number(postId)));
-  const [justAdded, setJustAdded] = useState(false);
 
   const onClick = () => {
     const wasSaved = saved;
     toggleSaved(Number(postId));
-    if (!wasSaved) {
-      setJustAdded(true);
-      window.setTimeout(() => setJustAdded(false), 2200);
-    }
+    if (!wasSaved) notify(TOAST.bookmarked);
   };
 
   return (
@@ -225,21 +226,13 @@ export function BookmarkOverlay({
           aria-hidden="true"
         />
       </button>
-      {justAdded && (
-        <span
-          role="status"
-          className="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded-control bg-[var(--void)] px-2.5 py-1 text-caption text-[var(--offwhite)] shadow-overlay animate-in duration-base fade-in"
-        >
-          Saved
-        </span>
-      )}
     </div>
   );
 }
 
 
 const ICON_BTN =
-  "flex h-11 shrink-0 min-w-11 items-center justify-center gap-1 rounded-control px-2 text-small transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
+  "flex h-11 shrink-0 min-w-11 items-center justify-center gap-1 rounded-control px-2 text-small transition-[color,background-color,scale] active:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
 
 /**
  * The one reaction row — used by every MomentCard and by MomentDetail, so
@@ -269,6 +262,13 @@ export function MomentActions({
   const thoughts = mine ? (ownCounts[post.id]?.thoughts ?? 0) : 0;
   const loved = myReactions.includes("love");
   const inPressed = myReactions.includes("in");
+  // Which reaction was just turned on, for its one quiet press (.ns-react).
+  // Only on a tap, never on load, and never when turning one off.
+  const [justPressed, setJustPressed] = useState<"love" | "in" | null>(null);
+  const press = (kind: "love" | "in", wasOn: boolean) => {
+    setJustPressed(wasOn ? null : kind);
+    toggle(kind);
+  };
 
   // Zero shows as the bare icon, not "0".
   const Count = ({ n }: { n: number }) =>
@@ -298,10 +298,16 @@ export function MomentActions({
             aria-pressed={loved}
             aria-label={`Love this, ${love}${loved ? ", pressed" : ""}`}
             title="Love this"
-            onClick={() => toggle("love")}
+            onClick={() => press("love", loved)}
             className={`${ICON_BTN} hover:bg-surface-muted ${loved ? "text-[var(--coral-deep)]" : "text-foreground"}`}
           >
-            <Heart className="size-[18px] shrink-0" strokeWidth={1.9} fill={loved ? "currentColor" : "none"} aria-hidden="true" />
+            <Heart
+              className={`size-[18px] shrink-0 ${justPressed === "love" ? "ns-react" : ""}`}
+              onAnimationEnd={() => setJustPressed(null)}
+              strokeWidth={1.9}
+              fill={loved ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
             <Count n={love} />
           </button>
           <button
@@ -309,10 +315,16 @@ export function MomentActions({
             aria-pressed={inPressed}
             aria-label={`Count me in, ${inCount}${inPressed ? ", pressed" : ""}`}
             title="Count me in"
-            onClick={() => toggle("in")}
+            onClick={() => press("in", inPressed)}
             className={`${ICON_BTN} hover:bg-surface-muted ${inPressed ? "[color:var(--moment-tile-moss)]" : "text-foreground"}`}
           >
-            <Hand className="size-[18px] shrink-0" strokeWidth={1.9} fill={inPressed ? "currentColor" : "none"} aria-hidden="true" />
+            <Hand
+              className={`size-[18px] shrink-0 ${justPressed === "in" ? "ns-react" : ""}`}
+              onAnimationEnd={() => setJustPressed(null)}
+              strokeWidth={1.9}
+              fill={inPressed ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
             <Count n={inCount} />
           </button>
           {onThoughts && (
@@ -386,10 +398,6 @@ export function MomentCard({
   const cornerLine = [corner, pursuitTitle].filter(Boolean).join(" · ");
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   const onlyYou = isOnlyYou(post);
-  const timeLabel = new Date(post.createdAt).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
 
   return (
     <article className="flex min-w-0 flex-col">
@@ -453,7 +461,7 @@ export function MomentCard({
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
               {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
               <span className="hidden sm:inline">{visibilityWord(post)} · </span>
-              {timeLabel}
+              <Time value={post.createdAt} />
             </span>
           </div>
         ) : (
@@ -486,13 +494,7 @@ export function MomentCard({
           <div className="mt-3 rounded-card border border-border bg-surface px-3 py-2.5">
             <div className="flex items-center gap-1.5 text-caption">
               <CalendarDays className="size-3.5 shrink-0 text-foreground" />
-              {new Date(post.startsAt!).toLocaleString(undefined, {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}
+              <Time value={post.startsAt!} format="datetime" />
             </div>
             {activityPlace && (
               <div className="mt-1 flex items-center gap-1.5 text-caption text-muted-foreground">
@@ -501,7 +503,7 @@ export function MomentCard({
               </div>
             )}
             <div className="mt-1.5 text-caption text-muted-foreground">
-              {goingCount} {goingCount === 1 ? "person" : "people"} going
+              {plural(goingCount, "person", "people")} going
             </div>
           </div>
         )}

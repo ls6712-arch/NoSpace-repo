@@ -7,6 +7,7 @@ import { builtInSpace, hobbies, isBuiltInSpace, type Hobby } from "../data/hobbi
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { plural } from "../lib/plural";
 
 /**
  * Creating, shaping, hiding and deleting Spaces.
@@ -35,10 +36,6 @@ interface Confirm {
   plan: DeletePlan;
   /** True when content has to be moved before the delete. */
   move: boolean;
-}
-
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 export function AdminSpaces() {
@@ -152,7 +149,7 @@ export function AdminSpaces() {
     const res = await spaceUsage(h.slug);
     setBusy(null);
     if (res.error || !res.usage) {
-      setError(res.error ?? "Couldn't check what's in this Space.");
+      setError(res.error ?? "Couldn’t check what’s in this Space.");
       return;
     }
     setPlan({ slug: h.slug, name: h.name, usage: res.usage, moveTo: "" });
@@ -178,7 +175,7 @@ export function AdminSpaces() {
       setCopied(slug);
       setTimeout(() => setCopied((c) => (c === slug ? null : c)), 1800);
     } catch {
-      setError(`Couldn't copy. The link is ${url}`);
+      setError(`Couldn’t copy. The link is ${url}`);
     }
   };
 
@@ -192,7 +189,7 @@ export function AdminSpaces() {
           Spaces
         </h1>
         <p className="mb-8 mt-2 text-small text-muted-foreground">
-          Create a Space, reword one, or hide what you don't want people to see. Hiding never
+          Create a Space, reword one, or hide what you don’t want people to see. Hiding never
           touches a post. Deleting is only allowed once nothing is left in a Space.
         </p>
 
@@ -410,8 +407,8 @@ export function AdminSpaces() {
           confirm?.move
             ? `Every Moment and Pursuit in this Space moves to ${
                 spaces.find((s) => s.slug === confirm.plan.moveTo)?.name ?? "the other Space"
-              }, then this Space is deleted. This can't be undone.`
-            : "This Space is empty. Deleting it can't be undone."
+              }, then this Space is deleted. This can’t be undone.`
+            : "This Space is empty. Deleting it can’t be undone."
         }
         confirmLabel={confirm?.move ? "Move and delete" : "Delete"}
         onConfirm={() => (confirm ? performDelete(confirm) : undefined)}

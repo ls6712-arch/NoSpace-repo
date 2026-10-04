@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
+import { formatDate } from "../lib/dates";
 
 const SHAPES: { value: GoalShape; title: string; example: string; icon: typeof Hash }[] = [
   { value: "number", title: "A number", example: "Finish 10 pieces, run 3 times a week", icon: Hash },
@@ -21,7 +22,7 @@ function templateLabel(shape: GoalShape, targetNumber: string, unit: string, tar
   }
   if (shape === "date" && targetDate) {
     const d = new Date(localDateMs(targetDate) ?? targetDate);
-    return `Ready by ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+    return `Ready by ${formatDate(d)}`;
   }
   return "";
 }
@@ -142,7 +143,7 @@ export function GoalDialog({
             {project.goal ? "Change your goal" : "Set a goal"}
           </DialogTitle>
           <DialogDescription className="text-small text-muted-foreground">
-            For "{project.title}." Optional — skip anytime.
+            For “{project.title}.” Optional — skip anytime.
           </DialogDescription>
         </DialogHeader>
 
@@ -238,7 +239,7 @@ export function GoalDialog({
                   <span className="text-left">
                     <span className="block text-small">Also aim for a date</span>
                     <span className="block text-caption text-muted-foreground">
-                      Shown next to your count, e.g. "Sep 23"
+                      Shown next to your count, e.g. “Sep 23”
                     </span>
                   </span>
                   <span
@@ -278,7 +279,7 @@ export function GoalDialog({
 
           {shape === "feeling" && (
             <div>
-              <Label htmlFor="goal-feeling" className="mb-1.5 block text-caption">What does "there" look like?</Label>
+              <Label htmlFor="goal-feeling" className="mb-1.5 block text-caption">What does “there” look like?</Label>
               <Input
                 id="goal-feeling"
                 value={feeling}
@@ -291,7 +292,7 @@ export function GoalDialog({
 
           <div>
             <Label htmlFor="goal-label" className="mb-1.5 block text-caption">
-              How it'll read on your Pursuit
+              How it’ll read on your Pursuit
             </Label>
             <Input
               id="goal-label"
@@ -308,7 +309,7 @@ export function GoalDialog({
             {project.goal ? "Save goal" : "Set goal"}
           </Button>
           <p className="text-center text-caption text-muted-foreground">
-            Just what you said you're going for. Progress shows on the Pursuit.
+            Just what you said you’re going for. Progress shows on the Pursuit.
           </p>
         </div>
       </DialogContent>

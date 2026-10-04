@@ -75,8 +75,8 @@ export function IsThisPartOfSomething({ post, onDone }: { post: Post; onDone: ()
         <Button variant="outline" onClick={notNow} disabled={creating}>
           Not now
         </Button>
-        <Button variant="coral" onClick={next} disabled={!name.trim() || creating}>
-          {creating ? "Adding…" : "Next"}
+        <Button busy={creating} variant="coral" onClick={next} disabled={!name.trim() || creating}>
+          Next
         </Button>
       </div>
     </div>

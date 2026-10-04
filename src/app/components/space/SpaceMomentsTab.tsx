@@ -6,6 +6,9 @@ import { MomentCard, MOMENT_GRID } from "../MomentCard";
 import { MomentDetail } from "../MomentDetail";
 import type { SpaceRow } from "../../lib/spaces";
 import type { Post } from "../../data/posts";
+import { Loadable } from "../ui/skeleton";
+import { MomentGridSkeleton } from "../Skeletons";
+import { EmptyState } from "../StateViews";
 
 export function SpaceMomentsTab({ space, isActiveMember }: { space: SpaceRow; isActiveMember: boolean }) {
   const { user } = useAuth();
@@ -43,17 +46,26 @@ export function SpaceMomentsTab({ space, isActiveMember }: { space: SpaceRow; is
     };
   }, [space.id]);
 
-  if (posts === "loading") return <div className="min-h-[30vh]" />;
+  if (posts === "loading") {
+    return (
+      <Loadable loading className="py-6" skeleton={<MomentGridSkeleton count={6} />}>
+        {null}
+      </Loadable>
+    );
+  }
 
   if (posts.length === 0) {
+    if (!isActiveMember && space.access === "closed") {
+      return <EmptyState size="inline" className="py-16" line="Moments here are for members." hint="Request to join to see them." />;
+    }
     return (
-      <div className="py-16 text-center text-small text-muted-foreground">
-        {isActiveMember
-          ? "No Moments here yet. Be the first."
-          : space.access === "closed"
-            ? "Moments here are for members. Request to join to see them."
-            : "No Moments here yet."}
-      </div>
+      <EmptyState
+        size="inline"
+        className="py-16"
+        line="No Moments here yet."
+        hint={isActiveMember ? "Be the first." : undefined}
+        action={isActiveMember ? { label: "Log a Moment", to: `/create?space=${space.id}` } : { label: "Browse Spaces", to: "/discover?tab=spaces" }}
+      />
     );
   }
 

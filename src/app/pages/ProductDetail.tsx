@@ -99,7 +99,7 @@ export function ProductDetail() {
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
-                      className={`px-4 py-2 rounded-control border text-small transition-all ${
+                      className={`px-4 py-2 rounded-control border text-small transition-colors ${
                         selectedColor === color
                           ? "border-transparent text-on-brand [background-image:var(--gradient-brand)]"
                           : "border-border hover:border-foreground/30"
@@ -120,7 +120,7 @@ export function ProductDetail() {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`px-4 py-2 rounded-control border text-small transition-all ${
+                      className={`px-4 py-2 rounded-control border text-small transition-colors ${
                         selectedSize === size
                           ? "border-transparent text-on-brand [background-image:var(--gradient-brand)]"
                           : "border-border hover:border-foreground/30"
@@ -138,13 +138,13 @@ export function ProductDetail() {
               size="lg"
               className="w-full mb-2 cursor-not-allowed opacity-70"
               disabled
-              title="Buying isn't live yet — the marketplace is coming soon."
+              title="Buying isn’t live yet — the marketplace is coming soon."
             >
               <Clock className="size-4" />
               Coming soon
             </Button>
             <p className="text-center text-caption text-muted-foreground">
-              Buying isn't live yet — the marketplace is coming soon.
+              Buying isn’t live yet — the marketplace is coming soon.
             </p>
           </div>
         </div>
@@ -160,7 +160,7 @@ export function ProductDetail() {
                       <GeneratedArt
                         hobbySlug={item.hobbySlug}
                         seed={item.id}
-                        className="w-full h-full transition-transform duration-fast group-hover:scale-110"
+                        className="w-full h-full transition-transform duration-base group-hover:scale-110"
                       />
                     </div>
                     <div className="p-4">

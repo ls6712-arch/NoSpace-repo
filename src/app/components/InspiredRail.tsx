@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { fetchYouInspired, InspiredEntry } from "../lib/youInspired";
 import { subHobbyLabel } from "../data/hobbies";
+import { plural } from "../lib/plural";
+import { EmptyState } from "./StateViews";
 
 function snippet(caption: string): string {
   const trimmed = caption.trim();
@@ -10,7 +12,7 @@ function snippet(caption: string): string {
 
 function clause(entry: InspiredEntry): string {
   const activity = (entry.subHobby ? subHobbyLabel(entry.subHobby) : undefined) ?? entry.pursuitTitle;
-  return `${activity.toLowerCase()} after your "${snippet(entry.inspiringPostCaption)}"`;
+  return `${activity.toLowerCase()} after your “${snippet(entry.inspiringPostCaption)}"`;
 }
 
 function joinClauses(clauses: string[]): string {
@@ -59,10 +61,10 @@ export function InspiredRail() {
       </h2>
 
       {entries.length === 0 ? (
-        <p className="mt-3 text-small text-muted-foreground">Nothing yet this month.</p>
+        <EmptyState size="rail" line="Nothing yet this month." action={{ label: "Start a Pursuit", to: "/pursuits/new" }} />
       ) : (
         <p className="mt-3 text-small leading-relaxed text-foreground">
-          This month, {entries.length} {entries.length === 1 ? "person" : "people"} started a
+          This month, {plural(entries.length, "person", "people")} started a
           Pursuit not long after seeing yours — {joinClauses(entries.map(clause))}.
         </p>
       )}

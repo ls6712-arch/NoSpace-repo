@@ -633,6 +633,10 @@
      hover/press token instead of Tailwind's own 150ms + easing. */
   --default-transition-duration: var(--duration-fast);
   --default-transition-timing-function: var(--ease-standard);
+  /* Tailwind's own ease-* utilities resolve to the app's curve. */
+  --ease-in: var(--ease-standard);
+  --ease-out: var(--ease-standard);
+  --ease-in-out: var(--ease-standard);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -724,6 +728,17 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* The two motion durations as utilities. Also set --tw-duration so
+   tw-animate-css entrances (animate-in / animate-out) use them. */
+@utility duration-fast {
+  --tw-duration: var(--duration-fast);
+  transition-duration: var(--duration-fast);
+}
+@utility duration-base {
+  --tw-duration: var(--duration-base);
+  transition-duration: var(--duration-base);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -742,12 +757,100 @@
     font-family: var(--font-body);
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     /* In-flow content clears a landscape notch; fixed bars add their own
        --safe-* padding. */
     padding-left: var(--safe-left);
     padding-right: var(--safe-right);
+    /* Crisper text on macOS/iOS, and Inter's contextual alternates (an
+       arrow from "->", hyphens and colons that sit right between capitals
+       and figures) plus kerning everywhere. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "calt" 1;
+  }
+
+  /* Numbers that change or line up — counts, dates in lists, timers — use
+     Inter's tabular figures so they don't jiggle as they update. Tailwind's
+     `tabular-nums` sets font-variant-numeric; the feature is repeated here
+     because a component that sets its own font-feature-settings would
+     otherwise drop it. */
+  time,
+  .tabular-nums,
+  [data-tabular] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "kern" 1, "calt" 1, "tnum" 1;
+  }
+
+  /* Headings even out their lines; paragraphs avoid leaving one word alone
+     on the last line. */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+
+  p, li, dd, blockquote, figcaption {
+    text-wrap: pretty;
+  }
+
+  /* ── Interaction states ───────────────────────────────────────────────
+     Every tappable element gets hover, pressed, focus and disabled states
+     by default (focus rings are further down, outside the layers). These
+     sit in the base layer, so any component's own `active:` / `hover:` /
+     `disabled:` utilities still win. */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="switch"],
+         [role="checkbox"], [role="radio"], summary, select, label[for], a[href]) {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Controls aren't text: a long-press or double tap shouldn't select
+     their label. Links stay selectable (people copy names and titles). */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Pressed: buttons shrink a touch, links dim a touch. `scale` composes
+     with any transform or translate the element already has. */
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary) {
+    transition-property: color, background-color, border-color, opacity, box-shadow, scale, filter;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-standard);
+  }
+  :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary):active:not(:disabled):not([aria-disabled="true"]) {
+    scale: 0.98;
+  }
+  :where(a[href]):active {
+    opacity: 0.75;
+  }
+
+  /* Disabled: dimmed, not clickable-looking, and no pressed state. */
+  :where(button, [role="button"], [role="tab"], input, select, textarea):disabled,
+  :where([aria-disabled="true"]) {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Love this / Count me in: one quiet press when turned on. The icon dips
+     and settles back; it never grows past its own size, so no bounce. */
+  .ns-react {
+    animation: ns-react var(--duration-base) var(--ease-standard);
+  }
+  @keyframes ns-react {
+    0% { scale: 1; }
+    40% { scale: 0.82; }
+    100% { scale: 1; }
+  }
+
+  /* A truncated name or title someone tapped open (lib/truncation.ts). */
+  .ns-truncate-open {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
   }
 
   /* Paper-grain — a faint physical texture over the whole app, not a
@@ -781,8 +884,8 @@
   /* design-token-ignore: theme cross-fade, 400ms by the redesign brief; ThemeContext's 420ms timer pairs with it */
   .theme-transition,
   .theme-transition * {
-    transition: background-color 400ms ease-out, color 400ms ease-out, /* design-token-ignore: theme cross-fade, the one 400ms transition */
-      border-color 400ms ease-out, fill 400ms ease-out, stroke 400ms ease-out !important; /* design-token-ignore: theme cross-fade, the one 400ms transition */
+    transition: background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard), fill var(--duration-base) var(--ease-standard), stroke var(--duration-base) var(--ease-standard) !important;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1019,7 +1122,7 @@
     border: 1px solid var(--hairline);
     background: var(--surface-elevated);
     box-shadow: var(--shadow-card);
-    transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
   }
 
   .ns-value-card:focus-within {
@@ -1037,7 +1140,7 @@
   }
 
   .ns-value-card-icon {
-    transition: transform var(--duration-fast) var(--ease-standard);
+    transition: transform var(--duration-base) var(--ease-standard);
   }
 
   .ns-value-card:focus-within .ns-value-card-icon {
@@ -1143,7 +1246,7 @@
     border: 1px solid var(--hairline);
     background: var(--surface-elevated);
     box-shadow: var(--shadow-card);
-    transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
   }
 
   .ns-world-card:focus-within {
@@ -1195,7 +1298,7 @@
 
   .ns-space-card {
     background: var(--surface-elevated);
-    transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
   }
 
   .group:focus-visible .ns-space-card {
@@ -1299,7 +1402,13 @@
     background: color-mix(in srgb, var(--void) 45%, transparent);
   }
 
-  
+  .ns-discover-space-card {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-card);
+    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
+  }
 
   
 
@@ -1309,7 +1418,15 @@
 
   
 
-  
+  .ns-discover-open {
+    flex-shrink: 0;
+    color: var(--violet-electric-bright);
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: transform var(--duration-fast) var(--ease-standard);
+  }
 
   
 
@@ -1738,9 +1855,15 @@ summary:focus-visible,
     transform: none !important;
     transition: none !important;
   }
+  /* Everything else too: every transition and every animation, including
+     Tailwind/tw-animate entrances, dialogs and sheets, the press feedback
+     and anything added later. They still run (so animationend fires and
+     end states apply), just instantly and once. */
   *, *::before, *::after {
     transition-duration: .01ms !important; /* design-token-ignore: reduced-motion floor, effectively instant */
+    transition-delay: 0s !important;
     animation-duration: .01ms !important; /* design-token-ignore: reduced-motion floor, effectively instant */
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }

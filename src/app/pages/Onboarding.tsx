@@ -12,6 +12,8 @@ import { useCorners, cornerFollowKey } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
 import { fetchInvitesLeft } from "../lib/invites";
 import { Button } from "../components/ui/button";
+import { ENTER } from "../lib/motion";
+import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 
 /** Every chip carried across the wizard shares this layoutId prefix, so
  * Motion can visibly travel a tag from step 1's field into step 2's quiet
@@ -44,7 +46,7 @@ const COVER_TEXTURES = [
  * step transition, the tag chips traveling forward, and the cover's own
  * pieces settling into place in step 2. Nowhere else gets motion. */
 // design-token-ignore: spring, not a fixed duration; every use below is switched off by reduceMotion
-const SPRING = { type: "spring" as const, stiffness: 260, damping: 28 };
+const SPRING = ENTER;
 
 /**
  * Shown once, right after signup — see sql/onboarding-v2.sql and Root.tsx's
@@ -160,7 +162,7 @@ export function Onboarding() {
         cover_tagline: finishTagline.trim() || null,
       });
       if (error) {
-        setFinishError("Couldn't finish setting up. Try again in a moment.");
+        setFinishError(ERROR_LINE);
         return;
       }
       // onboarding_completed is saved now, so the invite card below is
@@ -176,7 +178,7 @@ export function Onboarding() {
       }
       navigate(redirectTo, { replace: true });
     } catch {
-      setFinishError("Couldn't reach the server. Try again in a moment.");
+      setFinishError(OFFLINE_LINE);
     } finally {
       setFinishing(false);
     }
@@ -221,7 +223,7 @@ export function Onboarding() {
                   What are you into?
                 </h1>
                 <p className="mb-6 text-small text-[var(--ink-soft)]">
-                  Add a few tags — anything you like, however specific. There's no fixed list and no
+                  Add a few tags — anything you like, however specific. There’s no fixed list and no
                   wrong number.
                 </p>
 
@@ -353,7 +355,7 @@ function CoverStep({
           </motion.div>
 
           <motion.p {...settle(0.05)} className="mb-1 text-caption uppercase tracking-[0.16em] text-on-media/90">
-            Let's set the scene
+            Let’s set the scene
           </motion.p>
 
           <motion.div {...settle(0.1)}>
@@ -371,7 +373,7 @@ function CoverStep({
             <input
               value={tagline}
               onChange={(e) => onTaglineChange(e.target.value)}
-              placeholder="What's this about? (optional)"
+              placeholder="What’s this about? (optional)"
               maxLength={160}
               className={`mt-2 w-full max-w-md border-b border-dashed bg-transparent text-body italic text-on-media outline-none placeholder:text-on-media/60 focus:border-on-media/70 sm:text-lead ${
                 tagline ? "border-transparent" : "border-on-media/40"
@@ -421,8 +423,8 @@ function CoverStep({
           <Button variant="outline" size="lg" disabled={finishing} onClick={onSkip}>
             Start with a blank page
           </Button>
-          <Button variant="coral" size="lg" disabled={finishing} onClick={onContinue}>
-            {finishing ? "Finishing…" : "Continue"}
+          <Button busy={finishing} variant="coral" size="lg" disabled={finishing} onClick={onContinue}>
+            Continue
           </Button>
         </div>
       </div>

@@ -61,7 +61,7 @@ export function PursuitsRail({
           Start one
         </button>
       </div>
-      <p className="mt-0.5 text-caption text-muted-foreground">The ones you haven't set down yet.</p>
+      <p className="mt-0.5 text-caption text-muted-foreground">The ones you haven’t set down yet.</p>
       <div className="mt-3">
         <PursuitInvitesCard />
       </div>
@@ -98,7 +98,7 @@ export function PursuitsRail({
           ) : (
             due.length === 0 && (
               <p className="mt-3 text-small text-muted-foreground">
-                Everything's resting or finished. Pick one back up, or start something new.
+                Everything’s resting or finished. Pick one back up, or start something new.
               </p>
             )
           )}

@@ -11,6 +11,8 @@ import { clearLocalData } from "../lib/localData";
 import { restoreOwnPursuits } from "../lib/pursuitsRemote";
 import { takeSavedInviteCode } from "../lib/inviteCode";
 import { claimInvite } from "../lib/invites";
+import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
+import { friendlyError } from "../lib/friendlyError";
 
 export interface Profile {
   id: string;
@@ -242,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp: AuthContextType["signUp"] = async (email, password, displayName) => {
-    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -300,13 +302,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn: AuthContextType["signIn"] = async (email, password) => {
-    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? error.message : null };
   };
 
   const resendConfirmation: AuthContextType["resendConfirmation"] = async (email) => {
-    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     try {
       const { error } = await supabase.auth.resend({
         type: "signup",
@@ -317,12 +319,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       return { error: error ? error.message : null };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
   const signInWithGoogle: AuthContextType["signInWithGoogle"] = async () => {
-    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -338,26 +340,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * layer, so this can't be used to find out which addresses have accounts.
    */
   const resetPassword: AuthContextType["resetPassword"] = async (email) => {
-    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}${window.location.pathname}#/you`,
       });
       return { error: error ? error.message : null };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
   /** Changing your own password, from Settings, while signed in. */
   const updatePassword: AuthContextType["updatePassword"] = async (next) => {
-    if (!supabase) return { error: "Accounts aren't set up for this build yet." };
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     if (next.length < 10) return { error: "Your password needs at least 10 characters." };
     try {
       const { error } = await supabase.auth.updateUser({ password: next });
       return { error: error ? error.message : null };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
@@ -382,7 +384,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut({ scope: "global" });
       return { error: error ? error.message : null };
     } catch {
-      return { error: "Couldn't reach the server. Try again in a moment." };
+      return { error: OFFLINE_LINE };
     }
   };
 
@@ -406,11 +408,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("profiles")
         .update(fields)
         .eq("id", session.user.id);
-      if (error) return { error: error.message };
+      if (error) {
+        console.warn("[AuthContext] profile update failed:", error);
+        return { error: friendlyError(error) };
+      }
       await loadProfile(session.user.id);
       return { error: null };
     } catch {
-      return { error: "Couldn't save. Try again in a moment." };
+      return { error: ERROR_LINE };
     }
   };
 

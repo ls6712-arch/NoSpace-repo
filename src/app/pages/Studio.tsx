@@ -11,6 +11,9 @@ import { PostMedia } from "../components/PostMedia";
 import { CoverEditor } from "../components/CoverEditor";
 import { Button } from "../components/ui/button";
 import { APP_NAME } from "../config";
+import { formatMonth } from "../lib/dates";
+import { plural } from "../lib/plural";
+import { ENTER } from "../lib/motion";
 
 type Grouping = "chronological" | "tag";
 
@@ -227,10 +230,7 @@ export function Studio() {
   const coverTagline = loaded.coverTagline || loaded.bio;
   const sinceAt = loaded.posts.length ? Math.min(...loaded.posts.map((p) => p.createdAt)) : null;
   const sinceLabel = sinceAt
-    ? new Date(sinceAt).toLocaleDateString(undefined, {
-        month: "long",
-        year: new Date(sinceAt).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
-      })
+    ? formatMonth(sinceAt)
     : null;
 
   if (!opened) {
@@ -276,7 +276,7 @@ export function Studio() {
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
           <p className="mb-2 text-caption uppercase tracking-[0.16em] text-on-media/90">
-            {loaded.posts.length} {loaded.posts.length === 1 ? "moment" : "moments"}
+            {plural(loaded.posts.length, "Moment")}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
           <h1
@@ -372,7 +372,7 @@ export function Studio() {
               animate={{ rotateY: 0, opacity: 1 }}
               exit={reduceMotion ? undefined : { rotateY: direction > 0 ? -70 : 70, opacity: 0 }}
               // design-token-ignore: spring, not a fixed duration; initial/exit are off under reduced motion
-              transition={{ type: "spring", stiffness: 260, damping: 32 }}
+              transition={ENTER}
               style={{
                 transformStyle: "preserve-3d",
                 transformOrigin: direction > 0 ? "left center" : "right center",

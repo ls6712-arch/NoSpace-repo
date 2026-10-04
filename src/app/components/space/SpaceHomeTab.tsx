@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { MapPin, Star, ArrowRight, X, Pin, PinOff } from "lucide-react";
+import { MapPin, Star, ArrowRight, X, Pin, PinOff, Check } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { useJournal } from "../../lib/journal";
@@ -12,6 +12,11 @@ import { MomentDetail } from "../MomentDetail";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import type { Post } from "../../data/posts";
+import { formatTime, formatWeekday } from "../../lib/dates";
+import { Loadable } from "../ui/skeleton";
+import { MomentCardSkeleton } from "../Skeletons";
+import { EmptyState, ErrorNotice, InlineError } from "../StateViews";
+import { friendlyError } from "../../lib/friendlyError";
 import { ImageWithFallback } from "../ImageWithFallback";
 
 type HostLite = { id: string; name: string; avatarUrl?: string };
@@ -29,15 +34,11 @@ function initials(name: string) {
 }
 
 function fmtTime(iso: string, tz: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: tz });
-  } catch {
-    return new Date(iso).toLocaleString();
-  }
+  return `${formatWeekday(iso, "short", tz)} ${formatTime(iso, tz)}`;
 }
 
 function fmtDay(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { weekday: "short" });
+  return formatWeekday(iso, "short");
 }
 
 function hoursUntil(iso: string) {
@@ -102,6 +103,8 @@ export function SpaceHomeTab({
   const [rsvpBusy, setRsvpBusy] = useState(false);
 
   const [moments, setMoments] = useState<SpaceMoment[] | "loading">("loading");
+  const [momentsError, setMomentsError] = useState(false);
+  const [momentsAttempt, setMomentsAttempt] = useState(0);
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [pinBusyId, setPinBusyId] = useState<number | null>(null);
   const [pinError, setPinError] = useState<string | null>(null);
@@ -228,7 +231,8 @@ export function SpaceHomeTab({
       // ones), not a moderation queue, so a pending Moment only ever
       // renders here for its own author (labelled), never for a host
       // looking at someone else's — that review happens on Manage.
-      const { data } = await supabase
+      setMomentsError(false);
+      const { data, error } = await supabase
         .from("space_moments")
         .select("added_at, featured, status, posts(*)")
         .eq("space_id", space.id)
@@ -236,6 +240,12 @@ export function SpaceHomeTab({
         .order("added_at", { ascending: false })
         .limit(15);
       if (cancelled) return;
+      if (error) {
+        console.warn("[SpaceHomeTab] Table load failed:", error);
+        setMomentsError(true);
+        setMoments((prev) => (prev === "loading" ? [] : prev));
+        return;
+      }
       const rows = (data ?? []).filter((r: any) => r.posts);
       const userIds = [...new Set(rows.map((r: any) => r.posts.user_id as string))];
       const { data: profilesData } = userIds.length
@@ -259,7 +269,7 @@ export function SpaceHomeTab({
     return () => {
       cancelled = true;
     };
-  }, [space.id, user?.id, momentsRefreshKey]);
+  }, [space.id, user?.id, momentsRefreshKey, momentsAttempt]);
 
   useEffect(() => {
     let cancelled = false;
@@ -389,7 +399,8 @@ export function SpaceHomeTab({
       .eq("post_id", post.id);
     setPinBusyId(null);
     if (error) {
-      setPinError(error.message || "Couldn't update that Moment.");
+      console.warn("[SpaceHomeTab] host pick update failed:", error);
+      setPinError(friendlyError(error));
       return;
     }
     setMoments((prev) =>
@@ -402,9 +413,9 @@ export function SpaceHomeTab({
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
         <div className="-mx-4 rounded-card bg-bark px-5 py-5 text-on-bark sm:mx-0">
-          <p className="text-caption uppercase tracking-wide text-on-bark/70">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
-          <p className="mt-1 text-title" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
-          <p className="mt-1 text-small text-on-bark/80">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
+          <p className="text-caption uppercase tracking-wide text-paper/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
+          <p className="mt-1 line-clamp-2 break-words text-title" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
+          <p className="mt-1 text-small text-paper/80 tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
           {(todayEvent.neighborhood || todayEvent.city || todayAddress) && (
             <p className="mt-1 flex items-center gap-1 text-small text-on-bark/80">
               <MapPin className="size-3.5" />
@@ -413,11 +424,18 @@ export function SpaceHomeTab({
           )}
           <div className="mt-3 flex items-center gap-3">
             <AvatarRow people={todayAttendees} max={4} />
-            {todayGoing > 0 && <span className="text-caption text-on-bark/70">{todayGoing} going</span>}
+            {todayGoing > 0 && <span className="text-caption text-paper/70 tabular-nums">{todayGoing} going</span>}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button variant="coral" size="sm" disabled={rsvpBusy} onClick={() => rsvp(todayEvent.id)}>
-              {myRsvps.has(todayEvent.id) ? "I'm going ✓" : "I'm going"}
+            <Button
+              variant="coral"
+              size="sm"
+              disabled={rsvpBusy}
+              aria-pressed={myRsvps.has(todayEvent.id)}
+              onClick={() => rsvp(todayEvent.id)}
+            >
+              {myRsvps.has(todayEvent.id) && <Check aria-hidden="true" />}
+              I’m going
             </Button>
             <Link to={`/space/${space.slug}?tab=events`} className="text-caption text-on-bark/70 underline">
               See all events
@@ -466,12 +484,13 @@ export function SpaceHomeTab({
             {activeChecklist.map((c) => (
               <li key={c.key} className="flex items-center gap-2 text-small">
                 <span
-                  className={`flex size-4 shrink-0 items-center justify-center rounded-full border text-caption ${
+                  className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
                     c.done ? "border-clay bg-clay text-on-clay" : "border-line text-transparent"
                   }`}
                 >
-                  ✓
+                  <Check className="size-2.5" strokeWidth={3} aria-hidden="true" />
                 </span>
+                {c.done && <span className="sr-only">Done: </span>}
                 <span className={c.done ? "text-muted-foreground line-through" : ""}>{c.label}</span>
               </li>
             ))}
@@ -510,16 +529,27 @@ export function SpaceHomeTab({
             ))}
           </div>
         )}
-        {pinError && <p className="mt-2 text-caption text-destructive">{pinError}</p>}
-        {moments === "loading" ? (
-          <div className="min-h-[20vh]" />
+        <InlineError message={pinError} className="mt-2" />
+        <Loadable
+          loading={moments === "loading"}
+          skeleton={
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="overflow-hidden rounded-card border border-line bg-paper">
+                  <MomentCardSkeleton />
+                </div>
+              ))}
+            </div>
+          }
+        >
+        {momentsError ? (
+          <ErrorNotice onRetry={() => setMomentsAttempt((a) => a + 1)} />
         ) : tableEmpty ? (
-          <div className="py-10 text-center">
-            <p className="text-small text-muted-foreground">The table's clear.</p>
-            <Button variant="coral" size="sm" className="mt-3" onClick={onAddMoment}>
-              Log a Moment
-            </Button>
-          </div>
+          <EmptyState
+            size="inline"
+            line="The table’s clear."
+            action={{ label: "Log a Moment", onClick: onAddMoment }}
+          />
         ) : (
           <>
             {pinnedMoments.length > 0 && (
@@ -574,6 +604,7 @@ export function SpaceHomeTab({
             )}
           </>
         )}
+        </Loadable>
       </div>
 
       {/* ── People here ────────────────────────────────────────────────── */}

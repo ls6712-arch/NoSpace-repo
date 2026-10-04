@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pencil, X } from "lucide-react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { captureOpener, restoreFocus } from "../lib/returnFocus";
 import { useAuth } from "../context/AuthContext";
 import { Post } from "../data/posts";
 import { PostMedia } from "./PostMedia";
+import { Button } from "./ui/button";
+import { notify } from "./ui/toaster";
+import { TOAST } from "../lib/stateCopy";
+import { InlineError } from "./StateViews";
 
 /** True only for a real, loadable upload — a placeholder illustration makes
  * a poor cover photo, so it never shows up as a swatch option here. */
@@ -25,6 +31,8 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
   const [tagline, setTagline] = useState("");
   const [postId, setPostId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const opener = useRef<HTMLElement | null>(null);
 
   const candidates = (() => {
     const withMedia = posts.filter(hasRealMedia);
@@ -43,12 +51,16 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
   const save = async () => {
     if (saving) return;
     setSaving(true);
-    await updateProfile({
+    setError(null);
+    const result = await updateProfile({
       cover_title: title.trim() || null,
       cover_tagline: tagline.trim() || null,
       cover_post_id: postId,
     });
     setSaving(false);
+    // Keep the dialog (and what was typed) open on failure.
+    if (result?.error) return setError(result.error);
+    notify(TOAST.changesSaved);
     setOpen(false);
   };
 
@@ -63,27 +75,35 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
         Edit cover
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-scrim-solid/70 p-4"
-          onClick={() => !saving && setOpen(false)}
-        >
-          <div
-            className="ns-paper-theme w-full max-w-[620px] rounded-control border border-[var(--line)] bg-[var(--paper-raised)] p-8"
-            onClick={(e) => e.stopPropagation()}
+      {/* Radix Dialog: focus moves in, Escape and the backdrop close it,
+          focus returns to "Edit cover", and the page behind can't scroll.
+          It stays put while a save is in flight. */}
+      <DialogPrimitive.Root open={open} onOpenChange={(next) => !saving && setOpen(next)}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay
+            className="fixed inset-0 z-[80] bg-scrim-solid/70 ease-standard data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-fast"
+          />
+          <DialogPrimitive.Content
+            aria-describedby={undefined}
+            onOpenAutoFocus={() => {
+              opener.current = captureOpener();
+            }}
+            onCloseAutoFocus={(e) => {
+              if (restoreFocus(opener.current)) e.preventDefault();
+            }}
+            className="ns-paper-theme fixed top-1/2 left-1/2 z-[80] max-h-[90vh] w-[calc(100%-2rem)] max-w-[620px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-control border border-[var(--line)] bg-[var(--paper-raised)] p-8 ease-standard data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-fast"
           >
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+              <DialogPrimitive.Title className="text-lead" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                 Make it yours
-              </h2>
-              <button
-                type="button"
-                onClick={() => !saving && setOpen(false)}
+              </DialogPrimitive.Title>
+              <DialogPrimitive.Close
+                disabled={saving}
                 aria-label="Close"
                 className="text-[var(--ink-soft)] transition-colors hover:text-[var(--ink)]"
               >
                 <X className="size-4" />
-              </button>
+              </DialogPrimitive.Close>
             </div>
 
             <label className="mb-1 block text-caption text-[var(--ink-soft)]" htmlFor="cover-title">
@@ -114,7 +134,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
             <p className="mb-1.5 text-caption text-[var(--ink-soft)]">Cover photo</p>
             {candidates.length === 0 ? (
               <p className="mb-4 text-caption text-[var(--ink-faint)]">
-                Pin a Moment with a photo first — that's what shows up here.
+                Pin a Moment with a photo first — that’s what shows up here.
               </p>
             ) : (
               <div className="mb-5 flex gap-2">
@@ -144,18 +164,13 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={save}
-              disabled={saving}
-              className="w-full rounded-control px-4 py-2.5 text-small text-on-brand transition-opacity disabled:opacity-60"
-              style={{ backgroundColor: "var(--coral-deep)" }}
-            >
-              {saving ? "Saving…" : "Done"}
-            </button>
-          </div>
-        </div>
-      )}
+            <InlineError message={error} className="mb-2 text-center" />
+            <Button type="button" variant="coral" className="h-auto w-full py-2.5" onClick={save} busy={saving}>
+              Done
+            </Button>
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
     </>
   );
 }

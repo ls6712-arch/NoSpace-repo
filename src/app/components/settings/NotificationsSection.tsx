@@ -50,7 +50,7 @@ export function NotificationsSection() {
     <section>
       <SectionHeader n={5} eyebrow="NOTIFICATIONS" title="Notifications" />
       <p className="mb-4 text-small text-muted-foreground">
-        Turning a type off stops new ones. It doesn't remove ones you already have.
+        Turning a type off stops new ones. It doesn’t remove ones you already have.
       </p>
       <SettingsPanel>
         {CATEGORY_ROWS.map((row) => (

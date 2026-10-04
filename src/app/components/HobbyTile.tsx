@@ -36,16 +36,16 @@ export function HobbyTile({
     <>
       <div className="relative overflow-hidden rounded-card">
         {photo ? (
-          <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className="h-auto w-full aspect-square" imgClassName="transition-transform duration-fast group-hover:scale-[1.06]" />
+          <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className="h-auto w-full aspect-square" imgClassName="transition-transform duration-base group-hover:scale-[1.06]" />
         ) : (
           <SubHobbyArt
             hobbySlug={hobbySlug}
             subSlug={subSlug}
-            className="w-full h-auto aspect-square transition-transform duration-fast group-hover:scale-[1.06]"
+            className="w-full h-auto aspect-square transition-transform duration-base group-hover:scale-[1.06]"
           />
         )}
         {!!count && (
-          <span className="absolute top-1.5 right-1.5 rounded-control bg-scrim-solid/55 px-1.5 py-0.5 text-caption leading-none text-on-media backdrop-blur-sm">
+          <span className="absolute top-1.5 right-1.5 rounded-control bg-scrim-solid/55 px-1.5 py-0.5 text-caption leading-none text-on-media tabular-nums backdrop-blur-sm">
             {count}
           </span>
         )}

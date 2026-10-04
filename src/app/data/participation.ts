@@ -183,7 +183,7 @@ const BY_HOBBY: Record<string, HobbyIntents> = {
   },
   coding: {
     exploreTogether: ["Ask about their stack", "Compare approaches", "Learn their workflow"],
-    makeTogether: ["Build something together", "Pair on a problem", "Review each other's work"],
+    makeTogether: ["Build something together", "Pair on a problem", "Review each other’s work"],
   },
 };
 
@@ -210,7 +210,7 @@ const BY_SPACE: Record<string, HobbyIntents> = {
     makeTogether: ["Make the same thing", "Share a work session"],
   },
   rooted: {
-    exploreTogether: ["Ask what they're growing", "Compare conditions", "Learn their method"],
+    exploreTogether: ["Ask what they’re growing", "Compare conditions", "Learn their method"],
     makeTogether: ["Grow the same thing", "Swap cuttings or seeds"],
   },
   buildstack: {
