@@ -109,7 +109,7 @@ async function runPass(browser: Browser, o: RunOpts): Promise<{ results: Results
 
 async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, TouchResult>> {
   const srv = await serve(o.dist, o.fontsDir); const out = new Map<string, TouchResult>();
-  const W = o.widths[0] ?? 375, H0 = HEIGHTS[W] ?? 812;
+  const W = o.widths[0] ?? 375, H0 = Number(process.env.VISUAL_HEIGHT) || (HEIGHTS[W] ?? 812);
   for (const theme of o.themes) {
     const ctx = await browser.newContext({ viewport: { width: W, height: H0 }, hasTouch: true, isMobile: true, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
     await installSupabaseMock(ctx, buildFixtures(), TYPES);

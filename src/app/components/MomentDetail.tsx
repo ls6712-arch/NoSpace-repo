@@ -332,7 +332,7 @@ export function MomentDetail({
               <button
                 type="button"
                 onClick={() => setInspiredDialogOpen(true)}
-                className="text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="inline-flex min-h-11 items-center text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 Start a Pursuit — inspired by this
               </button>
@@ -356,7 +356,7 @@ export function MomentDetail({
               <button
                 type="button"
                 onClick={() => setSendToOpen(true)}
-                className="flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="flex min-h-11 items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 <Send className="size-3" />
                 Send to…
@@ -381,7 +381,7 @@ export function MomentDetail({
                     `/messages?draftWith=${encodeURIComponent(post.userId!)}&draftName=${encodeURIComponent(post.creator)}&aboutMomentId=${post.id}`,
                   );
                 }}
-                className="flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="flex min-h-11 items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 <MessageCircle className="size-3" />
                 Message {post.creator} about this
@@ -392,7 +392,7 @@ export function MomentDetail({
               <button
                 type="button"
                 onClick={() => setReportOpen(true)}
-                className="flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="flex min-h-11 items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 <Flag className="size-3" />
                 Report

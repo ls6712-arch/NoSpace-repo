@@ -172,7 +172,7 @@ export function AllPursuitsSection({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search your Pursuits"
           aria-label="Search your Pursuits"
-          className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-9 text-small outline-none focus:border-[var(--coral-deep)]"
+          className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-9 text-body outline-none focus:border-[var(--coral-deep)]"
         />
         {query && (
           <button

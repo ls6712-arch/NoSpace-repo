@@ -528,3 +528,31 @@ bundled landing hero sits a step down (`filter: brightness(.78) saturate(.88)`).
 share. Avatars keep Radix's circle crop and initials fallback and now fade in.
 
 New harness modes: `--images`, `--carousel`, `--art`; CI runs all three.
+
+
+## 16. Merge with main (Oct 4, 2026)
+
+`main` had moved 35 commits (P1 copy and typography, P1 interaction and motion, P0
+states: skeletons, empty states, toasts, errors, plus the inline Pursuits list)
+and 94 files conflicted with the token sweep, almost all lines where a typography
+or motion edit met a token edit. They were resolved at token granularity (each
+file split to one token per line and run through `git merge-file`), so both sides
+land; 46 files merged with no remaining conflict, the rest by rule: where both
+sides picked a duration token, main's choice stands (both sides had defined
+`--duration-fast` 150ms, `--duration-base` 250ms and `--ease-standard` with the same
+values); where main replaced one of our token-swept empty-state divs with
+`EmptyState` or `Loadable`, main's version stands. The fixed Pursuits bar is gone
+on main (the section is inline now), so the safe-area fix to it is moot.
+
+Main's new files (`StateViews`, `Skeletons`, `toaster`, `NetworkBanner`,
+`AllPursuitsSection`) arrived with raw sizes, radii, shadows and `min-h-screen`
+and were brought onto the tokens; the guard is at 0. Post-merge fixes from the
+audits: the Space countdown text back on `--on-bark`, 44px hit areas and chip-row
+spacing in the new Pursuit and Space UI, the Pursuit search input at 16px, and two
+section gaps.
+
+Result on the merged tree (Chromium, light and dark): guard 0; 262 views at six
+widths with no horizontal scroll and no clipped text without a title; contrast 0
+failures; touch targets under 44px 0 (also at 375x667); 11 overlapping pairs (the
+same list); images audit 0 resized boxes, 0 shift, 0 non-lazy, 0 broken glyphs;
+carousel 11 of 11; tests 261 pass.
