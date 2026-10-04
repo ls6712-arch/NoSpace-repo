@@ -591,19 +591,23 @@ found what the audits could not:
   cover and goal dialogs, a Pursuit, Space tabs, Messages and the theme switch at
   393 touch and 1440 mouse: 20 of 20, no page or console errors.
 
-### Open: Pursuit card actions on touch
+### Done: Pursuit card actions on touch
 
-Each Pursuit card has three round buttons (share, goal, cover) that are
-`opacity-0` until hover or focus. On a touch screen they never appear, but they are
-still there: on an iPhone SE the card is 166px wide and the three buttons occupy
-x = 75–171 (58% of the card) with their 44px hit areas overlapping by about 10px,
-so a tap on the top right of the card photo opens a dialog instead of the Pursuit,
-with nothing on screen explaining why. Options: show one "more" button on coarse
-pointers that opens the three actions; or show the three always but smaller and
-spaced to 44px pitch (it won't fit a 166px card); or hide them on touch
-(`pointer-coarse:hidden`) and keep goal and share on the Pursuit page (cover has no
-other home today). The icon-only buttons also have no `title`, so a mouse user gets
-no label on hover. Not changed: it is a product call.
+Each Pursuit card has three round buttons (share, goal, cover). They used to be
+`opacity-0` until hover or focus, so on a touch screen they never appeared but were
+still tappable (and the touch and contrast audits skipped them as invisible). On
+devices with no hover (`[@media(hover:none)]`) they are now always at full opacity
+and sit at a 44px pitch (`right-13.5` / `right-24.5` instead of `right-11` /
+`right-[4.875rem]`), so their 44px touch areas no longer overlap. Desktop keeps
+reveal-on-hover and the old spacing; focus-visible styles are unchanged and no label
+changed. On the 166px-wide card of an iPhone SE the three buttons now span about 76%
+of the card width (they were 58%); on a 260px card, about 48%.
+
+The flows run checks it at 393 touch (6 buttons on 2 cards, opacity 1, 0 overlapping
+44px areas, white icon over the scrim at least 5.61:1 against the brightest possible
+photo, #E6E6E6) and at 1440 with a mouse (still hidden until hover). The fixtures'
+covers are generated art, so the legibility figure is the worst-case bound, not a
+measurement over a real bright photo.
 
 ### Deploy notes
 
