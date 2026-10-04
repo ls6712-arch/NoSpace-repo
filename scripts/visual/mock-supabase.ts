@@ -29,7 +29,16 @@ function placeholderSvg(name: string): string {
 
 export interface MockReport { unservedTables: Set<string>; unhandledRpc: Set<string>; requests: number }
 
-export async function installSupabaseMock(context: BrowserContext, fixtures: Fixtures, typesPath: string): Promise<MockReport> {
+export interface MockOptions {
+  /** Hold every image response this long, so layout shift while photos load is measurable. */
+  imageDelayMs?: number;
+  /** Hold every image response until this promise resolves (measure the page with the photos still pending). */
+  imageGate?: Promise<void>;
+  /** Answer every image request with a 404, to exercise broken-image fallbacks. */
+  brokenImages?: boolean;
+}
+
+export async function installSupabaseMock(context: BrowserContext, fixtures: Fixtures, typesPath: string, opts: MockOptions = {}): Promise<MockReport> {
   const ctx: Ctx = { fixtures, fks: parseForeignKeys(typesPath) };
   const report: MockReport = { unservedTables: new Set(), unhandledRpc: new Set(), requests: 0 };
   const session = seededSession();
@@ -49,6 +58,15 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
     }
   };
 
+  const sendImage = async (route: import("playwright-core").Route, name: string) => {
+    if (opts.imageGate) await opts.imageGate;
+    if (opts.imageDelayMs) await new Promise((r) => setTimeout(r, opts.imageDelayMs));
+    if (opts.brokenImages) return route.fulfill({ status: 404, headers: cors, body: "not found" });
+    return route.fulfill({ status: 200, headers: { ...cors, "content-type": "image/svg+xml", "cache-control": opts.imageDelayMs ? "no-store" : "max-age=3600" }, body: placeholderSvg(name) });
+  };
+  // Seed photos come from Unsplash; serve the same flat placeholders so screens look the same offline.
+  await context.route("https://images.unsplash.com/**", (route) => sendImage(route, new URL(route.request().url()).pathname));
+
   await context.route(`${FIXTURE_ORIGIN}/**`, async (route) => {
     report.requests++;
     const req = route.request(); const url = new URL(req.url()); const method = req.method();
@@ -63,12 +81,12 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
     }
     if (p.startsWith("/storage/v1/object/public/")) {
       const name = p.split("/").pop() ?? "0";
-      return route.fulfill({ status: 200, headers: { ...cors, "content-type": "image/svg+xml", "cache-control": "max-age=3600" }, body: placeholderSvg(name) });
+      return sendImage(route, name);
     }
     if (p.startsWith("/storage/v1/object/sign/")) {
       const name = p.split("/").pop() ?? "0";
       // createSignedUrls is a POST with {paths}; the signed URL it returns is then fetched with GET.
-      if (route.request().method() === "GET") return route.fulfill({ status: 200, headers: { ...cors, "content-type": "image/svg+xml", "cache-control": "max-age=3600" }, body: placeholderSvg(name) });
+      if (route.request().method() === "GET") return sendImage(route, name);
       let paths: string[] = [];
       try { paths = (JSON.parse(route.request().postData() ?? "{}") as { paths?: string[] }).paths ?? []; } catch { /* no body */ }
       if (paths.length) return reply(json(200, paths.map((path) => ({ path, signedURL: `/object/sign/moment-media/${encodeURIComponent(path.split("/").pop() ?? "0")}?token=fixture`, error: null }))));

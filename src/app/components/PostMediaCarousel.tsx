@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
-import { Images } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { GeneratedArt } from "./GeneratedArt";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 const isRealUrl = (url?: string) => !!url && /^https?:\/\//.test(url);
 
@@ -24,6 +25,8 @@ export function PostMediaCarousel({
   seed,
   className,
   preview,
+  width,
+  priority,
 }: {
   media: string[];
   // "written" is treated the same as "photo" below — a written Moment
@@ -35,6 +38,10 @@ export function PostMediaCarousel({
   className?: string;
   /** Thumbnail context: no controls, no sound, no swipe — the tile is a target, not a player. */
   preview?: boolean;
+  /** Display width in CSS px, so resized copies can be served when image transforms are on. */
+  width?: number;
+  /** Above the fold: the first photo loads now instead of lazily. */
+  priority?: boolean;
 }) {
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
   const markFailed = (url: string) => setFailedUrls((prev) => new Set(prev).add(url));
@@ -66,28 +73,14 @@ export function PostMediaCarousel({
 
   if (validUrls.length === 1) {
     const url = validUrls[0];
-    return (
-      <img
-        src={url}
-        alt=""
-        className={`${className ?? ""} object-cover`}
-        loading="lazy"
-        onError={() => markFailed(url)}
-      />
-    );
+    return <ImageWithFallback src={url} alt="" className={className} width={width} priority={priority} onFail={() => markFailed(url)} />;
   }
 
   if (preview) {
     const cover = validUrls[0];
     return (
       <div className={`relative ${className ?? ""}`}>
-        <img
-          src={cover}
-          alt=""
-          loading="lazy"
-          onError={() => markFailed(cover)}
-          className="h-full w-full object-cover"
-        />
+        <ImageWithFallback src={cover} alt="" className="size-full" width={width} priority={priority} onFail={() => markFailed(cover)} />
         <span className="pointer-events-none absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-control bg-scrim-solid/60 px-1.5 py-0.5 text-caption font-medium text-on-media backdrop-blur-sm">
           <Images className="size-3" aria-hidden="true" />
           {validUrls.length}
@@ -96,72 +89,93 @@ export function PostMediaCarousel({
     );
   }
 
-  return <PhotoTrack urls={validUrls} className={className} onError={markFailed} />;
+  return <PhotoTrack urls={validUrls} className={className} width={width} priority={priority} onError={markFailed} />;
 }
 
 function PhotoTrack({
   urls,
   className,
+  width,
+  priority,
   onError,
 }: {
   urls: string[];
   className?: string;
+  width?: number;
+  priority?: boolean;
   onError: (url: string) => void;
 }) {
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
+  const frame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
 
-  const scrollToIndex = (i: number) => {
+  const goTo = (i: number) => {
     const el = trackRef.current;
     if (!el) return;
-    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    const next = Math.max(0, Math.min(urls.length - 1, i));
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
   };
 
-  // Tracks which slide is centered as the person swipes, rather than only
-  // updating on a click — a real thumb-drag never fires onClick.
+  // Which slide is centred as the thumb drags: read once per frame (a scroll
+  // event fires far more often than that), and only re-render when it changes.
   const handleScroll = () => {
-    const el = trackRef.current;
-    if (!el || el.clientWidth === 0) return;
-    setIndex(Math.round(el.scrollLeft / el.clientWidth));
+    if (frame.current) return;
+    frame.current = requestAnimationFrame(() => {
+      frame.current = 0;
+      const el = trackRef.current;
+      if (!el || el.clientWidth === 0) return;
+      setIndex(Math.round(el.scrollLeft / el.clientWidth));
+    });
   };
+
+  const label = `Photo ${index + 1} of ${urls.length}`;
 
   return (
-    <div className={`relative ${className ?? ""}`}>
+    <div className={`relative ${className ?? ""}`} role="group" aria-roledescription="carousel" aria-label="Photos">
       <div
         ref={trackRef}
         onScroll={handleScroll}
-        className="flex h-full w-full snap-x snap-mandatory overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        tabIndex={0}
+        aria-label={label}
+        className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain outline-none [-ms-overflow-style:none] [scrollbar-width:none] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--coral-deep)] [&::-webkit-scrollbar]:hidden"
       >
         {urls.map((url, i) => (
-          <img
-            key={url + i}
-            src={url}
-            alt=""
-            loading={i === 0 ? "eager" : "lazy"}
-            onError={() => onError(url)}
-            className="h-full w-full shrink-0 snap-center object-cover"
-          />
+          <div key={url + i} role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${urls.length}`} className="size-full shrink-0 snap-center snap-always">
+            <ImageWithFallback src={url} alt="" className="size-full" width={width} priority={priority && i === 0} onFail={() => onError(url)} />
+          </div>
         ))}
       </div>
 
-      <span className="pointer-events-none absolute bottom-2.5 right-2.5 rounded-control bg-scrim-solid/60 px-2 py-0.5 text-caption text-on-media backdrop-blur-sm">
+      {/* Announced as the photo changes; the visible "2/5" is the same thing, so it's hidden from readers. */}
+      <span role="status" className="sr-only">
+        {label}
+      </span>
+      <span aria-hidden="true" className="pointer-events-none absolute bottom-2.5 right-2.5 rounded-control bg-scrim-solid/60 px-2 py-0.5 text-caption text-on-media backdrop-blur-sm">
         {index + 1}/{urls.length}
       </span>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-2.5 flex justify-center gap-1.5">
+      {/* Dots show where you are; swipe, the arrow keys or the arrows (mouse) move. They aren't buttons:
+          6px targets 12px apart can't each have a 44px hit area. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-2.5 flex justify-center gap-1.5">
         {urls.map((_, i) => (
-          <button
+          <span
             key={i}
-            type="button"
-            aria-label={`Photo ${i + 1} of ${urls.length}`}
-            aria-current={i === index}
-            onClick={() => scrollToIndex(i)}
-            className={`pointer-events-auto h-1.5 rounded-full transition-all ${
-              i === index ? "w-4 bg-on-media" : "w-1.5 bg-on-media/50"
-            }`}
+            className={`h-1.5 rounded-full transition-[width,background-color] duration-fast ease-standard ${i === index ? "w-4 bg-on-media" : "w-1.5 bg-on-media/50"}`}
           />
         ))}
       </div>
+
+      {index > 0 && (
+        <button type="button" aria-label="Previous photo" onClick={() => goTo(index - 1)} className="absolute left-2 top-1/2 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-scrim-solid/50 text-on-media backdrop-blur-sm pointer-fine:flex">
+          <ChevronLeft className="size-4" aria-hidden="true" />
+        </button>
+      )}
+      {index < urls.length - 1 && (
+        <button type="button" aria-label="Next photo" onClick={() => goTo(index + 1)} className="absolute right-2 top-1/2 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-scrim-solid/50 text-on-media backdrop-blur-sm pointer-fine:flex">
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }

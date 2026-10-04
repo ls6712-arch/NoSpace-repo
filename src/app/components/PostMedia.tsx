@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GeneratedArt } from "./GeneratedArt";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * Renders a post/product's actual uploaded photo or video when there is one
@@ -20,6 +21,8 @@ export function PostMedia({
   seed,
   className,
   preview,
+  width,
+  priority,
 }: {
   media?: string;
   // "written" behaves exactly like the "photo" default below — there's
@@ -31,6 +34,10 @@ export function PostMedia({
   className?: string;
   /** Thumbnail context: no controls, no sound — the tile is a target, not a player. */
   preview?: boolean;
+  /** Display width in CSS px, so a resized copy can be served when image transforms are on. */
+  width?: number;
+  /** Above the fold: load now instead of lazily. */
+  priority?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const isRealMedia = !failed && !!media && /^https?:\/\//.test(media);
@@ -57,12 +64,13 @@ export function PostMedia({
 
   if (isRealMedia) {
     return (
-      <img
+      <ImageWithFallback
         src={media}
         alt=""
-        className={`${className ?? ""} object-cover`}
-        loading="lazy"
-        onError={() => setFailed(true)}
+        className={className}
+        width={width}
+        priority={priority}
+        onFail={() => setFailed(true)}
       />
     );
   }

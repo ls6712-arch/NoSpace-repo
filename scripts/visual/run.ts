@@ -8,6 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
+//   node scripts/visual/run.ts --images               image boxes keep their size when photos arrive, below-fold images are lazy, broken photos fall back
 //   node scripts/visual/run.ts --fixed                header / Pursuits bar / bottom tab bar: no overlap, no covered content, with and without safe-area insets (notch 47px / home indicator 34px, on phones tall enough to have them)
 //   node scripts/visual/run.ts --profiles [--chromium-standin] [--only SE,iPad]  the six device profiles (WebKit for iOS, Chromium for the rest) x light/dark: layout + contrast + touch
 //   node scripts/visual/run.ts --contrast             WCAG contrast of every text/background pair (4.5:1, 3:1 large), light + dark; --strict fails on any
@@ -28,6 +29,7 @@ import { touchAuditInPage, type TouchResult } from "./touch.ts";
 import { contrastInPage, type ContrastResult } from "./contrast.ts";
 import { iosChecksInPage, type IosResult } from "./ios.ts";
 import { fixedBarsInPage, type FixedBarsResult } from "./fixedbars.ts";
+import { imagesInPage, clsObserverInit, type ImgSnapshot } from "./images.ts";
 import { FIXTURE_ANON_KEY, FIXTURE_ORIGIN, installSupabaseMock, seededSession } from "./mock-supabase.ts";
 import { SCREENS, type Screen } from "./screens.ts";
 
@@ -172,6 +174,50 @@ async function fixedPass(browser: Browser, o: RunOpts): Promise<Map<string, Fixe
   await ctx.close(); srv.close(); return out;
 }
 
+interface ImagesResult { screenSources?: { v: number; node: string }[]; screen: string; total: number; moved: { sel: string; before: string; after: string }[]; shiftAfterRelease: number; notLazyBelow: string[]; brokenGlyphs: string[]; imgCount: number }
+async function imagesPass(browser: Browser, o: RunOpts): Promise<ImagesResult[]> {
+  const srv = await serve(o.dist, o.fontsDir); const out: ImagesResult[] = []; const W = o.widths[0];
+  for (const s of o.screens) {
+    // 1) photos held back, then released: do image boxes keep their size, and does the page shift?
+    let release!: () => void; const gate = new Promise<void>((r) => { release = r; });
+    const ctx = await browser.newContext({ viewport: { width: W, height: HEIGHTS[W] ?? 900 }, hasTouch: true, colorScheme: "light", reducedMotion: "reduce", deviceScaleFactor: 1 });
+    await installSupabaseMock(ctx, buildFixtures(), TYPES, { imageGate: gate });
+    await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* storage blocked */ } }, seededSession());
+    await ctx.addInitScript(clsObserverInit);
+    const page = await ctx.newPage(); const res: ImagesResult = { screen: `${W}/${s.name}`, total: 0, moved: [], shiftAfterRelease: 0, notLazyBelow: [], brokenGlyphs: [], imgCount: 0 };
+    try {
+      await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`, { waitUntil: "domcontentloaded" }); await page.waitForTimeout(1800); if (s.setup) await s.setup(page);
+      const before = await page.evaluate(imagesInPage, { tag: true }); const cls0 = before.shifts;
+      release(); await page.waitForTimeout(1500);
+      const settled = await page.evaluate(imagesInPage, { tag: false }); // before scrolling: scrolling collapses the Pursuits bar spacer, which is not an image
+      // walk the page so lazy images below the fold load too
+      const h = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < Math.min(h, 12000); y += 500) { await page.evaluate((yy) => window.scrollTo(0, yy), y); await page.waitForTimeout(120); }
+      await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(800);
+      const after: ImgSnapshot = await page.evaluate(imagesInPage, { tag: false });
+      res.shiftAfterRelease = Math.round((settled.shifts - cls0) * 1000) / 1000; res.imgCount = after.imgs.length; res.screenSources = settled.sources.slice(before.sources.length);
+      const prior = new Map(before.imgs.map((i) => [i.id, i]));
+      for (const a of after.imgs) { const b = prior.get(a.id); if (!b) continue; if (Math.abs(a.h - b.h) > 1 || Math.abs(a.w - b.w) > 1) res.moved.push({ sel: a.sel, before: `${b.w}x${b.h}`, after: `${a.w}x${a.h}` }); if (a.below && !a.lazy) res.notLazyBelow.push(a.sel); }
+      res.total = res.moved.length;
+    } catch (e) { console.log(`note: images ${W}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
+    await ctx.close();
+    // 2) every photo 404s: no broken-image glyph may remain
+    const ctx2 = await browser.newContext({ viewport: { width: W, height: HEIGHTS[W] ?? 900 }, colorScheme: "light", reducedMotion: "reduce", deviceScaleFactor: 1 });
+    await installSupabaseMock(ctx2, buildFixtures(), TYPES, { brokenImages: true });
+    await ctx2.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* storage blocked */ } }, seededSession());
+    const p2 = await ctx2.newPage();
+    try {
+      await p2.goto("about:blank"); await p2.goto(`http://localhost:${srv.port}/#${s.route}`); await p2.waitForTimeout(1800); if (s.setup) await s.setup(p2);
+      const h = await p2.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < Math.min(h, 12000); y += 500) { await p2.evaluate((yy) => window.scrollTo(0, yy), y); await p2.waitForTimeout(120); }
+      await p2.waitForTimeout(800);
+      res.brokenGlyphs = (await p2.evaluate(imagesInPage, { tag: false })).imgs.filter((i) => i.broken).map((i) => i.sel);
+    } catch (e) { console.log(`note: images(broken) ${W}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
+    await ctx2.close(); out.push(res);
+  }
+  srv.close(); return out;
+}
+
 const total = (r: Results) => [...r.values()].reduce((n, d) => n + d.flags.length, 0);
 
 async function main() {
@@ -191,6 +237,18 @@ async function main() {
     console.log(`selftest: normal ${total(normal.results)} flags / ${hs(normal.results)}px hscroll → +45% type ${total(inflated.results)} flags / ${hs(inflated.results)}px hscroll`);
     console.log(ok ? "selftest PASS: the detector sees inflated type" : "selftest FAIL: the detector did not react to +45% type");
     await browser.close(); process.exit(ok ? 0 : 1);
+  }
+
+  if (flag("images")) {
+    const all: ImagesResult[] = [];
+    for (const w of base.widths) { HEIGHTS[w] = PROFILES.find((p) => p.w === w)?.h ?? HEIGHTS[w] ?? 900; all.push(...await imagesPass(browser, { ...base, widths: [w] })); }
+    let boxes = 0, shiftSum = 0, glyphs = 0, nl = 0, imgs = 0; const movedBy = new Map<string, string>();
+    for (const r of all) { imgs += r.imgCount; boxes += r.total; shiftSum += r.shiftAfterRelease; glyphs += r.brokenGlyphs.length; nl += r.notLazyBelow.length; for (const m of r.moved) movedBy.set(m.sel, `${m.before} -> ${m.after}  [${r.screen}]`); }
+    console.log(`image audit: ${all.length} views, ${imgs} <img>/<video> seen; boxes that resized when the photo arrived: ${boxes} (${movedBy.size} distinct); layout shift after the photos arrive (sum of per-view scores): ${shiftSum.toFixed(3)}, worst view ${Math.max(0, ...all.map((r) => r.shiftAfterRelease)).toFixed(3)}; below-the-fold images not lazy: ${nl}; broken-image glyphs with every photo 404: ${glyphs}`);
+    for (const [sel, d] of [...movedBy].slice(0, 30)) console.log(`  RESIZED ${sel}  ${d}`);
+    for (const r of all) if (r.brokenGlyphs.length) console.log(`  BROKEN  ${r.screen}: ${[...new Set(r.brokenGlyphs)].slice(0, 4).join(", ")}`);
+    for (const r of all.filter((x) => x.shiftAfterRelease > 0.02)) { const top = new Map<string, number>(); for (const s of r.screenSources ?? []) top.set(s.node, Math.max(top.get(s.node) ?? 0, s.v)); console.log(`  SHIFT   ${r.screen}  ${r.shiftAfterRelease}  moved: ${[...top].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n, v]) => `${n} (${v.toFixed(3)})`).join(" | ")}`); }
+    await browser.close(); process.exit(flag("strict") && (boxes > 0 || glyphs > 0 || nl > 0) ? 1 : 0);
   }
 
   if (flag("fixed")) {
