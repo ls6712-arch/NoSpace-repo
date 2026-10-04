@@ -8,6 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
+//   node scripts/visual/run.ts --carousel             the multi-photo carousel: announced, keyboard, mouse arrows, dots
 //   node scripts/visual/run.ts --art --out <dir>      crops every illustration in dark and light and reports its luminance (glow)
 //   node scripts/visual/run.ts --images               image boxes keep their size when photos arrive, below-fold images are lazy, broken photos fall back
 //   node scripts/visual/run.ts --fixed                header / Pursuits bar / bottom tab bar: no overlap, no covered content, with and without safe-area insets (notch 47px / home indicator 34px, on phones tall enough to have them)
@@ -265,6 +266,36 @@ async function main() {
     console.log(`selftest: normal ${total(normal.results)} flags / ${hs(normal.results)}px hscroll → +45% type ${total(inflated.results)} flags / ${hs(inflated.results)}px hscroll`);
     console.log(ok ? "selftest PASS: the detector sees inflated type" : "selftest FAIL: the detector did not react to +45% type");
     await browser.close(); process.exit(ok ? 0 : 1);
+  }
+
+  if (flag("carousel")) {
+    // A Moment with three photos: announced "Photo n of 3", moves with the arrow keys and the mouse arrows, dots follow.
+    const srv = await serve(dist, fontsDir); const results: string[] = []; let bad = 0;
+    for (const [label, pointer] of [["touch", true], ["mouse", false]] as const) {
+      const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, hasTouch: pointer, isMobile: pointer, reducedMotion: "reduce" });
+      await installSupabaseMock(ctx, buildFixtures(), TYPES);
+      await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* storage blocked */ } }, seededSession());
+      const page = await ctx.newPage(); await page.goto(`http://localhost:${srv.port}/#/moment/91`); await page.waitForTimeout(2200);
+      const read = () => page.locator('[role="status"]').filter({ hasText: /Photo \d of \d/ }).first().textContent();
+      const ok = (name: string, pass: boolean, extra = "") => { results.push(`  ${pass ? "ok  " : "FAIL"} [${label}] ${name}${extra ? " (" + extra + ")" : ""}`); if (!pass) bad++; };
+      try {
+        ok("announces the current photo", (await read())?.trim() === "Photo 1 of 3", String(await read()));
+        const track = page.locator('[aria-roledescription="carousel"] > div').first(); await track.focus(); await page.keyboard.press("ArrowRight"); await page.waitForTimeout(700); await page.evaluate(() => (document.activeElement as HTMLElement)?.dispatchEvent(new Event("scroll")));
+        const afterKey = await track.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth));
+        ok("arrow key scrolls to the next photo", afterKey >= 1, `slide index ${afterKey}`);
+        await page.waitForTimeout(400); ok("status follows the scroll", /Photo [23] of 3/.test((await read()) ?? ""), String(await read()));
+        const next = page.getByRole("button", { name: "Next photo" });
+        const visible = await next.isVisible().catch(() => false);
+        ok(pointer ? "mouse arrows are hidden on touch" : "mouse arrows are shown with a fine pointer", pointer ? !visible : visible);
+        if (!pointer) { const before = await track.evaluate((el) => el.scrollLeft); await next.click(); await page.waitForTimeout(700); ok("Next photo button moves", (await track.evaluate((el) => el.scrollLeft)) > before); }
+        const dots = await page.locator('[aria-roledescription="carousel"] [aria-hidden="true"].pointer-events-none.absolute.inset-x-0 > span').count();
+        ok("three dots, none of them buttons", dots === 3 && (await page.locator('[aria-roledescription="carousel"] button[aria-label^="Photo "]').count()) === 0, `${dots} dots`);
+        await page.screenshot({ path: path.join(os.tmpdir(), `carousel-${label}.png`) });
+      } catch (e) { ok("ran", false, String(e).split("\n")[0].slice(0, 100)); }
+      await ctx.close();
+    }
+    srv.close(); console.log(`carousel check: ${results.length} assertions, ${bad} failed`); for (const r of results) console.log(r);
+    await browser.close(); process.exit(bad > 0 ? 1 : 0);
   }
 
   if (flag("art")) {

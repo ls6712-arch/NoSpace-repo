@@ -44,7 +44,9 @@ export function buildFixtures(now = new Date()): Fixtures {
     post(1, ME, "Trimmed my first set of mugs tonight. Still wobbly, still proud."),
     post(2, ME, "Bowl number nine. The rim finally sits right.", { pursuit_id: PURSUIT_ID }),
     post(3, ME, "Glaze test tiles, fired and cooled. The celadon came out greener than I hoped.", { pursuit_id: PURSUIT_ID }),
-    post(4, ME, "Morning sketch: the kettle, the window, the light.", { pursuit_id: PURSUIT2_ID, hobby_slug: "crafts-making", sub_hobby: null, corner: "Drawing", interest: "Drawing", tags: ["drawing"] }),
+    // Three photos: the carousel (swipe, dots, "Photo n of 3").
+    post(91, ME, "Three shots from the kiln opening.", { media_urls: [media(71), media(72), media(73)] }),
+    post(90, ME, "Morning sketch: the kettle, the window, the light.", { pursuit_id: PURSUIT2_ID, hobby_slug: "crafts-making", sub_hobby: null, corner: "Drawing", interest: "Drawing", tags: ["drawing"] }),
     // Text-only Moments (type "written", no media) — these render as colored tiles with a caption.
     post(4, ME, "Short note.", { type: "written", media_url: "" }),
     post(5, ME, "Wedging for ten minutes before throwing changed everything about how the clay behaves.", { type: "written", media_url: "" }),
