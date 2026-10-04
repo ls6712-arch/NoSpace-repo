@@ -551,11 +551,21 @@ audits: the Space countdown text back on `--on-bark`, 44px hit areas and chip-ro
 spacing in the new Pursuit and Space UI, the Pursuit search input at 16px, and two
 section gaps.
 
-Result on the merged tree (Chromium, light and dark): guard 0; 262 views at six
-widths with no horizontal scroll and no clipped text without a title; contrast 0
-failures; touch targets under 44px 0 (also at 375x667); 11 overlapping pairs (the
-same list); images audit 0 resized boxes, 0 shift, 0 non-lazy, 0 broken glyphs;
-carousel 11 of 11; tests 261 pass.
+Result on the merged tree (CI run on 4229140, light and dark, Chromium for Android
+and desktop, real WebKit for the four iOS sizes): guard 0; 274 views (46 per profile,
+44 on iPad Pro 11in) with no horizontal scroll; contrast 0 failures; touch targets
+under 44px 0; overlapping 44px pairs 3 / 3 / 3 / 2 / 2 on Android, SE, iPhone 15,
+iPad, iPad Pro (the standalone `--touch` run at 375 lists 4 distinct pairs, down from
+11); iOS input text under 16px 0; safe-area ok on every WebKit view; images audit 0
+resized boxes, 0 non-lazy, 0 broken glyphs, layout shift 0.000; carousel 13 of 13;
+flows 20 of 20; tests 262 pass. The art audit found no illustrations in the
+fixtures (0 measured), so it says nothing about dark-mode art yet.
+
+Touch overlaps fixed afterwards (`gap-y-3` on wrapping rows, no target resized): the
+Pursuit page action row and its "Check in with me" row, the Space event action row,
+and the cadence grid in the Pursuit dialog. Left as they are: Pottery/Drawing
+Moments links (8px), Change photo / Take photo (14px), the tag chip and "Add a tag"
+(5px), "New today" and "Pursuits in progress" chips (5px).
 
 ### Review of the merge (Oct 4)
 
