@@ -498,7 +498,7 @@ export function Pursuit() {
 
         {owner && ownProject && (
           <>
-            <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-3">
               {moments.length > 0 && !hasMeasure(ownProject) && (
                 <Button variant="coral" size="sm" onClick={() => setLogging((v) => !v)} aria-expanded={logging}>
                   <Plus className="size-3.5" />
@@ -565,7 +565,7 @@ export function Pursuit() {
             )}
 
             {status === "active" && (
-              <div className="mb-8 flex flex-wrap items-center gap-2 text-caption text-muted-foreground">
+              <div className="mb-8 flex flex-wrap items-center gap-x-2 gap-y-3 text-caption text-muted-foreground">
                 <span>Check in with me:</span>
                 {CHECK_IN_OPTIONS.map((o) => {
                   const current = ownProject.checkInDays ?? DEFAULT_CHECK_IN_DAYS;

@@ -376,7 +376,7 @@ export function PursuitDialog({
 
           <div>
             <Label className="mb-1.5 block text-caption">Check in with me</Label>
-            <div className="grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Check in with me">
+            <div className="grid grid-cols-4 gap-x-2 gap-y-3" role="radiogroup" aria-label="Check in with me">
               {CHECK_IN_OPTIONS.map((o) => (
                 <button
                   key={o.days}
