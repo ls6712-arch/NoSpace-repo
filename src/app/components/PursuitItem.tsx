@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
-import { ImagePlus, Plus, Sparkle, Target } from "lucide-react";
+import { ImagePlus, Plus, Share2, Sparkle, Target } from "lucide-react";
 import { Project, useJournalSlice, ProgressEntry } from "../lib/journal";
 import { hasMeasure, summarize } from "../lib/pursuitProgress";
 import { PursuitMoment } from "../lib/pursuitTrail";
@@ -9,6 +9,7 @@ import { ProgressRing, PURSUIT_SPRING } from "./pursuit/ui";
 import { PostMedia } from "./PostMedia";
 import { GoalDialog } from "./GoalDialog";
 import { CoverImageDialog } from "./CoverImageDialog";
+import { PursuitShareDialog } from "./PursuitShareDialog";
 import { track } from "../lib/analytics";
 
 const NO_PROGRESS: ProgressEntry[] = [];
@@ -73,6 +74,7 @@ export function PursuitItem({
 
   const [goalOpen, setGoalOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <motion.div
@@ -115,6 +117,18 @@ export function PursuitItem({
           className="absolute right-11 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/55 text-white opacity-0 backdrop-blur-md transition-opacity duration-fast hover:bg-[var(--void)]/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
         >
           <Target className="size-3.5" strokeWidth={1.9} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            track({ name: "pursuit_share_opened", pursuitId: pursuit.id, from: "pursuit_item" });
+            setShareOpen(true);
+          }}
+          aria-label={`Share ${pursuit.title}`}
+          className="absolute right-[4.875rem] top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/55 text-white opacity-0 backdrop-blur-md transition-opacity duration-fast hover:bg-[var(--void)]/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+        >
+          <Share2 className="size-3.5" strokeWidth={1.9} />
         </button>
 
         <motion.div whileTap={reduceMotion ? undefined : { scale: 0.9 }} className="absolute bottom-2.5 right-2.5 z-10">
@@ -160,6 +174,7 @@ export function PursuitItem({
 
       <GoalDialog open={goalOpen} onOpenChange={setGoalOpen} project={pursuit} />
       <CoverImageDialog open={coverOpen} onOpenChange={setCoverOpen} project={pursuit} />
+      <PursuitShareDialog open={shareOpen} onOpenChange={setShareOpen} project={pursuit} coverImage={coverImage} />
     </motion.div>
   );
 }
