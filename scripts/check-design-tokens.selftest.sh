@@ -20,7 +20,7 @@ export const Bad = () => (
     <i className="text-white" /> <i style={{ color: "#ff00aa" }} /> <i style={{ color: "rgb(1, 2, 3)" }} />
     <i className="bg-scrim-solid" /> <i className="bg-scrim-solid/[#fff]" /> <i className="bg-scrim-solid/100" />
     <i className="space-y-[18px]" /> <section className="py-[70px]" /> <i className="py-section-hero" />
-    <img src="/x.png" alt="" />
+    <img src="/x.png" alt="" /> <p className="text-on-media/70" />
     <i className="duration-300" /> <i className="ease-out" /> <i style={{ transition: "opacity 300ms" }} />
     {/* design-token-ignore: */}
   </div>

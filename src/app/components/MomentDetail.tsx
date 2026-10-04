@@ -269,7 +269,7 @@ export function MomentDetail({
         {/* Same square as every card, capped so it fits a laptop screen
             without scrolling. Save sits on the media, same as the grid. */}
         <div className="relative mx-auto w-full max-w-[min(100%,62vh)]">
-          <MomentMedia post={post} />
+          <MomentMedia post={post} full />
           {!owned && !post.isPrivateLog && (
             <BookmarkOverlay postId={post.id} tone={isNote ? tile.fg : undefined} />
           )}

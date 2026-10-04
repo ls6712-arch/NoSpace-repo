@@ -142,6 +142,9 @@ scan color "colour literal outside theme.css; define a token there" '#([0-9A-Fa-
 scan color "colour literal outside theme.css; define a token there" '(^|[^A-Za-z-])(rgba?|hsla?)\([[:space:]]*[0-9.]' '*.ts' '*.tsx' '*.css'
 SKIP_FILES=""
 
+# ── text on photos ─────────────────────────────────────────────────────────
+scan image "text-on-media below /90 fails contrast on a bright photo; use text-on-media or /90" "(^|[^:A-Za-z0-9_-])text-on-media/([0-9]|[1-8][0-9])([^0-9]|\$)" '*.ts' '*.tsx'
+
 # ── images ─────────────────────────────────────────────────────────────────
 # Photos go through ImageWithFallback (fixed box, placeholder + fade-in, lazy, fallback).
 SKIP_FILES="$SRC/app/components/ImageWithFallback.tsx"

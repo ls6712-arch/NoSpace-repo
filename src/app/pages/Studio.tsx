@@ -244,10 +244,11 @@ export function Studio() {
               hobbySlug={coverPost.hobbySlug}
               seed={coverPost.id}
               preview
+              priority
               className="h-full w-full object-cover"
             />
           )}
-          <div className="absolute inset-0 bg-scrim-solid/25" />
+          <div className="absolute inset-0 bg-scrim-top" />
           <div className="absolute inset-0 bg-scrim" />
         </div>
 
@@ -261,7 +262,7 @@ export function Studio() {
         </button>
 
         <span
-          className="absolute right-8 top-7 text-small italic text-on-media/80"
+          className="absolute right-8 top-7 text-small italic text-on-media/90"
           style={{ fontFamily: "var(--font-serif)" }}
         >
           {APP_NAME}
@@ -274,7 +275,7 @@ export function Studio() {
         )}
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
-          <p className="mb-2 text-caption uppercase tracking-[0.16em] text-on-media/70">
+          <p className="mb-2 text-caption uppercase tracking-[0.16em] text-on-media/90">
             {loaded.posts.length} {loaded.posts.length === 1 ? "moment" : "moments"}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
@@ -286,7 +287,7 @@ export function Studio() {
           </h1>
           {coverTagline && (
             <p
-              className="mt-3 max-w-md text-lead italic text-on-media/85 sm:text-title"
+              className="mt-3 max-w-md text-lead italic text-on-media/90 sm:text-title"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {coverTagline}
@@ -386,6 +387,7 @@ export function Studio() {
                     hobbySlug={hero.hobbySlug}
                     seed={hero.id}
                     preview
+                    width={800}
                     className="h-full w-full object-cover"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-scrim" />
@@ -406,6 +408,7 @@ export function Studio() {
                       hobbySlug={post.hobbySlug}
                       seed={post.id}
                       preview
+                      width={400}
                       className="h-full w-full object-cover"
                     />
                     <div className="pointer-events-none absolute inset-0 bg-scrim" />

@@ -223,7 +223,11 @@
      keep their color in both modes, so this does too (deliberately not
      --accent-foreground, which goes dark in dark mode). */
   --on-brand: #FFFFFF;
-  --scrim: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+  /* Under text on a photo: heavy at the edge the text sits on, so white text
+     keeps 4.5:1 on a very bright image (the contrast audit tests this). Bottom
+     for captions and titles, top for wordmarks and controls. */
+  --scrim: linear-gradient(to top, rgb(0 0 0 / 0.78) 0%, rgb(0 0 0 / 0.5) 50%, rgb(0 0 0 / 0) 100%);
+  --scrim-top: linear-gradient(to bottom, rgb(0 0 0 / 0.6) 0%, rgb(0 0 0 / 0) 100%);
   /* Flat dimming layer on or over media: chips and icon buttons sitting on
      photos, the camera viewfinder, modal backdrops. Pure black in both
      modes; set the strength at the call site with an opacity modifier
@@ -860,6 +864,10 @@
    A gradient, so it's a utility rather than a --color-* token. */
 @utility bg-scrim {
   background-image: var(--scrim);
+}
+
+@utility bg-scrim-top {
+  background-image: var(--scrim-top);
 }
 
 /* Full-height layouts: 100dvh tracks the mobile browser's collapsing

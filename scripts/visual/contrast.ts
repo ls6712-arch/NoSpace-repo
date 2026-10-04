@@ -4,7 +4,7 @@
 // compares the ratio with 4.5:1, or 3:1 for large text (>= 24px, or >= 18.66px
 // bold). Text over a photo, video or illustration is judged against the scrim
 // layers above it (a two-stop vertical gradient is sampled at the text's
-// position), with the media assumed as bright as white or as dark as black:
+// position), with the media assumed as bright as a very bright photo (#E6E6E6) or as dark as black:
 // no scrim, or too thin a one, fails. Those elements are also listed under
 // `overMedia`.
 export interface ContrastFailure { sel: string; text: string; fg: string; bg: string; ratio: number; need: number; size: number }
@@ -65,15 +65,25 @@ export function contrastInPage(): ContrastResult {
     const num = "[\\d.]+";
     const sample = (bi: string, r: DOMRect): RGBA | null => {
       const m = bi.match(/^linear-gradient\(\s*to (top|bottom),(.*)\)$/s); if (!m) return null;
-      const cols = (m[2].match(/(?:rgba?|color|oklab|oklch|lab|lch|hsla?)\([^)]*\)|transparent/g) ?? []).map((c) => (c === "transparent" ? ([0, 0, 0, 0] as RGBA) : straight(c)));
-      if (cols.length !== 2 || /%|px/.test(m[2].replace(/\([^)]*\)/g, ""))) return null;
+      // top-level comma split, each item "<colour> [N%]"
+      const items: string[] = []; let depth = 0, cur = "";
+      for (const ch of m[2]) { if (ch === "(") depth++; if (ch === ")") depth--; if (ch === "," && depth === 0) { items.push(cur.trim()); cur = ""; } else cur += ch; }
+      items.push(cur.trim());
+      const stops = items.map((it, idx) => {
+        const pm = it.match(/\s(-?[\d.]+)%$/); const col = (pm ? it.slice(0, pm.index) : it).trim();
+        return { c: col === "transparent" ? ([0, 0, 0, 0] as RGBA) : straight(col), p: pm ? parseFloat(pm[1]) / 100 : idx / Math.max(1, items.length - 1) };
+      });
+      if (stops.length < 2) return null;
       const u = m[1] === "top" ? (r.bottom - py) / r.height : (py - r.top) / r.height; const f = Math.min(1, Math.max(0, u));
-      return [0, 1, 2, 3].map((j) => cols[0][j] + (cols[1][j] - cols[0][j]) * f) as RGBA;
+      let lo = stops[0], hi = stops[stops.length - 1];
+      for (let q = 0; q < stops.length - 1; q++) if (f >= stops[q].p && f <= stops[q + 1].p) { lo = stops[q]; hi = stops[q + 1]; break; }
+      const g = hi.p === lo.p ? 0 : (f - lo.p) / (hi.p - lo.p);
+      return [0, 1, 2, 3].map((j) => lo.c[j] + (hi.c[j] - lo.c[j]) * g) as RGBA;
     };
     void num;
     for (let k = i; k < stack.length && !opaque; k++) {
       const e = stack[k]; const s = getComputedStyle(e);
-      if (e instanceof HTMLImageElement || e instanceof HTMLVideoElement || e instanceof HTMLCanvasElement || e instanceof SVGSVGElement) { media = true; break; }
+      if (e instanceof HTMLImageElement || e instanceof HTMLVideoElement || e instanceof HTMLCanvasElement || (e instanceof SVGSVGElement && e.getBoundingClientRect().width >= 110 && e.getBoundingClientRect().height >= 70)) { media = true; break; }
       const bi = s.backgroundImage; const bc = straight(s.backgroundColor); let stops: RGBA[] = []; let sampled: RGBA | null = null;
       if (bi && bi !== "none") {
         if (/url\(/.test(bi)) { media = true; break; }
@@ -84,7 +94,7 @@ export function contrastInPage(): ContrastResult {
       if (!sampled && ((stops.length === 0 && bc[3] >= 0.999) || (stops.length > 0 && stops.every((c) => c[3] >= 0.999)))) opaque = true;
     }
     let cands: RGBA[];
-    if (media) cands = [[255, 255, 255, 1], [0, 0, 0, 1]];
+    if (media) cands = [[230, 230, 230, 1], [0, 0, 0, 1]]; // a very bright photo, and a black one
     else if (opaque) cands = [[255, 255, 255, 1]]; // page canvas behind everything
     else { const root = straight(getComputedStyle(document.documentElement).backgroundColor), body = straight(getComputedStyle(document.body).backgroundColor); cands = [over(body, over(root, [255, 255, 255, 1]))]; }
     for (let k = layers.length - 1; k >= 0; k--) {

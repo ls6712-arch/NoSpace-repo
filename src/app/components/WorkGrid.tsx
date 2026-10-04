@@ -68,6 +68,7 @@ function PinPicker({
                   hobbySlug={post.hobbySlug}
                   seed={post.id}
                   preview
+                  width={96}
                   className="h-full w-full object-cover"
                 />
               </div>

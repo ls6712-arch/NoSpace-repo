@@ -148,6 +148,7 @@ export function PursuitCard({
               hobbySlug={inspirationPost.hobbySlug}
               seed={inspirationPost.id}
               preview
+              width={400}
               className="h-full w-full"
             />
           ) : (

@@ -95,6 +95,7 @@ export function PursuitItem({
             hobbySlug={pursuit.hobbySlug ?? "crafts-making"}
             seed={pursuit.id}
             preview
+            width={360}
             className="h-full w-full object-cover transition-transform duration-base group-hover:scale-[1.04]"
           />
         </Link>

@@ -352,7 +352,7 @@ function CoverStep({
             <AvatarPicker compact name={displayName} url={avatar} onChange={onAvatarChange} />
           </motion.div>
 
-          <motion.p {...settle(0.05)} className="mb-1 text-caption uppercase tracking-[0.16em] text-on-media/70">
+          <motion.p {...settle(0.05)} className="mb-1 text-caption uppercase tracking-[0.16em] text-on-media/90">
             Let's set the scene
           </motion.p>
 
@@ -386,7 +386,7 @@ function CoverStep({
                 <Chip
                   key={tag}
                   {...chipProps(tag)}
-                  className="rounded-control border border-on-media/30 bg-scrim-solid/20 px-2.5 py-1 text-caption text-on-media/85"
+                  className="rounded-control border border-on-media/30 bg-scrim-solid/20 px-2.5 py-1 text-caption text-on-media/90"
                 >
                   {tag}
                 </Chip>
@@ -395,7 +395,7 @@ function CoverStep({
           )}
 
           <motion.div {...settle(0.25)} className="mt-5">
-            <p className="mb-1.5 text-caption text-on-media/70">Background</p>
+            <p className="mb-1.5 text-caption text-on-media/90">Background</p>
             <div className="flex gap-2">
               {COVER_TEXTURES.map((texture, i) => (
                 <button

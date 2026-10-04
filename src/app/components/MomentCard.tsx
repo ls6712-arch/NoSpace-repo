@@ -334,7 +334,8 @@ export function MomentActions({
 
 /** The media square itself — a photo/video carousel, or a colored tile
  * with the caption set into it. Shared with MomentDetail. */
-export function MomentMedia({ post, className = "" }: { post: Post; className?: string }) {
+/** `full`: the Moment view, where the photo is the point: original size, loaded now. Cards ask for a thumbnail-sized copy. */
+export function MomentMedia({ post, className = "", full = false }: { post: Post; className?: string; full?: boolean }) {
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   return hasRealMedia(post) ? (
     <PostMediaCarousel
@@ -342,6 +343,8 @@ export function MomentMedia({ post, className = "" }: { post: Post; className?: 
       type={post.type}
       hobbySlug={post.hobbySlug}
       seed={post.id}
+      width={full ? undefined : 640}
+      priority={full}
       className={`${MOMENT_MEDIA} object-cover ${className}`}
     />
   ) : (

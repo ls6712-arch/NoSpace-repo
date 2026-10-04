@@ -304,7 +304,7 @@ export function CameraCapture({
                   type="button"
                   onClick={() => !recording && setCaptureMode("photo")}
                   className={`rounded-control px-3.5 py-1.5 transition-colors ${
-                    captureMode === "photo" ? "bg-coral-deep text-on-brand" : "text-on-media/80"
+                    captureMode === "photo" ? "bg-coral-deep text-on-brand" : "text-on-media/90"
                   }`}
                 >
                   Photo
@@ -313,7 +313,7 @@ export function CameraCapture({
                   type="button"
                   onClick={() => !recording && setCaptureMode("video")}
                   className={`rounded-control px-3.5 py-1.5 transition-colors ${
-                    captureMode === "video" ? "bg-coral-deep text-on-brand" : "text-on-media/80"
+                    captureMode === "video" ? "bg-coral-deep text-on-brand" : "text-on-media/90"
                   }`}
                 >
                   Video

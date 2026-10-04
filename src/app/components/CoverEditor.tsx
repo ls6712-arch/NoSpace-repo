@@ -136,6 +136,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
                       hobbySlug={post.hobbySlug}
                       seed={post.id}
                       preview
+                      width={160}
                       className="h-full w-full object-cover"
                     />
                   </button>
