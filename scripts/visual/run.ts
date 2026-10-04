@@ -8,6 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
+//   node scripts/visual/run.ts --art --out <dir>      crops every illustration in dark and light and reports its luminance (glow)
 //   node scripts/visual/run.ts --images               image boxes keep their size when photos arrive, below-fold images are lazy, broken photos fall back
 //   node scripts/visual/run.ts --fixed                header / Pursuits bar / bottom tab bar: no overlap, no covered content, with and without safe-area insets (notch 47px / home indicator 34px, on phones tall enough to have them)
 //   node scripts/visual/run.ts --profiles [--chromium-standin] [--only SE,iPad]  the six device profiles (WebKit for iOS, Chromium for the rest) x light/dark: layout + contrast + touch
@@ -218,6 +219,33 @@ async function imagesPass(browser: Browser, o: RunOpts): Promise<ImagesResult[]>
   srv.close(); return out;
 }
 
+/** Crops of every large illustration (GeneratedArt, SubHobbyArt, WorldIllustration) in dark and light, photos all 404 so art fills the tiles. */
+async function artPass(browser: Browser, o: RunOpts, outDir: string): Promise<string[]> {
+  const srv = await serve(o.dist, o.fontsDir); const files: string[] = []; const W = o.widths[0];
+  for (const theme of ["dark", "light"]) {
+    const ctx = await browser.newContext({ viewport: { width: W, height: HEIGHTS[W] ?? 900 }, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
+    await installSupabaseMock(ctx, buildFixtures(), TYPES, { brokenImages: true });
+    await ctx.addInitScript(([session, th]) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", th as string); } catch { /* storage blocked */ } }, [seededSession(), theme] as const);
+    const page = await ctx.newPage();
+    for (const s of o.screens) {
+      try {
+        await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page);
+        const h = await page.evaluate(() => document.documentElement.scrollHeight);
+        for (let y = 0; y < Math.min(h, 6000); y += 600) { await page.evaluate((yy) => window.scrollTo(0, yy), y); await page.waitForTimeout(80); }
+        const handles = await page.locator("svg[viewBox], .ns-hero-worlds-art").elementHandles(); let n = 0;
+        for (const hd of handles) {
+          const box = await hd.boundingBox(); if (!box || box.width < 110 || box.height < 70 || n >= 6) continue;
+          await hd.scrollIntoViewIfNeeded().catch(() => undefined); await page.waitForTimeout(60);
+          const f = path.join(outDir, `${theme}_${W}_${s.name}_${n}.png`); fs.mkdirSync(outDir, { recursive: true });
+          try { await hd.screenshot({ path: f }); files.push(f); n++; } catch { /* detached */ }
+        }
+      } catch (e) { console.log(`note: art ${theme}/${s.name}: ${String(e).split("\n")[0].slice(0, 90)}`); }
+    }
+    await ctx.close();
+  }
+  srv.close(); return files;
+}
+
 const total = (r: Results) => [...r.values()].reduce((n, d) => n + d.flags.length, 0);
 
 async function main() {
@@ -237,6 +265,20 @@ async function main() {
     console.log(`selftest: normal ${total(normal.results)} flags / ${hs(normal.results)}px hscroll → +45% type ${total(inflated.results)} flags / ${hs(inflated.results)}px hscroll`);
     console.log(ok ? "selftest PASS: the detector sees inflated type" : "selftest FAIL: the detector did not react to +45% type");
     await browser.close(); process.exit(ok ? 0 : 1);
+  }
+
+  if (flag("art")) {
+    const outDir = path.resolve(opt("out") ?? path.join(os.tmpdir(), "art-crops")); const files = await artPass(browser, { ...base, widths: [base.widths[0]] }, outDir);
+    const lum = (f: string) => { try { return parseFloat(execFileSync("convert", [f, "-colorspace", "Gray", "-format", "%[fx:mean]", "info:"], { encoding: "utf8" })); } catch { return NaN; } };
+    // Share of pixels at 70% grey or brighter: a big bright patch on a dark page is what reads as a glow.
+    const bright = (f: string) => { try { return parseFloat(execFileSync("convert", [f, "-colorspace", "Gray", "-threshold", "70%", "-format", "%[fx:mean]", "info:"], { encoding: "utf8" })); } catch { return NaN; } };
+    const rows = files.map((f) => ({ f: path.basename(f), mean: lum(f), max: bright(f) })).filter((r) => !Number.isNaN(r.mean));
+    const by = (th: string) => rows.filter((r) => r.f.startsWith(th));
+    const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
+    console.log(`art audit @${base.widths[0]}: ${rows.length} illustrations; mean luminance dark ${avg(by("dark").map((r) => r.mean)).toFixed(3)} / light ${avg(by("light").map((r) => r.mean)).toFixed(3)} (0 = black, 1 = white; dark page ~0.01)`);
+    const glow = by("dark").filter((r) => r.mean > 0.45 || r.max > 0.08); console.log(`  dark illustrations that glow (mean grey > 0.45, or > 8% of pixels at 70% grey+): ${glow.length}`);
+    for (const r of [...by("dark")].sort((a, b) => b.max - a.max).slice(0, 6)) console.log(`  dark mean ${r.mean.toFixed(3)} bright ${(r.max * 100).toFixed(1)}%  ${r.f}`);
+    await browser.close(); process.exit(flag("strict") && glow.length > 0 ? 1 : 0);
   }
 
   if (flag("images")) {

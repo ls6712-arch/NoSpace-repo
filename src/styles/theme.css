@@ -955,6 +955,12 @@
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
   }
+  /* The bundled hero is a bright, pastel illustration; on the dark page it reads
+     as a lit panel, so it sits a step down. (Generated art already has dark
+     palette overrides; photos are left as shot.) */
+  .dark .ns-hero-worlds-art img {
+    filter: brightness(0.78) saturate(0.88);
+  }
 
   .ns-text-link {
     display: inline-flex;
