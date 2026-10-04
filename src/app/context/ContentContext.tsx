@@ -644,6 +644,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const addPostImpl = async (input: NewPostInput): Promise<Post> => {
     setSaveError(null);
+    // Cleared unconditionally, not only inside the files.length>0 branch
+    // below — otherwise a later text-only Moment (no files at all) kept
+    // showing a previous save's stale "your photo didn't upload" warning,
+    // since nothing ever touched mediaError for it.
+    setMediaError(null);
     let productId: number | undefined;
     // What this session counts toward for the craft badges: the specific
     // hobby when tagged, otherwise just the space it went into.
