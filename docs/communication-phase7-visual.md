@@ -79,6 +79,12 @@ Moment or Pursuit id, so the UI has no image to show.
    - mute and block checks still work
 5. **App:** read the two new columns into the `Notification` type.
 
+**Follow-up, not part of 7B:** `space_moment_pending` / `space_moment_approved` are both about one
+specific Moment, but their `href` points at the Space (`/space/<slug>?tab=manage`, `/space/<slug>`),
+so the href-parsing rule in `enforce_notification_insert()` correctly leaves both target columns
+null for these two kinds. Giving them a `target_post_id` would need a different mechanism (e.g. a
+column `notify_space_moment_status` sets directly) — deferred.
+
 ## Step 7C: The notification row, and one real Notifications page (app only, after 7B)
 
 ### The row
