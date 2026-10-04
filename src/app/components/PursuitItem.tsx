@@ -127,7 +127,7 @@ export function PursuitItem({
             setShareOpen(true);
           }}
           aria-label={`Share ${pursuit.title}`}
-          className="absolute right-[4.875rem] top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 backdrop-blur-md transition-opacity duration-fast hover:bg-[var(--void)]/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-[4.875rem] top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
         >
           <Share2 className="size-3.5" strokeWidth={1.9} />
         </button>

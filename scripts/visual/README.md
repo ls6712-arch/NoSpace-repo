@@ -24,6 +24,25 @@ npm run visual:selftest                               prove the detector reacts 
 fails unless the detector's flag count and horizontal scroll both grow, so a
 "no regressions" result can't come from a detector that has gone blind.
 
+## The other audits
+
+Each is a flag on the same runner (`node scripts/visual/run.ts --<flag>`); all but
+`--flows` take `--widths` and `--screens`, and `--strict` makes a finding exit 1.
+
+| flag | asks |
+|---|---|
+| `--contrast` | every text element's colour against the fills actually under it, light and dark: 4.5:1 (3:1 large). Text over a photo, video or illustration is judged against its scrim, assuming a very bright (#E6E6E6) or a black photo |
+| `--touch` | every tappable element has a 44×44 hit area; lists neighbouring pairs whose areas overlap. `VISUAL_HEIGHT=667` re-runs it at another viewport height |
+| `--images` | image boxes keep their size when photos arrive (held back, then released), nothing below the fold is eager, no broken-image glyph when every photo 404s |
+| `--art` | crops every illustration in dark and light and measures how much of it is near-white (a glow); needs ImageMagick's `convert` |
+| `--carousel` | the multi-photo Moment: announced "Photo n of m", arrow keys, mouse arrows (fine pointer only), dots are not buttons, both arrows have a scrim |
+| `--fixed` | header, any fixed bar and the bottom tab bar don't overlap or hide content, with and without simulated safe-area insets |
+| `--flows` | clicks through the critical flows (quick log, Moment, Pursuit dialogs, Space tabs, Messages, theme) at 393 touch and 1440 mouse; fails on any page or console error |
+| `--profiles` | the six device profiles (WebKit for iOS, Chromium for the rest; `--chromium-standin` when WebKit isn't installed, labelled) running layout, contrast, touch, no-input-under-16px and safe-area checks; `--only SE,iPad` picks profiles |
+
+A failing audit is only as good as its detector: add a screen or a fixture that
+reproduces a bug *before* fixing it, so the audit proves it can see it.
+
 ## How the backend is faked
 
 - `fixtures.ts`: rows typed against `database.types.ts` (generated from the live
@@ -32,8 +51,8 @@ fails unless the detector's flag count and horizontal scroll both grow, so a
 - `postgrest.ts`: an in-memory PostgREST emulator (filters, order, embedded
   resources via the generated foreign keys, single-object and count headers).
 - `mock-supabase.ts`: auth session (seeded into `sb-fixture-auth-token`), REST,
-  RPCs, storage placeholders, and a quiet realtime socket. Writes are
-  acknowledged and not stored.
+  RPCs, storage (placeholder images, signed URLs; photos can be held back or 404
+  on purpose), and a quiet realtime socket. Writes are acknowledged and not stored.
 - `screens.ts`: the screens. Add one and it is covered at every width and theme.
 
 Not reachable by this harness: anything needing real OAuth, real storage

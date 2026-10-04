@@ -8,6 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
+//   node scripts/visual/run.ts --flows                click through the critical flows (quick log, Moment, Pursuit dialogs, Space, Messages, theme) and fail on any page or console error
 //   node scripts/visual/run.ts --carousel             the multi-photo carousel: announced, keyboard, mouse arrows, dots
 //   node scripts/visual/run.ts --art --out <dir>      crops every illustration in dark and light and reports its luminance (glow)
 //   node scripts/visual/run.ts --images               image boxes keep their size when photos arrive, below-fold images are lazy, broken photos fall back
@@ -34,6 +35,7 @@ import { fixedBarsInPage, type FixedBarsResult } from "./fixedbars.ts";
 import { imagesInPage, clsObserverInit, type ImgSnapshot } from "./images.ts";
 import { FIXTURE_ANON_KEY, FIXTURE_ORIGIN, installSupabaseMock, seededSession } from "./mock-supabase.ts";
 import { SCREENS, type Screen } from "./screens.ts";
+import { PURSUIT_ID, SPACE_SLUG } from "./fixtures.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "../..");
@@ -266,6 +268,63 @@ async function main() {
     console.log(`selftest: normal ${total(normal.results)} flags / ${hs(normal.results)}px hscroll → +45% type ${total(inflated.results)} flags / ${hs(inflated.results)}px hscroll`);
     console.log(ok ? "selftest PASS: the detector sees inflated type" : "selftest FAIL: the detector did not react to +45% type");
     await browser.close(); process.exit(ok ? 0 : 1);
+  }
+
+  if (flag("flows")) {
+    // Click through the critical flows against the fixture backend (writes are accepted, not stored) and
+    // fail on any page error or console error. Complements the screen audits: this is "does it work".
+    const srv = await serve(dist, fontsDir); let bad = 0; const lines: string[] = [];
+    for (const [label, w, h, touch] of [["393 touch", 393, 852, true], ["1440 mouse", 1440, 900, false]] as const) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: touch, isMobile: touch, reducedMotion: "reduce" });
+      await installSupabaseMock(ctx, buildFixtures(), TYPES);
+      await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* storage blocked */ } }, seededSession());
+      const page = await ctx.newPage(); const errors: string[] = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${String(e).slice(0, 140)}`));
+      page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource|net::ERR|favicon|fonts\.g/.test(m.text())) errors.push(`console: ${m.text().slice(0, 140)}`); });
+      const go = async (route: string) => { await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${route}`); await page.waitForTimeout(1600); };
+      const flow = async (name: string, fn: () => Promise<void>) => {
+        const before = errors.length; let err = "";
+        try { await fn(); } catch (e) { err = String(e).split("\n").filter((x) => /waiting for|Error:/.test(x)).slice(0, 2).join(" ").slice(0, 200); }
+        const newErrs = errors.slice(before); const ok = !err && newErrs.length === 0; if (!ok) bad++;
+        lines.push(`  ${ok ? "ok  " : "FAIL"} [${label}] ${name}${err ? ` — ${err}` : ""}${newErrs.length ? ` — ${newErrs.join(" | ")}` : ""}`);
+      };
+      const T = { timeout: 7000 };
+      await flow("My Space renders with Pursuit cards", async () => { await go("/my-space"); await page.getByText("Pursuits in progress").first().waitFor(T); });
+      await flow("quick log: type a line and Log it", async () => {
+        await go("/my-space");
+        if (touch) await page.locator('nav[aria-label="Main"] button:has-text("Create")').first().click(T); else await page.getByRole("button", { name: /Log a Moment/ }).first().click(T);
+        await page.getByPlaceholder(/what changed/i).first().fill("Smoke test Moment"); await page.getByRole("button", { name: /^Log$/ }).first().click(T);
+        await page.waitForTimeout(900);
+      });
+      await flow("open a Moment, Send to… opens and Escape closes it", async () => {
+        await go("/moment/91"); await page.getByText("Three shots from the kiln opening").first().waitFor(T);
+        await page.getByRole("button", { name: /Send to/ }).first().click(T); await page.getByRole("dialog").last().waitFor(T); await page.keyboard.press("Escape"); await page.waitForTimeout(400);
+      });
+      await flow("Pursuit cover dialog: choose First Moment, Save", async () => {
+        await go("/my-space"); const cover = page.getByRole("button", { name: /Change the cover photo for Throw 24 bowls/ }).first(); await cover.evaluate((el) => el.scrollIntoView({ block: "center" })); await page.waitForTimeout(300); await cover.click({ ...T, force: true });
+        await page.getByRole("button", { name: /First Moment/ }).first().click(T); await page.getByRole("button", { name: /^Save$/ }).first().click(T); await page.waitForTimeout(700);
+      });
+      await flow("Pursuit goal dialog opens and closes", async () => {
+        await go("/my-space"); const goal = page.getByRole("button", { name: /Edit the goal for Throw 24 bowls/ }).first(); await goal.evaluate((el) => el.scrollIntoView({ block: "center" })); await page.waitForTimeout(300); await goal.click({ ...T, force: true }); await page.getByRole("dialog").first().waitFor(T); await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+      });
+      await flow("Pursuit page loads and its actions respond", async () => { await go(`/pursuit/${PURSUIT_ID}`); await page.getByText("Throw 24 bowls by spring").first().waitFor(T); });
+      await flow("Space: every tab opens", async () => {
+        await go(`/space/${SPACE_SLUG}`);
+        for (const tab of ["Moments", "Events", "People"]) { await page.getByRole("tab", { name: new RegExp(tab, "i") }).first().click(T); await page.waitForTimeout(500); }
+      });
+      await flow("Messages: open a thread and send", async () => {
+        await go("/messages"); await page.getByText("Want to pull shots together").first().click(T);
+        const box = page.getByPlaceholder(/message/i).first(); await box.fill("See you there"); await box.press("Enter"); await page.waitForTimeout(700);
+      });
+      await flow("Settings: switching to dark sets the dark theme", async () => {
+        await go("/settings/appearance"); await page.locator('label[for="appearance-dark"] >> visible=true').first().click(T); await page.waitForTimeout(500);
+        if (!(await page.evaluate(() => document.documentElement.classList.contains("dark")))) throw new Error("html has no .dark class");
+      });
+      await flow("Discover renders", async () => { await go("/discover"); await page.getByRole("heading").first().waitFor(T); });
+      await ctx.close();
+    }
+    srv.close(); console.log(`flows: ${lines.length} run, ${bad} failed`); for (const l of lines) console.log(l);
+    await browser.close(); process.exit(bad > 0 ? 1 : 0);
   }
 
   if (flag("carousel")) {
