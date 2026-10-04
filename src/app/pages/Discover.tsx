@@ -20,6 +20,9 @@ import { useSocial } from "../context/SocialContext";
 import { useCorners, isBrowsableOnDiscover, cornerFollowKey } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
 import { deriveProjects } from "../lib/journal";
+import { fetchFollowingIds } from "../lib/profileFollows";
+import { supabase } from "../../lib/supabase";
+import { track } from "../lib/analytics";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
@@ -139,6 +142,41 @@ function DiscoverSpaceArt({
  * creators and Spaces so one Moment or one Space can't fill the whole row.
  * No score is ever shown; it only decides the order.
  */
+/**
+ * "For You"'s own ranking — real signals (who you actually follow, your
+ * Interest Corners, Spaces you're an active member of), not an ML model:
+ * there's no training pipeline or event log behind this app to build one
+ * on, and the honest version of "personalized" here is a short, named list
+ * of real connections, same spirit as scorePost's own hobby/tag bonus in
+ * ContentContext.tsx. Deliberately NOT engagement-weighted — no love/in/
+ * thought count anywhere in this score — per the same guardrail scorePost
+ * already follows (docs/moment-card-and-reactions-spec.md §4.6). Kept
+ * local to this tab rather than folded into scorePost/publicFeed, which
+ * every other surface (My Space, Space pages, "Recent"/"Following") reads
+ * too — this only ever changes what "For You" itself shows.
+ */
+function scoreForYou(
+  post: Post,
+  followingIds: Set<string>,
+  followedHobbySlugs: Set<string>,
+  memberSpacePostIds: Set<number>,
+): number {
+  const ageHours = (Date.now() - post.createdAt) / HOUR;
+  const recencyScore = Math.max(0, 240 - ageHours); // same ~10-day decay as scorePost
+  const fromSomeoneYouFollow = !!post.userId && followingIds.has(post.userId);
+  // Same hobby-follow set + the same "match post.hobbySlug directly" rule
+  // the "Following" tab already uses just below (social.followedHobbies
+  // mixes space/hobby/Corner-level keys; a plain hobby slug is the only
+  // shape that lines up with post.hobbySlug).
+  const inYourInterests = followedHobbySlugs.has(post.hobbySlug);
+  const fromYourSpace = memberSpacePostIds.has(post.id);
+  // Three independent, additive bonuses rather than one flag — a Moment
+  // that's both from someone you follow AND in a Space you're part of is
+  // more relevant than either alone, not capped at the same bump.
+  const bonus = (fromSomeoneYouFollow ? 90 : 0) + (inYourInterests ? 50 : 0) + (fromYourSpace ? 40 : 0);
+  return recencyScore + bonus;
+}
+
 function rankFeatured(posts: Post[], followedHobbies: string[], take: number): Post[] {
   const followed = new Set(followedHobbies);
   const scored = posts.map((post) => {
@@ -343,6 +381,46 @@ export function Discover() {
   const [cornerFilter, setCornerFilter] = useState(searchParams.get("corner") ?? "");
   const [mediaFilter, setMediaFilter] = useState<MediaFilter>("all");
 
+  // "For You" personalization signals — real ones, not an ML model: who you
+  // actually follow (accepted profile_follows) and which Spaces you're an
+  // active member of. Fetched once per account, same guard pattern
+  // MySpaceGrid.tsx already uses for both of these exact queries.
+  const [followingIds, setFollowingIds] = useState<string[]>([]);
+  const [memberSpacePostIds, setMemberSpacePostIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!user) return;
+    fetchFollowingIds(user.id).then(setFollowingIds);
+  }, [user?.id]);
+
+  useEffect(() => {
+    const client = supabase;
+    if (!user || !client) return;
+    let cancelled = false;
+    (async () => {
+      const { data: memberships } = await client
+        .from("space_members")
+        .select("space_id")
+        .eq("user_id", user.id)
+        .eq("status", "active");
+      const spaceIds = (memberships ?? []).map((m) => m.space_id as string);
+      if (spaceIds.length === 0) {
+        if (!cancelled) setMemberSpacePostIds(new Set());
+        return;
+      }
+      const { data: moments } = await client
+        .from("space_moments")
+        .select("post_id")
+        .in("space_id", spaceIds)
+        .eq("status", "approved")
+        .eq("removed_by_host", false);
+      if (!cancelled) setMemberSpacePostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
   const q = query.trim().toLowerCase();
 
   // Ongoing work, so "Projects in progress" means something specific rather
@@ -413,8 +491,32 @@ export function Discover() {
       const followed = new Set(social.followedHobbies);
       return publicFeed.filter((p) => followed.has(p.hobbySlug));
     }
+    // "For You" — real personalization: people you follow, hobbies you
+    // follow, Spaces you're a member of (see scoreForYou above). Every post
+    // still shows (never narrowed like "Following" is), just reordered —
+    // this is a re-sort, not a filter, so it degrades to plain recency for
+    // a signed-out visitor or anyone with no connections yet, rather than
+    // ever showing an empty "For You" tab.
+    if (feedTab === "forYou") {
+      const followingSet = new Set(followingIds);
+      const followedHobbySet = new Set(social.followedHobbies);
+      return [...publicFeed].sort(
+        (a, b) =>
+          scoreForYou(b, followingSet, followedHobbySet, memberSpacePostIds) -
+          scoreForYou(a, followingSet, followedHobbySet, memberSpacePostIds),
+      );
+    }
     return publicFeed;
-  }, [publicFeed, feedTab, social.followedHobbies]);
+  }, [publicFeed, feedTab, social.followedHobbies, followingIds, memberSpacePostIds]);
+
+  // Once per meaningful signal change, not per render/keystroke — how many
+  // real personalization signals this account actually has right now.
+  useEffect(() => {
+    if (feedTab !== "forYou") return;
+    const signalCount = (followingIds.length > 0 ? 1 : 0) + (memberSpacePostIds.size > 0 ? 1 : 0);
+    track({ name: "discover_for_you_personalized", signalCount });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedTab, followingIds.length, memberSpacePostIds.size]);
 
   // Space-scoped, but not yet narrowed by Corner or media type — this is
   // what the Corner filter row's own live counts are measured against, so

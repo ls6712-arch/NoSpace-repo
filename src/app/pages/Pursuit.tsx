@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
-import { ArrowLeft, ArrowRight, Check, Lock, Moon, PenLine, Play, Plus, Send, Share2, Target, Wind } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Lock, Moon, PenLine, Play, Plus, Share2, Target, Wind } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { SendToChatDialog } from "../components/SendToChatDialog";
+import { PursuitShareDialog } from "../components/PursuitShareDialog";
 import { useContent } from "../context/ContentContext";
 import { getHobby, subHobbyLabel } from "../data/hobbies";
 import { seedPosts, Post } from "../data/posts";
@@ -20,7 +20,6 @@ import {
   pursuitStatus,
   resumeProject,
   setCheckInDays,
-  setProjectShared,
   useJournalSlice,
 } from "../lib/journal";
 import {
@@ -50,6 +49,7 @@ import { plural } from "../lib/plural";
 import { Loadable } from "../components/ui/skeleton";
 import { EmptyState } from "../components/StateViews";
 import { PursuitHeaderSkeleton } from "../components/Skeletons";
+import { track } from "../lib/analytics";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
 function initials(name: string) {
@@ -115,9 +115,8 @@ export function Pursuit() {
   const [logging, setLogging] = useState(false);
   const [searchParams] = useSearchParams();
   const isNew = searchParams.get("new") === "1";
-  const [justCopied, setJustCopied] = useState(false);
   const [openPost, setOpenPost] = useState<Post | null>(null);
-  const [sendToOpen, setSendToOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [remote, setRemote] = useState<
     { status: "idle" | "loading" | "not-found" } | { status: "found"; data: SharedPursuit; ownerName: string; ownerAvatar?: string }
   >({ status: "idle" });
@@ -296,6 +295,18 @@ export function Pursuit() {
   const photos = firstAndLatestPhoto(moments);
   const months = groupByMonth(moments);
 
+  // The owner's own real journal row carries measure/role/shared and so
+  // gets the dialog's full toggle-the-link + progress-ring treatment; a
+  // visitor only ever reaches this page for a Pursuit that's already
+  // public, so a minimal synthetic Project (role: "member" keeps the
+  // dialog's own isCreator check false, same as this page's own isCreator
+  // above) is enough to drive "Copy link"/"Share…"/"Send to a chat" without
+  // inventing fields this view was never given.
+  const shareProject: Project =
+    owner && ownProject
+      ? ownProject
+      : { id: view.id, title: view.title, hobbySlug: view.hobbySlug, startedAt: view.startedAt, shared: true, role: "member" };
+
   // Progress toward a numeric goal is the goal's own tap-logged current —
   // see GoalProgressTap.tsx and journal.ts's logProgress.
   const goalCount = goal?.shape === "number" ? (goal.current ?? 0) : undefined;
@@ -304,23 +315,6 @@ export function Pursuit() {
 
   const mirror = (p: Project | undefined) => {
     if (user && p) void mirrorPursuit(user.id, p);
-  };
-
-  const toggleShare = async () => {
-    if (!owner || !ownProject) return;
-    const next = !ownProject.shared;
-    setProjectShared(ownProject.id, next);
-    mirror({ ...ownProject, shared: next });
-    if (next) {
-      const url = window.location.href.replace(/[?&]new=1/, "");
-      try {
-        await navigator.clipboard.writeText(url);
-        setJustCopied(true);
-        setTimeout(() => setJustCopied(false), 2000);
-      } catch {
-        // Clipboard can be unavailable — the Pursuit is shared either way.
-      }
-    }
   };
 
   const reachIt = () => {
@@ -517,9 +511,16 @@ export function Pursuit() {
                   Full form
                 </Button>
               </Link>
-              <Button variant="outline" size="sm" onClick={() => setSendToOpen(true)}>
-                <Send className="size-3.5" />
-                Send to…
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  track({ name: "pursuit_share_opened", pursuitId: view.id, from: "pursuit_page" });
+                  setShareOpen(true);
+                }}
+              >
+                <Share2 className="size-3.5" />
+                Share
               </Button>
               {isCreator && !hasMeasure(ownProject) && (
                 <Button variant="outline" size="sm" onClick={() => setGoalOpen(true)}>
@@ -531,25 +532,6 @@ export function Pursuit() {
                 <Button variant="outline" size="sm" onClick={reachIt}>
                   Reached it
                 </Button>
-              )}
-              {/* The label always names the action a click takes, never the
-                  current state. */}
-              {isCreator && (
-              <Button variant="outline" size="sm" onClick={toggleShare} aria-pressed={view.shared}>
-                {justCopied ? (
-                  "Link copied!"
-                ) : view.shared ? (
-                  <>
-                    <Lock className="size-3.5" />
-                    Make private
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="size-3.5" />
-                    Share
-                  </>
-                )}
-              </Button>
               )}
               {isCreator && status === "active" && (
                 <Button variant="outline" size="sm" onClick={() => mirror(pauseProject(view.id))}>
@@ -610,9 +592,16 @@ export function Pursuit() {
             is their one chance to share this Pursuit into a chat. */}
         {!owner && (
           <div className="mb-4">
-            <Button variant="outline" size="sm" onClick={() => setSendToOpen(true)}>
-              <Send className="size-3.5" />
-              Send to…
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                track({ name: "pursuit_share_opened", pursuitId: view.id, from: "pursuit_page" });
+                setShareOpen(true);
+              }}
+            >
+              <Share2 className="size-3.5" />
+              Share
             </Button>
           </div>
         )}
@@ -678,7 +667,12 @@ export function Pursuit() {
         onOpenChange={(o) => !o && setOpenPost(null)}
       />
 
-      <SendToChatDialog open={sendToOpen} onOpenChange={setSendToOpen} kind="pursuit" pursuitId={view.id} />
+      <PursuitShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        project={shareProject}
+        coverImage={photos?.latest?.image ?? photos?.first?.image}
+      />
     </div>
   );
 }

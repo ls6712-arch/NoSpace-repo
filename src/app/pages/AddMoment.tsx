@@ -41,7 +41,7 @@ export function AddMoment() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { addPost, posts } = useContent();
+  const { addPost, posts, mediaError, clearMediaError } = useContent();
   const { add: addPrivateLog, logs } = usePrivateLogs();
   const rewards = useRewards();
   const { defaultVisibility } = useSettings();
@@ -168,6 +168,7 @@ export function AddMoment() {
   };
 
   const reset = () => {
+    clearMediaError();
     setAdded(null);
     setNote("");
     setFile(null);
@@ -217,6 +218,7 @@ export function AddMoment() {
             recent={recent.map((m) => ({ key: m.key, image: m.image!, date: m.createdAt }))}
             pursuitId={project.id}
             onAnother={reset}
+            mediaError={mediaError}
           />
         ) : (
           <>
@@ -347,6 +349,7 @@ function MomentAdded({
   recent,
   pursuitId,
   onAnother,
+  mediaError,
 }: {
   added: number;
   unit: string;
@@ -355,6 +358,12 @@ function MomentAdded({
   recent: { key: string; image: string; date: number }[];
   pursuitId: string;
   onAnother: () => void;
+  /** Set when the photo attached to this save didn't actually upload — the
+   * Moment itself still saved (same "degrade gracefully" rule addPost
+   * follows everywhere), so this is a warning on an otherwise-success
+   * screen, not a blocking error. Without this, that failure was
+   * completely silent here — nothing on this page ever read it. */
+  mediaError?: string | null;
 }) {
   return (
     <div className="mt-4" role="status">
@@ -370,6 +379,12 @@ function MomentAdded({
           </p>
         </div>
       </SoftPanel>
+
+      {mediaError && (
+        <p className="mt-2.5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3.5 py-2.5 text-small leading-relaxed text-foreground">
+          {mediaError}
+        </p>
+      )}
 
       {summary && (
         <div className="mt-4">

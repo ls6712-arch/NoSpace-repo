@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, Share2, X } from "lucide-react";
 import { getHobby } from "../data/hobbies";
 import { Project } from "../lib/journal";
 import { startedLabel } from "../lib/pursuitTrail";
 import { formatWhen } from "../lib/dates";
+import { PursuitShareDialog } from "./PursuitShareDialog";
+import { track } from "../lib/analytics";
 
 function relative(ms: number): string {
   return formatWhen(ms, { ago: true });
@@ -17,9 +19,55 @@ function spaceNameOf(p: Project): string | undefined {
   return p.hobbySlug ? getHobby(p.hobbySlug)?.shortName : p.customSpace || p.interest;
 }
 
+/** One row — its own component (not inlined in the .map() below) purely so
+ * it can own its own share-dialog open state; a hook can't live inside a
+ * loop body. */
+function AllPursuitsRow({ pursuit: p, last }: { pursuit: Project; last: number | undefined }) {
+  const [shareOpen, setShareOpen] = useState(false);
+  const space = spaceNameOf(p);
+  return (
+    <li className="flex items-center gap-3 py-2.5">
+      <Link to={`/pursuit/${p.id}`} className="group min-w-0 flex-1">
+        <span
+          className="block truncate text-body text-foreground group-hover:text-accent"
+          style={{ fontFamily: "var(--font-serif)" }}
+                 title={p.title}>
+          {p.title}
+        </span>
+        <span className="block truncate text-caption text-foreground/80" title={[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
+                    .filter(Boolean)
+                    .join(" · ")}>
+          {[space, startedLabel(p.startedAt), last ? `Last Moment ${relative(last)}` : "No Moments yet"]
+            .filter(Boolean)
+            .join(" · ")}
+        </span>
+      </Link>
+      <button
+        type="button"
+        onClick={() => {
+          track({ name: "pursuit_share_opened", pursuitId: p.id, from: "all_pursuits_row" });
+          setShareOpen(true);
+        }}
+        aria-label={`Share ${p.title}`}
+        className="flex shrink-0 items-center justify-center rounded-full border border-border p-1.5 text-foreground hover:border-[var(--coral-deep)]"
+      >
+        <Share2 className="size-3" />
+      </button>
+      <Link
+        to={`/pursuit/${p.id}/moment`}
+        aria-label={`Log a Moment on ${p.title}`}
+        className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground hover:border-[var(--coral-deep)]"
+      >
+        <Plus className="size-3" /> Add
+      </Link>
+      <PursuitShareDialog open={shareOpen} onOpenChange={setShareOpen} project={p} />
+    </li>
+  );
+}
+
 /** One section of the All your Pursuits list. Every row is a real link to
- * the Pursuit, in full-strength text, plus its own "Add" to log a Moment
- * without opening the Pursuit first. */
+ * the Pursuit, in full-strength text, plus its own Share and "Add" (log a
+ * Moment without opening the Pursuit first). */
 function AllPursuitsGroup({
   title,
   items,
@@ -36,36 +84,9 @@ function AllPursuitsGroup({
         {title} · {items.length}
       </p>
       <ul className="divide-y divide-border">
-        {items.map((p) => {
-          const last = lastOf(p);
-          const space = spaceNameOf(p);
-          return (
-            <li key={p.id} className="flex items-center gap-3 py-2.5">
-              <Link to={`/pursuit/${p.id}`} className="group min-w-0 flex-1">
-                <span
-                  className="block truncate text-body text-foreground group-hover:text-accent"
-                  style={{ fontFamily: "var(--font-serif)" }}
-                 title={p.title}>
-                  {p.title}
-                </span>
-                <span className="block truncate text-caption text-foreground/80" title={[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
-                    .filter(Boolean)
-                    .join(" · ")}>
-                  {[space, startedLabel(p.startedAt), last ? `Last Moment ${relative(last)}` : "No Moments yet"]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
-              </Link>
-              <Link
-                to={`/pursuit/${p.id}/moment`}
-                aria-label={`Log a Moment on ${p.title}`}
-                className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground hover:border-[var(--coral-deep)]"
-              >
-                <Plus className="size-3" /> Add
-              </Link>
-            </li>
-          );
-        })}
+        {items.map((p) => (
+          <AllPursuitsRow key={p.id} pursuit={p} last={lastOf(p)} />
+        ))}
       </ul>
     </div>
   );

@@ -58,7 +58,7 @@ export function LoggedNotice({
   offerPursuitName: boolean;
   onDone: () => void;
 }) {
-  const { deletePost } = useContent();
+  const { deletePost, mediaError, clearMediaError } = useContent();
   const { remove: removePrivateLog } = usePrivateLogs();
   const [offerPursuitName, setOfferPursuitName] = useState(initialOffer);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -67,9 +67,12 @@ export function LoggedNotice({
   onDoneRef.current = onDone;
 
   // Auto-dismiss after the undo window — but never while the person is
-  // mid-way through the follow-up (naming a Pursuit, adding details), since
-  // dismissing would unmount what they're typing into.
-  const busy = detailsOpen || offerPursuitName;
+  // mid-way through the follow-up (naming a Pursuit, adding details), or
+  // while a photo-didn't-upload warning is still showing: this card used to
+  // auto-dismiss in 6 seconds regardless, which was plenty of time to miss
+  // the one warning that mattered. It stays up until explicitly dismissed
+  // (below) once there's something to read.
+  const busy = detailsOpen || offerPursuitName || !!mediaError;
   useEffect(() => {
     if (busy) return;
     const t = setTimeout(() => onDoneRef.current(), 6000);
@@ -100,6 +103,19 @@ export function LoggedNotice({
           <Undo2 className="size-3.5" /> Undo
         </button>
       </div>
+      {saved.post && mediaError && (
+        <div className="flex items-start gap-2 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3.5 py-2.5 text-small leading-relaxed text-foreground">
+          <span className="flex-1">{mediaError}</span>
+          <button
+            type="button"
+            onClick={clearMediaError}
+            aria-label="Dismiss"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
       {saved.post && offerPursuitName && (
         <IsThisPartOfSomething post={saved.post} onDone={() => setOfferPursuitName(false)} />
       )}
