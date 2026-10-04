@@ -292,6 +292,35 @@ async function main() {
       };
       const T = { timeout: 7000 };
       await flow("My Space renders with Pursuit cards", async () => { await go("/my-space"); await page.getByText("Pursuits in progress").first().waitFor(T); });
+      await flow(`Pursuit card buttons: ${touch ? "visible on touch, 44px areas apart, white icon legible on the brightest photo" : "hidden until hover with a mouse"}`, async () => {
+        await go("/my-space"); await page.getByText("Pursuits in progress").first().waitFor(T);
+        const r = await page.evaluate(() => {
+          const rgba = (c: string): number[] => { const m = c.match(/[\d.]+/g)!.map(Number); return [m[0], m[1], m[2], m.length > 3 ? m[3] : 1]; };
+          const lin = (v: number) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
+          const L = (c: number[]) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+          const btns = [...document.querySelectorAll<HTMLElement>('button[aria-label^="Change the cover photo for"], button[aria-label^="Edit the goal for"], button[aria-label^="Share "]')].filter((b) => b.closest(".group") && b.getBoundingClientRect().width > 0);
+          const cards = new Map<Element, HTMLElement[]>(); for (const b of btns) { const c = b.closest(".group")!; cards.set(c, [...(cards.get(c) ?? []), b]); }
+          let minOpacity = 1, overlap = 0, worst = 99, n = 0;
+          for (const [, list] of cards) {
+            for (const b of list) {
+              n++; minOpacity = Math.min(minOpacity, parseFloat(getComputedStyle(b).opacity));
+              // Worst case behind the icon: the scrim over a very bright photo (#E6E6E6), or over black.
+              const bg = rgba(getComputedStyle(b).backgroundColor); const fg = rgba(getComputedStyle(b).color);
+              for (const base of [230, 0]) { const mix = [0, 1, 2].map((i) => bg[i] * bg[3] + base * (1 - bg[3])); const a = L(fg), q = L(mix); worst = Math.min(worst, (Math.max(a, q) + 0.05) / (Math.min(a, q) + 0.05)); }
+            }
+            const bx = list.map((b) => { const q = b.getBoundingClientRect(); return { l: q.left + q.width / 2 - 22, r: q.left + q.width / 2 + 22 }; });
+            for (let i = 0; i < bx.length; i++) for (let j = i + 1; j < bx.length; j++) if (Math.min(bx[i].r, bx[j].r) - Math.max(bx[i].l, bx[j].l) > 0.5) overlap++;
+          }
+          return { n, cards: cards.size, minOpacity, overlap, worst: Math.round(worst * 100) / 100 };
+        });
+        if (r.n < 6) throw new Error(`expected 3 buttons on each of 2 cards, found ${r.n}`);
+        if (touch) {
+          if (r.minOpacity < 1) throw new Error(`a button is at opacity ${r.minOpacity} on touch`);
+          if (r.overlap) throw new Error(`${r.overlap} overlapping 44px area(s) between the card buttons`);
+          if (r.worst < 3) throw new Error(`icon contrast ${r.worst}:1 over the brightest photo (needs 3:1)`);
+          console.log(`  card buttons on touch: ${r.n} buttons on ${r.cards} cards, opacity ${r.minOpacity}, 44px overlaps ${r.overlap}, icon contrast worst case ${r.worst}:1`);
+        } else if (r.minOpacity !== 0) throw new Error(`mouse: buttons should stay hidden until hover, opacity ${r.minOpacity}`);
+      });
       await flow("quick log: type a line and Log it", async () => {
         await go("/my-space");
         if (touch) await page.locator('nav[aria-label="Main"] button:has-text("Create")').first().click(T); else await page.getByRole("button", { name: /Log a Moment/ }).first().click(T);
