@@ -413,9 +413,9 @@ export function SpaceHomeTab({
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
         <div className="-mx-4 rounded-card bg-bark px-5 py-5 text-on-bark sm:mx-0">
-          <p className="text-caption uppercase tracking-wide text-paper/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
+          <p className="text-caption uppercase tracking-wide text-on-bark/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
           <p className="mt-1 line-clamp-2 break-words text-title" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
-          <p className="mt-1 text-small text-paper/80 tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
+          <p className="mt-1 text-small text-on-bark/80 tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
           {(todayEvent.neighborhood || todayEvent.city || todayAddress) && (
             <p className="mt-1 flex items-center gap-1 text-small text-on-bark/80">
               <MapPin className="size-3.5" />
@@ -424,7 +424,7 @@ export function SpaceHomeTab({
           )}
           <div className="mt-3 flex items-center gap-3">
             <AvatarRow people={todayAttendees} max={4} />
-            {todayGoing > 0 && <span className="text-caption text-paper/70 tabular-nums">{todayGoing} going</span>}
+            {todayGoing > 0 && <span className="text-caption text-on-bark/70 tabular-nums">{todayGoing} going</span>}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button

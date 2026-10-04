@@ -113,7 +113,7 @@ export function SpacePeopleTab({ space, isHost }: { space: SpaceRow; isHost: boo
       <ul className="divide-y divide-[var(--hairline)]">
         {rows.map((r) => (
           <li key={r.user_id} className="flex items-center justify-between gap-3 py-2.5">
-            <Link to={`/u/${r.username}`} className="min-w-0 truncate text-small hover:underline">
+            <Link to={`/u/${r.username}`} className="-my-3.5 block min-w-0 truncate py-3.5 text-small hover:underline">
               {r.displayName}
             </Link>
             {r.role === "host" ? (

@@ -159,7 +159,7 @@ export function AllPursuitsSection({
   if (!hasAny) return null;
 
   return (
-    <section id={ALL_PURSUITS_SECTION_ID} className="mt-10 scroll-mt-16 border-t border-border pt-8">
+    <section id={ALL_PURSUITS_SECTION_ID} className="mt-12 scroll-mt-16 border-t border-border pt-8">
       <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         All your Pursuits
       </h2>
@@ -190,7 +190,7 @@ export function AllPursuitsSection({
           glance" reference that doesn't flicker as the search box above is
           typed into. The "N Pursuits matching" line below carries the
           search-filtered count instead. */}
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Filter by status">
+      <div className="mt-3 flex flex-wrap gap-x-2 gap-y-3" role="group" aria-label="Filter by status">
         <StatusChip active={status === "all"} onClick={() => setStatus("all")}>
           All · {total}
         </StatusChip>

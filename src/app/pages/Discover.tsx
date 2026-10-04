@@ -285,7 +285,7 @@ function AllCornersBrowser({ query }: { query: string }) {
 function SpotlightSkeleton() {
   const show = useDelayedFlag(true);
   return (
-    <section className={`mb-14 ${show ? "" : "invisible"}`} aria-busy="true">
+    <section className={`mb-12 ${show ? "" : "invisible"}`} aria-busy="true">
       <div className="mb-5">
         <div className="ns-section-kicker mb-2">Popular Moments from across {APP_NAME}</div>
         <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>Spotlight</h2>

@@ -616,7 +616,7 @@ export function MomentDetail({
 
         {/* Actions */}
         {owned && !editing && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-x-2 gap-y-3">
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
               <Pencil className="size-3.5" />
               Edit
