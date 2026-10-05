@@ -6,6 +6,7 @@ import { convertHeicFiles, isHeicFile } from "../lib/heicConversion";
 import { Button } from "./ui/button";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { withFirstFrame } from "../lib/mediaUrl";
 
 /** Confirmed with product: 60s, matching Instagram-length clips — long enough
  * for a real moment, short enough that this stays a quick-capture tool
@@ -403,7 +404,7 @@ export function CameraCapture({
                 >
                   {r.type === "video" ? (
                     <>
-                      <video src={r.url} muted className="h-full w-full object-cover" />
+                      <video src={withFirstFrame(r.url)} muted playsInline preload="metadata" className="h-full w-full object-cover" />
                       <span className="absolute inset-0 flex items-center justify-center bg-scrim-solid/25">
                         <Play className="size-3.5 fill-on-media text-on-media" />
                       </span>

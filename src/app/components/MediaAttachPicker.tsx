@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { withFirstFrame } from "../lib/mediaUrl";
 
 /**
  * A small, reusable "attach a photo or video" control — the same picked
@@ -55,7 +56,7 @@ export function MediaAttachPicker({
     return (
       <div className="relative inline-block overflow-hidden rounded-card border border-border">
         {isVideo ? (
-          <video src={previewUrl} className="h-24 w-24 object-cover" muted />
+          <video src={withFirstFrame(previewUrl)} className="h-24 w-24 object-cover" muted playsInline preload="metadata" />
         ) : (
           <ImageWithFallback src={previewUrl} alt="" className="h-24 w-24" />
         )}

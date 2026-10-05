@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { GeneratedArt } from "./GeneratedArt";
 import { ImageWithFallback } from "./ImageWithFallback";
-import { isRealMediaUrl } from "../lib/mediaUrl";
+import { isRealMediaUrl, withFirstFrame } from "../lib/mediaUrl";
 
 /**
  * Renders a post/product's actual uploaded photo or video when there is one
@@ -46,15 +46,11 @@ export function PostMedia({
   const isRealMedia = !failed && isRealMediaUrl(media);
 
   if (isRealMedia && type === "video") {
-    // A bare <video> with no poster shows solid black until something
-    // triggers a decode — in a thumbnail grid nothing ever does, since
-    // preview clips never play. Appending #t=0.1 makes the browser seek to
-    // that frame as soon as metadata loads and paint it, the same trick a
-    // real poster image would otherwise need a generated thumbnail for.
-    const src = preview ? `${media}#t=0.1` : media;
+    // No poster image exists, so withFirstFrame makes the browser paint the first frame as the
+    // cover, in thumbnails and in the full player alike (otherwise it's blank until played).
     return (
       <video
-        src={src}
+        src={withFirstFrame(media)}
         controls={!preview}
         muted={preview}
         playsInline

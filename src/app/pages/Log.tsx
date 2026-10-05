@@ -42,6 +42,7 @@ import {
   saveLocalDraft,
   clearLocalDraft,
 } from "../lib/draftStore";
+import { withFirstFrame } from "../lib/mediaUrl";
 import { saveDraftMedia, loadDraftMedia, clearDraftMedia } from "../lib/draftMedia";
 import { mirrorDraft, fetchRemoteDraft, clearRemoteDraft } from "../lib/draftRemote";
 import { archiveKey } from "../components/HobbyShelf";
@@ -173,7 +174,7 @@ function Preview({
 }) {
   if (!url) return <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />;
   return type === "video" ? (
-    <video src={url} className={`${className} object-cover`} muted playsInline />
+    <video src={withFirstFrame(url)} className={`${className} object-cover`} muted playsInline preload="metadata" />
   ) : (
     <ImageWithFallback src={url} alt="" className={`${className}`} />
   );
