@@ -110,7 +110,7 @@ export function ProfileHeadline({
 
   if (variant === "quiet") {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-small text-muted-foreground">
         {headline} <span className="text-muted-foreground/60">· Keep going.</span>
       </p>
     );
@@ -118,10 +118,10 @@ export function ProfileHeadline({
 
   return (
     <div>
-      <div className="font-hud text-3xl sm:text-4xl mb-1 text-gradient-brand">
+      <div className="font-hud text-display mb-1 text-gradient-brand">
         {headline}
       </div>
-      <div className="text-sm text-muted-foreground/70 font-hud">Keep going.</div>
+      <div className="text-small text-muted-foreground/70 font-hud">Keep going.</div>
     </div>
   );
 }

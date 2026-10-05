@@ -20,6 +20,7 @@ import { Time } from "../components/ui/time";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { notify } from "../components/ui/toaster";
 import { TOAST } from "../lib/stateCopy";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 type CornerLite = { slug: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string; avatarUrl?: string };
@@ -219,22 +220,22 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const primaryCorner = corners.find((c) => c.isPrimary) ?? corners[0];
 
   return (
-    <div className="ns-space-theme min-h-screen bg-background pb-24 text-foreground">
+    <div className="ns-space-theme min-h-viewport bg-background pb-24 text-foreground">
       {/* Inset, compact cover — not edge-to-edge */}
       <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-2xl bg-surface-muted sm:aspect-[3/1]">
-          <img src={space.cover_image} alt="" className="size-full object-cover" />
+        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-card bg-surface-muted sm:aspect-[3/1]">
+          <ImageWithFallback src={space.cover_image} alt="" className="size-full" />
         </div>
       </div>
 
       <div className="mx-auto w-full max-w-3xl px-4 pt-5">
         {space.status === "read_only" && (
-          <div className="mb-4 rounded-2xl border border-clay/30 bg-clay-soft px-4 py-3 text-sm">
+          <div className="mb-4 rounded-card border border-clay/30 bg-clay-soft px-4 py-3 text-small">
             This Space is read-only right now — no new members, requests, or events until it’s reactivated.
           </div>
         )}
         {space.status === "deleted" && (
-          <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+          <div className="mb-4 rounded-card border border-destructive/30 bg-destructive/5 px-4 py-3 text-small">
             This Space has been deleted. You’re seeing it as an admin.
           </div>
         )}
@@ -245,19 +246,19 @@ export function SpacePage({ space }: { space: SpaceRow }) {
               Space{primaryCorner ? ` · ${primaryCorner.name}` : ""}
             </p>
             <h1
-              className="mt-1 break-words text-[42px] leading-[1.05] sm:text-[48px] lg:text-[76px]"
+              className="mt-1 break-words text-display"
               style={{ fontFamily: "var(--font-display)" }}
             >
               {space.name}
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">{space.description}</p>
+            <p className="mt-2 text-small text-muted-foreground">{space.description}</p>
           </div>
-          <span className="shrink-0 rounded-full border border-line px-2.5 py-1 text-[11px] text-muted-foreground">
+          <span className="shrink-0 rounded-control border border-line px-2.5 py-1 text-caption text-muted-foreground">
             {space.access === "open" ? "Open" : "Closed"}
           </span>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-muted-foreground">
           {(space.neighborhood || space.city) && (
             <span className="flex items-center gap-1">
               <MapPin className="size-3.5" />
@@ -270,11 +271,11 @@ export function SpacePage({ space }: { space: SpaceRow }) {
                 {hosts.slice(0, 4).map((h, i) => (
                   <Avatar key={h.id} className={`size-6 border-2 border-background ${i > 0 ? "-ml-2" : ""}`}>
                     {h.avatarUrl && <AvatarImage src={h.avatarUrl} alt="" />}
-                    <AvatarFallback className="text-[9px]">{initials(h.name)}</AvatarFallback>
+                    <AvatarFallback className="text-caption">{initials(h.name)}</AvatarFallback>
                   </Avatar>
                 ))}
                 {hosts.length > 4 && (
-                  <span className="-ml-2 flex size-6 items-center justify-center rounded-full border-2 border-background bg-surface-muted text-[9px] text-muted-foreground">
+                  <span className="-ml-2 flex size-6 items-center justify-center rounded-full border-2 border-background bg-surface-muted text-caption text-muted-foreground">
                     +{hosts.length - 4}
                   </span>
                 )}
@@ -283,18 +284,18 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             </span>
           )}
           {isActiveMember && (
-            <span className="rounded-full bg-clay-soft px-2 py-0.5 text-[10px] font-medium text-clay-dark">
+            <span className="rounded-control bg-clay-soft px-2 py-0.5 text-caption font-medium text-clay-dark">
               {isHost ? "Host" : "Member"}
             </span>
           )}
         </div>
 
-        <p className="mt-2 text-xs text-muted-foreground tabular-nums">
+        <p className="mt-2 text-caption text-muted-foreground tabular-nums">
           {plural(momentCount ?? 0, "Moment")} this month
         </p>
 
         {spaceAddress && (
-          <p className="mt-1.5 flex items-center gap-1 text-xs">
+          <p className="mt-1.5 flex items-center gap-1 text-caption">
             <MapPin className="size-3.5 text-clay" />
             {spaceAddress}
           </p>
@@ -303,14 +304,14 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         {featuredEvent && (
           <Link
             to={`/space/${space.slug}?tab=events`}
-            className="mt-4 flex items-center gap-3 rounded-2xl border border-clay/40 bg-clay-soft px-4 py-3 hover:border-clay"
+            className="mt-4 flex items-center gap-3 rounded-card border border-clay/40 bg-clay-soft px-4 py-3 hover:border-clay"
           >
             <Star className="size-4 shrink-0 fill-current text-clay" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{featuredEvent.title}</p>
-              <p className="text-xs text-muted-foreground"><Time value={featuredEvent.starts_at} format="datetime" timeZone={featuredEvent.timezone} /></p>
+              <p className="truncate text-small font-medium" title={featuredEvent.title}>{featuredEvent.title}</p>
+              <p className="text-caption text-muted-foreground"><Time value={featuredEvent.starts_at} format="datetime" timeZone={featuredEvent.timezone} /></p>
               {featuredEventAddress && (
-                <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                <p className="mt-0.5 flex items-center gap-1 text-caption text-muted-foreground">
                   <MapPin className="size-3" />
                   {featuredEventAddress}
                 </p>
@@ -333,7 +334,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
                   type="button"
                   onClick={leave}
                   disabled={actionBusy}
-                  className="text-xs text-muted-foreground underline hover:text-foreground disabled:opacity-50"
+                  className="text-caption text-muted-foreground underline hover:text-foreground disabled:opacity-50"
                 >
                   Leave
                 </button>
@@ -349,17 +350,18 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             <RequestToJoinButton spaceId={space.id} disabled={actionBusy || !user || space.status !== "active"} onDone={refetchMembership} setError={setActionError} />
           )}
           {isHost && (
-            <Link to={`/space/${space.slug}/edit`} className="text-xs text-muted-foreground underline hover:text-foreground">
+            <Link to={`/space/${space.slug}/edit`} className="text-caption text-muted-foreground underline hover:text-foreground">
               Edit Space
             </Link>
           )}
         </div>
-        {actionError && <p className="mt-2 text-xs text-destructive">{actionError}</p>}
+        {actionError && <p className="mt-2 text-caption text-destructive">{actionError}</p>}
       </div>
 
       <div className="mx-auto w-full max-w-3xl px-4 pt-6">
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList>
+          <div className="-my-1.5 overflow-x-auto py-1.5">
+          <TabsList className="w-max justify-start">
             <TabsTrigger value="home">Table</TabsTrigger>
             <TabsTrigger value="moments">Moments</TabsTrigger>
             <TabsTrigger value="people">People</TabsTrigger>
@@ -370,6 +372,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
               </TabsTrigger>
             )}
           </TabsList>
+          </div>
           <TabsContent value="home">
             <SpaceHomeTab
               space={space}
@@ -472,9 +475,9 @@ function RequestToJoinButton({
   }
 
   return (
-    <div className="w-full rounded-2xl border border-border p-3">
+    <div className="w-full rounded-card border border-border p-3">
       <textarea
-        className="w-full resize-none rounded-lg border border-border bg-transparent p-2 text-sm"
+        className="w-full resize-none rounded-control border border-border bg-transparent p-2 text-body"
         rows={2}
         maxLength={300}
         placeholder="A short note to the hosts (optional)"
@@ -483,7 +486,7 @@ function RequestToJoinButton({
       />
       {posts.length > 0 && (
         <select
-          className="mt-2 w-full rounded-lg border border-border bg-transparent p-2 text-sm"
+          className="mt-2 w-full rounded-control border border-border bg-transparent p-2 text-body"
           value={postId ?? ""}
           onChange={(e) => setPostId(e.target.value ? Number(e.target.value) : undefined)}
         >

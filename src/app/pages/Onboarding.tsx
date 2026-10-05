@@ -45,6 +45,7 @@ const COVER_TEXTURES = [
 /** Spring, not linear-ease, everywhere motion appears on this page — the
  * step transition, the tag chips traveling forward, and the cover's own
  * pieces settling into place in step 2. Nowhere else gets motion. */
+// design-token-ignore: spring, not a fixed duration; every use below is switched off by reduceMotion
 const SPRING = ENTER;
 
 /**
@@ -191,7 +192,7 @@ export function Onboarding() {
   };
 
   return (
-    <div className="ns-paper-theme min-h-screen bg-[var(--paper)] py-10 sm:py-14">
+    <div className="ns-paper-theme min-h-viewport bg-[var(--paper)] py-10 sm:py-14">
       <div className="container mx-auto max-w-3xl px-4">
         <div className="mb-8 flex items-center gap-1.5" aria-hidden="true">
           {[1, 2, 3].map((n) => (
@@ -218,10 +219,10 @@ export function Onboarding() {
 
             {step === 2 && (
               <>
-                <h1 className="mb-1 text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+                <h1 className="mb-1 text-title sm:text-display" style={{ fontFamily: "var(--font-serif)" }}>
                   What are you into?
                 </h1>
-                <p className="mb-6 text-sm text-[var(--ink-soft)]">
+                <p className="mb-6 text-small text-[var(--ink-soft)]">
                   Add a few tags — anything you like, however specific. There’s no fixed list and no
                   wrong number.
                 </p>
@@ -333,7 +334,7 @@ function CoverStep({
         };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-[var(--line)]">
+    <div className="relative overflow-hidden rounded-card border border-[var(--line)]">
       <div className="relative aspect-[4/5] w-full sm:aspect-[16/10]">
         <AnimatePresence mode="wait">
           <motion.div
@@ -346,20 +347,14 @@ function CoverStep({
             transition={reduceMotion ? { duration: 0 } : SPRING}
           />
         </AnimatePresence>
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to top, rgba(42,36,29,0.75) 0%, rgba(42,36,29,0.2) 45%, rgba(42,36,29,0.1) 100%)",
-          }}
-        />
+        <div className="absolute inset-0 bg-scrim" />
 
         <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
-          <motion.div {...settle(0)} className="mb-4 inline-block rounded-2xl bg-[var(--paper-raised)]/90 p-2.5 backdrop-blur-sm">
+          <motion.div {...settle(0)} className="mb-4 inline-block rounded-card bg-[var(--paper-raised)]/90 p-2.5 backdrop-blur-sm">
             <AvatarPicker compact name={displayName} url={avatar} onChange={onAvatarChange} />
           </motion.div>
 
-          <motion.p {...settle(0.05)} className="mb-1 text-xs uppercase tracking-[0.16em] text-white/70">
+          <motion.p {...settle(0.05)} className="mb-1 text-caption uppercase tracking-[0.16em] text-on-media/90">
             Let’s set the scene
           </motion.p>
 
@@ -369,7 +364,7 @@ function CoverStep({
               onChange={(e) => onTitleChange(e.target.value)}
               placeholder="Your name"
               maxLength={60}
-              className="w-full max-w-lg border-none bg-transparent text-3xl leading-tight text-white outline-none placeholder:text-white/50 sm:text-5xl"
+              className="w-full max-w-lg border-none bg-transparent text-display leading-tight text-on-media outline-none placeholder:text-on-media/50"
               style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
             />
           </motion.div>
@@ -380,8 +375,8 @@ function CoverStep({
               onChange={(e) => onTaglineChange(e.target.value)}
               placeholder="What’s this about? (optional)"
               maxLength={160}
-              className={`mt-2 w-full max-w-md border-b border-dashed bg-transparent text-base italic text-white outline-none placeholder:text-white/60 focus:border-white/70 sm:text-lg ${
-                tagline ? "border-transparent" : "border-white/40"
+              className={`mt-2 w-full max-w-md border-b border-dashed bg-transparent text-body italic text-on-media outline-none placeholder:text-on-media/60 focus:border-on-media/70 sm:text-lead ${
+                tagline ? "border-transparent" : "border-on-media/40"
               }`}
               style={{ fontFamily: "var(--font-serif)" }}
             />
@@ -393,7 +388,7 @@ function CoverStep({
                 <Chip
                   key={tag}
                   {...chipProps(tag)}
-                  className="rounded-full border border-white/30 bg-black/20 px-2.5 py-1 text-[11px] text-white/85"
+                  className="rounded-control border border-on-media/30 bg-scrim-solid/20 px-2.5 py-1 text-caption text-on-media/90"
                 >
                   {tag}
                 </Chip>
@@ -402,18 +397,17 @@ function CoverStep({
           )}
 
           <motion.div {...settle(0.25)} className="mt-5">
-            <p className="mb-1.5 text-[11px] text-white/70">Background</p>
+            <p className="mb-1.5 text-caption text-on-media/90">Background</p>
             <div className="flex gap-2">
               {COVER_TEXTURES.map((texture, i) => (
                 <button
                   key={texture.id}
                   type="button"
                   onClick={() => onTextureChange(i)}
-                  className="h-12 w-[72px] shrink-0 overflow-hidden rounded"
-                  style={{
-                    background: texture.css,
-                    border: textureIndex === i ? "2px solid var(--coral-deep)" : "1px solid rgba(255,255,255,0.4)",
-                  }}
+                  className={`h-12 w-[72px] shrink-0 overflow-hidden rounded-control ${
+                    textureIndex === i ? "border-2 border-coral-deep" : "border border-on-media/40"
+                  }`}
+                  style={{ background: texture.css }}
                   aria-label={`Use this background`}
                   aria-pressed={textureIndex === i}
                 />
@@ -424,7 +418,7 @@ function CoverStep({
       </div>
 
       <div className="flex flex-col items-end gap-2 border-t border-[var(--line)] bg-[var(--paper-raised)] p-4">
-        {finishError && <p className="text-xs text-[var(--coral-text)]">{finishError}</p>}
+        {finishError && <p className="text-caption text-[var(--coral-text)]">{finishError}</p>}
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button variant="outline" size="lg" disabled={finishing} onClick={onSkip}>
             Start with a blank page

@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { friendlyError } from "../lib/friendlyError";
 import { Loadable, Skeleton } from "./ui/skeleton";
 import { EmptyState } from "./StateViews";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /** Links one of the member's own existing Moments into this Space —
  * space_moments' own "the poster or a host links/unlinks" policy already
@@ -126,10 +127,10 @@ export function AddMomentToSpaceDialog({
           <DialogDescription>Pick one of your Moments to show here.</DialogDescription>
         </DialogHeader>
         {!done && posts !== "loading" && (
-          <p className="text-xs text-muted-foreground">Everyone who can see this Space will see this Moment.</p>
+          <p className="text-caption text-muted-foreground">Everyone who can see this Space will see this Moment.</p>
         )}
         {done ? (
-          <p className="py-4 text-sm text-muted-foreground">
+          <p className="py-4 text-small text-muted-foreground">
             {donePending ? "Sent to the hosts for approval." : "Added."}
           </p>
         ) : posts === "loading" ? (
@@ -138,8 +139,8 @@ export function AddMomentToSpaceDialog({
             skeleton={
               <div className="space-y-1">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-xl px-2 py-2">
-                    <Skeleton className="size-12 shrink-0 rounded-lg" />
+                  <div key={i} className="flex items-center gap-3 rounded-card px-2 py-2">
+                    <Skeleton className="size-12 shrink-0 rounded-control" />
                     <Skeleton className="h-3 w-40 rounded-full" />
                   </div>
                 ))}
@@ -168,18 +169,18 @@ export function AddMomentToSpaceDialog({
                 type="button"
                 disabled={linking !== null}
                 onClick={() => link(p.id)}
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-surface-muted disabled:opacity-50"
+                className="flex w-full items-center gap-3 rounded-control px-2 py-2 text-left text-small hover:bg-surface-muted disabled:opacity-50"
               >
                 {p.media && (
-                  <img src={p.media} alt="" className="size-10 shrink-0 rounded-md object-cover" />
+                  <ImageWithFallback src={p.media} alt="" className="size-10 shrink-0 rounded-control" />
                 )}
-                <span className="line-clamp-2 flex-1">{p.caption || `Moment #${p.id}`}</span>
-                {linking === p.id && <span className="text-xs text-muted-foreground">Adding…</span>}
+                <span className="line-clamp-2 flex-1" title={p.caption || `Moment #${p.id}`}>{p.caption || `Moment #${p.id}`}</span>
+                {linking === p.id && <span className="text-caption text-muted-foreground">Adding…</span>}
               </button>
             ))}
           </div>
         )}
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {error && <p className="text-caption text-destructive">{error}</p>}
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Close</Button>
         </div>

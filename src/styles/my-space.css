@@ -7,6 +7,7 @@
    lg and up. */
 
 .myspace-shell {
+  min-height: calc(100vh - 4rem);
   min-height: calc(100dvh - 4rem);
 }
 
@@ -115,9 +116,7 @@
     order: 0;
   }
 
-  .myspace-caption {
-    font-size: 1.125rem;
-  }
+  
 }
 
 @media (min-width: 1280px) {
@@ -126,9 +125,7 @@
     column-gap: 32px;
   }
 
-  .myspace-caption {
-    font-size: 1.375rem;
-  }
+  
 }
 
 @media (min-width: 1536px) {

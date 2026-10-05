@@ -5,6 +5,7 @@ import { addRecentCapture, useRecentCaptures } from "../lib/recentCaptures";
 import { convertHeicFiles, isHeicFile } from "../lib/heicConversion";
 import { Button } from "./ui/button";
 import { UPLOAD_COPY } from "../lib/stateCopy";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /** Confirmed with product: 60s, matching Instagram-length clips — long enough
  * for a real moment, short enough that this stays a quick-capture tool
@@ -253,13 +254,13 @@ export function CameraCapture({
       />
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-3xl border border-border bg-black">
+      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-card border border-border bg-media-base">
         {cameraAvailable ? (
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-surface-muted px-6 text-center">
             <CameraIcon className="size-8 text-muted-foreground" strokeWidth={1.5} />
-            <p className="text-sm text-muted-foreground">{cameraError}</p>
+            <p className="text-small text-muted-foreground">{cameraError}</p>
           </div>
         )}
 
@@ -271,7 +272,7 @@ export function CameraCapture({
             variant="ghost"
             aria-label="Close"
             onClick={() => navigate(-1)}
-            className="bg-black/40 text-white hover:bg-black/60"
+            className="bg-scrim-solid/40 text-on-media hover:bg-scrim-solid/60"
           >
             <X className="size-4" />
           </Button>
@@ -282,13 +283,13 @@ export function CameraCapture({
               variant="ghost"
               aria-label="Flip camera"
               onClick={() => setFacingMode((f) => (f === "user" ? "environment" : "user"))}
-              className="bg-black/40 text-white hover:bg-black/60"
+              className="bg-scrim-solid/40 text-on-media hover:bg-scrim-solid/60"
             >
               <SwitchCamera className="size-4" />
             </Button>
           )}
           {recording && (
-            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 text-xs text-white tabular-nums">
+            <span className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1.5 rounded-control bg-scrim-solid/50 px-2.5 py-1 text-caption text-on-media tabular-nums">
               <span className="size-2 rounded-full bg-[var(--coral)] animate-pulse" />
               {timeLabel}
             </span>
@@ -296,15 +297,15 @@ export function CameraCapture({
         </div>
 
         {/* Bottom overlay: mode pill + capture row */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-4 pt-10">
+        <div className="absolute inset-x-0 bottom-0 bg-scrim px-4 pb-4 pt-10">
           {cameraAvailable && (
             <div className="mb-4 flex justify-center">
-              <div className="flex rounded-full bg-black/40 p-1 text-xs">
+              <div className="flex rounded-control bg-scrim-solid/40 p-1 text-caption">
                 <button
                   type="button"
                   onClick={() => !recording && setCaptureMode("photo")}
-                  className={`rounded-full px-3.5 py-1.5 transition-colors ${
-                    captureMode === "photo" ? "bg-white text-black" : "text-white/80"
+                  className={`rounded-control px-3.5 py-1.5 transition-colors ${
+                    captureMode === "photo" ? "bg-coral-deep text-on-brand" : "text-on-media/90"
                   }`}
                 >
                   Photo
@@ -312,8 +313,8 @@ export function CameraCapture({
                 <button
                   type="button"
                   onClick={() => !recording && setCaptureMode("video")}
-                  className={`rounded-full px-3.5 py-1.5 transition-colors ${
-                    captureMode === "video" ? "bg-white text-black" : "text-white/80"
+                  className={`rounded-control px-3.5 py-1.5 transition-colors ${
+                    captureMode === "video" ? "bg-coral-deep text-on-brand" : "text-on-media/90"
                   }`}
                 >
                   Video
@@ -327,7 +328,7 @@ export function CameraCapture({
               type="button"
               aria-label="Text only, no photo or video"
               onClick={onTextOnly}
-              className="flex size-11 flex-col items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60"
+              className="flex size-11 flex-col items-center justify-center rounded-control bg-scrim-solid/40 text-on-media transition-colors hover:bg-scrim-solid/60"
             >
               <Type className="size-4" />
             </button>
@@ -339,17 +340,18 @@ export function CameraCapture({
                   captureMode === "photo" ? "Take a photo" : recording ? "Stop recording" : "Start recording"
                 }
                 onClick={handleCapturePress}
-                className="flex size-16 items-center justify-center rounded-full border-4 border-white/90 transition-transform active:scale-95"
+                // design-token-ignore: camera shutter, universal affordance
+                className="flex size-16 items-center justify-center rounded-full border-4 border-on-media/90 transition-transform active:scale-95"
               >
                 <span
                   // Always 48px and scaled down while recording, so the change
                   // animates on the compositor instead of re-laying out.
                   className={`size-12 transition-[transform,border-radius,background-color] ${
                     recording
-                      ? "scale-50 rounded-xl bg-[var(--coral)]"
+                      ? "scale-50 rounded-card bg-[var(--coral)]"
                       : captureMode === "video"
                         ? "rounded-full bg-[var(--coral)]"
-                        : "rounded-full bg-white"
+                        : "rounded-full bg-coral-deep"
                   }`}
                 />
               </button>
@@ -360,9 +362,10 @@ export function CameraCapture({
                 aria-busy={converting}
                 disabled={converting}
                 onClick={() => libraryInputRef.current?.click()}
-                className="flex size-16 items-center justify-center rounded-full border-4 border-white/90 disabled:opacity-50"
+                // design-token-ignore: camera shutter, universal affordance
+                className="flex size-16 items-center justify-center rounded-full border-4 border-on-media/90 disabled:opacity-50"
               >
-                <Images className="size-6 text-white" />
+                <Images className="size-6 text-on-media" />
               </button>
             )}
 
@@ -372,14 +375,14 @@ export function CameraCapture({
               aria-busy={converting}
               disabled={converting}
               onClick={() => libraryInputRef.current?.click()}
-              className="flex size-11 flex-col items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 disabled:opacity-50"
+              className="flex size-11 flex-col items-center justify-center rounded-control bg-scrim-solid/40 text-on-media transition-colors hover:bg-scrim-solid/60 disabled:opacity-50"
             >
               <Images className="size-4" />
             </button>
           </div>
 
           {heicWarning && (
-            <p className="mt-3 rounded-full bg-[var(--coral-deep)]/90 px-3 py-1.5 text-center text-xs text-white">
+            <p className="mt-3 rounded-control bg-[var(--coral-deep)]/90 px-3 py-1.5 text-center text-caption text-on-brand">
               {heicWarning}
             </p>
           )}
@@ -396,17 +399,17 @@ export function CameraCapture({
                   key={r.id}
                   type="button"
                   onClick={() => onCaptured(r.file, r.type)}
-                  className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-white/30"
+                  className="relative size-12 shrink-0 overflow-hidden rounded-control border border-on-media/30"
                 >
                   {r.type === "video" ? (
                     <>
                       <video src={r.url} muted className="h-full w-full object-cover" />
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/25">
-                        <Play className="size-3.5 fill-white text-white" />
+                      <span className="absolute inset-0 flex items-center justify-center bg-scrim-solid/25">
+                        <Play className="size-3.5 fill-on-media text-on-media" />
                       </span>
                     </>
                   ) : (
-                    <img src={r.url} alt="" className="h-full w-full object-cover" />
+                    <ImageWithFallback src={r.url} alt="" className="h-full w-full" />
                   )}
                 </button>
               ))}

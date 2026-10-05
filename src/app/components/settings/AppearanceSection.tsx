@@ -20,19 +20,19 @@ const APPEARANCE_OPTIONS: {
     value: "system",
     label: "System default",
     sublabel: "FOLLOWS YOUR DEVICE",
-    swatch: { bg: "#F6F1E7", card: "#1C1816", ink: "#9A4A34" },
+    swatch: { bg: "var(--theme-light-bg)", card: "var(--theme-dark-bg)", ink: "var(--theme-light-accent)" },
   },
   {
     value: "light",
     label: "Light",
     sublabel: "WARM PAPER",
-    swatch: { bg: "#F6F1E7", card: "#FBF8F1", ink: "#9A4A34" },
+    swatch: { bg: "var(--theme-light-bg)", card: "var(--theme-light-card)", ink: "var(--theme-light-accent)" },
   },
   {
     value: "dark",
     label: "Dark",
     sublabel: "WARM CHARCOAL",
-    swatch: { bg: "#1C1816", card: "#26211D", ink: "#C8674D" },
+    swatch: { bg: "var(--theme-dark-bg)", card: "var(--theme-dark-card)", ink: "var(--theme-dark-accent)" },
   },
 ];
 
@@ -42,7 +42,7 @@ export function AppearanceSection() {
   return (
     <section>
       <SectionHeader n={1} eyebrow="APPEARANCE" title="Appearance" />
-      <p className="mb-4 text-sm text-muted-foreground">
+      <p className="mb-4 text-small text-muted-foreground">
         Light is warm paper, dark is warm charcoal. Same identity in either.
       </p>
       <RadioGroup
@@ -57,12 +57,12 @@ export function AppearanceSection() {
               key={opt.value}
               htmlFor={`appearance-${opt.value}`}
               className={
-                "flex min-h-11 cursor-pointer items-center gap-4 rounded-btn border p-4 transition-colors " +
+                "flex min-h-11 cursor-pointer items-center gap-4 rounded-control border p-4 transition-colors " +
                 (selected ? "border-accent" : "border-border hover:border-muted-foreground")
               }
             >
               <span
-                className="flex h-10 w-14 shrink-0 overflow-hidden rounded-md border border-border"
+                className="flex h-10 w-14 shrink-0 overflow-hidden rounded-control border border-border"
                 aria-hidden="true"
               >
                 <span className="h-full w-1/2" style={{ backgroundColor: opt.swatch.bg }} />

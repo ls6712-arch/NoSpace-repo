@@ -112,7 +112,8 @@ function Trail({
                 style={
                   reducedMotion
                     ? undefined
-                    : { animation: `ns-rise 500ms ease-out both`, animationDelay: `${i * 30}ms` }
+                    // design-token-ignore: stagger delay, not a duration
+                    : { animation: "ns-rise var(--duration-base) var(--ease-standard) both", animationDelay: `${i * 30}ms` }
                 }
               />
             );
@@ -122,7 +123,7 @@ function Trail({
       {hoveredMoment && (
         <div
           role="tooltip"
-          className="absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[11px] text-popover-foreground shadow-sm"
+          className="absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-control border border-border bg-popover px-2 py-1 text-caption text-popover-foreground shadow-overlay"
         >
           <Time value={hoveredMoment.createdAt} format="date" /> · {firstWords(hoveredMoment.caption)}
         </div>
@@ -169,7 +170,7 @@ export function PursuitTrack({
         <div className="min-w-0">
           <Link
             to={`/pursuit/${pursuit.id}`}
-            className="block text-base text-foreground hover:text-accent"
+            className="block text-body text-foreground hover:text-accent"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             {pursuit.title}
@@ -182,7 +183,7 @@ export function PursuitTrack({
           <Link
             to={`/pursuit/${pursuit.id}/moment`}
             aria-label={`Log a Moment on ${pursuit.title}`}
-            className="flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-[var(--coral-deep)]"
+            className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground transition-colors hover:border-[var(--coral-deep)]"
           >
             <Plus className="size-3" />
             Moment
@@ -193,7 +194,7 @@ export function PursuitTrack({
             onClick={() => setLogging((v) => !v)}
             aria-expanded={logging}
             aria-label={`Log a Moment on ${pursuit.title}`}
-            className="flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-[var(--coral-deep)]"
+            className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground transition-colors hover:border-[var(--coral-deep)]"
           >
             <Plus className="size-3" />
             Moment
@@ -206,15 +207,15 @@ export function PursuitTrack({
       {measured ? (
         <div className="mt-2">
           <ProgressBar fraction={measured.fraction} thin />
-          <p className="mt-1 text-xs text-foreground">
+          <p className="mt-1 text-caption text-foreground">
             {formatAmount(measured.current)} / {formatAmount(measured.target)} {pursuit.measure!.unit}
             <span className="text-muted-foreground"> · {measured.percent}%</span>
           </p>
         </div>
       ) : (
-        goalLine && <p className="mt-2 text-xs text-foreground">{goalLine}</p>
+        goalLine && <p className="mt-2 text-caption text-foreground">{goalLine}</p>
       )}
-      <p className="mt-0.5 text-xs text-muted-foreground">{lastMomentText(lastMomentAt)}</p>
+      <p className="mt-0.5 text-caption text-muted-foreground">{lastMomentText(lastMomentAt)}</p>
 
       {logging && (
         <div className="mt-2.5">

@@ -33,8 +33,8 @@ export function BadgeUnlockToast() {
   const shared = isBadgeShared(badge.id);
 
   return (
-    <div className="fixed bottom-5 right-5 z-[60] w-[calc(100%-2.5rem)] max-w-sm animate-in slide-in-from-bottom-4 fade-in">
-      <div className="glass-panel glow-violet flex items-start gap-3 rounded-2xl p-4">
+    <div className="fixed bottom-[calc(1.25rem+var(--safe-bottom))] right-[calc(1.25rem+var(--safe-right))] z-[60] w-[calc(100%-2.5rem)] max-w-sm animate-in duration-base slide-in-from-bottom-4 fade-in">
+      <div className="glass-panel shadow-overlay flex items-start gap-3 rounded-card p-4">
         <span
           className="flex size-10 shrink-0 items-center justify-center rounded-full"
           style={{
@@ -46,18 +46,18 @@ export function BadgeUnlockToast() {
           <Icon className="size-5" />
         </span>
         <div className="flex-1">
-          <div className="text-xs uppercase tracking-wide text-[var(--coral-text)] mb-0.5">
+          <div className="text-caption uppercase tracking-wide text-[var(--coral-text)] mb-0.5">
             Milestone reached
           </div>
-          <div className="text-sm font-medium">{badgeName(badge, hobbySlug, hobbyLabel)}</div>
-          <div className="mb-1.5 text-xs text-muted-foreground">{badge.description}</div>
+          <div className="text-small font-medium">{badgeName(badge, hobbySlug, hobbyLabel)}</div>
+          <div className="mb-1.5 text-caption text-muted-foreground">{badge.description}</div>
           {shared ? (
-            <span className="text-xs text-muted-foreground">Shared on your profile</span>
+            <span className="text-caption text-muted-foreground">Shared on your profile</span>
           ) : (
             <button
               type="button"
               onClick={() => setShareOpen(true)}
-              className="inline-flex items-center gap-1 text-xs text-[var(--coral-text)] hover:underline"
+              className="inline-flex items-center gap-1 text-caption text-[var(--coral-text)] hover:underline"
             >
               <Icons.Share2 className="size-3" />
               Share
@@ -66,7 +66,7 @@ export function BadgeUnlockToast() {
         </div>
         <button
           onClick={dismissLastBadge}
-          className="text-muted-foreground hover:text-foreground text-xs"
+          className="text-muted-foreground hover:text-foreground text-caption"
         >
           <Icons.X className="size-4" />
         </button>

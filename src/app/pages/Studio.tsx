@@ -203,14 +203,14 @@ export function Studio() {
     if (!username && !user) {
       return (
         <div className="flex min-h-[70vh] items-center justify-center px-4 text-center">
-          <p className="text-sm text-muted-foreground">Sign in to open your own Scrapbook.</p>
+          <p className="text-small text-muted-foreground">Sign in to open your own Scrapbook.</p>
         </div>
       );
     }
     if (remote.status === "missing") {
       return (
         <div className="flex min-h-[70vh] items-center justify-center px-4 text-center">
-          <p className="text-sm text-muted-foreground">No Scrapbook here. The link may be out of date.</p>
+          <p className="text-small text-muted-foreground">No Scrapbook here. The link may be out of date.</p>
         </div>
       );
     }
@@ -235,7 +235,7 @@ export function Studio() {
 
   if (!opened) {
     return (
-      <div className="ns-paper-theme relative min-h-screen overflow-hidden bg-[var(--ink)] text-white">
+      <div className="ns-paper-theme relative min-h-viewport overflow-hidden bg-media-base text-on-media">
         <div className="absolute inset-0">
           {coverPost && (
             <PostMedia
@@ -244,29 +244,25 @@ export function Studio() {
               hobbySlug={coverPost.hobbySlug}
               seed={coverPost.id}
               preview
+              priority
               className="h-full w-full object-cover"
             />
           )}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(42,36,29,0.72) 0%, rgba(42,36,29,0.15) 45%, rgba(42,36,29,0.35) 100%)",
-            }}
-          />
+          <div className="absolute inset-0 bg-scrim-top" />
+          <div className="absolute inset-0 bg-scrim" />
         </div>
 
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="absolute left-6 top-6 flex size-9 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white transition-colors hover:border-white/60"
+          className="absolute left-6 top-6 flex size-9 items-center justify-center rounded-control border border-on-media/30 bg-scrim-solid/25 text-on-media transition-colors hover:border-on-media/60"
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />
         </button>
 
         <span
-          className="absolute right-8 top-7 text-sm italic text-white/80"
+          className="absolute right-8 top-7 text-small italic text-on-media/90"
           style={{ fontFamily: "var(--font-serif)" }}
         >
           {APP_NAME}
@@ -279,19 +275,19 @@ export function Studio() {
         )}
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
-          <p className="mb-2 text-xs uppercase tracking-[0.16em] text-white/70">
+          <p className="mb-2 text-caption uppercase tracking-[0.16em] text-on-media/90">
             {plural(loaded.posts.length, "Moment")}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
           <h1
-            className="max-w-xl text-4xl leading-tight sm:text-6xl"
+            className="max-w-xl text-display leading-tight text-on-media"
             style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
           >
             {coverTitle}
           </h1>
           {coverTagline && (
             <p
-              className="mt-3 max-w-md text-lg italic text-white/85 sm:text-xl"
+              className="mt-3 max-w-md text-lead italic text-on-media/90 sm:text-title"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {coverTagline}
@@ -304,7 +300,7 @@ export function Studio() {
               setPageIndex(0);
             }}
             disabled={spreads.length === 0}
-            className="mt-7 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm text-white transition-opacity disabled:opacity-40"
+            className="mt-7 inline-flex items-center gap-2 rounded-control px-6 py-3 text-small text-on-brand transition-opacity disabled:opacity-40"
             style={{ backgroundColor: "var(--coral-deep)" }}
           >
             Open the Scrapbook
@@ -320,19 +316,19 @@ export function Studio() {
   const rest = spread?.items.slice(1, 7) ?? [];
 
   return (
-    <div className="ns-paper-theme min-h-screen bg-[var(--paper)]">
+    <div className="ns-paper-theme min-h-viewport bg-[var(--paper)]">
       <div className="mx-auto max-w-6xl px-6 py-6 sm:px-10">
         <div className="mb-6 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => setOpened(false)}
-            className="flex size-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] transition-colors hover:border-[var(--coral-deep)]"
+            className="flex size-9 items-center justify-center rounded-control border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] transition-colors hover:border-[var(--coral-deep)]"
             aria-label="Back to cover"
           >
             <ArrowLeft className="size-4" />
           </button>
 
-          <div className="flex gap-1 rounded-full border border-[var(--line)] p-0.5 text-xs">
+          <div className="flex gap-1 rounded-control border border-[var(--line)] p-0.5 text-caption">
             {(["chronological", "tag"] as Grouping[]).map((g) => (
               <button
                 key={g}
@@ -342,8 +338,8 @@ export function Studio() {
                   setPageIndex(0);
                   setDirection(1);
                 }}
-                className={`rounded-full px-3.5 py-1.5 transition-colors ${
-                  grouping === g ? "bg-[var(--coral-deep)] text-white" : "text-[var(--ink-soft)]"
+                className={`rounded-control px-3.5 py-1.5 transition-colors ${
+                  grouping === g ? "bg-[var(--coral-deep)] text-on-brand" : "text-[var(--ink-soft)]"
                 }`}
               >
                 {g === "chronological" ? "Chronological" : "By tag"}
@@ -352,7 +348,7 @@ export function Studio() {
           </div>
 
           <span
-            className="text-sm italic text-[var(--ink-soft)]"
+            className="text-small italic text-[var(--ink-soft)]"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             {spreads.length === 0 ? "0 / 0" : `${clampedIndex + 1} / ${spreads.length}`}
@@ -361,7 +357,7 @@ export function Studio() {
 
         {spread?.chapter && (
           <h2
-            className="mb-4 text-[22px]"
+            className="mb-4 text-title"
             style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}
           >
             {spread.chapter}
@@ -375,6 +371,7 @@ export function Studio() {
               initial={reduceMotion ? false : { rotateY: direction > 0 ? 70 : -70, opacity: 0 }}
               animate={{ rotateY: 0, opacity: 1 }}
               exit={reduceMotion ? undefined : { rotateY: direction > 0 ? -70 : 70, opacity: 0 }}
+              // design-token-ignore: spring, not a fixed duration; initial/exit are off under reduced motion
               transition={ENTER}
               style={{
                 transformStyle: "preserve-3d",
@@ -383,18 +380,19 @@ export function Studio() {
               className="grid grid-cols-1 gap-3 md:grid-cols-[1.2fr_1fr]"
             >
               {hero && (
-                <div className="relative aspect-[4/5] overflow-hidden rounded-md border border-[var(--line)] md:aspect-auto md:h-[560px]">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-card border border-[var(--line)] md:aspect-auto md:h-[560px]">
                   <PostMedia
                     media={hero.media}
                     type={hero.type}
                     hobbySlug={hero.hobbySlug}
                     seed={hero.id}
                     preview
+                    width={800}
                     className="h-full w-full object-cover"
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-scrim" />
                   <p
-                    className="absolute inset-x-0 bottom-0 p-5 text-lg italic text-white sm:text-xl"
+                    className="absolute inset-x-0 bottom-0 p-5 text-lead italic text-on-media sm:text-title"
                     style={{ fontFamily: "var(--font-serif)" }}
                   >
                     {hero.caption}
@@ -403,17 +401,18 @@ export function Studio() {
               )}
               <div className="grid grid-cols-2 grid-rows-3 gap-2 md:h-[560px]">
                 {rest.map((post) => (
-                  <div key={post.id} className="relative overflow-hidden rounded-md border border-[var(--line)]">
+                  <div key={post.id} className="relative overflow-hidden rounded-card border border-[var(--line)]">
                     <PostMedia
                       media={post.media}
                       type={post.type}
                       hobbySlug={post.hobbySlug}
                       seed={post.id}
                       preview
+                      width={400}
                       className="h-full w-full object-cover"
                     />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
-                    <p className="absolute inset-x-0 bottom-0 truncate p-2 text-[11px] italic text-white">
+                    <div className="pointer-events-none absolute inset-0 bg-scrim" />
+                    <p className="absolute inset-x-0 bottom-0 truncate p-2 text-caption italic text-on-media" title={post.caption}>
                       {post.caption}
                     </p>
                   </div>
@@ -426,7 +425,7 @@ export function Studio() {
         <div className="mt-6 flex justify-between">
           <Button
             variant="outline"
-            className="rounded-full disabled:opacity-35"
+            className="rounded-control disabled:opacity-35"
             disabled={clampedIndex === 0}
             onClick={() => goTo(clampedIndex - 1)}
           >
@@ -435,7 +434,7 @@ export function Studio() {
           </Button>
           <Button
             variant="outline"
-            className="rounded-full disabled:opacity-35"
+            className="rounded-control disabled:opacity-35"
             disabled={clampedIndex >= spreads.length - 1}
             onClick={() => goTo(clampedIndex + 1)}
           >

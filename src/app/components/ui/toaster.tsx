@@ -20,10 +20,10 @@ export function Toaster() {
         unstyled: true,
         classNames: {
           toast:
-            "flex w-full items-center gap-3 rounded-btn border border-border bg-card px-4 py-3 text-sm text-foreground shadow-md",
+            "flex w-full items-center gap-3 rounded-control border border-border bg-card px-4 py-3 text-small text-foreground shadow-overlay",
           error: "border-destructive/40",
           icon: "hidden",
-          actionButton: "ml-auto shrink-0 text-sm font-medium text-accent hover:underline",
+          actionButton: "ml-auto shrink-0 text-small font-medium text-accent hover:underline",
         },
       }}
     />

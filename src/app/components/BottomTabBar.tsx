@@ -65,11 +65,11 @@ export function BottomTabBar() {
   return (
     <>
       {/* Keeps page content clear of the bar, including the iOS home indicator. */}
-      <div className="h-[72px] lg:hidden" aria-hidden="true" />
+      <div className="h-[calc(72px+var(--safe-bottom))] lg:hidden" aria-hidden="true" />
 
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur-xl lg:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{ paddingBottom: "var(--safe-bottom)", paddingLeft: "var(--safe-left)", paddingRight: "var(--safe-right)" }}
         aria-label="Main"
       >
         <div className="mx-auto grid max-w-md grid-cols-4 px-1 pb-1.5 pt-1.5">
@@ -95,17 +95,17 @@ export function BottomTabBar() {
                     />
                   )}
                 </span>
-                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+                <span className="text-caption font-medium leading-none">{tab.label}</span>
               </>
             );
-            const className = `flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl py-1.5 transition-colors ${
+            const className = `flex min-h-12 flex-col items-center justify-center gap-1 rounded-card py-1.5 transition-colors ${
               tint ? "" : "text-muted-foreground"
             }`;
             const style = {
               color: tint,
               backgroundColor:
                 tab.accent && active
-                  ? "color-mix(in srgb, var(--violet-electric) 16%, transparent)"
+                  ? "color-mix(in srgb, var(--violet-electric) 10%, transparent)"
                   : undefined,
             };
 

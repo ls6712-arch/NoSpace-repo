@@ -5,8 +5,8 @@ export function NotFound() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
       <div className="text-center">
-        <h1 className="text-8xl mb-4 text-gradient-brand">404</h1>
-        <h2 className="text-2xl mb-4">This space doesn’t exist</h2>
+        <h1 className="text-display mb-4 text-gradient-brand">404</h1>
+        <h2 className="text-title mb-4">This space doesn’t exist</h2>
         <p className="text-muted-foreground mb-6">
           But eight other hobby spaces do, and they’re worth a look.
         </p>

@@ -52,7 +52,7 @@ export function DayTwoInviteCard() {
   return (
     <section
       aria-label="Invite someone"
-      className="mb-6 rounded-2xl border border-border bg-card p-4 sm:p-5"
+      className="mb-6 rounded-card border border-border bg-card p-4 sm:p-5"
     >
       <OnboardingInviteCard
         variant="card"

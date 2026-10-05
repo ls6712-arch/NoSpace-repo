@@ -16,7 +16,7 @@ import { EmptyState } from "./StateViews";
  * the "By Corner" view still groups by Space/Corner (and so still wants a
  * per-Corner color), since the All-moments grid (WorkGrid.tsx) reads tags
  * with one neutral pill instead — see Fix 1-2. */
-export const INK = "#3A2A1F";
+export { INK } from "./subart/palette";
 
 /** A colored tag per Space, cycling through the brand's warm-hue tokens —
  * same idea as this file's own book-spine colors. A few Spaces get an
@@ -199,7 +199,7 @@ function CornerTile({
   return (
     <Link
       to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`}
-      className="group flex min-w-0 flex-col rounded-[var(--radius-moment)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--coral-deep)]"
+      className="group flex min-w-0 flex-col rounded-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--coral-deep)]"
     >
       <div className={`relative overflow-hidden ${MOMENT_MEDIA}`}>
         {item.lastMediaUrl ? (
@@ -209,6 +209,7 @@ function CornerTile({
             hobbySlug={item.hobbySlug}
             seed={item.lastMediaId ?? item.key}
             preview
+            width={320}
             className="h-full w-full object-cover transition-transform duration-base group-hover:scale-[1.02] motion-reduce:transition-none"
           />
         ) : item.subSlug ? (
@@ -230,20 +231,20 @@ function CornerTile({
           </div>
         )}
         <span
-          className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-full px-2.5 py-1 text-[10px] font-semibold text-white"
+          className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-control px-2.5 py-1 text-caption font-semibold text-on-media"
           style={{ backgroundColor: tagTint(item.hobbySlug) }}
-        >
+         title={getHobby(item.hobbySlug)?.shortName ?? item.label}>
           {getHobby(item.hobbySlug)?.shortName ?? item.label}
         </span>
       </div>
       <p
-        className="mt-3 truncate text-[17px] leading-snug transition-colors group-hover:text-[var(--coral-text)] sm:text-[19px]"
+        className="mt-3 truncate text-lead leading-snug transition-colors group-hover:text-[var(--coral-text)]"
         style={{ fontFamily: "var(--font-serif)" }}
         title={item.label}
       >
         {item.label}
       </p>
-      <p className="mt-0.5 min-h-[1.25rem] truncate text-xs text-muted-foreground" title={note ?? undefined}>
+      <p className="mt-0.5 min-h-[1.25rem] truncate text-caption text-muted-foreground" title={note ?? undefined}>
         {note ?? ""}
       </p>
     </Link>

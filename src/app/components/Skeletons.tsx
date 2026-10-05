@@ -32,7 +32,7 @@ export function MomentCardSkeleton() {
           </div>
         </div>
         {/* Caption: two lines at 17px/1.3 (19px on sm), min-h 2.6em */}
-        <div className="mt-2 flex min-h-[2.6em] flex-col justify-center gap-2 text-[17px] leading-[1.3] sm:text-[19px]">
+        <div className="mt-2 flex min-h-[2.6em] flex-col justify-center gap-2 text-lead">
           <Line className="h-3.5 w-full" />
           <Line className="h-3.5 w-2/3" />
         </div>
@@ -62,7 +62,7 @@ export function MomentGridSkeleton({ count = 6, className }: { count?: number; c
 /** Twin of the Space / Corner card on Discover (4:5 art, p-3 with name + one line). */
 export function SpaceCardSkeleton() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="flex flex-col overflow-hidden rounded-card border border-border bg-card">
       <Skeleton className="aspect-[4/5] w-full rounded-none" />
       <div className="p-3">
         <div className="flex h-5 items-center">
@@ -104,7 +104,7 @@ export function PersonRowSkeleton({ variant = "card" }: { variant?: "card" | "ro
     );
   }
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5">
+    <div className="flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3.5">
       <Skeleton className="size-11 shrink-0 rounded-full" />
       <div className="min-w-0 flex-1">
         <div className="flex h-5 items-center">
@@ -145,8 +145,8 @@ export function ProfileHeaderSkeleton() {
           <Line className="h-3 w-48" />
         </div>
         <div className="mt-4 flex gap-2">
-          <Skeleton className="h-9 w-24 rounded-btn" />
-          <Skeleton className="h-9 w-24 rounded-btn" />
+          <Skeleton className="h-9 w-24 rounded-control" />
+          <Skeleton className="h-9 w-24 rounded-control" />
         </div>
       </div>
     </div>
@@ -156,7 +156,7 @@ export function ProfileHeaderSkeleton() {
 /** Twin of PursuitCard (4:5 cover, p-4 with title and two meta lines). */
 export function PursuitCardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn("flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card", className)}>
+    <div className={cn("flex w-64 shrink-0 flex-col overflow-hidden rounded-card border border-border bg-card", className)}>
       <Skeleton className="aspect-[4/5] w-full rounded-none" />
       <div className="flex flex-1 flex-col p-4">
         <div className="flex h-5 items-center">
@@ -176,7 +176,7 @@ export function PursuitCardSkeleton({ className }: { className?: string }) {
 /** Twin of PursuitCompactCard (min-h-11 row with ring + three text lines). */
 export function PursuitCompactSkeleton() {
   return (
-    <div className="flex min-h-11 items-center gap-2.5 rounded-2xl border border-border bg-card p-3">
+    <div className="flex min-h-11 items-center gap-2.5 rounded-card border border-border bg-card p-3">
       <Skeleton className="size-9 shrink-0 rounded-full" />
       <div className="min-w-0 flex-1 space-y-1.5">
         <Line className="h-2 w-12" />
@@ -201,7 +201,7 @@ export function PursuitHeaderSkeleton() {
       <div className="mb-5 flex h-5 items-center">
         <Line className="h-3 w-56" />
       </div>
-      <Skeleton className="mb-6 h-40 w-full rounded-2xl" />
+      <Skeleton className="mb-6 h-40 w-full rounded-card" />
     </>
   );
 }
@@ -235,7 +235,7 @@ export function CardListSkeleton({ count = 3, rowClassName = "h-24" }: { count?:
   return (
     <div className="space-y-3">
       {Array.from({ length: count }, (_, i) => (
-        <Skeleton key={i} className={cn("w-full rounded-2xl", rowClassName)} />
+        <Skeleton key={i} className={cn("w-full rounded-card", rowClassName)} />
       ))}
     </div>
   );

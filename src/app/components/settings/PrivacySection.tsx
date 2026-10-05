@@ -22,7 +22,7 @@ function BlockedPeopleSection() {
 
   if (social.blockedPeople.length === 0) {
     return (
-      <p className="px-4 py-4 text-xs leading-relaxed text-muted-foreground sm:px-5">
+      <p className="px-4 py-4 text-caption leading-relaxed text-muted-foreground sm:px-5">
         You haven’t blocked anyone.
       </p>
     );
@@ -35,9 +35,9 @@ function BlockedPeopleSection() {
           <span className="flex min-w-0 items-center gap-2.5">
             <Avatar className="size-8 shrink-0">
               {p.avatarUrl && <AvatarImage src={p.avatarUrl} alt="" />}
-              <AvatarFallback className="text-[10px]">{initials(p.displayName)}</AvatarFallback>
+              <AvatarFallback className="text-caption">{initials(p.displayName)}</AvatarFallback>
             </Avatar>
-            <span className="truncate text-sm">{p.displayName}</span>
+            <span className="truncate text-small" title={p.displayName}>{p.displayName}</span>
           </span>
           <Button
             variant="outline"
@@ -63,8 +63,8 @@ function DefaultVisibilityRow() {
 
   return (
     <div className="px-4 py-4 sm:px-5">
-      <div className="mb-0.5 text-sm">Default visibility for new Moments</div>
-      <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+      <div className="mb-0.5 text-small">Default visibility for new Moments</div>
+      <p className="mb-3 text-caption leading-relaxed text-muted-foreground">
         What a new Moment starts as in the composer — you can always change it there before sharing.
       </p>
       <RadioGroup
@@ -85,7 +85,7 @@ function DefaultVisibilityRow() {
           <Label
             key={opt.value}
             htmlFor={`default-visibility-${opt.value}`}
-            className="flex min-h-11 cursor-pointer items-center gap-2 text-sm"
+            className="flex min-h-11 cursor-pointer items-center gap-2 text-small"
           >
             <RadioGroupItem
               value={opt.value}
@@ -127,7 +127,7 @@ export function PrivacySection() {
   return (
     <section>
       <SectionHeader n={4} eyebrow="PRIVACY" title="Privacy" />
-      <p className="mb-4 text-sm text-muted-foreground">
+      <p className="mb-4 text-small text-muted-foreground">
         Who sees what you make by default.
       </p>
       <SettingsPanel>
@@ -135,10 +135,10 @@ export function PrivacySection() {
         <ReadReceiptsRow />
       </SettingsPanel>
 
-      <h2 className="mb-1 mt-8 text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+      <h2 className="mb-1 mt-8 text-small" style={{ fontFamily: "var(--font-serif)" }}>
         Blocked people
       </h2>
-      <p className="mb-4 text-xs text-muted-foreground">
+      <p className="mb-4 text-caption text-muted-foreground">
         They can’t message you, follow you, react, or comment on your Moments, and don’t see your
         profile. Unblocking doesn’t restore a follow.
       </p>

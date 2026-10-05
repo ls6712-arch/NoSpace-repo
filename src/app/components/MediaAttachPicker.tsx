@@ -3,6 +3,7 @@ import { ImagePlus, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { UPLOAD_COPY } from "../lib/stateCopy";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * A small, reusable "attach a photo or video" control — the same picked
@@ -52,17 +53,17 @@ export function MediaAttachPicker({
   if (file && previewUrl) {
     const isVideo = file.type.startsWith("video/");
     return (
-      <div className="relative inline-block overflow-hidden rounded-xl border border-border">
+      <div className="relative inline-block overflow-hidden rounded-card border border-border">
         {isVideo ? (
           <video src={previewUrl} className="h-24 w-24 object-cover" muted />
         ) : (
-          <img src={previewUrl} alt="" className="h-24 w-24 object-cover" />
+          <ImageWithFallback src={previewUrl} alt="" className="h-24 w-24" />
         )}
         <button
           type="button"
           onClick={() => onChange(null)}
           aria-label="Remove attachment"
-          className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/70 text-white"
+          className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media"
         >
           <X className="size-3" />
         </button>
@@ -110,7 +111,7 @@ export function MediaAttachPicker({
         {converting ? "Preparing…" : label}
       </Button>
       {heicWarning && (
-        <p className="mt-1.5 max-w-[16rem] text-[11px] leading-relaxed text-[var(--coral-text)]">
+        <p className="mt-1.5 max-w-[16rem] text-caption leading-relaxed text-[var(--coral-text)]">
           {heicWarning}
         </p>
       )}

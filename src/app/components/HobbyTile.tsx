@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { useState } from "react";
 import { hobbyPhoto } from "../data/hobbyPhotos";
 import { SubHobbyArt } from "./SubHobbyArt";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /**
  * One hobby, as a picture. Used both inside a space (where it filters that
@@ -33,15 +34,9 @@ export function HobbyTile({
 
   const inner = (
     <>
-      <div className="relative overflow-hidden rounded-xl">
+      <div className="relative overflow-hidden rounded-card">
         {photo ? (
-          <img
-            src={photo}
-            alt=""
-            loading="lazy"
-            onError={() => setPhotoFailed(true)}
-            className="h-auto w-full aspect-square object-cover transition-transform duration-base group-hover:scale-[1.06]"
-          />
+          <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className="h-auto w-full aspect-square" imgClassName="transition-transform duration-base group-hover:scale-[1.06]" />
         ) : (
           <SubHobbyArt
             hobbySlug={hobbySlug}
@@ -50,13 +45,13 @@ export function HobbyTile({
           />
         )}
         {!!count && (
-          <span className="absolute top-1.5 right-1.5 rounded-full bg-black/55 px-1.5 py-0.5 text-[10px] leading-none text-white tabular-nums backdrop-blur-sm">
+          <span className="absolute top-1.5 right-1.5 rounded-control bg-scrim-solid/55 px-1.5 py-0.5 text-caption leading-none text-on-media tabular-nums backdrop-blur-sm">
             {count}
           </span>
         )}
       </div>
       <span
-        className={`mt-2 block text-center text-xs leading-tight ${
+        className={`mt-2 block text-center text-caption leading-tight ${
           active ? "text-foreground" : "text-muted-foreground"
         }`}
       >
@@ -65,10 +60,10 @@ export function HobbyTile({
     </>
   );
 
-  const className = `group block rounded-2xl border p-1.5 text-left transition-colors ${
+  const className = `group block rounded-card border p-1.5 text-left transition-colors ${
     active
-      ? "border-[var(--coral-text)] bg-white/[0.07]"
-      : "border-border hover:border-foreground/30 hover:bg-white/[0.04]"
+      ? "border-[var(--coral-text)] bg-surface-muted"
+      : "border-border hover:border-foreground/30 hover:bg-surface-muted"
   }`;
 
   if (to) {

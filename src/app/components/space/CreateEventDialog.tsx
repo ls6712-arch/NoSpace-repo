@@ -125,7 +125,7 @@ export function CreateEventDialog({
           <div>
             <Label htmlFor="event-title">Title <span className="text-destructive">*</span></Label>
             <Input id="event-title" value={title} onChange={(e) => setTitle(e.target.value)} />
-            {fieldErrors.title && <p className="mt-1 text-xs text-destructive">{fieldErrors.title}</p>}
+            {fieldErrors.title && <p className="mt-1 text-caption text-destructive">{fieldErrors.title}</p>}
           </div>
           <div>
             <Label htmlFor="event-description">Description (optional)</Label>
@@ -135,7 +135,7 @@ export function CreateEventDialog({
             <div>
               <Label htmlFor="event-starts">Starts <span className="text-destructive">*</span></Label>
               <Input id="event-starts" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
-              {fieldErrors.startsAt && <p className="mt-1 text-xs text-destructive">{fieldErrors.startsAt}</p>}
+              {fieldErrors.startsAt && <p className="mt-1 text-caption text-destructive">{fieldErrors.startsAt}</p>}
             </div>
             <div>
               <Label htmlFor="event-ends">Ends (optional)</Label>
@@ -165,14 +165,14 @@ export function CreateEventDialog({
                   <Input id="event-city" value={city} onChange={(e) => setCity(e.target.value)} />
                 </div>
               </div>
-              {fieldErrors.location && <p className="text-xs text-destructive">{fieldErrors.location}</p>}
+              {fieldErrors.location && <p className="text-caption text-destructive">{fieldErrors.location}</p>}
               <div>
                 <Label htmlFor="event-address">Exact address (optional)</Label>
                 <Input id="event-address" value={exactAddress} onChange={(e) => setExactAddress(e.target.value)} placeholder="Only shown to members and RSVP’d guests" />
               </div>
             </>
           )}
-          {error && <p className="text-xs text-destructive">{error}</p>}
+          {error && <p className="text-caption text-destructive">{error}</p>}
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>

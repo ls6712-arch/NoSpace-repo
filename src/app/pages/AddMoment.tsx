@@ -21,6 +21,7 @@ import { AmountStepper, ProgressBar, SoftPanel, Toggle } from "../components/pur
 import { APP_NAME } from "../config";
 import { formatDate } from "../lib/dates";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 type Audience = "private" | "followers" | "public";
 
@@ -86,7 +87,7 @@ export function AddMoment() {
   if (!project) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
-        <p className="text-sm text-muted-foreground">That Pursuit isn’t in your list.</p>
+        <p className="text-small text-muted-foreground">That Pursuit isn’t in your list.</p>
         <Link to="/my-space">
           <Button variant="outline">Back to Home</Button>
         </Link>
@@ -177,33 +178,33 @@ export function AddMoment() {
   const recent = moments.filter((m) => m.image).slice(-4);
 
   return (
-    <div className="min-h-screen bg-surface pb-44 lg:pb-28">
+    <div className="min-h-viewport bg-surface pb-44 lg:pb-28">
       <div className="container mx-auto max-w-md px-5 pt-6">
         <div className="mb-4 flex items-center justify-between">
           <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="size-5" />
           </button>
-          <span className="text-base" style={{ fontFamily: "var(--font-serif)" }}>
+          <span className="text-body" style={{ fontFamily: "var(--font-serif)" }}>
             {APP_NAME}
           </span>
           <span className="size-5" />
         </div>
 
-        <h1 className="text-center text-[1.9rem] leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-center text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
           Log a Moment
         </h1>
-        <p className="mt-1 text-center text-sm text-muted-foreground">A little progress, kept for good.</p>
+        <p className="mt-1 text-center text-small text-muted-foreground">A little progress, kept for good.</p>
 
         <Link
           to={`/pursuit/${project.id}`}
-          className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 hover:border-[var(--coral-deep)]"
+          className="mt-6 flex items-center gap-3 rounded-card border border-border bg-card p-3.5 hover:border-[var(--coral-deep)]"
         >
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--pastel-stone)_30%,var(--card))]">
             <Target className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[11px] text-muted-foreground">Pursuit</span>
-            <span className="block truncate text-sm">{project.title}</span>
+            <span className="block text-caption text-muted-foreground">Pursuit</span>
+            <span className="block truncate text-small" title={project.title}>{project.title}</span>
           </span>
           <ChevronRight className="size-4 text-muted-foreground" />
         </Link>
@@ -221,14 +222,14 @@ export function AddMoment() {
           />
         ) : (
           <>
-            <div className="mt-4 flex gap-3 rounded-xl border border-border bg-card p-3">
+            <div className="mt-4 flex gap-3 rounded-card border border-border bg-card p-3">
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-surface-muted text-muted-foreground hover:text-foreground"
+                className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-control border border-dashed border-border bg-surface-muted text-muted-foreground hover:text-foreground"
                 aria-label={file ? "Change photo" : "Add a photo"}
               >
-                {preview ? <img src={preview} alt="" className="size-full object-cover" /> : <Camera className="size-5" />}
+                {preview ? <ImageWithFallback src={preview} alt="" className="size-full" /> : <Camera className="size-5" />}
                 {file && (
                   <span
                     role="button"
@@ -237,7 +238,7 @@ export function AddMoment() {
                       e.stopPropagation();
                       setFile(null);
                     }}
-                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/60 text-white"
+                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/60 text-on-media"
                     aria-label="Remove photo"
                   >
                     <X className="size-3" />
@@ -260,7 +261,7 @@ export function AddMoment() {
                 }}
               />
               <div className="min-w-0 flex-1">
-                <label htmlFor="moment-note" className="text-[11px] text-muted-foreground">
+                <label htmlFor="moment-note" className="text-caption text-muted-foreground">
                   What changed?
                 </label>
                 <textarea
@@ -269,14 +270,14 @@ export function AddMoment() {
                   onChange={(e) => setNote(e.target.value.slice(0, 500))}
                   rows={3}
                   placeholder="Finished the sky layer — wetter paper worked."
-                  className="w-full resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                  className="w-full resize-none bg-transparent text-body text-foreground outline-none placeholder:text-muted-foreground"
                 />
               </div>
             </div>
 
             {measure && (
               <SoftPanel className="mt-4">
-                <p className="text-sm">How much did this move it forward?</p>
+                <p className="text-small">How much did this move it forward?</p>
                 <div className="mt-3">
                   <AmountStepper
                     value={amount}
@@ -287,18 +288,18 @@ export function AddMoment() {
                   />
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted-foreground">Count toward Pursuit progress</span>
+                  <span className="text-caption text-muted-foreground">Count toward Pursuit progress</span>
                   <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
                 </div>
                 {summary && (
-                  <p className="mt-2 text-[11px] text-muted-foreground tabular-nums">
+                  <p className="mt-2 text-caption text-muted-foreground tabular-nums">
                     {formatAmount(summary.current)} of {targetText(measure)} so far
                   </p>
                 )}
               </SoftPanel>
             )}
 
-            <p className="mb-2 mt-5 text-sm">Who sees this</p>
+            <p className="mb-2 mt-5 text-small">Who sees this</p>
             <div className="grid grid-cols-3 gap-2">
               {AUDIENCES.map((a) => (
                 <button
@@ -306,7 +307,7 @@ export function AddMoment() {
                   type="button"
                   onClick={() => setAudience(a.value)}
                   aria-pressed={audience === a.value}
-                  className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs ${
+                  className={`flex h-10 items-center justify-center gap-1.5 rounded-control border text-caption ${
                     audience === a.value
                       ? "border-[var(--coral)] bg-[color-mix(in_srgb,var(--coral)_12%,var(--card))] text-foreground"
                       : "border-border bg-card text-muted-foreground"
@@ -316,10 +317,10 @@ export function AddMoment() {
                 </button>
               ))}
             </div>
-            {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
-            <p className="mt-4 text-center text-[11px] text-muted-foreground">
+            {error && <p className="mt-2 text-caption text-destructive">{error}</p>}
+            <p className="mt-4 flex flex-wrap items-center justify-center gap-x-1 text-center text-caption text-muted-foreground">
               Something bigger?{" "}
-              <Link to={`/create?pursuit=${project.id}`} className="text-accent hover:underline">
+              <Link to={`/create?pursuit=${project.id}`} className="inline-flex min-h-11 items-center text-accent hover:underline">
                 Open the full form
               </Link>
             </p>
@@ -328,9 +329,9 @@ export function AddMoment() {
       </div>
 
       {!added && (
-        <div className="fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom,0px))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur lg:bottom-0 lg:pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]">
+        <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur lg:bottom-0 lg:pb-[calc(var(--safe-bottom)+1rem)]">
           <div className="mx-auto max-w-md">
-            <Button busy={saving} variant="coral" className="h-11 w-full rounded-xl" disabled={!canSave} onClick={save}>
+            <Button busy={saving} variant="coral" className="h-11 w-full rounded-control" disabled={!canSave} onClick={save}>
               Save Moment
             </Button>
           </div>
@@ -367,12 +368,12 @@ function MomentAdded({
   return (
     <div className="mt-4" role="status">
       <SoftPanel className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--coral)] text-white">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--coral-deep)] text-on-brand">
           <Check className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm">Moment added</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-small">Moment added</p>
+          <p className="text-caption text-muted-foreground">
             {added > 0 ? `+${formatAmount(added)} ${unit}` : "Saved to your Pursuit"}
             {summary && targetLine ? ` · ${formatAmount(summary.current)} of ${targetLine}` : ""}
           </p>
@@ -380,7 +381,7 @@ function MomentAdded({
       </SoftPanel>
 
       {mediaError && (
-        <p className="mt-2.5 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3.5 py-2.5 text-xs leading-relaxed text-foreground">
+        <p className="mt-2.5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3.5 py-2.5 text-small leading-relaxed text-foreground">
           {mediaError}
         </p>
       )}
@@ -388,7 +389,7 @@ function MomentAdded({
       {summary && (
         <div className="mt-4">
           <ProgressBar fraction={summary.fraction} />
-          <div className="mt-1.5 flex justify-between text-xs text-muted-foreground">
+          <div className="mt-1.5 flex justify-between text-caption text-muted-foreground">
             <span>{summary.percent}%</span>
             <span>{summary.done ? "Goal reached" : `${formatAmount(summary.remaining)} to go`}</span>
           </div>
@@ -397,12 +398,12 @@ function MomentAdded({
 
       {recent.length > 0 && (
         <div className="mt-5">
-          <p className="mb-2 text-xs text-muted-foreground">Your latest pieces</p>
+          <p className="mb-2 text-caption text-muted-foreground">Your latest pieces</p>
           <div className="grid grid-cols-4 gap-2">
             {recent.map((m) => (
               <figure key={m.key}>
-                <img src={m.image} alt="" className="aspect-square w-full rounded-lg object-cover" />
-                <figcaption className="mt-1 text-center text-[10px] text-muted-foreground">
+                <ImageWithFallback src={m.image} alt="" className="aspect-square w-full rounded-card" />
+                <figcaption className="mt-1 text-center text-caption text-muted-foreground">
                   {formatDate(m.date)}
                 </figcaption>
               </figure>
@@ -412,11 +413,11 @@ function MomentAdded({
       )}
 
       <div className="mt-6 grid grid-cols-2 gap-2">
-        <Button variant="outline" className="h-11 rounded-xl" onClick={onAnother}>
+        <Button variant="outline" className="h-11 rounded-control" onClick={onAnother}>
           Add another
         </Button>
         <Link to={`/pursuit/${pursuitId}`}>
-          <Button variant="coral" className="h-11 w-full rounded-xl">
+          <Button variant="coral" className="h-11 w-full rounded-control">
             View Pursuit
           </Button>
         </Link>
