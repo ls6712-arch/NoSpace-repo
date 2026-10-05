@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { GeneratedArt } from "./GeneratedArt";
 import { scrollBehavior } from "../lib/scrollToElement";
-import { isRealMediaUrl } from "../lib/mediaUrl";
+import { isRealMediaUrl, withFirstFrame } from "../lib/mediaUrl";
 import { ImageWithFallback } from "./ImageWithFallback";
 
 
@@ -61,9 +61,8 @@ export function PostMediaCarousel({
     const url = validUrls[0];
     return (
       <video
-        // A bare <video> with no poster paints black until something decodes it; #t=0.1 seeks to a frame
-        // (same trick as PostMedia, which this component stands in for).
-        src={preview ? `${url}#t=0.1` : url}
+        // First frame as the cover in every view, not only thumbnails (see withFirstFrame).
+        src={withFirstFrame(url)}
         controls={!preview}
         muted={preview}
         playsInline

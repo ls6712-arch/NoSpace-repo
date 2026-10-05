@@ -10,6 +10,7 @@ import { MediaAttachPicker } from "./MediaAttachPicker";
 import { ReportDialog } from "./ReportDialog";
 import { Time } from "./ui/time";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { withFirstFrame } from "../lib/mediaUrl";
 
 /**
  * Thoughts, not comments — short, standalone reflections on a piece of work
@@ -208,7 +209,7 @@ export function Thoughts({
               {t.media && (
                 <div className="mt-2 overflow-hidden rounded-card border border-[var(--hairline)]">
                   {/^https?:\/\/.*\.(mp4|webm|mov)$/i.test(t.media) ? (
-                    <video src={t.media} controls className="w-full" />
+                    <video src={withFirstFrame(t.media)} controls playsInline preload="metadata" className="w-full" />
                   ) : (
                     <ImageWithFallback src={t.media} alt="" aspect="4 / 3" className="w-full" />
                   )}

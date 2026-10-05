@@ -8,6 +8,7 @@ import { plural } from "../../lib/plural";
 import { Time } from "../ui/time";
 import { EmptyState } from "../StateViews";
 import { ImageWithFallback } from "../ImageWithFallback";
+import { withFirstFrame } from "../../lib/mediaUrl";
 
 
 export function DataSection() {
@@ -51,7 +52,7 @@ export function DataSection() {
                 {entry.media && (
                   <div className="mb-2 overflow-hidden rounded-card border border-[var(--hairline)]">
                     {entry.mediaType === "video" ? (
-                      <video src={entry.media} controls className="w-full" />
+                      <video src={withFirstFrame(entry.media)} controls playsInline preload="metadata" className="w-full" />
                     ) : (
                       <ImageWithFallback src={entry.media} alt="" aspect="4 / 3" className="w-full" />
                     )}
