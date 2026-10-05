@@ -47,7 +47,7 @@ function rowToProject(row: any): Project {
     mode: row.mode ?? undefined,
     // 20261014000000_step5a_pursuit_plans_and_let_go.sql.
     letGoAt: row.let_go_at ? new Date(row.let_go_at).getTime() : undefined,
-    // Columns from supabase/migrations/20261011000000_pursuit_cover_image.sql.
+    // Columns from supabase/migrations/20261015000000_pursuit_cover_image_reapply.sql.
     // Same absent-reads-as-unset degradation as pausedAt etc. above.
     coverImagePath: row.cover_image_path ?? undefined,
     coverImagePreference: row.cover_image_preference ?? undefined,
@@ -160,7 +160,7 @@ async function fetchMyPlans(userId: string): Promise<Map<string, Partial<Project
 }
 
 /** Mirrors just the cover-image columns
- * (20261011000000_pursuit_cover_image.sql) — its own call, same reason as
+ * (20261015000000_pursuit_cover_image_reapply.sql) — its own call, same reason as
  * the paused_at/check_in_days/ending_note update above: isolated from the
  * core upsert so it degrades to a no-op on a database that hasn't run that
  * migration yet, rather than failing the whole mirror. `coverImagePath`
