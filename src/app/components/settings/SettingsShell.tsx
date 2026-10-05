@@ -44,7 +44,7 @@ export function SettingsShell({
       {/* Desktop / lg+ */}
       <div className="hidden lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
         <nav aria-label="Settings sections" className="sticky top-24 self-start">
-          <h1 className="mb-5 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="mb-5 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Settings
           </h1>
           <ul className="space-y-0.5">
@@ -56,7 +56,7 @@ export function SettingsShell({
                     to={s.path}
                     aria-current={isActive ? "page" : undefined}
                     className={
-                      "flex min-h-11 items-center gap-2.5 rounded-btn px-3 py-2 text-sm transition-colors " +
+                      "flex min-h-11 items-center gap-2.5 rounded-control px-3 py-2 text-small transition-colors " +
                       (isActive
                         ? "bg-accent/10 text-foreground"
                         : "text-muted-foreground hover:bg-surface-muted hover:text-foreground")
@@ -83,10 +83,10 @@ export function SettingsShell({
       <div className="lg:hidden">
         {isIndexRoute ? (
           <>
-            <h1 className="mb-6 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <h1 className="mb-6 text-title" style={{ fontFamily: "var(--font-serif)" }}>
               Settings
             </h1>
-            <ul className="divide-y divide-[var(--hairline)] rounded-btn border border-border bg-card">
+            <ul className="divide-y divide-[var(--hairline)] rounded-control border border-border bg-card">
               {SETTINGS_SECTIONS.map((s) => (
                 <li key={s.key}>
                   <Link
@@ -94,10 +94,10 @@ export function SettingsShell({
                     className="flex min-h-11 items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-surface-muted"
                   >
                     <span className="min-w-0">
-                      <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                      <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
                         {s.n} · {s.name}
                       </span>
-                      <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                      <span className="mt-0.5 block truncate text-caption text-muted-foreground" title={s.summary}>
                         {s.summary}
                       </span>
                     </span>
@@ -111,7 +111,7 @@ export function SettingsShell({
           <>
             <Link
               to="/settings"
-              className="mb-5 inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="mb-5 inline-flex min-h-11 items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
               Settings

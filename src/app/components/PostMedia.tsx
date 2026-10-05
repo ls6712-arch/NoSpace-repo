@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { GeneratedArt } from "./GeneratedArt";
+import { ImageWithFallback } from "./ImageWithFallback";
+import { isRealMediaUrl } from "../lib/mediaUrl";
 
 /**
  * Renders a post/product's actual uploaded photo or video when there is one
@@ -20,6 +22,8 @@ export function PostMedia({
   seed,
   className,
   preview,
+  width,
+  priority,
 }: {
   media?: string;
   // "written" behaves exactly like the "photo" default below — there's
@@ -31,9 +35,15 @@ export function PostMedia({
   className?: string;
   /** Thumbnail context: no controls, no sound — the tile is a target, not a player. */
   preview?: boolean;
+  /** Display width in CSS px, so a resized copy can be served when image transforms are on. */
+  width?: number;
+  /** Above the fold: load now instead of lazily. */
+  priority?: boolean;
 }) {
-  const [failed, setFailed] = useState(false);
-  const isRealMedia = !failed && !!media && /^https?:\/\//.test(media);
+  // The URL that failed, not a flag: the same slot given a different photo gets a fresh try.
+  const [failedUrl, setFailedUrl] = useState<string>();
+  const failed = failedUrl === media;
+  const isRealMedia = !failed && isRealMediaUrl(media);
 
   if (isRealMedia && type === "video") {
     // A bare <video> with no poster shows solid black until something
@@ -49,7 +59,7 @@ export function PostMedia({
         muted={preview}
         playsInline
         preload="metadata"
-        onError={() => setFailed(true)}
+        onError={() => setFailedUrl(media)}
         className={`${className ?? ""} object-cover [background-color:var(--void)]`}
       />
     );
@@ -57,12 +67,13 @@ export function PostMedia({
 
   if (isRealMedia) {
     return (
-      <img
+      <ImageWithFallback
         src={media}
         alt=""
-        className={`${className ?? ""} object-cover`}
-        loading="lazy"
-        onError={() => setFailed(true)}
+        className={className}
+        width={width}
+        priority={priority}
+        onFail={() => setFailedUrl(media)}
       />
     );
   }

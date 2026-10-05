@@ -87,8 +87,8 @@ export function GoalProgressTap({
         onPointerUp={stopHold}
         onPointerLeave={stopHold}
         disabled={atTarget}
-        className={`flex items-center justify-center gap-1.5 rounded-full border border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] font-medium text-foreground transition-colors hover:border-[var(--coral-deep)] disabled:cursor-default disabled:opacity-50 ${
-          fullWidth ? "flex-1 py-3.5 text-base" : "px-3.5 py-1.5 text-sm"
+        className={`flex items-center justify-center gap-1.5 rounded-control border border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] font-medium text-foreground transition-colors hover:border-[var(--coral-deep)] disabled:cursor-default disabled:opacity-50 ${
+          fullWidth ? "flex-1 py-3.5 text-body" : "px-3.5 py-1.5 text-small"
         }`}
       >
         <Plus className={fullWidth ? "size-4" : "size-3.5"} strokeWidth={2} />
@@ -100,7 +100,7 @@ export function GoalProgressTap({
           onClick={undo}
           aria-label="Undo last log"
           title="Undo last log"
-          className={`flex shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground ${
+          className={`flex shrink-0 items-center justify-center rounded-control border border-border text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground ${
             fullWidth ? "size-12" : "size-8"
           }`}
         >

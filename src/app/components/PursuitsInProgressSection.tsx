@@ -100,7 +100,7 @@ export function PursuitsInProgressSection({
 
   return (
     <section className="mb-6">
-      <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+      <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         Pursuits in progress
       </h2>
 
@@ -133,7 +133,7 @@ export function PursuitsInProgressSection({
             transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(active.length, 7) * 0.05 }}
             whileHover={reduceMotion ? undefined : { y: -4 }}
             whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-border text-caption text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ArrowRight className="size-4" />
             See all

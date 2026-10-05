@@ -117,7 +117,7 @@ export function AvatarPicker({
         <Avatar className="size-14 ring-0">
           {url && <AvatarImage src={url} alt="" className="object-cover" />}
           <AvatarFallback
-            className="text-base"
+            className="text-body"
             style={{ backgroundImage: "none", backgroundColor: "var(--surface-muted)", color: "var(--foreground)" }}
           >
             {initials(name)}
@@ -133,7 +133,7 @@ export function AvatarPicker({
         </div>
         <input ref={libraryRef} type="file" accept="image/*" className="hidden" onChange={upload} />
         <input ref={cameraRef} type="file" accept="image/*" capture="user" className="hidden" onChange={upload} />
-        {error && <p className="text-center text-[10px] text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="text-center text-caption text-[var(--coral-text)]">{error}</p>}
       </div>
     );
   }
@@ -145,7 +145,7 @@ export function AvatarPicker({
       <Avatar className={`${size} shrink-0 ring-0`}>
         {url && <AvatarImage src={url} alt="" className="object-cover" />}
         <AvatarFallback
-          className="text-xl"
+          className="text-title"
           style={{ backgroundImage: "none", backgroundColor: "var(--surface-muted)", color: "var(--foreground)" }}
         >
           {initials(name)}
@@ -190,10 +190,10 @@ export function AvatarPicker({
           )}
         </div>
 
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-caption text-muted-foreground">
           {busy ? "Working…" : url ? "Shown wherever you appear." : `Showing your initials, ${initials(name)}.`}
         </p>
-        {error && <p className="mt-1 text-xs text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="mt-1 text-caption text-[var(--coral-text)]">{error}</p>}
       </div>
     </div>
   );

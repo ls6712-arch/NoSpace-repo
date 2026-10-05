@@ -158,6 +158,19 @@ the phase.
 
 ## STATUS
 
+**Correction, 2026-10-04:** Phases 2, 3 and 5 below were still marked "PR opened
+against `main`, not yet merged" even though their app code has clearly been on
+`main` for some time — later work (Step 4's first-response notifications, the
+Spaces Rework) builds directly on top of it without issue. Their "merged"
+status is corrected below from direct code evidence (file-by-file, cited
+inline) checked this session. Nothing about their live-Supabase-database
+status is re-verified here — this session has no live query access — so
+every live-database claim below is either carried over unchanged from
+whoever last actually checked it, or marked **unconfirmed live** where this
+session couldn't find a prior claim to carry over. Treat any "unconfirmed
+live" line as worth an actual `information_schema`/`pg_catalog` check before
+relying on it.
+
 - Phase 1 Safety: done. Migration applied to live Supabase and verified (see
   `docs/backend-state-20260924.md`); app built, typechecked, tested, and verified in the browser
   at phone and laptop width, light and dark (see `docs/verification/communication-phase1/`);
@@ -186,7 +199,12 @@ the phase.
   (see `docs/verification/communication-phase2/`) — a real two-account live
   check (message delivery latency, live request/accept/block updates, an
   actual offline-Wi-Fi retry) is still needed and listed in that folder's
-  README. PR opened against `main`, not yet merged.
+  README. **Correction, 2026-10-04: confirmed merged to `main`** — the
+  Realtime channel (`social-updates-${myUserId}`, subscribed to
+  `messages`/`participations` INSERT/UPDATE/DELETE) is live in
+  `src/app/context/SocialContext.tsx` on current `main`. Whether Realtime is
+  actually enabled on the live Supabase project is **unconfirmed live** —
+  this session only read source, it didn't query the database.
 - Phase 3 Unread, Seen, and a quieter bell: database applied to live Supabase and verified (see
   `docs/backend-state-20260925-phase3.md`) — `conversation_reads` table with RLS,
   `mark_conversation_read()`, `profile_settings.read_receipts`, `unread_count` added to
@@ -204,8 +222,12 @@ the phase.
   participations-event filter), and verified with a mocked-network browser pass (see
   `docs/verification/communication-phase3/`) — a real two-account live check (delivery + read +
   Seen timing, read-receipts-off working both ways, a stranger's public activity not refreshing
-  your badge) is still needed and listed in that folder's README. PR opened against `main`, not
-  yet merged.
+  your badge) is still needed and listed in that folder's README. **Correction, 2026-10-04:
+  confirmed merged to `main`** — `conversation_reads`/`unreadCountFor`/`mark_conversation_read`
+  and `read_receipts` are all live in `src/app/context/SocialContext.tsx`,
+  `src/app/lib/messageSync.ts`, `src/app/context/SettingsContext.tsx`, and
+  `src/app/components/settings/PrivacySection.tsx` on current `main`. The live-database side
+  (table, RLS, Realtime publication membership) is **unconfirmed live** this session.
 - Phase 4 Richer conversations: database applied to live Supabase and verified (see
   `docs/backend-state-20260925-phase4.md`) — `message-media` private storage bucket with policies
   scoped to the two people in a conversation, `messages` gaining `kind`
@@ -233,8 +255,12 @@ the phase.
   Storage after unsend).
 - Phase 5 Notification center: database migration **applied live on 2026-09-26** and verified
   (all 20 checks true; security advisors unchanged) — see
-  `supabase/migrations/20261007000000_communication_phase5_notifications.sql` and its rollback and
-  verification script. It adds one new `private.notification_kind_muted(user, kind)` helper
+  `supabase/migrations/20260926164848_communication_phase5_notifications.sql` and its rollback
+  (`rollback_20261007000000_communication_phase5_notifications.sql` — a later timestamp than the
+  forward migration it rolls back; that's the rollback file's own authoring date, not a typo
+  worth chasing further) and verification script. **Correction, 2026-10-04:** this paragraph
+  previously cited the forward migration as `20261007000000_...`, which doesn't exist on disk;
+  fixed to the real filename above. It adds one new `private.notification_kind_muted(user, kind)` helper
   (SECURITY DEFINER, execute revoked from `public`/`anon`/`authenticated` — reachable only from
   inside the trigger below) and one new check inside `enforce_notification_insert()`: a muted
   category's notification is silently dropped (`return null`), the same way a blocked-between one
@@ -258,8 +284,25 @@ the phase.
   apply time: the Circle-invitations check compares jsonb instead of casting to boolean (a
   malformed stored value can't make the sender's insert throw), and the verification script was
   corrected (a sender can't read the recipient's notifications, so it now uses row counts and
-  reads as the recipient).
+  reads as the recipient). **Correction, 2026-10-04: confirmed merged to `main`** —
+  `notificationGrouping.ts`, `notificationPreferences.ts`, and the mute check
+  (`private.notification_kind_muted`) inside `enforce_notification_insert()` are all present on
+  current `main`. The live-database side (whether `notification_kind_muted` is actually live on
+  the Supabase project) is **unconfirmed live** this session.
 - Phase 6 Email and push: not started
+- **Not a phase of this document, but touching the same trigger function — noted here so this
+  file's own description of `enforce_notification_insert()`'s allowed-kinds list doesn't go stale
+  relative to its real current definition.** Two later, separate initiatives have each extended
+  the trigger (verbatim-plus-new-kinds, same pattern Phase 5 itself used) since Phase 5 above was
+  written: **Spaces Rework** added `space_invite`, `pursuit_invite`, `pursuit_joined`,
+  `pursuit_progress`, `space_event_cancelled`, `space_join_request`, `space_join_approved`,
+  `space_join_declined`, `space_host_invite`, `space_moment_pending`, `space_moment_approved`
+  (`supabase/migrations/20260927000000_spaces_rework_events.sql` through
+  `20261008000000_spaces_rework_moment_notifications.sql`); **Step 4 (first response)** added
+  `first_moment` and `love`
+  (`supabase/migrations/20261012000000_step4_first_response.sql`). Neither touches this document's
+  own phases' scope or decisions — confirmed only by reading the latest migration that redefines
+  the function; not re-verified against the live database this session.
 
 ## Follow-ups (found, not in any phase)
 

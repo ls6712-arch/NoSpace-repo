@@ -137,10 +137,10 @@ export function AdminInvites() {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="mb-3 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Nothing here for you
           </h2>
-          <p className="mb-6 max-w-sm text-sm text-muted-foreground">This screen is for whoever sends invites.</p>
+          <p className="mb-6 max-w-sm text-small text-muted-foreground">This screen is for whoever sends invites.</p>
           <Link to="/discover">
             <Button variant="outline">Back to Discover</Button>
           </Link>
@@ -184,31 +184,31 @@ export function AdminInvites() {
   };
 
   return (
-    <div className="min-h-screen bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 sm:py-12">
       <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-4xl sm:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Invites
         </h1>
-        <p className="mb-8 mt-2 text-sm text-muted-foreground">
+        <p className="mb-8 mt-2 text-small text-muted-foreground">
           {APP_NAME} is invite-only for now — create a link for someone to join with.
         </p>
 
-        <div className="mb-8 rounded-2xl border border-border bg-card p-4">
+        <div className="mb-8 rounded-card border border-border bg-card p-4">
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 280))}
             placeholder="A note for them, optional — shown on their arrival page."
             className="mb-2"
           />
-          <div className="mb-3 text-right text-[11px] text-muted-foreground">{note.length}/280</div>
-          {createError && <p className="mb-3 text-xs text-destructive">{createError}</p>}
+          <div className="mb-3 text-right text-caption text-muted-foreground">{note.length}/280</div>
+          {createError && <p className="mb-3 text-caption text-destructive">{createError}</p>}
           <Button busy={creating} variant="coral" disabled={creating} onClick={create}>
             Create invite
           </Button>
 
           {newLink && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-[var(--hairline)] bg-surface-muted px-3 py-2.5">
-              <code className="min-w-0 flex-1 truncate text-xs">{newLink}</code>
+            <div className="mt-4 flex items-center gap-2 rounded-card border border-[var(--hairline)] bg-surface-muted px-3 py-2.5">
+              <code className="min-w-0 flex-1 truncate text-caption" title={newLink}>{newLink}</code>
               <Button variant="outline" size="sm" onClick={copyLink}>
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                 {copied ? "Copied" : "Copy"}
@@ -237,16 +237,16 @@ export function AdminInvites() {
                 {rows.map((r) => {
                   const status = inviteStatus(r);
                   return (
-                    <li key={r.code} className="rounded-2xl border border-border bg-card p-4">
+                    <li key={r.code} className="rounded-card border border-border bg-card p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0 text-sm">
-                          <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">{r.code}</p>
+                        <div className="min-w-0 text-small">
+                          <p className="font-mono text-caption uppercase tracking-wide text-muted-foreground">{r.code}</p>
                           {r.note && <p className="mt-1 italic text-foreground">“{r.note}”</p>}
-                          <p className="mt-1 text-xs text-muted-foreground">Created <Time value={r.createdAt} ago /></p>
+                          <p className="mt-1 text-caption text-muted-foreground">Created <Time value={r.createdAt} ago /></p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           <span
-                            className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                            className={`rounded-control border px-2.5 py-1 text-caption ${
                               status.done
                                 ? "border-border text-muted-foreground"
                                 : "border-[var(--coral-deep)]/40 text-[var(--coral-deep)]"
@@ -282,10 +282,10 @@ export function AdminInvites() {
                 {waitlist.map((w, i) => (
                   <li
                     key={`${w.email}-${i}`}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-border bg-card px-4 py-3 text-small"
                   >
-                    <span className="min-w-0 truncate">{w.email}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="min-w-0 truncate" title={w.email}>{w.email}</span>
+                    <span className="text-caption text-muted-foreground">
                       {w.hobby ? `${w.hobby} · ` : ""}
                       <Time value={w.createdAt} ago />
                     </span>
@@ -296,7 +296,7 @@ export function AdminInvites() {
           </TabsContent>
 
           <TabsContent value="first-moments">
-            <p className="mb-4 text-sm text-muted-foreground">
+            <p className="mb-4 text-small text-muted-foreground">
               New people’s first moments from the last 14 days with no thought from anyone yet,
               oldest first. Anything over 24 hours is ours to answer.
             </p>
@@ -308,19 +308,19 @@ export function AdminInvites() {
                 {waiting.map((m) => {
                   const overdue = m.hoursWaiting >= 24;
                   return (
-                    <li key={m.postId} className="rounded-2xl border border-border bg-card p-4">
+                    <li key={m.postId} className="rounded-card border border-border bg-card p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0 text-sm">
+                        <div className="min-w-0 text-small">
                           <p className="font-medium text-foreground">{m.authorName}</p>
-                          {m.caption && <p className="mt-1 line-clamp-2 text-muted-foreground">{m.caption}</p>}
-                          <p className="mt-1 text-xs text-muted-foreground">
+                          {m.caption && <p className="mt-1 line-clamp-2 text-muted-foreground" title={m.caption}>{m.caption}</p>}
+                          <p className="mt-1 text-caption text-muted-foreground">
                             {m.inviterName ? `Invited by ${m.inviterName} · ` : ""}
                             {m.hoursWaiting < 1 ? "Just now" : `${m.hoursWaiting}h waiting`}
                           </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           {overdue && (
-                            <span className="rounded-full border border-destructive/40 px-2.5 py-1 text-[11px] text-destructive">
+                            <span className="rounded-control border border-destructive/40 px-2.5 py-1 text-caption text-destructive">
                               Over 24h
                             </span>
                           )}
@@ -329,7 +329,7 @@ export function AdminInvites() {
                               <Link to={`/moment/${m.postId}?reply=1`}>Add a thought</Link>
                             </Button>
                           ) : (
-                            <span className="text-xs text-muted-foreground">Followers only</span>
+                            <span className="text-caption text-muted-foreground">Followers only</span>
                           )}
                         </div>
                       </div>

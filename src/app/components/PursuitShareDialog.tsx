@@ -119,8 +119,8 @@ export function PursuitShareDialog({
         <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
           <DialogTitle className="sr-only">Share {project.title}</DialogTitle>
 
-          <div className="rounded-3xl p-[1.5px] [background-image:var(--gradient-brand)]">
-            <div className="overflow-hidden rounded-[calc(1.5rem-1.5px)] bg-[var(--surface)]">
+          <div className="rounded-card p-[1.5px] [background-image:var(--gradient-brand)]">
+            <div className="overflow-hidden rounded-card bg-[var(--surface)]">
               <div className="relative aspect-[16/10] w-full">
                 <PostMedia
                   media={coverImage}
@@ -140,10 +140,10 @@ export function PursuitShareDialog({
                 )}
               </div>
               <div className={`px-5 pb-5 ${hasMeasure(project) && fraction != null ? "pt-7" : "pt-4"}`}>
-                <h3 className="text-lg leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
+                <h3 className="text-lead leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
                   {project.title}
                 </h3>
-                {progressLabel && <p className="mt-0.5 text-xs text-muted-foreground">{progressLabel}</p>}
+                {progressLabel && <p className="mt-0.5 text-caption text-muted-foreground">{progressLabel}</p>}
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@ export function PursuitShareDialog({
               <button
                 type="button"
                 onClick={() => setShared(false)}
-                className="mt-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                className="mt-1 flex items-center justify-center gap-1.5 text-caption text-muted-foreground hover:text-foreground hover:underline"
               >
                 <Lock className="size-3" />
                 Make private
@@ -191,7 +191,7 @@ export function PursuitShareDialog({
             )}
           </div>
 
-          <p className="mt-3 px-1 text-center text-xs text-muted-foreground">
+          <p className="mt-3 px-1 text-center text-caption text-muted-foreground">
             {!isCreator && !project.shared
               ? "Only the Pursuit’s owner can turn on its link."
               : project.shared

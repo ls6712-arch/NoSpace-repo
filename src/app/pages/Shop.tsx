@@ -19,21 +19,21 @@ export function Shop() {
   const filtered = selected === "all" ? listings : listings.filter((p) => p.hobbySlug === selected);
 
   return (
-    <div className="min-h-screen bg-surface py-14">
+    <div className="min-h-viewport bg-surface py-14">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl mb-3">The marketplace</h1>
-          <p className="text-muted-foreground text-lg">
+          <h1 className="text-display mb-3">The marketplace</h1>
+          <p className="text-muted-foreground text-lead">
             Physical goods, digital guides, and courses, all made by real creators.
           </p>
         </div>
 
         <div className="mb-10 flex justify-center">
-          <div className="flex flex-wrap gap-2 justify-center rounded-2xl border border-border bg-white/[0.03] p-2">
+          <div className="flex flex-wrap gap-2 justify-center rounded-card border border-border bg-surface-muted p-2">
             <Button
               variant="ghost"
               onClick={() => setSelected("all")}
-              className={selected === "all" ? "text-white [background-image:var(--gradient-brand)]" : "text-muted-foreground"}
+              className={selected === "all" ? "text-on-brand [background-image:var(--gradient-brand)]" : "text-muted-foreground"}
             >
               All
             </Button>
@@ -44,7 +44,7 @@ export function Shop() {
                 onClick={() => setSelected(hobby.slug)}
                 className={
                   selected === hobby.slug
-                    ? "text-white [background-image:var(--gradient-brand)]"
+                    ? "text-on-brand [background-image:var(--gradient-brand)]"
                     : "text-muted-foreground"
                 }
               >
@@ -54,7 +54,7 @@ export function Shop() {
           </div>
         </div>
 
-        <div className="mb-6 text-center text-sm text-muted-foreground">
+        <div className="mb-6 text-center text-small text-muted-foreground">
           {plural(filtered.length, "listing")}
         </div>
 
@@ -66,7 +66,7 @@ export function Shop() {
 
         {filtered.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-xl text-muted-foreground mb-4">Nothing here yet</p>
+            <p className="text-title text-muted-foreground mb-4">Nothing here yet</p>
             <Button variant="outline" onClick={() => setSelected("all")}>
               View everything
             </Button>

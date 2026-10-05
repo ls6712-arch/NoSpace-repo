@@ -29,12 +29,14 @@ function AllPursuitsRow({ pursuit: p, last }: { pursuit: Project; last: number |
     <li className="flex items-center gap-3 py-2.5">
       <Link to={`/pursuit/${p.id}`} className="group min-w-0 flex-1">
         <span
-          className="block truncate text-base text-foreground group-hover:text-accent"
+          className="block truncate text-body text-foreground group-hover:text-accent"
           style={{ fontFamily: "var(--font-serif)" }}
-        >
+                 title={p.title}>
           {p.title}
         </span>
-        <span className="block truncate text-xs text-foreground/80">
+        <span className="block truncate text-caption text-foreground/80" title={[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
+                    .filter(Boolean)
+                    .join(" · ")}>
           {[space, startedLabel(p.startedAt), last ? `Last Moment ${relative(last)}` : "No Moments yet"]
             .filter(Boolean)
             .join(" · ")}
@@ -54,7 +56,7 @@ function AllPursuitsRow({ pursuit: p, last }: { pursuit: Project; last: number |
       <Link
         to={`/pursuit/${p.id}/moment`}
         aria-label={`Log a Moment on ${p.title}`}
-        className="flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-foreground hover:border-[var(--coral-deep)]"
+        className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground hover:border-[var(--coral-deep)]"
       >
         <Plus className="size-3" /> Add
       </Link>
@@ -108,7 +110,7 @@ function StatusChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-8 items-center justify-center gap-1 rounded-full border px-3 text-xs transition-colors ${
+      className={`flex h-8 items-center justify-center gap-1 rounded-full border px-3 text-caption transition-colors ${
         active
           ? "border-[var(--coral)] bg-[color-mix(in_srgb,var(--coral)_12%,var(--card))] text-foreground"
           : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -178,8 +180,8 @@ export function AllPursuitsSection({
   if (!hasAny) return null;
 
   return (
-    <section id={ALL_PURSUITS_SECTION_ID} className="mt-10 scroll-mt-16 border-t border-border pt-8">
-      <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+    <section id={ALL_PURSUITS_SECTION_ID} className="mt-12 scroll-mt-16 border-t border-border pt-8">
+      <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         All your Pursuits
       </h2>
 
@@ -191,7 +193,7 @@ export function AllPursuitsSection({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search your Pursuits"
           aria-label="Search your Pursuits"
-          className="h-11 w-full rounded-lg border border-border bg-card pl-9 pr-9 text-sm outline-none focus:border-[var(--coral-deep)]"
+          className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-9 text-body outline-none focus:border-[var(--coral-deep)]"
         />
         {query && (
           <button
@@ -209,7 +211,7 @@ export function AllPursuitsSection({
           glance" reference that doesn't flicker as the search box above is
           typed into. The "N Pursuits matching" line below carries the
           search-filtered count instead. */}
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Filter by status">
+      <div className="mt-3 flex flex-wrap gap-x-2 gap-y-3" role="group" aria-label="Filter by status">
         <StatusChip active={status === "all"} onClick={() => setStatus("all")}>
           All · {total}
         </StatusChip>
@@ -224,13 +226,13 @@ export function AllPursuitsSection({
         </StatusChip>
       </div>
 
-      <p className="mt-3 text-xs text-muted-foreground" role="status" aria-live="polite">
+      <p className="mt-3 text-caption text-muted-foreground" role="status" aria-live="polite">
         {shownTotal} Pursuit{shownTotal === 1 ? "" : "s"}
         {filtersApplied ? " matching" : ""}
       </p>
 
       {shownTotal === 0 ? (
-        <div className="mt-3 rounded-xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
+        <div className="mt-3 rounded-card border border-dashed border-border px-5 py-8 text-center text-small text-muted-foreground">
           {query.trim() ? (
             <>No Pursuits match "{query.trim()}".</>
           ) : (

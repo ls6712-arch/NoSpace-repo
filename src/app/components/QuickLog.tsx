@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 type Audience = "private" | "followers" | "public";
 
@@ -91,7 +92,7 @@ export function LoggedNotice({
 
   return (
     <div className="space-y-2.5">
-      <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-card px-3.5 text-sm">
+      <div className="flex h-11 items-center justify-between rounded-control border border-border bg-card px-3.5 text-small">
         <span>Logged</span>
         <button
           type="button"
@@ -103,7 +104,7 @@ export function LoggedNotice({
         </button>
       </div>
       {saved.post && mediaError && (
-        <div className="flex items-start gap-2 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3.5 py-2.5 text-xs leading-relaxed text-foreground">
+        <div className="flex items-start gap-2 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3.5 py-2.5 text-small leading-relaxed text-foreground">
           <span className="flex-1">{mediaError}</span>
           <button
             type="button"
@@ -122,7 +123,7 @@ export function LoggedNotice({
         <button
           type="button"
           onClick={() => setDetailsOpen(true)}
-          className="text-xs text-accent hover:underline"
+          className="text-caption text-accent hover:underline"
         >
           Add details (Corner, location, reflection)
         </button>
@@ -361,7 +362,7 @@ export function QuickLog({
 
   if (confirmingEveryone) {
     return (
-      <div className={`rounded-xl border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
+      <div className={`rounded-card border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
         <EveryoneShareConfirm
           name={profile?.display_name?.trim() || "You"}
           cornerLabel={cornerName.trim() || "Uncategorized"}
@@ -374,7 +375,7 @@ export function QuickLog({
           type="button"
           onClick={() => setConfirmingEveryone(false)}
           disabled={saving}
-          className="mt-2 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+          className="mt-2 w-full text-center text-caption text-muted-foreground hover:text-foreground"
         >
           Back
         </button>
@@ -383,15 +384,15 @@ export function QuickLog({
   }
 
   return (
-    <div className={`rounded-xl border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
+    <div className={`rounded-card border border-border bg-card ${compact ? "p-2.5" : "p-3"}`}>
       <div className="flex items-start gap-2.5">
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep,var(--accent))] hover:text-foreground"
+          className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-control border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep,var(--accent))] hover:text-foreground"
           aria-label={file ? "Change photo" : "Add a photo"}
         >
-          {preview ? <img src={preview} alt="" className="size-full object-cover" /> : <Camera className="size-4" />}
+          {preview ? <ImageWithFallback src={preview} alt="" className="size-full" /> : <Camera className="size-4" />}
         </button>
         <input
           ref={fileRef}
@@ -413,9 +414,9 @@ export function QuickLog({
             }}
             placeholder={placeholder}
             aria-label={placeholder}
-            className="w-full bg-transparent py-1 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            className="w-full bg-transparent py-1 text-body text-foreground outline-none placeholder:text-muted-foreground"
           />
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <div className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-6">
             {!locked && (
               <Select
                 value={selectedPursuitId || NO_PURSUIT}
@@ -423,7 +424,7 @@ export function QuickLog({
               >
                 <SelectTrigger
                   size="sm"
-                  className="h-6 w-auto gap-1 rounded-full border-border px-2 py-0.5 text-[11px]"
+                  className="h-6 w-auto gap-1 rounded-control border-border px-2 py-0.5 text-body"
                   aria-label="Pursuit"
                 >
                   <SelectValue placeholder="No pursuit" />
@@ -453,13 +454,13 @@ export function QuickLog({
                 }}
                 placeholder="Corner"
                 maxLength={60}
-                className="h-6 w-28 rounded-full border border-[var(--coral-deep,var(--accent))] bg-transparent px-2 text-[11px] text-foreground outline-none"
+                className="h-6 w-28 rounded-control border border-[var(--coral-deep,var(--accent))] bg-transparent px-2 text-body text-foreground outline-none"
               />
             ) : (
               <button
                 type="button"
                 onClick={() => setEditingCorner(true)}
-                className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                className="inline-flex items-center gap-1 rounded-control border border-border px-2 py-0.5 text-caption text-muted-foreground transition-colors hover:text-foreground"
               >
                 {cornerName.trim() || "Add a Corner"}
               </button>
@@ -471,7 +472,7 @@ export function QuickLog({
                 type="button"
                 onClick={() => setAudience(a)}
                 aria-pressed={audience === a}
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                className={`inline-flex items-center gap-1 rounded-control border px-2 py-0.5 text-caption transition-colors ${
                   audience === a
                     ? "border-[var(--coral-deep,var(--accent))] text-foreground"
                     : "border-border text-muted-foreground hover:text-foreground"
@@ -484,27 +485,27 @@ export function QuickLog({
               <button
                 type="button"
                 onClick={() => setFile(null)}
-                className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-0.5 text-caption text-muted-foreground hover:text-foreground"
               >
                 <X className="size-3" /> Remove photo
               </button>
             )}
           </div>
           {cornerBlocked && (
-            <p className="mt-1 text-[11px] text-destructive">Try a more general Corner name.</p>
+            <p className="mt-1 text-caption text-destructive">Try a more general Corner name.</p>
           )}
         </div>
         <Button variant="coral" size="sm" onClick={requestSave} disabled={!canPost} className="shrink-0">
           {saving ? <Loader2 className="size-3.5 animate-spin" /> : "Log"}
         </Button>
       </div>
-      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+      {error && <p className="mt-2 text-caption text-destructive">{error}</p>}
       {!compact && (
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-3 flex flex-wrap items-center gap-x-1 text-caption text-muted-foreground">
           Something bigger?{" "}
           <Link
             to={effectivePursuit ? `/create?pursuit=${effectivePursuit.id}` : "/create"}
-            className="text-accent hover:underline"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
           >
             Open the full form
           </Link>

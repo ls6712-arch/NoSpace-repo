@@ -35,7 +35,7 @@ export function QuickLogGlobalSheet() {
             keyboard would cover it. */}
         <SheetContent
           side="bottom"
-          className="inset-x-0 top-[12vh] bottom-auto mx-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
+          className="inset-x-0 top-[12vh] bottom-auto mx-auto w-[calc(100%-2rem)] max-w-lg rounded-card border data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
         >
           <SheetHeader>
             <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>New Moment</SheetTitle>
@@ -59,7 +59,7 @@ export function QuickLogGlobalSheet() {
       {logged && (
         <div
           role="status"
-          className="fixed inset-x-0 z-50 mx-auto w-[calc(100%-2rem)] max-w-lg animate-in fade-in slide-in-from-bottom-4 rounded-2xl border border-border bg-card p-2.5 shadow-2xl top-[12vh] bottom-auto"
+          className="fixed inset-x-0 z-50 mx-auto w-[calc(100%-2rem)] max-w-lg animate-in fade-in slide-in-from-bottom-4 rounded-card border border-border bg-card p-2.5 shadow-overlay top-[12vh] bottom-auto"
         >
           <LoggedNotice
             key={logged.key}

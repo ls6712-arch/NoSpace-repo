@@ -35,10 +35,10 @@ export function ShelfRail() {
 
   return (
     <section>
-      <h2 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+      <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         The Shelf
       </h2>
-      <p className="mt-0.5 text-xs text-muted-foreground">Where your Moments get bound into Books.</p>
+      <p className="mt-0.5 text-caption text-muted-foreground">Where your Moments get bound into Books.</p>
 
       {sessions.length === 0 ? (
         <EmptyState size="rail" line="Nothing on the Shelf yet." action={{ label: "Log a Moment", to: "/create" }} />
@@ -49,6 +49,7 @@ export function ShelfRail() {
               <div
                 key={s.key}
                 title={`${s.label}: ${plural(s.sessions, "Moment")}`}
+                // design-token-ignore: decorative spine
                 className="min-w-0 flex-1 rounded-t-[4px]"
                 style={{
                   height: `${Math.max(6, (s.sessions / max) * 100)}%`,
@@ -74,7 +75,7 @@ export function ShelfRail() {
                     }}
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                    <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={s.label}>
                       {s.label}
                     </span>
                   </span>

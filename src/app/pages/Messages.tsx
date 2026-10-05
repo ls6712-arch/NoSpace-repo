@@ -32,6 +32,7 @@ import { ListSkeleton } from "../components/Skeletons";
 import { EmptyState } from "../components/StateViews";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -150,31 +151,25 @@ function PhotoBubble({
 
   if (failed) {
     return (
-      <div className="flex h-32 w-52 items-center justify-center gap-2 rounded-xl bg-surface-muted text-xs text-muted-foreground">
+      <div className="flex h-32 w-52 items-center justify-center gap-2 rounded-card bg-surface-muted text-caption text-muted-foreground">
         <ImageOff className="size-4" /> Photo unavailable
       </div>
     );
   }
 
   if (!url) {
-    return <div className="h-32 w-52 animate-pulse rounded-xl bg-surface-muted" />;
+    return <div className="h-32 w-52 animate-pulse rounded-card bg-surface-muted" />;
   }
 
   return (
     <>
-      <button type="button" onClick={() => setLightboxOpen(true)} className="block overflow-hidden rounded-xl">
-        <img
-          src={url}
-          alt=""
-          className={`max-h-64 w-52 object-cover ${uploading ? "opacity-70" : ""}`}
-          onError={handleImageError}
-          onLoad={onLoad}
-        />
+      <button type="button" onClick={() => setLightboxOpen(true)} className="block overflow-hidden rounded-card">
+        <ImageWithFallback src={url} alt="" onError={handleImageError} onLoad={onLoad} aspect="4 / 5" className={`w-52 ${uploading ? "opacity-70" : ""}`} />
       </button>
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-2xl border-none bg-transparent p-0 shadow-none">
           <DialogTitle className="sr-only">Photo</DialogTitle>
-          <img src={url} alt="" className="max-h-[85vh] w-full rounded-xl object-contain" onError={handleImageError} />
+          <ImageWithFallback src={url} alt="" onError={handleImageError} aspect="4 / 3" fit="contain" className="max-h-[85vh] w-full rounded-card" />
         </DialogContent>
       </Dialog>
     </>
@@ -328,18 +323,18 @@ function ConversationPanel({
   };
 
   return (
-    <div className="flex h-[26rem] flex-col rounded-2xl border border-border bg-card md:h-[36rem]">
+    <div className="flex h-[26rem] flex-col rounded-card border border-border bg-card md:h-[36rem]">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <Avatar className="size-9 shrink-0">
             {person.avatar && <AvatarImage src={person.avatar} alt="" />}
-            <AvatarFallback className="text-[10px]">{initials(person.name)}</AvatarFallback>
+            <AvatarFallback className="text-caption">{initials(person.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <div className="truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+            <div className="truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={person.name}>
               {person.name}
             </div>
-            <div className="text-[11px] text-muted-foreground">{subtitle}</div>
+            <div className="text-caption text-muted-foreground">{subtitle}</div>
           </div>
         </div>
         <PersonActionsMenu personId={person.id} personName={person.name} />
@@ -348,10 +343,10 @@ function ConversationPanel({
       <div className="relative flex-1 min-h-0">
         <div ref={scrollRef} onScroll={handleScroll} className="h-full space-y-2 overflow-y-auto px-4 py-4">
           {loadingOlder && (
-            <p className="pb-1 text-center text-[11px] text-muted-foreground">Loading earlier messages…</p>
+            <p className="pb-1 text-center text-caption text-muted-foreground">Loading earlier messages…</p>
           )}
           {bannerText && (
-            <p className="mb-2 rounded-xl bg-surface-muted px-3.5 py-2.5 text-center text-xs text-muted-foreground">
+            <p className="mb-2 rounded-card bg-surface-muted px-3.5 py-2.5 text-center text-caption text-muted-foreground">
               {bannerText}
             </p>
           )}
@@ -360,7 +355,7 @@ function ConversationPanel({
               {null}
             </Loadable>
           ) : messages.length === 0 ? (
-            <p className="py-8 text-center text-xs text-muted-foreground">{emptyText}</p>
+            <p className="py-8 text-center text-caption text-muted-foreground">{emptyText}</p>
           ) : (
             messages.map((m, i) => {
               const mine = m.fromUser === (myId ?? "local-user");
@@ -380,7 +375,7 @@ function ConversationPanel({
               return (
                 <div key={m.id} className={`group ${mine ? "ml-auto max-w-[80%]" : "max-w-[80%]"}`}>
                   {renderKind === "deleted" ? (
-                    <p className="rounded-2xl border border-dashed border-[var(--hairline)] px-3.5 py-2 text-sm italic text-muted-foreground">
+                    <p className="rounded-card border border-dashed border-[var(--hairline)] px-3.5 py-2 text-small italic text-muted-foreground">
                       Message deleted
                     </p>
                   ) : renderKind === "photo" ? (
@@ -396,7 +391,7 @@ function ConversationPanel({
                           type="button"
                           onClick={() => setUnsendTargetId(m.id)}
                           aria-label="Unsend"
-                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -409,11 +404,11 @@ function ConversationPanel({
                   ) : (
                     <div className="relative">
                       <div
-                        className={`rounded-2xl px-3.5 py-2 text-sm ${
+                        className={`rounded-card px-3.5 py-2 text-small ${
                           m.status === "failed"
                             ? "border border-dashed border-[var(--coral-text)] bg-surface-muted text-foreground"
                             : mine
-                              ? `text-white [background-color:var(--coral-deep)] ${m.status === "sending" ? "opacity-60" : ""}`
+                              ? `text-on-brand [background-color:var(--coral-deep)] ${m.status === "sending" ? "opacity-60" : ""}`
                               : "bg-surface-muted"
                         }`}
                       >
@@ -424,7 +419,7 @@ function ConversationPanel({
                           type="button"
                           onClick={() => setUnsendTargetId(m.id)}
                           aria-label="Unsend"
-                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-[var(--void)]/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                          className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                         >
                           <Trash2 className="size-3" />
                         </button>
@@ -435,12 +430,12 @@ function ConversationPanel({
                     <button
                       type="button"
                       onClick={() => onRetry(m.clientId!)}
-                      className="mt-0.5 block text-[11px] text-[var(--coral-text)] underline-offset-2 hover:underline"
+                      className="mt-0.5 block text-caption text-[var(--coral-text)] underline-offset-2 hover:underline"
                     >
                       Not sent · tap to retry
                     </button>
                   )}
-                  {showSeen && <p className="mt-0.5 text-right text-[11px] text-muted-foreground">Seen</p>}
+                  {showSeen && <p className="mt-0.5 text-right text-caption text-muted-foreground">Seen</p>}
                 </div>
               );
             })
@@ -451,7 +446,7 @@ function ConversationPanel({
           <button
             type="button"
             onClick={scrollToBottom}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--coral-deep)] px-3.5 py-1.5 text-xs text-white shadow"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--coral-deep)] px-3.5 py-1.5 text-caption text-on-brand"
           >
             {pluralWord(newMessageCount, "New message", "New messages")}
           </button>
@@ -509,10 +504,10 @@ function ConversationPanel({
         </Button>
       </div>
       {heicWarning && (
-        <p className="border-t border-[var(--hairline)] px-4 py-2 text-xs text-[var(--coral-text)]">{heicWarning}</p>
+        <p className="border-t border-[var(--hairline)] px-4 py-2 text-caption text-[var(--coral-text)]">{heicWarning}</p>
       )}
       {sendError && (
-        <p className="border-t border-[var(--hairline)] px-4 py-2 text-xs text-[var(--coral-text)]">
+        <p className="border-t border-[var(--hairline)] px-4 py-2 text-caption text-[var(--coral-text)]">
           {sendError}
         </p>
       )}
@@ -805,13 +800,13 @@ export function Messages() {
             autoFocus
           />
           {query.trim().length < 2 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
+            <p className="py-6 text-center text-caption text-muted-foreground">
               Type a name to find someone.
             </p>
           ) : loading ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">Searching…</p>
+            <p className="py-6 text-center text-caption text-muted-foreground">Searching…</p>
           ) : results.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">No one found</p>
+            <p className="py-6 text-center text-caption text-muted-foreground">No one found</p>
           ) : (
             <ul className="max-h-72 space-y-1 overflow-y-auto">
               {results.map((person) => (
@@ -819,11 +814,11 @@ export function Messages() {
                   <button
                     type="button"
                     onClick={() => startThreadWith({ id: person.id, name: person.displayName, avatar: person.avatarUrl })}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                    className="flex w-full items-center gap-3 rounded-control px-3 py-2 text-left text-small transition-colors hover:bg-surface-muted"
                   >
                     <Avatar className="size-7 shrink-0">
                       {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" />}
-                      <AvatarFallback className="text-[10px]">{initials(person.displayName)}</AvatarFallback>
+                      <AvatarFallback className="text-caption">{initials(person.displayName)}</AvatarFallback>
                     </Avatar>
                     <span className="min-w-0 truncate">{person.displayName}</span>
                   </button>
@@ -831,7 +826,7 @@ export function Messages() {
               ))}
             </ul>
           )}
-          {startError && <p className="text-xs text-[var(--coral-text)]">{startError}</p>}
+          {startError && <p className="text-caption text-[var(--coral-text)]">{startError}</p>}
         </div>
       </DialogContent>
     </Dialog>
@@ -840,17 +835,17 @@ export function Messages() {
   const requestCount = requests.length;
 
   return (
-    <div className="min-h-screen bg-surface py-10 sm:py-14">
+    <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-4xl px-4">
         <div className="mb-1 flex items-center justify-between gap-3">
-          <h1 className="text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
             Messages
           </h1>
           <Button variant="coral" size="sm" onClick={openPicker}>
             New message
           </Button>
         </div>
-        <p className="mb-6 text-sm text-muted-foreground">
+        <p className="mb-6 text-small text-muted-foreground">
           People who accepted making or exploring something together, and anyone who’s sent or
           received a direct message.
         </p>
@@ -879,7 +874,7 @@ export function Messages() {
               />
             ) : (
               <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
-                <ul className="space-y-2">
+                <ul className="min-w-0 space-y-2">
                   {chatThreads.map((t) => {
                     const name = user && t.fromUser === user.id ? t.toName ?? "Them" : t.fromName;
                     const avatar = user && t.fromUser === user.id ? t.toAvatar : t.fromAvatar;
@@ -906,20 +901,20 @@ export function Messages() {
                             setDraftThread(null);
                             setActiveId(t.id);
                           }}
-                          className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors ${
+                          className={`flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors ${
                             on ? "border-[var(--coral-deep)] bg-card" : "border-border bg-card hover:border-[var(--foreground)]/30"
                           }`}
                         >
                           <Avatar className="size-10 shrink-0">
                             {avatar && <AvatarImage src={avatar} alt="" />}
-                            <AvatarFallback className="text-[10px]">{initials(name ?? "?")}</AvatarFallback>
+                            <AvatarFallback className="text-caption">{initials(name ?? "?")}</AvatarFallback>
                           </Avatar>
                           <span className="min-w-0 flex-1">
-                            <span className={`block truncate text-sm ${unread > 0 ? "font-semibold text-foreground" : ""}`}>
+                            <span className={`block truncate text-small ${unread > 0 ? "font-semibold text-foreground" : ""}`} title={name}>
                               {name}
                             </span>
                             <span
-                              className={`flex items-center gap-1 truncate text-[11px] ${
+                              className={`flex items-center gap-1 truncate text-caption ${
                                 unread > 0 ? "font-semibold text-foreground" : "text-muted-foreground"
                               }`}
                             >
@@ -930,12 +925,12 @@ export function Messages() {
                               ) : (
                                 <MessageCircle className="size-3 shrink-0" />
                               )}
-                              <span className="truncate">{preview}</span>
+                              <span className="truncate" title={preview}>{preview}</span>
                             </span>
                           </span>
                           {unread > 0 && (
                             <span
-                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-[10px] text-white"
+                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand"
                               aria-label={`${unread} unread`}
                             >
                               {formatBadgeCount(unread)}
@@ -1048,22 +1043,22 @@ function RequestCard({ request }: { request: Participation }) {
   const message = social.messagesFor(request.id)[0];
 
   return (
-    <li className="rounded-2xl border border-border bg-card p-4">
+    <li className="rounded-card border border-border bg-card p-4">
       <div className="flex items-center gap-3">
         <Link to={profilePath({ id: request.fromUser })} className="shrink-0">
           <Avatar className="size-10">
             {request.fromAvatar && <AvatarImage src={request.fromAvatar} alt="" />}
-            <AvatarFallback className="text-[10px]">{initials(request.fromName)}</AvatarFallback>
+            <AvatarFallback className="text-caption">{initials(request.fromName)}</AvatarFallback>
           </Avatar>
         </Link>
         <Link to={profilePath({ id: request.fromUser })} className="min-w-0 flex-1">
-          <span className="block truncate text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+          <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={request.fromName}>
             {request.fromName}
           </span>
         </Link>
       </div>
       {message && (
-        <p className="mt-2.5 rounded-xl bg-surface-muted px-3.5 py-2.5 text-sm">{message.body}</p>
+        <p className="mt-2.5 rounded-card bg-surface-muted px-3.5 py-2.5 text-small">{message.body}</p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
@@ -1127,7 +1122,7 @@ function MessageBubblesSkeleton() {
     <div className="space-y-2">
       {rows.map(([side, width], i) => (
         <div key={i} className={`flex ${side === "end" ? "justify-end" : "justify-start"}`}>
-          <Skeleton className={`h-9 ${width} max-w-[75%] rounded-2xl`} />
+          <Skeleton className={`h-9 ${width} max-w-[75%] rounded-card`} />
         </div>
       ))}
     </div>

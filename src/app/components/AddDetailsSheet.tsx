@@ -80,14 +80,14 @@ export function AddDetailsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-2xl">
+      <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-card">
         <SheetHeader>
           <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>Add details</SheetTitle>
           <SheetDescription>Optional — nothing here was needed to save this Moment.</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 px-4 pb-4">
           <div>
-            <Label htmlFor="details-corner" className="mb-1.5 block text-xs">
+            <Label htmlFor="details-corner" className="mb-1.5 block text-caption">
               Corner
             </Label>
             <Input
@@ -101,12 +101,12 @@ export function AddDetailsSheet({
               placeholder="Pottery, sourdough, bouldering…"
             />
             {cornerBlocked && (
-              <p className="mt-1.5 text-[11px] text-destructive">Try a more general name.</p>
+              <p className="mt-1.5 text-caption text-destructive">Try a more general name.</p>
             )}
           </div>
 
           <div>
-            <Label htmlFor="details-location" className="mb-1.5 block text-xs">
+            <Label htmlFor="details-location" className="mb-1.5 block text-caption">
               Location <span className="text-muted-foreground">(optional)</span>
             </Label>
             <Input
@@ -124,7 +124,7 @@ export function AddDetailsSheet({
                     type="button"
                     onClick={() => setLocationPrivacy(o.value)}
                     aria-pressed={locationPrivacy === o.value}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                    className={`rounded-control border px-2.5 py-1 text-caption transition-colors ${
                       locationPrivacy === o.value
                         ? "border-[var(--coral-deep,var(--accent))] text-foreground"
                         : "border-border text-muted-foreground hover:text-foreground"
@@ -138,7 +138,7 @@ export function AddDetailsSheet({
           </div>
 
           <div>
-            <Label htmlFor="details-reflection" className="mb-1.5 block text-xs">
+            <Label htmlFor="details-reflection" className="mb-1.5 block text-caption">
               Private reflection <span className="text-muted-foreground">(only you)</span>
             </Label>
             <Textarea
@@ -152,7 +152,7 @@ export function AddDetailsSheet({
           </div>
 
           <div>
-            <Label className="mb-1.5 block text-xs">Who sees this</Label>
+            <Label className="mb-1.5 block text-caption">Who sees this</Label>
             <div className="grid grid-cols-3 gap-1.5">
               {MOMENT_VISIBILITY_OPTIONS.map((o) => {
                 const Icon = o.icon;
@@ -166,7 +166,7 @@ export function AddDetailsSheet({
                     type="button"
                     onClick={() => setAudience(o.value)}
                     aria-pressed={active}
-                    className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2 text-[11px] transition-colors ${
+                    className={`flex flex-col items-center gap-1 rounded-control border px-2 py-2 text-caption transition-colors ${
                       active ? "border-[var(--coral-deep,var(--accent))] text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -178,7 +178,7 @@ export function AddDetailsSheet({
             </div>
           </div>
 
-          {error && <p className="text-xs text-destructive">{error}</p>}
+          {error && <p className="text-caption text-destructive">{error}</p>}
           <Button busy={saving} variant="coral" className="w-full" disabled={saving} onClick={save}>
             Save details
           </Button>

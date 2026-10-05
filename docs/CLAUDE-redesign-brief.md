@@ -27,7 +27,7 @@ Define these under `:root` (light) and `.dark`. Dark is **warm charcoal, never p
 | `--foreground` | `#2B2622` | `#EFE8DA` |
 | `--muted-foreground` | `#6B6259` | `#A39885` |
 | `--border` (hairlines) | `#DDD3C0` | `#3A332B` |
-| `--accent` | `#9A4A34` | `#C8674D` |
+| `--accent` | `#9A4A34` | `#D38571` |
 | `--accent-foreground` | `#FBF8F1` | `#1C1816` |
 | `--gold` | `#B08D4A` | `#C9A55E` |
 
@@ -37,12 +37,16 @@ Define these under `:root` (light) and `.dark`. Dark is **warm charcoal, never p
 - **Verify contrast** (WCAG AA: 4.5:1 body text, 3:1 large text and UI). Check foreground, muted-foreground, accent-on-background, and accent-foreground-on-accent in both themes. Tune the hex values if any fail, and tell me what you changed.
 
 **Type**
-- Headlines: `--font-serif` (Fraunces). Page openers 56-72px, section titles 28-40px, captions 13-14px. Pull-quotes in italic.
-- Body/UI: `--font-body` (Inter), 15px, line-height 1.6.
-- Labels: small caps, uppercase, 11px, letter-spacing 0.12em. Retune `font-hud` to this.
+- Seven sizes only, from `src/styles/theme.css` (other Tailwind sizes and `text-[Npx]` are locked out): `text-caption` 12px, `text-small` 14px, `text-body` 16px, `text-lead` 18px, `text-title` 22px, `text-display` 28-36px (fluid), `text-hero` 40-76px (fluid; the marketing page `Home.tsx` only).
+- Headlines: `--font-serif` (Fraunces). Page openers (the 56-72px style in the original look) are `text-display`, or `text-hero` on the marketing page only. Section titles are `text-title`. Captions are `text-caption` or `text-small`. Pull-quotes in italic.
+- Body/UI: `--font-body` (Inter), `text-body` (16px; was 15px), line-height 1.5.
+- Labels: small caps, uppercase, `text-caption` (12px; was 11px), letter-spacing 0.12em. Retune `font-hud` to this.
 
 **Shape and space**
 - 8px spacing base (8/16/24/32/48/64/96). Radius 12px cards, 8px buttons and inputs. Retire pill buttons and `rounded-2xl/3xl` in favor of these.
+- **Radius rules (two tokens, no others).** `rounded-card` (12px): cards, popovers, menus, dialogs, sheets, tiles, and media larger than 96px square. `rounded-control` (8px): buttons, inputs, selects, chips and badges with text, tabs, list rows, and media up to 96px square (thumbnails, add-photo tiles). `rounded-full` only for true circles: avatars, status dots, count badges, toggle tracks and knobs, spinners, radio dots, progress bars, decorative icon circles. Never for a button, chip or input.
+- Segmented controls (tab lists, mode switches): outer and inner are both `rounded-control`. No `calc()` or arbitrary inner radius.
+- A deliberate exception carries `// design-token-ignore: <reason>` on the line above, so the Phase 4 guard allows it. Current ones: the camera shutter (universal affordance) and the shelf spine (decorative).
 - Soft shadows in light mode only (`0 8px 24px rgba(43,38,34,0.06)`). In dark mode use a lighter card fill plus a hairline border instead of shadows.
 - Thin hand-drawn SVG rule as a divider (reuse it, don't redraw it per page).
 - Paper-grain overlay: 3-4% opacity light, 2% dark, as one fixed pseudo-element, `pointer-events: none`.
@@ -70,7 +74,7 @@ Order matters. Finish and check each before starting the next. After each screen
 
 Hard rules for every screen: one accent-filled primary action, no raw hex, both themes verified, reduced-motion respected, focus rings visible, touch targets at least 44px, no truncation that hides meaningful information (allow two lines instead of an ellipsis).
 
-**Motion:** 200-300ms ease-out for micro-interactions, 500-700ms for page/panel transitions. Cards lift 2px on hover, images zoom 2-3%, scroll reveals fade and rise 8px, staggered 40ms. No bounce, spring, or confetti. Everything is disabled or reduced to opacity-only under `prefers-reduced-motion`.
+**Motion:** two durations only, from the tokens in `src/styles/theme.css`: `duration-fast` (150ms) for hover and press, `duration-base` (250ms) for every enter and exit, page and panel transitions included. One easing curve, `ease-standard`. Cards lift 2px on hover, images zoom 2-3%, scroll reveals fade and rise 8px, staggered 40ms. No bounce, spring, or confetti. Everything is disabled or reduced to opacity-only under `prefers-reduced-motion`.
 
 ## 4. Task C: Settings page
 

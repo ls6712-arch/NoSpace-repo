@@ -54,8 +54,7 @@ export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(
  * stays a shadow rather than a filled badge behind the icon; on a dark
  * photo the black tones simply have nothing to contrast against, so it
  * never reads as heavy there. */
-const CORNER_ICON_SCRIM =
-  "[filter:drop-shadow(0_0_1px_rgb(0_0_0/0.85))_drop-shadow(0_1px_2px_rgb(0_0_0/0.6))_drop-shadow(0_0_6px_rgb(0_0_0/0.4))]";
+const CORNER_ICON_SCRIM = "icon-halo";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -82,22 +81,24 @@ export function tileTokenFor(postId: number | string) {
  * and device; `size` is kept on the props only so existing call sites
  * don't need to change.
  */
-export const MOMENT_MEDIA = "aspect-square w-full rounded-[var(--radius-moment)]";
+export const MOMENT_MEDIA = "aspect-square w-full rounded-card";
 
 /** The grid every Moment list uses: 2 columns on phones, 3 from large
  * screens up. Import this instead of writing a grid class at a call site,
  * so no page drifts out of step again. */
 export const MOMENT_GRID = "grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-3";
 
-/** Caption set into a text-only Moment's colored tile. Scales with the
- * tile rather than a breakpoint, and clamps so a long note never changes
- * the tile's shape. */
+/** Caption set into a text-only Moment's colored tile. Clamps so a long
+ * note never changes the tile's shape. It was fluid (15-26px by tile width);
+ * on the type scale it is text-lead, not text-title: at 22px a typical
+ * 86-character note shows only 50-56% of its text on the smallest tiles
+ * (138-166px, measured at 320-375px wide) versus 56-71% at 18px. */
 export const TILE_CAPTION =
-  "line-clamp-5 text-center italic text-[clamp(15px,4.2cqw+6px,26px)] leading-[1.2]";
+  "line-clamp-5 text-center italic text-lead leading-[1.2]";
 
 /** Caption under every card — same size and always two lines tall, so
  * cards in a row line up whether the caption is one word or a paragraph. */
-export const CARD_CAPTION = "line-clamp-2 min-h-[2.6em] italic text-[17px] leading-[1.3] sm:text-[19px]";
+export const CARD_CAPTION = "line-clamp-2 min-h-[2.6em] italic text-lead leading-[1.3]";
 
 export type MomentCardSurface =
   | "mySpace"
@@ -168,7 +169,7 @@ function VisibilityDialog({
           {MOMENT_VISIBILITY_OPTIONS.map((opt) => (
             <label
               key={opt.value}
-              className="flex min-h-11 items-center gap-3 rounded-btn border border-border px-3 py-2.5 text-sm has-[[data-state=checked]]:border-[var(--coral-deep)]"
+              className="flex min-h-11 items-center gap-3 rounded-control border border-border px-3 py-2.5 text-small has-[[data-state=checked]]:border-[var(--coral-deep)]"
             >
               <RadioGroupItem value={opt.value} id={`vis-${opt.value}`} />
               <opt.icon className="size-4 shrink-0 text-muted-foreground" />
@@ -176,7 +177,7 @@ function VisibilityDialog({
             </label>
           ))}
         </RadioGroup>
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {error && <p className="text-caption text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
@@ -198,7 +199,7 @@ function VisibilityDialog({
  */
 export function BookmarkOverlay({
   postId,
-  tone = "#fff",
+  tone = "var(--on-media)",
 }: {
   postId: string | number;
   tone?: string;
@@ -219,7 +220,7 @@ export function BookmarkOverlay({
         aria-label={saved ? "Saved. Tap again to remove it" : "Save"}
         title={saved ? "Saved" : "Save"}
         onClick={onClick}
-        className="flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+        className="flex size-11 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
       >
         <Bookmark
           className={`size-[22px] ${CORNER_ICON_SCRIM}`}
@@ -234,7 +235,7 @@ export function BookmarkOverlay({
 
 
 const ICON_BTN =
-  "flex h-10 shrink-0 min-w-10 items-center justify-center gap-1 rounded-full px-2 text-sm transition-[color,background-color,scale] active:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
+  "flex h-11 shrink-0 min-w-11 items-center justify-center gap-1 rounded-control px-2 text-small transition-[color,background-color,scale] active:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
 
 /**
  * The one reaction row — used by every MomentCard and by MomentDetail, so
@@ -355,7 +356,8 @@ export function MomentActions({
 
 /** The media square itself — a photo/video carousel, or a colored tile
  * with the caption set into it. Shared with MomentDetail. */
-export function MomentMedia({ post, className = "" }: { post: Post; className?: string }) {
+/** `full`: the Moment view, where the photo is the point: original size, loaded now. Cards ask for a thumbnail-sized copy. */
+export function MomentMedia({ post, className = "", full = false }: { post: Post; className?: string; full?: boolean }) {
   const tile = useMemo(() => tileTokenFor(post.id), [post.id]);
   return hasRealMedia(post) ? (
     <PostMediaCarousel
@@ -363,6 +365,8 @@ export function MomentMedia({ post, className = "" }: { post: Post; className?: 
       type={post.type}
       hobbySlug={post.hobbySlug}
       seed={post.id}
+      width={full ? undefined : 640}
+      priority={full}
       className={`${MOMENT_MEDIA} object-cover ${className}`}
     />
   ) : (
@@ -515,13 +519,13 @@ export function MomentCard({
           onPointerLeave={onMediaPointerUp}
           onPointerCancel={onMediaPointerUp}
           aria-label={`Open: ${post.caption.slice(0, 60)}`}
-          className={`relative block w-full overflow-hidden rounded-[var(--radius-moment)] text-left ${
+          className={`relative block w-full overflow-hidden rounded-card text-left ${
             onlyYou ? "outline outline-2 outline-offset-[5px] outline-dashed outline-[var(--input-border)]" : ""
           }`}
         >
           <MomentMedia post={post} />
           {number && (
-            <span className="ns-section-kicker absolute left-3 top-3 rounded-full bg-card px-2.5 py-1 text-foreground shadow-sm">
+            <span className="ns-section-kicker absolute left-3 top-3 rounded-control bg-card px-2.5 py-1 text-foreground">
               {number}
             </span>
           )}
@@ -537,7 +541,7 @@ export function MomentCard({
                   transition={{ duration: 0.65, times: [0, 0.3, 0.75, 1] }}
                 >
                   <Heart
-                    className="size-20 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+                    className="size-20 icon-halo"
                     style={{ color: "var(--coral-deep)" }}
                     fill="currentColor"
                     strokeWidth={0}
@@ -565,7 +569,7 @@ export function MomentCard({
                   key="quick-react-tray"
                   role="menu"
                   aria-label="Quick react"
-                  className="absolute z-30 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-[var(--void)]/85 p-1.5 shadow-lg backdrop-blur-md"
+                  className="absolute z-30 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-scrim-solid/85 p-1.5 shadow-overlay backdrop-blur-md"
                   style={{ left: `${quickReactAt.x}%`, top: `${quickReactAt.y}%` }}
                   initial={reduceMotion ? false : { opacity: 0, scale: 0.7 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -577,7 +581,7 @@ export function MomentCard({
                     role="menuitem"
                     onClick={quickLove}
                     aria-label="Love this"
-                    className="flex size-10 items-center justify-center rounded-full text-white hover:bg-white/15"
+                    className="flex size-10 items-center justify-center rounded-full text-on-media hover:bg-on-media/15"
                   >
                     <Heart className="size-[18px]" fill={loved ? "currentColor" : "none"} strokeWidth={1.9} />
                   </button>
@@ -586,7 +590,7 @@ export function MomentCard({
                     role="menuitem"
                     onClick={quickIn}
                     aria-label="Count me in"
-                    className="flex size-10 items-center justify-center rounded-full text-white hover:bg-white/15"
+                    className="flex size-10 items-center justify-center rounded-full text-on-media hover:bg-on-media/15"
                   >
                     <Hand
                       className="size-[18px]"
@@ -599,7 +603,7 @@ export function MomentCard({
                     role="menuitem"
                     onClick={quickThought}
                     aria-label="Add a thought"
-                    className="flex size-10 items-center justify-center rounded-full text-white hover:bg-white/15"
+                    className="flex size-10 items-center justify-center rounded-full text-on-media hover:bg-on-media/15"
                   >
                     <MessageCircle className="size-[18px]" strokeWidth={1.9} />
                   </button>
@@ -616,20 +620,20 @@ export function MomentCard({
             onClick={() => setVisibilityOpen(true)}
             aria-label={`Who sees this: ${visibilityWord(post)}. Change it`}
             title="Who sees this"
-            className="absolute right-1.5 top-1.5 z-[1] flex size-10 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+            className="absolute right-1 top-1 z-[1] flex size-11 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
           >
             {onlyYou ? (
               <Lock
                 className={`size-[20px] ${CORNER_ICON_SCRIM}`}
                 strokeWidth={2}
-                style={{ color: hasRealMedia(post) ? "#fff" : tile.fg }}
+                style={{ color: hasRealMedia(post) ? "var(--on-media)" : tile.fg }}
                 aria-hidden="true"
               />
             ) : (
               <Eye
                 className={`size-[20px] ${CORNER_ICON_SCRIM}`}
                 strokeWidth={2}
-                style={{ color: hasRealMedia(post) ? "#fff" : tile.fg }}
+                style={{ color: hasRealMedia(post) ? "var(--on-media)" : tile.fg }}
                 aria-hidden="true"
               />
             )}
@@ -644,7 +648,7 @@ export function MomentCard({
           <div className="flex min-h-9 min-w-0 items-center justify-between gap-2">
             {/* No Category-name fallback (Spaces Rework follow-up, PR #83):
                 a Moment with no Corner shows no label at all here either. */}
-            <span className="ns-section-kicker min-w-0 truncate text-muted-foreground">{corner}</span>
+            <span className="ns-section-kicker min-w-0 truncate text-muted-foreground" title={corner}>{corner}</span>
             <span className="ns-section-kicker flex shrink-0 items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
               {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
@@ -654,21 +658,21 @@ export function MomentCard({
           </div>
         ) : (
           <div className="flex min-h-9 min-w-0 items-center gap-2">
-            <Link to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"} className="shrink-0">
+            <Link to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"} className="-my-1.5 -mr-3 shrink-0 py-1.5 pr-3">
               <Avatar className="size-8">
-                <AvatarFallback className="text-[11px]">{initials(post.creator)}</AvatarFallback>
+                <AvatarFallback className="text-caption">{initials(post.creator)}</AvatarFallback>
               </Avatar>
             </Link>
             <span className="min-w-0">
               <Link
                 to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
-                className="block truncate text-[15px] leading-tight transition-colors hover:text-[var(--coral-text)]"
+                className="-my-3 block truncate py-3 text-body leading-tight transition-colors hover:text-[var(--coral-text)]"
                 style={{ fontFamily: "var(--font-serif)" }}
-              >
+               title={post.creator}>
                 {post.creator}
               </Link>
               {cornerLine && (
-                <span className="ns-section-kicker block truncate text-muted-foreground">{cornerLine}</span>
+                <span className="ns-section-kicker block truncate text-muted-foreground" title={cornerLine}>{cornerLine}</span>
               )}
             </span>
           </div>
@@ -679,18 +683,18 @@ export function MomentCard({
         </p>
 
         {isActivity && (
-          <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2.5">
-            <div className="flex items-center gap-1.5 text-xs">
+          <div className="mt-3 rounded-card border border-border bg-surface px-3 py-2.5">
+            <div className="flex items-center gap-1.5 text-caption">
               <CalendarDays className="size-3.5 shrink-0 text-foreground" />
               <Time value={post.startsAt!} format="datetime" />
             </div>
             {activityPlace && (
-              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="mt-1 flex items-center gap-1.5 text-caption text-muted-foreground">
                 <MapPin className="size-3.5 shrink-0" />
-                <span className="truncate">{activityPlace}</span>
+                <span className="truncate" title={activityPlace}>{activityPlace}</span>
               </div>
             )}
-            <div className="mt-1.5 text-xs text-muted-foreground">
+            <div className="mt-1.5 text-caption text-muted-foreground">
               {plural(goingCount, "person", "people")} going
             </div>
           </div>
@@ -712,14 +716,14 @@ export function MomentCard({
             {/* Step 4c: Count me in → do it together, as a shared Pursuit. */}
             <Link
               to={pursuitTogetherHref(post)}
-              className="text-left text-xs font-medium text-foreground transition-colors hover:underline"
+              className="text-left text-caption font-medium text-foreground transition-colors hover:underline"
             >
               Start a Pursuit with {post.creator}?
             </Link>
             <button
               type="button"
               onClick={() => setAskTogetherOpen(true)}
-              className="text-left text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+              className="text-left text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
             >
               Ask {post.creator} to make it together?
             </button>

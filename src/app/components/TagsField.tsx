@@ -85,7 +85,7 @@ export function TagsField({
   return (
     <div className="relative">
       <div
-        className={`flex min-h-11 flex-wrap items-center gap-1.5 rounded-2xl border border-border bg-surface px-3 py-2 transition-colors ${
+        className={`flex min-h-11 flex-wrap items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-2 transition-colors ${
           focused ? "border-[var(--coral-deep)]" : ""
         }`}
       >
@@ -96,7 +96,7 @@ export function TagsField({
               key={tag}
               layout={chipLayoutIdPrefix && !reduceMotion ? true : undefined}
               layoutId={chipLayoutIdPrefix && !reduceMotion ? `${chipLayoutIdPrefix}${tag}` : undefined}
-              className="flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1 text-xs"
+              className="flex items-center gap-1 rounded-control bg-surface-muted px-2.5 py-1 text-caption"
             >
               {tag}
               <button
@@ -140,19 +140,19 @@ export function TagsField({
             // A click on a suggestion has to land before the list closes.
             onBlur={() => window.setTimeout(() => setFocused(false), 150)}
             placeholder={value.length === 0 ? placeholder : "Add another…"}
-            className="min-w-[8rem] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="min-w-[8rem] flex-1 bg-transparent text-body outline-none placeholder:text-muted-foreground"
           />
         )}
       </div>
 
       {atCap && (
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1.5 text-caption text-muted-foreground">
           Up to {max} tags per Moment — that’s plenty to find by.
         </p>
       )}
 
       {!atCap && draft.trim() && (
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1.5 text-caption text-muted-foreground">
           {exactExisting ? (
             <span className="flex items-center gap-1">
               <Check className="size-3 text-foreground" />
@@ -178,20 +178,20 @@ export function TagsField({
       )}
 
       {!atCap && !draft.trim() && value.length === 0 && !focused && (
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1.5 text-caption text-muted-foreground">
           Anything you like, not listed? Type your own and press Enter.
         </p>
       )}
 
       {focused && !atCap && suggestions.length > 0 && (
-        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border border-border bg-popover py-1 shadow-xl">
+        <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-overlay">
           {suggestions.map((s) => (
             <li key={s}>
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => addTag(s)}
-                className="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-surface-muted"
+                className="w-full px-4 py-2 text-left text-small transition-colors hover:bg-surface-muted"
               >
                 {s}
               </button>

@@ -67,6 +67,7 @@ import { LinkPreviewCard } from "../components/LinkPreviewCard";
 import { ENTER } from "../lib/motion";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
  * Logging, choose-first:
@@ -141,7 +142,7 @@ function BackLink({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-4" />
       Back
@@ -151,7 +152,7 @@ function BackLink({ onClick }: { onClick: () => void }) {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-surface py-10 sm:py-14">
+    <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-lg px-4">{children}</div>
     </div>
   );
@@ -174,7 +175,7 @@ function Preview({
   return type === "video" ? (
     <video src={url} className={`${className} object-cover`} muted playsInline />
   ) : (
-    <img src={url} alt="" className={`${className} object-cover`} />
+    <ImageWithFallback src={url} alt="" className={`${className}`} />
   );
 }
 
@@ -193,7 +194,7 @@ const SALE_COMING_SOON_COPY = "Marketplace is coming soon.";
 function ForSaleComingSoon({ className = "" }: { className?: string }) {
   const [showNotice, setShowNotice] = useState(false);
   return (
-    <div className={`rounded-2xl border border-dashed border-border bg-surface p-4 opacity-60 ${className}`}>
+    <div className={`rounded-card border border-dashed border-border bg-surface p-4 opacity-60 ${className}`}>
       {/* Not aria-disabled: the control still responds to a tap — it just
           answers with a coming-soon notice instead of the old toggle
           behavior, so it needs to stay a normal, focusable, clickable
@@ -209,18 +210,18 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
         className="flex w-full items-center justify-between gap-3 text-left"
       >
         <span>
-          <span className="block text-sm">Offer this for sale</span>
-          <span className="block text-xs text-muted-foreground">
+          <span className="block text-small">Offer this for sale</span>
+          <span className="block text-caption text-muted-foreground">
             The physical piece, a digital download, or a course
           </span>
         </span>
-        <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline)] bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+        <span className="flex shrink-0 items-center gap-1.5 rounded-control border border-[var(--hairline)] bg-surface-muted px-2.5 py-1 text-caption font-medium text-muted-foreground">
           <Clock className="size-3" />
           Coming soon
         </span>
       </button>
       {showNotice && (
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{SALE_COMING_SOON_COPY}</p>
+        <p className="mt-3 text-caption leading-relaxed text-muted-foreground">{SALE_COMING_SOON_COPY}</p>
       )}
     </div>
   );
@@ -1006,7 +1007,7 @@ export function Log() {
   if (screen === "choose") {
     return (
       <Shell>
-        <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Log a Moment
         </h1>
         <p className="mb-8 text-muted-foreground">Share a moment, or start a pursuit.</p>
@@ -1015,16 +1016,16 @@ export function Log() {
           <button
             type="button"
             onClick={() => setScreen("camera")}
-            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
               <Camera className="size-5" />
             </span>
             <span>
-              <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+              <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 Photo or video
               </span>
-              <span className="block text-xs text-muted-foreground">
+              <span className="block text-caption text-muted-foreground">
                 Opens the camera, or pick one from your library.
               </span>
             </span>
@@ -1037,32 +1038,32 @@ export function Log() {
               setFiles([]);
               setScreen("caption");
             }}
-            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
               <PenLine className="size-5" />
             </span>
             <span>
-              <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+              <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 Write it down
               </span>
-              <span className="block text-xs text-muted-foreground">Just a sentence counts.</span>
+              <span className="block text-caption text-muted-foreground">Just a sentence counts.</span>
             </span>
           </button>
 
           <button
             type="button"
             onClick={() => setPursuitDialogOpen(true)}
-            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
+            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
               <Sparkle className="size-5" />
             </span>
             <span>
-              <span className="block text-sm" style={{ fontFamily: "var(--font-serif)" }}>
+              <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 Start a Pursuit
               </span>
-              <span className="block text-xs text-muted-foreground">
+              <span className="block text-caption text-muted-foreground">
                 Something you’re bringing to life over time.
               </span>
             </span>
@@ -1108,14 +1109,14 @@ export function Log() {
               </DialogDescription>
             </DialogHeader>
             {draftPrompt && (
-              <div className="rounded-2xl border border-dashed border-border bg-surface p-3.5 text-sm text-muted-foreground">
+              <div className="rounded-card border border-dashed border-border bg-surface p-3.5 text-small text-muted-foreground">
                 {draftPrompt.thought.trim() ? (
-                  <p className="line-clamp-3 text-foreground">“{draftPrompt.thought.trim()}”</p>
+                  <p className="line-clamp-3 text-foreground" title={draftPrompt.thought.trim()}>“{draftPrompt.thought.trim()}”</p>
                 ) : (
                   <p>No caption yet</p>
                 )}
                 {draftPrompt.mediaType && !draftPromptMedia && (
-                  <p className="mt-2 text-xs">
+                  <p className="mt-2 text-caption">
                     A {draftPrompt.mediaType} was attached on another device — not available here.
                   </p>
                 )}
@@ -1155,11 +1156,11 @@ export function Log() {
   if (requiresLogin) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="max-w-md rounded-3xl border border-border bg-card p-10 text-center">
-          <span className="mb-5 inline-flex size-14 items-center justify-center rounded-full text-white [background-color:var(--coral-deep)]">
+        <div className="max-w-md rounded-card border border-border bg-card p-10 text-center">
+          <span className="mb-5 inline-flex size-14 items-center justify-center rounded-full text-on-brand [background-color:var(--coral-deep)]">
             <NotebookPen className="size-7" />
           </span>
-          <h2 className="mb-2 text-2xl">Log in to keep your Moments</h2>
+          <h2 className="mb-2 text-title">Log in to keep your Moments</h2>
           <p className="mb-6 text-muted-foreground">
             Your moments are tied to your account, so they’re still here next
             time, not just in this browser tab.
@@ -1187,7 +1188,7 @@ export function Log() {
     const anySaveError = saveError || privateSaveError;
     return (
       <Shell>
-        <div className="rounded-3xl border border-border bg-card px-6 py-10 text-center">
+        <div className="rounded-card border border-border bg-card px-6 py-10 text-center">
           <span className="relative mx-auto mb-5 flex size-16 items-center justify-center">
             {/* A small burst, not confetti */}
             <svg
@@ -1217,14 +1218,14 @@ export function Log() {
             </span>
           </span>
 
-          <h1 className="text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
             {anySaveError ? "Not saved." : "Saved."}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-small text-muted-foreground">
             {interest.trim() ? `${tagLabel} · ${cornerLabel}` : cornerLabel}
           </p>
           {!anySaveError && (
-            <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-sm">
+            <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-small">
               {savedAs === "private" ? "Kept just for you." : "Another one made."}
             </p>
           )}
@@ -1235,18 +1236,19 @@ export function Log() {
             // tracked at once, this box hands itself off into position on
             // the Shelf instead of the grid tile just appearing cold.
             layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
+            // design-token-ignore: spring, not a fixed duration; layout/layoutId are off under reduced motion
             transition={ENTER}
             className={
               savedTileSettled
                 ? "mx-auto my-6 w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
-                : "mx-auto my-6 w-40 overflow-hidden rounded-xl border border-border"
+                : "mx-auto my-6 w-40 overflow-hidden rounded-card border border-border"
             }
           >
             <MediaPreview className="aspect-square w-full" />
           </motion.div>
           {savedAs === "shared" && !anySaveError && (
             <p
-              className={`-mt-3 mb-3 text-xs text-muted-foreground transition-opacity duration-base ${
+              className={`-mt-3 mb-3 text-caption text-muted-foreground transition-opacity duration-base ${
                 savedTileSettled ? "opacity-100" : "opacity-0"
               }`}
             >
@@ -1257,14 +1259,14 @@ export function Log() {
           {/* An honest failure beats a cheerful lie: the post is on screen but
               only in this tab, and it will be gone after a reload. */}
           {anySaveError && (
-            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+            <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
               {anySaveError} Nothing you wrote is lost yet. Try again before you
               close this tab.
             </p>
           )}
 
           {mediaError && (
-            <p className="mx-auto mb-5 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+            <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
               {mediaError}
             </p>
           )}
@@ -1284,7 +1286,7 @@ export function Log() {
             <button
               type="button"
               onClick={reset}
-              className="w-full py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="w-full py-1 text-small text-muted-foreground transition-colors hover:text-foreground"
             >
               Create another
             </button>
@@ -1301,7 +1303,7 @@ export function Log() {
     return (
       <Shell>
         <Back to={captionBackTo} />
-        <h1 className="mb-6 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mb-6 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Your moment
         </h1>
 
@@ -1310,12 +1312,12 @@ export function Log() {
             up to 8 of them: one square per photo, its own remove button,
             and a dashed "+" tile to add more. */}
         {type === "video" && files.length > 0 && (
-          <div className="relative mb-4 overflow-hidden rounded-2xl border border-border">
+          <div className="relative mb-4 overflow-hidden rounded-card border border-border">
             <MediaPreview className="aspect-[4/3] w-full" />
             <button
               type="button"
               onClick={() => setFiles([])}
-              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-[var(--void)]/65 text-white"
+              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-control bg-scrim-solid/65 text-on-media"
               aria-label="Remove this video"
             >
               <X className="size-3.5" />
@@ -1328,13 +1330,13 @@ export function Log() {
             {filePreviewUrls.map((url, i) => (
               <div
                 key={i}
-                className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border"
+                className="relative size-20 shrink-0 overflow-hidden rounded-control border border-border"
               >
-                <img src={url} alt="" className="h-full w-full object-cover" />
+                <ImageWithFallback src={url} alt="" className="h-full w-full" />
                 <button
                   type="button"
                   onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                  className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/65 text-white"
+                  className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/65 text-on-media"
                   aria-label={`Remove photo ${i + 1}`}
                 >
                   <X className="size-3" />
@@ -1346,7 +1348,7 @@ export function Log() {
                 type="button"
                 onClick={() => addMoreInputRef.current?.click()}
                 aria-label="Add another photo"
-                className="flex size-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                className="flex size-20 shrink-0 items-center justify-center rounded-control border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Plus className="size-5" />
               </button>
@@ -1384,7 +1386,7 @@ export function Log() {
         />
 
         {heicWarning && (
-          <p className="mb-4 rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-xs leading-relaxed text-foreground">
+          <p className="mb-4 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
             {heicWarning}
           </p>
         )}
@@ -1400,7 +1402,7 @@ export function Log() {
             onChange={(e) => setThought(e.target.value)}
             placeholder={files.length > 0 ? "Add a thought…" : "What happened? Even a sentence counts."}
           />
-          <div className="mt-1 text-right text-[11px] text-muted-foreground">
+          <div className="mt-1 text-right text-caption text-muted-foreground">
             {thought.length}/{THOUGHT_LIMIT}
           </div>
           {/* Passive detection: no "add a link" field to fill out on
@@ -1426,7 +1428,7 @@ export function Log() {
               shows or requires that choice; typing tags that match nothing
               just leaves those legacy fields on their default. */}
           <div>
-            <h2 className="mb-2 text-sm">
+            <h2 className="mb-2 text-small">
               <label htmlFor="tags">What is it about?</label>
             </h2>
             <TagsField
@@ -1464,10 +1466,10 @@ export function Log() {
               sets both hobbySlug and spaceSet, which then scopes this
               field the same way it always used to. */}
           <div>
-            <h2 className="mb-1 text-sm">
+            <h2 className="mb-1 text-small">
               <label htmlFor="corner">Which Corner?</label>
             </h2>
-            <p className="mb-2 text-xs text-muted-foreground">Where this shows up when someone browses by Corner.</p>
+            <p className="mb-2 text-caption text-muted-foreground">Where this shows up when someone browses by Corner.</p>
             <CornerTagField
               spaceSlug={spaceSet ? hobbySlug : undefined}
               value={corner}
@@ -1482,7 +1484,7 @@ export function Log() {
           </div>
 
           {/* Only a thing that happens at a time needs a time. */}
-          <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+          <div className="rounded-card border border-border bg-surface px-4 py-3.5">
             <button
               type="button"
               onClick={() => setIsActivity((v) => !v)}
@@ -1490,8 +1492,8 @@ export function Log() {
               className="flex w-full items-center justify-between gap-3"
             >
               <span className="text-left">
-                <span className="block text-sm">This is something happening</span>
-                <span className="block text-xs text-muted-foreground">
+                <span className="block text-small">This is something happening</span>
+                <span className="block text-caption text-muted-foreground">
                   A walk, a workshop, a meetup, a challenge: people can join in
                 </span>
               </span>
@@ -1502,13 +1504,13 @@ export function Log() {
                     : "justify-start bg-surface-muted"
                 }`}
               >
-                <span className="size-5 rounded-full bg-white" />
+                <span className="size-5 rounded-full bg-background" />
               </span>
             </button>
 
             {isActivity && (
               <div className="mt-4">
-                <Label htmlFor="startsAt" className="mb-1.5 block text-xs">
+                <Label htmlFor="startsAt" className="mb-1.5 block text-caption">
                   When
                 </Label>
                 <Input
@@ -1525,9 +1527,9 @@ export function Log() {
               activity — a photo from a trip or a walk deserves the same
               option. Kept as its own section rather than nested under "This
               is something happening" so it's never gated behind that toggle. */}
-          <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+          <div className="rounded-card border border-border bg-surface px-4 py-3.5">
             <div>
-              <Label htmlFor="place" className="mb-1.5 block text-xs">
+              <Label htmlFor="place" className="mb-1.5 block text-caption">
                 Where (optional)
               </Label>
               <Input
@@ -1539,7 +1541,7 @@ export function Log() {
             </div>
             {locationName.trim() && (
               <div className="mt-3">
-                <Label className="mb-1.5 block text-xs">How precisely to show it</Label>
+                <Label className="mb-1.5 block text-caption">How precisely to show it</Label>
                 <Select
                   value={locationPrivacy}
                   onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
@@ -1555,7 +1557,7 @@ export function Log() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="mt-1.5 text-xs text-muted-foreground">
+                <p className="mt-1.5 text-caption text-muted-foreground">
                   Neighborhood by default. Exact is never assumed.
                 </p>
               </div>
@@ -1563,7 +1565,7 @@ export function Log() {
           </div>
 
           <div>
-            <h2 className="mb-2 text-sm">Choose who sees this</h2>
+            <h2 className="mb-2 text-small">Choose who sees this</h2>
             <ul className="space-y-2">
               {AUDIENCE.map((opt) => {
                 const active = audience === opt.value;
@@ -1573,14 +1575,14 @@ export function Log() {
                       type="button"
                       aria-pressed={active}
                       onClick={() => chooseAudience(opt.value)}
-                      className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
+                      className={`flex w-full items-center gap-3 rounded-card border px-4 py-3 text-left transition-colors ${
                         active
                           ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface-elevated))]"
                           : "border-border bg-surface hover:border-[var(--foreground)]/30"
                       }`}
                     >
                       <opt.icon className="size-4 shrink-0 text-foreground" />
-                      <span className="min-w-0 flex-1 text-sm">{opt.label}</span>
+                      <span className="min-w-0 flex-1 text-small">{opt.label}</span>
                       {active && <Check className="size-4 shrink-0 text-[var(--coral-deep)]" />}
                     </button>
                   </li>
@@ -1593,7 +1595,7 @@ export function Log() {
                 flow's own version of this control uses. */}
             {audience === "public" && <ForSaleComingSoon className="mt-3" />}
 
-            <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-4 text-center text-caption leading-relaxed text-muted-foreground">
               {audience === "private"
                 ? "This stays a private log. Nobody else will see it."
                 : `This will appear in ${
@@ -1604,12 +1606,12 @@ export function Log() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card px-4 py-3.5">
+          <div className="rounded-card border border-border bg-card px-4 py-3.5">
             <div className="flex items-center gap-3">
               <FolderPlus className="size-4 shrink-0 text-foreground" />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm">Add to a Pursuit</span>
-                <span className="block text-xs text-muted-foreground">
+                <span className="block text-small">Add to a Pursuit</span>
+                <span className="block text-caption text-muted-foreground">
                   Keep an ongoing thing together.
                 </span>
               </span>
@@ -1636,7 +1638,7 @@ export function Log() {
           </div>
         </div>
 
-        {error && <p className="mb-3 text-center text-xs text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="mb-3 text-center text-caption text-[var(--coral-text)]">{error}</p>}
 
         {/* One button, one outcome, decided by the audience above — not a
             separate "Save this moment" that produced the same private
@@ -1653,7 +1655,7 @@ export function Log() {
         </Button>
 
         {!hasSomething && (
-          <p className="mt-3 text-center text-xs text-muted-foreground">
+          <p className="mt-3 text-center text-caption text-muted-foreground">
             Add a photo, video, or a line of text to continue.
           </p>
         )}
@@ -1669,12 +1671,12 @@ export function Log() {
   const isPrivateOnly = mode === "private";
 
   return (
-    <div className="min-h-screen bg-surface py-10 sm:py-14">
+    <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-2xl px-4">
         {pursuitScoped ? (
           <Link
             to={`/pursuit/${initialPursuit!.id}`}
-            className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
             Back
@@ -1683,20 +1685,20 @@ export function Log() {
           <Back to="camera" />
         )}
 
-        <h1 className="mb-2 text-3xl sm:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           {activeMode.title}
         </h1>
         <p className="mb-9 text-muted-foreground">
           {pursuitScoped ? initialPursuit!.title : activeMode.copy}
         </p>
 
-        <div className="space-y-7 rounded-3xl border border-border bg-card p-6 md:p-8">
+        <div className="space-y-8 rounded-card border border-border bg-card p-6 md:p-8">
           {!isPrivateOnly && (
             <>
               {!pursuitScoped && (
                 <section>
-                  <h2 className="mb-1 text-sm">What are you working on?</h2>
-                  <p className="mb-3 text-xs text-muted-foreground">
+                  <h2 className="mb-1 text-small">What are you working on?</h2>
+                  <p className="mb-3 text-caption text-muted-foreground">
                     {mode === "update"
                       ? "Choose the Pursuit this belongs to."
                       : mode === "project"
@@ -1753,19 +1755,19 @@ export function Log() {
               )}
 
               <section>
-                <h2 className="mb-1 text-sm">Show where it’s at</h2>
-                <p className="mb-3 text-xs text-muted-foreground">
+                <h2 className="mb-1 text-small">Show where it’s at</h2>
+                <p className="mb-3 text-caption text-muted-foreground">
                   Add a photo, video, or short note.
                 </p>
 
                 <div className="mb-3 flex items-center gap-4">
-                  <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-border">
+                  <div className="relative size-20 shrink-0 overflow-hidden rounded-control border border-border">
                     <MediaPreview className="h-full w-full" />
                     {files.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setFiles([])}
-                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--void)]/70 text-white"
+                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media"
                         aria-label="Remove file"
                       >
                         <X className="size-3" />
@@ -1798,12 +1800,12 @@ export function Log() {
                       }}
                     />
                     {heicWarning && (
-                      <p className="mb-2 max-w-xs rounded-xl border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3 py-2 text-left text-[11px] leading-relaxed text-foreground">
+                      <p className="mb-2 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3 py-2 text-left text-caption leading-relaxed text-foreground">
                         {heicWarning}
                       </p>
                     )}
                     <div className="mb-2 flex gap-2">
-                      <span className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5 rounded-control border border-border px-3 py-1 text-caption text-muted-foreground">
                         {type === "video" ? (
                           <Video className="size-3.5" />
                         ) : (
@@ -1833,8 +1835,8 @@ export function Log() {
               </section>
 
               <section>
-                <h2 className="mb-1 text-sm">What changed?</h2>
-                <p className="mb-3 text-xs text-muted-foreground">
+                <h2 className="mb-1 text-small">What changed?</h2>
+                <p className="mb-3 text-caption text-muted-foreground">
                   A small win, a lesson, a question, or what comes next.
                 </p>
                 <Textarea
@@ -1852,10 +1854,10 @@ export function Log() {
               open for a private-only entry, where it's the whole point. */}
           {isPrivateOnly || reflectionOpen || reflection.trim() ? (
             <section>
-              <h2 className="mb-1 flex items-center gap-1.5 text-sm">
+              <h2 className="mb-1 flex items-center gap-1.5 text-small">
                 <Lock className="size-3.5" /> Private reflection
               </h2>
-              <p className="mb-3 text-xs text-muted-foreground">
+              <p className="mb-3 text-caption text-muted-foreground">
                 What do you want to remember for yourself?
               </p>
               <Textarea
@@ -1870,16 +1872,16 @@ export function Log() {
             <button
               type="button"
               onClick={() => setReflectionOpen(true)}
-              className="flex w-full items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-card border border-dashed border-border px-4 py-3 text-left text-small text-muted-foreground transition-colors hover:text-foreground"
             >
               <Lock className="size-3.5" />
-              Add a private reflection <span className="text-xs">(only you)</span>
+              Add a private reflection <span className="text-caption">(only you)</span>
             </button>
           )}
 
           {!isPrivateOnly && (
             <section>
-              <h2 className="mb-3 text-sm">Choose who sees this</h2>
+              <h2 className="mb-3 text-small">Choose who sees this</h2>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {AUDIENCE.map((opt) => (
                   <button
@@ -1887,18 +1889,18 @@ export function Log() {
                     type="button"
                     onClick={() => chooseAudience(opt.value)}
                     aria-pressed={audience === opt.value}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-colors ${
+                    className={`flex flex-col items-center gap-1.5 rounded-control border px-2 py-3 text-center transition-colors ${
                       audience === opt.value
-                        ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                        ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
                         : "border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <opt.icon className="size-4" />
-                    <span className="text-[11px] leading-tight">{opt.label}</span>
+                    <span className="text-caption leading-tight">{opt.label}</span>
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-caption text-muted-foreground">
                 {AUDIENCE.find((o) => o.value === audience)?.copy}
               </p>
             </section>
@@ -1906,7 +1908,7 @@ export function Log() {
 
           {!isPrivateOnly && audience === "public" && <ForSaleComingSoon />}
 
-          {error && <p className="text-xs text-[var(--coral-text)]">{error}</p>}
+          {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button
               variant="coral"

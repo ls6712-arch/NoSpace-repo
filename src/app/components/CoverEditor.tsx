@@ -69,11 +69,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
       <button
         type="button"
         onClick={openPanel}
-        className="inline-flex items-center gap-1.5 rounded-[20px] border px-3.5 py-1.5 text-sm text-white transition-colors"
-        style={{
-          backgroundColor: "rgba(42,36,29,0.35)",
-          borderColor: "rgba(248,242,229,0.4)",
-        }}
+        className="inline-flex items-center gap-1.5 rounded-control border border-on-media/40 bg-scrim-solid/35 px-3.5 py-1.5 text-small text-on-media transition-colors"
       >
         <Pencil className="size-3.5" />
         Edit cover
@@ -85,8 +81,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
       <DialogPrimitive.Root open={open} onOpenChange={(next) => !saving && setOpen(next)}>
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay
-            className="fixed inset-0 z-[80] ease-out data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-fast"
-            style={{ backgroundColor: "rgba(20,17,13,0.72)" }}
+            className="fixed inset-0 z-[80] bg-scrim-solid/70 ease-standard data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-fast"
           />
           <DialogPrimitive.Content
             aria-describedby={undefined}
@@ -96,10 +91,10 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
             onCloseAutoFocus={(e) => {
               if (restoreFocus(opener.current)) e.preventDefault();
             }}
-            className="ns-paper-theme fixed top-1/2 left-1/2 z-[80] max-h-[90vh] w-[calc(100%-2rem)] max-w-[620px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-md border border-[var(--line)] bg-[var(--paper-raised)] p-8 ease-out data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-fast"
+            className="ns-paper-theme fixed top-1/2 left-1/2 z-[80] max-h-[90vh] w-[calc(100%-2rem)] max-w-[620px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-control border border-[var(--line)] bg-[var(--paper-raised)] p-8 ease-standard data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-fast"
           >
             <div className="mb-5 flex items-center justify-between">
-              <DialogPrimitive.Title className="text-[19px]" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+              <DialogPrimitive.Title className="text-lead" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                 Make it yours
               </DialogPrimitive.Title>
               <DialogPrimitive.Close
@@ -111,7 +106,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               </DialogPrimitive.Close>
             </div>
 
-            <label className="mb-1 block text-[12.5px] text-[var(--ink-soft)]" htmlFor="cover-title">
+            <label className="mb-1 block text-caption text-[var(--ink-soft)]" htmlFor="cover-title">
               Title
             </label>
             <input
@@ -119,11 +114,11 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={60}
-              className="mb-4 w-full rounded border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[17px] text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-lead text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
               style={{ fontFamily: "var(--font-serif)" }}
             />
 
-            <label className="mb-1 block text-[12.5px] text-[var(--ink-soft)]" htmlFor="cover-tagline">
+            <label className="mb-1 block text-caption text-[var(--ink-soft)]" htmlFor="cover-tagline">
               Tagline
             </label>
             <textarea
@@ -132,13 +127,13 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               onChange={(e) => setTagline(e.target.value)}
               rows={2}
               maxLength={160}
-              className="mb-4 w-full resize-none rounded border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-[14.5px] italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full resize-none rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-body italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
               style={{ fontFamily: "var(--font-serif)" }}
             />
 
-            <p className="mb-1.5 text-[12.5px] text-[var(--ink-soft)]">Cover photo</p>
+            <p className="mb-1.5 text-caption text-[var(--ink-soft)]">Cover photo</p>
             {candidates.length === 0 ? (
-              <p className="mb-4 text-xs text-[var(--ink-faint)]">
+              <p className="mb-4 text-caption text-[var(--ink-faint)]">
                 Pin a Moment with a photo first — that’s what shows up here.
               </p>
             ) : (
@@ -148,7 +143,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
                     key={post.id}
                     type="button"
                     onClick={() => setPostId(post.id)}
-                    className="h-16 w-[90px] shrink-0 overflow-hidden rounded"
+                    className="h-16 w-[90px] shrink-0 overflow-hidden rounded-control"
                     style={{
                       border: postId === post.id ? "2px solid var(--coral-deep)" : "1px solid var(--line)",
                     }}
@@ -161,6 +156,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
                       hobbySlug={post.hobbySlug}
                       seed={post.id}
                       preview
+                      width={160}
                       className="h-full w-full object-cover"
                     />
                   </button>

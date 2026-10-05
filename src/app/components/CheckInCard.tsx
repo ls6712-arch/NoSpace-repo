@@ -31,9 +31,9 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--coral-deep)]/40 bg-card p-4">
-      <p className="text-sm">
-        <Link to={`/pursuit/${pursuit.id}`} className="hover:text-accent" style={{ fontFamily: "var(--font-serif)" }}>
+    <div className="rounded-card border border-[var(--coral-deep)]/40 bg-card p-4">
+      <p className="text-small">
+        <Link to={`/pursuit/${pursuit.id}`} className="inline-flex min-h-11 items-center hover:text-accent" style={{ fontFamily: "var(--font-serif)" }}>
           {pursuit.title}
         </Link>{" "}
         <span className="text-muted-foreground">has been quiet for {quietFor(lastActivity)}. Where’s it at?</span>
@@ -44,25 +44,25 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
           <QuickLog pursuit={pursuit} compact onDone={() => setLogging(false)} />
         </div>
       ) : (
-        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+        <div className="mt-3 flex flex-wrap gap-2 text-caption">
           <button
             type="button"
             onClick={() => setLogging(true)}
-            className="rounded-full border border-[var(--coral-deep)] px-3 py-1.5 text-foreground hover:bg-[color-mix(in_srgb,var(--coral)_14%,transparent)]"
+            className="rounded-control border border-[var(--coral-deep)] px-3 py-1.5 text-foreground hover:bg-[color-mix(in_srgb,var(--coral)_14%,transparent)]"
           >
             Log a Moment
           </button>
           <button
             type="button"
             onClick={() => mirror(pauseProject(pursuit.id))}
-            className="rounded-full border border-border px-3 py-1.5 text-foreground hover:border-[var(--coral-deep)]"
+            className="rounded-control border border-border px-3 py-1.5 text-foreground hover:border-[var(--coral-deep)]"
           >
             Pausing for now
           </button>
           <button
             type="button"
             onClick={() => setEnding(true)}
-            className="rounded-full border border-border px-3 py-1.5 text-foreground hover:border-[var(--coral-deep)]"
+            className="rounded-control border border-border px-3 py-1.5 text-foreground hover:border-[var(--coral-deep)]"
           >
             Done with this
           </button>

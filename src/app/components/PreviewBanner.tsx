@@ -17,12 +17,12 @@ export function PreviewBanner() {
   return (
     <div
       role="status"
-      className="w-full border-b text-center text-[11px] font-medium tracking-wide"
+      className="w-full border-b text-center text-caption font-medium tracking-wide"
       style={{
         backgroundColor: "var(--surface-muted)",
         borderColor: "var(--hairline)",
         color: "var(--muted-foreground)",
-        paddingTop: "calc(env(safe-area-inset-top) + 0.3rem)",
+        paddingTop: "calc(var(--safe-top) + 0.3rem)",
         paddingBottom: "0.3rem",
       }}
     >

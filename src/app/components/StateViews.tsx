@@ -37,10 +37,10 @@ export function EmptyState({
   className?: string;
 }) {
   if (size === "rail") {
-    const linkClass = "text-xs text-accent hover:underline";
+    const linkClass = "text-caption text-accent hover:underline";
     return (
       <div data-slot="empty-state" className={cn("mt-3", className)}>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-small text-muted-foreground">
           {line}
           {hint ? <> {hint}</> : null}
         </p>
@@ -80,8 +80,8 @@ export function EmptyState({
       className={cn(
         "text-center",
         size === "inline" && "py-6",
-        size === "section" && "rounded-2xl border border-dashed border-border px-5 py-9",
-        size === "page" && "rounded-2xl border border-dashed border-border px-5 py-14",
+        size === "section" && "rounded-card border border-dashed border-border px-5 py-9",
+        size === "page" && "rounded-card border border-dashed border-border px-5 py-14",
         className,
       )}
     >
@@ -94,16 +94,16 @@ export function EmptyState({
         </span>
       )}
       {size === "page" ? (
-        <h2 className="mb-2 text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h2 className="mb-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>
           {line}
         </h2>
       ) : (
-        <p className="mx-auto max-w-sm text-sm text-foreground">{line}</p>
+        <p className="mx-auto max-w-sm text-small text-foreground">{line}</p>
       )}
       {hint && (
         <p
           className={cn(
-            "mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground",
+            "mx-auto max-w-sm text-small leading-relaxed text-muted-foreground",
             size === "page" ? "mb-6" : "mt-1",
           )}
         >
@@ -130,7 +130,7 @@ export function ErrorNotice({
 }) {
   return (
     <div role="alert" className={cn("py-6 text-center", className)}>
-      <p className="mx-auto max-w-sm text-sm text-muted-foreground">{message}</p>
+      <p className="mx-auto max-w-sm text-small text-muted-foreground">{message}</p>
       {onRetry && (
         <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>
           {TRY_AGAIN}
@@ -152,7 +152,7 @@ export function InlineError({
 }) {
   if (!message) return null;
   return (
-    <p role="alert" className={cn("text-xs text-[var(--coral-text)]", className)}>
+    <p role="alert" className={cn("text-caption text-[var(--coral-text)]", className)}>
       {message}
       {onRetry && (
         <>

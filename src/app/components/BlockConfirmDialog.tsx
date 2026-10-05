@@ -55,7 +55,7 @@ export function BlockConfirmDialog({
             told.
           </DialogDescription>
         </DialogHeader>
-        {error && <p className="text-xs text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
             Cancel

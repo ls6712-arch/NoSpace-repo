@@ -129,10 +129,10 @@ export function Login() {
   if (!isConfigured) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <div className="glass-panel rounded-3xl p-8 text-center max-w-sm">
+        <div className="glass-panel rounded-card p-8 text-center max-w-sm">
           <AlertCircle className="size-8 mx-auto mb-3 text-muted-foreground" />
-          <h2 className="text-xl mb-2">Accounts aren’t set up on this build</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-title mb-2">Accounts aren’t set up on this build</h2>
+          <p className="text-small text-muted-foreground">
             This copy of {APP_NAME} isn’t connected to a database yet, so there’s no real
             sign-up here. Everything still works in local demo mode.
           </p>
@@ -145,13 +145,13 @@ export function Login() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-14">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="inline-flex size-12 items-center justify-center rounded-full text-white mb-4 [background-image:var(--gradient-brand)]">
+          <span className="inline-flex size-12 items-center justify-center rounded-full text-on-brand mb-4 [background-image:var(--gradient-brand)]">
             <Sparkles className="size-5" />
           </span>
-          <h1 className="text-2xl mb-1">
+          <h1 className="text-title mb-1">
             {mode === "signup" ? "Create your account" : "Welcome back"}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-small text-muted-foreground">
             {mode === "signup"
               ? "Your Moments, saved for real, not just this browser tab."
               : "Log in to pick up where you left off."}
@@ -159,17 +159,17 @@ export function Login() {
         </div>
 
         {needsConfirmation ? (
-          <div className="glass-panel rounded-3xl p-6 text-center">
-            <p className="text-sm leading-relaxed text-muted-foreground">
+          <div className="glass-panel rounded-card p-6 text-center">
+            <p className="text-small leading-relaxed text-muted-foreground">
               Check <span className="text-foreground">{email}</span> for a confirmation link —
               you’ll be signed in once you click it.
             </p>
-            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-3 text-caption leading-relaxed text-muted-foreground">
               {resent
                 ? "Sent again — check your spam folder if it still doesn’t turn up."
                 : "Nothing after a few minutes? It can land in spam, or just take a moment."}
             </p>
-            {error && <p className="mt-2 text-xs text-[var(--coral-text)]">{error}</p>}
+            {error && <p className="mt-2 text-caption text-[var(--coral-text)]">{error}</p>}
             <Button
               busy={resending}
               variant="outline"
@@ -195,11 +195,11 @@ export function Login() {
 
             <div className="flex items-center gap-3 my-5">
               <div className="h-px flex-1 bg-[var(--hairline)]" />
-              <span className="text-xs text-muted-foreground">or</span>
+              <span className="text-caption text-muted-foreground">or</span>
               <div className="h-px flex-1 bg-[var(--hairline)]" />
             </div>
 
-            <form onSubmit={handleSubmit} className="glass-panel rounded-3xl p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="glass-panel rounded-card p-6 space-y-4">
               {mode === "signup" && (
                 <div>
                   <Label htmlFor="displayName" className="mb-2 block">
@@ -241,13 +241,13 @@ export function Login() {
                   required
                 />
                 {mode === "signup" && (
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">At least 8 characters.</p>
+                  <p className="mt-1.5 text-caption text-muted-foreground">At least 8 characters.</p>
                 )}
                 {mode === "signin" && (
                   <button
                     type="button"
                     onClick={sendReset}
-                    className="mt-2 text-xs text-[var(--coral-text)] hover:underline"
+                    className="mt-2 text-caption text-[var(--coral-text)] hover:underline"
                   >
                     Forgot your password?
                   </button>
@@ -255,14 +255,14 @@ export function Login() {
               </div>
 
               {resetSent && (
-                <p className="rounded-xl border border-[var(--hairline)] bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                <p className="rounded-card border border-[var(--hairline)] bg-surface-muted px-3 py-2.5 text-caption leading-relaxed text-muted-foreground">
                   If there’s an account for that address, a reset link is on its way.
                   Check your spam folder if it doesn’t arrive.
                 </p>
               )}
 
               {error && (
-                <div className="flex items-start gap-2 rounded-xl border border-[var(--coral)]/30 bg-[var(--coral)]/10 px-3 py-2.5 text-xs text-[var(--coral)]">
+                <div className="flex items-start gap-2 rounded-card border border-[var(--coral)]/30 bg-[var(--coral)]/10 px-3 py-2.5 text-caption text-[var(--coral)]">
                   <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
                   {error}
                 </div>
@@ -273,7 +273,7 @@ export function Login() {
               </Button>
             </form>
 
-            <p className="text-center text-sm text-muted-foreground mt-5">
+            <p className="text-center text-small text-muted-foreground mt-5">
               {mode === "signup" ? "Already have an account? " : "New here? "}
               <button
                 type="button"

@@ -63,20 +63,21 @@ function PinPicker({
               type="button"
               disabled={busyId === post.id}
               onClick={() => toggle(post.id)}
-              className="flex w-full items-center gap-3 rounded-xl border border-border px-3 py-2.5 text-left transition-colors hover:border-[var(--coral-deep)] disabled:opacity-50"
+              className="flex w-full items-center gap-3 rounded-card border border-border px-3 py-2.5 text-left transition-colors hover:border-[var(--coral-deep)] disabled:opacity-50"
             >
-              <div className="size-11 shrink-0 overflow-hidden rounded-lg">
+              <div className="size-11 shrink-0 overflow-hidden rounded-control">
                 <PostMedia
                   media={post.media}
                   type={post.type}
                   hobbySlug={post.hobbySlug}
                   seed={post.id}
                   preview
+                  width={96}
                   className="h-full w-full object-cover"
                 />
               </div>
-              <span className="min-w-0 flex-1 truncate text-sm">{post.caption || "Untitled moment"}</span>
-              <span className={`text-xs ${post.pinned ? "text-[var(--coral-deep)]" : "text-muted-foreground"}`}>
+              <span className="min-w-0 flex-1 truncate text-small" title={post.caption || "Untitled moment"}>{post.caption || "Untitled moment"}</span>
+              <span className={`text-caption ${post.pinned ? "text-[var(--coral-deep)]" : "text-muted-foreground"}`}>
                 {post.pinned ? "Pinned" : "Pin"}
               </span>
             </button>
@@ -211,10 +212,10 @@ export function WorkGrid({
                 <button
                   type="button"
                   onClick={() => setPinPickerOpen(true)}
-                  className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                  className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                 >
                   <ImagePlus className="size-5" strokeWidth={1.7} />
-                  <span className="text-sm font-medium">Pin a moment</span>
+                  <span className="text-small font-medium">Pin a moment</span>
                 </button>
               )}
             </div>
@@ -228,10 +229,10 @@ export function WorkGrid({
           <button
             type="button"
             onClick={() => setPinPickerOpen(true)}
-            className="flex aspect-square w-full max-w-xs flex-col items-center justify-center gap-2 rounded-[var(--radius-moment)] border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            className="flex aspect-square w-full max-w-xs flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ImagePlus className="size-5" strokeWidth={1.7} />
-            <span className="text-sm font-medium">Pin a moment</span>
+            <span className="text-small font-medium">Pin a moment</span>
           </button>
         )}
       </div>

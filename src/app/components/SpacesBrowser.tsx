@@ -7,6 +7,7 @@ import type { SpaceRow } from "../lib/spaces";
 import { Loadable } from "./ui/skeleton";
 import { SpaceGridSkeleton } from "./Skeletons";
 import { EmptyState, ErrorNotice } from "./StateViews";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 /** Discover's "Spaces" tab — host-created communities, Phase 5 of the
  * Spaces Rework. No member counts anywhere in this app's Spaces UI, same
@@ -51,7 +52,7 @@ export function SpacesBrowser({ query }: { query: string }) {
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
           <div className="ns-section-kicker mb-2">HOST-CREATED COMMUNITIES</div>
-          <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>Spaces</h2>
+          <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>Spaces</h2>
         </div>
         <Link to="/create-space">
           <Button variant="outline" size="sm">
@@ -80,21 +81,17 @@ export function SpacesBrowser({ query }: { query: string }) {
             <Link
               key={s.id}
               to={`/space/${s.slug}`}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-[transform,border-color,box-shadow] duration-base ease-out hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-md"
+              className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-base ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
             >
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
-                <img
-                  src={s.cover_image}
-                  alt=""
-                  className="size-full object-cover transition-transform duration-base ease-out group-hover:scale-110"
-                />
-                <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                <ImageWithFallback src={s.cover_image} alt="" className="size-full" imgClassName="transition-transform duration-base ease-standard group-hover:scale-110" />
+                <span className="absolute right-2 top-2 rounded-control bg-scrim-solid/60 px-2 py-0.5 text-caption text-on-media">
                   {s.access === "open" ? "Open" : "Closed"}
                 </span>
               </div>
               <div className="p-3">
-                <p className="truncate text-sm font-medium">{s.name}</p>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.description}</p>
+                <p className="truncate text-small font-medium" title={s.name}>{s.name}</p>
+                <p className="mt-0.5 truncate text-caption text-muted-foreground" title={s.description}>{s.description}</p>
               </div>
             </Link>
           ))}

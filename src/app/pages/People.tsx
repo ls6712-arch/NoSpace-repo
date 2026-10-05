@@ -112,7 +112,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search people by name…"
-            className="w-full rounded-full border border-border bg-surface py-2.5 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+            className="w-full rounded-control border border-border bg-surface py-2.5 pl-10 pr-10 text-body outline-none placeholder:text-muted-foreground focus:border-ring"
           />
           {query && (
             <button
@@ -128,11 +128,11 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
       )}
 
       {searching2 ? (
-        <section className="mb-10">
-          <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <section className="mb-12">
+          <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Matching “{query}”
           </h2>
-          <p className="mb-4 mt-1 text-sm text-muted-foreground">
+          <p className="mb-4 mt-1 text-small text-muted-foreground">
             {searching
               ? "Looking…"
               : found.length === 0
@@ -148,10 +148,10 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
       ) : null}
 
       <section>
-        <h2 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+        <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
           By what they make
         </h2>
-        <p className="mb-4 mt-1 text-sm text-muted-foreground">
+        <p className="mb-4 mt-1 text-small text-muted-foreground">
           Browse everyone, or narrow it down by hobby. This is the intended
           route: you meet someone through the craft, not a ranked list.
         </p>
@@ -165,9 +165,9 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
                   type="button"
                   aria-pressed={on}
                   onClick={() => setHobbyParam(on ? "" : h.slug)}
-                  className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
                     on
-                      ? "border-transparent text-white [background-color:var(--coral-deep)]"
+                      ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
                       : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
                   }`}
                 >
@@ -203,8 +203,8 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
         )}
       </section>
 
-      <div className="mt-12 rounded-3xl border border-border bg-card px-6 py-9 text-center">
-        <p className="mx-auto mb-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+      <div className="mt-12 rounded-card border border-border bg-card px-6 py-9 text-center">
+        <p className="mx-auto mb-4 max-w-md text-small leading-relaxed text-muted-foreground">
           No follower counts anywhere on {APP_NAME}, not here, not on a
           profile. People are described by what they do.
         </p>
@@ -218,14 +218,14 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
 
 export function People() {
   return (
-    <div className="min-h-screen">
-      <section className="relative overflow-hidden py-12 sm:py-14">
+    <div className="min-h-viewport">
+      <section className="relative overflow-hidden py-12 sm:py-12">
         <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
         <div className="container mx-auto max-w-5xl px-4 relative">
-          <h1 className="text-4xl md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
             People
           </h1>
-          <p className="mb-6 mt-2 max-w-2xl text-lg text-foreground">
+          <p className="mb-6 mt-2 max-w-2xl text-lead text-foreground">
             Find people by what they make, or by name.
           </p>
         </div>

@@ -1,1 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Work+Sans:wght@400;500;600&family=Caveat:wght@500;600&family=Instrument+Serif:ital@0;1&display=swap');
+
+/* Metric-matched fallbacks: while the webfonts above load (display=swap),
+   text renders in a local font scaled to the webfont's metrics, so the swap
+   doesn't shift layout. Arial/Helvetica on iOS and desktop, Roboto on
+   Android. Overrides were computed from the webfont files against Arial's
+   metrics (letter-frequency-weighted average width, hhea ascent/descent —
+   the same method next/font uses); on Roboto they're close, not exact. */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial'), local('ArialMT'), local('Helvetica'), local('Roboto');
+  ascent-override: 90.26%;
+  descent-override: 22.47%;
+  line-gap-override: 0%;
+  size-adjust: 107.33%;
+}
+
+@font-face {
+  font-family: 'Space Grotesk Fallback';
+  src: local('Arial'), local('ArialMT'), local('Helvetica'), local('Roboto');
+  ascent-override: 88.74%;
+  descent-override: 26.33%;
+  line-gap-override: 0%;
+  size-adjust: 110.88%;
+}

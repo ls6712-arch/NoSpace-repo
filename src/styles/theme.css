@@ -1,15 +1,14 @@
 :root {
   color-scheme: light;
-  --font-size: 16px;
-  /* Motion: two durations and one curve, used for every transition and
-     entrance in the app. Fast is for state changes (hover, press, toggles,
-     anything leaving); base is for things arriving (dialogs, sheets,
-     menus, reveals). */
-  --duration-fast: 150ms;
-  --duration-base: 250ms;
-  --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  /* 100%, not 16px: a px root ignores the reader's browser/OS default text
+     size, which would make every rem token below fixed in practice. */
+  --font-size: 100%;
+  /* Each webfont is followed by a metric-matched local fallback (fonts.css)
+     and then the platform UI fonts, so the swap from fallback to webfont
+     doesn't reflow the page and Android, iOS and desktop all land on the
+     same family once it loads. */
+  --font-heading: 'Space Grotesk', 'Space Grotesk Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   /* Warm high-contrast serif — used for the wordmark, people's names, and
      hobby titles, where the app should feel like a well-made object rather
@@ -85,12 +84,18 @@
      component already reading --input/`border-input` — Input, Textarea,
      Select's trigger, RadioGroupItem, the button outline variant — picks
      this up automatically. */
-  --background: #F6F1E7;
-  --card: #FBF8F1;
+  --theme-light-bg: #F6F1E7;
+  --theme-light-card: #FBF8F1;
+  --theme-light-accent: #9A4A34;
+  --theme-dark-bg: #1C1816;
+  --theme-dark-card: #26211D;
+  --theme-dark-accent: #D38571;
+  --background: var(--theme-light-bg);
+  --card: var(--theme-light-card);
   --foreground: #2B2622;
   --muted-foreground: #6B6259;
   --border: #DDD3C0;
-  --accent: #9A4A34;
+  --accent: var(--theme-light-accent);
   --accent-foreground: #FBF8F1;
   --gold: #B08D4A;
   --gold-text: #7E6535;
@@ -156,7 +161,9 @@
   --forest-ink: #0B3E2E;
   --coral: #FF6B4A;
   --coral-deep: #C43F22;
-  --coral-text: #FF8B6E;
+  /* Coral as text. Light mode needs the deeper shade (#FF8B6E was 1.9-2.2:1
+     on cream); .dark restores the bright one. */
+  --coral-text: #B83A1F;
   --yellow: #F5C542;
   --mustard: var(--yellow);
   --cream: #F8F4EB;
@@ -189,6 +196,9 @@
   --gen-art-olive: #7C8A54;
   --gen-art-sage: #A9B98C;
   --gen-art-denim: #5C7C97;
+  --gen-art-denim-light: #89A6BC;
+  --gen-art-lavender: #B9A4CE;
+  --gen-art-night: #1B2733;
   --gen-art-blush: #D98A82;
   --gen-art-cream: #FBF3E2;
   --gen-art-skin-1: #E8B98C;
@@ -199,6 +209,52 @@
   --gen-art-hair-2: #6B4226;
   --gen-art-hair-3: #1E1512;
   --gen-art-hair-4: #8A5A32;
+
+  /* ── P0 Foundations tokens (docs/design-audit.md) ────────────────────────
+     The one scale every screen uses. Type, radius and easing don't change
+     between modes, so they live in the @theme block below; everything here
+     either changes in dark (.dark) or under reduced motion. */
+
+  /* Text and icons on photos and video. Identical in both modes — the media
+     underneath doesn't change with the theme — and always sits on a
+     bg-scrim layer, never bare on an image. */
+  --on-media: #FFFFFF;
+  /* Text and icons on --coral-deep or --gradient-brand fills. Those fills
+     keep their color in both modes, so this does too (deliberately not
+     --accent-foreground, which goes dark in dark mode). */
+  --on-brand: #FFFFFF;
+  /* Under text on a photo: heavy at the edge the text sits on, so white text
+     keeps 4.5:1 on a very bright image (the contrast audit tests this). Bottom
+     for captions and titles, top for wordmarks and controls. */
+  --scrim: linear-gradient(to top, rgb(0 0 0 / 0.78) 0%, rgb(0 0 0 / 0.5) 50%, rgb(0 0 0 / 0) 100%);
+  --scrim-top: linear-gradient(to bottom, rgb(0 0 0 / 0.6) 0%, rgb(0 0 0 / 0) 100%);
+  /* Flat dimming layer on or over media: chips and icon buttons sitting on
+     photos, the camera viewfinder, modal backdrops. Pure black in both
+     modes; set the strength at the call site with an opacity modifier
+     (bg-scrim-solid/60). For full-bleed text over a photo use the --scrim
+     gradient (bg-scrim) instead. */
+  --scrim-solid: #000000;
+  /* Opaque dark base under photo/video surfaces (Studio cover, camera
+     viewfinder). Dark in both modes, like --on-media. Not a scrim: a scrim
+     is translucent, so a fully opaque one is this token instead. */
+  --media-base: #0B0A09;
+
+  /* Elevation, light mode only. Dark mode has no shadows: elevation there
+     is --surface plus a 1px --border (see .dark). */
+  --shadow-card: 0 8px 24px rgb(43 38 34 / 0.06);
+  --shadow-overlay: 0 16px 40px -12px rgb(43 38 34 / 0.24), 0 2px 8px rgb(43 38 34 / 0.06);
+
+  /* Motion: fast = hover/press, base = enter/exit (pages and panels too).
+     Both drop to 0ms under prefers-reduced-motion (end of file). */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+
+  /* Device safe areas (notch, home indicator, rounded corners). Needs
+     viewport-fit=cover in index.html; 0px everywhere else. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 
   /* ── shadcn/ui mappings ───────────────────────────────────────────────────
      The ui/ primitives consume these names, so pointing them at the semantic
@@ -222,7 +278,6 @@
   --chart-3: var(--sky-deep);
   --chart-4: var(--mustard);
   --chart-5: var(--forest);
-  --radius: 0.875rem;
   --sidebar: var(--card);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
@@ -275,19 +330,39 @@
    properties resolve against the final cascaded value at use time. */
 .dark {
   color-scheme: dark;
-  --background: #1C1816;
-  --card: #26211D;
+  --background: var(--theme-dark-bg);
+  --card: var(--theme-dark-card);
   --foreground: #EFE8DA;
   --muted-foreground: #A39885;
   --border: #3A332B;
-  --accent: #C8674D;
+  --accent: var(--theme-dark-accent);
   --accent-foreground: #1C1816;
+  --coral-text: #FF8B6E;
+  /* Brand-gradient fills carry white --on-brand text and keep their colour in
+     both modes, so dark uses the light accent (6.17:1 under white) rather
+     than the lighter dark --accent (3.4:1). */
+  --gradient-brand: linear-gradient(
+    120deg,
+    var(--theme-light-accent) 0%,
+    color-mix(in srgb, var(--theme-light-accent) 88%, black) 100%
+  );
   --gold: #C9A55E;
   --gold-text: #C9A55E;
   --input-border: #847462;
   --destructive: #D9776A;
   --destructive-foreground: #1C1816;
   --surface-elevated: #2E2822;
+
+  /* No shadows in dark — elevation there comes from --surface plus a 1px
+     --border (see "Dark elevation" in the base layer).
+     DO NOT "simplify" these to `none`. Tailwind composes box-shadow as a
+     comma-separated list (inset, ring-offset, ring and --tw-shadow layers),
+     and `none` is not valid inside a list: one `none` makes the whole
+     declaration invalid, so every ring on that element vanishes too.
+     `0 0 #0000` is a real, fully transparent, zero-size shadow: it draws
+     nothing and keeps the list valid. */
+  --shadow-card: 0 0 #0000;
+  --shadow-overlay: 0 0 #0000;
 
   /* Lightened from the light-theme value so the "ink" tile still reads as
      its own block against the dark background (#1C1816) instead of nearly
@@ -305,6 +380,9 @@
   --gen-art-olive: #6B7847;
   --gen-art-sage: #8FA173;
   --gen-art-denim: #4D6980;
+  --gen-art-denim-light: #6B879E;
+  --gen-art-lavender: #8F7BA6;
+  --gen-art-night: #0F171F;
   --gen-art-blush: #B8746D;
   --gen-art-cream: #6B5C45;
 }
@@ -356,12 +434,6 @@
   font-family: 'Work Sans', sans-serif;
 }
 
-/* The one dark-theme flourish that leaks through the semantic layer above —
-   a literal --yellow border accent, not a token that repoints itself. */
-.ns-paper-theme .ns-you-profile-card {
-  border-top-color: var(--line);
-}
-
 /* Live-test fix (Sep 27): .ns-paper-theme's own raw palette above had no
    dark-mode counterpart at all, so You/Studio/PublicProfile/the cover
    editor stayed on their light cream-and-ink values even with the rest of
@@ -373,7 +445,7 @@
    every semantic one above (--background, --surface, --foreground, …) is
    already declared as `var(--paper)`/`var(--ink)`/etc. and re-resolves on
    its own once those raw values change under this more specific selector.
-   Never touches .ns-space-theme below — Spaces stays out of this round. */
+   .ns-space-theme has its own dark block below. */
 .dark .ns-paper-theme {
   --paper: #1C1816;
   --paper-raised: #26211D;
@@ -416,12 +488,18 @@
   --sand: #EADFCF;
   --line: #E0D4C3;
   --ink: #2B211C;
-  --clay: #B4532A;
+  --clay: #A44A23;
   --clay-dark: #93411F;
   --clay-soft: #F3E0D3;
   --bark: #5E3B28;
   --moss: #56613F;
   --moss-soft: #E4E6D6;
+  --ink-muted: #6E5E52;
+  /* Text/icons on a filled --bark panel or --clay fill. Their own tokens
+     rather than --paper: in dark, --paper turns dark while those fills
+     need light (bark) or dark (clay) text, not paper's. */
+  --on-bark: var(--paper);
+  --on-clay: var(--paper);
 
   /* Re-point the semantic layer, same as .ns-paper-theme — every existing
      component that already reads --surface/--foreground/--border/--card/
@@ -437,8 +515,8 @@
   --surface-elevated: var(--paper);
   --surface-muted: var(--sand);
   --foreground: var(--ink);
-  --foreground-muted: #6E5E52;
-  --muted-foreground: #6E5E52;
+  --foreground-muted: var(--ink-muted);
+  --muted-foreground: var(--ink-muted);
   --border: var(--line);
   --hairline: var(--line);
   --card: var(--paper);
@@ -446,14 +524,14 @@
   --popover: var(--paper);
   --popover-foreground: var(--ink);
   --accent: var(--clay);
-  --accent-foreground: var(--paper);
+  --accent-foreground: var(--on-clay);
   --primary: var(--clay);
-  --primary-foreground: var(--paper);
+  --primary-foreground: var(--on-clay);
   --input-border: var(--clay-dark);
   --input: var(--input-border);
   --input-background: var(--paper);
   --destructive: var(--clay-dark);
-  --destructive-foreground: var(--paper);
+  --destructive-foreground: var(--on-clay);
   --ring: var(--clay);
 
   /* Display font for this page only — the app's own sans stays for body
@@ -465,12 +543,97 @@
   background: var(--cream);
 }
 
+/* The Space page in dark mode — same warm charcoal as the app-wide .dark
+   block, a touch warmer to keep the Space's own bark/clay character. Only
+   the raw palette is restated; the semantic layer above re-resolves on its
+   own. Clay and clay-dark get lighter (they're text and fills on a dark
+   page now), so --on-clay flips to dark text; bark stays a deep brown
+   panel with light --on-bark text.
+   Contrast (WCAG AA): ink/cream 14.3, ink/paper 13.0, ink-muted/paper 6.1,
+   ink-muted/sand 5.2, clay/paper 5.3, clay/cream 5.8, on-clay/clay 5.8,
+   clay-dark/clay-soft 6.1, clay-dark/paper 7.4 (input boundary ≥3),
+   on-bark/bark 9.9 (4.7 at /60). */
+.dark .ns-space-theme {
+  --cream: #1E1915;
+  --paper: #28211C;
+  --sand: #352C25;
+  --line: #43382E;
+  --ink: #F1E7DA;
+  --ink-muted: #AD9E8B;
+  --clay: #DB7C55;
+  --clay-dark: #E9A07F;
+  --clay-soft: #47291D;
+  --bark: #4A3124;
+  --moss: #A8B488;
+  --moss-soft: #2E3325;
+  --on-bark: #F3E8DB;
+  --on-clay: #1E1915;
+}
+
+/* `dark:` follows the in-app theme (the .dark class ThemeContext puts on
+   <html>), not the OS setting — Tailwind v4's default is the media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Lock the scale. Tailwind's own text, radius and shadow steps are removed,
+     so an off-scale class (text-sm, rounded-xl, shadow-lg, ...) no longer
+     compiles: it renders unstyled, which a screenshot or the audit catches,
+     instead of quietly drifting off the scale. Only the tokens below exist.
+     Spacing, colour and everything else keep Tailwind's defaults. */
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+
+  /* Radius: cards vs. controls (buttons, inputs, chips, tabs). rounded-full
+     stays for avatars, dots, knobs, spinners and other true circles only. */
+  --radius-card: 12px;
+  --radius-control: 8px;
+
+  /* Type, in rem so the reader's text-size setting scales all of it.
+     Nothing below 12px. text-body is also the size of every form field
+     (iOS zooms the page on focus below 16px). */
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.4;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.45;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.4;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.3;
+  --text-display: clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem);
+  --text-display--line-height: 1.2;
+  /* Marketing landing page (Home.tsx) only — the one exception to the scale
+     above; scripts/design-audit.py flags it anywhere else. */
+  --text-hero: clamp(2.5rem, 1.5rem + 4vw, 4.75rem);
+  --text-hero--line-height: 1.05;
+
+  /* Landing-page section gap (Home.tsx only), the way --text-hero is the
+     landing-only type size: py-section-hero, pt-section-hero, … In-app
+     section gaps stay on 16/24/32/48. The guard flags it anywhere else. */
+  --spacing-section-hero: 96px;
+
+  /* The one easing curve, for both durations. */
+  --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
 @theme inline {
-  /* Tailwind's own transition defaults and ease-* utilities all resolve to
-     the app's tokens, so a bare `transition-colors` or `ease-out` is
-     already on-system. */
+  --color-on-media: var(--on-media);
+  --color-on-brand: var(--on-brand);
+  --color-scrim-solid: var(--scrim-solid);
+  --color-media-base: var(--media-base);
+  /* Registered by reference (not value) so the .dark and reduced-motion
+     overrides above reach the utilities at runtime. */
+  --shadow-card: var(--shadow-card);
+  --shadow-overlay: var(--shadow-overlay);
+  --transition-duration-fast: var(--duration-fast);
+  --transition-duration-base: var(--duration-base);
+  /* Bare `transition`/`transition-colors` (no duration-*) default to the
+     hover/press token instead of Tailwind's own 150ms + easing. */
   --default-transition-duration: var(--duration-fast);
   --default-transition-timing-function: var(--ease-standard);
+  /* Tailwind's own ease-* utilities resolve to the app's curve. */
   --ease-in: var(--ease-standard);
   --ease-out: var(--ease-standard);
   --ease-in-out: var(--ease-standard);
@@ -524,6 +687,8 @@
   --color-bark: var(--bark);
   --color-moss: var(--moss);
   --color-moss-soft: var(--moss-soft);
+  --color-on-bark: var(--on-bark);
+  --color-on-clay: var(--on-clay);
   --color-yellow: var(--yellow);
   --color-plum: var(--plum);
   --color-plum-deep: var(--plum-deep);
@@ -553,22 +718,6 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 8px);
-  --radius-md: calc(var(--radius) - 4px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 6px);
-  /* Redesign-brief scale (docs/CLAUDE-redesign-brief.md §1: "Radius 12px
-     cards, 8px buttons and inputs. Retire pill buttons and rounded-2xl/3xl")
-     — named tokens rather than retuning --radius itself, since that base
-     scale still drives every not-yet-restyled screen; retuning it directly
-     would ripple past this primitives pass into every rounded-xl/2xl/3xl
-     usage app-wide. Primitives restyled under Task B opt into these
-     explicitly (rounded-btn, rounded-card) instead. */
-  --radius-btn: 8px;
-  --radius-card: 12px;
-  /* MomentCard's own media radius (docs/moment-card-and-reactions-spec.md
-     §2.1: "radius 22px, define one radius token, do not scatter values"). */
-  --radius-moment: 22px;
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -597,11 +746,21 @@
 
   html {
     font-size: var(--font-size);
+    /* Stops iOS inflating text in landscape; the reader's own text-size
+       setting still applies through the rem scale. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    /* In-flow content clears a landscape notch; fixed bars add their own
+       --safe-* padding. */
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
     /* Crisper text on macOS/iOS, and Inter's contextual alternates (an
        arrow from "->", hyphens and colons that sit right between capitals
        and figures) plus kerning everywhere. */
@@ -722,6 +881,7 @@
 
   /* Theme changes cross-fade rather than snap — toggled for ~400ms by
      ThemeContext.tsx around a preference/OS change, never on first paint. */
+  /* design-token-ignore: theme cross-fade, 400ms by the redesign brief; ThemeContext's 420ms timer pairs with it */
   .theme-transition,
   .theme-transition * {
     transition: background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard),
@@ -735,6 +895,40 @@
     }
   }
 
+  /* ── Touch targets ────────────────────────────────────────────────────────
+     On touch devices every tappable element gets an invisible hit area of at
+     least 44×44px, centred on it, so a 20px icon stays 20px to the eye and
+     still takes a thumb. Only (pointer: coarse); a mouse sees none of this.
+     The element itself is never enlarged: the area is an ::after that is
+     max(100%, 44px), so anything already big enough is untouched.
+     :where() keeps specificity at zero, so absolute / fixed / sticky from a
+     utility still wins over the position: relative this needs. Known limits,
+     each handled where it occurs: overflow:hidden on the element clips its
+     own hit area, inline text links inside a paragraph are left alone (44px
+     around a line of prose would cover the lines above and below), and text
+     inputs can't have pseudo-elements so they get a 44px min-height. */
+  @media (pointer: coarse) {
+    :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="option"],
+        [role="checkbox"], [role="switch"], [role="radio"], summary, a[href]:not(:where(p, label) > a)) {
+      position: relative;
+    }
+
+    :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="option"],
+        [role="checkbox"], [role="switch"], [role="radio"], summary, a[href]:not(:where(p, label) > a))::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+
+    :where(input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"], [type="file"]), select, textarea) {
+      min-height: 44px;
+    }
+  }
+
   h1, h2, h3 {
     font-family: var(--font-heading);
     font-weight: var(--font-weight-medium);
@@ -743,28 +937,60 @@
   }
 
   h4 {
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
   label {
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
   button {
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  input {
-    font-size: var(--text-base);
+  input,
+  textarea,
+  select {
+    font-size: var(--text-body);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+}
+
+/* Readability layer for text on photos and video; pair with text-on-media.
+   A gradient, so it's a utility rather than a --color-* token. */
+@utility bg-scrim {
+  background-image: var(--scrim);
+}
+
+@utility bg-scrim-top {
+  background-image: var(--scrim-top);
+}
+
+/* Full-height layouts: 100dvh tracks the mobile browser's collapsing
+   toolbars; the 100vh line is the fallback for browsers without dvh.
+   (Tailwind's own min-h-screen is a bare 100vh and can't be overridden.) */
+@utility min-h-viewport {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+@utility h-viewport {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Soft dark halo behind a white icon sitting directly on a photo: layered
+   so it stays a shadow, not a filled badge. Reads on light photos; on dark
+   ones the black has nothing to contrast with and never looks heavy. */
+@utility icon-halo {
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.85)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.6)) drop-shadow(0 0 6px rgb(0 0 0 / 0.4));
 }
 
 @layer components {
@@ -788,7 +1014,7 @@
   .ns-hero-eyebrow,
   .ns-section-kicker {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--text-caption);
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -800,24 +1026,12 @@
     gap: 0.65rem;
     border-block: 1px solid var(--hairline);
     padding-block: 0.55rem;
-    color: var(--lavender-muted);
+    color: var(--foreground);
   }
 
-  .ns-hero-claims {
-    gap: 0;
-  }
+  
 
-  .ns-hero-claims li {
-    display: inline-flex;
-    align-items: center;
-    margin: 0.2rem 0.2rem 0.2rem 0;
-    border: 1px solid var(--hairline);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--violet-electric) 12%, transparent);
-    padding: 0.35rem 0.65rem;
-    color: var(--offwhite);
-    font-size: 0.72rem;
-  }
+  
 
   /* Secondary action: dark/transparent with a quiet border, brightening on
      hover rather than filling in — the primary action is the only one that
@@ -827,28 +1041,36 @@
     height: 2.75rem;
     align-items: center;
     border: 1px solid var(--hairline);
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     background: color-mix(in srgb, var(--void) 45%, transparent);
     padding: 0 1rem;
     color: var(--offwhite);
-    font-size: 0.75rem;
+    font-size: var(--text-caption);
     transition: border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-hero-secondary-link:hover { border-color: var(--violet-electric); transform: translateY(-1px); }
+  @media (hover: hover) {
+    .ns-hero-secondary-link:hover {
+   border-color: var(--violet-electric); transform: translateY(-1px); 
+    }
+  }
 
   /* The hero's single large illustration — a real image now
-     (src/assets/hero-worlds.png), a big generously-rounded window rather
+     (src/assets/hero-worlds.webp), a big generously-rounded window rather
      than a banner filling edge to edge. Replaced an earlier 3-photo-card
      collage and, before that, an SVG approximation of the same composition
      (both now removed along with their now-dead CSS below this rule). A
      soft violet glow rather than a dark drop-shadow, so it reads as lit
      from within the purple environment rather than sitting on top of it. */
   .ns-hero-worlds-art {
-    border-radius: 1.75rem;
-    box-shadow:
-      0 30px 70px -25px color-mix(in srgb, var(--violet-electric) 40%, transparent),
-      0 45px 90px -35px rgba(0, 0, 0, 0.55);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+  /* The bundled hero is a bright, pastel illustration; on the dark page it reads
+     as a lit panel, so it sits a step down. (Generated art already has dark
+     palette overrides; photos are left as shot.) */
+  .dark .ns-hero-worlds-art img {
+    filter: brightness(0.78) saturate(0.88);
   }
 
   .ns-text-link {
@@ -858,19 +1080,23 @@
     border-bottom: 1px solid currentColor;
     padding-bottom: 0.16rem;
     color: var(--violet-electric-bright);
-    font-size: 0.875rem;
+    font-size: var(--text-small);
     font-weight: 500;
     transition: color var(--duration-fast) var(--ease-standard), gap var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-text-link:hover { gap: 0.65rem; color: var(--offwhite); }
+  @media (hover: hover) {
+    .ns-text-link:hover {
+   gap: 0.65rem; color: var(--offwhite); 
+    }
+  }
 
   .ns-paper-panel {
     position: relative;
     border: 1px solid var(--border);
     background-color: var(--surface-elevated);
     background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, color-mix(in srgb, var(--violet-electric) 5%, transparent) 28px);
-    box-shadow: 0 20px 40px -24px color-mix(in srgb, var(--violet-electric) 30%, transparent);
+    box-shadow: var(--shadow-card);
   }
 
   .ns-process-panel { padding: 0.45rem 1.5rem; }
@@ -885,7 +1111,7 @@
 
   .ns-process-step:last-child { border-bottom: 0; }
 
-  .ns-portfolio-panel { padding: 1.5rem; box-shadow: 0 20px 40px -22px color-mix(in srgb, var(--violet-electric) 26%, transparent); }
+  
 
   /* ── Value cards — "Create moments / Document / Explore," right below the
      hero. Dark-plum elevated surfaces with a soft violet-tinted shadow, and
@@ -895,24 +1121,36 @@
     position: relative;
     border: 1px solid var(--hairline);
     background: var(--surface-elevated);
-    box-shadow: 0 16px 32px -22px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--shadow-card);
     transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
   }
 
-  .ns-value-card:hover,
   .ns-value-card:focus-within {
     transform: translate(0, -4px);
     border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
-    box-shadow: 0 22px 40px -18px color-mix(in srgb, var(--violet-electric) 35%, transparent);
+    box-shadow: var(--shadow-overlay);
+  }
+
+  @media (hover: hover) {
+    .ns-value-card:hover {
+      transform: translate(0, -4px);
+      border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
+      box-shadow: var(--shadow-overlay);
+    }
   }
 
   .ns-value-card-icon {
     transition: transform var(--duration-base) var(--ease-standard);
   }
 
-  .ns-value-card:hover .ns-value-card-icon,
   .ns-value-card:focus-within .ns-value-card-icon {
     transform: translateY(-3px) rotate(-4deg);
+  }
+
+  @media (hover: hover) {
+    .ns-value-card:hover .ns-value-card-icon {
+      transform: translateY(-3px) rotate(-4deg);
+    }
   }
 
   /* ── Whatever pulls you in — the Worlds section ─────────────────────────
@@ -942,6 +1180,7 @@
     top: 0;
     display: flex;
     height: 100vh;
+    height: 100dvh;
     align-items: center;
     /* Stays hidden (inherited from the base rule above) — this is the
        viewport-width "window" the track's translateX moves the cards
@@ -985,6 +1224,7 @@
     pointer-events: none;
   }
 
+  /* design-token-ignore: ambient loops below (flow, float, pulse, breathe, sway, drift, twinkle); long, decorative, off under reduced motion */
   .ns-worlds-path path {
     fill: none;
     stroke: color-mix(in srgb, var(--coral) 55%, var(--yellow) 45%);
@@ -992,7 +1232,7 @@
     stroke-linecap: round;
     stroke-dasharray: 1 15;
     opacity: 0.5;
-    animation: ns-flow 26s linear infinite;
+    animation: ns-flow 26s linear infinite; /* design-token-ignore: ambient loop */
   }
 
   .ns-world-card {
@@ -1001,30 +1241,47 @@
     flex: 0 0 auto;
     width: clamp(14.5rem, 19vw, 18.5rem);
     scroll-margin-inline: 5vw;
-    border-radius: 1.75rem;
+    border-radius: var(--radius-card);
     overflow: hidden;
     border: 1px solid var(--hairline);
     background: var(--surface-elevated);
-    box-shadow: 0 16px 30px -18px rgba(0, 0, 0, 0.55);
+    box-shadow: var(--shadow-card);
     transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
   }
 
-  .ns-world-card:hover,
   .ns-world-card:focus-within {
     transform: translateY(-10px) scale(1.015);
-    box-shadow: 10px 18px 0 color-mix(in srgb, var(--world-accent, var(--coral)) 48%, transparent);
+    box-shadow: var(--shadow-overlay);
   }
 
-  .ns-world-card:hover .ns-world-card-life,
+  @media (hover: hover) {
+    .ns-world-card:hover {
+      transform: translateY(-10px) scale(1.015);
+      box-shadow: var(--shadow-overlay);
+    }
+  }
+
+  /* design-token-ignore: ambient loop */
   .ns-world-card:focus-within .ns-world-card-life {
-    animation-duration: 1.6s;
+    animation-duration: 1.6s; /* design-token-ignore: ambient loop */
+  }
+
+  @media (hover: hover) {
+    .ns-world-card:hover .ns-world-card-life {
+      animation-duration: 1.6s; /* design-token-ignore: ambient loop */
+    }
   }
 
   /* Real photo cards get the same gentle push-in HobbyCategoryCard's Space
      photos use, instead of the illustrated fallback's idle breathe/sway. */
-  .ns-world-card:hover img,
   .ns-world-card:focus-within img {
     transform: scale(1.06);
+  }
+
+  @media (hover: hover) {
+    .ns-world-card:hover img {
+      transform: scale(1.06);
+    }
   }
 
   .ns-world-card-label {
@@ -1044,10 +1301,16 @@
     transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
   }
 
-  .group:hover .ns-space-card,
   .group:focus-visible .ns-space-card {
-    box-shadow: 0 18px 34px -16px color-mix(in srgb, var(--violet-electric) 55%, transparent);
+    box-shadow: var(--shadow-overlay);
     transform: translate(-3px, -3px);
+  }
+
+  @media (hover: hover) {
+    .group:hover .ns-space-card {
+      box-shadow: var(--shadow-overlay);
+      transform: translate(-3px, -3px);
+    }
   }
 
   .ns-space-card-index {
@@ -1059,40 +1322,22 @@
     padding: 0.28rem 0.4rem;
     color: var(--offwhite);
     font-family: var(--font-mono);
-    font-size: 0.55rem;
+    font-size: var(--text-caption);
     font-weight: 600;
     letter-spacing: 0.1em;
   }
 
-  .ns-maker-notes {
-    position: relative;
-    overflow: hidden;
-  }
+  
 
-  .ns-maker-notes::before {
-    position: absolute;
-    top: -3rem;
-    left: -1rem;
-    content: "✦  ✦  ✦  ✦  ✦";
-    color: var(--yellow);
-    font-size: 2rem;
-    letter-spacing: 3rem;
-    opacity: 0.2;
-    transform: rotate(-8deg);
-  }
+  
 
-  .ns-maker-note {
-    border: 1px solid color-mix(in srgb, var(--violet-electric) 20%, transparent);
-    background: var(--surface-elevated);
-    padding: 1.5rem;
-    box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--violet-electric) 35%, transparent);
-  }
+  
 
-  .ns-maker-note:nth-child(even) { transform: rotate(0.45deg); }
-  .ns-maker-note:nth-child(odd) { transform: rotate(-0.25deg); }
+  
+  
 
-  .ns-principle { background: color-mix(in srgb, var(--surface-elevated) 84%, transparent); }
-  .ns-principle:nth-child(2) { background: color-mix(in srgb, var(--surface-elevated) 60%, transparent); }
+  
+  
 
   .ns-invitation {
     position: relative;
@@ -1102,69 +1347,33 @@
 
   .ns-invitation-spark {
     position: absolute;
-    top: -1.1rem;
+    top: -1.5rem;
     left: 50%;
     display: grid;
-    width: 2.2rem;
-    height: 2.2rem;
+    width: 3rem;
+    height: 3rem;
     place-items: center;
     background: var(--surface-elevated);
     color: var(--violet-electric-bright);
-    font-size: 1.6rem;
+    font-size: var(--text-display);
     transform: translateX(-50%);
-    box-shadow: 0 0 0 1px var(--hairline), 0 8px 20px -8px color-mix(in srgb, var(--violet-electric) 45%, transparent);
+    border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-card);
   }
 
-  .ns-myspace-page {
-    background-image:
-      radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px),
-      linear-gradient(90deg, transparent 0 8%, color-mix(in srgb, var(--violet-electric) 5%, transparent) 8.1% 8.2%, transparent 8.3% 100%),
-      radial-gradient(ellipse 60% 45% at 90% 0%, color-mix(in srgb, var(--violet-electric-bright) 14%, transparent), transparent),
-      radial-gradient(ellipse 55% 40% at 5% 100%, color-mix(in srgb, var(--plum) 45%, transparent), transparent);
-    background-size: 26px 26px, 100% 100%, auto, auto;
-    background-color: var(--plum-night);
-  }
+  
 
-  .ns-myspace-masthead {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    border-bottom: 1px solid var(--hairline);
-    padding-bottom: 1.4rem;
-  }
+  
 
-  .ns-myspace-mark {
-    border-left: 1px solid var(--violet-electric);
-    padding-left: 0.7rem;
-    color: var(--lavender-muted);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.14em;
-    line-height: 1.5;
-    text-align: right;
-  }
+  
 
-  .ns-myspace-mark span { color: var(--violet-electric-bright); }
+  
 
-  .ns-myspace-today {
-    border: 1px solid var(--border);
-    background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
-    padding: clamp(1rem, 3vw, 1.5rem);
-  }
+  
 
-  .ns-myspace-feed > .group {
-    border-color: var(--hairline);
-    border-radius: 0.25rem;
-    box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 30%, transparent);
-  }
+  
 
-  .ns-myspace-projects a {
-    border-radius: 0;
-    border-color: var(--border);
-    background: color-mix(in srgb, var(--surface) 82%, transparent);
-    box-shadow: 0 12px 22px -14px color-mix(in srgb, var(--violet-electric) 26%, transparent);
-  }
+  
 
   .ns-public-profile {
     background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px);
@@ -1172,32 +1381,20 @@
     background-color: var(--void);
   }
 
-  .ns-profile-header {
-    border-block: 1px solid var(--hairline);
-    padding-block: 1.25rem;
-  }
+  
 
-  .ns-profile-shelf {
-    border-top: 1px solid var(--hairline);
-    padding-top: 1.25rem;
-  }
+  
 
-  .ns-profile-grid {
-    grid-auto-rows: clamp(8rem, 20vw, 13rem);
-  }
+  
 
-  .ns-profile-tile {
-    min-height: 0;
-    border: 1px solid var(--hairline);
-    background: var(--surface-muted);
-  }
+  
 
-  .ns-profile-feature { grid-row: span 2; }
+  
 
   .ns-profile-cta {
     border-color: var(--border);
     background: var(--surface-muted);
-    box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--violet-electric) 32%, transparent);
+    box-shadow: var(--shadow-card);
   }
 
   .ns-discover-search {
@@ -1209,63 +1406,34 @@
     overflow: hidden;
     border: 1px solid var(--border);
     background: var(--surface-elevated);
-    box-shadow: 0 16px 30px -20px rgba(0, 0, 0, 0.55);
+    box-shadow: var(--shadow-card);
     transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
   }
 
-  .ns-discover-space-card:hover,
-  .ns-discover-space-card:focus-visible {
-    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
-    box-shadow: 0 22px 40px -18px color-mix(in srgb, var(--violet-electric) 38%, transparent);
-    transform: translate(-3px, -3px);
-  }
+  
 
-  .ns-discover-space-art {
-    position: relative;
-    aspect-ratio: 1.55;
-    overflow: hidden;
-    background: var(--surface-muted);
-  }
+  
 
-  .ns-discover-space-number {
-    position: absolute;
-    top: 0.8rem;
-    left: 0.8rem;
-    border: 1px solid var(--hairline);
-    background: color-mix(in srgb, var(--void) 70%, transparent);
-    padding: 0.25rem 0.38rem;
-    color: var(--offwhite);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-  }
+  
 
-  .ns-discover-space-copy {
-    display: flex;
-    min-height: 7.2rem;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.1rem 1.15rem;
-  }
+  
 
   .ns-discover-open {
     flex-shrink: 0;
     color: var(--violet-electric-bright);
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: var(--text-caption);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     transition: transform var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-discover-space-card:hover .ns-discover-open { transform: translate(2px, -2px); }
+  
 
-  .ns-discover-wayfinder {
-    box-shadow: 0 14px 26px -16px color-mix(in srgb, var(--violet-electric) 28%, transparent);
-  }
+  
 
   .ns-discover-filters button {
-    border-radius: 0;
+    border-radius: var(--radius-control);
     border-color: var(--border);
     background: transparent;
   }
@@ -1279,84 +1447,25 @@
     color: var(--ink-on-violet);
   }
 
-  .ns-space-hero {
-    background: var(--atmo-green);
-    isolation: isolate;
-  }
+  
 
-  .ns-space-hero-grid {
-    background-image:
-      linear-gradient(color-mix(in srgb, var(--violet-electric) 8%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--violet-electric) 8%, transparent) 1px, transparent 1px);
-    background-size: 42px 42px;
-    mask-image: linear-gradient(90deg, black, transparent 85%);
-    opacity: 0.55;
-    pointer-events: none;
-  }
+  
 
-  .ns-space-hero-art {
-    position: relative;
-    border: 1px solid var(--hairline);
-    background: var(--surface-muted);
-    box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--violet-electric) 35%, transparent);
-    transform: rotate(2deg);
-  }
+  
 
-  .ns-space-hero-art::before {
-    position: absolute;
-    inset: 0.8rem;
-    border: 1px dashed color-mix(in srgb, var(--violet-electric) 32%, transparent);
-    content: "";
-    pointer-events: none;
-  }
+  
 
-  .ns-space-hero-caption {
-    position: absolute;
-    right: -0.7rem;
-    bottom: -1.1rem;
-    border: 1px solid var(--hairline);
-    background: var(--surface-elevated);
-    padding: 0.45rem 0.6rem;
-    color: var(--offwhite);
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    line-height: 1.35;
-    transform: rotate(-4deg);
-  }
+  
 
-  .ns-space-corner-grid > * {
-    min-width: 0;
-  }
+  
 
-  .ns-you-profile-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1.1rem;
-    padding: 1.4rem 1.6rem;
-    border: 1px solid var(--border);
-    border-top: 2px solid var(--yellow);
-    background: var(--surface);
-    /* was: box-shadow: 8px 8px 0 ...; drop the hard-shadow, it's what reads as "loud" */
-  }
+  
 
-  .ns-you-profile-card--compact {
-    gap: 0.75rem;
-    padding: 1rem 1.15rem;
-  }
+  
 
-  .ns-you-profile-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
+  
 
-  .ns-you-profile-identity {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.9rem;
-    min-width: 0;
-  }
+  
 
   .ns-you-avatar-compact {
     display: flex;
@@ -1377,18 +1486,20 @@
     width: 1.6rem;
     align-items: center;
     justify-content: center;
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     border: 1px solid var(--hairline);
     background: transparent;
     color: var(--muted-foreground);
   }
 
-  .ns-you-avatar-icon-row button:hover {
-    border-color: var(--foreground);
-    color: var(--foreground);
+  @media (hover: hover) {
+    .ns-you-avatar-icon-row button:hover {
+      border-color: var(--foreground);
+      color: var(--foreground);
+    }
   }
 
-  .ns-you-sprout { color: var(--coral-deep); font-size: 0.85rem; }
+  
 
   .ns-you-tags {
     /* now lives directly under the card, not in its own panel */
@@ -1397,7 +1508,7 @@
 
   .ns-you-tags a,
   .ns-you-tags button {
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     border-color: var(--hairline);
     background: transparent;
     color: var(--foreground);
@@ -1413,27 +1524,23 @@
   .ns-you-tags--pills .ns-pill {
     display: inline-flex;
     align-items: center;
-    border-radius: 999px;
+    border-radius: var(--radius-control);
     border: 1px solid var(--line, var(--hairline));
     background: var(--paper-raised, var(--cream));
     padding: 0.32rem 0.75rem;
-    font-size: 0.72rem;
+    font-size: var(--text-caption);
     font-family: var(--font-serif);
     color: var(--ink, var(--forest-ink));
     transition: border-color var(--duration-fast) var(--ease-standard);
   }
 
-  .ns-you-tags--pills .ns-pill:hover {
-    border-color: color-mix(in srgb, var(--coral-deep) 45%, var(--line, var(--hairline)));
+  @media (hover: hover) {
+    .ns-you-tags--pills .ns-pill:hover {
+      border-color: color-mix(in srgb, var(--coral-deep) 45%, var(--line, var(--hairline)));
+    }
   }
 
-  /* Same specificity as the base rule above (two classes) — defined after
-     it so source order breaks the tie in its favor. */
-  .ns-you-tags--pills .ns-pill.ns-pill--ghost {
-    background: transparent;
-    border: 1px dashed var(--line, var(--hairline));
-    color: var(--ink-faint, var(--muted-foreground));
-  }
+  
 
   /* The tag currently narrowing Your Moments below — the one place this
      row spends the single accent. */
@@ -1458,7 +1565,7 @@
     border: none;
     background: transparent;
     padding: 0;
-    font-size: 0.85rem;
+    font-size: var(--text-body);
     color: var(--muted-foreground);
   }
 
@@ -1468,71 +1575,34 @@
 
   .ns-you-links-row button {
     flex-shrink: 0;
-    font-size: 0.75rem;
+    font-size: var(--text-caption);
     color: var(--coral-text);
   }
 
-  .ns-you-tabs [data-slot="tabs-trigger"] {
-    border-radius: 0;
-    border-bottom: 1px solid var(--hairline);
-    padding-inline: 0.75rem;
-    color: var(--muted-foreground);
-  }
+  
 
-  .ns-you-tabs [data-slot="tabs-trigger"][data-state="active"] {
-    border-bottom-color: var(--violet-electric);
-    background: transparent;
-    color: var(--foreground);
-  }
+  
 
   @media (max-width: 639px) {
-    .ns-discover-space-copy { display: block; min-height: 8.5rem; }
-    .ns-discover-open { display: block; margin-top: 0.9rem; }
-    .ns-space-hero-art { width: calc(100% - 1rem); margin-right: 0.5rem; }
-    .ns-space-hero-caption { right: -0.35rem; }
+    
+    
+    
   }
 
-  .ns-marquee {
-    border-block: 1px solid var(--hairline);
-    background: var(--surface);
-    mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent);
-  }
+  
 
-  .ns-marquee-art {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    opacity: 0.18;
-    pointer-events: none;
-  }
+  
 
-  .ns-marquee-hobby {
-    position: absolute;
-    width: 9rem;
-    height: 5.7rem;
-    overflow: hidden;
-    border: 3px solid var(--surface-elevated);
-    box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--violet-electric) 30%, transparent);
-    mix-blend-mode: normal;
-    animation: ns-marquee-float 8s ease-in-out infinite;
-  }
+  
 
-  .ns-marquee-hobby-one { top: -1.5rem; left: 7%; transform: rotate(-8deg); }
-  .ns-marquee-hobby-two { right: 24%; bottom: -1.8rem; transform: rotate(6deg); animation-delay: -2s; }
-  .ns-marquee-hobby-three { top: -1.8rem; right: 7%; transform: rotate(4deg); animation-delay: -4s; }
-  .ns-marquee-hobby-four { bottom: -1.6rem; left: 34%; transform: rotate(-5deg); animation-delay: -6s; }
+  
+  
+  
+  
 
-  .ns-marquee .animate-marquee {
-    align-items: center;
-    will-change: transform;
-  }
+  
 
-  .ns-marquee-mark {
-    display: inline-block;
-    color: var(--violet-electric-bright);
-    animation: ns-twinkle 3.4s ease-in-out infinite;
-    text-shadow: 0 0 0 var(--violet-electric-bright), 0 0 15px color-mix(in srgb, var(--violet-electric) 55%, transparent);
-  }
+  
 
   .ns-site-header {
     background-color: color-mix(in srgb, var(--void) 86%, transparent);
@@ -1550,20 +1620,10 @@
     transform: rotate(-12deg);
   }
 
-  .ns-wordmark:hover .ns-wordmark-mark { background: var(--coral-deep); }
-
-  /* Names kept so existing markup keeps working; all three now read as a soft
-     lift off the page rather than a neon rim. */
-  .glow-violet {
-    box-shadow: 0 0 0 1px rgba(27, 67, 50, 0.10), 0 10px 30px -12px rgba(27, 67, 50, 0.22);
-  }
-
-  .glow-cyan {
-    box-shadow: 0 0 0 1px rgba(47, 118, 168, 0.16), 0 10px 30px -12px rgba(47, 118, 168, 0.26);
-  }
-
-  .glow-magenta {
-    box-shadow: 0 0 0 1px rgba(196, 63, 34, 0.16), 0 10px 30px -12px rgba(196, 63, 34, 0.24);
+  @media (hover: hover) {
+    .ns-wordmark:hover .ns-wordmark-mark {
+   background: var(--coral-deep); 
+    }
   }
 
   .font-hud {
@@ -1571,43 +1631,42 @@
     letter-spacing: 0.02em;
   }
 
-  .text-gradient-animated {
-    background-image: var(--gradient-ink);
-    background-size: 200% 200%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: gradient-shift 12s ease infinite;
-  }
+  
 
+  /* design-token-ignore: ambient loop */
   .animate-float-slow {
-    animation: float 16s ease-in-out infinite;
+    animation: float 16s ease-in-out infinite; /* design-token-ignore: ambient loop */
   }
 
-  .animate-float-slower {
-    animation: float 22s ease-in-out infinite reverse;
-  }
+  
 
+  /* design-token-ignore: ambient loop */
   .animate-pulse-soft {
-    animation: pulse-soft 3.2s ease-in-out infinite;
+    animation: pulse-soft 3.2s ease-in-out infinite; /* design-token-ignore: ambient loop */
   }
 
+  /* design-token-ignore: ambient loop */
   .generated-art-float {
-    animation: generated-art-float 5s ease-in-out infinite;
+    animation: generated-art-float 5s ease-in-out infinite; /* design-token-ignore: ambient loop */
     transform-origin: center;
   }
 
   /* Applied to groups inside hero illustrations. transform-box keeps the
      transform origin on the shape itself rather than the whole SVG canvas. */
-  .ns-breathe, .ns-sway, .ns-drift, .ns-twinkle {
+  .ns-breathe,
+  .ns-sway,
+  .ns-drift {
     transform-box: fill-box;
     transform-origin: center;
     will-change: transform;
   }
+  /* design-token-ignore: ambient loop */
   .ns-breathe { animation: ns-breathe 6.5s ease-in-out infinite; }
+  /* design-token-ignore: ambient loop */
   .ns-sway    { transform-origin: bottom center; animation: ns-sway 7.5s ease-in-out infinite; }
+  /* design-token-ignore: ambient loop */
   .ns-drift   { animation: ns-drift 34s ease-in-out infinite alternate; }
-  .ns-twinkle { animation: ns-twinkle 3.4s ease-in-out infinite; }
+  
 
   /* Hero entrance: headline, copy, CTA, then the illustration. Each step
      starts from a visible resting state on the last frame, so nothing is
@@ -1616,10 +1675,11 @@
     opacity: 0;
     animation: ns-rise var(--duration-base) var(--ease-standard) forwards;
   }
+  /* design-token-ignore: stagger delays, not durations */
   .ns-enter-1 { animation-delay: .05s; }
-  .ns-enter-2 { animation-delay: .16s; }
-  .ns-enter-3 { animation-delay: .27s; }
-  .ns-enter-4 { animation-delay: .38s; }
+  .ns-enter-2 { animation-delay: .16s; } /* design-token-ignore: stagger delay */
+  .ns-enter-3 { animation-delay: .27s; } /* design-token-ignore: stagger delay */
+  .ns-enter-4 { animation-delay: .38s; } /* design-token-ignore: stagger delay */
 
   /* Scroll-triggered reveal for everything below the hero (see
      useScrollReveal.ts) — the same rise as ns-enter, but fired by an
@@ -1638,7 +1698,7 @@
   }
 
   .generated-art-sparkle {
-    animation: generated-art-twinkle 2.4s ease-in-out infinite;
+    animation: generated-art-twinkle 2.4s ease-in-out infinite; /* design-token-ignore: ambient loop */
     transform-origin: center;
   }
 }
@@ -1648,14 +1708,6 @@
    breathe, plants sway, clouds drift, sparkles pulse — each on a different
    period so the scene never falls into lockstep. All of it is switched off
    wholesale under prefers-reduced-motion at the bottom of this file. */
-@keyframes ns-marquee-float {
-  0%, 100% { transform: translateY(0) rotate(-4deg); }
-  50% { transform: translateY(7px) rotate(4deg); }
-}
-@keyframes ns-orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 @keyframes ns-breathe {
   0%, 100% { transform: translateY(0) scale(1); }
   50%      { transform: translateY(-1.5px) scale(1.012); }
@@ -1668,10 +1720,6 @@
   0%   { transform: translateX(0); }
   100% { transform: translateX(26px); }
 }
-@keyframes ns-twinkle {
-  0%, 100% { opacity: .45; transform: scale(.86); }
-  50%      { opacity: 1;   transform: scale(1.1); }
-}
 @keyframes ns-rise {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -1680,16 +1728,6 @@
    between the little worlds, not a network diagram. */
 @keyframes ns-flow {
   to { stroke-dashoffset: -420; }
-}
-
-@keyframes gradient-shift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
 }
 
 @keyframes float {
@@ -1735,28 +1773,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .text-gradient-animated,
   .animate-float-slow,
-  .animate-float-slower,
   .animate-pulse-soft,
   .generated-art-float,
-  .generated-art-sparkle,
-  .animate-marquee {
+  .generated-art-sparkle {
     animation: none;
   }
-}
-
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-marquee {
-  animation: marquee 24s linear infinite;
 }
 
 /*
@@ -1791,15 +1813,32 @@ summary:focus-visible,
   outline-offset: 2px !important;
 }
 
+/* ── Dark elevation ──────────────────────────────────────────────────────
+   Dark mode has no shadows (--shadow-card and --shadow-overlay are
+   transparent), so cards and overlays lift off the page the other way: the
+   --surface fill plus a 1px --border. It is keyed off the same two
+   utilities, so every card, dialog, sheet, select list, menu, tooltip and
+   suggestion list picks it up without a per-component edit, and a new one
+   does too the moment it uses shadow-card or shadow-overlay.
+   Unlayered on purpose: it has to beat the bg-* and border-* utilities
+   those elements already carry. Light mode is untouched. */
+.dark :is(.shadow-card, .shadow-overlay) {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+}
+
 /* Honour the OS setting: no continuous loops, no parallax, no entrance
    offsets — everything simply present. */
 @media (prefers-reduced-motion: reduce) {
-  .ns-breathe, .ns-sway, .ns-drift, .ns-twinkle,
-  .generated-art-float, .generated-art-sparkle,
-  .animate-float-slow, .animate-float-slower, .animate-pulse-soft,
-  .animate-marquee, .animate-in, .animate-spin,
-  .text-gradient-animated, .ns-marquee-mark,
-  .ns-marquee-hobby {
+  .ns-breathe,
+  .ns-sway,
+  .ns-drift,
+  .generated-art-float,
+  .generated-art-sparkle,
+  .animate-float-slow,
+  .animate-pulse-soft,
+  .animate-in,
+  .animate-spin {
     animation: none !important;
   }
   .ns-enter {
@@ -1808,7 +1847,7 @@ summary:focus-visible,
     transform: none !important;
   }
   .ns-parallax { transform: none !important; }
-  .ns-maker-note { transform: none !important; }
+  
   .ns-worlds-path path { animation: none !important; }
   .ns-worlds-track { transform: none !important; }
   .ns-reveal {
@@ -1821,11 +1860,20 @@ summary:focus-visible,
      and anything added later. They still run (so animationend fires and
      end states apply), just instantly and once. */
   *, *::before, *::after {
-    transition-duration: .01ms !important;
+    transition-duration: .01ms !important; /* design-token-ignore: reduced-motion floor, effectively instant */
     transition-delay: 0s !important;
-    animation-duration: .01ms !important;
+    animation-duration: .01ms !important; /* design-token-ignore: reduced-motion floor, effectively instant */
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Both motion tokens collapse to 0ms, so anything timed with them (and every
+   bare transition, via --default-transition-duration) is instant. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
   }
 }

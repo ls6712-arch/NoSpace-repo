@@ -11,13 +11,13 @@ import { urlDomain } from "../lib/linkPreview";
 export function LinkPreviewCard({ url }: { url: string }) {
   const domain = urlDomain(url);
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-3">
+    <div className="flex items-center gap-3 rounded-card border border-[var(--hairline)] bg-surface px-3.5 py-3">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
         <Link2 className="size-4" />
       </span>
       <div className="min-w-0">
-        <div className="truncate text-sm">{domain ?? "Link"}</div>
-        <div className="truncate text-xs text-muted-foreground">{url}</div>
+        <div className="truncate text-small" title={domain ?? "Link"}>{domain ?? "Link"}</div>
+        <div className="truncate text-caption text-muted-foreground" title={url}>{url}</div>
       </div>
     </div>
   );

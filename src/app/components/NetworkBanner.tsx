@@ -13,7 +13,7 @@ export function NetworkBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="sticky top-0 z-50 border-b border-border bg-surface-muted px-4 py-1.5 text-center text-xs text-muted-foreground"
+      className="sticky top-0 z-50 border-b border-border bg-surface-muted px-4 py-1.5 text-center text-caption text-muted-foreground"
     >
       {state === "offline" ? OFFLINE_LINE : SLOW_LINE}
     </div>

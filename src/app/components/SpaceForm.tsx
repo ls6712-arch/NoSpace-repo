@@ -18,6 +18,7 @@ import {
 } from "./ui/select";
 import { notify } from "./ui/toaster";
 import { TOAST } from "../lib/stateCopy";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 function slugify(name: string) {
   return name
@@ -230,7 +231,7 @@ export function SpaceForm({
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-xl space-y-6 px-4 pb-24 pt-8">
-      <h1 className="text-2xl" style={{ fontFamily: "var(--font-serif)" }}>
+      <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
         {mode === "create" ? "Create a Space" : "Edit Space"}
       </h1>
 
@@ -238,12 +239,12 @@ export function SpaceForm({
         <Label>Cover photo <span className="text-destructive">*</span></Label>
         <div className="mt-2">
           {coverImage ? (
-            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border">
-              <img src={coverImage} alt="" className="size-full object-cover" />
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-card border border-border">
+              <ImageWithFallback src={coverImage} alt="" className="size-full" />
               <button
                 type="button"
                 onClick={() => setCoverImage("")}
-                className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white"
+                className="absolute right-2 top-2 rounded-control bg-scrim-solid/60 p-1.5 text-on-media"
                 aria-label="Remove cover photo"
               >
                 <X className="size-3.5" />
@@ -254,7 +255,7 @@ export function SpaceForm({
               type="button"
               disabled={uploading}
               onClick={() => fileRef.current?.click()}
-              className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm text-muted-foreground hover:border-foreground/30"
+              className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-card border border-dashed border-border text-small text-muted-foreground hover:border-foreground/30"
             >
               {uploading ? "Uploading…" : (
                 <>
@@ -266,7 +267,7 @@ export function SpaceForm({
           )}
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadCover} />
         </div>
-        {fieldErrors.cover && <p className="mt-1 text-xs text-destructive">{fieldErrors.cover}</p>}
+        {fieldErrors.cover && <p className="mt-1 text-caption text-destructive">{fieldErrors.cover}</p>}
       </div>
 
       <div>
@@ -281,14 +282,14 @@ export function SpaceForm({
           }}
           placeholder="The Clay Collective"
         />
-        {fieldErrors.name && <p className="mt-1 text-xs text-destructive">{fieldErrors.name}</p>}
+        {fieldErrors.name && <p className="mt-1 text-caption text-destructive">{fieldErrors.name}</p>}
       </div>
 
       {mode === "create" && (
         <div>
           <Label htmlFor="space-slug">URL</Label>
-          <div className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <span className="truncate">{origin}/#/space/</span>
+          <div className="mt-1.5 flex items-center gap-1.5 text-small text-muted-foreground">
+            <span className="truncate" title={`${origin}/#/space/`}>{origin}/#/space/</span>
             <Input
               id="space-slug"
               value={slug}
@@ -355,13 +356,13 @@ export function SpaceForm({
           <button
             type="button"
             onClick={() => setCornerSlots((n) => Math.min(3, n + 1))}
-            className="mt-2 text-xs text-[var(--coral-text)]"
+            className="mt-2 text-caption text-accent"
           >
             + Add another Corner
           </button>
         )}
-        {fieldErrors.corners && <p className="mt-1 text-xs text-destructive">{fieldErrors.corners}</p>}
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        {fieldErrors.corners && <p className="mt-1 text-caption text-destructive">{fieldErrors.corners}</p>}
+        <p className="mt-1 text-caption text-muted-foreground">
           The first Corner is this Space’s primary one.
         </p>
       </div>
@@ -390,7 +391,7 @@ export function SpaceForm({
               <Input id="space-city" value={city} onChange={(e) => setCity(e.target.value)} />
             </div>
           </div>
-          {fieldErrors.location && <p className="mt-1 text-xs text-destructive">{fieldErrors.location}</p>}
+          {fieldErrors.location && <p className="mt-1 text-caption text-destructive">{fieldErrors.location}</p>}
         </div>
       )}
 
@@ -403,7 +404,7 @@ export function SpaceForm({
             onChange={(e) => setExactAddress(e.target.value)}
             placeholder="Only shown to members and RSVP’d guests"
           />
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-1 text-caption text-muted-foreground">
             Never shown publicly — only to members, or a specific event’s RSVPs.
           </p>
         </div>
@@ -460,7 +461,7 @@ export function SpaceForm({
       </div>
 
       {error && (
-        <p className="text-sm text-destructive">
+        <p className="text-small text-destructive">
           {error}
           {pendingRequestsMatch && space && (
             <>

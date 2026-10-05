@@ -121,7 +121,7 @@ export function ReportDialog({
 
         {sent ? (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Report sent. Thanks for telling us.</p>
+            <p className="text-small text-muted-foreground">Report sent. Thanks for telling us.</p>
             <Button
               variant="outline"
               className="w-full"
@@ -137,7 +137,7 @@ export function ReportDialog({
           <div className="space-y-4">
             <RadioGroup value={reason} onValueChange={(v) => setReason(v as ReportReason)}>
               {REASONS.map((r) => (
-                <label key={r.value} className="flex items-center gap-2.5 text-sm">
+                <label key={r.value} className="flex items-center gap-2.5 text-small">
                   <RadioGroupItem value={r.value} />
                   {r.label}
                 </label>
@@ -150,11 +150,11 @@ export function ReportDialog({
               placeholder="Anything else we should know? (optional)"
               className="min-h-20"
             />
-            <label className="flex items-center justify-between gap-3 text-sm">
+            <label className="flex items-center justify-between gap-3 text-small">
               <span>Also block {personName}</span>
               <Switch checked={alsoBlock} onCheckedChange={setAlsoBlock} />
             </label>
-            {error && <p className="text-xs text-[var(--coral-text)]">{error}</p>}
+            {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={busy}>
                 Cancel

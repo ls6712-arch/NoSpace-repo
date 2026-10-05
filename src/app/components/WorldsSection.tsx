@@ -85,10 +85,10 @@ export function WorldsSection() {
       <div className="mx-auto w-full max-w-[1440px] px-5 pt-20 sm:px-8 lg:px-12 lg:pt-28 xl:px-16">
         <div ref={headingRef} className="ns-reveal mb-10 max-w-xl lg:mb-14">
           <div className="ns-section-kicker mb-4">WHATEVER PULLS YOU IN</div>
-          <h2 className="mb-3 text-3xl md:text-4xl" style={{ fontFamily: "var(--font-serif)" }}>
+          <h2 className="mb-3 text-display" style={{ fontFamily: "var(--font-serif)" }}>
             Whatever pulls you in, it belongs here.
           </h2>
-          <p className="text-[1.05rem] leading-relaxed text-muted-foreground">
+          <p className="text-body leading-relaxed text-muted-foreground">
             There are many ways to be a person. You don’t have to choose just
             one — whatever genuinely pulls you in has a place to live.
           </p>
@@ -126,11 +126,11 @@ export function WorldsSection() {
                   <div className="ns-world-card-label">
                     <div className="mb-1.5 flex items-center gap-2">
                       <span className="ns-world-card-dot" aria-hidden="true" />
-                      <span className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+                      <span className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
                         {world.name}
                       </span>
                     </div>
-                    <p className="text-xs leading-relaxed text-muted-foreground">{world.description}</p>
+                    <p className="text-caption leading-relaxed text-muted-foreground">{world.description}</p>
                   </div>
                 </Link>
               </div>

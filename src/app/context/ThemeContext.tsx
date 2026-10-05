@@ -67,6 +67,7 @@ function applyToDom(resolved: ResolvedTheme, animate: boolean) {
   const root = document.documentElement;
   if (animate && !prefersReducedMotion()) {
     root.classList.add("theme-transition");
+    // design-token-ignore: waits out the 400ms .theme-transition cross-fade in theme.css
     window.setTimeout(() => root.classList.remove("theme-transition"), 420);
   }
   root.classList.toggle("dark", resolved === "dark");
