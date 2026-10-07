@@ -182,7 +182,7 @@ export function QuickLog({
   );
   const [cornerName, setCornerName] = useState(() => {
     if (pursuit?.subHobby) return subHobbyLabel(pursuit.subHobby) ?? pursuit.subHobby;
-    return defaults.corner?.name ?? "";
+    return "";
   });
   const [editingCorner, setEditingCorner] = useState(false);
   const [cornerBlocked, setCornerBlocked] = useState(false);

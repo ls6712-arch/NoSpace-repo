@@ -22,7 +22,7 @@ import {
 import { hobbies, subHobbyLabel, findSpaceForInterest, defaultSpaceSlug } from "../data/hobbies";
 import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
-import { Visibility, postCorner } from "../data/posts";
+import { Visibility } from "../data/posts";
 import { classifyMomentType } from "../lib/momentType";
 import { convertHeicFiles, convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { useContent } from "../context/ContentContext";
@@ -230,7 +230,7 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
 
 export function Log() {
   const [searchParams] = useSearchParams();
-  const { addPost, myPosts, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
+  const { addPost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const { defaultVisibility, defaultVisibilityLoaded } = useSettings();
   const rewards = useRewards();
@@ -294,15 +294,12 @@ export function Log() {
   // the Gift-making Corner (this) at once.
   //
   // Required now (spec change: "Corners carry discovery" — a Moment always
-  // needs one), but with a smart default so picking one is usually zero
-  // taps: inside a Pursuit, its own Corner; otherwise whichever Corner this
-  // person's most recent Moment used. Either way it's just a starting
-  // point — CornerTagField below still lets them change it. Existing
-  // Moments are never retroactively tagged; this only ever seeds a new one.
+  // needs one). Only pre-filled from context the person chose: inside a
+  // Pursuit, its own Corner; arriving from a Corner's own "create" link
+  // (?sub=). Otherwise empty, never guessed from their last Moment.
   const [corner, setCorner] = useState<string>(() => {
     if (initialPursuit?.subHobby) return initialPursuit.subHobby;
-    const lastTagged = [...myPosts].sort((a, b) => b.createdAt - a.createdAt).find((p) => postCorner(p));
-    return lastTagged ? (postCorner(lastTagged) ?? "") : "";
+    return searchParams.get("sub") ?? "";
   });
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
