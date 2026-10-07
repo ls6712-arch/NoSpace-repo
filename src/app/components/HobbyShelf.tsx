@@ -143,7 +143,7 @@ export function sessionsFromPosts(posts: Post[]): HobbySession[] {
       // title-cased slug rather than the raw dashed slug.
       label: corner
         ? subHobbyLabel(corner) ?? titleCaseSlug(corner)
-        : getHobby(post.hobbySlug)?.shortName ?? post.hobbySlug,
+        : "No Corner",
       hobbySlug: post.hobbySlug,
       subSlug: corner,
       sessions: 1,

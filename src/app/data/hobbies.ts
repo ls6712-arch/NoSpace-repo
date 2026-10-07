@@ -1,6 +1,3 @@
-// TODO(decision: D5): overlapping Corners ("Food & Cooking" vs "Cooking",
-// "Photography & Film" vs "Food Photography"). Merge names, then a migration
-// to move existing Moments, once the founder decides.
 /**
  * A single hobby inside a Space — "Pottery" inside Crafts & Making. These are
  * what people actually do; the Spaces above them are the shelves they sit on.
@@ -102,7 +99,7 @@ export const hobbies: Hobby[] = [
     description: "Cooking, baking, coffee, bread, fermentation, BBQ.",
     subItems: [
       sub("Cooking"), sub("Baking"), sub("Sourdough"), sub("Fermentation"),
-      sub("Home coffee"), sub("Tea"), sub("Espresso"), sub("Food photography"),
+      sub("Home coffee"), sub("Tea"), sub("Espresso"),
       sub("Home brewing"), sub("Kombucha"), sub("Cocktail-making"), sub("Supper clubs"),
       sub("Coffee"), sub("BBQ"),
     ],
@@ -324,7 +321,7 @@ export const hobbies: Hobby[] = [
     plainLabel: "Photography, film photography, filmmaking, video",
     description: "Photography, film photography, filmmaking, video.",
     subItems: [
-      sub("Food photography"), sub("Outdoor photography"), sub("Photography"), sub("Filmmaking"),
+      sub("Outdoor photography"), sub("Photography"), sub("Filmmaking"),
       sub("Film photography"), sub("Video"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
