@@ -533,6 +533,9 @@ export function Pursuit() {
                   Reached it
                 </Button>
               )}
+              {/* TODO(decision: D3): one label pair for pausing/ending a Pursuit
+                  (now "Rest it / Let go" here, "Pausing for now / Done with
+                  this" in CheckInCard, filter "Resting"). */}
               {isCreator && status === "active" && (
                 <Button variant="outline" size="sm" onClick={() => mirror(pauseProject(view.id))}>
                   <Moon className="size-3.5" />

@@ -220,6 +220,8 @@ function AccountMenu() {
   // Until the profile row arrives there is no name to abbreviate. It used to
   // fall back to "You", so the avatar flashed a stray "Y" that belonged to
   // nobody — worse than showing nothing for a moment.
+  // TODO(decision: D2): where display name vs username appears, and whether
+  // "Sush" is a nickname field or a bug.
   const name = profile?.display_name?.trim();
 
   return (

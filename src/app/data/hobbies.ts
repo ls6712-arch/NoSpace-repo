@@ -1,3 +1,6 @@
+// TODO(decision: D5): overlapping Corners ("Food & Cooking" vs "Cooking",
+// "Photography & Film" vs "Food Photography"). Merge names, then a migration
+// to move existing Moments, once the founder decides.
 /**
  * A single hobby inside a Space — "Pottery" inside Crafts & Making. These are
  * what people actually do; the Spaces above them are the shelves they sit on.

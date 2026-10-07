@@ -95,6 +95,9 @@ export function PursuitCompactCard({
   // more specific than its parent Space, so it's what should label the
   // tile whenever one was actually given. Falls back to Space rather than
   // leaving the tile unlabeled when no Corner was set.
+  // TODO(decision: D6): this tile shows the Corner (e.g. Badminton) while
+  // Home shows the Category (e.g. Sports & Fitness). Which level should each
+  // screen show?
   const label = pursuit.interest || spaceLabel;
   const goal = pursuit.goal;
   // Tap-to-log (GoalProgressTap) is what actually moves a number goal's

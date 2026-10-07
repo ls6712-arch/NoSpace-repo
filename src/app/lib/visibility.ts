@@ -36,6 +36,8 @@ export const MOMENT_VISIBILITY_OPTIONS: {
  * `FOLLOWERS` — small-caps ready, uppercase already applied. `spaceName` is
  * unused until a post can actually carry `visibility: "space"`.
  */
+// TODO(decision: D4): "Everyone" (forms, glossary) vs "Public" (this card
+// word). One label, applied everywhere, once the founder picks.
 export function visibilityWord(post: VisibilityPost, spaceName?: string): string {
   if (isOnlyYou(post)) return "ONLY YOU";
   if (post.visibility === "space") return spaceName ?? "A Space";
