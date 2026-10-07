@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Bookmark,
   Eye,
-  PenLine,
   Lock,
   CalendarDays,
   MapPin,
@@ -657,7 +656,6 @@ export function MomentCard({
             <span className="ns-section-kicker min-w-0 truncate text-muted-foreground" title={corner}>{corner}</span>
             <span className="ns-section-kicker flex shrink-0 items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
-              {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
               <span className="hidden sm:inline">{visibilityWord(post)} · </span>
               <Time value={post.createdAt} />
             </span>

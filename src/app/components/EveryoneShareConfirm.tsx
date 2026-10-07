@@ -56,7 +56,6 @@ export function EveryoneShareConfirm({
         </div>
       </div>
       <HoldToShareButton onConfirm={onConfirm} disabled={disabled} />
-      <p className="text-center text-caption text-muted-foreground">Your reflection is never shared.</p>
     </div>
   );
 }

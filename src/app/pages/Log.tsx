@@ -106,7 +106,6 @@ const MODES: { id: Mode; title: string; copy: string; icon: typeof Plus }[] = [
   { id: "project", title: "Start a Pursuit", copy: "Give a new thing a home", icon: Plus },
   { id: "update", title: "Add to a Pursuit", copy: "Keep an existing Pursuit moving", icon: PenLine },
   { id: "moment", title: "Log a Moment", copy: "A photo, win, question, or small discovery", icon: Sparkle },
-  { id: "private", title: "Reflect privately", copy: "Keep a note just for you", icon: Lock },
 ];
 
 /** The four audiences, widest privacy first, in the words the app uses everywhere. */
@@ -1844,36 +1843,6 @@ export function Log() {
                 />
               </section>
             </>
-          )}
-
-          {/* Collapsed by default on a regular Moment — it's optional, and a
-              third open text box made posting feel like homework. Always
-              open for a private-only entry, where it's the whole point. */}
-          {isPrivateOnly || reflectionOpen || reflection.trim() ? (
-            <section>
-              <h2 className="mb-1 flex items-center gap-1.5 text-small">
-                <Lock className="size-3.5" /> Private reflection
-              </h2>
-              <p className="mb-3 text-caption text-muted-foreground">
-                What do you want to remember for yourself?
-              </p>
-              <Textarea
-                id="reflection"
-                placeholder="Never shown to anyone, this part is only ever yours"
-                value={reflection}
-                autoFocus={reflectionOpen && !reflection}
-                onChange={(e) => setReflection(e.target.value)}
-              />
-            </section>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setReflectionOpen(true)}
-              className="flex w-full items-center gap-2 rounded-card border border-dashed border-border px-4 py-3 text-left text-small text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Lock className="size-3.5" />
-              Add a private reflection <span className="text-caption">(only you)</span>
-            </button>
           )}
 
           {!isPrivateOnly && (

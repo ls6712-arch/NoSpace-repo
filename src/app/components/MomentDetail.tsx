@@ -110,7 +110,6 @@ export function MomentDetail({
   const [sendToOpen, setSendToOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState("");
-  const [reflection, setReflection] = useState("");
   const [editHobbySlug, setEditHobbySlug] = useState("");
   const [editSubHobby, setEditSubHobby] = useState("");
   const [newMediaFile, setNewMediaFile] = useState<File | null>(null);
@@ -130,7 +129,6 @@ export function MomentDetail({
   useEffect(() => {
     if (!post) return;
     setCaption(post.caption);
-    setReflection(post.reflection ?? "");
     setEditHobbySlug(post.hobbySlug);
     setEditSubHobby(post.subHobby ?? "");
     setNewMediaFile(null);
@@ -188,7 +186,6 @@ export function MomentDetail({
         ? Boolean((await updatePrivateLogEntry(post.privateLogId!, { note: caption })).data)
         : await updatePost(post.id, {
             caption,
-            reflection,
             hobbySlug: editHobbySlug,
             subHobby: editSubHobby || undefined,
             ...(uploadedMediaPath ? { mediaPath: uploadedMediaPath } : {}),
@@ -538,16 +535,6 @@ export function MomentDetail({
                 onChange={(e) => setCaption(e.target.value)}
               />
             </div>
-            <div>
-              <label htmlFor="m-reflection" className="mb-1.5 block text-caption text-muted-foreground">
-                Private reflection, only you ever see this
-              </label>
-              <Textarea
-                id="m-reflection"
-                value={reflection}
-                onChange={(e) => setReflection(e.target.value)}
-              />
-            </div>
             <div className="flex gap-2">
               <Button busy={saving} variant="coral" size="sm" onClick={save} disabled={saving}>
                 Save changes
@@ -598,17 +585,6 @@ export function MomentDetail({
             every "Only you" Moment, not just a real just_me post. */}
         {isOnlyYou(post) && (
           <p className="-mt-1 text-caption text-muted-foreground">Only you Moments can’t be shared.</p>
-        )}
-
-        {/* Owner-only: the note they wrote for themselves */}
-        {owned && !editing && post.reflection && (
-          <div className="rounded-card border border-[var(--hairline)] bg-card px-4 py-3">
-            <div className="mb-1.5 flex items-center gap-1.5 text-caption text-muted-foreground">
-              <Lock className="size-3" />
-              Private reflection, only you
-            </div>
-            <p className="whitespace-pre-line text-small leading-relaxed">{post.reflection}</p>
-          </div>
         )}
 
         {saveError && <p className="text-caption text-[var(--coral-text)]">{saveError}</p>}
