@@ -268,7 +268,7 @@ export function AddMoment() {
                   value={note}
                   onChange={(e) => setNote(e.target.value.slice(0, 500))}
                   rows={3}
-                  placeholder="Finished the sky layer — wetter paper worked."
+                  placeholder="What did you do?"
                   className="w-full resize-none bg-transparent text-body text-foreground outline-none placeholder:text-muted-foreground"
                 />
               </div>

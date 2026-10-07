@@ -80,11 +80,29 @@ export function stepFor(measure: Measure): number {
   return 1;
 }
 
+/** Plural → singular for the -ves words a Pursuit unit is likely to be
+ * ("loaves", "knives"). Anything else ending in -ves just drops the s
+ * ("sleeves" → "sleeve"). */
+const VES_SINGULAR: Record<string, string> = {
+  loaves: "loaf",
+  knives: "knife",
+  shelves: "shelf",
+  halves: "half",
+  leaves: "leaf",
+  wolves: "wolf",
+  lives: "life",
+  wives: "wife",
+};
+
 /** Singular unit for "1 painting". Good-enough English for common units. */
 export function unitFor(measure: Measure, n: number): string {
   const u = measure.unit.trim();
   if (n !== 1 || !u.endsWith("s") || u.endsWith("ss")) return u;
-  if (u.endsWith("ies")) return `${u.slice(0, -3)}y`;
+  const lower = u.toLowerCase();
+  const irregular = VES_SINGULAR[lower];
+  if (irregular) return u[0] === u[0].toUpperCase() && u[0] !== u[0].toLowerCase() ? irregular[0].toUpperCase() + irregular.slice(1) : irregular;
+  if (lower.endsWith("ies")) return `${u.slice(0, -3)}y`;
+  if (/(ch|sh|x|z)es$/.test(lower)) return u.slice(0, -2);
   return u.slice(0, -1);
 }
 
