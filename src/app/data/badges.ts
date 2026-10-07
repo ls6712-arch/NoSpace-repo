@@ -44,7 +44,7 @@ export const badges: Badge[] = [
   {
     id: "first-session",
     name: "First Session",
-    description: "You showed up once. That’s the hard one.",
+    description: "Your first Moment.",
     icon: "Sprout",
     tint: "var(--pastel-sage)",
     test: (s) => s.postsCreated >= 1,
@@ -52,7 +52,7 @@ export const badges: Badge[] = [
   {
     id: "hands-on",
     name: "Getting My Hands In",
-    description: "Ten Moments logged. Past the beginner wobble.",
+    description: "Ten Moments logged.",
     icon: "Hand",
     tint: "var(--pastel-clay)",
     test: (s) => s.postsCreated >= 10,
@@ -60,7 +60,7 @@ export const badges: Badge[] = [
   {
     id: "made-something",
     name: "Made Something",
-    description: "Fifteen Moments logged. Long enough to finish a real thing.",
+    description: "Fifteen Moments logged.",
     icon: "Package",
     tint: "var(--pastel-wheat)",
     test: (s) => s.postsCreated >= 15,
@@ -76,7 +76,7 @@ export const badges: Badge[] = [
   {
     id: "consistency-club",
     name: "Consistency Club",
-    description: "Fifty Moments. You keep coming back.",
+    description: "Fifty Moments logged.",
     icon: "Coffee",
     tint: "var(--pastel-sky)",
     test: (s) => s.postsCreated >= 50,
@@ -84,7 +84,7 @@ export const badges: Badge[] = [
   {
     id: "still-going",
     name: "Still Going",
-    description: "A hundred Moments in. Quietly remarkable.",
+    description: "A hundred Moments logged.",
     icon: "Mountain",
     tint: "var(--pastel-rose)",
     test: (s) => s.postsCreated >= 100,
@@ -92,7 +92,7 @@ export const badges: Badge[] = [
   {
     id: "second-nature",
     name: "Second Nature",
-    description: "A hundred and fifty Moments in. It’s part of you now.",
+    description: "A hundred and fifty Moments logged.",
     icon: "Feather",
     tint: "var(--pastel-sage)",
     test: (s) => s.postsCreated >= 150,
