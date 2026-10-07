@@ -416,7 +416,7 @@ export function InviteDialog({
           <p className="flex items-center gap-2 text-small">
             <Link2 className="size-4" /> Invite link
           </p>
-          <p className="mt-0.5 text-caption text-muted-foreground">Works for people who aren’t on {APP_NAME} yet — they sign up and land in this Pursuit.</p>
+          <p className="mt-0.5 text-caption text-muted-foreground">Works for people who aren’t on {APP_NAME} yet. They sign up and land in this Pursuit.</p>
           {link ? (
             <>
               <input readOnly value={link} onFocus={(e) => e.target.select()} className="mt-2 h-9 w-full rounded-control border border-border bg-card px-2 text-body" />
@@ -448,7 +448,7 @@ export function InviteDialog({
             </Button>
           )}
         </div>
-        <p className="text-caption text-muted-foreground">Or find someone on {APP_NAME} — they’ll get a notification.</p>
+        <p className="text-caption text-muted-foreground">Or find someone on {APP_NAME}. They’ll get a notification.</p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -524,7 +524,7 @@ export function PursuitInvitesCard() {
             </p>
           </div>
           <p className="mt-1 pl-[38px] text-caption text-muted-foreground">
-            {inv.mode === "group" ? "One shared goal, everyone contributes." : "Side by side — you’ll have your own goal and journey."}
+            {inv.mode === "group" ? "One shared goal, everyone contributes." : "Side by side: you’ll have your own goal and journey."}
           </p>
           <div className="mt-3 flex gap-2 pl-[38px]">
             <Button variant="coral" size="sm" onClick={() => answer(inv, true)}>

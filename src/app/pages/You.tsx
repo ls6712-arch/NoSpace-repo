@@ -362,7 +362,7 @@ export function You() {
           </div>
           <p className="mb-5 mt-1 flex flex-wrap items-center gap-2 text-small text-muted-foreground">
             {momentsView === "shelf"
-              ? "By Corner, most recently updated first — open one to see every moment inside it."
+              ? "By Corner, most recently updated first. Open one to see every Moment inside it."
               : tagFilter
                 ? `Tagged “${tagFilter}.”`
                 : "A visual record of what you’ve made, explored, and loved, newest first."}
@@ -480,7 +480,7 @@ export function You() {
             </h2>
           </div>
           <p className="mb-5 text-small text-muted-foreground">
-            Private by default — share one at a time, only if you want to.
+            Private by default. Share one at a time, only if you want to.
           </p>
           <QuietMilestones />
         </section>

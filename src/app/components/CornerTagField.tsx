@@ -188,7 +188,7 @@ export function CornerTagField({
             {!exact && pendingConfirm && (
               <li className="border-t border-[var(--hairline)] px-4 py-2.5">
                 <p className="mb-2 text-caption text-muted-foreground">
-                  Close to “{pendingConfirm.label}” — the same Corner, or something different?
+                  Close to “{pendingConfirm.label}”. The same Corner, or something different?
                 </p>
                 <div className="flex gap-2">
                   <button

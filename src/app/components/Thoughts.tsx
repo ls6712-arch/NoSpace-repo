@@ -258,7 +258,7 @@ export function Thoughts({
         open={confirmDeleteId !== null}
         onOpenChange={(o) => !o && setConfirmDeleteId(null)}
         title="Delete this thought?"
-        description="This can’t be undone — it’s gone for whoever else could see it too."
+        description="This can’t be undone. It’s gone for whoever else could see it too."
         onConfirm={async () => {
           if (confirmDeleteId !== null) await social.removeThought(confirmDeleteId);
           setConfirmDeleteId(null);

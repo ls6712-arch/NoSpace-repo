@@ -75,7 +75,7 @@ export function DataSection() {
         open={confirmDeleteId !== null}
         onOpenChange={(o) => !o && setConfirmDeleteId(null)}
         title="Delete this?"
-        description="This can’t be undone — nobody else ever saw it, and once it’s gone there’s no copy left anywhere."
+        description="This can’t be undone. Nobody else saw it, and there is no copy left once it’s deleted."
         onConfirm={async () => {
           if (confirmDeleteId !== null) await remove(confirmDeleteId);
           setConfirmDeleteId(null);

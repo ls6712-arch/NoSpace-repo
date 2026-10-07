@@ -24,7 +24,7 @@ export function TagsField({
   value,
   onChange,
   id = "tags",
-  placeholder = "Add tags — pottery, sourdough, bouldering…",
+  placeholder = "Add tags: pottery, sourdough, bouldering",
   max = MAX_TAGS,
   chipLayoutIdPrefix,
 }: {
@@ -147,7 +147,7 @@ export function TagsField({
 
       {atCap && (
         <p className="mt-1.5 text-caption text-muted-foreground">
-          Up to {max} tags per Moment — that’s plenty to find by.
+          Up to {max} tags per Moment.
         </p>
       )}
 
@@ -160,7 +160,7 @@ export function TagsField({
             </span>
           ) : closeMatch ? (
             <span>
-              Close to “{closeMatch.label}” —{" "}
+              Close to “{closeMatch.label}”.{" "}
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
@@ -172,7 +172,7 @@ export function TagsField({
               , or press Enter to keep your own.
             </span>
           ) : (
-            "New one. Press Enter to add it — it’ll suggest itself to others after this."
+            "New one. Press Enter to add it. It’ll suggest itself to others after this."
           )}
         </p>
       )}

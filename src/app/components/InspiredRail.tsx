@@ -65,7 +65,7 @@ export function InspiredRail() {
       ) : (
         <p className="mt-3 text-small leading-relaxed text-foreground">
           This month, {plural(entries.length, "person", "people")} started a
-          Pursuit not long after seeing yours — {joinClauses(entries.map(clause))}.
+          Pursuit not long after seeing yours: {joinClauses(entries.map(clause))}.
         </p>
       )}
 

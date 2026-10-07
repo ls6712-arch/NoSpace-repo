@@ -75,7 +75,7 @@ export function InterestField({
             </span>
           ) : closeMatch ? (
             <span>
-              Close to “{closeMatch.label}” —{" "}
+              Close to “{closeMatch.label}”.{" "}
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}

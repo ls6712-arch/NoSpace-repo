@@ -164,7 +164,7 @@ export function HobbyArchive() {
           onBlur={() => setCornerNote(noteKey, noteDraft)}
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
           maxLength={140}
-          placeholder="Add a short note about this Corner — only you see it."
+          placeholder="Add a short note about this Corner. Only you see it."
           aria-label={`Your private note about ${target.label}`}
           className="mt-3 w-full max-w-md border-b border-transparent bg-transparent text-body text-muted-foreground outline-none transition-colors focus:border-border placeholder:text-muted-foreground/60"
         />

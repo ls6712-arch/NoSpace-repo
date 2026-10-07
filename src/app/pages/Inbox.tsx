@@ -13,6 +13,7 @@ import { ListSkeleton } from "../components/Skeletons";
 import { EmptyState } from "../components/StateViews";
 import { notifyError } from "../components/ui/toaster";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { withoutDashes } from "../lib/text";
 
 /**
  * Inbox: everything addressed to you, in one place.
@@ -200,7 +201,7 @@ export function Inbox() {
                     <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                       {n.actorName ?? "Someone"}{" "}
                     </strong>
-                    {n.body}
+                    {withoutDashes(n.body)}
                     <span className="ml-2 text-caption text-muted-foreground">
                       {ago(n.createdAt)}
                     </span>

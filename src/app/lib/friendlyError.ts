@@ -1,3 +1,4 @@
+import { withoutDashes } from "./text";
 import { ERROR_LINE, OFFLINE_LINE, UPLOAD_COPY } from "./stateCopy";
 
 /**
@@ -41,7 +42,7 @@ function authoredMessage(err: unknown): string | null {
   const msg = e.message.trim();
   if (!msg || msg.length > 160) return null;
   if (/[_%(){}[\]<>]|\b(null|uuid|sqlstate|function|relation|column)\b/i.test(msg)) return null;
-  return msg;
+  return withoutDashes(msg);
 }
 
 function errorText(err: unknown): string {

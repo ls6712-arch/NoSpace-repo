@@ -114,7 +114,7 @@ export function CameraCapture({
         if (videoRef.current) videoRef.current.srcObject = stream;
       })
       .catch(() => {
-        if (!cancelled) setCameraError("Camera access isn’t available — pick a photo or video instead.");
+        if (!cancelled) setCameraError("Camera access isn’t available. Pick a photo or video instead.");
       });
 
     return () => {

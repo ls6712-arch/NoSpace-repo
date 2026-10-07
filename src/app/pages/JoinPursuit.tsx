@@ -116,7 +116,7 @@ export function JoinPursuit() {
           {isOwner ? (
             <Link to={`/pursuit/${preview.pursuitId}`}>
               <Button variant="coral" className="h-11 w-full rounded-control">
-                This is your Pursuit — open it
+                This is your Pursuit. Open it
               </Button>
             </Link>
           ) : user ? (

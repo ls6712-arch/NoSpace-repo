@@ -223,7 +223,7 @@ export function Onboarding() {
                   What are you into?
                 </h1>
                 <p className="mb-6 text-small text-[var(--ink-soft)]">
-                  Add a few tags — anything you like, however specific. There’s no fixed list and no
+                  Add a few tags, anything you like, however specific. There’s no fixed list and no
                   wrong number.
                 </p>
 

@@ -446,7 +446,7 @@ export function Pursuit() {
               <Target className={`size-4 shrink-0 ${goalReached ? "text-[var(--violet-electric-bright)]" : "text-muted-foreground"}`} />
               {goalReached ? (
                 <span>
-                  Goal reached — <span className="text-muted-foreground">{goal.label}</span>
+                  Goal reached: <span className="text-muted-foreground">{goal.label}</span>
                 </span>
               ) : (
                 <span className="tabular-nums">{goalSentence}</span>

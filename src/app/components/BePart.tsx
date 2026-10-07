@@ -185,7 +185,7 @@ export function BePart({
       else if (result?.error === "no-recipient")
         setError("We can’t reach this maker yet. Try from their profile.");
       else if (result?.error === "failed")
-        setError("That didn’t send — you may have already asked. Check your Inbox.");
+        setError("That didn’t send. You may have already asked. Check your Inbox.");
       else setSent(true);
     } catch {
       setError(OFFLINE_LINE);

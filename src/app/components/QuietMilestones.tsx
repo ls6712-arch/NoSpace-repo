@@ -124,7 +124,7 @@ export function QuietMilestones() {
                     e.stopPropagation();
                     setShareTarget(badge);
                   }}
-                  aria-label={shared ? "Shared — manage sharing" : "Share this milestone"}
+                  aria-label={shared ? "Shared, manage sharing" : "Share this milestone"}
                   title={shared ? "Shared on your profile" : "Share this milestone"}
                   className={`absolute right-1 top-11 flex size-6 items-center justify-center rounded-control border transition-colors ${
                     shared

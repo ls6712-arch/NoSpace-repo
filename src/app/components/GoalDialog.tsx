@@ -143,7 +143,7 @@ export function GoalDialog({
             {project.goal ? "Change your goal" : "Set a goal"}
           </DialogTitle>
           <DialogDescription className="text-small text-muted-foreground">
-            For “{project.title}.” Optional — skip anytime.
+            For “{project.title}.” Optional. Skip anytime.
           </DialogDescription>
         </DialogHeader>
 

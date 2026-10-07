@@ -32,7 +32,7 @@ function EmailPrefixPrompt({ userId, emailPrefix }: { userId: string; emailPrefi
     <div className="mb-4 flex items-start justify-between gap-4 rounded-control border border-accent/40 bg-accent/5 p-4">
       <p className="text-small leading-relaxed">
         Is this how you’d like to be known? Your name is currently{" "}
-        <span style={{ fontFamily: "var(--font-serif)" }}>“{emailPrefix}”</span> — taken from your
+        <span style={{ fontFamily: "var(--font-serif)" }}>“{emailPrefix}”</span>, taken from your
         email. You can change it below any time.
       </p>
       <button
@@ -67,7 +67,7 @@ export function ProfileSection() {
     <section>
       <SectionHeader n={2} eyebrow="PROFILE" title="Profile" />
       <p className="mb-4 text-small text-muted-foreground">
-        What people see — your Shelf, your Scrapbook, and anywhere you show up.
+        What people see on your Shelf, your Scrapbook, and anywhere you show up.
       </p>
 
       {showEmailPrefixPrompt && <EmailPrefixPrompt userId={user.id} emailPrefix={emailPrefix} />}

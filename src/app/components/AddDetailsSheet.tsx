@@ -83,7 +83,7 @@ export function AddDetailsSheet({
       <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-card">
         <SheetHeader>
           <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>Add details</SheetTitle>
-          <SheetDescription>Optional — nothing here was needed to save this Moment.</SheetDescription>
+          <SheetDescription>Optional. Nothing here is needed to save this Moment.</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 px-4 pb-4">
           <div>

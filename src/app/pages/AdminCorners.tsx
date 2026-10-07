@@ -180,7 +180,7 @@ export function AdminCorners() {
         </h1>
         <p className="mb-8 mt-2 text-small text-muted-foreground">
           Merge duplicates, rename, or hide. Merging moves every Moment, Pursuit, Space link and Interest
-          from one Corner to the other, then removes the one merged away — this can’t be undone.
+          from one Corner to the other, then removes the one merged away. This can’t be undone.
         </p>
 
         {error && (

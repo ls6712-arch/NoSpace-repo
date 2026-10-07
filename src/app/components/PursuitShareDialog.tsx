@@ -196,7 +196,7 @@ export function PursuitShareDialog({
               ? "Only the Pursuit’s owner can turn on its link."
               : project.shared
                 ? "Anyone with the link can view this Pursuit."
-                : "Copying the link or sharing turns it on — only this Pursuit, nothing else."}
+                : "Copying the link or sharing turns it on for this Pursuit only."}
           </p>
         </DialogContent>
       </Dialog>

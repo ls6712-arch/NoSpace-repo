@@ -91,7 +91,7 @@ function CornerField({
       )}
       {closeMatch && (
         <p className="mt-1.5 text-caption text-muted-foreground">
-          Close to “{closeMatch.label}” —{" "}
+          Close to “{closeMatch.label}”.{" "}
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}

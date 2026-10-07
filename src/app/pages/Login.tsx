@@ -161,12 +161,12 @@ export function Login() {
         {needsConfirmation ? (
           <div className="glass-panel rounded-card p-6 text-center">
             <p className="text-small leading-relaxed text-muted-foreground">
-              Check <span className="text-foreground">{email}</span> for a confirmation link —
+              Check <span className="text-foreground">{email}</span> for a confirmation link.
               you’ll be signed in once you click it.
             </p>
             <p className="mt-3 text-caption leading-relaxed text-muted-foreground">
               {resent
-                ? "Sent again — check your spam folder if it still doesn’t turn up."
+                ? "Sent again. Check your spam folder if it still doesn’t turn up."
                 : "Nothing after a few minutes? It can land in spam, or just take a moment."}
             </p>
             {error && <p className="mt-2 text-caption text-[var(--coral-text)]">{error}</p>}

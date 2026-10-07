@@ -10,12 +10,12 @@ import { APP_NAME } from "../config";
 
 export function PrivacyPolicy() {
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="[PLACEHOLDER — draft, not yet published]">
+    <LegalPage title="Privacy Policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
       <h2>What we collect</h2>
       <p>
         Your email, display name, and password (or your Google account, if you sign in
-        that way), and whatever you add to your profile. The Moments you log — photos,
-        notes, and Reflections — plus Thoughts, messages, and who you follow. If you
+        that way), and whatever you add to your profile. The Moments you log (photos
+        and notes), plus Thoughts, messages, and who you follow. If you
         join the waitlist before you have an invite, we keep the email and the optional
         "what do you make?" answer you give us.
       </p>
@@ -33,8 +33,8 @@ export function PrivacyPolicy() {
 
       <h2>What you control</h2>
       <p>
-        Every Moment you log, you choose who sees it — just you, your followers, a
-        Space, or everyone — each time you post it. A Moment marked "only you" is kept
+        Every Moment you log, you choose who sees it: just you, your followers, or
+        everyone, each time you post it. A Moment marked "only you" is kept
         and never shown anywhere else, including to {APP_NAME} staff reviewing a
         report.
       </p>

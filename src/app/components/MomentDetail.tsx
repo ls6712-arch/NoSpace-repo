@@ -334,7 +334,7 @@ export function MomentDetail({
                 onClick={() => setInspiredDialogOpen(true)}
                 className="inline-flex min-h-11 items-center text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
-                Start a Pursuit — inspired by this
+                Start a Pursuit inspired by this
               </button>
             )}
 
@@ -698,7 +698,7 @@ export function MomentDetail({
         open={confirmDeleteOpen}
         onOpenChange={setConfirmDeleteOpen}
         title="Delete this Moment?"
-        description="This can’t be undone — the photo, caption, and any thoughts on it are gone for good."
+        description="This can’t be undone. The photo, caption, and any thoughts on it are deleted."
         onConfirm={handleDelete}
       />
       <AddDetailsSheet post={post} open={detailsOpen} onOpenChange={setDetailsOpen} />

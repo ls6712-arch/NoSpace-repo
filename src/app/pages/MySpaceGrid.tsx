@@ -180,8 +180,8 @@ export function MySpaceGrid() {
 
   const numeral =
     sheet.length === 0
-      ? "00–00"
-      : `${String(1).padStart(2, "0")}–${String(sheet.length).padStart(2, "0")}`;
+      ? "00 to 00"
+      : `${String(1).padStart(2, "0")} to ${String(sheet.length).padStart(2, "0")}`;
 
   // For AllPursuitsSection, rendered once at the bottom of this page —
   // both PursuitsInProgressSection's and PursuitsRail's own "See all"

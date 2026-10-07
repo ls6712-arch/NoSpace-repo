@@ -205,7 +205,7 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
           interaction outright. */}
       <button
         type="button"
-        aria-label="Offer this for sale — coming soon"
+        aria-label="Offer this for sale (coming soon)"
         title={SALE_COMING_SOON_COPY}
         onClick={() => setShowNotice((v) => !v)}
         className="flex w-full items-center justify-between gap-3 text-left"
@@ -1114,7 +1114,7 @@ export function Log() {
                 )}
                 {draftPrompt.mediaType && !draftPromptMedia && (
                   <p className="mt-2 text-caption">
-                    A {draftPrompt.mediaType} was attached on another device — not available here.
+                    A {draftPrompt.mediaType} was attached on another device and is not available here.
                   </p>
                 )}
               </div>

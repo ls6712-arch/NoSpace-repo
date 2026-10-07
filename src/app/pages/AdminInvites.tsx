@@ -88,7 +88,7 @@ export function AdminInvites() {
     ]);
 
     if (invitesErr) {
-      setListError("Couldn’t load invites — the columns this page expects may not match the live schema yet.");
+      setListError("Couldn’t load invites. The columns this page expects may not match the live schema yet.");
       setLoading(false);
       return;
     }
@@ -190,14 +190,14 @@ export function AdminInvites() {
           Invites
         </h1>
         <p className="mb-8 mt-2 text-small text-muted-foreground">
-          {APP_NAME} is invite-only for now — create a link for someone to join with.
+          {APP_NAME} is invite-only for now. Create a link for someone to join with.
         </p>
 
         <div className="mb-8 rounded-card border border-border bg-card p-4">
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 280))}
-            placeholder="A note for them, optional — shown on their arrival page."
+            placeholder="A note for them, (optional). Shown on their arrival page."
             className="mb-2"
           />
           <div className="mb-3 text-right text-caption text-muted-foreground">{note.length}/280</div>
