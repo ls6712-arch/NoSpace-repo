@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
 import { useAuth } from "../context/AuthContext";
 import { WaitlistForm } from "../components/WaitlistForm";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 import heroSooshImg from "../../assets/hero-soosh.webp";
 import heroSoosh1000Img from "../../assets/hero-soosh-1000.webp";
 import { APP_NAME, landingShowsSpaces } from "../config";
@@ -204,13 +205,10 @@ export function Home() {
                 src/assets/landing-pursuit.webp (see docs/landing-assets.md).
                 Until that file exists nothing renders here. */}
             {pursuitShot && (
-              <img
+              <ImageWithFallback
                 src={pursuitShot}
                 alt="A Pursuit on a Shelf, with its goal and progress."
-                width={780}
-                height={1688}
-                loading="lazy"
-                className="mx-auto mt-8 w-full max-w-[280px] rounded-card border border-[var(--hairline)]"
+                className="mx-auto mt-8 aspect-[780/1688] w-full max-w-[280px] rounded-card border border-[var(--hairline)]"
               />
             )}
           </div>
