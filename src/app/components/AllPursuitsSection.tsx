@@ -55,7 +55,7 @@ function AllPursuitsRow({ pursuit: p, last }: { pursuit: Project; last: number |
         <Share2 className="size-3" />
       </button>
       <Link
-        to={`/pursuit/${p.id}/moment`}
+        to={`/create?pursuit=${p.id}`}
         aria-label={`Log a Moment on ${p.title}`}
         className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground hover:border-[var(--coral-deep)]"
       >

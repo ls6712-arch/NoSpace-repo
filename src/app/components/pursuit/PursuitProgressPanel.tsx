@@ -76,7 +76,7 @@ export function PursuitProgressPanel({
       ) : (
         <span />
       )}
-      <Link to={`/pursuit/${project.id}/moment`} className={!viewerIsOwner ? "col-span-2" : ""}>
+      <Link to={`/create?pursuit=${project.id}`} className={!viewerIsOwner ? "col-span-2" : ""}>
         <Button variant="coral" className="h-11 w-full rounded-control">
           <Plus className="size-4" /> Log a Moment
         </Button>

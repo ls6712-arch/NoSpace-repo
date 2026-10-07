@@ -3,7 +3,6 @@ import { Link } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { Project, dismissCheckIn, pauseProject } from "../lib/journal";
 import { mirrorPursuit } from "../lib/pursuitsRemote";
-import { QuickLog } from "./QuickLog";
 import { EndingDialog } from "./EndingDialog";
 import { plural } from "../lib/plural";
 
@@ -23,7 +22,6 @@ function quietFor(since: number): string {
  */
 export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastActivity: number }) {
   const { user } = useAuth();
-  const [logging, setLogging] = useState(false);
   const [ending, setEnding] = useState(false);
 
   const mirror = (p: Project | undefined) => {
@@ -39,19 +37,14 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
         <span className="text-muted-foreground">has been quiet for {quietFor(lastActivity)}. Where’s it at?</span>
       </p>
 
-      {logging ? (
-        <div className="mt-3">
-          <QuickLog pursuit={pursuit} compact onDone={() => setLogging(false)} />
-        </div>
-      ) : (
+      {(
         <div className="mt-3 flex flex-wrap gap-2 text-caption">
-          <button
-            type="button"
-            onClick={() => setLogging(true)}
+          <Link
+            to={`/create?pursuit=${pursuit.id}`}
             className="rounded-control border border-[var(--coral-deep)] px-3 py-1.5 text-foreground hover:bg-[color-mix(in_srgb,var(--coral)_14%,transparent)]"
           >
             Log a Moment
-          </button>
+          </Link>
           <button
             type="button"
             onClick={() => mirror(pauseProject(pursuit.id))}

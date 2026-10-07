@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router";
 import { Compass, Library, PlusCircle, UserRound } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { useQuickLog } from "../context/QuickLogContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 
 /**
@@ -58,7 +57,6 @@ export const TABS = [
 export function BottomTabBar() {
   const { pathname } = useLocation();
   const { user } = useAuth();
-  const { openQuickLog } = useQuickLog();
   const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
   const waiting = incomingFollows.length > 0;
 
@@ -109,18 +107,6 @@ export function BottomTabBar() {
                   : undefined,
             };
 
-            // Step 3: Create opens the two-tap sheet (QuickLogGlobalSheet,
-            // mounted once in Root.tsx) instead of navigating to the full
-            // /create form — same reasoning as Header.tsx's "Log a Moment"
-            // button. The full form stays one "Open the full form" tap away
-            // inside the sheet.
-            if (tab.to === "/create") {
-              return (
-                <button key={tab.to} type="button" onClick={openQuickLog} className={className} style={style}>
-                  {content}
-                </button>
-              );
-            }
 
             return (
               <Link key={tab.to} to={tab.to} aria-current={active ? "page" : undefined} className={className} style={style}>

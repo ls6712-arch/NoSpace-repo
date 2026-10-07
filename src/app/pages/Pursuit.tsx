@@ -36,7 +36,6 @@ import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { GoalDialog } from "../components/GoalDialog";
 import { GoalProgressTap } from "../components/GoalProgressTap";
-import { QuickLog } from "../components/QuickLog";
 import { EndingDialog } from "../components/EndingDialog";
 import { PursuitProgressPanel } from "../components/pursuit/PursuitProgressPanel";
 import { NextSessionCard } from "../components/pursuit/NextSessionCard";
@@ -111,7 +110,6 @@ export function Pursuit() {
   const { logs: privateLogs } = usePrivateLogs();
   const [goalOpen, setGoalOpen] = useState(false);
   const [endingOpen, setEndingOpen] = useState<null | "finish" | "edit">(null);
-  const [logging, setLogging] = useState(false);
   const [searchParams] = useSearchParams();
   const isNew = searchParams.get("new") === "1";
   const [openPost, setOpenPost] = useState<Post | null>(null);
@@ -482,7 +480,7 @@ export function Pursuit() {
               A photo of where you’re starting makes the best before-and-after later.
             </p>
             {!hasMeasure(ownProject) && (
-              <Link to={`/pursuit/${ownProject.id}/moment`} className="mt-3 inline-block">
+              <Link to={`/create?pursuit=${ownProject.id}`} className="mt-3 inline-block">
                 <Button variant="coral" size="sm">
                   <Plus className="size-3.5" />
                   Log a Moment
@@ -496,10 +494,12 @@ export function Pursuit() {
           <>
             <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-3">
               {moments.length > 0 && !hasMeasure(ownProject) && (
-                <Button variant="coral" size="sm" onClick={() => setLogging((v) => !v)} aria-expanded={logging}>
-                  <Plus className="size-3.5" />
-                  Log a Moment
-                </Button>
+                <Link to={`/create?pursuit=${ownProject.id}`}>
+                  <Button variant="coral" size="sm">
+                    <Plus className="size-3.5" />
+                    Log a Moment
+                  </Button>
+                </Link>
               )}
               <Link to={`/create?pursuit=${view.id}`}>
                 <Button variant="outline" size="sm">
@@ -547,12 +547,6 @@ export function Pursuit() {
                 </Button>
               )}
             </div>
-
-            {logging && (
-              <div className="mb-4">
-                <QuickLog pursuit={ownProject} onDone={() => setLogging(false)} />
-              </div>
-            )}
 
             {status === "active" && (
               <div className="mb-8 flex flex-wrap items-center gap-x-2 gap-y-3 text-caption text-muted-foreground">

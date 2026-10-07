@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
 import { Flag, LogOut, MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
 import { useCart } from "../context/CartContext";
-import { useQuickLog } from "../context/QuickLogContext";
 import { useAuth } from "../context/AuthContext";
 import { useTheme, type ThemePreference } from "../context/ThemeContext";
 import { useCategories } from "../context/CategoriesContext";
@@ -275,7 +274,6 @@ const PRIMARY_NAV = [
 
 export function Header() {
   const { openCart, cartCount } = useCart();
-  const { openQuickLog } = useQuickLog();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -358,16 +356,15 @@ export function Header() {
               // linking straight to it.
               if (item.to === "/create") {
                 return (
-                  <button
+                  <Link
                     key={item.to}
-                    type="button"
+                    to="/create"
                     title={item.hint}
-                    onClick={openQuickLog}
                     className="flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-small text-accent-foreground transition-[filter] hover:brightness-110"
                   >
                     <Plus className="size-3.5" aria-hidden="true" />
                     {item.label}
-                  </button>
+                  </Link>
                 );
               }
               return (

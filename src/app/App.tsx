@@ -11,7 +11,6 @@ import { CategoriesProvider } from "./context/CategoriesContext";
 import { CornersProvider } from "./context/CornersContext";
 import { PrivateLogsProvider } from "./context/PrivateLogsContext";
 import { SettingsProvider } from "./context/SettingsContext";
-import { QuickLogProvider } from "./context/QuickLogContext";
 import { Toaster } from "./components/ui/toaster";
 
 export default function App() {
@@ -26,15 +25,13 @@ export default function App() {
                   <SocialProvider>
                     <CategoriesProvider>
                       <CartProvider>
-                        <QuickLogProvider>
-                          {/* JS animations (the motion library) follow the OS
-                              reduced-motion setting everywhere, not just
-                              where a component checks it itself. */}
-                          <MotionConfig reducedMotion="user">
-                            <RouterProvider router={router} />
-                            <Toaster />
-                          </MotionConfig>
-                        </QuickLogProvider>
+                        {/* JS animations (the motion library) follow the OS
+                            reduced-motion setting everywhere, not just
+                            where a component checks it itself. */}
+                        <MotionConfig reducedMotion="user">
+                          <RouterProvider router={router} />
+                          <Toaster />
+                        </MotionConfig>
                       </CartProvider>
                     </CategoriesProvider>
                   </SocialProvider>

@@ -31,7 +31,6 @@ import { PublicProfile } from "./pages/PublicProfile";
 import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
 import { CreatePursuit } from "./pages/CreatePursuit";
-import { AddMoment } from "./pages/AddMoment";
 import { MomentPage } from "./pages/MomentPage";
 import { JoinPursuit } from "./pages/JoinPursuit";
 import { Shop } from "./pages/Shop";
@@ -112,7 +111,8 @@ export const router = createHashRouter([
       { path: "corner/:slug", Component: CornerPage },
       { path: "pursuits/new", Component: CreatePursuit },
       { path: "join/:token", Component: JoinPursuit },
-      { path: "pursuit/:id/moment", Component: AddMoment },
+      // The old per-Pursuit form is gone: one Log a Moment form, with the Pursuit pre-filled.
+      { path: "pursuit/:id/moment", loader: ({ params }) => redirect(`/create?pursuit=${params.id}`) },
       { path: "pursuit/:id", Component: Pursuit },
       // A Moment shared into a chat (Phase 4) is the first place a Moment
       // needs a URL of its own — everywhere else it's a dialog opened from

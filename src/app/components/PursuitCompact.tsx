@@ -223,7 +223,7 @@ export function PursuitExpandedPanel({
           </h3>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link to={`/pursuit/${pursuit.id}/moment`}>
+          <Link to={`/create?pursuit=${pursuit.id}`}>
             <Button variant="coral" size="sm">
               Log a Moment
             </Button>
@@ -312,7 +312,7 @@ export function PursuitExpandedPanel({
           posts={attached}
           onOpen={onOpenPost}
           emptyLabel="Nothing logged under this Pursuit yet."
-          emptyAction={{ label: "Log a Moment", to: `/pursuit/${pursuit.id}/moment` }}
+          emptyAction={{ label: "Log a Moment", to: `/create?pursuit=${pursuit.id}` }}
         />
       </div>
 

@@ -237,7 +237,7 @@ export function PursuitCard({
         {owner && (
           <div className="mt-3 flex items-center gap-2">
             <Link
-              to={`/pursuit/${pursuit.id}/moment`}
+              to={`/create?pursuit=${pursuit.id}`}
               className="flex-1 rounded-control border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-caption font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
             >
               Log a Moment

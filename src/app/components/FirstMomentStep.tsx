@@ -7,7 +7,6 @@ import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { preparePickedPhoto } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { defaultSpaceSlug } from "../data/hobbies";
-import { saveMomentDefaults } from "../lib/momentDefaults";
 import { Post } from "../data/posts";
 import { EveryoneShareConfirm } from "./EveryoneShareConfirm";
 import { IsThisPartOfSomething } from "./IsThisPartOfSomething";
@@ -101,7 +100,6 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
           setError(outcome.error || ERROR_LINE);
           return;
         }
-        if (user) saveMomentDefaults(user.id, { audience });
         setSaved({ post: null, privateLogId: outcome.data.id });
         return;
       }
@@ -115,7 +113,6 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         visibility: audience,
       });
       if (isInFlightSkipped(entry)) return;
-      if (user) saveMomentDefaults(user.id, { audience });
       setLine("");
       setFile(null);
       setSaved({ post: entry, privateLogId: null });
