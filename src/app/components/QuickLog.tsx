@@ -309,7 +309,7 @@ export function QuickLog({
           type: file ? "photo" : "written",
           files: file ? [file] : undefined,
           creator: profile?.display_name?.trim() || "You",
-          caption: text || (effectivePursuit ? `A ${effectivePursuit.title} Moment` : "A moment"),
+          caption: text,
           visibility: audience,
           pursuitId: effectivePursuit?.id,
         });

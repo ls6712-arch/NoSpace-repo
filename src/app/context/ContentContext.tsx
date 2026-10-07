@@ -6,7 +6,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { Post, seedPosts, Visibility } from "../data/posts";
+import { Post, Visibility } from "../data/posts";
 import { currentSpaceSlug } from "../data/hobbies";
 import { Product, products as seedProducts } from "../data/products";
 import { useRewards } from "./RewardsContext";
@@ -595,15 +595,13 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }
   }, [userListings]);
 
-  // Real posts belonging to the signed-in user, mixed with the app's sample
-  // content everywhere else — the seed data keeps every space feeling
-  // populated while real posts layer in on top of it. `realPosts.likes`
+  // Real posts only — no sample content is mixed in. `realPosts.likes`
   // already reflects post_likes (kept in sync by a DB trigger, patched
   // optimistically here on toggle — see toggleLike), so this no longer
   // needs a separate delta layered on top of it.
   const myRealPosts = realPosts.filter((p) => p.userId === myId);
   const myPosts: Post[] = myRealPosts;
-  const posts: Post[] = [...realPosts, ...seedPosts];
+  const posts: Post[] = realPosts;
 
   const myListings: Product[] = userListings;
   const listings: Product[] = [...userListings, ...seedProducts];

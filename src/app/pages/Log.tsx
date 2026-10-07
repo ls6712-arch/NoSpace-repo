@@ -799,7 +799,7 @@ export function Log() {
     }
 
     const result = await addPrivateLog({
-      note: note || (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment"),
+      note,
       projectId: linkTo || undefined,
       media,
     });
@@ -850,9 +850,8 @@ export function Log() {
     setSaving(true);
     setError(null);
     try {
-      const caption =
-        [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
-        (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment");
+      // No caption typed means no caption stored (a photo can stand alone).
+      const caption = [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ");
 
       // Decided from the actual attached files, not the `type` state (which
       // only ever reflects whichever single pick set it last) — video wins

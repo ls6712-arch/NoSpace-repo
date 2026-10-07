@@ -142,7 +142,7 @@ export function AddMoment() {
           type: file ? "photo" : "written",
           files: file ? [file] : undefined,
           creator: profile?.display_name?.trim() || "You",
-          caption: text || (logged ? `+${unitWords} on ${project.title}` : `A ${project.title} Moment`),
+          caption: text || (logged ? `+${unitWords} on ${project.title}` : ""),
           visibility: audience,
           pursuitId: project.id,
         });
