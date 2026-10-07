@@ -75,8 +75,6 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Term | Meaning |
 |---|---|
 | Shelf | Your profile page |
-| Book | One Corner's history on your Shelf ("Your Pottery book") |
-| Scrapbook | The photo-book view of your Moments (the /studio page) |
 | Cover | Profile cover area |
 | Tell your story | Bio |
 | Moments logged | Headline stat |
@@ -87,7 +85,6 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 
 | Term | Meaning |
 |---|---|
-| Contact Sheet / You Inspired / You're caught up | Home sections |
 | Love this / Count me in / Thoughts | Reactions |
 | [Name] loved your moment. / [Name] and N others loved your moment. | The Love this notification, at most one per moment per day |
 | Add a thought / Keep going | Comment / quick starter |

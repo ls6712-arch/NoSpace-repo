@@ -78,8 +78,6 @@ type Loaded = {
  * everyday Shelf (see You.tsx's Fix 4) — a place worth opening deliberately,
  * not a section scrolled past on every visit.
  */
-// TODO(decision: D7): "Scrapbook" is a named concept outside the five product
-// nouns. Hide, rename, or keep? Waiting on the founder.
 export function Studio() {
   const { username } = useParams();
   const navigate = useNavigate();

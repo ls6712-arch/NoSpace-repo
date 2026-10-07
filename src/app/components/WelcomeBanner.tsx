@@ -42,10 +42,10 @@ export function WelcomeBanner() {
         <div className="min-w-0 flex-1">
           <p className="ns-section-kicker text-gold-text">Welcome to {APP_NAME}</p>
           <h2 className="mt-2 text-title leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-            Your Contact sheet and your Shelf
+            Your Home and your Shelf
           </h2>
           <p className="mt-3 max-w-2xl text-small leading-relaxed text-muted-foreground">
-            Your Contact sheet shows Moments from the people and Spaces you follow.
+            Home shows Moments from the people and Spaces you follow.
             Your Shelf holds everything you have logged.
           </p>
         </div>

@@ -67,7 +67,7 @@ export function ProfileSection() {
     <section>
       <SectionHeader n={2} eyebrow="PROFILE" title="Profile" />
       <p className="mb-4 text-small text-muted-foreground">
-        What people see on your Shelf, your Scrapbook, and anywhere you show up.
+        What people see on your Shelf and anywhere you show up.
       </p>
 
       {showEmailPrefixPrompt && <EmailPrefixPrompt userId={user.id} emailPrefix={emailPrefix} />}

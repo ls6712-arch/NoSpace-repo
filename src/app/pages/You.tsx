@@ -1,3 +1,4 @@
+import { extraConceptsEnabled } from "../config";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import * as Icons from "lucide-react";
@@ -244,6 +245,8 @@ export function You() {
                 >
                   Share
                 </button>
+                {extraConceptsEnabled && (
+                  <>
                 <span className="text-muted-foreground/50" aria-hidden="true">·</span>
                 <Link
                   to="/studio"
@@ -251,6 +254,8 @@ export function You() {
                 >
                   Public Scrapbook ↗
                 </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

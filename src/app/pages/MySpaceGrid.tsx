@@ -1,3 +1,4 @@
+import { extraConceptsEnabled } from "../config";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
@@ -63,8 +64,6 @@ function greeting(name: string): string {
  * flagged as a deliberate deviation rather than doubling up on navigation
  * chrome.
  */
-// TODO(decision: D7): "Today’s sheet" / "Contact sheet" are named concepts
-// outside the five product nouns. Hide, rename, or keep? Waiting on the founder.
 export function MySpaceGrid() {
   const { user, profile } = useAuth();
   const { publicFeed, posts, myPosts, postsStatus, reloadPosts } = useContent();
@@ -237,7 +236,7 @@ export function MySpaceGrid() {
             <p className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
               {numeral}
             </p>
-            <p className="ns-section-kicker text-muted-foreground">Today’s sheet</p>
+            {extraConceptsEnabled && <p className="ns-section-kicker text-muted-foreground">Today’s sheet</p>}
           </div>
         </div>
         <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
@@ -264,13 +263,13 @@ export function MySpaceGrid() {
                   size="page"
                   icon={<Sparkles />}
                   line="Nothing here yet."
-                  hint="Log your first Moment, then join a Space or follow a person to fill your Contact sheet."
+                  hint="Log your first Moment, then follow a person or join a Space to see their Moments here."
                   action={{ label: "Log a Moment", to: "/create" }}
                 />
               ) : (
                 <EmptyState
                   line="Nothing here yet."
-                  hint="Join a Space or follow a person to start your Contact sheet."
+                  hint="Follow a person or join a Space to see their Moments here."
                   action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }}
                 />
               )
@@ -302,7 +301,7 @@ export function MySpaceGrid() {
 
           {sheet.length > 0 && (
             <div className="mt-6 rounded-card border-t border-border pt-4">
-              <p className="ns-section-kicker text-muted-foreground">End of the sheet</p>
+              {extraConceptsEnabled && <p className="ns-section-kicker text-muted-foreground">End of the sheet</p>}
               <p className="mt-1 text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 You’re caught up
               </p>

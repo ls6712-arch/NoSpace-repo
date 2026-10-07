@@ -85,8 +85,8 @@ export function HobbyArchive() {
   if (isConfigured && !user) {
     return (
       <SignUpPrompt
-        title="This is where your books live"
-        body="Every hobby you log gets a book here, holding every photo, video and note you’ve put in it. Make an account and yours starts filling up."
+        title="Your Moments by Corner"
+        body="Every Corner you post in shows its photos, videos and notes here. Make an account and yours starts filling up."
         cta="Start my Shelf"
       />
     );
@@ -100,7 +100,7 @@ export function HobbyArchive() {
             No such hobby
           </h1>
           <p className="mb-6 text-small text-muted-foreground">
-            That Book isn’t on your Shelf.
+            That Corner isn’t on your Shelf.
           </p>
           <Link to="/you">
             <Button variant="outline">Back to your Shelf</Button>
@@ -293,7 +293,7 @@ export function HobbyArchive() {
             </div>
             <div className="rounded-card border border-border bg-card p-5">
               <h2 className="mb-2 text-body" style={{ fontFamily: "var(--font-serif)" }}>
-                This book
+                This Corner
               </h2>
               <dl className="grid gap-1.5 text-small">
                 <div className="flex justify-between gap-3">

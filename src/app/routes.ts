@@ -5,7 +5,7 @@
 // based routing ("#/space/crafting") works identically under file://, a
 // plain static host, or the published Artifact page.
 import { createHashRouter, redirect } from "react-router";
-import { marketplaceEnabled } from "./config";
+import { extraConceptsEnabled, marketplaceEnabled } from "./config";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
@@ -119,8 +119,12 @@ export const router = createHashRouter([
       // inside whatever grid it's already sitting in.
       { path: "moment/:id", Component: MomentPage },
       { path: "u/:username", Component: PublicProfile },
-      { path: "u/:username/studio", Component: Studio },
-      { path: "studio", Component: Studio },
+      {
+        path: "u/:username/studio",
+        loader: ({ params }) => (extraConceptsEnabled ? null : redirect(`/u/${params.username}`)),
+        Component: Studio,
+      },
+      { path: "studio", loader: () => (extraConceptsEnabled ? null : redirect("/you")), Component: Studio },
       { path: "login", Component: Login },
       // Landing page spec §2.5. Not /privacy — that path already renders
       // the signed-in Settings > Privacy page (PrivacySettingsPage above).

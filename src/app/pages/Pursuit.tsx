@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { PursuitShareDialog } from "../components/PursuitShareDialog";
 import { useContent } from "../context/ContentContext";
-import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { subHobbyLabel } from "../data/hobbies";
 import { seedPosts, Post } from "../data/posts";
 import {
   CHECK_IN_OPTIONS,

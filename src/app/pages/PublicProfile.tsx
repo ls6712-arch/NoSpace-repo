@@ -1,3 +1,4 @@
+import { extraConceptsEnabled } from "../config";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { ArrowRight, MessageCircle, Plus, Share2 } from "lucide-react";
@@ -481,12 +482,14 @@ export function PublicProfile() {
                 <CopyLinkButton />
                 {!isMe && user && <PersonActionsMenu personId={personId} personName={displayName} onBlocked={() => navigate("/discover")} />}
               </div>
+              {extraConceptsEnabled && (
               <Link
                 to={`/u/${username}/studio`}
                 className="mt-2 inline-block text-caption text-muted-foreground transition-colors hover:text-foreground"
               >
                 Open Scrapbook →
               </Link>
+              )}
             </div>
         </div>
 

@@ -18,3 +18,10 @@ export const APP_NAME = "Soosh";
 // Marketplace tab, /shop, /product/:id, a Space's studio booking) stays
 // hidden until this flips on.
 export const marketplaceEnabled = false;
+
+// Today's sheet, Books and the Public Scrapbook are named concepts outside
+// the five product nouns (Moment, Shelf, Pursuit, Corner, Space), so they are
+// hidden for now. The code and data stay; flip this to bring them back.
+// While it is off: no Scrapbook links, /studio redirects to Shelf, and Home
+// shows no "Today's sheet" labels.
+export const extraConceptsEnabled = false;
