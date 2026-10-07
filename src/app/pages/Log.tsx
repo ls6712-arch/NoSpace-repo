@@ -334,8 +334,6 @@ export function Log() {
   const [thought, setThought] = useState("");
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
-  const [reflection, setReflection] = useState("");
-  const [reflectionOpen, setReflectionOpen] = useState(false);
   // Starts at the account's own default (Settings → Privacy → "Default
   // visibility for new Moments"), "Only you" unless changed there. Falls
   // back to private for the instant before that setting has loaded.
@@ -731,7 +729,7 @@ export function Log() {
    * function again — the exact bug that put a moment's photo into
    * private_logs three times over one upload. */
   const saveAsPrivateLog = async () => {
-    const note = [thought.trim(), progress.trim(), changed.trim(), reflection.trim()]
+    const note = [thought.trim(), progress.trim(), changed.trim()]
       .filter(Boolean)
       .join("\n\n");
     if (!note && files.length === 0) return;
@@ -871,7 +869,6 @@ export function Log() {
         files: files.length ? files : undefined,
         creator: profile?.display_name?.trim() || "You",
         caption,
-        reflection: reflection.trim() || undefined,
         visibility: audience,
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
         locationName: locationName.trim() ? locationName.trim() : undefined,
@@ -938,7 +935,6 @@ export function Log() {
     setThought("");
     setProgress("");
     setChanged("");
-    setReflection("");
     setForSale(false);
     setSaleTitle("");
     setTags([]);
@@ -949,7 +945,6 @@ export function Log() {
     setSavedAs(null);
     setSavedPostId(null);
     setMode(pursuitScoped ? "update" : null);
-    setReflectionOpen(false);
     // Without these, posting an activity with a location and then logging
     // another (plain) Moment right after silently carried both over onto
     // the new post — a pre-existing gap that location being always visible

@@ -11,11 +11,16 @@ import { APP_NAME } from "../config";
 export function PrivacyPolicy() {
   return (
     <LegalPage title="Privacy policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
+      {/* TODO(privacy: remove after reflection data deleted): drop the
+          "private reflections" sentence once 20261018000000_drop_reflections.sql
+          has run on the live project. */}
       <h2>What we collect</h2>
       <p>
         Your email, display name, and password (or your Google account, if you log in
         that way), and whatever you add to your profile. The Moments you log (photos
-        and notes), plus Thoughts, messages, and who you follow. If you
+        and notes), plus thoughts, messages, and who you follow. We may
+        also still hold private reflections you wrote before that feature was
+        removed. If you
         join the waitlist before you have an invite, we keep the email and the optional
         "what do you make?" answer you give us.
       </p>

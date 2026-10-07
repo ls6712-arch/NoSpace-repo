@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import { Post, postCorner } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { getHobby, hobbies, subHobbyLabel, titleCaseSlug } from "../data/hobbies";
-import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
 import { MOMENT_GRID, MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./MomentCard";
@@ -190,7 +189,6 @@ function CornerTile({
   /** Where this tile opens. Defaults to your own archive. */
   linkTo?: (item: HobbySession) => string;
 }) {
-  const note = useCornerNote(item.key);
 
   const tile = tileTokenFor(item.key);
 
@@ -243,9 +241,6 @@ function CornerTile({
         title={item.label}
       >
         {item.label}
-      </p>
-      <p className="mt-0.5 min-h-[1.25rem] truncate text-caption text-muted-foreground" title={note ?? undefined}>
-        {note ?? ""}
       </p>
     </Link>
   );

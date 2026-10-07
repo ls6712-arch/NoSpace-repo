@@ -48,8 +48,6 @@ export interface Post {
   mediaPaths?: string[];
   creator: string;
   caption: string;
-  /** A private reflection captured at post time — "Log, then Reflect" — never shown publicly. */
-  reflection?: string;
   likes: number;
   /** Public reaction totals (posts.love_count / posts.in_count, kept in step
    * by a trigger on public.reactions). Visible to anyone who can see the

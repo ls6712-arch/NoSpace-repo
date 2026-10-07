@@ -7,7 +7,6 @@ import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal } from "../lib/journal";
-import { setCornerNote, useCornerNote } from "../lib/cornerNotes";
 import { parseArchiveKey } from "../components/HobbyShelf";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
@@ -53,14 +52,6 @@ export function HobbyArchive() {
 
   const target = useMemo(() => parseArchiveKey(hobbyKey), [hobbyKey]);
 
-  // Same key format as the Moments tile's tally (HobbyShelf.tsx), so a note
-  // written here shows up on the right tile there. Private to this account —
-  // not CornersContext's Corner.description, which is a Corner's one shared,
-  // public line, set by whoever created it and visible to everyone.
-  const noteKey = target ? target.subSlug ?? `space:${target.hobbySlug}` : "";
-  const savedNote = useCornerNote(noteKey);
-  const [noteDraft, setNoteDraft] = useState(savedNote);
-  useEffect(() => setNoteDraft(savedNote), [noteKey]);
 
   const moments = useMemo(() => {
     if (!target) return [];
@@ -154,20 +145,6 @@ export function HobbyArchive() {
           {plural(moments.length, "Moment")} · {plural(projects.length, "Pursuit")}
           {moments.length > 0 ? ` · updated ${formatWhen(moments[0].createdAt, { ago: true })}` : ""}
         </p>
-
-        {/* A short, private note about this Corner — only you ever see it,
-            here or on its Moments tile. Saves on blur/Enter rather than
-            needing a separate edit mode; empty just clears it. */}
-        <input
-          value={noteDraft}
-          onChange={(e) => setNoteDraft(e.target.value)}
-          onBlur={() => setCornerNote(noteKey, noteDraft)}
-          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          maxLength={140}
-          placeholder="Add a short note about this Corner. Only you see it."
-          aria-label={`Your private note about ${target.label}`}
-          className="mt-3 w-full max-w-md border-b border-transparent bg-transparent text-body text-muted-foreground outline-none transition-colors focus:border-border placeholder:text-muted-foreground/60"
-        />
 
         <div className="mt-5">
           <Link to={logTo}>

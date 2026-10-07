@@ -125,7 +125,7 @@ export function LoggedNotice({
           onClick={() => setDetailsOpen(true)}
           className="text-caption text-accent hover:underline"
         >
-          Add details (Corner, location, reflection)
+          Add details (Corner, location)
         </button>
       )}
       {saved.post && (

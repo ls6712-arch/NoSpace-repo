@@ -95,7 +95,6 @@ export interface NewPostInput {
   files?: File[];
   creator: string;
   caption: string;
-  reflection?: string;
   visibility: Visibility;
   forSale?: ForSaleInput;
   /** Set when this moment is a thing happening at a time. */
@@ -239,7 +238,6 @@ interface ContentContextType {
     postId: number,
     patch: {
       caption?: string;
-      reflection?: string;
       visibility?: Visibility | "private";
       hobbySlug?: string;
       subHobby?: string;
@@ -402,29 +400,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       : { data: [] as { id: string; display_name: string }[] };
     const nameById = new Map((profilesData ?? []).map((p) => [p.id, p.display_name]));
 
-    // Your own Reflections only — a separate, owner-only table (sql/post-
-    // reflections.sql), never folded into the shared posts select above.
-    // RLS on post_reflections already caps this to `user`'s own rows even
-    // without the .eq below; the filter is kept anyway so the query reads
-    // as exactly what it is.
-    const reflectionByPostId = new Map<number, string>();
-    if (user) {
-      const { data: reflectionRows } = await supabase
-        .from("post_reflections")
-        .select("post_id, reflection")
-        .eq("user_id", user.id);
-      for (const row of reflectionRows ?? []) {
-        reflectionByPostId.set(row.post_id, row.reflection);
-      }
-    }
-
-    const mapped = data.map((row: any) => {
-      const post = rowToPost(row, nameById.get(row.user_id) ?? "Someone");
-      if (user && row.user_id === user.id) {
-        post.reflection = reflectionByPostId.get(row.id);
-      }
-      return post;
-    });
+    const mapped = data.map((row: any) => rowToPost(row, nameById.get(row.user_id) ?? "Someone"));
 
     // One batched sign call for the whole page, not one per Moment — the
     // in-memory cache in momentMedia.ts means a path already signed on a
@@ -753,16 +729,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           const signed = await signMomentPaths(newPost.mediaPaths);
           newPost = resolvePostMedia(newPost, signed);
         }
-        // A Reflection is never written to `posts` (see #86) — its own
-        // owner-only table, set right after the post exists since it needs
-        // the new row's id.
-        const trimmedReflection = input.reflection?.trim();
-        if (trimmedReflection) {
-          newPost.reflection = trimmedReflection;
-          await supabase
-            .from("post_reflections")
-            .upsert({ post_id: newPost.id, user_id: user.id, reflection: trimmedReflection });
-        }
         // A sale listing is tracked separately from the post row; without
         // this, a real post never knew it was for sale and the buy link
         // disappeared the moment the page reloaded.
@@ -803,7 +769,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       mediaUrls: localMediaUrls.length ? localMediaUrls : undefined,
       creator: input.creator || "You",
       caption: input.caption,
-      reflection: input.reflection?.trim() ? input.reflection.trim() : undefined,
       likes: 0,
       createdAt: Date.now(),
       visibility: input.visibility,
@@ -854,10 +819,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           ? {
               ...p,
               caption: patch.caption ?? p.caption,
-              reflection:
-                patch.reflection === undefined
-                  ? p.reflection
-                  : patch.reflection.trim() || undefined,
               // "private" isn't in the Visibility type yet (see lib/visibility.ts's
               // isOnlyYou) even though the live posts.visibility column already
               // allows it — same tolerance rowToPost's own `row.visibility`
@@ -893,9 +854,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         postsPatch.media_urls = null;
       }
 
-      // A no-op `.update({})` (only the Reflection changed) is skipped
-      // entirely — Reflection never touches `posts` at all (see #86), and
-      // an empty patch object is nothing worth sending.
+      // An empty patch object is nothing worth sending.
       if (Object.keys(postsPatch).length > 0) {
         const { data, error } = await supabase
           .from("posts")
@@ -905,19 +864,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         if (error || !data || data.length === 0) return false;
       }
 
-      if (patch.reflection !== undefined) {
-        const trimmed = patch.reflection.trim();
-        const { error: reflectionError } = trimmed
-          ? await supabase
-              .from("post_reflections")
-              .upsert({ post_id: postId, user_id: user.id, reflection: trimmed })
-          : await supabase
-              .from("post_reflections")
-              .delete()
-              .eq("post_id", postId)
-              .eq("user_id", user.id);
-        if (reflectionError) return false;
-      }
     }
 
     setRealPosts(apply);
