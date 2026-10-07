@@ -259,6 +259,8 @@ function CornerTile({
  * since its whole point is to browse by the more specific thing rather
  * than re-derive the Space hierarchy a click away on every other tab.
  */
+// TODO(decision: D7): "Book" is a named concept outside the five product
+// nouns. Hide, rename, or keep? Waiting on the founder.
 export function HobbyShelf({
   items: override,
   linkTo,

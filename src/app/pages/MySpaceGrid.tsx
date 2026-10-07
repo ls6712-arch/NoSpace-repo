@@ -63,6 +63,8 @@ function greeting(name: string): string {
  * flagged as a deliberate deviation rather than doubling up on navigation
  * chrome.
  */
+// TODO(decision: D7): "Today’s sheet" / "Contact sheet" are named concepts
+// outside the five product nouns. Hide, rename, or keep? Waiting on the founder.
 export function MySpaceGrid() {
   const { user, profile } = useAuth();
   const { publicFeed, posts, myPosts, postsStatus, reloadPosts } = useContent();

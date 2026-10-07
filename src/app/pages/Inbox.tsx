@@ -14,6 +14,7 @@ import { EmptyState } from "../components/StateViews";
 import { notifyError } from "../components/ui/toaster";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { notificationText } from "../lib/text";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Inbox: everything addressed to you, in one place.
@@ -39,15 +40,6 @@ function initials(name: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-}
-
-function ago(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  return `${Math.floor(hrs / 24)}d`;
 }
 
 export function Inbox() {
@@ -203,7 +195,7 @@ export function Inbox() {
                     </strong>
                     {notificationText(n.body)}
                     <span className="ml-2 text-caption text-muted-foreground">
-                      {ago(n.createdAt)}
+                      {formatWhen(n.createdAt, { ago: true })}
                     </span>
                   </li>
                 ))}

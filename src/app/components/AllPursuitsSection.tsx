@@ -7,6 +7,7 @@ import { startedLabel } from "../lib/pursuitTrail";
 import { formatWhen } from "../lib/dates";
 import { PursuitShareDialog } from "./PursuitShareDialog";
 import { track } from "../lib/analytics";
+import { plural } from "../lib/plural";
 
 function relative(ms: number): string {
   return formatWhen(ms, { ago: true });
@@ -227,7 +228,7 @@ export function AllPursuitsSection({
       </div>
 
       <p className="mt-3 text-caption text-muted-foreground" role="status" aria-live="polite">
-        {shownTotal} Pursuit{shownTotal === 1 ? "" : "s"}
+        {plural(shownTotal, "Pursuit")}
         {filtersApplied ? " matching" : ""}
       </p>
 
