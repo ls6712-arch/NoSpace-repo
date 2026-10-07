@@ -105,6 +105,19 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Waitlist / You're on the list | Asking to join without an invite |
 | Welcome to Soosh | The inviter's button on "[Name] added their first moment": opens it with the reply box ready |
 
+## Landing page
+
+| Term | Meaning |
+|---|---|
+| Invite-only for now | Eyebrow above the hero headline, and the waitlist section's kicker |
+| A place for everything you do and make. | Hero headline |
+| I have an invite | Secondary hero button / waitlist-section button, both going to sign-in |
+| Soosh is for people 16 and older. | Age-eligibility line (hero, footer) — read the app name from `APP_NAME`, never hardcode it |
+| Choose who sees it / Keep going with a Pursuit | Landing-page value-card titles (the third, "Log a Moment," reuses the existing term above) |
+| Find your people, or just your thing. | "Spaces and Corners" section heading |
+| Share what you want, with who you want, or with no one. | Statement band, replacing the old "no feed algorithm / no streaks" quote |
+| Terms / Privacy Policy / Contact | Footer links and the waitlist form's consent line |
+
 ## Saving, states and confirmations
 
 All of these live in `src/app/lib/stateCopy.ts`; use them from there.

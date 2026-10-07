@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router";
 import { joinWaitlist } from "../lib/invites";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -77,6 +78,17 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
         />
       </div>
       {error && <p className="text-caption text-destructive">{error}</p>}
+      <p className="text-caption text-muted-foreground">
+        By joining, you agree to the{" "}
+        <Link to="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+          Privacy Policy
+        </Link>
+        .
+      </p>
       <Button busy={submitting} type="submit" variant="outline" className="w-full" disabled={submitting || !email.trim()}>
         Join the waitlist
       </Button>
