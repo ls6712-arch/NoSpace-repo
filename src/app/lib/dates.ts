@@ -3,7 +3,7 @@
  * these so a date reads the same everywhere:
  *
  * - Past, under 7 days: relative and short — "now", "5m", "3h", "3d"
- *   (or "just now", "5m ago" … with `{ ago: true }` inside a sentence).
+ *   (or "just now", "5m ago", "Yesterday" with `{ ago: true }` inside a sentence).
  * - Otherwise: "Sep 24", with the year only when it isn't this year
  *   ("Sep 24, 2025").
  * - Ranges use "to": "Oct 1 to 5", "Sep 28 to Oct 3".
@@ -101,6 +101,7 @@ export function formatWhen(input: DateInput, opts: WhenOptions = {}): string {
   if (diff < MINUTE) return opts.ago ? "just now" : "now";
   if (diff < HOUR) return `${Math.floor(diff / MINUTE)}m${ago}`;
   if (diff < DAY) return `${Math.floor(diff / HOUR)}h${ago}`;
+  if (opts.ago && diff < 2 * DAY) return "Yesterday";
   return `${Math.floor(diff / DAY)}d${ago}`;
 }
 

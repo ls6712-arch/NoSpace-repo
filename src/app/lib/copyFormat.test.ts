@@ -8,6 +8,12 @@ describe("plural", () => {
     expect(plural(1, "Moment")).toBe("1 Moment");
     expect(plural(2, "Moment")).toBe("2 Moments");
   });
+  it("handles irregular units", () => {
+    expect(plural(1, "loaf", "loaves")).toBe("1 loaf");
+    expect(plural(2, "loaf", "loaves")).toBe("2 loaves");
+    expect(plural(0.5, "loaf", "loaves")).toBe("0.5 loaves");
+    expect(plural(1, "knife", "knives")).toBe("1 knife");
+  });
   it("takes an irregular plural", () => {
     expect(plural(1, "person", "people")).toBe("1 person");
     expect(plural(5, "person", "people")).toBe("5 people");
@@ -36,6 +42,10 @@ describe("formatWhen", () => {
   it("reads inside a sentence with ago", () => {
     expect(formatWhen(NOW - 10_000, { now: NOW, ago: true })).toBe("just now");
     expect(formatWhen(at(2026, 9, 29), { now: NOW, ago: true })).toBe("3d ago");
+  });
+  it("says Yesterday for the day before inside a sentence", () => {
+    expect(formatWhen(NOW - 26 * 3_600_000, { now: NOW, ago: true })).toBe("Yesterday");
+    expect(formatWhen(NOW - 26 * 3_600_000, { now: NOW })).toBe("1d");
   });
   it("switches to a date at 7 days, with the year only if not this year", () => {
     expect(formatWhen(at(2026, 9, 24), { now: NOW })).toBe("Sep 24");

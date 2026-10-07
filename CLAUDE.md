@@ -27,6 +27,16 @@ These apply to every session working in this repo, not just Spaces-related work.
 - Any **new notification kind** must be added to `enforce_notification_insert`'s allowed-kinds list, in a new migration (see the git rule above — that function has already run live, so it's always a new migration, never an edit to the one that defined it).
 - **Notification bodies must stay under `enforce_notification_insert`'s 300-char cap.** When a body embeds a person's name or a title, truncate defensively: `left(name, 60)` for a person's name, `left(title, 150)`–`left(title, 200)` for a title, even if the source column's own constraint seems to already bound it — the cap is a trigger-level invariant that shouldn't depend on some other table's `CHECK` constraint never changing.
 
+## Copy and style
+
+- **Every change to user-facing text follows `docs/style-guide.md`.** It is checked by `src/app/lib/copyRules.test.ts`, so a violation fails `npm test`.
+- **The only five product nouns** (always capitalized, nothing else gets a capitalized name): **Moment, Shelf, Pursuit, Corner, Space.**
+- **The three hardest rules, always in force:**
+  1. **No em or en dashes** in any string (use a period, comma, colon, or "to").
+  2. **Sentence case** for every label, button, tab, header and title. No ALL CAPS.
+  3. **Shared helpers only:** `plural()` (`src/app/lib/plural.ts`) for every count, `src/app/lib/dates.ts` for every date or time. Never hand-build "N followers" or "3d ago".
+- Dropped language that must not appear: reflection, private note, journal, diary, habit, streak, "not ranked", "non-metric", "never scored".
+
 ## Product terminology
 
 - **All UI copy must follow `docs/glossary.md`: one word per idea, one idea per word; never use a retired term.**
