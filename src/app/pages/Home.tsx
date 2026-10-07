@@ -168,6 +168,7 @@ export function Home() {
 
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-12 sm:px-8 lg:px-12 lg:pb-20 xl:px-16">
           <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform -mx-5 sm:mx-0">
+            {/* design-token-ignore: bundled hero art with srcSet, which ImageWithFallback does not take */}
             <img
               src={heroSooshImg}
               srcSet={`${heroSoosh1000Img} 1000w, ${heroSooshImg} 1942w`}

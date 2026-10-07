@@ -306,6 +306,7 @@ function AllCornersBrowser({ query }: { query: string }) {
           style={{ "--corner-color": cornerColorFor(`${c.spaceSlug}-${c.slug}`), animationDelay: `${Math.min(i, 11) * 0.03}s` } as CSSProperties}
         >
           <span
+            // design-token-ignore: Corner name tile, sits between the title and display sizes
             className="text-[24px] font-semibold leading-tight text-[var(--corner-color)] transition-transform duration-base ease-standard group-hover:scale-105 sm:text-[32px]"
             style={{ fontFamily: "var(--font-serif)" }}
           >
