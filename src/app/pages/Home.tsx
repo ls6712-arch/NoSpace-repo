@@ -73,7 +73,7 @@ const VALUE_CARDS = [
   {
     icon: Eye,
     title: "Choose who sees it",
-    copy: "Just you, your followers, a Space, or everyone. You pick each time.",
+    copy: "Just you, your followers, or everyone. You pick each time.",
   },
   {
     icon: Target,
@@ -84,8 +84,8 @@ const VALUE_CARDS = [
 
 const LOOP_STEPS = [
   { n: "01", label: "Create", desc: "Log a Moment right when it happens. A photo, a note, a small update." },
-  { n: "02", label: "Reflect", desc: "Add a private note only you can see. Never shown, never scored." },
-  { n: "03", label: "Share", desc: "Just you, your followers, a Space, or everyone. Chosen right when you write it." },
+  { n: "02", label: "Reflect", desc: "Add a private note only you can see." },
+  { n: "03", label: "Share", desc: "Just you, your followers, or everyone. Chosen right when you write it." },
 ];
 
 export function Home() {
@@ -211,12 +211,12 @@ export function Home() {
               <div className="mx-auto max-w-lg lg:mx-0">
                 <div className="ns-section-kicker mb-4">THE LOOP</div>
                 <h2 className="mb-5 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-                  Ten seconds to log. A lifetime to look back on.
+                  Log a Moment in seconds.
                 </h2>
                 <p className="max-w-md text-body leading-relaxed text-muted-foreground">
-                  Take a photo, write a quick note, or add a reflection nobody
-                  else will ever see. Every Moment adds to your Shelf, the
-                  full record of what you’ve actually done.
+                  Take a photo, write a quick note, or add a private reflection.
+                  Every Moment adds to your Shelf, the full record of what
+                  you’ve done.
                 </p>
               </div>
               <div className="ns-paper-panel ns-process-panel">
@@ -240,30 +240,21 @@ export function Home() {
         {/* Spaces and Corners */}
         <section ref={spacesRef} className="ns-reveal border-t border-[var(--hairline)] py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-            <div className="grid items-center gap-10 md:grid-cols-2 md:gap-20">
-              <div className="mx-auto max-w-lg lg:mx-0">
+            <div>
+              <div className="mx-auto max-w-lg text-center">
                 <div className="ns-section-kicker mb-4">SPACES AND CORNERS</div>
                 <h2 className="mb-5 text-display" style={{ fontFamily: "var(--font-serif)" }}>
                   Find your people, or just your thing.
                 </h2>
-                <p className="max-w-md text-body leading-relaxed text-muted-foreground">
+                <p className="mx-auto max-w-md text-body leading-relaxed text-muted-foreground">
                   Join a Space run by someone who cares about the same thing.
                   Tag a Moment with a Corner, like Pottery or Pickleball, so
                   it's easy to find.
                 </p>
               </div>
-              {/* TODO(landing page spec §2.4): Sush is supplying a real
-                  screenshot of a Space page (phone width, 390x844, sample
-                  content) to drop in here — placeholder until then. */}
-              <div className="mx-auto flex aspect-[390/844] w-full max-w-[280px] items-center justify-center rounded-card border border-dashed border-[var(--hairline)] bg-surface-muted p-6 text-center text-caption text-muted-foreground">
-                Space screenshot goes here (390×844)
-              </div>
             </div>
           </div>
         </section>
-
-        {/* Whatever pulls you in */}
-        <WorldsSection />
 
         {/* Statement band */}
         <section ref={statementRef} className="ns-reveal py-12 [background:var(--atmo-wine)] lg:py-section-hero">
@@ -337,25 +328,24 @@ export function Home() {
               One place for everything you’re living, doing, and making.
             </p>
           </div>
-          {signedOut ? (
-            // Fix: these used to be Discover/Home/Log a Moment links shown
-            // to signed-out visitors too — but Root.tsx's PUBLIC_PATHS
-            // bounces a signed-out visit to any of those straight back to
-            // "/", so they were dead links for everyone except members.
-            <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">
-              <Link to="/terms" className="hover:text-foreground">Terms</Link>
-              <Link to="/privacy-policy" className="hover:text-foreground">Privacy Policy</Link>
-              {/* TODO(landing page spec §2.7, §10.5): placeholder address —
-                  needs a real contact email before launch. */}
-              <a href="mailto:hello@example.com" className="hover:text-foreground">Contact</a>
-            </nav>
-          ) : (
+          <div className="flex flex-col items-center gap-3 sm:items-end">
+          {/* Product links only for members: Root.tsx's PUBLIC_PATHS bounces a
+              signed-out visit to Discover/Home/Log a Moment back to "/". */}
+          {!signedOut && (
             <nav aria-label="Product" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">
               <Link to="/discover" className="hover:text-foreground">Discover</Link>
               <Link to="/my-space" className="hover:text-foreground">Home</Link>
               <Link to="/create" className="hover:text-foreground">Log a Moment</Link>
             </nav>
           )}
+          <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">
+            <Link to="/terms" className="hover:text-foreground">Terms</Link>
+            <Link to="/privacy-policy" className="hover:text-foreground">Privacy Policy</Link>
+            {/* TODO(landing page spec §2.7, §10.5): placeholder address —
+                needs a real contact email before launch. */}
+            <a href="mailto:hello@example.com" className="hover:text-foreground">Contact</a>
+          </nav>
+          </div>
         </div>
         <p className="mt-8 text-center text-caption text-muted-foreground">
           {APP_NAME} is for people 16 and older. © {new Date().getFullYear()} {APP_NAME}.

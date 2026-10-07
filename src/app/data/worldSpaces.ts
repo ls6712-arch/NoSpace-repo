@@ -42,7 +42,7 @@ export const WORLD_SPACES: WorldSpace[] = [
   {
     slug: "sculpture",
     name: "Sculpture",
-    description: "Shaping something out of what used to be just material.",
+    description: "Carving, welding, or building up a form, then walking around it.",
     illustration: "sculpture",
     accent: "var(--plum)",
     to: "/space/art-creative",
@@ -90,7 +90,7 @@ export const WORLD_SPACES: WorldSpace[] = [
   {
     slug: "pottery",
     name: "Pottery",
-    description: "A shape emerging out of clay that was formless a minute ago.",
+    description: "Throwing a bowl on the wheel, then trimming it before the kiln.",
     illustration: "pottery",
     accent: "var(--coral-deep)",
     to: "/space/crafts-making",
