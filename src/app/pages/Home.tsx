@@ -1,6 +1,6 @@
 import { useEffect, useRef, type MouseEvent } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Camera, Eye, Target } from "lucide-react";
+import { Camera, LayoutGrid, Share2 } from "lucide-react";
 import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
@@ -64,87 +64,54 @@ function useHeroParallax() {
   return ref;
 }
 
-const VALUE_CARDS = [
-  {
-    icon: Camera,
-    title: "Log a Moment",
-    copy: "A photo, a note, a small win. Log it when it happens.",
-  },
-  {
-    icon: Eye,
-    title: "Choose who sees it",
-    copy: "Just you, your followers, or everyone. You pick each time.",
-  },
-  {
-    icon: Target,
-    title: "Keep going with a Pursuit",
-    copy: "Follow something you’re working toward, on your own or with friends.",
-  },
-];
-
-const LOOP_STEPS = [
-  { n: "01", label: "Create", desc: "Log a Moment right when it happens. A photo, a note, a small update." },
-  { n: "02", label: "Reflect", desc: "Add a private note only you can see." },
-  { n: "03", label: "Share", desc: "Just you, your followers, or everyone. Chosen right when you write it." },
+const HOW_IT_WORKS = [
+  { icon: Camera, title: "Post a Moment", copy: "A photo, a video or a link." },
+  { icon: LayoutGrid, title: "It goes on your Shelf", copy: "Every Moment is added to your Shelf, grouped by Corner." },
+  { icon: Share2, title: "Share your Shelf anywhere", copy: "Send anyone your public link. Only members can follow and react." },
 ];
 
 export function Home() {
   const heroRef = useHeroParallax();
-  // Step 2 (invite-only sign-up): a signed-out visitor gets the waitlist
-  // instead of a "sign up" button here — the two CTAs below (hero, final)
-  // are the "invites strangers to sign up" copy the brief calls out.
-  // Anyone signed in (active or pending — Root.tsx already routes a
-  // pending account to /welcome before this page ever renders) still sees
-  // the normal "Begin your story" link into the composer.
+  // Invite-only sign-up: a signed-out visitor gets the waitlist form instead
+  // of a sign-up button. Anyone signed in (Root.tsx already routes a pending
+  // account to /welcome before this page renders) gets a link into the
+  // composer instead.
   const { user } = useAuth();
   const signedOut = !user;
 
-  // One below the hero, in the order they appear — the entire page reads as
-  // one continuous unfolding story rather than five separately-loaded
-  // sections (see useScrollReveal.ts).
-  const valueCardsRef = useScrollReveal<HTMLDivElement>();
-  const loopRef = useScrollReveal<HTMLElement>();
-  const spacesRef = useScrollReveal<HTMLElement>();
-  const statementRef = useScrollReveal<HTMLElement>();
+  const howRef = useScrollReveal<HTMLElement>();
+  const pursuitsRef = useScrollReveal<HTMLElement>();
+  const friendsRef = useScrollReveal<HTMLElement>();
   const finalCtaRef = useScrollReveal<HTMLElement>();
 
   const scrollToWaitlist = (e: MouseEvent) => {
-    // Same reasoning as "See how it works" below: a plain href="#waitlist"
-    // would set location.hash, which the HashRouter reads as a navigation
-    // to path "/waitlist" — a route that doesn't exist — instead of
-    // scrolling. Scroll manually and skip that.
+    // A plain href="#waitlist" would set location.hash, which the HashRouter
+    // reads as a navigation to a route that doesn't exist. Scroll manually.
     e.preventDefault();
     document.getElementById("waitlist")?.scrollIntoView({ behavior: scrollBehavior() });
   };
 
   return (
     <div className="min-h-viewport">
-      {/* Hero */}
+      {/* 1. Hero */}
       <section className="ns-home-hero relative isolate overflow-hidden">
         <div className="mx-auto w-full max-w-[1200px] px-5 pb-12 pt-12 text-center sm:px-8 sm:pt-16 lg:pb-16 lg:pt-20">
-          <div className="ns-hero-eyebrow ns-enter ns-enter-1 mx-auto mb-7 lg:mb-8">
-            <span className="animate-pulse-soft size-1.5 bg-[var(--violet-electric)]" />
-            INVITE-ONLY FOR NOW
-          </div>
-
           <h1
             className="ns-enter ns-enter-1 mb-5 text-hero font-semibold leading-[.98] tracking-[-0.035em] text-balance text-foreground"
             style={{ fontFamily: "var(--font-serif)" }}
           >
-            A place for everything you do and make.
+            Everything you do outside work, in one place.
           </h1>
 
-          <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-lg text-body leading-relaxed text-foreground/90 sm:text-lead">
-            {APP_NAME} is a place for everything you do, make, and try. Keep it to
-            yourself, share it with a few people, or show everyone.
+          <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-xl text-body leading-relaxed text-foreground/90 sm:text-lead">
+            {APP_NAME} is a portfolio for what you make, learn and do. Post it as it happens, share your Shelf, see what your friends are up to.
           </p>
 
           <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-2.5">
             {!signedOut && (
               <Link to="/create">
                 <Button variant="coral" size="lg">
-                  Begin your story
-                  <ArrowRight className="size-4" />
+                  Log a Moment
                 </Button>
               </Link>
             )}
@@ -152,7 +119,7 @@ export function Home() {
               <>
                 <a href="#waitlist" onClick={scrollToWaitlist}>
                   <Button variant="coral" size="lg">
-                    Join the waitlist
+                    Request an invite
                   </Button>
                 </a>
                 <Link to="/login" className="ns-hero-secondary-link">
@@ -166,6 +133,10 @@ export function Home() {
           </p>
         </div>
 
+        {/* TODO(landing page 3b): the spec wants a real, full Shelf screenshot
+            here showing range (bread, a GitHub project, a race, film
+            photos). None exists yet, so the existing illustration stays
+            until one is supplied. */}
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-12 sm:px-8 lg:px-12 lg:pb-20 xl:px-16">
           <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform -mx-5 sm:mx-0">
             {/* design-token-ignore: bundled hero art with srcSet, which ImageWithFallback does not take */}
@@ -188,11 +159,14 @@ export function Home() {
       </section>
 
       <div className="bg-surface">
-        {/* Three value cards — what you actually come here to do. */}
-        <section className="pb-4 pt-12 lg:pb-8 lg:pt-12">
+        {/* 2. How it works */}
+        <section id="how" ref={howRef} className="ns-reveal pb-4 pt-12 lg:pb-8 lg:pt-16">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-            <div ref={valueCardsRef} className="ns-reveal grid gap-4 sm:grid-cols-3">
-              {VALUE_CARDS.map(({ icon: Icon, title, copy }) => (
+            <h2 className="mb-8 text-center text-display" style={{ fontFamily: "var(--font-serif)" }}>
+              How it works
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {HOW_IT_WORKS.map(({ icon: Icon, title, copy }) => (
                 <div key={title} className="ns-value-card rounded-card p-6">
                   <span className="ns-value-card-icon mb-5 flex size-11 items-center justify-center rounded-full bg-surface-muted">
                     <Icon className="size-5 text-foreground" strokeWidth={1.7} />
@@ -205,83 +179,49 @@ export function Home() {
           </div>
         </section>
 
-        {/* The Loop */}
-        <section id="loop" ref={loopRef} className="ns-reveal py-12 lg:py-section-hero">
-          <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-            <div className="grid items-center gap-10 md:grid-cols-2 md:gap-20">
-              <div className="mx-auto max-w-lg lg:mx-0">
-                <div className="ns-section-kicker mb-4">THE LOOP</div>
-                <h2 className="mb-5 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-                  Log a Moment in seconds.
-                </h2>
-                <p className="max-w-md text-body leading-relaxed text-muted-foreground">
-                  Take a photo, write a quick note, or add a private reflection.
-                  Every Moment adds to your Shelf, the full record of what
-                  you’ve done.
-                </p>
-              </div>
-              <div className="ns-paper-panel ns-process-panel">
-                {LOOP_STEPS.map((step) => (
-                  <div key={step.n} className="ns-process-step">
-                    <span className="font-hud text-caption text-[var(--violet-electric-bright)]">{step.n}</span>
-                    <div>
-                      <div className="mb-0.5 text-lead" style={{ fontFamily: "var(--font-serif)" }}>{step.label}</div>
-                      <div className="text-caption leading-relaxed text-muted-foreground">{step.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Whatever pulls you in */}
+        {/* 3. Corners */}
         <WorldsSection />
 
-        {/* Spaces and Corners */}
-        <section ref={spacesRef} className="ns-reveal border-t border-[var(--hairline)] py-12 lg:py-section-hero">
-          <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-            <div>
-              <div className="mx-auto max-w-lg text-center">
-                <div className="ns-section-kicker mb-4">SPACES AND CORNERS</div>
-                <h2 className="mb-5 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-                  Find your people, or just your thing.
-                </h2>
-                <p className="mx-auto max-w-md text-body leading-relaxed text-muted-foreground">
-                  Join a Space run by someone who cares about the same thing.
-                  Tag a Moment with a Corner, like Pottery or Pickleball, so
-                  it’s easy to find.
-                </p>
-              </div>
-            </div>
+        {/* 4. Pursuits */}
+        <section ref={pursuitsRef} className="ns-reveal border-t border-[var(--hairline)] py-12 lg:py-section-hero">
+          <div className="mx-auto max-w-xl px-5 text-center sm:px-8">
+            <h2 className="mb-4 text-display" style={{ fontFamily: "var(--font-serif)" }}>
+              Show what you’re working toward.
+            </h2>
+            <p className="text-body leading-relaxed text-muted-foreground">
+              Start a Pursuit with a goal you can count, like 10 loaves or 5 paintings. Log Moments toward it and its progress shows on your Shelf.
+            </p>
+            {/* TODO(landing page 3b §4): add one screenshot of a Pursuit on a
+                Shelf here once a real one exists. */}
           </div>
         </section>
 
-        {/* Statement band */}
-        <section ref={statementRef} className="ns-reveal py-12 [background:var(--atmo-wine)] lg:py-section-hero">
-          <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
-            <p className="text-title leading-snug text-foreground md:text-display" style={{ fontFamily: "var(--font-serif)" }}>
-              Share what you want, with who you want, or with no one.
+        {/* 5. Friends and Spaces */}
+        <section ref={friendsRef} className="ns-reveal border-t border-[var(--hairline)] py-12 lg:py-section-hero">
+          <div className="mx-auto max-w-xl px-5 text-center sm:px-8">
+            <h2 className="mb-4 text-display" style={{ fontFamily: "var(--font-serif)" }}>
+              See what your friends are making.
+            </h2>
+            <p className="text-body leading-relaxed text-muted-foreground">
+              Follow friends to see their Moments on Home. Join a Space to find a group around something you do.
             </p>
           </div>
         </section>
 
-        {/* Get in */}
+        {/* 6. Invite ask */}
         <section id="waitlist" ref={finalCtaRef} className="ns-reveal py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[900px] px-5 sm:px-8">
             <div className="ns-invitation">
               <div className="ns-invitation-spark" aria-hidden="true">✦</div>
               <div className="text-center">
-                <div className="ns-section-kicker mb-5">INVITE-ONLY FOR NOW</div>
                 <h2 className="mb-3 text-display leading-[1.02]" style={{ fontFamily: "var(--font-serif)" }}>
-                  {APP_NAME} is invite-only for now.
+                  {APP_NAME} is invite only for now.
                 </h2>
               </div>
               {signedOut ? (
                 <>
                   <p className="mx-auto mb-8 max-w-md text-center leading-relaxed text-muted-foreground">
-                    Members invite people they know. No invite? Join the waitlist
-                    and tell us what you make.
+                    Members invite people they know. No invite? Request one and tell us what you make.
                   </p>
                   <div className="grid gap-10 md:grid-cols-2">
                     <div className="mx-auto w-full max-w-xs text-left">
@@ -304,14 +244,9 @@ export function Home() {
                 </>
               ) : (
                 <div className="mx-auto max-w-md text-center">
-                  <p className="mb-8 leading-relaxed text-muted-foreground">
-                    Share only the Moments you choose, with exactly the people
-                    you choose.
-                  </p>
                   <Link to="/create">
                     <Button variant="brand" size="lg">
-                      Begin your story
-                      <ArrowRight className="size-4" />
+                      Log a Moment
                     </Button>
                   </Link>
                 </div>
