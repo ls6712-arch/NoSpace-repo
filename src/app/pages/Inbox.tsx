@@ -87,7 +87,7 @@ export function Inbox() {
           Inbox
         </h1>
         <p className="mb-8 mt-2 text-small text-muted-foreground">
-          Everything addressed to you. Nothing here takes effect until you answer it.
+          Requests and notifications for you.
         </p>
 
         <Tabs defaultValue={requestCount > 0 ? "requests" : "activity"}>
@@ -190,9 +190,11 @@ export function Inbox() {
                     }`}
                   >
                     {!n.read && <span className="sr-only">Unread. </span>}
-                    <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
-                      {n.actorName ?? "Someone"}{" "}
-                    </strong>
+                    {!(n.actorName && n.body.startsWith(n.actorName)) && (
+                      <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+                        {n.actorName ?? "Someone"}{" "}
+                      </strong>
+                    )}
                     {notificationText(n.body)}
                     <span className="ml-2 text-caption text-muted-foreground">
                       {formatWhen(n.createdAt, { ago: true })}

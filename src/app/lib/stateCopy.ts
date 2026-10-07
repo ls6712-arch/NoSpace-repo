@@ -7,11 +7,11 @@
  */
 
 /** Busy label inside a button while its save is in flight. */
-export const BUSY_LABEL = "One sec…";
+export const BUSY_LABEL = "Working…";
 
 /** The one error tone. Shown with a TRY_AGAIN button wherever a retry is possible. */
-export const ERROR_LINE = "Something went wrong. Mind trying again?";
-export const LOAD_ERROR_LINE = "Something went wrong loading this. Mind trying again?";
+export const ERROR_LINE = "Something went wrong. Try again.";
+export const LOAD_ERROR_LINE = "Couldn’t load this. Try again.";
 export const TRY_AGAIN = "Try again";
 
 export const OFFLINE_LINE = "You’re offline. Anything you’ve typed stays put.";
