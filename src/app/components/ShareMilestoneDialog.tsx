@@ -33,7 +33,7 @@ export function ShareMilestoneDialog({
   const shared = isBadgeShared(badge.id);
   const name = badgeName(badge, hobbySlug, hobbyLabel);
   const Icon = (Icons as any)[badge.icon] ?? Icons.Sparkles;
-  const summary = `A quiet milestone reached on ${APP_NAME}: ${name}. ${badge.description}`;
+  const summary = `A milestone reached on ${APP_NAME}: ${name}. ${badge.description}`;
 
   const handleCopy = async () => {
     try {

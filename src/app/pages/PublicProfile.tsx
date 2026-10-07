@@ -574,7 +574,7 @@ export function PublicProfile() {
         {(isMe || sharedMilestoneIds.length > 0) && (
           <div className="mb-10">
             <h2 className="mb-1 flex items-center gap-2 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
-              Quiet milestones
+              Milestones
             </h2>
             <p className="mb-3 text-small text-muted-foreground">
               {isMe ? "Private by default." : `What ${shownName} chose to share.`}

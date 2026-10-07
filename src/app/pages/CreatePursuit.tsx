@@ -420,7 +420,7 @@ export function CreatePursuit() {
                     active={mode === "together"}
                     onClick={() => setMode("together")}
                     title="Side by side"
-                    copy="Everyone has their own goal and journey."
+                    copy="Everyone has their own goal and progress."
                   />
                   <ModeOption
                     active={mode === "group"}

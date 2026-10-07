@@ -153,7 +153,7 @@ export function Login() {
           </h1>
           <p className="text-small text-muted-foreground">
             {mode === "signup"
-              ? "Your Moments, saved for real, not just this browser tab."
+              ? "Your Moments are saved to your account."
               : "Log in to pick up where you left off."}
           </p>
         </div>
@@ -167,7 +167,7 @@ export function Login() {
             <p className="mt-3 text-caption leading-relaxed text-muted-foreground">
               {resent
                 ? "Sent again. Check your spam folder if it still doesn’t turn up."
-                : "Nothing after a few minutes? It can land in spam, or just take a moment."}
+                : "Nothing after a few minutes? Check spam, or try again."}
             </p>
             {error && <p className="mt-2 text-caption text-[var(--coral-text)]">{error}</p>}
             <Button

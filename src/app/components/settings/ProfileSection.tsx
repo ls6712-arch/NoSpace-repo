@@ -98,7 +98,7 @@ export function ProfileSection() {
         />
         <EditableTextRow
           label="Bio"
-          description="A short line under your name. Never required."
+          description="A short line under your name (optional)."
           value={profile.bio ?? ""}
           placeholder="What got you into this, and where it’s going"
           multiline

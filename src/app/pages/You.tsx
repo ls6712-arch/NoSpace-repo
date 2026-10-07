@@ -150,7 +150,7 @@ export function You() {
                       to="/profile"
                       className="mt-1 inline-block rounded-control border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-caption text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                     >
-                      Tell your story: what got you into this, and where it’s going.
+                      Add a bio
                     </Link>
                   )
                 )}
@@ -315,7 +315,7 @@ export function You() {
         {isConfigured && !user && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-card border border-border bg-surface-muted px-4 py-3">
             <p className="text-caption text-muted-foreground">
-              You’re not logged in. Sessions here are just local to this browser.
+              You’re not logged in. Sessions here are saved only in this browser.
             </p>
             <Link to="/login" className="shrink-0">
               <Button variant="outline" size="sm">Log in</Button>
@@ -481,7 +481,7 @@ export function You() {
           <div className="mb-1 flex items-baseline justify-between gap-4">
             <h2 className="flex items-center gap-2 text-body sm:text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
-              Quiet milestones
+              Milestones
             </h2>
           </div>
           <p className="mb-5 text-small text-muted-foreground">

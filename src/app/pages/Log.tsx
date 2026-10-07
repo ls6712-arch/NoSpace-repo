@@ -108,7 +108,7 @@ const AUDIENCE: {
   copy: string;
   icon: typeof Globe2;
 }[] = [
-  { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
+  { value: "private", label: "Only you", copy: "Only you can see it", icon: Lock },
   { value: "followers", label: "Followers", copy: "People who follow you, once you’ve accepted them", icon: UserRound },
   { value: "public", label: "Public", copy: "Anyone can find it", icon: Globe2 },
 ];
@@ -1165,15 +1165,14 @@ export function Log() {
           </span>
           <h2 className="mb-2 text-title">Log in to keep your Moments</h2>
           <p className="mb-6 text-muted-foreground">
-            Your Moments are tied to your account, so they’re still here next
-            time, not just in this browser tab.
+            Your Moments are saved to your account and are here next time you log in.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link to="/login?redirect=/create">
               <Button variant="coral">Log in or sign up</Button>
             </Link>
             <Button busy={saving} variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
-              Just keep it for myself
+              Keep it private
             </Button>
           </div>
         </div>
@@ -1229,7 +1228,7 @@ export function Log() {
           </p>
           {!anySaveError && (
             <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-small">
-              {savedAs === "private" ? "Kept just for you." : "Moment logged."}
+              {savedAs === "private" ? "Only you can see it." : "Moment logged."}
             </p>
           )}
 
@@ -1576,7 +1575,7 @@ export function Log() {
                   </SelectContent>
                 </Select>
                 <p className="mt-1.5 text-caption text-muted-foreground">
-                  Neighborhood by default. Exact is never assumed.
+                  Neighborhood by default.
                 </p>
               </div>
             )}

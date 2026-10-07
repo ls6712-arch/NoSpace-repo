@@ -103,7 +103,7 @@ export function JoinPursuit() {
             <Users className="size-4 shrink-0 text-muted-foreground" />
             {preview.mode === "group"
               ? "Everyone contributes to the same total."
-              : "Everyone has their own goal and journey, side by side."}
+              : "Everyone has their own goal and progress, side by side."}
           </p>
           {preview.memberCount > 0 && (
             <p className="pl-[26px] text-caption text-muted-foreground tabular-nums">

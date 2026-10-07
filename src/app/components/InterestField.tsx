@@ -125,7 +125,7 @@ export function InterestField({
               </button>
             ) : (
               <span className="text-caption text-muted-foreground">
-                Not listed? Just type your own.
+                Not listed? Type your own.
               </span>
             )}
           </li>

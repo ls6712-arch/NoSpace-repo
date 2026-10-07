@@ -55,7 +55,7 @@ export function NewSpacesRail() {
         Freshly opened this week
       </h2>
       <p className="mt-0.5 text-caption text-muted-foreground">
-        Spaces the community just started.
+        Spaces opened in the last 7 days.
       </p>
 
       {spaces.length === 0 ? (

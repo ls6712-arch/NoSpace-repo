@@ -78,7 +78,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Cover | Profile cover area |
 | Tell your story | Bio |
 | Moments logged | Headline stat |
-| Quiet Milestones | Private badges, shared one at a time |
+| Milestones | Private badges, shared one at a time |
 | Followers / Following | People connections |
 
 ## Home, reactions, connection
