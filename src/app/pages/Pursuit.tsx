@@ -493,18 +493,10 @@ export function Pursuit() {
         {owner && ownProject && (
           <>
             <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-3">
-              {moments.length > 0 && !hasMeasure(ownProject) && (
-                <Link to={`/create?pursuit=${ownProject.id}`}>
-                  <Button variant="coral" size="sm">
-                    <Plus className="size-3.5" />
-                    Log a Moment
-                  </Button>
-                </Link>
-              )}
               <Link to={`/create?pursuit=${view.id}`}>
-                <Button variant="outline" size="sm">
-                  <PenLine className="size-3.5" />
-                  Full form
+                <Button variant="coral" size="sm">
+                  <Plus className="size-3.5" />
+                  Log a Moment
                 </Button>
               </Link>
               <Button

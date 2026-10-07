@@ -858,13 +858,13 @@ export function Discover() {
                         That’s everything here.
                       </p>
                       <p className="mb-5 text-small text-muted-foreground">
-                        A good place to stop scrolling and go make something.
+                        Log a Moment of your own.
                       </p>
                       <div className="flex flex-wrap items-center justify-center gap-3">
                         <Link to="/create">
                           <Button variant="coral">
                             <PenLine className="size-4" />
-                            Create something
+                            Log a Moment
                           </Button>
                         </Link>
                       </div>

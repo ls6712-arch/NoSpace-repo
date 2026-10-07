@@ -440,12 +440,18 @@ export function Log() {
   // instead. React Router doesn't remount this component for a search-param
   // change on the same route, so the initial-screen choice above needs this
   // to actually follow along.
+  //
+  // pursuitScoped also turns true late: arriving on /create?pursuit=<id> from
+  // a link or a new device, the Pursuit is restored from the database a moment
+  // after first render. The Pursuit's Corner and name come along then too.
+  const pursuitReady = !!initialPursuit;
   useEffect(() => {
-    if (pursuitScoped) {
-      setScreen("caption");
-      setProjectId(initialPursuitId);
-    }
-  }, [initialPursuitId]);
+    if (!pursuitScoped) return;
+    setScreen((s) => (s === "choose" ? "caption" : s));
+    setProjectId(initialPursuitId);
+    if (initialPursuit?.subHobby) setCorner((c) => c || initialPursuit.subHobby!);
+    if (initialPursuit?.interest) setTags((t) => (t.length ? t : [initialPursuit.interest!]));
+  }, [initialPursuitId, pursuitReady]);
 
   // Same reason as the resync above: React Router doesn't remount this
   // component for a search-param change on the same route, so a later
@@ -1050,7 +1056,7 @@ export function Log() {
               <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 Write it down
               </span>
-              <span className="block text-caption text-muted-foreground">Just a sentence counts.</span>
+              <span className="block text-caption text-muted-foreground">A sentence is enough.</span>
             </span>
           </button>
 
@@ -1067,7 +1073,7 @@ export function Log() {
                 Start a Pursuit
               </span>
               <span className="block text-caption text-muted-foreground">
-                Something you’re bringing to life over time.
+                Set a goal and log Moments toward it.
               </span>
             </span>
           </button>
