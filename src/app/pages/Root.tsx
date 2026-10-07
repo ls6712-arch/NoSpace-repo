@@ -10,10 +10,13 @@ import { NetworkBanner } from "../components/NetworkBanner";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 
-// Only the landing page and the login/signup screen are open to a signed-out
-// visitor. Everything else — Discover, Spaces, People, a profile, all of it
-// — now requires an account, so this is checked before any of it renders.
-const PUBLIC_PATHS = new Set(["/", "/login"]);
+// Only the landing page, the login/signup screen, and the two legal pages
+// are open to a signed-out visitor. Everything else — Discover, Spaces,
+// People, a profile, all of it — now requires an account, so this is
+// checked before any of it renders. Terms/Privacy Policy need to be open:
+// the landing page's waitlist consent line and footer link to them while
+// signed out (landing page spec §2.5).
+const PUBLIC_PATHS = new Set(["/", "/login", "/terms", "/privacy-policy"]);
 
 // You.tsx and HobbyArchive.tsx (its "you/work/:hobbyKey" sub-page) already
 // render their own friendly SignUpPrompt ("Your shelf lives here...") when

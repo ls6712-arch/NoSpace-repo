@@ -1,20 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type MouseEvent } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Camera, Compass, NotebookPen, Quote, Sparkles } from "lucide-react";
-import { hobbies } from "../data/hobbies";
-import { seedPosts } from "../data/posts";
-import { HobbyCategoryCard } from "../components/HobbyCategoryCard";
-import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
+import { ArrowRight, Camera, Eye, Target } from "lucide-react";
 import { WorldsSection } from "../components/WorldsSection";
 import { Button } from "../components/ui/button";
 import { useScrollReveal } from "../lib/useScrollReveal";
-import { useCategories } from "../context/CategoriesContext";
 import { useAuth } from "../context/AuthContext";
 import { WaitlistForm } from "../components/WaitlistForm";
-import heroWorldsImg from "../../assets/hero-worlds.webp";
+import heroSooshImg from "../../assets/hero-soosh.webp";
+import heroSoosh1000Img from "../../assets/hero-soosh-1000.webp";
 import { APP_NAME } from "../config";
 import { scrollBehavior } from "../lib/scrollToElement";
-import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
  * Desktop-only parallax on the hero collage: it drifts up a little more
@@ -72,18 +67,18 @@ function useHeroParallax() {
 const VALUE_CARDS = [
   {
     icon: Camera,
-    title: "Create moments",
-    copy: "Turn the things you do, make, learn, and experience into moments worth remembering.",
+    title: "Log a Moment",
+    copy: "A photo, a note, a small win. Log it when it happens.",
   },
   {
-    icon: NotebookPen,
-    title: "Document what makes you more you",
-    copy: "Photos, notes, first attempts, small wins, and all the little changes that become part of your story.",
+    icon: Eye,
+    title: "Choose who sees it",
+    copy: "Just you, your followers, a Space, or everyone. You pick each time.",
   },
   {
-    icon: Compass,
-    title: "Find what sparks next",
-    copy: "Follow where your curiosity takes you and discover the next thing you want to try, learn, make, or experience.",
+    icon: Target,
+    title: "Keep going with a Pursuit",
+    copy: "Follow something you're working toward, on your own or with friends.",
   },
 ];
 
@@ -95,8 +90,6 @@ const LOOP_STEPS = [
 
 export function Home() {
   const heroRef = useHeroParallax();
-  // Subscribing re-renders the Space grid when admin changes load.
-  useCategories();
   // Step 2 (invite-only sign-up): a signed-out visitor gets the waitlist
   // instead of a "sign up" button here — the two CTAs below (hero, final)
   // are the "invites strangers to sign up" copy the brief calls out.
@@ -111,12 +104,18 @@ export function Home() {
   // sections (see useScrollReveal.ts).
   const valueCardsRef = useScrollReveal<HTMLDivElement>();
   const loopRef = useScrollReveal<HTMLElement>();
-  const cornerRef = useScrollReveal<HTMLElement>();
-  const discoverRef = useScrollReveal<HTMLElement>();
-  const quoteRef = useScrollReveal<HTMLElement>();
+  const spacesRef = useScrollReveal<HTMLElement>();
+  const statementRef = useScrollReveal<HTMLElement>();
   const finalCtaRef = useScrollReveal<HTMLElement>();
 
-  const cornerMoments = seedPosts.filter((p) => p.subHobby === "pickleball").slice(0, 4);
+  const scrollToWaitlist = (e: MouseEvent) => {
+    // Same reasoning as "See how it works" below: a plain href="#waitlist"
+    // would set location.hash, which the HashRouter reads as a navigation
+    // to path "/waitlist" — a route that doesn't exist — instead of
+    // scrolling. Scroll manually and skip that.
+    e.preventDefault();
+    document.getElementById("waitlist")?.scrollIntoView({ behavior: scrollBehavior() });
+  };
 
   return (
     <div className="min-h-viewport">
@@ -125,21 +124,19 @@ export function Home() {
         <div className="mx-auto w-full max-w-[1200px] px-5 pb-12 pt-12 text-center sm:px-8 sm:pt-16 lg:pb-16 lg:pt-20">
           <div className="ns-hero-eyebrow ns-enter ns-enter-1 mx-auto mb-7 lg:mb-8">
             <span className="animate-pulse-soft size-1.5 bg-[var(--violet-electric)]" />
-            A SPACE FOR MORE OF YOU
+            INVITE-ONLY FOR NOW
           </div>
 
           <h1
             className="ns-enter ns-enter-1 mb-5 text-hero font-semibold leading-[.98] tracking-[-0.035em] text-balance text-foreground"
             style={{ fontFamily: "var(--font-serif)" }}
           >
-            Your interests are
-            <br />
-            part of your story.
+            A place for everything you do and make.
           </h1>
 
-          <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-md text-body leading-relaxed text-foreground/90 sm:text-lead">
-            Create moments. Document what makes you more you. Find
-            what sparks next.
+          <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-lg text-body leading-relaxed text-foreground/90 sm:text-lead">
+            {APP_NAME} is a place for everything you do, make, and try. Keep it to
+            yourself, share it with a few people, or show everyone. No judgments.
           </p>
 
           <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-2.5">
@@ -151,33 +148,36 @@ export function Home() {
                 </Button>
               </Link>
             )}
-            <a
-              href="#loop"
-              className="ns-hero-secondary-link"
-              onClick={(e) => {
-                // A plain href="#loop" would set location.hash, which the
-                // HashRouter reads as a navigation to path "/loop" — a
-                // route that doesn't exist, so it lands on the 404 page
-                // instead of scrolling. Scroll manually and skip that.
-                e.preventDefault();
-                document.getElementById("loop")?.scrollIntoView({ behavior: scrollBehavior() });
-              }}
-            >
-              See how it works
-            </a>
+            {signedOut && (
+              <>
+                <a href="#waitlist" onClick={scrollToWaitlist}>
+                  <Button variant="coral" size="lg">
+                    Join the waitlist
+                  </Button>
+                </a>
+                <Link to="/login" className="ns-hero-secondary-link">
+                  I have an invite
+                </Link>
+              </>
+            )}
           </div>
-          {signedOut ? (
-            <p className="ns-enter ns-enter-3 mt-4 text-small text-foreground/70">
-              {APP_NAME} is invite-only for now — no invite? Join the waitlist below.
-            </p>
-          ) : (
-            <p className="ns-enter ns-enter-3 mt-4 text-small text-foreground/70">Free to join. No credit card.</p>
-          )}
+          <p className="ns-enter ns-enter-3 mt-4 text-small text-foreground/70">
+            {APP_NAME} is for people 16 and older.
+          </p>
         </div>
 
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-12 sm:px-8 lg:px-12 lg:pb-20 xl:px-16">
-          <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform">
-            <ImageWithFallback src={heroWorldsImg} alt="Small illustrated worlds of people playing music, painting, sculpting, gardening, reading, and coding, connected by soft glowing paths." className="ns-hero-worlds-art aspect-[1376/768] w-full" priority />
+          <div ref={heroRef} className="ns-parallax ns-enter ns-enter-4 will-change-transform -mx-5 sm:mx-0">
+            <img
+              src={heroSooshImg}
+              srcSet={`${heroSoosh1000Img} 1000w, ${heroSooshImg} 1942w`}
+              sizes="100vw"
+              width={1942}
+              height={809}
+              loading="eager"
+              alt="Friends writing, playing guitar, painting, knitting, reading, coding and hiking on and around giant colorful letters spelling SOOSH at sunset, with the New York skyline behind them."
+              className="ns-hero-worlds-art aspect-[1942/809] w-full sm:rounded-card"
+            />
           </div>
         </div>
 
@@ -237,102 +237,92 @@ export function Home() {
         {/* Whatever pulls you in */}
         <WorldsSection />
 
-        {/* This Corner */}
-        {cornerMoments.length > 0 && (
-          <section ref={cornerRef} className="ns-reveal py-12 lg:py-section-hero">
-            <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-              <div className="mb-10 max-w-xl lg:mb-12">
-                <div className="ns-section-kicker mb-4">THIS CORNER, RIGHT NOW</div>
-                <h2 className="mb-3 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-                  Inside the Pickleball Corner.
-                </h2>
-                <p className="text-body leading-relaxed text-muted-foreground">
-                  A Corner is the specific thing inside a Space, like Pickleball
-                  inside Sports &amp; Fitness. Here’s an example, shown with
-                  real Moments from {APP_NAME}’s sample content.
-                </p>
-              </div>
-              <div className={MOMENT_GRID}>
-                {cornerMoments.map((post) => (
-                  <MomentCard key={post.id} post={post} surface="feed" />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Discover / Spaces grid */}
-        <section ref={discoverRef} className="ns-reveal border-t border-[var(--hairline)] py-12 lg:py-section-hero">
+        {/* Spaces and Corners */}
+        <section ref={spacesRef} className="ns-reveal border-t border-[var(--hairline)] py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-            <div className="mb-10 flex items-end justify-between gap-5 lg:mb-12">
-              <div className="max-w-xl">
-                <div className="ns-section-kicker mb-4">DISCOVER</div>
-                <h2 className="mb-3 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-                  One place for everything you do.
+            <div className="grid items-center gap-10 md:grid-cols-2 md:gap-20">
+              <div className="mx-auto max-w-lg lg:mx-0">
+                <div className="ns-section-kicker mb-4">SPACES AND CORNERS</div>
+                <h2 className="mb-5 text-display" style={{ fontFamily: "var(--font-serif)" }}>
+                  Find your people, or just your thing.
                 </h2>
-                <p className="text-body leading-relaxed text-muted-foreground">
-                  Fifteen Spaces today. Inside each one, tag a Moment
-                  anything you like — “Pasta Making,” “Food Photography,”
-                  both at once — and it’s there. No fixed list, no approval
-                  queue.
+                <p className="max-w-md text-body leading-relaxed text-muted-foreground">
+                  Join a Space run by someone who cares about the same thing.
+                  Tag a Moment with a Corner, like Pottery or Pickleball, so
+                  it's easy to find.
                 </p>
               </div>
-              <Link to="/discover" className="ns-text-link hidden shrink-0 sm:inline-flex">
-                Open Discover
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
-              {hobbies.filter((h) => !h.hidden).map((hobby) => (
-                <HobbyCategoryCard key={hobby.slug} hobby={hobby} showCorners />
-              ))}
+              {/* TODO(landing page spec §2.4): Sush is supplying a real
+                  screenshot of a Space page (phone width, 390x844, sample
+                  content) to drop in here — placeholder until then. */}
+              <div className="mx-auto flex aspect-[390/844] w-full max-w-[280px] items-center justify-center rounded-card border border-dashed border-[var(--hairline)] bg-surface-muted p-6 text-center text-caption text-muted-foreground">
+                Space screenshot goes here (390×844)
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Quote / proof */}
-        <section ref={quoteRef} className="ns-reveal py-12 [background:var(--atmo-wine)] lg:py-section-hero">
+        {/* Whatever pulls you in */}
+        <WorldsSection />
+
+        {/* Statement band */}
+        <section ref={statementRef} className="ns-reveal py-12 [background:var(--atmo-wine)] lg:py-section-hero">
           <div className="mx-auto max-w-2xl px-5 text-center sm:px-8">
-            <Quote className="mx-auto mb-5 size-6 text-[var(--violet-electric-bright)]" />
             <p className="text-title leading-snug text-foreground md:text-display" style={{ fontFamily: "var(--font-serif)" }}>
-              No feed algorithm. No streaks. No performing for an audience.
-              Just your own log, kept the way you want it.
+              Share what you want, with who you want, or with no one.
             </p>
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section ref={finalCtaRef} className="ns-reveal py-12 lg:py-section-hero">
+        {/* Get in */}
+        <section id="waitlist" ref={finalCtaRef} className="ns-reveal py-12 lg:py-section-hero">
           <div className="mx-auto w-full max-w-[900px] px-5 sm:px-8">
-            <div className="ns-invitation text-center">
+            <div className="ns-invitation">
               <div className="ns-invitation-spark" aria-hidden="true">✦</div>
-              <div className="ns-section-kicker mb-5">START WHERE YOU ARE</div>
-              <h2 className="mb-5 text-display leading-[1.02]" style={{ fontFamily: "var(--font-serif)" }}>
-                Whatever you’re curious about,<br />it’s worth keeping.
-              </h2>
+              <div className="text-center">
+                <div className="ns-section-kicker mb-5">INVITE-ONLY FOR NOW</div>
+                <h2 className="mb-3 text-display leading-[1.02]" style={{ fontFamily: "var(--font-serif)" }}>
+                  {APP_NAME} is invite-only for now.
+                </h2>
+              </div>
               {signedOut ? (
                 <>
-                  <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
-                    {APP_NAME} is invite-only for now. Private by default once you’re
-                    in — share only the Moments you choose, with exactly the
-                    people you choose.
+                  <p className="mx-auto mb-8 max-w-md text-center leading-relaxed text-muted-foreground">
+                    Members invite people they know. No invite? Join the waitlist
+                    and tell us what you make.
                   </p>
-                  <div className="mx-auto max-w-xs text-left">
-                    <WaitlistForm />
+                  <div className="grid gap-10 md:grid-cols-2">
+                    <div className="mx-auto w-full max-w-xs text-left">
+                      <WaitlistForm />
+                    </div>
+                    <div className="mx-auto w-full max-w-xs text-left">
+                      <div className="mb-2 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
+                        Have an invite?
+                      </div>
+                      <p className="mb-4 text-small leading-relaxed text-muted-foreground">
+                        Open your invite link, or sign up and enter your code.
+                      </p>
+                      <Link to="/login">
+                        <Button variant="outline" className="w-full">
+                          I have an invite
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </>
               ) : (
-                <>
-                  <p className="mx-auto mb-8 max-w-md leading-relaxed text-muted-foreground">
-                    Free to join. Private by default. Share only the Moments you
-                    choose, with exactly the people you choose.
+                <div className="mx-auto max-w-md text-center">
+                  <p className="mb-8 leading-relaxed text-muted-foreground">
+                    Share only the Moments you choose, with exactly the people
+                    you choose.
                   </p>
                   <Link to="/create">
                     <Button variant="brand" size="lg">
-                      <Sparkles className="size-4" /> Begin your story
+                      Begin your story
+                      <ArrowRight className="size-4" />
                     </Button>
                   </Link>
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -347,12 +337,29 @@ export function Home() {
               One place for everything you’re living, doing, and making.
             </p>
           </div>
-          <nav aria-label="Product" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">
-            <Link to="/discover" className="hover:text-foreground">Discover</Link>
-            <Link to="/my-space" className="hover:text-foreground">Home</Link>
-            <Link to="/create" className="hover:text-foreground">Log a Moment</Link>
-          </nav>
+          {signedOut ? (
+            // Fix: these used to be Discover/Home/Log a Moment links shown
+            // to signed-out visitors too — but Root.tsx's PUBLIC_PATHS
+            // bounces a signed-out visit to any of those straight back to
+            // "/", so they were dead links for everyone except members.
+            <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">
+              <Link to="/terms" className="hover:text-foreground">Terms</Link>
+              <Link to="/privacy-policy" className="hover:text-foreground">Privacy Policy</Link>
+              {/* TODO(landing page spec §2.7, §10.5): placeholder address —
+                  needs a real contact email before launch. */}
+              <a href="mailto:hello@example.com" className="hover:text-foreground">Contact</a>
+            </nav>
+          ) : (
+            <nav aria-label="Product" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">
+              <Link to="/discover" className="hover:text-foreground">Discover</Link>
+              <Link to="/my-space" className="hover:text-foreground">Home</Link>
+              <Link to="/create" className="hover:text-foreground">Log a Moment</Link>
+            </nav>
+          )}
         </div>
+        <p className="mt-8 text-center text-caption text-muted-foreground">
+          {APP_NAME} is for people 16 and older. © {new Date().getFullYear()} {APP_NAME}.
+        </p>
       </footer>
     </div>
   );

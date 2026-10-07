@@ -39,6 +39,8 @@ import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
 import { InviteArrival } from "./pages/InviteArrival";
 import { Welcome } from "./pages/Welcome";
+import { Terms } from "./pages/Terms";
+import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import {
   Settings,
   AppearanceSettingsPage,
@@ -120,6 +122,10 @@ export const router = createHashRouter([
       { path: "u/:username/studio", Component: Studio },
       { path: "studio", Component: Studio },
       { path: "login", Component: Login },
+      // Landing page spec §2.5. Not /privacy — that path already renders
+      // the signed-in Settings > Privacy page (PrivacySettingsPage above).
+      { path: "terms", Component: Terms },
+      { path: "privacy-policy", Component: PrivacyPolicy },
       // Buying/selling isn't live — see src/app/config.ts's
       // marketplaceEnabled. Off, both routes redirect to /discover instead
       // of rendering a page for a marketplace that isn't there.
