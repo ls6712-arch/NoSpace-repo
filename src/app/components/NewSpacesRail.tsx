@@ -1,34 +1,53 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { getHobby } from "../data/hobbies";
-import { useCorners } from "../context/CornersContext";
+import { supabase } from "../../lib/supabase";
 import { formatWeekday } from "../lib/dates";
+import { freshSpaces } from "../lib/freshSpaces";
+import type { SpaceRow } from "../lib/spaces";
 import { EmptyState } from "./StateViews";
 
 const DAY = 86_400_000;
 
-/** "opened Wednesday" for anything this past week, "opened last week" just
- * past that, then a plain week count — matches the mockup's own phrasing
- * rather than a generic "3d ago" (already used elsewhere for Moments,
- * deliberately not reused here: those read as activity, this is an
- * announcement, and "opened 3d ago" reads oddly for a Corner). */
+/** "opened today", or "opened Wednesday" — the rail only ever lists the past
+ * 7 days (see freshSpaces). */
 function openedLabel(createdAt: number): string {
   const days = Math.floor((Date.now() - createdAt) / DAY);
   if (days < 1) return "opened today";
-  if (days < 7) return `opened ${formatWeekday(createdAt, "long")}`;
-  if (days < 14) return "opened last week";
-  return `opened ${Math.floor(days / 7)} weeks ago`;
+  return `opened ${formatWeekday(createdAt, "long")}`;
 }
 
 /**
  * Right rail, item 4 (docs/my-space-spec.md section 4). Platform-wide, not
- * personalized — the newest real Corners across every Space, regardless of
- * whether the viewer follows that Space or anyone in it. Reuses the same
- * coral-left-bar list-row shape ShelfRail already established for "Winter
- * cups"-style rows, rather than a new card style.
+ * personalized: the newest Spaces (host-created, same `spaces` table as
+ * Discover's Spaces tab) opened in the last 7 days. Corners are never
+ * listed here.
  */
 export function NewSpacesRail() {
-  const { newestCorners } = useCorners();
-  const corners = newestCorners(3);
+  const [spaces, setSpaces] = useState<SpaceRow[]>([]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let cancelled = false;
+    const since = new Date(Date.now() - 7 * DAY).toISOString();
+    supabase
+      .from("spaces")
+      .select("*")
+      .eq("status", "active")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          console.warn("[NewSpacesRail] load failed:", error);
+          return;
+        }
+        setSpaces(freshSpaces((data as SpaceRow[]) ?? [], Date.now(), 3));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section>
@@ -39,42 +58,32 @@ export function NewSpacesRail() {
         Spaces the community just started.
       </p>
 
-      {corners.length === 0 ? (
+      {spaces.length === 0 ? (
         <EmptyState size="rail" line="Nothing new to show yet." action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }} />
       ) : (
         <ul className="mt-3 space-y-2.5">
-          {corners.map((c) => {
-            const space = getHobby(c.spaceSlug);
-            return (
-              <li key={`${c.spaceSlug}-${c.slug}`}>
-                <div className="flex items-center gap-3">
-                  <span
-                    aria-hidden="true"
-                    className="h-8 w-1.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: "var(--coral-deep)" }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={c.name}>
-                      {c.name}
-                    </span>
-                    <span
-                      className="block truncate text-caption text-muted-foreground"
-                      title={`Inside ${space?.shortName ?? c.spaceSlug}${c.createdAt != null ? ` · ${openedLabel(c.createdAt)}` : ""}`}
-                    >
-                      Inside {space?.shortName ?? c.spaceSlug}
-                      {c.createdAt != null ? ` · ${openedLabel(c.createdAt)}` : ""}
-                    </span>
-                  </div>
-                  <Link
-                    to={`/corner/${c.slug}`}
-                    className="shrink-0 text-caption text-accent hover:underline"
-                  >
-                    Visit
-                  </Link>
+          {spaces.map((s) => (
+            <li key={s.id}>
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="h-8 w-1.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: "var(--coral-deep)" }}
+                />
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={s.name}>
+                    {s.name}
+                  </span>
+                  <span className="block truncate text-caption text-muted-foreground">
+                    {openedLabel(new Date(s.created_at).getTime())}
+                  </span>
                 </div>
-              </li>
-            );
-          })}
+                <Link to={`/space/${s.slug}`} className="shrink-0 text-caption text-accent hover:underline">
+                  Visit
+                </Link>
+              </div>
+            </li>
+          ))}
         </ul>
       )}
     </section>
