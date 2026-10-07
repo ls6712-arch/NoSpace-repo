@@ -61,7 +61,6 @@ export function PursuitsRail({
           Start one
         </button>
       </div>
-      <p className="mt-0.5 text-caption text-muted-foreground">The ones you haven’t set down yet.</p>
       <div className="mt-3">
         <PursuitInvitesCard />
       </div>

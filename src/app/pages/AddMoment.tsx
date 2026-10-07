@@ -193,7 +193,6 @@ export function AddMoment() {
         <h1 className="text-center text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
           Log a Moment
         </h1>
-        <p className="mt-1 text-center text-small text-muted-foreground">A little progress, kept for good.</p>
 
         <Link
           to={`/pursuit/${project.id}`}
