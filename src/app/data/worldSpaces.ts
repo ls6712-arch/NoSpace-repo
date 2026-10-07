@@ -44,8 +44,8 @@ export const WORLD_SPACES: WorldSpace[] = [
     accent: "var(--yellow)",
   },
   {
-    slug: "music",
-    name: "Music",
+    slug: "guitar",
+    name: "Guitar",
     description: "A song you learned, a practice session, a set you played.",
     illustration: "music",
     accent: "var(--coral-deep)",

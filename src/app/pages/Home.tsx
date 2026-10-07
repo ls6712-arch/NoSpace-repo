@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { WaitlistForm } from "../components/WaitlistForm";
 import heroSooshImg from "../../assets/hero-soosh.webp";
 import heroSoosh1000Img from "../../assets/hero-soosh-1000.webp";
-import { APP_NAME } from "../config";
+import { APP_NAME, landingShowsSpaces } from "../config";
 import { scrollBehavior } from "../lib/scrollToElement";
 
 /**
@@ -63,6 +63,15 @@ function useHeroParallax() {
 
   return ref;
 }
+
+// Optional real screenshot of a Pursuit on a Shelf. import.meta.glob finds the
+// file only if it exists, so adding it is a file drop and nothing else.
+const pursuitShots = import.meta.glob("../../assets/landing-pursuit.webp", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+const pursuitShot = Object.values(pursuitShots)[0];
 
 const HOW_IT_WORKS = [
   { icon: Camera, title: "Post a Moment", copy: "A photo, a video or a link." },
@@ -191,8 +200,19 @@ export function Home() {
             <p className="text-body leading-relaxed text-muted-foreground">
               Start a Pursuit with a goal you can count, like 10 loaves or 5 paintings. Log Moments toward it and its progress shows on your Shelf.
             </p>
-            {/* TODO(landing page 3b §4): add one screenshot of a Pursuit on a
-                Shelf here once a real one exists. */}
+            {/* TODO(landing page 3b §4): drop the real screenshot in at
+                src/assets/landing-pursuit.webp (see docs/landing-assets.md).
+                Until that file exists nothing renders here. */}
+            {pursuitShot && (
+              <img
+                src={pursuitShot}
+                alt="A Pursuit on a Shelf, with its goal and progress."
+                width={780}
+                height={1688}
+                loading="lazy"
+                className="mx-auto mt-8 w-full max-w-[280px] rounded-card border border-[var(--hairline)]"
+              />
+            )}
           </div>
         </section>
 
@@ -203,7 +223,8 @@ export function Home() {
               See what your friends are making.
             </h2>
             <p className="text-body leading-relaxed text-muted-foreground">
-              Follow friends to see their Moments on Home. Join a Space to find a group around something you do.
+              Follow friends to see their Moments on Home.
+              {landingShowsSpaces && " Join a Space to find a group around something you do."}
             </p>
           </div>
         </section>

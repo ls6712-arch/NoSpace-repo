@@ -31,3 +31,8 @@ export const marketplaceEnabled = false;
 // While it is off: no Scrapbook links, /studio redirects to Shelf, and Home
 // shows no "Today's sheet" labels.
 export const extraConceptsEnabled = false;
+
+// Landing page section 5 also promises Spaces ("join a group around what you
+// do"). Only one Space is active, so that line is hidden. Turn this on when 3
+// or more Spaces are active.
+export const landingShowsSpaces = false;
