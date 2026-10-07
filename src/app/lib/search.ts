@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
 import { products } from "../data/products";
 import { deriveProjects } from "./journal";
+import { pursuitCorner } from "./pursuitProgress";
 import { useContent } from "../context/ContentContext";
 import { useCorners, isDiscoverable } from "../context/CornersContext";
 import { usePeopleSearch, profilePath } from "./people";
@@ -145,7 +146,7 @@ export function useUnifiedSearchIndex(query: string) {
           group: "pursuit",
           key: `pursuit-${pursuit.key}`,
           label: pursuit.title,
-          sub: `${pursuit.creator} · ${hobby?.shortName ?? ""}`,
+          sub: [pursuit.creator, pursuitCorner(pursuit)].filter(Boolean).join(" · "),
           to: `/space/${pursuit.hobbySlug}${pursuit.subHobby ? `?hobby=${pursuit.subHobby}` : ""}`,
         });
       }

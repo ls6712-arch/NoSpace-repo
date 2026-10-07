@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Plus, Search, Share2, X } from "lucide-react";
-import { getHobby } from "../data/hobbies";
+import { pursuitCorner } from "../lib/pursuitProgress";
 import { Project } from "../lib/journal";
 import { startedLabel } from "../lib/pursuitTrail";
 import { formatWhen } from "../lib/dates";
@@ -17,7 +17,7 @@ function relative(ms: number): string {
  * AllPursuitsGroup already displays, pulled out so search matches exactly
  * what's on screen. */
 function spaceNameOf(p: Project): string | undefined {
-  return p.hobbySlug ? getHobby(p.hobbySlug)?.shortName : p.customSpace || p.interest;
+  return pursuitCorner(p);
 }
 
 /** One row — its own component (not inlined in the .map() below) purely so

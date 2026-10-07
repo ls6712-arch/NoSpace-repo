@@ -1,3 +1,4 @@
+import { subHobbyLabel } from "../data/hobbies";
 import { Measure, MeasureKind, Project, ProgressEntry } from "./journal";
 
 /** The five answers to "How should progress add up?", in the order shown. */
@@ -148,4 +149,11 @@ export function guessSpace(title: string): string | undefined {
 /** Projects with a measure read progress from entries; older ones from their goal. */
 export function hasMeasure(p: Pick<Project, "measure">): p is { measure: Measure } {
   return !!p.measure && p.measure.target > 0;
+}
+
+/** The one place a Pursuit's Corner label comes from: its specific Corner
+ * ("Badminton"), never the broader hobby group it sits in ("Sports & Fitness"),
+ * which is internal only. Undefined when no Corner was set. */
+export function pursuitCorner(p: { interest?: string; subHobby?: string }): string | undefined {
+  return p.interest?.trim() || (p.subHobby ? subHobbyLabel(p.subHobby) : undefined) || undefined;
 }

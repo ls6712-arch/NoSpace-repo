@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Check, Lock, Share2, Sparkles, Target } from "lucide-react";
-import { getHobby } from "../data/hobbies";
+import { pursuitCorner } from "../lib/pursuitProgress";
 import { Post } from "../data/posts";
 import {
   Project,
@@ -75,8 +75,7 @@ export function PursuitCard({
     ? projectProgress(entryProject, posts, pursuit.id)
     : { count: 0, lastUpdatedAt: undefined };
 
-  const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
-  const spaceLabel = space?.shortName ?? pursuit.customSpace;
+  const cornerLabel = pursuitCorner(pursuit);
   const status = pursuit.finishedAt ? "Finished" : count > 0 ? "In progress" : "Just started";
   const moved = pursuit.finishedAt ?? lastUpdatedAt ?? pursuit.startedAt;
 
@@ -192,9 +191,9 @@ export function PursuitCard({
           <p className="line-clamp-2 break-words text-body leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
             {pursuit.title}
           </p>
-          {(pursuit.interest || spaceLabel) && (
+          {cornerLabel && (
             <p className="mt-1.5 text-caption text-muted-foreground">
-              {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
+              {cornerLabel}
             </p>
           )}
           <p className="mt-2 text-caption text-muted-foreground">

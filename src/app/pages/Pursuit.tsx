@@ -41,7 +41,7 @@ import { EndingDialog } from "../components/EndingDialog";
 import { PursuitProgressPanel } from "../components/pursuit/PursuitProgressPanel";
 import { NextSessionCard } from "../components/pursuit/NextSessionCard";
 import { ProgressBar } from "../components/pursuit/ui";
-import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
+import { formatAmount, hasMeasure, pursuitCorner, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
 import { formatDate, formatWhen } from "../lib/dates";
 import { plural } from "../lib/plural";
@@ -287,8 +287,7 @@ export function Pursuit() {
   // A Pursuit you joined is in your journal too, but its goal, sharing and
   // ending belong to whoever created it.
   const isCreator = owner && ownProject?.role !== "member";
-  const space = view.hobbySlug ? getHobby(view.hobbySlug) : undefined;
-  const spaceLabel = space?.shortName ?? view.customSpace;
+  const cornerLabel = pursuitCorner(view);
   const goal = view.goal;
   const status = pursuitStatus(view);
   const photos = firstAndLatestPhoto(moments);
@@ -371,10 +370,8 @@ export function Pursuit() {
         </h1>
 
         <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted-foreground">
-          {view.interest && <span>{view.interest}</span>}
-          {view.interest && spaceLabel && <span aria-hidden="true">·</span>}
-          {spaceLabel && <span>{spaceLabel}</span>}
-          {(view.interest || spaceLabel) && <span aria-hidden="true">·</span>}
+          {cornerLabel && <span>{cornerLabel}</span>}
+          {cornerLabel && <span aria-hidden="true">·</span>}
           <span>{statusLine}</span>
           {moments.length > 0 && (
             <>

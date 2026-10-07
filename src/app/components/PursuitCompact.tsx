@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Check, Plus, Share2, Target } from "lucide-react";
-import { getHobby } from "../data/hobbies";
 import { Post } from "../data/posts";
 import {
   Project,
@@ -18,7 +17,7 @@ import { GoalDialog } from "./GoalDialog";
 import { EndingDialog } from "./EndingDialog";
 import { GoalProgressTap } from "./GoalProgressTap";
 import { WorkGrid } from "./WorkGrid";
-import { formatAmount, hasMeasure, summarize } from "../lib/pursuitProgress";
+import { formatAmount, hasMeasure, pursuitCorner, summarize } from "../lib/pursuitProgress";
 import { ProgressEntry, useJournalSlice } from "../lib/journal";
 
 const NO_PROGRESS: ProgressEntry[] = [];
@@ -88,17 +87,13 @@ export function PursuitCompactCard({
   onToggle: () => void;
 }) {
   const { count } = projectProgress(entryProject, posts, pursuit.id);
-  const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
-  const spaceLabel = space?.shortName ?? pursuit.customSpace;
+  const cornerLabel = pursuitCorner(pursuit);
   // Corner first — a Pursuit's own Corner (free-text, same field the
   // creation dialog's "Which Corner does this belong to?" writes to) is
   // more specific than its parent Space, so it's what should label the
   // tile whenever one was actually given. Falls back to Space rather than
   // leaving the tile unlabeled when no Corner was set.
-  // TODO(decision: D6): this tile shows the Corner (e.g. Badminton) while
-  // Home shows the Category (e.g. Sports & Fitness). Which level should each
-  // screen show?
-  const label = pursuit.interest || spaceLabel;
+  const label = cornerLabel;
   const goal = pursuit.goal;
   // Tap-to-log (GoalProgressTap) is what actually moves a number goal's
   // current now — count (attached Updates) stays a separate, honest signal
@@ -184,8 +179,7 @@ export function PursuitExpandedPanel({
   const [endingOpen, setEndingOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
 
-  const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
-  const spaceLabel = space?.shortName ?? pursuit.customSpace;
+  const cornerLabel = pursuitCorner(pursuit);
   const goal = pursuit.goal;
   const pastGoals = pursuit.pastGoals ?? [];
   const attached = posts
@@ -219,9 +213,9 @@ export function PursuitExpandedPanel({
     <div className="mt-3 rounded-card border border-border bg-card p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          {(pursuit.interest || spaceLabel) && (
+          {cornerLabel && (
             <p className="text-caption text-muted-foreground">
-              {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
+              {cornerLabel}
             </p>
           )}
           <h3 className="truncate text-lead" style={{ fontFamily: "var(--font-serif)" }} title={pursuit.title}>

@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { Project, goalDeadlineText, goalProgressText } from "../lib/journal";
-import { getHobby } from "../data/hobbies";
+import { pursuitCorner } from "../lib/pursuitProgress";
 import { lastMomentText, pursuitMoments, startedLabel, TrailMoment } from "../lib/pursuitTrail";
 import { isOnlyYou } from "../lib/visibility";
 import { firstWords } from "../lib/text";
@@ -18,10 +18,6 @@ import { Time } from "./ui/time";
 const NO_PROGRESS: ProgressEntry[] = [];
 
 /** {SPACE} for the meta line — a real Space, a made-up one, or free-text interest. */
-function spaceLabel(pursuit: Project): string {
-  if (pursuit.hobbySlug) return getHobby(pursuit.hobbySlug)?.name ?? pursuit.hobbySlug;
-  return pursuit.customSpace || pursuit.interest || "General";
-}
 
 function shortDate(ms: number): string {
   return formatDate(ms);
@@ -176,7 +172,7 @@ export function PursuitTrack({
             {pursuit.title}
           </Link>
           <p className="ns-section-kicker mt-0.5 text-muted-foreground">
-            {spaceLabel(pursuit).toUpperCase()} · {startedLabel(pursuit.startedAt).toUpperCase()}
+            {[pursuitCorner(pursuit), startedLabel(pursuit.startedAt)].filter(Boolean).join(" · ")}
           </p>
         </div>
         {quickLog && measured ? (
