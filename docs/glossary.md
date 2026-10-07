@@ -20,7 +20,8 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Log a Moment | Main create button (mobile tab may shorten to "Log") |
 | You | Your profile, in the nav (desktop and mobile) |
 | Messages / Inbox | Chats / notifications and requests |
-| Search Moments, people, Spaces | Every search box placeholder |
+| Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
+| Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
 
 ## Hobbies and Spaces
 

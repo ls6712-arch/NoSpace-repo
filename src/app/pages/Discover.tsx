@@ -78,6 +78,15 @@ const DISCOVER_TABS = [
 type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
 const VISIBLE_DISCOVER_TABS = DISCOVER_TABS.filter((t) => !t.hidden);
 
+/** The box searches what the open tab lists, so the placeholder says that. The
+ * Corners tab also filters the Moments list below it. */
+const SEARCH_PLACEHOLDER: Record<DiscoverTab, string> = {
+  corners: "Search Corners and Moments",
+  spaces: "Search Spaces",
+  people: "Search people",
+  marketplace: "Search the marketplace",
+};
+
 const FEED_TABS = [
   { id: "forYou", label: "For You" },
   { id: "following", label: "Following" },
@@ -590,7 +599,7 @@ export function Discover() {
                 setShown(PAGE_SIZE);
                 if (searchParams.get("about")) setSearchParams({}, { replace: true });
               }}
-              placeholder="Search Moments, people, Spaces"
+              placeholder={SEARCH_PLACEHOLDER[tab]}
               className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-body text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
             />
             {query && (
