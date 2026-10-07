@@ -398,7 +398,7 @@ export function PursuitDialog({
           </div>
 
           <Button variant="coral" className="w-full" disabled={!title.trim() || !goalReady} onClick={submit}>
-            Create Pursuit
+            Start a Pursuit
           </Button>
           <p className="text-center text-caption text-muted-foreground">
             Private by default. You choose if and when to share it.

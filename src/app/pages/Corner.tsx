@@ -48,7 +48,7 @@ export function CornerPage() {
         <div className="text-center">
           <h2 className="text-title mb-4">That Corner doesn’t exist</h2>
           <Link to="/">
-            <Button variant="outline">Back home</Button>
+            <Button variant="outline">Back to Home</Button>
           </Link>
         </div>
       </div>

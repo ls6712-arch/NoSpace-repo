@@ -11,7 +11,7 @@ export function NotFound() {
           Check the link, or go back home.
         </p>
         <Link to="/">
-          <Button variant="brand">Back home</Button>
+          <Button variant="brand">Back to Home</Button>
         </Link>
       </div>
     </div>

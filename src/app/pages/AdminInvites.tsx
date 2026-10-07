@@ -203,7 +203,7 @@ export function AdminInvites() {
           <div className="mb-3 text-right text-caption text-muted-foreground">{note.length}/280</div>
           {createError && <p className="mb-3 text-caption text-destructive">{createError}</p>}
           <Button busy={creating} variant="coral" disabled={creating} onClick={create}>
-            Create invite
+            Create invite link
           </Button>
 
           {newLink && (

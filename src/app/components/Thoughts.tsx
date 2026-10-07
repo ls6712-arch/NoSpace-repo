@@ -185,7 +185,7 @@ export function Thoughts({
                 Cancel
               </Button>
               <Button busy={saving} variant="coral" size="sm" disabled={!body.trim() || saving} onClick={submit}>
-                Add thought
+                Add a thought
               </Button>
             </span>
           </div>

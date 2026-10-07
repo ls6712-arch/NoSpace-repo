@@ -58,7 +58,7 @@ export function InviteArrival() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <p className="text-small text-muted-foreground">You’re already on {APP_NAME}.</p>
         <Link to="/my-space">
-          <Button variant="coral">Go to Home</Button>
+          <Button variant="coral">Back to Home</Button>
         </Link>
       </div>
     );
