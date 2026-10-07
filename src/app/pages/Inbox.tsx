@@ -58,6 +58,7 @@ export function Inbox() {
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
   const requestCount = followRequests.length;
+  const unreadActivity = social.notifications.filter((n) => !n.read).length;
 
   const answerFollow = async (followerId: string, accept: boolean) => {
     if (!user || respondingTo) return;
@@ -101,7 +102,9 @@ export function Inbox() {
             <TabsTrigger value="requests">
               Requests{requestCount > 0 ? ` (${requestCount})` : ""}
             </TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="activity">
+              Activity{unreadActivity > 0 ? ` (${unreadActivity})` : ""}
+            </TabsTrigger>
           </TabsList>
 
           {/* ── Requests ─────────────────────────────────────────────── */}
@@ -187,8 +190,13 @@ export function Inbox() {
                 {social.notifications.map((n) => (
                   <li
                     key={n.id}
-                    className="rounded-card border border-border bg-card px-4 py-3.5 text-small"
+                    className={`rounded-card border px-4 py-3.5 text-small ${
+                      n.read
+                        ? "border-border bg-card"
+                        : "border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--yellow)_10%,var(--card))]"
+                    }`}
                   >
+                    {!n.read && <span className="sr-only">Unread. </span>}
                     <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
                       {n.actorName ?? "Someone"}{" "}
                     </strong>
