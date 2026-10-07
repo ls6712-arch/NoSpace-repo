@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
   Compass,
@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { marketplaceEnabled, APP_NAME } from "../config";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
-import { spacePhoto } from "../data/hobbyPhotos";
 import { Post, postCorner } from "../data/posts";
 import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
@@ -21,12 +20,12 @@ import { useCorners, isBrowsableOnDiscover, cornerFollowKey } from "../context/C
 import { useCategories } from "../context/CategoriesContext";
 import { deriveProjects } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
+import { cornerColorFor } from "../lib/cornerColor";
 import { supabase } from "../../lib/supabase";
 import { track } from "../lib/analytics";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
-import { GeneratedArt } from "../components/GeneratedArt";
 import { SpacesBrowser } from "../components/SpacesBrowser";
 import { Loadable, useDelayedFlag } from "../components/ui/skeleton";
 import { MomentCardSkeleton, MomentGridSkeleton } from "../components/Skeletons";
@@ -36,7 +35,6 @@ import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
 import { plural } from "../lib/plural";
 import { scrollBehavior } from "../lib/scrollToElement";
-import { ImageWithFallback } from "../components/ImageWithFallback";
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
@@ -110,27 +108,6 @@ function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
       ? "border-[var(--coral-deep)] text-foreground"
       : "border-transparent text-muted-foreground hover:text-foreground"
   }`;
-}
-
-function DiscoverSpaceArt({
-  hobbySlug,
-  seed,
-  className,
-}: {
-  hobbySlug: string;
-  seed: string;
-  className?: string;
-}) {
-  const [photoFailed, setPhotoFailed] = useState(false);
-  const photo = photoFailed ? undefined : spacePhoto(hobbySlug, 1200);
-
-  if (!photo) {
-    return <GeneratedArt hobbySlug={hobbySlug} seed={seed} className={className} />;
-  }
-
-  return (
-    <ImageWithFallback src={photo} alt="" onFail={() => setPhotoFailed(true)} className={`h-full w-full ${className ?? ""}`} />
-  );
 }
 
 /**
@@ -264,12 +241,13 @@ function MarketplaceTab({ query }: { query: string }) {
 }
 
 /**
- * Corners tab — every Corner across every (internal) Category, flat, photo +
- * name per tile. Discover's own rule: no empty Corner is ever shown, curated
- * or not (isBrowsableOnDiscover) — a threshold of recent Moments or an
- * active Space, never a bypass for editorial signage. Ordered by 30-day
- * activity, never by follower/member counts. Category is internal-only now,
- * so nothing here names one — just the Corner.
+ * Corners tab — every Corner across every (internal) Category, flat,
+ * name-only tiles (no thumbnail — the name itself, large and in its own
+ * color, is the whole tile). Discover's own rule: no empty Corner is ever
+ * shown, curated or not (isBrowsableOnDiscover) — a threshold of recent
+ * Moments or an active Space, never a bypass for editorial signage. Ordered
+ * by 30-day activity, never by follower/member counts. Category is
+ * internal-only now, so nothing here names one — just the Corner.
  */
 function AllCornersBrowser({ query }: { query: string }) {
   const { cornersFor, cornerThreshold } = useCorners();
@@ -297,22 +275,33 @@ function AllCornersBrowser({ query }: { query: string }) {
 
   return (
     <div className="mb-14 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      {matching.map((c) => (
+      {matching.map((c, i) => (
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
           to={`/corner/${c.slug}`}
-          className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-base ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
+          aria-label={`Browse the ${c.name} corner`}
+          // Reveal-on-load: .ns-enter is the same rise-and-fade every other
+          // entrance in this app uses (theme.css), already switched off
+          // wholesale under prefers-reduced-motion. The per-item delay is
+          // necessarily dynamic (an unbounded grid, not theme.css's fixed
+          // ns-enter-1..4 steps) and capped so a long list still reads as
+          // one wave, not a slow trickle. design-token-ignore: stagger delay
+          //
+          // Background is the card's own color-mix'd 14% toward the
+          // Corner's own text color (computed below into --corner-color),
+          // deepening to 22% on hover — a colored whisper at rest, a little
+          // more playful on interaction. Every one of the 8 hues was
+          // contrast-checked at both strengths against light and dark
+          // --card, not just the flat --card this used before.
+          className="ns-enter group flex min-h-[9rem] flex-col items-center justify-center rounded-card border border-border bg-[color-mix(in_srgb,var(--card)_86%,var(--corner-color)_14%)] px-4 py-6 text-center transition-[transform,border-color,box-shadow,background-color] duration-base ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:bg-[color-mix(in_srgb,var(--card)_78%,var(--corner-color)_22%)] hover:shadow-card active:scale-[0.98] sm:min-h-[11rem] sm:px-5"
+          style={{ "--corner-color": cornerColorFor(`${c.spaceSlug}-${c.slug}`), animationDelay: `${Math.min(i, 11) * 0.03}s` } as CSSProperties}
         >
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
-            <DiscoverSpaceArt
-              hobbySlug={c.spaceSlug}
-              seed={`${c.spaceSlug}-${c.slug}`}
-              className="transition-transform duration-base ease-standard group-hover:scale-110"
-            />
-          </div>
-          <div className="px-3 py-2.5">
-            <span className="block text-small leading-tight text-foreground">{c.name}</span>
-          </div>
+          <span
+            className="text-[24px] font-semibold leading-tight text-[var(--corner-color)] transition-transform duration-base ease-standard group-hover:scale-105 sm:text-[32px]"
+            style={{ fontFamily: "var(--font-serif)" }}
+          >
+            {c.name}
+          </span>
         </Link>
       ))}
     </div>

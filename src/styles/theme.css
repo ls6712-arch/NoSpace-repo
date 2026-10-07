@@ -175,6 +175,23 @@
   --success: #4ADE80;
   --warning: var(--yellow);
 
+  /* ── Corner name palette (Discover's Corners tab) ────────────────────────
+     Eight hues a Corner's name is deterministically assigned from (see
+     lib/cornerColor.ts), each a distinct accessible TEXT variant — same
+     "light needs the deeper shade, dark restores a bright one" rule as
+     --coral-text above, verified at >=4.5:1 against both --card values
+     (light #FBF8F1, dark #26211D). Not used for anything but corner-name
+     text; GeneratedArt.tsx's --gen-art-* family below is for illustration
+     fills and isn't contrast-checked for text. */
+  --corner-terracotta: #9C3E24;
+  --corner-plum: #5B3454;
+  --corner-forest: #1C5B3F;
+  --corner-denim: #2A5878;
+  --corner-mustard: #7A5A12;
+  --corner-olive: #4F5E35;
+  --corner-rose: #8A3449;
+  --corner-sky: #1F5E86;
+
   /* ── GeneratedArt.tsx illustration palette ───────────────────────────────
      The flat-vector hobby illustrations' own colors — deliberately a
      separate family from the UI tokens above (illustrations read as warm,
@@ -338,6 +355,16 @@
   --accent: var(--theme-dark-accent);
   --accent-foreground: #1C1816;
   --coral-text: #FF8B6E;
+  /* Corner name palette, dark variants — same eight hues, brightened back up
+     for contrast against the dark card (#26211D), each re-verified >=4.5:1. */
+  --corner-terracotta: #F0A47E;
+  --corner-plum: #D8AEDD;
+  --corner-forest: #8FD6B2;
+  --corner-denim: #9AC4E3;
+  --corner-mustard: #E8C364;
+  --corner-olive: #B7C98F;
+  --corner-rose: #F0A3B5;
+  --corner-sky: #8FC7EC;
   /* Brand-gradient fills carry white --on-brand text and keep their colour in
      both modes, so dark uses the light accent (6.17:1 under white) rather
      than the lighter dark --accent (3.4:1). */
