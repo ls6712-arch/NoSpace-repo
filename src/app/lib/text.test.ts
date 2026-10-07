@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withoutDashes } from "./text";
+import { notificationText, withoutDashes } from "./text";
 
 describe("withoutDashes", () => {
   it("turns a spaced dash into a sentence break", () => {
@@ -12,5 +12,13 @@ describe("withoutDashes", () => {
   });
   it("leaves text without dashes alone", () => {
     expect(withoutDashes("Nani loved your Moment.")).toBe("Nani loved your Moment.");
+  });
+});
+
+describe("notificationText", () => {
+  it("capitalizes product nouns and drops dashes", () => {
+    expect(notificationText("Ana loved your moment.")).toBe("Ana loved your Moment.");
+    expect(notificationText("Nani added their first moments.")).toBe("Nani added their first Moments.");
+    expect(notificationText("Request declined — try again.")).toBe("Request declined. Try again.");
   });
 });

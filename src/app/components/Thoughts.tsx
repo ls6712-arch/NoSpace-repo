@@ -171,7 +171,7 @@ export function Thoughts({
             <span className="text-caption text-muted-foreground">
               {privateThoughts
                 ? "Only you and the maker will see this."
-                : "Visible to anyone who can see this moment."}
+                : "Visible to anyone who can see this Moment."}
             </span>
             <span className="flex shrink-0 gap-2">
               <Button

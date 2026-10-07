@@ -637,7 +637,7 @@ export function MomentDetail({
             )}
             <Button variant="outline" size="sm" onClick={share}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? "Link copied" : "Share this moment"}
+              {copied ? "Link copied" : "Share this Moment"}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setConfirmDeleteOpen(true)}>
               <Trash2 className="size-3.5" />
@@ -652,7 +652,7 @@ export function MomentDetail({
               <>
                 <p className="text-caption text-muted-foreground">
                   You don’t have a Pursuit yet. Starting one from here files this
-                  moment as its first update.
+                  Moment as its first update.
                 </p>
                 <Button
                   variant="coral"

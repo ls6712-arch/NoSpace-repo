@@ -267,11 +267,11 @@ const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
  * the same places in the same order rather than two different apps.
  */
 const PRIMARY_NAV = [
-  { to: "/discover", label: "Discover", hint: "Spaces, people and pursuits",
+  { to: "/discover", label: "Discover", hint: "Spaces, people and Pursuits",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },
   { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you’re part of",
     match: (p: string) => p.startsWith("/my-space") },
-  { to: "/create", label: "Log a Moment", hint: "Share a moment, or start a pursuit.", accent: true,
+  { to: "/create", label: "Log a Moment", hint: "Share a Moment or start a Pursuit.", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
 

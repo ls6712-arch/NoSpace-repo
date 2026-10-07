@@ -118,7 +118,7 @@ const AUDIENCE: {
 }[] = [
   { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
   { value: "followers", label: "Followers", copy: "People who follow you, once you’ve accepted them", icon: UserRound },
-  { value: "public", label: "Everyone", copy: "Anyone browsing this space can find it", icon: Globe2 },
+  { value: "public", label: "Everyone", copy: "Anyone can find it", icon: Globe2 },
 ];
 
 const THOUGHT_LIMIT = 300;
@@ -667,7 +667,7 @@ export function Log() {
     <Dialog open={discardPromptOpen} onOpenChange={(o) => !o && stayInComposer()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Discard this moment?</DialogTitle>
+          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Discard this Moment?</DialogTitle>
           <DialogDescription>Leaving now won’t keep what you’ve added.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -1007,7 +1007,7 @@ export function Log() {
         <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Log a Moment
         </h1>
-        <p className="mb-8 text-muted-foreground">Share a moment, or start a pursuit.</p>
+        <p className="mb-8 text-muted-foreground">Share a Moment or start a Pursuit.</p>
 
         <div className="space-y-3">
           <button
@@ -1159,7 +1159,7 @@ export function Log() {
           </span>
           <h2 className="mb-2 text-title">Log in to keep your Moments</h2>
           <p className="mb-6 text-muted-foreground">
-            Your moments are tied to your account, so they’re still here next
+            Your Moments are tied to your account, so they’re still here next
             time, not just in this browser tab.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -1301,7 +1301,7 @@ export function Log() {
       <Shell>
         <Back to={captionBackTo} />
         <h1 className="mb-6 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-          Your moment
+          Your Moment
         </h1>
 
         {/* A video is always exactly one file — same single preview as

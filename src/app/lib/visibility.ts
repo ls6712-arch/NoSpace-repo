@@ -33,7 +33,7 @@ export const MOMENT_VISIBILITY_OPTIONS: {
 
 /**
  * "Your Moments" meta-row word (MomentCard §2.1.2): `Public`, `Only you`,
- * `FOLLOWERS` — small-caps ready, uppercase already applied. `spaceName` is
+ * `Followers`, in sentence case. `spaceName` is
  * unused until a post can actually carry `visibility: "space"`.
  */
 // TODO(decision: D4): "Everyone" (forms, glossary) vs "Public" (this card

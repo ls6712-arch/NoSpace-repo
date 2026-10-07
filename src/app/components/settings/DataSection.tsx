@@ -29,7 +29,7 @@ export function DataSection() {
           “Only you” Moments
         </div>
         <p className="mb-3 text-caption leading-relaxed text-muted-foreground">
-          Kept here and nowhere else. These never appear in a Space, a feed, or your public shelf.
+          Kept here and nowhere else. These never appear in a Space, a feed, or your public Shelf.
         </p>
         {logs.length === 0 ? (
           <EmptyState size="rail" className="mt-0" line="Nothing here yet." action={{ label: "Log a Moment", to: "/create" }} />

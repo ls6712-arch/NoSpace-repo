@@ -80,7 +80,7 @@ export function ShelfRail() {
                     </span>
                   </span>
                   <span className="ns-section-kicker shrink-0 text-muted-foreground">
-                    {plural(s.sessions, "Moment").toUpperCase()}
+                    {plural(s.sessions, "Moment")}
                   </span>
                 </Link>
               </li>

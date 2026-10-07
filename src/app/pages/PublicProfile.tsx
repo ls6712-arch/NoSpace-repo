@@ -648,7 +648,7 @@ export function PublicProfile() {
         {/* The one place this page asks for anything */}
         <div className="ns-profile-cta glass-panel p-7 text-center">
           <h2 className="mb-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Start your own shelf
+            Start your own Shelf
           </h2>
           <p className="mx-auto mb-6 max-w-sm text-small text-muted-foreground">
             Pick a hobby, log what you make, and watch it stack up. Free, and there’s

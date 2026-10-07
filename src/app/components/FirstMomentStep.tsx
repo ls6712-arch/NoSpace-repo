@@ -95,7 +95,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
           }
           media = { path, type: "image", hobbySlug };
         }
-        const outcome = await addPrivateLog({ note: text || "My first moment" });
+        const outcome = await addPrivateLog({ note: text });
         if (outcome.skipped) return;
         if (!outcome.data) {
           setError(outcome.error || ERROR_LINE);
@@ -111,7 +111,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         type: file ? "photo" : "written",
         files: file ? [file] : undefined,
         creator: profile?.display_name?.trim() || "You",
-        caption: text || "My first moment",
+        caption: text,
         visibility: audience,
       });
       if (isInFlightSkipped(entry)) return;
@@ -146,7 +146,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
     return (
       <div className="space-y-3">
         <div className="flex h-11 items-center justify-between rounded-control border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 text-small">
-          <span>Your first moment is in.</span>
+          <span>Your first Moment is in.</span>
           <button type="button" onClick={undo} className="text-[var(--coral-text,var(--coral-deep))] hover:opacity-80">
             Undo
           </button>
@@ -215,7 +215,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
   return (
     <>
       <h1 className="mb-1 text-title sm:text-display" style={{ fontFamily: "var(--font-serif)" }}>
-        Add your first moment.
+        Add your first Moment.
       </h1>
       <p className="mb-6 text-small text-[var(--ink-soft)]">
         Anything you’re making, practising or learning. Half-done counts.

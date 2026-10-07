@@ -427,7 +427,7 @@ export function QuickLog({
                   className="h-6 w-auto gap-1 rounded-control border-border px-2 py-0.5 text-body"
                   aria-label="Pursuit"
                 >
-                  <SelectValue placeholder="No pursuit" />
+                  <SelectValue placeholder="No Pursuit" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_PURSUIT}>No Pursuit</SelectItem>

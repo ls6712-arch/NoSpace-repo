@@ -297,12 +297,12 @@ export function AdminInvites() {
 
           <TabsContent value="first-moments">
             <p className="mb-4 text-small text-muted-foreground">
-              New people’s first moments from the last 14 days with no thought from anyone yet,
+              New people’s first Moments from the last 14 days with no thought from anyone yet,
               oldest first. Anything over 24 hours is ours to answer.
             </p>
             <InlineError message={waitingError} className="mb-4" />
             {waiting.length === 0 ? (
-              <EmptyState line="Every first moment has a thought." />
+              <EmptyState line="Every first Moment has a thought." />
             ) : (
               <ul className="space-y-3">
                 {waiting.map((m) => {

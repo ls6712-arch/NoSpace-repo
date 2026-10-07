@@ -96,7 +96,7 @@ export function HobbyArchive() {
       <SignUpPrompt
         title="This is where your books live"
         body="Every hobby you log gets a book here, holding every photo, video and note you’ve put in it. Make an account and yours starts filling up."
-        cta="Start my shelf"
+        cta="Start my Shelf"
       />
     );
   }
@@ -173,7 +173,7 @@ export function HobbyArchive() {
           <Link to={logTo}>
             <Button variant="coral">
               <PenLine className="size-4" />
-              Log a {target.label.toLowerCase()} moment
+              Log a {target.label.toLowerCase()} Moment
             </Button>
           </Link>
         </div>

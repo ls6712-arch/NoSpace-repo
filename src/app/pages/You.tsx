@@ -106,9 +106,9 @@ export function You() {
   if (isConfigured && !user) {
     return (
       <SignUpPrompt
-        title="Your shelf lives here"
-        body="Make an account and everything you log builds up on a shelf of your own: hobbies, sessions, milestones. You can keep browsing everything else without one."
-        cta="Start my shelf"
+        title="Your Shelf lives here"
+        body="Make an account and everything you log builds up on a Shelf of your own: hobbies, sessions, milestones. You can keep browsing everything else without one."
+        cta="Start my Shelf"
       />
     );
   }
@@ -267,7 +267,7 @@ export function You() {
         </div>
 
         {/* Open tags now, not the fixed 15-Space list — tap one to narrow
-            Every moment below to just that tag, tap it again to clear. */}
+            Every Moment below to just that tag, tap it again to clear. */}
         {myTags.length > 0 && (
           <div
             className="mb-5 flex flex-wrap items-center gap-2 text-body"
@@ -330,7 +330,7 @@ export function You() {
             <h2 className="text-title sm:text-display" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
               Every moment
             </h2>
-            {/* All moments (plain chronological) is the default now — By
+            {/* All Moments (plain chronological) is the default now — By
                 Corner stays available for anyone who wants the grouped
                 view. HobbyShelf.tsx no longer renders Space-level section
                 headers at all — it's one flat grid of Corners, sorted by

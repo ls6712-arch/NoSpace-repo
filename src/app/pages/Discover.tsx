@@ -288,7 +288,7 @@ function AllCornersBrowser({ query }: { query: string }) {
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
           to={`/corner/${c.slug}`}
-          aria-label={`Browse the ${c.name} corner`}
+          aria-label={`Browse the ${c.name} Corner`}
           // Reveal-on-load: .ns-enter is the same rise-and-fade every other
           // entrance in this app uses (theme.css), already switched off
           // wholesale under prefers-reduced-motion. The per-item delay is

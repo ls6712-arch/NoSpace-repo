@@ -19,3 +19,17 @@ export function withoutDashes(text: string): string {
     .replace(/\s+[—–]\s+(\S)/g, (_m, next: string) => `. ${next.toUpperCase()}`)
     .replace(/[—–]/g, ", ");
 }
+
+/** The five product nouns are always capitalized (Moment, Shelf, Pursuit,
+ * Corner, Space), but older notification bodies stored by the database say
+ * "your moment". Fixes the casing when a stored body is shown. */
+export function withProductNouns(text: string): string {
+  return text.replace(/\b(moment|pursuit|corner|space|shelf)(s?)\b/g, (_m, noun: string, s: string) => {
+    return noun.charAt(0).toUpperCase() + noun.slice(1) + s;
+  });
+}
+
+/** Everything a stored notification body needs before it is shown. */
+export function notificationText(body: string): string {
+  return withProductNouns(withoutDashes(body));
+}
