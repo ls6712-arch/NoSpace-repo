@@ -314,7 +314,7 @@ export function PublicProfile() {
 
   const { personId, displayName, avatarUrl, tagline, bio, posts } = state;
   const isMe = !!user && user.id === personId;
-  const firstName = displayName.split(" ")[0];
+  const shownName = displayName;
   const sessions = sessionsFromPosts(posts);
   const tags = tagsFromPosts(posts);
 
@@ -525,7 +525,7 @@ export function PublicProfile() {
                   className="text-title sm:text-display"
                   style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
                 >
-                  {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
+                  {focusTag ? `What ${shownName} makes in ${focusTag.toLowerCase()}` : `What ${shownName} makes`}
                 </h2>
                 <p className="mt-1 text-small text-muted-foreground">
                   A look into the things they’ve created, explored, and loved.
@@ -545,7 +545,7 @@ export function PublicProfile() {
               posts={shownPosts}
               onOpen={setOpenPost}
               editable={isMe}
-              emptyLabel={isMe ? "Nothing logged yet." : `${firstName} hasn’t shared any Moments publicly yet.`}
+              emptyLabel={isMe ? "Nothing logged yet." : `${shownName} hasn’t shared any Moments publicly yet.`}
               emptyAction={isMe ? { label: "Log a Moment", to: "/create" } : { label: "Go to Discover", to: "/discover" }}
             />
           </section>
@@ -553,7 +553,7 @@ export function PublicProfile() {
           {sharedPursuits.length > 0 && (
             <section>
               <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-                {firstName}’s Pursuits
+                {shownName}’s Pursuits
               </h2>
               <p className="mb-4 mt-1 text-small text-muted-foreground">
                 The things they’re bringing to life, that they’ve chosen to share.
@@ -577,7 +577,7 @@ export function PublicProfile() {
               Quiet milestones
             </h2>
             <p className="mb-3 text-small text-muted-foreground">
-              {isMe ? "Private by default." : `What ${firstName} chose to share.`}
+              {isMe ? "Private by default." : `What ${shownName} chose to share.`}
             </p>
             {isMe ? (
               <QuietMilestones />
@@ -593,7 +593,7 @@ export function PublicProfile() {
               {primaryCorner.name}
             </h2>
             <p className="mb-4 text-small text-muted-foreground">
-              {firstName}’s Moments tagged {primaryCorner.name}.
+              {shownName}’s Moments tagged {primaryCorner.name}.
             </p>
             <div className={MOMENT_GRID}>
               {cornerMoments.slice(0, 6).map((post) => (
