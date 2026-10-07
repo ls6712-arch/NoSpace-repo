@@ -1226,7 +1226,7 @@ export function Log() {
           </p>
           {!anySaveError && (
             <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-small">
-              {savedAs === "private" ? "Kept just for you." : "Another one made."}
+              {savedAs === "private" ? "Kept just for you." : "Moment logged."}
             </p>
           )}
 

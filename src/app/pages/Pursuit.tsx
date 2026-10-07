@@ -423,7 +423,7 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-small">
               <Wind className="size-4 shrink-0 text-muted-foreground" />
-              Let go. Nothing’s lost.
+              Let go.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
               <Play className="size-3.5" /> Pick it back up

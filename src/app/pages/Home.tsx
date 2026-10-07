@@ -136,7 +136,7 @@ export function Home() {
 
           <p className="ns-enter ns-enter-2 mx-auto mb-8 max-w-lg text-body leading-relaxed text-foreground/90 sm:text-lead">
             {APP_NAME} is a place for everything you do, make, and try. Keep it to
-            yourself, share it with a few people, or show everyone. No judgments.
+            yourself, share it with a few people, or show everyone.
           </p>
 
           <div className="ns-enter ns-enter-3 flex flex-wrap items-center justify-center gap-2.5">

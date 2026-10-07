@@ -393,7 +393,7 @@ export function PursuitDialog({
               ))}
             </div>
             <p className="mt-1.5 text-caption text-muted-foreground">
-              One gentle question if it goes quiet. Never a streak.
+              A reminder if it goes quiet.
             </p>
           </div>
 

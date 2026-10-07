@@ -178,7 +178,7 @@ export function Inbox() {
               <EmptyState
                 size={requestCount === 0 ? "page" : "section"}
                 icon={<InboxIcon />}
-                line="Quiet."
+                line="No notifications yet."
                 hint="Thoughts on your Moments and accepted follows all show up here."
                 action={{ label: "Log a Moment", to: "/create" }}
               />

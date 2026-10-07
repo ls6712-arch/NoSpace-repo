@@ -59,7 +59,7 @@ function BadgeDetailDialog({
                     {badgeName(badge, hobbySlug, hobbyLabel)}
                   </h3>
                   <p className="mb-1 text-small text-muted-foreground">{badge.description}</p>
-                  {!unlocked && <p className="mt-4 text-caption text-muted-foreground">Not yet. No rush.</p>}
+                  
                 </>
               );
             })()}
