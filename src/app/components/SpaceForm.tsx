@@ -479,7 +479,7 @@ export function SpaceForm({
           Cancel
         </Button>
         <Button busy={saving} type="submit" variant="coral" disabled={saving || uploading}>
-          {mode === "create" ? "Create Space" : "Save changes"}
+          {mode === "create" ? "Create a Space" : "Save changes"}
         </Button>
       </div>
     </form>

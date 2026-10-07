@@ -81,7 +81,7 @@ interface AuthContextType {
   updatePassword: (next: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   /** Revokes every refresh token for this account, not just this browser's —
-   * Settings > Account's "Sign out everywhere". A revoked session's own
+   * Settings > Account's "Log out everywhere". A revoked session's own
    * access token still works until it expires on its own (see
    * docs/pause-session-revocation-plan.md); this stops any NEW token from
    * being minted on any other device, same as the pause flow's own
@@ -366,7 +366,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     // Clear the browser's copy first, and regardless of whether the network
     // call succeeds. Private logs, saved work and reactions all live in
-    // localStorage; leaving them behind meant the next person to sign in on
+    // localStorage; leaving them behind meant the next person to log in on
     // a shared laptop inherited the last person's private reflections.
     clearLocalData();
     if (!supabase) return;
@@ -393,7 +393,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateProfile: AuthContextType["updateProfile"] = async (fields) => {
-    if (!supabase || !session) return { error: "Not signed in." };
+    if (!supabase || !session) return { error: "You’re not logged in." };
     try {
       // A plain update, not an upsert: the row always already exists (the
       // trigger that creates it fires the moment the account is made), and

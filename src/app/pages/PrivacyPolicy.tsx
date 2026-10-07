@@ -13,7 +13,7 @@ export function PrivacyPolicy() {
     <LegalPage title="Privacy policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
       <h2>What we collect</h2>
       <p>
-        Your email, display name, and password (or your Google account, if you sign in
+        Your email, display name, and password (or your Google account, if you log in
         that way), and whatever you add to your profile. The Moments you log (photos
         and notes), plus Thoughts, messages, and who you follow. If you
         join the waitlist before you have an invite, we keep the email and the optional
@@ -25,8 +25,8 @@ export function PrivacyPolicy() {
 
       <h2>Who else sees it</h2>
       <p>
-        {APP_NAME} runs on Supabase, which hosts our database, handles sign-in, and
-        stores your photos, and on Vercel, which hosts the app itself. If you sign in
+        {APP_NAME} runs on Supabase, which hosts our database, handles login, and
+        stores your photos, and on Vercel, which hosts the app itself. If you log in
         with Google, Google is involved in that one step. We don’t sell your
         information to anyone.
       </p>

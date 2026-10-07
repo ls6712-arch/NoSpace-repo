@@ -38,7 +38,7 @@ export function QuickLogGlobalSheet() {
           className="inset-x-0 top-[12vh] bottom-auto mx-auto w-[calc(100%-2rem)] max-w-lg rounded-card border data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
         >
           <SheetHeader>
-            <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>New Moment</SheetTitle>
+            <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>Log a Moment</SheetTitle>
           </SheetHeader>
           <div className="px-4 pb-4">
             {open && (

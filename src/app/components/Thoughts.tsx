@@ -250,7 +250,7 @@ export function Thoughts({
 
       {!social.isShared && thoughts.length > 0 && (
         <p className="mt-2 text-caption text-muted-foreground">
-          Saved in this browser only. Sign in for thoughts other people can see.
+          Saved in this browser only. Log in for thoughts other people can see.
         </p>
       )}
 

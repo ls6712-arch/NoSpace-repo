@@ -54,7 +54,7 @@ export interface CreateInviteResult {
 }
 
 export async function createInvite(note: string): Promise<CreateInviteResult> {
-  if (!supabase) return { code: null, expiresAt: null, error: "Not signed in." };
+  if (!supabase) return { code: null, expiresAt: null, error: "You’re not logged in." };
   const { data, error } = await supabase.rpc("create_invite", { p_note: note.trim() || null });
   if (error) return { code: null, expiresAt: null, error: friendlyError(error) };
   const row = Array.isArray(data) ? data[0] : data;

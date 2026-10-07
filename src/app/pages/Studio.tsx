@@ -203,7 +203,7 @@ export function Studio() {
     if (!username && !user) {
       return (
         <div className="flex min-h-[70vh] items-center justify-center px-4 text-center">
-          <p className="text-small text-muted-foreground">Sign in to open your own Scrapbook.</p>
+          <p className="text-small text-muted-foreground">Log in to open your own Scrapbook.</p>
         </div>
       );
     }

@@ -156,7 +156,7 @@ export function NewPursuitTile({ onClick }: { onClick: () => void }) {
       className="flex min-h-11 items-center justify-center gap-1.5 rounded-card border border-dashed border-border p-3 text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
     >
       <Plus className="size-4" strokeWidth={1.8} />
-      <span className="text-caption">New Pursuit</span>
+      <span className="text-caption">Start a Pursuit</span>
     </button>
   );
 }

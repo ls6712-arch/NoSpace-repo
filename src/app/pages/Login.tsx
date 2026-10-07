@@ -162,7 +162,7 @@ export function Login() {
           <div className="glass-panel rounded-card p-6 text-center">
             <p className="text-small leading-relaxed text-muted-foreground">
               Check <span className="text-foreground">{email}</span> for a confirmation link.
-              you’ll be signed in once you click it.
+              you’ll be logged in once you click it.
             </p>
             <p className="mt-3 text-caption leading-relaxed text-muted-foreground">
               {resent

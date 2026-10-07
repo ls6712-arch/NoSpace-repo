@@ -191,7 +191,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const suggest: CategoriesContextType["suggest"] = async (input) => {
-    if (!supabase || !user) return { error: "Sign in to suggest a category." };
+    if (!supabase || !user) return { error: "Log in to suggest a category." };
     const name = input.name.trim();
     if (!name) return { error: "Give it a name." };
     try {
@@ -216,7 +216,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   };
 
   const review: CategoriesContextType["review"] = async (id, decision, opts) => {
-    if (!supabase || !user) return { error: "Sign in first." };
+    if (!supabase || !user) return { error: "Log in first." };
     const target = suggestions.find((s) => s.id === id);
     if (!target) return { error: "That suggestion is gone." };
 
@@ -266,7 +266,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   };
 
   const saveSpace: CategoriesContextType["saveSpace"] = async (input) => {
-    if (!supabase || !user) return { error: "Sign in first." };
+    if (!supabase || !user) return { error: "Log in first." };
     if (!isAdmin) return { error: "Only an admin can do that." };
     const name = input.name.trim();
     if (!name) return { error: "Give the Space a name." };

@@ -57,7 +57,7 @@ export function PauseOrLeaveSection() {
           </Button>
         </SettingsRow>
         {user && (
-          <SettingsRow label="Log out" description="Sign out of this device.">
+          <SettingsRow label="Log out" description="Ends your session on this device.">
             <Button variant="outline" size="sm" onClick={() => void signOut()}>
               Log out
             </Button>

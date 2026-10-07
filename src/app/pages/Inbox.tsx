@@ -81,7 +81,7 @@ export function Inbox() {
             Requests and activity live here once you have an account.
           </p>
           <Link to="/login?next=/inbox">
-            <Button variant="coral">Sign in</Button>
+            <Button variant="coral">Log in</Button>
           </Link>
         </div>
       </div>

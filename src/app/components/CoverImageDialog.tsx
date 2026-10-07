@@ -56,7 +56,7 @@ export function CoverImageDialog({
     let path: string | null | undefined = undefined; // undefined = leave the existing custom cover untouched
     if (file) {
       if (!user) {
-        setError("Sign in to upload a cover photo.");
+        setError("Log in to upload a cover photo.");
         setSaving(false);
         return;
       }

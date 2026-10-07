@@ -170,7 +170,7 @@ export function AccountSection() {
     <section>
       <SectionHeader n={3} eyebrow="ACCOUNT" title="Account" />
       <p className="mb-4 text-small text-muted-foreground">
-        Your sign-in details, and every device you’re signed into.
+        Your login details, and every device you’re logged into.
       </p>
       <SettingsPanel>
         <SettingsRow label="Email" description="Signing in and account notices go here.">
@@ -178,11 +178,11 @@ export function AccountSection() {
         </SettingsRow>
         {isEmailAccount && <PasswordChangeRow />}
         <SettingsRow
-          label="Sign out everywhere"
+          label="Log out everywhere"
           description="Ends every session on every device, including this one."
         >
           <Button variant="outline" size="sm" onClick={() => setConfirmOpen(true)}>
-            Sign out everywhere
+            Log out everywhere
           </Button>
         </SettingsRow>
       </SettingsPanel>
@@ -203,9 +203,9 @@ export function AccountSection() {
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Sign out everywhere?"
-        description="This ends every signed-in session for your account, including the one you’re using right now."
-        confirmLabel="Sign out everywhere"
+        title="Log out everywhere?"
+        description="This ends every logged-in session for your account, including the one you’re using right now."
+        confirmLabel="Log out everywhere"
         onConfirm={async () => {
           await signOutEverywhere();
           setConfirmOpen(false);

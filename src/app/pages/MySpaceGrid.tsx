@@ -176,7 +176,7 @@ export function MySpaceGrid() {
     setSearchParams(next, { replace: true });
   };
 
-  const dateEyebrow = formatDate(Date.now(), { weekday: "long", month: "long" }).toUpperCase();
+  const dateEyebrow = formatDate(Date.now(), { weekday: "long", month: "long" });
 
   const numeral =
     sheet.length === 0
