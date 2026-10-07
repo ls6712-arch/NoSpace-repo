@@ -761,6 +761,25 @@ export function addProgress(entry: Omit<ProgressEntry, "id" | "createdAt"> & { c
   return full;
 }
 
+/** Adds progress entries restored from the database that this browser
+ * doesn't have yet (a new device, cleared storage). Add-only, by id: an
+ * entry already here is never touched, same local-wins rule as
+ * mergeRemoteProjects. Without this the Shelf, which reads the local
+ * journal, showed 0 progress for a Pursuit whose entries only existed in
+ * the database. */
+export function mergeProgressEntries(local: ProgressEntry[], remote: ProgressEntry[]): ProgressEntry[] {
+  const known = new Set(local.map((e) => e.id));
+  const toAdd = remote.filter((e) => !known.has(e.id));
+  if (toAdd.length === 0) return local;
+  return [...local, ...toAdd].sort((a, b) => a.createdAt - b.createdAt);
+}
+
+export function mergeRemoteProgress(remote: ProgressEntry[]) {
+  const local = state.progress ?? [];
+  const merged = mergeProgressEntries(local, remote);
+  if (merged !== local) commit({ ...state, progress: merged });
+}
+
 export function removeProgress(entryId: string) {
   commit({ ...state, progress: (state.progress ?? []).filter((e) => e.id !== entryId) });
 }
