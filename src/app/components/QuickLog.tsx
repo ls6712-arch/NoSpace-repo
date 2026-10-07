@@ -35,7 +35,7 @@ type Audience = "private" | "followers" | "public";
 const AUDIENCE_LABEL: Record<Audience, string> = {
   private: "Only you",
   followers: "Followers",
-  public: "Everyone",
+  public: "Public",
 };
 
 const NO_PURSUIT = "__none__";

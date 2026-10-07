@@ -21,7 +21,7 @@ type Audience = "private" | "followers" | "public";
 const AUDIENCE_LABEL: Record<Audience, string> = {
   private: "Only you",
   followers: "Followers",
-  public: "Everyone",
+  public: "Public",
 };
 
 /**
@@ -153,7 +153,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         </div>
         {saved.post && (
           <p className="text-caption text-[var(--ink-soft)]">
-            {audience === "followers" ? "Your followers" : audience === "public" ? "Everyone" : "Only you"} will
+            {audience === "followers" ? "Your followers" : audience === "public" ? "Anyone" : "Only you"} will
             see it{audience === "followers" ? " first" : ""}.
           </p>
         )}

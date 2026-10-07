@@ -117,7 +117,7 @@ const AUDIENCE: {
 }[] = [
   { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
   { value: "followers", label: "Followers", copy: "People who follow you, once you’ve accepted them", icon: UserRound },
-  { value: "public", label: "Everyone", copy: "Anyone can find it", icon: Globe2 },
+  { value: "public", label: "Public", copy: "Anyone can find it", icon: Globe2 },
 ];
 
 const THOUGHT_LIMIT = 300;

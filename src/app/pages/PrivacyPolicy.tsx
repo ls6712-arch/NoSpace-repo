@@ -38,8 +38,8 @@ export function PrivacyPolicy() {
 
       <h2>What you control</h2>
       <p>
-        Every Moment you log, you choose who sees it: just you, your followers, or
-        everyone, each time you post it. A Moment marked "only you" is kept
+        Every Moment you log, you choose who sees it: only you, your followers, or
+        the public, each time you post it. A Moment marked “Only you” is kept
         and never shown anywhere else, including to {APP_NAME} staff reviewing a
         report.
       </p>

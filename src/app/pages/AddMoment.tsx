@@ -28,7 +28,7 @@ type Audience = "private" | "followers" | "public";
 const AUDIENCES: { value: Audience; label: string; icon: typeof Lock }[] = [
   { value: "private", label: "Only you", icon: Lock },
   { value: "followers", label: "Followers", icon: UserRound },
-  { value: "public", label: "Everyone", icon: Globe2 },
+  { value: "public", label: "Public", icon: Globe2 },
 ];
 
 /**

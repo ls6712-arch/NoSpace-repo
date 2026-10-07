@@ -48,7 +48,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 |---|---|
 | Moment | Anything you log |
 | Log a Moment / Add from my Moments | Create a new one / add an existing one to a Space |
-| Only you / Followers / Everyone | Who sees a Moment |
+| Only you / Followers / Public | Who sees a Moment |
 | Pinned | You choose, on your own profile. Buttons: "Pin" / "Unpin" |
 | Host picks | Hosts choose, in a Space. Buttons: "Add to host picks" / "Remove from host picks" (max 3) |
 | Spotlight | The Soosh team chooses, on Discover |

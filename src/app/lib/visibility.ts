@@ -28,7 +28,7 @@ export const MOMENT_VISIBILITY_OPTIONS: {
 }[] = [
   { value: "just_me", label: "Only you", icon: Lock },
   { value: "followers", label: "Followers", icon: UserRound },
-  { value: "public", label: "Everyone", icon: Globe2 },
+  { value: "public", label: "Public", icon: Globe2 },
 ];
 
 /**
@@ -36,8 +36,6 @@ export const MOMENT_VISIBILITY_OPTIONS: {
  * `Followers`, in sentence case. `spaceName` is
  * unused until a post can actually carry `visibility: "space"`.
  */
-// TODO(decision: D4): "Everyone" (forms, glossary) vs "Public" (this card
-// word). One label, applied everywhere, once the founder picks.
 export function visibilityWord(post: VisibilityPost, spaceName?: string): string {
   if (isOnlyYou(post)) return "Only you";
   if (post.visibility === "space") return spaceName ?? "A Space";

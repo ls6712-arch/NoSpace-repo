@@ -62,7 +62,7 @@ import { ImageWithFallback } from "./ImageWithFallback";
 
 /** The audience words, identical to the ones chosen in the Log flow. */
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
-  public: { label: "Everyone", icon: Globe2 },
+  public: { label: "Public", icon: Globe2 },
   followers: { label: "Followers", icon: UserRound },
 };
 
