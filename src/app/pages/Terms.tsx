@@ -11,7 +11,7 @@ export function Terms() {
     <LegalPage title="Terms of service" lastUpdated="[PLACEHOLDER: draft, not yet published]">
       <h2>Who can use {APP_NAME}</h2>
       <p>
-        You must be at least 16 years old to create an account. By signing up, you're
+        You must be at least 16 years old to create an account. By signing up, you’re
         confirming you meet that age.
       </p>
 
@@ -19,7 +19,7 @@ export function Terms() {
       <p>
         While {APP_NAME} is invite-only, an invite is for the person it's meant for, not
         something to sell, trade, or hand out publicly. We can revoke an invite or the
-        account it created if it's misused.
+        account it created if it’s misused.
       </p>
 
       <h2>What you post</h2>
@@ -32,8 +32,8 @@ export function Terms() {
 
       <h2>How to behave</h2>
       <p>
-        Be honest about who you are, and respect other people's boundaries and privacy.
-        Don't harass, impersonate, or post anything illegal or meant to harm someone.
+        Be honest about who you are, and respect other people’s boundaries and privacy.
+        Don’t harass, impersonate, or post anything illegal or meant to harm someone.
         You can block anyone, and report a Moment, a chat, or a profile. We review
         reports and act on them.
       </p>

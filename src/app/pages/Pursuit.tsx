@@ -474,7 +474,7 @@ export function Pursuit() {
 
         {/* A new Pursuit's empty state. There used to be a separate "Day
             Zero" box here with its own inline logger — a third way to add a
-            Moment, next to Log a Moment. It's gone: the before-and-after
+            Moment, next to Log a Moment. It’s gone: the before-and-after
             already uses whichever Moment has the first photo, so the only
             thing worth keeping is the nudge to make that one a photo. */}
         {owner && ownProject && moments.length === 0 && (

@@ -76,7 +76,7 @@ export function HobbyCategoryCard({
             </Link>
           ))}
           {/* Corners are created by tagging, not suggested for review: this
-              points at the one place that's actually true, logging a Moment,
+              points at the one place that’s actually true, logging a Moment,
               rather than opening a submission form for something that
               doesn't need approval. */}
           <Link

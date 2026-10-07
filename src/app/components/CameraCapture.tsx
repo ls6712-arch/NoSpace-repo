@@ -389,9 +389,9 @@ export function CameraCapture({
           )}
 
           {/* Recent picks from this visit — tapping one skips straight past
-              the picker. Browsers don't expose a real photo-library listing
-              to a web page, so this can only ever remember what's already
-              been picked or captured here, not the device's actual camera
+              the picker. Browsers don’t expose a real photo-library listing
+              to a web page, so this can only ever remember what’s already
+              been picked or captured here, not the device’s actual camera
               roll. */}
           {recents.length > 0 && (
             <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 [scrollbar-width:thin]">

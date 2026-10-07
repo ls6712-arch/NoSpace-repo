@@ -27,7 +27,7 @@ export function PrivacyPolicy() {
       <p>
         {APP_NAME} runs on Supabase, which hosts our database, handles sign-in, and
         stores your photos, and on Vercel, which hosts the app itself. If you sign in
-        with Google, Google is involved in that one step. We don't sell your
+        with Google, Google is involved in that one step. We don’t sell your
         information to anyone.
       </p>
 
@@ -41,12 +41,12 @@ export function PrivacyPolicy() {
 
       <h2>Pausing or deleting your account</h2>
       <p>
-        Self-serve account pausing and deletion are coming soon and aren't built yet.
+        Self-serve account pausing and deletion are coming soon and aren’t built yet.
         Until then, if you'd like your account or data deleted, contact us at{" "}
         <a href="mailto:hello@example.com" className="underline hover:text-foreground">
           [PLACEHOLDER contact email]
         </a>{" "}
-        and we'll handle it directly.
+        and we’ll handle it directly.
       </p>
 
       <h2>Questions</h2>

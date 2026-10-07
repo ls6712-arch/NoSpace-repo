@@ -223,7 +223,7 @@ export function WorkGrid({
         ))}
 
         {/* Nothing left but the pinned lead card — still needs somewhere
-            to offer "Pin a Moment" when there's no month section to
+            to offer "Pin a Moment" when there’s no month section to
             append it to. */}
         {byMonth.length === 0 && remaining === 0 && editable && (
           <button

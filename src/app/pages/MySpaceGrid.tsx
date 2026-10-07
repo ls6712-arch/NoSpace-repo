@@ -213,7 +213,7 @@ export function MySpaceGrid() {
           <div>
             {/* text-gold-text, not text-gold: this is a rendered label, and
                 --gold fails AA text contrast in light (2.76:1) — see
-                theme.css's own contrast-audit comment. --gold-text is the
+                theme.css’s own contrast-audit comment. --gold-text is the
                 darkened-in-light, same-in-dark variant built for exactly this
                 (any place gold is used as text, not decoration). */}
             <p className="ns-section-kicker text-gold-text">{dateEyebrow}</p>
@@ -228,7 +228,7 @@ export function MySpaceGrid() {
             </p>
           </div>
           {/* Numeral in foreground, not accent — docs/my-space-spec.md
-              section 1 explicitly overrides the mockup's warmer-looking
+              section 1 explicitly overrides the mockup’s warmer-looking
               numeral. lg+ only here; below lg it moves under the subtitle
               on one line instead (just below). */}
           <div className="hidden text-right text-foreground lg:block">
@@ -321,7 +321,7 @@ export function MySpaceGrid() {
             established unnumbered style avoids inventing a visible
             contradiction to chase a numbering scheme the live page never
             had; docs/my-space-deviations.md already flags that same
-            DOM/visual gap once, for tab order — this doesn't add a second,
+            DOM/visual gap once, for tab order — this doesn’t add a second,
             visible instance of it. */}
         <div className="myspace-rail mt-8 lg:mt-0">
           <div className="myspace-rail-shelf">

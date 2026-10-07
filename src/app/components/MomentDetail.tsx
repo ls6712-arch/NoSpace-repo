@@ -250,7 +250,7 @@ export function MomentDetail({
 
         {/* Who posted it — this dialog can now open from feeds that mix
             authors (Corner, Discover, CategoryFeed, Pursuit), so it can't
-            assume "you already know whose page you're on" the way it
+            assume "you already know whose page you’re on" the way it
             could when every caller was your own Shelf or My Space. */}
         {!owned && (
           <div className="flex min-w-0 items-center gap-2.5">
@@ -320,13 +320,13 @@ export function MomentDetail({
 
             {/* The one real (cross-user) way pursuits.inspired_by_post_id
                 (sql/pursuits.sql) ever gets set to someone else's Moment —
-                PursuitDialog's own seedPost prop already existed and already
+                PursuitDialog’s own seedPost prop already existed and already
                 wired inspiredByPostId through, but until now nothing ever
-                called it with another person's post: Log.tsx's "Start a
-                Pursuit" only ever seeds from the Moment you're publishing
-                yourself, and MomentDetail's owned-only "Add to Pursuit"
-                action doesn't set inspiredByPostId at all. Without this,
-                My Space's "You Inspired" rail could never have a real row to
+                called it with another person’s post: Log.tsx’s "Start a
+                Pursuit" only ever seeds from the Moment you’re publishing
+                yourself, and MomentDetail’s owned-only "Add to Pursuit"
+                action doesn’t set inspiredByPostId at all. Without this,
+                My Space’s "You Inspired" rail could never have a real row to
                 show — this button is what actually produces one. */}
             {!owned && (
               <button
@@ -341,15 +341,15 @@ export function MomentDetail({
             {/* Send to… — available whether or not you own it (sharing your
                 own Moment into a chat is just as ordinary as sharing
                 someone else's). The card that shows up on the other end
-                reloads it under THEIR permissions, not this viewer's — see
-                docs/communication-strategy.md's Phase 4 "Not available"
+                reloads it under THEIR permissions, not this viewer’s — see
+                docs/communication-strategy.md’s Phase 4 "Not available"
                 requirement and SharedContentCard.tsx. Not offered at all
                 for an "Only you" Moment (a real just_me post — a private-
                 log stand-in never reaches this row to begin with, see the
                 !post.isPrivateLog guard above): it's meant for nobody but
-                its owner, so there's nothing SharedContentCard could ever
+                its owner, so there’s nothing SharedContentCard could ever
                 load on the other end. The explanation lives in the
-                metadata block above, next to "Who sees this", since that's
+                metadata block above, next to "Who sees this", since that’s
                 the one place that reaches both kinds of "Only you"
                 Moment. */}
             {!isOnlyYou(post) && (
@@ -573,9 +573,9 @@ export function MomentDetail({
             </dd>
           </div>
           {/* entryProject is local, per-browser data (see lib/journal.ts) —
-              it can only ever answer for the signed-in viewer's own
+              it can only ever answer for the signed-in viewer’s own
               Pursuits, never for whoever actually posted this Moment. On
-              someone else's Moment this always read "Not part of a
+              someone else’s Moment this always read "Not part of a
               Pursuit," even when it demonstrably was one, which
               contradicted the Pursuit info this page already shows
               correctly elsewhere (PublicProfile's own shared-Pursuits

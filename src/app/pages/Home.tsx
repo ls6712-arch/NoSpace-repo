@@ -78,7 +78,7 @@ const VALUE_CARDS = [
   {
     icon: Target,
     title: "Keep going with a Pursuit",
-    copy: "Follow something you're working toward, on your own or with friends.",
+    copy: "Follow something you’re working toward, on your own or with friends.",
   },
 ];
 
@@ -250,7 +250,7 @@ export function Home() {
                 <p className="mx-auto max-w-md text-body leading-relaxed text-muted-foreground">
                   Join a Space run by someone who cares about the same thing.
                   Tag a Moment with a Corner, like Pottery or Pickleball, so
-                  it's easy to find.
+                  it’s easy to find.
                 </p>
               </div>
             </div>

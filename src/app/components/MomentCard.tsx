@@ -513,7 +513,7 @@ export function MomentCard({
       transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(staggerIndex ?? 0, 7) * 0.05 }}
     >
       {/* The open button and the Save icon are siblings, never nested —
-          a button inside a button isn't valid, and Save must not also
+          a button inside a button isn’t valid, and Save must not also
           open the Moment. */}
       <div className="relative">
         <button

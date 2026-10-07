@@ -182,7 +182,7 @@ export function You() {
                     </>
                   )}
                   {/* No count shown here — "who you follow" isn't a number
-                      worth advertising the way follower count is, it's just
+                      worth advertising the way follower count is, it’s just
                       a place to get to the list. */}
                   {user && (
                     <>
@@ -319,7 +319,7 @@ export function You() {
         )}
 
         {/* Three sections, stacked full-width. "Every moment" is the major
-            section here — it's what the Shelf is actually for — so it gets
+            section here — it’s what the Shelf is actually for — so it gets
             the biggest type and the most air around it. Pursuits and Quiet
             Milestones are minor sections: smaller headers, tighter rules,
             less padding, so the page reads as one important thing plus
@@ -333,7 +333,7 @@ export function You() {
             {/* All Moments (plain chronological) is the default now — By
                 Corner stays available for anyone who wants the grouped
                 view. HobbyShelf.tsx no longer renders Space-level section
-                headers at all — it's one flat grid of Corners, sorted by
+                headers at all — it’s one flat grid of Corners, sorted by
                 whichever was most recently updated — so "By Corner" is
                 what actually describes it now. (An earlier pass called
                 this "By space" when the view still had Space headers with

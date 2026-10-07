@@ -510,9 +510,9 @@ export function PublicProfile() {
         )}
 
         {/* Their Moments and their shared Pursuits, side by side — the same
-            portfolio-first layout as the owner's own profile. A Pursuit
+            portfolio-first layout as the owner’s own profile. A Pursuit
             only ever shows up here when its owner explicitly shared it;
-            the section itself doesn't render at all when there are none,
+            the section itself doesn’t render at all when there are none,
             rather than showing an empty "Pursuits" box. */}
         <div className="mb-12 grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
           <section>
@@ -565,7 +565,7 @@ export function PublicProfile() {
         </div>
 
         {/* Private by default, one milestone at a time: this section simply
-            doesn't exist for a non-owner until there's something explicitly
+            doesn’t exist for a non-owner until there’s something explicitly
             shared to show. Visiting your own public link still gets the full
             owner view, locked milestones included — same as /you. */}
         {(isMe || sharedMilestoneIds.length > 0) && (

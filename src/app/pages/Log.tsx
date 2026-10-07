@@ -1448,17 +1448,17 @@ export function Log() {
           {/* Its own field, independent of the tag match above: a Moment
               can be tagged Woodwork (whichever tag above matched a Corner
               name, setting subHobby) and filed under the Gift-making Corner
-              here at the same time — one is what it's made of, this is
-              which Corner it's filed under for Discover browsing.
+              here at the same time — one is what it’s made of, this is
+              which Corner it’s filed under for Discover browsing.
               Required now (spec change: "Corners carry discovery"), but
               pre-filled above (Pursuit's Corner, or your last one) so
-              picking one is usually zero taps — see the corner state's own
-              comment. Category never appears in this copy: it's internal
+              picking one is usually zero taps — see the corner state’s own
+              comment. Category never appears in this copy: it’s internal
               plumbing now, derived from whichever Corner is picked.
               Global (no spaceSlug) until spaceSet is true — hobbySlug is
               still just sitting at its silent technical default at that
               point (see spaceSet's own comment above), not a Category
-              anyone actually chose, so there's nothing real to scope to
+              anyone actually chose, so there’s nothing real to scope to
               yet. Picking a Corner (or the tag match above resolving one)
               sets both hobbySlug and spaceSet, which then scopes this
               field the same way it always used to. */}
@@ -1588,7 +1588,7 @@ export function Log() {
             </ul>
 
             {/* Only a public Moment could become a listing — Connections
-                couldn't be sold to anyway, same rule the Pursuit-scoped
+                couldn’t be sold to anyway, same rule the Pursuit-scoped
                 flow's own version of this control uses. */}
             {audience === "public" && <ForSaleComingSoon className="mt-3" />}
 

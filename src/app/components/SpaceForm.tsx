@@ -128,7 +128,7 @@ export function SpaceForm({
   // A blocklisted name is worded the same everywhere this class of error
   // can surface, regardless of which RPC raised it.
   function friendlyError(message: string) {
-    return message === "That name isn't available." ? "That name isn’t allowed." : message;
+    return message === "That name isn’t available." ? "That name isn’t allowed." : message;
   }
 
   // update_space's own message once pending requests block a closed->open

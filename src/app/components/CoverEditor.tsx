@@ -76,7 +76,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
       </button>
 
       {/* Radix Dialog: focus moves in, Escape and the backdrop close it,
-          focus returns to "Edit cover", and the page behind can't scroll.
+          focus returns to "Edit cover", and the page behind can’t scroll.
           It stays put while a save is in flight. */}
       <DialogPrimitive.Root open={open} onOpenChange={(next) => !saving && setOpen(next)}>
         <DialogPrimitive.Portal>

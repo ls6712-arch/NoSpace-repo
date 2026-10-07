@@ -208,7 +208,7 @@ export function AllPursuitsSection({
       </div>
 
       {/* Counts here are the raw, un-searched totals — a stable "at a
-          glance" reference that doesn't flicker as the search box above is
+          glance" reference that doesn’t flicker as the search box above is
           typed into. The "N Pursuits matching" line below carries the
           search-filtered count instead. */}
       <div className="mt-3 flex flex-wrap gap-x-2 gap-y-3" role="group" aria-label="Filter by status">

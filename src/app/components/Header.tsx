@@ -329,7 +329,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries
-              below — it's this wordmark — so it carries the same active
+              below — it’s this wordmark — so it carries the same active
               underline itself rather than leaving no primary item active
               (or, as before, leaving My Space wrongly claiming it). */}
           <Link
