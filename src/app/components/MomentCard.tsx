@@ -288,14 +288,20 @@ export function MomentActions({
     <div className="-ml-2 flex items-center">
       {mine ? (
         <>
-          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Love this, ${love}`} title="Love this" role="img">
-            <Heart className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
-            <Count n={love} />
-          </span>
-          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Count me in, ${inCount}`} title="Count me in" role="img">
-            <Hand className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
-            <Count n={inCount} />
-          </span>
+          {/* Nobody else can see an "Only you" Moment, so there is
+              nothing to react to. */}
+          {!isOnlyYou(post) && (
+            <>
+              <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Love this, ${love}`} title="Love this" role="img">
+                <Heart className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+                <Count n={love} />
+              </span>
+              <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Count me in, ${inCount}`} title="Count me in" role="img">
+                <Hand className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+                <Count n={inCount} />
+              </span>
+            </>
+          )}
           <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Thoughts, ${thoughts}`} title="Thoughts" role="img">
             <MessageCircle className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
             <Count n={thoughts} />
