@@ -69,7 +69,7 @@ export function InviteArrival() {
       <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
         <div className="mx-auto max-w-sm text-center">
           <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            This invite has expired or was already used.
+            This invite has expired or was already used
           </h1>
           <div className="mt-8 text-left">
             <WaitlistForm />

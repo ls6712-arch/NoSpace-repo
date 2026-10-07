@@ -197,7 +197,7 @@ export function AdminInvites() {
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 280))}
-            placeholder="A note for them, (optional). Shown on their arrival page."
+            placeholder="A note for them (optional). Shown on their arrival page."
             className="mb-2"
           />
           <div className="mb-3 text-right text-caption text-muted-foreground">{note.length}/280</div>

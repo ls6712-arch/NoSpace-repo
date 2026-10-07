@@ -223,7 +223,7 @@ export function CreatePursuit() {
               className="mt-6 w-full resize-none rounded-control border border-border bg-card p-4 text-body text-foreground outline-none focus:border-[var(--coral-deep)]"
             />
             <p className="mt-3 text-caption text-muted-foreground">
-              For example: Paint 10 paintings, Run 100 miles, Practice guitar 50 hours
+              For example: Paint 10 paintings, Run 100 miles, Practice guitar 50 hours.
             </p>
           </section>
         )}

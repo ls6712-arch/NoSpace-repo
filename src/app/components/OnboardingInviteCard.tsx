@@ -89,7 +89,7 @@ export function OnboardingInviteCard({
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 280))}
-            placeholder="A note for them, (optional). They’ll see it when they open the link."
+            placeholder="A note for them (optional). They’ll see it when they open the link."
             className="mb-2"
           />
           <div className="mb-3 text-right text-caption text-[var(--ink-soft)]">{note.length}/280</div>

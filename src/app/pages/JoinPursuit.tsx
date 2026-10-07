@@ -64,7 +64,7 @@ export function JoinPursuit() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-          This invite isn’t active.
+          This invite isn’t active
         </h1>
         <p className="max-w-sm text-small text-muted-foreground">
           The link may have been turned off. Ask whoever sent it for a new one.

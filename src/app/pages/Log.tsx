@@ -1116,7 +1116,7 @@ export function Log() {
                 {draftPrompt.thought.trim() ? (
                   <p className="line-clamp-3 text-foreground" title={draftPrompt.thought.trim()}>“{draftPrompt.thought.trim()}”</p>
                 ) : (
-                  <p>No caption yet</p>
+                  <p>No caption yet.</p>
                 )}
                 {draftPrompt.mediaType && !draftPromptMedia && (
                   <p className="mt-2 text-caption">

@@ -264,7 +264,7 @@ export function PursuitExpandedPanel({
       <div className="mb-5 border-t border-border pt-4">
         <h4 className="mb-2 text-caption font-medium tracking-wide text-muted-foreground">Goals</h4>
         {!goal && pastGoals.length === 0 ? (
-          <p className="text-small text-muted-foreground">No goal set yet</p>
+          <p className="text-small text-muted-foreground">No goal set yet.</p>
         ) : (
           <ul className="space-y-2">
             {goal && (

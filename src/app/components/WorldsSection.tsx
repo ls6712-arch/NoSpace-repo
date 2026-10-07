@@ -84,7 +84,7 @@ export function WorldsSection() {
       <div className="mx-auto w-full max-w-[1440px] px-5 pt-20 sm:px-8 lg:px-12 lg:pt-28 xl:px-16">
         <div ref={headingRef} className="ns-reveal mb-10 max-w-xl lg:mb-14">
           <h2 className="mb-3 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-            Pick a Corner for every Moment.
+            Pick a Corner for every Moment
           </h2>
           <p className="text-body leading-relaxed text-muted-foreground">
             Corners group your Moments on your Shelf and help people find what you post.

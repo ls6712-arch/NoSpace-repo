@@ -269,7 +269,7 @@ export function Pursuit() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
         <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-          This Pursuit isn’t here.
+          This Pursuit isn’t here
         </h1>
         <p className="max-w-sm text-small text-muted-foreground">
           It may have been kept private, or the link’s out of date.

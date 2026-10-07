@@ -33,3 +33,11 @@ export function withProductNouns(text: string): string {
 export function notificationText(body: string): string {
   return withProductNouns(withoutDashes(body));
 }
+
+/** Full sentences end with a period. Empty-state lines and hints are written
+ * without one at the call site; this adds it when the text doesn't already end
+ * in punctuation. */
+export function endSentence(text: string): string {
+  const t = text.trim();
+  return /[.!?…:]$/.test(t) ? t : `${t}.`;
+}

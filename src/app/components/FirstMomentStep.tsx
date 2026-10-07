@@ -212,7 +212,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
   return (
     <>
       <h1 className="mb-1 text-title sm:text-display" style={{ fontFamily: "var(--font-serif)" }}>
-        Add your first Moment.
+        Add your first Moment
       </h1>
       <p className="mb-6 text-small text-[var(--ink-soft)]">
         Anything you’re making, practising or learning. Half-done counts.
