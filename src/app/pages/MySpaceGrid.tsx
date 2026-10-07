@@ -239,9 +239,11 @@ export function MySpaceGrid() {
             {extraConceptsEnabled && <p className="ns-section-kicker text-muted-foreground">Today’s sheet</p>}
           </div>
         </div>
-        <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
-          {numeral} · TODAY’S SHEET
+        {extraConceptsEnabled && (
+          <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
+          {numeral} · Today’s sheet
         </p>
+        )}
       </header>
 
       <DayTwoInviteCard />

@@ -556,7 +556,7 @@ export function PublicProfile() {
                 {shownName}’s Pursuits
               </h2>
               <p className="mb-4 mt-1 text-small text-muted-foreground">
-                The things they’re bringing to life, that they’ve chosen to share.
+                Pursuits they chose to share.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {sharedPursuits.map((pursuit) => (

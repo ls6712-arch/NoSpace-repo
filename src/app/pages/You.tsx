@@ -118,7 +118,7 @@ export function You() {
     <div className="ns-paper-theme min-h-viewport bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="mb-5 text-caption font-medium tracking-[0.14em] text-muted-foreground">
-          YOUR SHELF
+          Your Shelf
         </div>
 
         <div className="mb-6 flex flex-col gap-3">
@@ -132,7 +132,7 @@ export function You() {
               />
               <div className="min-w-0">
                 <h2
-                  className="truncate text-title leading-tight sm:text-display"
+                  className="break-words text-title leading-tight sm:text-display"
                   style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
                  title={user ? displayName : "You"}>
                   {user ? displayName : "You"}
@@ -160,7 +160,7 @@ export function You() {
                     {pluralWord(totalSessions, "Moment")} logged
                     {sinceLabel ? ` since ${sinceLabel}` : ""}
                   </span>
-                  {followerCount !== null && followerCount > 0 && (
+                  {followerCount !== null && (
                     <>
                       <span className="text-muted-foreground/60" aria-hidden="true">·</span>
                       <button
@@ -174,12 +174,6 @@ export function You() {
                         <strong className="text-foreground tabular-nums">{followerCount.toLocaleString("en-US")}</strong>{" "}
                         {pluralWord(followerCount, "follower")}
                       </button>
-                    </>
-                  )}
-                  {followerCount === 0 && (
-                    <>
-                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
-                      <span>No one’s following yet</span>
                     </>
                   )}
                   {/* No count shown here — "who you follow" isn't a number
@@ -333,7 +327,7 @@ export function You() {
         <section className="mb-12">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-title sm:text-display" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
-              Every moment
+              Every Moment
             </h2>
             {/* All Moments (plain chronological) is the default now — By
                 Corner stays available for anyone who wants the grouped
@@ -352,7 +346,7 @@ export function You() {
                   momentsView === "grid" ? "bg-[var(--coral-deep)] text-on-brand" : "text-muted-foreground"
                 }`}
               >
-                All moments
+                All Moments
               </button>
               <button
                 type="button"
@@ -370,7 +364,7 @@ export function You() {
               ? "By Corner, most recently updated first. Open one to see every Moment inside it."
               : tagFilter
                 ? `Tagged “${tagFilter}.”`
-                : "A visual record of what you’ve made, explored, and loved, newest first."}
+                : "Newest first."}
             {momentsView === "grid" && tagFilter && (
               <button
                 type="button"
@@ -415,7 +409,6 @@ export function You() {
               Start a Pursuit
             </Button>
           </div>
-          <p className="mb-5 text-small text-muted-foreground">The things you’re bringing to life.</p>
 
           {myPursuits.length === 0 ? (
             <EmptyState
@@ -485,7 +478,7 @@ export function You() {
             </h2>
           </div>
           <p className="mb-5 text-small text-muted-foreground">
-            Private by default. Share one at a time, only if you want to.
+            Private by default. Share one at a time.
           </p>
           <QuietMilestones />
         </section>
