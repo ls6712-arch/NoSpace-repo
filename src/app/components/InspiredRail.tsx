@@ -57,7 +57,7 @@ export function InspiredRail() {
   return (
     <section>
       <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
-        You Inspired
+        You inspired
       </h2>
 
       {entries.length === 0 ? (

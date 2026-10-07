@@ -85,7 +85,7 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
         </Link>{" "}
         and{" "}
         <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
-          Privacy Policy
+          Privacy policy
         </Link>
         .
       </p>

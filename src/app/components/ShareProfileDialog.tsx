@@ -29,7 +29,7 @@ export function ShareProfileDialog({
 
   const unlocked = badges.filter((b) => unlockedBadgeIds.includes(b.id));
 
-  const summary = `${plural(stats.postsCreated, "Moment")} logged on ${APP_NAME}, ${plural(unlocked.length, "Quiet Milestone")} reached. ${publicUrl}`;
+  const summary = `${plural(stats.postsCreated, "Moment")} logged on ${APP_NAME}, ${plural(unlocked.length, "Quiet milestone")} reached. ${publicUrl}`;
 
   const handleCopy = async () => {
     try {
@@ -71,7 +71,6 @@ export function ShareProfileDialog({
               </div>
             )}
 
-            <div className="text-caption text-muted-foreground mb-1">Create, Don’t Just Consume.</div>
           </div>
         </div>
 

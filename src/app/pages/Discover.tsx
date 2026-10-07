@@ -88,7 +88,7 @@ const SEARCH_PLACEHOLDER: Record<DiscoverTab, string> = {
 };
 
 const FEED_TABS = [
-  { id: "forYou", label: "For You" },
+  { id: "forYou", label: "For you" },
   { id: "following", label: "Following" },
   { id: "recent", label: "Recent" },
 ] as const;

@@ -8,7 +8,7 @@ import { APP_NAME } from "../config";
 
 export function Terms() {
   return (
-    <LegalPage title="Terms of Service" lastUpdated="[PLACEHOLDER: draft, not yet published]">
+    <LegalPage title="Terms of service" lastUpdated="[PLACEHOLDER: draft, not yet published]">
       <h2>Who can use {APP_NAME}</h2>
       <p>
         You must be at least 16 years old to create an account. By signing up, you're

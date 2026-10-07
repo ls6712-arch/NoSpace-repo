@@ -10,7 +10,7 @@ import { APP_NAME } from "../config";
 
 export function PrivacyPolicy() {
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
+    <LegalPage title="Privacy policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
       <h2>What we collect</h2>
       <p>
         Your email, display name, and password (or your Google account, if you sign in

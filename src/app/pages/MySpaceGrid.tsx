@@ -262,13 +262,13 @@ export function MySpaceGrid() {
                   size="page"
                   icon={<Sparkles />}
                   line="Nothing here yet."
-                  hint="Log your first Moment, then join a Space or follow a person to fill your Contact Sheet."
+                  hint="Log your first Moment, then join a Space or follow a person to fill your Contact sheet."
                   action={{ label: "Log a Moment", to: "/create" }}
                 />
               ) : (
                 <EmptyState
                   line="Nothing here yet."
-                  hint="Join a Space or follow a person to start your Contact Sheet."
+                  hint="Join a Space or follow a person to start your Contact sheet."
                   action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }}
                 />
               )

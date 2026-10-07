@@ -476,7 +476,7 @@ export function You() {
           <div className="mb-1 flex items-baseline justify-between gap-4">
             <h2 className="flex items-center gap-2 text-body sm:text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
-              Quiet Milestones
+              Quiet milestones
             </h2>
           </div>
           <p className="mb-5 text-small text-muted-foreground">
