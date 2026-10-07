@@ -116,7 +116,7 @@ export function You() {
   return (
     <div className="ns-paper-theme min-h-viewport bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="mb-5 text-caption font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="mb-5 text-caption font-medium tracking-[0.14em] text-muted-foreground">
           YOUR SHELF
         </div>
 
@@ -212,7 +212,7 @@ export function You() {
                         <span
                           key={b.id}
                           title={b.description}
-                          className="flex items-center gap-1.5 text-caption font-medium uppercase tracking-[0.08em] text-muted-foreground"
+                          className="flex items-center gap-1.5 text-caption font-medium tracking-[0.08em] text-muted-foreground"
                         >
                           <Icon className="size-3.5 text-[var(--coral-deep)]" strokeWidth={1.8} aria-hidden="true" />
                           {badgeName(b, primaryHobbySlug, primaryHobbyLabel)}
@@ -228,7 +228,7 @@ export function You() {
               <div className="flex items-center">
                 <Link
                   to="/create"
-                  className="flex min-h-11 items-center text-caption font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
+                  className="flex min-h-11 items-center text-caption font-medium tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
                 >
                   Log a Moment
                 </Link>
@@ -240,14 +240,14 @@ export function You() {
                 <button
                   type="button"
                   onClick={() => setShareOpen(true)}
-                  className="min-h-11 text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="min-h-11 text-caption tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Share
                 </button>
                 <span className="text-muted-foreground/50" aria-hidden="true">·</span>
                 <Link
                   to="/studio"
-                  className="flex min-h-11 items-center text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex min-h-11 items-center text-caption tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Public Scrapbook ↗
                 </Link>

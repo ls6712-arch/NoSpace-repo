@@ -51,7 +51,7 @@ export function SpacesBrowser({ query }: { query: string }) {
     <div className="mb-14">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
-          <div className="ns-section-kicker mb-2">HOST-CREATED COMMUNITIES</div>
+          <div className="ns-section-kicker mb-2">Host-created communities</div>
           <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>Spaces</h2>
         </div>
         <Link to="/create-space">

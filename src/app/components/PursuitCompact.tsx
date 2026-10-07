@@ -133,7 +133,7 @@ export function PursuitCompactCard({
       )}
       <span className="min-w-0 flex-1">
         {label && (
-          <span className="block truncate text-caption font-medium uppercase tracking-wide text-muted-foreground" title={label}>
+          <span className="block truncate text-caption font-medium tracking-wide text-muted-foreground" title={label}>
             {label}
           </span>
         )}
@@ -245,7 +245,7 @@ export function PursuitExpandedPanel({
           )}
           <Button variant="outline" size="sm" onClick={toggleShare} aria-pressed={!!pursuit.shared}>
             {justCopied ? (
-              "Link copied!"
+              "Link copied"
             ) : pursuit.shared ? (
               <>
                 <Share2 className="size-3.5" />
@@ -268,7 +268,7 @@ export function PursuitExpandedPanel({
       </div>
 
       <div className="mb-5 border-t border-border pt-4">
-        <h4 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">Goals</h4>
+        <h4 className="mb-2 text-caption font-medium tracking-wide text-muted-foreground">Goals</h4>
         {!goal && pastGoals.length === 0 ? (
           <p className="text-small text-muted-foreground">No goal set yet</p>
         ) : (
@@ -311,7 +311,7 @@ export function PursuitExpandedPanel({
       </div>
 
       <div className="border-t border-border pt-4">
-        <h4 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
+        <h4 className="mb-2 text-caption font-medium tracking-wide text-muted-foreground">
           Moments under this Pursuit
         </h4>
         <WorkGrid

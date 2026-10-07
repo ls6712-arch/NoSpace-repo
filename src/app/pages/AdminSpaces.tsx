@@ -357,7 +357,7 @@ export function AdminSpaces() {
                             className="rounded-control border border-border bg-background px-2 py-1.5 text-body"
                             aria-label="Move everything to"
                           >
-                            <option value="">Move everything to…</option>
+                            <option value="">Move everything to</option>
                             {moveTargets(plan.slug).map((t) => (
                               <option key={t.slug} value={t.slug}>
                                 {t.name}

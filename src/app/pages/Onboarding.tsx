@@ -230,7 +230,7 @@ export function Onboarding() {
                 <TagsField
                   value={tags}
                   onChange={setTags}
-                  placeholder="Pottery, sourdough, bouldering…"
+                  placeholder="Pottery, sourdough, bouldering"
                   chipLayoutIdPrefix={TAG_LAYOUT_PREFIX}
                 />
 
@@ -354,7 +354,7 @@ function CoverStep({
             <AvatarPicker compact name={displayName} url={avatar} onChange={onAvatarChange} />
           </motion.div>
 
-          <motion.p {...settle(0.05)} className="mb-1 text-caption uppercase tracking-[0.16em] text-on-media/90">
+          <motion.p {...settle(0.05)} className="mb-1 text-caption tracking-[0.16em] text-on-media/90">
             Let’s set the scene
           </motion.p>
 

@@ -179,7 +179,7 @@ export function ProfileLinksEditor({
         <Input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="github.com/you, yoursubstack.com…"
+          placeholder="github.com/you, yoursubstack.com"
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
         <Button variant="outline" onClick={submit} className="shrink-0">

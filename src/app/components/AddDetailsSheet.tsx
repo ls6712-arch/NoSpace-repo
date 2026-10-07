@@ -98,7 +98,7 @@ export function AddDetailsSheet({
                 setCorner(e.target.value);
                 setCornerBlocked(false);
               }}
-              placeholder="Pottery, sourdough, bouldering…"
+              placeholder="Pottery, sourdough, bouldering"
             />
             {cornerBlocked && (
               <p className="mt-1.5 text-caption text-destructive">Try a more general name.</p>

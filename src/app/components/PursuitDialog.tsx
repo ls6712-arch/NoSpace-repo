@@ -82,7 +82,7 @@ function CornerField({
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => window.setTimeout(() => setFocused(false), 150)}
-        placeholder="Pottery, DJing, bookbinding…"
+        placeholder="Pottery, DJing, bookbinding"
       />
       {!value.trim() && (
         <p className="mt-1.5 text-caption text-muted-foreground">
@@ -261,7 +261,7 @@ export function PursuitDialog({
               maxLength={80}
               autoFocus
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Learn pottery, learn to DJ, learn bookbinding…"
+              placeholder="Learn pottery, learn to DJ, learn bookbinding"
               onKeyDown={(e) => e.key === "Enter" && submit()}
             />
           </div>
@@ -287,7 +287,7 @@ export function PursuitDialog({
                     {h.shortName}
                   </SelectItem>
                 ))}
-                <SelectItem value={OTHER}>Other…</SelectItem>
+                <SelectItem value={OTHER}>Other</SelectItem>
               </SelectContent>
             </Select>
             {isOther && (
@@ -352,7 +352,7 @@ export function PursuitDialog({
                         value={goalUnit}
                         maxLength={30}
                         onChange={(e) => setGoalUnit(e.target.value)}
-                        placeholder="sessions, pieces…"
+                        placeholder="sessions, pieces"
                       />
                     </div>
                   </div>

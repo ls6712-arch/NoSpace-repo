@@ -413,7 +413,7 @@ export function SpaceHomeTab({
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
         <div className="-mx-4 rounded-card bg-bark px-5 py-5 text-on-bark sm:mx-0">
-          <p className="text-caption uppercase tracking-wide text-on-bark/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
+          <p className="text-caption tracking-wide text-on-bark/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
           <p className="mt-1 line-clamp-2 break-words text-title" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
           <p className="mt-1 text-small text-on-bark/80 tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
           {(todayEvent.neighborhood || todayEvent.city || todayAddress) && (
@@ -443,7 +443,7 @@ export function SpaceHomeTab({
           </div>
           {laterThisWeek.length > 0 && (
             <div className="mt-4 border-t border-on-bark/20 pt-3">
-              <p className="text-caption uppercase tracking-wide text-on-bark/60">Later this week</p>
+              <p className="text-caption tracking-wide text-on-bark/60">Later this week</p>
               <ul className="mt-1.5 space-y-1">
                 {laterThisWeek.map((e) => (
                   <li key={e.id} className="text-small text-on-bark/85">

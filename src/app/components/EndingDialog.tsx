@@ -62,7 +62,7 @@ export function EndingDialog({
         <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value.slice(0, 1000))}
-          placeholder="It gets easier once you stop being precious about the paper…"
+          placeholder="It gets easier once you stop being precious about the paper"
           rows={4}
           autoFocus
         />

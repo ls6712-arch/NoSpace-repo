@@ -177,7 +177,7 @@ export function PursuitCard({
             className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-control bg-scrim-solid/55 px-2.5 backdrop-blur-md transition-colors hover:bg-scrim-solid/75"
           >
             {justCopied ? (
-              <span className="text-caption font-medium text-on-media">Copied!</span>
+              <span className="text-caption font-medium text-on-media">Copied</span>
             ) : shared ? (
               <Share2 className="size-3.5 text-on-media" strokeWidth={1.9} />
             ) : (

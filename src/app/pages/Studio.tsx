@@ -275,7 +275,7 @@ export function Studio() {
         )}
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
-          <p className="mb-2 text-caption uppercase tracking-[0.16em] text-on-media/90">
+          <p className="mb-2 text-caption tracking-[0.16em] text-on-media/90">
             {plural(loaded.posts.length, "Moment")}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>

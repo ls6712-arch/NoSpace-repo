@@ -273,7 +273,7 @@ export function AdminCorners() {
                         value={mergeInto ?? ""}
                         onChange={(e) => setMergeInto(e.target.value ? Number(e.target.value) : null)}
                       >
-                        <option value="">Pick a Corner…</option>
+                        <option value="">Pick a Corner</option>
                         {rows
                           .filter((r) => r.id !== row.id)
                           .map((r) => (

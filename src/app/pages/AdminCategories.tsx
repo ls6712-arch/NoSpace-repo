@@ -150,7 +150,7 @@ export function AdminCategories() {
                             }
                             className="rounded-control border border-border bg-surface px-3 py-1.5 text-body outline-none focus:border-ring"
                           >
-                            <option value="">Merge into…</option>
+                            <option value="">Merge into</option>
                             {categories.map((c) => (
                               <option key={c.slug} value={c.slug}>
                                 {c.name}

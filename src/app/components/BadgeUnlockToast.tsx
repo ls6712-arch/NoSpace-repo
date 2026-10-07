@@ -46,7 +46,7 @@ export function BadgeUnlockToast() {
           <Icon className="size-5" />
         </span>
         <div className="flex-1">
-          <div className="text-caption uppercase tracking-wide text-[var(--coral-text)] mb-0.5">
+          <div className="text-caption tracking-wide text-[var(--coral-text)] mb-0.5">
             Milestone reached
           </div>
           <div className="text-small font-medium">{badgeName(badge, hobbySlug, hobbyLabel)}</div>

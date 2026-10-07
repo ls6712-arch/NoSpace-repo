@@ -139,7 +139,7 @@ export function TagsField({
             onFocus={() => setFocused(true)}
             // A click on a suggestion has to land before the list closes.
             onBlur={() => window.setTimeout(() => setFocused(false), 150)}
-            placeholder={value.length === 0 ? placeholder : "Add another…"}
+            placeholder={value.length === 0 ? placeholder : "Add another"}
             className="min-w-[8rem] flex-1 bg-transparent text-body outline-none placeholder:text-muted-foreground"
           />
         )}

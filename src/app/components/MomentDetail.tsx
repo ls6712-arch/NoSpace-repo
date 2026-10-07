@@ -359,7 +359,7 @@ export function MomentDetail({
                 className="flex min-h-11 items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 <Send className="size-3" />
-                Send to…
+                Send to
               </button>
             )}
 

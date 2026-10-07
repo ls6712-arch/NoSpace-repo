@@ -18,7 +18,7 @@ export function DataSection() {
 
   return (
     <section>
-      <SectionHeader n={6} eyebrow="YOUR DATA" title="Your data" />
+      <SectionHeader n={6} eyebrow="Your data" title="Your data" />
       <p className="mb-4 text-small text-muted-foreground">
         What’s kept here, and only here.
       </p>

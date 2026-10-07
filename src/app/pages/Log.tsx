@@ -1397,7 +1397,7 @@ export function Log() {
             value={thought}
             maxLength={THOUGHT_LIMIT}
             onChange={(e) => setThought(e.target.value)}
-            placeholder={files.length > 0 ? "Add a thought…" : "What happened? Even a sentence counts."}
+            placeholder={files.length > 0 ? "Add a thought" : "What happened? Even a sentence counts."}
           />
           <div className="mt-1 text-right text-caption text-muted-foreground">
             {thought.length}/{THOUGHT_LIMIT}

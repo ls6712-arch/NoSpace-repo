@@ -188,7 +188,7 @@ export function GoalDialog({
                       if (parsed.unit) setUnit(parsed.unit);
                     }
                   }}
-                  placeholder="read 10 books, run 3 times a week…"
+                  placeholder="read 10 books, run 3 times a week"
                 />
               </div>
 
@@ -211,7 +211,7 @@ export function GoalDialog({
                     value={unit}
                     maxLength={30}
                     onChange={(e) => setUnit(e.target.value)}
-                    placeholder="pieces, sessions…"
+                    placeholder="pieces, sessions"
                   />
                 </div>
               </div>

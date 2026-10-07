@@ -110,7 +110,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search people by name…"
+            placeholder="Search people by name"
             className="w-full rounded-control border border-border bg-surface py-2.5 pl-10 pr-10 text-body outline-none placeholder:text-muted-foreground focus:border-ring"
           />
           {query && (

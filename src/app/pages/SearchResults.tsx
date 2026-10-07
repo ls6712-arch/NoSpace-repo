@@ -74,7 +74,7 @@ export function SearchResults() {
   return (
     <div className="min-h-viewport bg-surface">
       <div className="container mx-auto max-w-4xl px-4 py-10">
-        <div className="ns-section-kicker mb-3">SEARCH</div>
+        <div className="ns-section-kicker mb-3">Search</div>
         <h1 className="mb-6 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           {q ? `Results for “${q}"` : `Search ${APP_NAME}`}
         </h1>

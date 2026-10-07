@@ -19,7 +19,7 @@ export function InterestField({
   value,
   onChange,
   id = "interest",
-  placeholder = "Pottery, bouldering, sourdough…",
+  placeholder = "Pottery, bouldering, sourdough",
 }: {
   value: string;
   onChange: (next: string) => void;

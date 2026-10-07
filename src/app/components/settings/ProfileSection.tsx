@@ -100,7 +100,7 @@ export function ProfileSection() {
           label="Bio"
           description="A short line under your name. Never required."
           value={profile.bio ?? ""}
-          placeholder="What got you into this, and where it’s going…"
+          placeholder="What got you into this, and where it’s going"
           multiline
           maxLength={280}
           emptyLabel="Not set"

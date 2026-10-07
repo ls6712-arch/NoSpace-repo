@@ -189,7 +189,7 @@ export function AccountSection() {
 
       {isAdmin && (
         <>
-          <p className="mb-2 mt-6 text-caption uppercase tracking-[0.08em] text-muted-foreground">Site admin</p>
+          <p className="mb-2 mt-6 text-caption tracking-[0.08em] text-muted-foreground">Site admin</p>
           <SettingsPanel>
             <AdminLinkRow to="/admin/spaces" label="Manage Spaces" />
             <AdminLinkRow to="/admin/corners" label="Manage Corners" />

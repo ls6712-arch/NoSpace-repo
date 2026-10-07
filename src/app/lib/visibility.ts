@@ -32,15 +32,15 @@ export const MOMENT_VISIBILITY_OPTIONS: {
 ];
 
 /**
- * "Your Moments" meta-row word (MomentCard §2.1.2): `PUBLIC`, `ONLY YOU`,
+ * "Your Moments" meta-row word (MomentCard §2.1.2): `Public`, `Only you`,
  * `FOLLOWERS` — small-caps ready, uppercase already applied. `spaceName` is
  * unused until a post can actually carry `visibility: "space"`.
  */
 // TODO(decision: D4): "Everyone" (forms, glossary) vs "Public" (this card
 // word). One label, applied everywhere, once the founder picks.
 export function visibilityWord(post: VisibilityPost, spaceName?: string): string {
-  if (isOnlyYou(post)) return "ONLY YOU";
+  if (isOnlyYou(post)) return "Only you";
   if (post.visibility === "space") return spaceName ?? "A Space";
-  if (post.visibility === "followers") return "FOLLOWERS";
-  return "PUBLIC";
+  if (post.visibility === "followers") return "Followers";
+  return "Public";
 }

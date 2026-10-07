@@ -127,7 +127,7 @@ export function Thoughts({
             <AvatarFallback className="text-caption">{initials(myName)}</AvatarFallback>
           </Avatar>
           <span className={`flex-1 truncate text-muted-foreground ${compact ? "text-caption" : "text-small"}`}>
-            {compact ? "Add a thought" : "Add a thought…"}
+            Add a thought
           </span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
         </button>
@@ -200,7 +200,7 @@ export function Thoughts({
               className="rounded-card border border-[var(--hairline)] bg-surface px-3.5 py-3"
             >
               {t.prompt && (
-                <div className="mb-1.5 flex items-center gap-1.5 text-caption uppercase tracking-wide text-[var(--coral-text)]">
+                <div className="mb-1.5 flex items-center gap-1.5 text-caption tracking-wide text-[var(--coral-text)]">
                   <MessageCircleQuestion className="size-3" />
                   {t.prompt}
                 </div>

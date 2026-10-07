@@ -157,14 +157,14 @@ export function PursuitShareDialog({
                 transition={{ ...PURSUIT_SPRING, duration: 0.3 }}
               >
                 {justCopied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                {justCopied ? "Link copied!" : "Copy link"}
+                {justCopied ? "Link copied" : "Copy link"}
               </motion.span>
             </Button>
 
             {canNativeShare && (
               <Button variant="outline" onClick={nativeShare} disabled={!canCopyOrShare}>
                 <Share2 className="size-4" />
-                Share…
+                Share
               </Button>
             )}
 

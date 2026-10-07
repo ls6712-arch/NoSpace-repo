@@ -110,7 +110,7 @@ const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
  * doing something.
  */
 function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
-  return `border-b-2 font-medium uppercase tracking-wider transition-colors ${
+  return `border-b-2 font-medium tracking-wider transition-colors ${
     size === "sm" ? "pb-2 text-caption" : "pb-1 text-caption"
   } ${
     active
