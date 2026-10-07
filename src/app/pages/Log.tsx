@@ -1614,7 +1614,7 @@ export function Log() {
 
             <p className="mt-4 text-center text-caption leading-relaxed text-muted-foreground">
               {audience === "private"
-                ? "This stays a private log. Nobody else will see it."
+                ? "Only you can see this."
                 : `This will appear in ${
                     audience === "public"
                       ? `${cornerLabel}`

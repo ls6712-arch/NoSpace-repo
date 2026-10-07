@@ -197,7 +197,7 @@ src/app/components/EndingDialog.tsx:45	Finishing ${project.title}
 src/app/components/EndingDialog.tsx:45	A note to day one
 src/app/components/EndingDialog.tsx:47	What would you tell yourself on day one?
 src/app/components/EndingDialog.tsx:52	Where you started.
-src/app/components/EndingDialog.tsx:58	It gets easier once you stop being precious about the paper
+src/app/components/EndingDialog.tsx:58	Write a line to your day-one self
 src/app/components/EndingDialog.tsx:62	gap-2 sm:gap-2
 src/app/components/EndingDialog.tsx:65	Skip and finish
 src/app/components/EndingDialog.tsx:68	&& note === (project.endingNote ??
@@ -321,7 +321,7 @@ src/app/components/GoalDialog.tsx:275	Comfortable enough to teach someone else
 src/app/components/GoalDialog.tsx:282	How it’ll read on your Pursuit
 src/app/components/GoalDialog.tsx:296	Save goal
 src/app/components/GoalDialog.tsx:296	Set goal
-src/app/components/GoalDialog.tsx:299	Just what you said you’re going for. Progress shows on the Pursuit.
+src/app/components/GoalDialog.tsx:299	Progress shows on the Pursuit.
 src/app/components/GoalProgressTap.tsx:61	Finished one
 src/app/components/GoalProgressTap.tsx:83	Undo last log
 src/app/components/GoalProgressTap.tsx:84	Undo last log
@@ -398,7 +398,7 @@ src/app/components/InterestField.tsx:12	Pottery, bouldering, sourdough
 src/app/components/InterestField.tsx:55	Anything you like, not listed? Enter your own.
 src/app/components/InterestField.tsx:64	Others use this too. Your Moment joins theirs.
 src/app/components/InterestField.tsx:80	New one. It’ll show up as a suggestion for everyone after this.
-src/app/components/InterestField.tsx:116	Not listed? Just type your own.
+src/app/components/InterestField.tsx:116	Not listed? Type your own.
 src/app/components/IsThisPartOfSomething.tsx:35	hobbySlug: post.hobbySlug,
 src/app/components/IsThisPartOfSomething.tsx:36	subHobby: post.subHobby,
 src/app/components/IsThisPartOfSomething.tsx:37	inspiredByPostId: post.id,
@@ -479,7 +479,7 @@ src/app/components/NewSpacesRail.tsx:14	opened today
 src/app/components/NewSpacesRail.tsx:15	opened ${formatWeekday(createdAt, "long")}
 src/app/components/NewSpacesRail.tsx:36	[NewSpacesRail] load failed:
 src/app/components/NewSpacesRail.tsx:49	Freshly opened this week
-src/app/components/NewSpacesRail.tsx:52	Spaces the community just started.
+src/app/components/NewSpacesRail.tsx:52	Spaces opened in the last 7 days.
 src/app/components/NewSpacesRail.tsx:56	action={{ label:
 src/app/components/NewSpacesRail.tsx:58	mt-3 space-y-2.5
 src/app/components/NewSpacesRail.tsx:64	h-8 w-1.5 shrink-0 rounded-full
@@ -517,9 +517,9 @@ src/app/components/OnboardingInviteCard.tsx:109	onClick={share} aria-label=
 src/app/components/PersonActionsMenu.tsx:35	More about ${personName}
 src/app/components/PersonCard.tsx:8	return name
 src/app/components/PersonCard.tsx:39	Sharing Moments on ${APP_NAME}
-src/app/components/PersonCard.tsx:40	Just joined, nothing shared yet
+src/app/components/PersonCard.tsx:40	Joined recently. No Moments yet.
 src/app/components/PersonCard.tsx:44	Sharing Moments on ${APP_NAME}
-src/app/components/PersonCard.tsx:45	Just joined, nothing shared yet
+src/app/components/PersonCard.tsx:45	Joined recently. No Moments yet.
 src/app/components/PostMediaCarousel.tsx:132	Photo ${index + 1} of ${urls.length}
 src/app/components/PostMediaCarousel.tsx:169	Previous photo
 src/app/components/PostMediaCarousel.tsx:174	Next photo
@@ -533,9 +533,7 @@ src/app/components/ProfileHeadline.tsx:50	Day one of ${label}
 src/app/components/ProfileHeadline.tsx:51	${plural(days, "day")} into ${label}
 src/app/components/ProfileHeadline.tsx:57	${plural(months, "month")} into ${label}
 src/app/components/ProfileHeadline.tsx:61	${plural(years, "year")} into ${label}
-src/app/components/ProfileHeadline.tsx:85	Just getting started
-src/app/components/ProfileHeadline.tsx:90	· Keep going.
-src/app/components/ProfileHeadline.tsx:100	Keep going.
+src/app/components/ProfileHeadline.tsx:85	No Moments yet
 src/app/components/ProfileLinks.tsx:35	noreferrer noopener
 src/app/components/ProfileLinks.tsx:66	Add a link first.
 src/app/components/ProfileLinks.tsx:71	That doesn’t look like a working link. Check it and try again.
@@ -671,13 +669,13 @@ src/app/components/ReportDialog.tsx:159	Send report
 src/app/components/SendToChatDialog.tsx:68	Send to
 src/app/components/SendToChatDialog.tsx:72	No open chats yet. Start one from someone’s profile first.
 src/app/components/SendToChatDialog.tsx:75	max-h-72 space-y-1 overflow-y-auto
-src/app/components/ShareMilestoneDialog.tsx:29	A quiet milestone reached on ${APP_NAME}: ${name}. ${badge.description}
+src/app/components/ShareMilestoneDialog.tsx:29	A milestone reached on ${APP_NAME}: ${name}. ${badge.description}
 src/app/components/ShareMilestoneDialog.tsx:44	Share this milestone
 src/app/components/ShareMilestoneDialog.tsx:74	Copy as text
 src/app/components/ShareMilestoneDialog.tsx:91	Share on your profile
 src/app/components/ShareMilestoneDialog.tsx:98	Visible on your public profile. Screenshot the card above to share it as an image.
 src/app/components/ShareMilestoneDialog.tsx:99	Only visible to you until you share it. Screenshot the card above to share it as an image.
-src/app/components/ShareProfileDialog.tsx:32	${plural(stats.postsCreated, "Moment")} logged on ${APP_NAME}, ${plural(unlocked.length, "Quiet milestone")} reached. ${publicUrl}
+src/app/components/ShareProfileDialog.tsx:32	${plural(stats.postsCreated, "Moment")} logged on ${APP_NAME}, ${plural(unlocked.length, "milestone")} reached. ${publicUrl}
 src/app/components/ShareProfileDialog.tsx:87	Copy as text
 src/app/components/ShareProfileDialog.tsx:96	Screenshot the card above to share it as an image.
 src/app/components/SharedContentCard.tsx:38	A Moment
@@ -1024,7 +1022,7 @@ src/app/components/settings/AppearanceSection.tsx:66	style={{ fontFamily:
 src/app/components/settings/DataSection.tsx:21	Your data
 src/app/components/settings/DataSection.tsx:21	Your data
 src/app/components/settings/DataSection.tsx:23	What’s kept here, and only here.
-src/app/components/settings/DataSection.tsx:32	Kept here and nowhere else. These never appear in a Space, a feed, or your public Shelf.
+src/app/components/settings/DataSection.tsx:32	Only you can see these. They don’t appear in a Space, on Home, or on your public Shelf.
 src/app/components/settings/DataSection.tsx:35	action={{ label:
 src/app/components/settings/DataSection.tsx:77	Delete this?
 src/app/components/settings/DataSection.tsx:78	This can’t be undone. Nobody else saw it, and there is no copy left once it’s deleted.
@@ -1066,7 +1064,7 @@ src/app/components/settings/ProfileSection.tsx:33	email. You can change it below
 src/app/components/settings/ProfileSection.tsx:67	What people see on your Shelf and anywhere you show up.
 src/app/components/settings/ProfileSection.tsx:82	Display name
 src/app/components/settings/ProfileSection.tsx:83	Shown wherever your Moments appear.
-src/app/components/settings/ProfileSection.tsx:98	A short line under your name. Never required.
+src/app/components/settings/ProfileSection.tsx:98	A short line under your name (optional).
 src/app/components/settings/ProfileSection.tsx:100	What got you into this, and where it’s going
 src/app/components/settings/ProfileSection.tsx:103	Not set
 src/app/components/settings/SettingsShell.tsx:25	Settings live here
@@ -1079,7 +1077,7 @@ src/app/components/settings/sections.ts:16	Light, dark, or match your device.
 src/app/components/settings/sections.ts:23	Name, bio, and photo.
 src/app/components/settings/sections.ts:30	Email, password, and sessions.
 src/app/components/settings/sections.ts:37	Who sees new Moments by default.
-src/app/components/settings/sections.ts:44	What the bell tells you about, and what it stays quiet on.
+src/app/components/settings/sections.ts:44	Choose which notifications you get.
 src/app/components/settings/sections.ts:49	Your data
 src/app/components/settings/sections.ts:51	Only you Moments, and your points.
 src/app/components/settings/sections.ts:56	Pause or leave
@@ -1251,11 +1249,11 @@ src/app/components/pursuit/NextSessionCard.tsx:134	Not set
 src/app/components/pursuit/PursuitProgressPanel.tsx:43	userId: project.ownerId ?? user?.id,
 src/app/components/pursuit/PursuitProgressPanel.tsx:45	avatarUrl: viewerIsOwner ? profile?.avatar_url : undefined,
 src/app/components/pursuit/PursuitProgressPanel.tsx:65	h-11 rounded-control
-src/app/components/pursuit/PursuitProgressPanel.tsx:99	Everyone has their own goal and journey.
+src/app/components/pursuit/PursuitProgressPanel.tsx:99	Everyone has their own goal and progress.
 src/app/components/pursuit/PursuitProgressPanel.tsx:126	Goal reached
 src/app/components/pursuit/PursuitProgressPanel.tsx:126	${formatAmount(s.remaining)} remaining
 src/app/components/pursuit/PursuitProgressPanel.tsx:179	${formatAmount(total)} ${unitFor(measure, total)}
-src/app/components/pursuit/PursuitProgressPanel.tsx:188	Our journey
+src/app/components/pursuit/PursuitProgressPanel.tsx:188	Everyone’s progress
 src/app/components/pursuit/PursuitProgressPanel.tsx:220	Goal reached
 src/app/components/pursuit/PursuitProgressPanel.tsx:220	${formatAmount(remaining)} ${unit} remaining
 src/app/components/pursuit/PursuitProgressPanel.tsx:229	mt-4 space-y-2
@@ -1275,7 +1273,7 @@ src/app/components/pursuit/PursuitProgressPanel.tsx:451	max-h-60 overflow-y-auto
 src/app/components/pursuit/PursuitProgressPanel.tsx:469	No one found
 src/app/components/pursuit/PursuitProgressPanel.tsx:505	mb-4 space-y-2
 src/app/components/pursuit/PursuitProgressPanel.tsx:516	One shared goal, everyone contributes.
-src/app/components/pursuit/PursuitProgressPanel.tsx:516	Side by side: you’ll have your own goal and journey.
+src/app/components/pursuit/PursuitProgressPanel.tsx:516	Side by side: you’ll have your own goal and progress.
 src/app/components/pursuit/PursuitProgressPanel.tsx:523	Not this time
 src/app/components/pursuit/ui.tsx:68	0 0 ${size} ${size}
 src/app/components/pursuit/ui.tsx:184	|| t.endsWith(
@@ -2769,7 +2767,7 @@ src/app/pages/CreatePursuit.tsx:390	Who’s pursuing this with you?
 src/app/pages/CreatePursuit.tsx:407	to invite people.
 src/app/pages/CreatePursuit.tsx:410	How will you pursue it?
 src/app/pages/CreatePursuit.tsx:415	Side by side
-src/app/pages/CreatePursuit.tsx:416	Everyone has their own goal and journey.
+src/app/pages/CreatePursuit.tsx:416	Everyone has their own goal and progress.
 src/app/pages/CreatePursuit.tsx:421	One shared goal
 src/app/pages/CreatePursuit.tsx:422	Everyone contributes to the same total.
 src/app/pages/CreatePursuit.tsx:426	relative mt-5
@@ -2942,12 +2940,12 @@ src/app/pages/JoinPursuit.tsx:66	The link may have been turned off. Ask whoever 
 src/app/pages/JoinPursuit.tsx:95	One shared goal: ${targetText(preview.measure)}
 src/app/pages/JoinPursuit.tsx:95	Your own goal: ${targetText(preview.measure)}
 src/app/pages/JoinPursuit.tsx:101	Everyone contributes to the same total.
-src/app/pages/JoinPursuit.tsx:102	Everyone has their own goal and journey, side by side.
+src/app/pages/JoinPursuit.tsx:102	Everyone has their own goal and progress, side by side.
 src/app/pages/JoinPursuit.tsx:115	This is your Pursuit. Open it
 src/app/pages/JoinPursuit.tsx:126	Sign up or log in to join
 src/app/pages/JoinPursuit.tsx:129	Free to join. You’ll come right back here.
 src/app/pages/Log.tsx:85	Only you
-src/app/pages/Log.tsx:85	Kept as a private log, nobody else ever sees it
+src/app/pages/Log.tsx:85	Only you can see it
 src/app/pages/Log.tsx:86	People who follow you, once you’ve accepted them
 src/app/pages/Log.tsx:87	Anyone can find it
 src/app/pages/Log.tsx:144	Marketplace is coming soon.
@@ -3008,45 +3006,44 @@ src/app/pages/Log.tsx:1052	You started a Moment you didn’t finish.
 src/app/pages/Log.tsx:1060	No caption yet.
 src/app/pages/Log.tsx:1074	Resume draft
 src/app/pages/Log.tsx:1107	Log in to keep your Moments
-src/app/pages/Log.tsx:1109	Your Moments are tied to your account, so they’re still here next
-src/app/pages/Log.tsx:1110	time, not just in this browser tab.
-src/app/pages/Log.tsx:1114	Log in or sign up
-src/app/pages/Log.tsx:1117	Just keep it for myself
-src/app/pages/Log.tsx:1153	rotate(${deg} 40 40)
-src/app/pages/Log.tsx:1166	Not saved
-src/app/pages/Log.tsx:1169	${tagLabel} · ${cornerLabel}
-src/app/pages/Log.tsx:1173	Kept just for you.
-src/app/pages/Log.tsx:1173	Moment logged.
-src/app/pages/Log.tsx:1191	aspect-square w-full
-src/app/pages/Log.tsx:1202	Now on your Shelf.
-src/app/pages/Log.tsx:1210	close this tab.
-src/app/pages/Log.tsx:1239	Log another
-src/app/pages/Log.tsx:1265	Log a Moment
-src/app/pages/Log.tsx:1271	aspect-[4/3] w-full
-src/app/pages/Log.tsx:1276	Remove this video
-src/app/pages/Log.tsx:1295	Remove photo ${i + 1}
-src/app/pages/Log.tsx:1305	Add another photo
-src/app/pages/Log.tsx:1325	mb-6 space-y-6
-src/app/pages/Log.tsx:1329	What is it about?
-src/app/pages/Log.tsx:1351	Which Corner?
-src/app/pages/Log.tsx:1353	Where this shows up when someone browses by Corner.
-src/app/pages/Log.tsx:1376	This is something happening
-src/app/pages/Log.tsx:1378	A walk, a workshop, a meetup, a challenge: people can join in
-src/app/pages/Log.tsx:1411	Where (optional)
-src/app/pages/Log.tsx:1417	e.g. Prospect Park, Brooklyn
-src/app/pages/Log.tsx:1422	How precisely to show it
-src/app/pages/Log.tsx:1439	Neighborhood by default. Exact is never assumed.
-src/app/pages/Log.tsx:1446	Choose who sees this
-src/app/pages/Log.tsx:1476	This stays a private log. Nobody else will see it.
-src/app/pages/Log.tsx:1480	Home for people you’ve connected with
-src/app/pages/Log.tsx:1481	and be tagged ${tagLabel}.
-src/app/pages/Log.tsx:1489	Add to a Pursuit
-src/app/pages/Log.tsx:1491	Keep an ongoing thing together.
-src/app/pages/Log.tsx:1526	How much did this move it forward?
+src/app/pages/Log.tsx:1109	Your Moments are saved to your account and are here next time you log in.
+src/app/pages/Log.tsx:1113	Log in or sign up
+src/app/pages/Log.tsx:1116	Keep it private
+src/app/pages/Log.tsx:1152	rotate(${deg} 40 40)
+src/app/pages/Log.tsx:1165	Not saved
+src/app/pages/Log.tsx:1168	${tagLabel} · ${cornerLabel}
+src/app/pages/Log.tsx:1172	Only you can see it.
+src/app/pages/Log.tsx:1172	Moment logged.
+src/app/pages/Log.tsx:1190	aspect-square w-full
+src/app/pages/Log.tsx:1201	Now on your Shelf.
+src/app/pages/Log.tsx:1209	close this tab.
+src/app/pages/Log.tsx:1238	Log another
+src/app/pages/Log.tsx:1264	Log a Moment
+src/app/pages/Log.tsx:1270	aspect-[4/3] w-full
+src/app/pages/Log.tsx:1275	Remove this video
+src/app/pages/Log.tsx:1294	Remove photo ${i + 1}
+src/app/pages/Log.tsx:1304	Add another photo
+src/app/pages/Log.tsx:1324	mb-6 space-y-6
+src/app/pages/Log.tsx:1328	What is it about?
+src/app/pages/Log.tsx:1350	Which Corner?
+src/app/pages/Log.tsx:1352	Where this shows up when someone browses by Corner.
+src/app/pages/Log.tsx:1375	This is something happening
+src/app/pages/Log.tsx:1377	A walk, a workshop, a meetup, a challenge: people can join in
+src/app/pages/Log.tsx:1410	Where (optional)
+src/app/pages/Log.tsx:1416	e.g. Prospect Park, Brooklyn
+src/app/pages/Log.tsx:1421	How precisely to show it
+src/app/pages/Log.tsx:1438	Neighborhood by default.
+src/app/pages/Log.tsx:1445	Choose who sees this
+src/app/pages/Log.tsx:1475	This stays a private log. Nobody else will see it.
+src/app/pages/Log.tsx:1479	Home for people you’ve connected with
+src/app/pages/Log.tsx:1480	and be tagged ${tagLabel}.
+src/app/pages/Log.tsx:1488	Add to a Pursuit
+src/app/pages/Log.tsx:1490	Keep an ongoing thing together.
+src/app/pages/Log.tsx:1525	How much did this move it forward?
+src/app/pages/Log.tsx:1536	Count toward Pursuit progress
 src/app/pages/Log.tsx:1537	Count toward Pursuit progress
-src/app/pages/Log.tsx:1538	Count toward Pursuit progress
-src/app/pages/Log.tsx:1555	Keep it private
-src/app/pages/Log.tsx:1560	Add a photo, video, or a line of text to continue.
+src/app/pages/Log.tsx:1554	Keep it private
+src/app/pages/Log.tsx:1559	Add a photo, video, or a line of text to continue.
 src/app/pages/Login.tsx:46	That doesn’t look like an email address.
 src/app/pages/Login.tsx:49	Your password needs at least 8 characters.
 src/app/pages/Login.tsx:52	What should people call you?
@@ -3056,11 +3053,11 @@ src/app/pages/Login.tsx:137	sign-up here. Everything still works in local demo m
 src/app/pages/Login.tsx:146	w-full max-w-sm
 src/app/pages/Login.tsx:152	Create your account
 src/app/pages/Login.tsx:152	Welcome back
-src/app/pages/Login.tsx:156	Your Moments, saved for real, not just this browser tab.
+src/app/pages/Login.tsx:156	Your Moments are saved to your account.
 src/app/pages/Login.tsx:157	Log in to pick up where you left off.
 src/app/pages/Login.tsx:165	you’ll be logged in once you click it.
 src/app/pages/Login.tsx:169	Sent again. Check your spam folder if it still doesn’t turn up.
-src/app/pages/Login.tsx:170	Nothing after a few minutes? It can land in spam, or just take a moment.
+src/app/pages/Login.tsx:170	Nothing after a few minutes? Check spam, or try again.
 src/app/pages/Login.tsx:181	Resend confirmation email
 src/app/pages/Login.tsx:193	Continue with Google
 src/app/pages/Login.tsx:202	glass-panel rounded-card p-6 space-y-4
@@ -3121,17 +3118,16 @@ src/app/pages/Onboarding.tsx:126	cover_title: finishTitle.trim() || null,
 src/app/pages/Onboarding.tsx:130	bio: finishTagline.trim() || null,
 src/app/pages/Onboarding.tsx:131	cover_tagline: finishTagline.trim() || null,
 src/app/pages/Onboarding.tsx:192	What are you into?
-src/app/pages/Onboarding.tsx:195	Add a few tags, anything you like, however specific. There’s no fixed list and no
-src/app/pages/Onboarding.tsx:196	wrong number.
-src/app/pages/Onboarding.tsx:202	Pottery, sourdough, bouldering
-src/app/pages/Onboarding.tsx:300	relative aspect-[4/5] w-full sm:aspect-[16/10]
-src/app/pages/Onboarding.tsx:304	absolute inset-0
-src/app/pages/Onboarding.tsx:314	absolute inset-x-0 bottom-0 p-6 sm:p-10
-src/app/pages/Onboarding.tsx:320	Let’s set the scene
-src/app/pages/Onboarding.tsx:327	Your name
-src/app/pages/Onboarding.tsx:338	What’s this about? (optional)
-src/app/pages/Onboarding.tsx:373	Use this background
-src/app/pages/Onboarding.tsx:386	Start with a blank page
+src/app/pages/Onboarding.tsx:195	Add a few tags, as specific as you like.
+src/app/pages/Onboarding.tsx:201	Pottery, sourdough, bouldering
+src/app/pages/Onboarding.tsx:299	relative aspect-[4/5] w-full sm:aspect-[16/10]
+src/app/pages/Onboarding.tsx:303	absolute inset-0
+src/app/pages/Onboarding.tsx:313	absolute inset-x-0 bottom-0 p-6 sm:p-10
+src/app/pages/Onboarding.tsx:319	Let’s set the scene
+src/app/pages/Onboarding.tsx:326	Your name
+src/app/pages/Onboarding.tsx:337	What’s this about? (optional)
+src/app/pages/Onboarding.tsx:372	Use this background
+src/app/pages/Onboarding.tsx:385	Start with a blank page
 src/app/pages/People.tsx:53	return hobbies
 src/app/pages/People.tsx:65	peopleInHobby(hobby, 24)
 src/app/pages/People.tsx:91	relative mb-8 max-w-md
@@ -3221,7 +3217,6 @@ src/app/pages/PublicProfile.tsx:513	${shownName} hasn’t shared any Moments pub
 src/app/pages/PublicProfile.tsx:514	Log a Moment
 src/app/pages/PublicProfile.tsx:514	Go to Discover
 src/app/pages/PublicProfile.tsx:524	The things they’re bringing to life, that they’ve chosen to share.
-src/app/pages/PublicProfile.tsx:539	Quiet milestones
 src/app/pages/PublicProfile.tsx:542	Private by default.
 src/app/pages/PublicProfile.tsx:542	What ${shownName} chose to share.
 src/app/pages/PublicProfile.tsx:573	h-40 w-full shrink-0 overflow-hidden sm:h-auto sm:w-64
@@ -3430,14 +3425,14 @@ src/app/pages/You.tsx:110	Your Shelf lives here
 src/app/pages/You.tsx:111	Make an account and everything you log builds up on a Shelf of your own: hobbies, sessions, milestones. You can keep browsing everything else without one.
 src/app/pages/You.tsx:112	Start my Shelf
 src/app/pages/You.tsx:141	profile?.bio?.trim() ? (
-src/app/pages/You.tsx:153	Tell your story: what got you into this, and where it’s going.
+src/app/pages/You.tsx:153	Add a bio
 src/app/pages/You.tsx:161	since ${sinceLabel}
 src/app/pages/You.tsx:182	No one’s following yet
 src/app/pages/You.tsx:230	Log a Moment
 src/app/pages/You.tsx:251	Public Scrapbook ↗
 src/app/pages/You.tsx:299	Add a tag
 src/app/pages/You.tsx:300	Add a tag
-src/app/pages/You.tsx:312	You’re not logged in. Sessions here are just local to this browser.
+src/app/pages/You.tsx:312	You’re not logged in. Sessions here are saved only in this browser.
 src/app/pages/You.tsx:324	Every moment
 src/app/pages/You.tsx:335	All moments
 src/app/pages/You.tsx:344	By Corner
@@ -3456,7 +3451,6 @@ src/app/pages/You.tsx:402	No Pursuits yet.
 src/app/pages/You.tsx:403	Name a thing you’re working toward and it lives here.
 src/app/pages/You.tsx:404	Start a Pursuit
 src/app/pages/You.tsx:441	renderedPursuit && (
-src/app/pages/You.tsx:462	Quiet milestones
 src/app/pages/You.tsx:466	Private by default. Share one at a time, only if you want to.
 src/app/context/AuthContext.tsx:49	signUp: (
 src/app/context/AuthContext.tsx:50	email: string,

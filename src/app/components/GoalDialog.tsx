@@ -13,7 +13,7 @@ import { formatDate } from "../lib/dates";
 const SHAPES: { value: GoalShape; title: string; example: string; icon: typeof Hash }[] = [
   { value: "number", title: "A number", example: "Finish 10 pieces, run 3 times a week", icon: Hash },
   { value: "date", title: "A date", example: "Ready for the fall market", icon: CalendarDays },
-  { value: "feeling", title: "A feeling, not a number", example: "Comfortable enough to teach someone", icon: Heart },
+  { value: "feeling", title: "A feeling", example: "Comfortable enough to teach someone", icon: Heart },
 ];
 
 function templateLabel(shape: GoalShape, targetNumber: string, unit: string, targetDate: string) {

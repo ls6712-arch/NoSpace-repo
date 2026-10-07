@@ -319,9 +319,7 @@ export function BePart({
               {active.id === "join_in" && postId && !isActivity && (
                 <>
                   <p className="text-small leading-relaxed text-muted-foreground">
-                    Nothing scheduled on this one. It’s a Moment, not an
-                    activity. There may be something happening in {hobbyLabel}{" "}
-                    you can take part in.
+                    This Moment has no event. See what’s happening in {hobbyLabel}.
                   </p>
                   <Link to={`/space/${hobbySlug}`} onClick={() => setOpen(false)}>
                     <Button variant="outline" className="w-full">
