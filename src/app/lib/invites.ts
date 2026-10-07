@@ -1,3 +1,4 @@
+import { SITE_ORIGIN } from "../config";
 import { supabase } from "../../lib/supabase";
 import { friendlyError } from "./friendlyError";
 
@@ -67,7 +68,6 @@ export async function createInvite(note: string): Promise<CreateInviteResult> {
 
 /** The one shape of an invite link, shared by AdminInvites and the
  * onboarding invite card so the two can never drift apart. */
-export const SITE_ORIGIN = "https://www.trynospace.com";
 export function inviteLink(code: string): string {
   return `${SITE_ORIGIN}/#/i/${code}`;
 }
