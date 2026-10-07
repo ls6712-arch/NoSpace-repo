@@ -33,6 +33,7 @@ import { EmptyState } from "../components/StateViews";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
+import { formatDateTime, formatTime } from "../lib/dates";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -435,6 +436,11 @@ function ConversationPanel({
                       Not sent · tap to retry
                     </button>
                   )}
+                  {!m.status && renderKind !== "deleted" && (
+                    <p className={`mt-0.5 text-caption text-muted-foreground ${mine ? "text-right" : ""}`}>
+                      {messageTimestamp(m.createdAt)}
+                    </p>
+                  )}
                   {showSeen && <p className="mt-0.5 text-right text-caption text-muted-foreground">Seen</p>}
                 </div>
               );
@@ -524,6 +530,12 @@ function ConversationPanel({
       />
     </div>
   );
+}
+
+/** "7:00 PM" for today, "Oct 4, 7:00 PM" for anything earlier. */
+function messageTimestamp(createdAt: number): string {
+  const sameDay = new Date(createdAt).toDateString() === new Date().toDateString();
+  return sameDay ? formatTime(createdAt) : formatDateTime(createdAt, { weekday: false });
 }
 
 export function Messages() {
