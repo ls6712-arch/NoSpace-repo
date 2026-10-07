@@ -574,7 +574,7 @@ export function PublicProfile() {
               Quiet Milestones
             </h2>
             <p className="mb-3 text-small text-muted-foreground">
-              {isMe ? "Non-metric growth that feels good." : `What ${firstName} chose to share.`}
+              {isMe ? "Private by default." : `What ${firstName} chose to share.`}
             </p>
             {isMe ? (
               <QuietMilestones />

@@ -36,7 +36,7 @@ export function NewSpacesRail() {
         Freshly opened this week
       </h2>
       <p className="mt-0.5 text-caption text-muted-foreground">
-        Real Spaces the community just started. Not personalized, not ranked, just new.
+        Spaces the community just started.
       </p>
 
       {corners.length === 0 ? (

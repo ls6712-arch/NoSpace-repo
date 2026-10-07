@@ -480,7 +480,7 @@ export function You() {
             </h2>
           </div>
           <p className="mb-5 text-small text-muted-foreground">
-            Non-metric growth that feels good. Private by default — share one at a time, only if you want to.
+            Private by default — share one at a time, only if you want to.
           </p>
           <QuietMilestones />
         </section>

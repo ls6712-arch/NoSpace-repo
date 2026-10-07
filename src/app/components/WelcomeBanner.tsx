@@ -41,12 +41,11 @@ export function WelcomeBanner() {
         <div className="min-w-0 flex-1">
           <p className="ns-section-kicker text-gold-text">WELCOME TO MY SPACE</p>
           <h2 className="mt-2 text-title leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-            The one page here that is not ranked, curated, or competing for your time
+            Your Contact Sheet and your Shelf
           </h2>
           <p className="mt-3 max-w-2xl text-small leading-relaxed text-muted-foreground">
-            Your Contact Sheet holds real days from the people and Spaces you follow.
-            Nothing algorithmic, nothing inserted. The Shelf tracks what you have
-            actually bound. Both grow only as honestly, and only as quickly, as you do.
+            Your Contact Sheet shows Moments from the people and Spaces you follow.
+            Your Shelf holds everything you have logged.
           </p>
         </div>
         <GeneratedArt

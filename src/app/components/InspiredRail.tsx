@@ -57,7 +57,7 @@ export function InspiredRail() {
   return (
     <section>
       <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
-        Quiet, but real
+        You Inspired
       </h2>
 
       {entries.length === 0 ? (
@@ -70,8 +70,7 @@ export function InspiredRail() {
       )}
 
       <p className="mt-3 text-caption italic text-muted-foreground">
-        Visible only to you. Counted from real follow-throughs, not views. Nothing here is
-        ranked against anyone else.
+        Visible only to you.
       </p>
     </section>
   );

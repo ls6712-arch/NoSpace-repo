@@ -6,7 +6,6 @@ import { useContent } from "../context/ContentContext";
 import { usePeopleSearch, peopleInHobby, browsePeople, type Person } from "../lib/people";
 import { PeopleRow } from "../components/PersonCard";
 import { Button } from "../components/ui/button";
-import { APP_NAME } from "../config";
 import { plural } from "../lib/plural";
 import { Loadable } from "../components/ui/skeleton";
 import { PersonListSkeleton } from "../components/Skeletons";
@@ -152,8 +151,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
           By what they make
         </h2>
         <p className="mb-4 mt-1 text-small text-muted-foreground">
-          Browse everyone, or narrow it down by hobby. This is the intended
-          route: you meet someone through the craft, not a ranked list.
+          Browse everyone, or narrow it down by hobby.
         </p>
 
         <ul className="mb-7 flex flex-wrap gap-2">
@@ -204,10 +202,6 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
       </section>
 
       <div className="mt-12 rounded-card border border-border bg-card px-6 py-9 text-center">
-        <p className="mx-auto mb-4 max-w-md text-small leading-relaxed text-muted-foreground">
-          No follower counts anywhere on {APP_NAME}, not here, not on a
-          profile. People are described by what they do.
-        </p>
         <Link to="/discover">
           <Button variant="outline">Browse Discover</Button>
         </Link>
