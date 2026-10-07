@@ -285,7 +285,7 @@ export function CreatePursuit() {
                             list[i] = e.target.value.slice(0, 60);
                             patch({ milestones: list });
                           }}
-                          placeholder={["Learn three songs", "Play for friends", "First open mic"][i] ?? "Next stepping stone"}
+                          placeholder={["Learn 3 songs", "Play for friends", "First open mic"][i] ?? "Next stepping stone"}
                           className="h-10 flex-1 rounded-control border border-border bg-card px-3 text-body outline-none focus:border-[var(--coral-deep)]"
                         />
                       </div>
