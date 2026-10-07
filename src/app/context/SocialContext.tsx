@@ -47,8 +47,12 @@ export interface Participation {
   kind: Exclude<ParticipationKind, "keep_exploring">;
   fromUser: string;
   fromName: string;
+  /** Phase 7A — from the same single batched `profiles` select that already
+   * resolves fromName/toName below, never a second query. */
+  fromAvatar?: string;
   toUser?: string;
   toName?: string;
+  toAvatar?: string;
   postId?: number;
   hobbyKey?: string;
   intent?: string;
@@ -548,6 +552,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       : { data: [] as any[], error: null };
     const byId = new Map((people ?? []).map((p: any) => [p.id, p]));
     const nameOf = (id?: string) => (id ? byId.get(id)?.display_name ?? "Someone" : undefined);
+    const avatarOf = (id?: string) => (id ? (byId.get(id)?.avatar_url ?? undefined) : undefined);
 
     setBlockedPeople(
       (blocks.data ?? []).map((b: any) => ({
@@ -562,8 +567,10 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       kind: p.kind,
       fromUser: p.from_user,
       fromName: nameOf(p.from_user) ?? "Someone",
+      fromAvatar: avatarOf(p.from_user),
       toUser: p.to_user ?? undefined,
       toName: nameOf(p.to_user),
+      toAvatar: avatarOf(p.to_user),
       postId: p.post_id ?? undefined,
       hobbyKey: p.hobby_key ?? undefined,
       intent: p.intent ?? undefined,
