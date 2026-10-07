@@ -77,7 +77,7 @@ export function PursuitCard({
 
   const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
   const spaceLabel = space?.shortName ?? pursuit.customSpace;
-  const status = pursuit.finishedAt ? "Completed" : count > 0 ? "In progress" : "Just started";
+  const status = pursuit.finishedAt ? "Finished" : count > 0 ? "In progress" : "Just started";
   const moved = pursuit.finishedAt ?? lastUpdatedAt ?? pursuit.startedAt;
 
   const toggleShare = async () => {
@@ -257,7 +257,7 @@ export function PursuitCard({
               <button
                 type="button"
                 onClick={markDone}
-                title="Mark as completed"
+                title="Finish"
                 className="flex size-8 shrink-0 items-center justify-center rounded-control border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Check className="size-3.5" strokeWidth={2} />

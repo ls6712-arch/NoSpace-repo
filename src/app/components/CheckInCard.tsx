@@ -57,14 +57,14 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
             onClick={() => mirror(pauseProject(pursuit.id))}
             className="rounded-control border border-border px-3 py-1.5 text-foreground hover:border-[var(--coral-deep)]"
           >
-            Pausing for now
+            Pause
           </button>
           <button
             type="button"
             onClick={() => setEnding(true)}
             className="rounded-control border border-border px-3 py-1.5 text-foreground hover:border-[var(--coral-deep)]"
           >
-            Done with this
+            Finish
           </button>
           <button
             type="button"

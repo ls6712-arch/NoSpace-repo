@@ -108,7 +108,7 @@ export function PursuitCompactCard({
     ? summarize(pursuit.measure!, allProgress.filter((e) => e.projectId === pursuit.id))
     : undefined;
   const hasCount = !measured && goal?.shape === "number" && !!goal.targetNumber;
-  const status = pursuit.finishedAt ? "Completed" : pursuit.pausedAt ? "Resting" : count > 0 ? "In progress" : "Just started";
+  const status = pursuit.finishedAt ? "Finished" : pursuit.pausedAt ? "Paused" : count > 0 ? "In progress" : "Just started";
   const progressText = measured
     ? `${formatAmount(measured.current)} of ${formatAmount(measured.target)} ${pursuit.measure!.unit} · ${measured.percent}%`
     : goal?.shape === "number"
@@ -261,7 +261,7 @@ export function PursuitExpandedPanel({
           {!pursuit.finishedAt && (
             <Button variant="outline" size="sm" onClick={markDone}>
               <Check className="size-3.5" />
-              Mark as completed
+              Finish
             </Button>
           )}
         </div>

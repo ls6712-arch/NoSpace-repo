@@ -15,7 +15,6 @@ import {
   deriveProjects,
   goalDeadlineText,
   markGoalReached,
-  letGoProject,
   pauseProject,
   pursuitStatus,
   resumeProject,
@@ -326,9 +325,9 @@ export function Pursuit() {
     status === "complete"
       ? `Finished ${timeAgo(view.finishedAt!)}`
       : status === "resting"
-        ? `Resting since ${formatDate(view.pausedAt!)}`
+        ? `Paused since ${formatDate(view.pausedAt!)}`
         : status === "let_go"
-          ? `Let go ${formatDate(view.letGoAt!)}`
+          ? `Finished ${formatDate(view.letGoAt!)}`
           : startedLabel(view.startedAt);
 
   // Step 5a: "[N] of [M] this week" counts only this person's own Moments —
@@ -411,10 +410,10 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-small">
               <Moon className="size-4 shrink-0 text-muted-foreground" />
-              Resting. Nothing’s lost, and there’s no clock running.
+              This Pursuit is paused.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
-              <Play className="size-3.5" /> Pick it back up
+              <Play className="size-3.5" /> Resume
             </Button>
           </div>
         )}
@@ -423,10 +422,10 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-small">
               <Wind className="size-4 shrink-0 text-muted-foreground" />
-              Let go.
+              This Pursuit is finished.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
-              <Play className="size-3.5" /> Pick it back up
+              <Play className="size-3.5" /> Reopen
             </Button>
           </div>
         )}
@@ -533,25 +532,16 @@ export function Pursuit() {
                   Reached it
                 </Button>
               )}
-              {/* TODO(decision: D3): one label pair for pausing/ending a Pursuit
-                  (now "Rest it / Let go" here, "Pausing for now / Done with
-                  this" in CheckInCard, filter "Resting"). */}
               {isCreator && status === "active" && (
                 <Button variant="outline" size="sm" onClick={() => mirror(pauseProject(view.id))}>
                   <Moon className="size-3.5" />
-                  Rest it
-                </Button>
-              )}
-              {isCreator && (status === "active" || status === "resting") && (
-                <Button variant="outline" size="sm" onClick={() => mirror(letGoProject(view.id))}>
-                  <Wind className="size-3.5" />
-                  Let go
+                  Pause
                 </Button>
               )}
               {!isCreator ? null : status !== "complete" ? (
                 <Button variant="outline" size="sm" onClick={() => setEndingOpen("finish")}>
                   <Check className="size-3.5" />
-                  Mark as completed
+                  Finish
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>

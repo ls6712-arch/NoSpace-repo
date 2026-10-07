@@ -63,7 +63,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Stepping stones | Steps toward the goal |
 | Aim for | Optional target date (no urgency language) |
 | Check in with me | Gentle Pursuit reminders. "Check in" means only this |
-| Just started / In progress / Resting / Completed / Let go | Statuses. Buttons: "Mark as completed", "Let go" (stop without finishing; "Pick it back up" undoes it) |
+| Just started / In progress / Paused / Finished | Statuses. Buttons: "Pause", "Resume", "Finish", "Reopen". Filter: "Paused" |
 | Next session | Card at the top of an active Pursuit: when, plus an optional note |
 | Times a week / [N] of [M] this week | Your own weekly aim for a Pursuit, and the count toward it (days with a Moment, Mon–Sun) |
 | One shared goal / Side by side | Shared Pursuit modes |

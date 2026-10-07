@@ -220,10 +220,10 @@ export function AllPursuitsSection({
           In progress · {active.length}
         </StatusChip>
         <StatusChip active={status === "resting"} onClick={() => setStatus("resting")}>
-          Resting · {resting.length}
+          Paused · {resting.length}
         </StatusChip>
         <StatusChip active={status === "complete"} onClick={() => setStatus("complete")}>
-          Completed · {complete.length}
+          Finished · {complete.length}
         </StatusChip>
       </div>
 
@@ -247,8 +247,8 @@ export function AllPursuitsSection({
       ) : (
         <div className="mt-4 space-y-6">
           <AllPursuitsGroup title="In progress" items={shownActive} lastOf={lastOf} />
-          <AllPursuitsGroup title="Resting" items={shownResting} lastOf={lastOf} />
-          <AllPursuitsGroup title="Completed" items={shownComplete} lastOf={lastOf} />
+          <AllPursuitsGroup title="Paused" items={shownResting} lastOf={lastOf} />
+          <AllPursuitsGroup title="Finished" items={shownComplete} lastOf={lastOf} />
         </div>
       )}
     </section>
