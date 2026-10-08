@@ -14,9 +14,9 @@ declare
 begin
   -- The table is gone.
   if to_regclass('public.post_reflections') is null then
-    results := results || 'PASS table post_reflections is gone';
+    results := array_append(results, 'PASS table post_reflections is gone');
   else
-    results := results || 'FAIL table post_reflections still exists';
+    results := array_append(results, 'FAIL table post_reflections still exists');
   end if;
 
   -- The column is gone (scoped to the one table it lived on).
@@ -25,9 +25,9 @@ begin
     where c.table_schema = 'public' and c.table_name = 'posts' and c.column_name = 'reflection'
   );
   if v_n = 0 then
-    results := results || 'PASS posts.reflection is gone';
+    results := array_append(results, 'PASS posts.reflection is gone');
   else
-    results := results || 'FAIL posts.reflection still exists';
+    results := array_append(results, 'FAIL posts.reflection still exists');
   end if;
 
   -- posts itself is intact: its id column is still there.
@@ -36,9 +36,9 @@ begin
     where c.table_schema = 'public' and c.table_name = 'posts' and c.column_name = 'id'
   );
   if v_n = 1 then
-    results := results || 'PASS posts table intact';
+    results := array_append(results, 'PASS posts table intact');
   else
-    results := results || 'FAIL posts table is missing its id column';
+    results := array_append(results, 'FAIL posts table is missing its id column');
   end if;
 
   raise exception 'RESULTS: %', array_to_string(results, ', ');
