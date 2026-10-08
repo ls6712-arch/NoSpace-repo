@@ -34,7 +34,7 @@ reflections.
 
 - **Private reflections.** Both tables hold 0 rows (`post_reflections` has 0 rows,
   `posts.reflection` has 0 non-empty values). The page still says they may exist
-  until `20261018000000_drop_reflections.sql` runs; then remove that sentence
+  until `20261021000000_drop_reflections.sql` runs (its own follow-up PR, not part of #163); then remove that sentence
   (`TODO(privacy: remove after reflection data deleted)`).
 - **Date of birth.** The page has a TODO for it; nothing collects it today.
 - **Corner notes** (the private line you could write under a Corner) were stored
