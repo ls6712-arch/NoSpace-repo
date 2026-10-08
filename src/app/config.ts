@@ -36,3 +36,10 @@ export const extraConceptsEnabled = false;
 // do"). Only one Space is active, so that line is hidden. Turn this on when 3
 // or more Spaces are active.
 export const landingShowsSpaces = false;
+
+// Onboarding's first step normally uses its own short "first Moment" form.
+// When this is on, it shows the one Log a Moment form instead (same fields,
+// same Undo, same Pursuit and Corner choices), so there is one form to
+// maintain. Off by default until it has been tried on a fresh invite; see
+// docs/qa/round-3/onboarding-test.md.
+export const onboardingUsesMainForm = import.meta.env.VITE_ONBOARDING_MAIN_FORM === "true";

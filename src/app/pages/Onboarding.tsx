@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { TagsField } from "../components/TagsField";
 import { AvatarPicker } from "../components/AvatarPicker";
+import { Log } from "./Log";
+import { onboardingUsesMainForm } from "../config";
 import { FirstMomentStep } from "../components/FirstMomentStep";
 import { OnboardingInviteCard } from "../components/OnboardingInviteCard";
 import { useAuth } from "../context/AuthContext";
@@ -268,7 +270,12 @@ export function Onboarding() {
               />
             )}
 
-            {step === 1 && <FirstMomentStep onContinue={() => goToStep(2)} />}
+            {step === 1 &&
+              (onboardingUsesMainForm ? (
+                <Log onboarding={{ onDone: () => goToStep(2) }} />
+              ) : (
+                <FirstMomentStep onContinue={() => goToStep(2)} />
+              ))}
 
             {step === 2 && (
               <>

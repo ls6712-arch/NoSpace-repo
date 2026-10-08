@@ -48,6 +48,7 @@ jobs:
           node scripts/visual/run.ts --images --widths 375,1440 --strict
           node scripts/visual/run.ts --carousel
           node scripts/visual/run.ts --flows
+          node scripts/visual/qa-round3.ts --out visual-out/onboarding
           node scripts/visual/run.ts --art --widths 375,1440 --strict --out visual-out/art
       - uses: actions/upload-artifact@v4
         if: always()

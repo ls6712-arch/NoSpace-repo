@@ -143,7 +143,9 @@ function BackLink({ onClick }: { onClick: () => void }) {
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, bare }: { children: React.ReactNode; bare?: boolean }) {
+  // bare: inside onboarding, whose own page already provides the frame.
+  if (bare) return <>{children}</>;
   return (
     <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-lg px-4">{children}</div>
@@ -220,7 +222,7 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
   );
 }
 
-export function Log() {
+export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}) {
   const [searchParams] = useSearchParams();
   const { addPost, deletePost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
@@ -252,7 +254,7 @@ export function Log() {
   // be a chooser first ("Add an update" vs "Reflect privately"), but the
   // form already has a private reflection section and an "Only you"
   // audience, so that screen was a step that decided nothing.
-  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "caption" : "choose");
+  const [screen, setScreen] = useState<Screen>(pursuitScoped || onboarding ? "caption" : "choose");
   const [pursuitDialogOpen, setPursuitDialogOpen] = useState(false);
   // Where the caption screen's Back link returns to — "camera" when a photo
   // or video was actually captured/picked there, "choose" when "Write a
@@ -621,7 +623,7 @@ export function Log() {
       !!projectId ||
       projectTitle.trim().length > 0);
 
-  const blocker = useBlocker(hasUnsavedChanges);
+  const blocker = useBlocker(hasUnsavedChanges && !onboarding);
 
   useEffect(() => {
     if (blocker.state === "blocked") setDiscardPromptOpen(true);
@@ -1060,7 +1062,7 @@ export function Log() {
   // new is being built here, just asked before reaching for the camera.
   if (screen === "choose") {
     return (
-      <Shell>
+      <Shell bare={!!onboarding}>
         <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Log a Moment
         </h1>
@@ -1193,7 +1195,7 @@ export function Log() {
   // ── 1 · Camera — reached only once "Photo or video" is actually tapped ──
   if (screen === "camera") {
     return (
-      <Shell>
+      <Shell bare={!!onboarding}>
         <CameraCapture
           onCaptured={handleCaptured}
           onPickedLibrary={handlePickedLibrary}
@@ -1240,7 +1242,7 @@ export function Log() {
     // screen has to say so, not just whichever one happened to be checked.
     const anySaveError = saveError || privateSaveError;
     return (
-      <Shell>
+      <Shell bare={!!onboarding}>
         <div className="rounded-card border border-border bg-card px-6 py-10 text-center">
           <span className="relative mx-auto mb-5 flex size-16 items-center justify-center">
             {/* A small burst, not confetti */}
@@ -1345,26 +1347,34 @@ export function Log() {
           )}
 
           <div className="space-y-2">
-            <Link
-              to={
-                pursuitScoped
-                  ? `/pursuit/${initialPursuitId}`
-                  : savedAs === "private"
-                    ? "/you"
-                    : `/you/work/${archiveKey({ subSlug: subHobby || undefined, hobbySlug })}`
-              }
-            >
-              <Button variant="coral" className="w-full">
-                Done
+            {onboarding ? (
+              <Button variant="coral" className="w-full" onClick={onboarding.onDone}>
+                Continue
               </Button>
-            </Link>
-            <button
-              type="button"
-              onClick={reset}
-              className="w-full py-1 text-small text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Log another
-            </button>
+            ) : (
+              <>
+                <Link
+                  to={
+                    pursuitScoped
+                      ? `/pursuit/${initialPursuitId}`
+                      : savedAs === "private"
+                        ? "/you"
+                        : `/you/work/${archiveKey({ subSlug: subHobby || undefined, hobbySlug })}`
+                  }
+                >
+                  <Button variant="coral" className="w-full">
+                    Done
+                  </Button>
+                </Link>
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="w-full py-1 text-small text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Log another
+                </button>
+              </>
+            )}
           </div>
         </div>
       </Shell>
@@ -1376,8 +1386,8 @@ export function Log() {
     const hasSomething = files.length > 0 || thought.trim().length > 0 || loggedAmount > 0;
     const detectedUrl = extractFirstUrl(thought);
     return (
-      <Shell>
-        {pursuitScoped ? (
+      <Shell bare={!!onboarding}>
+        {onboarding ? null : pursuitScoped ? (
           <Link
             to={`/pursuit/${initialPursuitId}`}
             className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
