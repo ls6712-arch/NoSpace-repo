@@ -1330,7 +1330,7 @@ export function Log() {
           {undoTarget && !anySaveError && (
             <div
               role="status"
-              className="fixed inset-x-4 bottom-20 z-50 mx-auto flex h-12 max-w-sm items-center justify-between rounded-control border border-border bg-card px-4 text-small shadow-lg"
+              className="fixed inset-x-4 bottom-20 z-50 mx-auto flex h-12 max-w-sm items-center justify-between rounded-control border border-border bg-card px-4 text-small shadow-overlay"
             >
               <span>{undoError ?? "Saved."}</span>
               <button
