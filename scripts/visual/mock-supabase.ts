@@ -53,6 +53,13 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
         return [...byP].map(([participation_id, ms]) => { const last = [...ms].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).at(-1)!; return { participation_id, last_message_id: last.id, last_message_body: last.body, last_message_created_at: last.created_at, last_message_from_user: last.from_user, message_count: ms.length, unread_count: ms.filter((m) => m.from_user !== ME).length ? 1 : 0 }; });
       }
       case "you_inspired_this_month": return 0;
+      // Only the caller's own owner-only profile columns (public.my_profile_private).
+      case "my_profile_private": {
+        const me = (fixtures.profiles as AnyRow[] | undefined)?.find((p) => p.id === session.user.id);
+        if (!me) return [];
+        const { access, invited_by, invite_allowance, onboarding_completed, onboarding_completed_at, theme_preference, is_admin, discoverable, show_this_corner } = me;
+        return [{ access, invited_by, invite_allowance, onboarding_completed, onboarding_completed_at, theme_preference, is_admin, discoverable, show_this_corner }];
+      }
       // The database stamps the time itself; the client sends only the version.
       case "accept_terms": {
         const rows = (fixtures.terms_acceptances ?? (fixtures.terms_acceptances = [])) as AnyRow[];
