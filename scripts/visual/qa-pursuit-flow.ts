@@ -34,23 +34,35 @@ function serve(): Promise<{ port: number; close: () => void }> {
 
 const TITLE = "Throw 24 bowls by spring";
 const progressOf = (t: string) => { const m = t.match(/(\d+(?:\.\d+)?)\s*(?:\/|of)\s*24/); return m ? Number(m[1]) : null; };
-const statusOf = (t: string) => (/\bPaused\b/.test(t) ? "Paused" : /\bFinished\b/.test(t) ? "Finished" : /\bIn progress\b/.test(t) ? "In progress" : /\bJust started\b/.test(t) ? "Just started" : "?");
+const statusOf = (t: string) => (/\bThis Pursuit is paused\b|Paused since/.test(t) ? "Paused" : /\bFinished (\d|just|\w+ ago|[A-Z][a-z]{2} )/.test(t) || /Reopen/.test(t) ? "Finished" : /\n(Pause)\n/.test(t) ? "In progress" : "?");
+
+// The 120 characters of page text after the first mention of the Pursuit's title.
+const after = (text: string, from = 0) => { const i = text.indexOf(TITLE, from); return i < 0 ? "" : text.slice(i, i + 160); };
+// Which group heading ("In progress", "Paused", "Finished") the title sits under on a list.
+function groupOf(text: string): string {
+  const lines = text.split("\n").map((l) => l.trim());
+  let group = "?";
+  for (const l of lines) {
+    const m = l.match(/^(In progress|Paused|Finished)\b/);
+    if (m && !l.includes(TITLE)) group = m[1];
+    if (l.includes(TITLE) && group !== "?") return group;
+  }
+  return "?";
+}
 
 async function read(page: Page, port: number) {
   const go = async (route: string) => { await page.goto(`http://localhost:${port}/#${route}`); await page.waitForTimeout(1500); };
   await go("/my-space");
-  const home = await page.evaluate((title) => {
-    const el = [...document.querySelectorAll("a, li, div")].filter((e) => e.textContent?.includes(title) && (e.textContent?.length ?? 0) < 700).sort((a, b) => (a.textContent?.length ?? 0) - (b.textContent?.length ?? 0))[0];
-    return el?.closest("li, [role=listitem], .group, div")?.textContent ?? "";
-  }, TITLE);
+  const homeText = await page.evaluate(() => document.body.innerText);
   await go("/you");
-  const shelf = await page.evaluate((title) => {
-    const el = [...document.querySelectorAll("button, a, li, div")].filter((e) => e.textContent?.includes(title) && (e.textContent?.length ?? 0) < 500).sort((a, b) => (a.textContent?.length ?? 0) - (b.textContent?.length ?? 0))[0];
-    return el?.textContent ?? "";
-  }, TITLE);
+  const shelfText = await page.evaluate(() => document.body.innerText);
   await go(`/pursuit/${PURSUIT_ID}`);
-  const pursuit = await page.evaluate(() => document.body.innerText);
-  return { home: { p: progressOf(home), s: statusOf(home) }, shelf: { p: progressOf(shelf), s: statusOf(shelf) }, pursuit: { p: progressOf(pursuit), s: statusOf(pursuit) } };
+  const pursuitText = await page.evaluate(() => document.body.innerText);
+  return {
+    home: { p: progressOf(after(homeText)), s: groupOf(homeText) },
+    shelf: { p: progressOf(shelfText), s: "n/a (the Shelf tile shows progress only)" },
+    pursuit: { p: progressOf(pursuitText), s: statusOf(pursuitText) },
+  };
 }
 
 const main = async () => {
@@ -66,7 +78,8 @@ const main = async () => {
   const record = async (step: string) => {
     const r = await read(page, srv.port);
     const vals = [r.home, r.shelf, r.pursuit];
-    const agree = vals.every((v) => v.p === vals[0].p && v.s === vals[0].s);
+    const counts = vals.map((v) => v.p).filter((p): p is number => p !== null);
+    const agree = counts.every((c) => c === counts[0]) && r.home.s === r.pursuit.s;
     rows.push(`| ${step} | ${r.home.p ?? "-"} / ${r.home.s} | ${r.shelf.p ?? "-"} / ${r.shelf.s} | ${r.pursuit.p ?? "-"} / ${r.pursuit.s} | ${agree ? "yes" : "NO"} |`);
   };
   const logLine = async (text: string) => {
@@ -82,9 +95,8 @@ const main = async () => {
   // 2. From the main button, picking the Pursuit inside the form.
   await page.goto(`${base}/create`); await page.waitForTimeout(1200);
   await page.getByText("Write it down").first().click(T);
-  await page.getByText(/Choose a Pursuit|Add to a Pursuit/).first().click(T).catch(() => {});
-  await page.getByRole("combobox").first().click(T).catch(() => {});
-  await page.getByText(TITLE).first().click(T).catch(() => {});
+  await page.locator('input[placeholder*="Pursuit"]').first().click(T);
+  await page.getByRole("button", { name: TITLE }).first().click(T);
   await logLine("Moment 2, from the main button"); await record("after Moment 2 (main button)");
   // 3. From the Pursuit page button.
   await page.goto(`${base}/pursuit/${PURSUIT_ID}`); await page.waitForTimeout(1200);

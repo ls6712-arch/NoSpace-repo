@@ -69,7 +69,9 @@ const TILE_TOKENS = [
 
 export function tileTokenFor(postId: number | string) {
   const n = typeof postId === "number" ? postId : [...postId].reduce((a, c) => a + c.charCodeAt(0), 0);
-  return TILE_TOKENS[Math.abs(n) % TILE_TOKENS.length];
+  // A stand-in id that isn't a finite number (a log saved without an id yet)
+  // used to index past the palette and crash the whole Shelf.
+  return TILE_TOKENS[Number.isFinite(n) ? Math.abs(Math.trunc(n)) % TILE_TOKENS.length : 0];
 }
 
 /**
