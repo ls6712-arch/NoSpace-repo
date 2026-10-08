@@ -24,7 +24,7 @@ export function buildFixtures(now = new Date()): Fixtures {
     id, username, display_name, tagline, bio: null, avatar_url: null, access: "active", cover_post_id: null, cover_tagline: null,
     cover_title: null, created_at: ago(120), deletion_requested_at: null, discoverable: true, invite_allowance: 3, invited_by: null,
     is_admin: false, onboarding_completed: true, onboarding_completed_at: ago(119), paused_at: null, show_this_corner: true,
-    theme_preference: "system",
+    theme_preference: "system", terms_accepted_at: ago(119),
   });
   const profiles: Row<"profiles">[] = [
     person(ME, "maya", "Maya Okafor", "Making things slowly, on purpose"),

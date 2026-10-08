@@ -80,6 +80,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | What should people call you? / This is how your name shows on your Shelf. | Onboarding name step: required display name, with a live preview under "Your Shelf" |
 | Moments logged | Headline stat |
 | Is this how you’d like to be known? / Save name | One-time prompt for accounts named after their email; saving unchanged confirms the name |
+| I’m 16 or older and agree to the Terms and Privacy Policy | Required sign-up checkbox (email and Google). Both documents are linked. Shown again once in onboarding for an account with no recorded acceptance |
 | Milestones | Private badges, shared one at a time |
 | Followers / Following | People connections |
 

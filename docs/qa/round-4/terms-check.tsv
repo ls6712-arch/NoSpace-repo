@@ -1,0 +1,14 @@
+PASS	checkbox shows on sign-up
+PASS	checkbox starts unticked
+PASS	Google is blocked until ticked
+PASS	Sign up is blocked until ticked
+PASS	Terms is linked
+PASS	Privacy Policy is linked
+PASS	Google unblocks once ticked
+PASS	Sign up unblocks once ticked
+PASS	no horizontal scroll
+PASS	log in form has no checkbox
+PASS	no page errors
+PASS	onboarding asks once when no acceptance is recorded
+PASS	Continue is blocked until ticked
+PASS	Continue unblocks once ticked

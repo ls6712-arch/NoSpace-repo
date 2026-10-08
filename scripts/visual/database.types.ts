@@ -935,6 +935,7 @@ export type Database = {
           paused_at: string | null
           show_this_corner: boolean
           tagline: string | null
+          terms_accepted_at: string | null
           theme_preference: string
           username: string
         }
@@ -958,6 +959,7 @@ export type Database = {
           paused_at?: string | null
           show_this_corner?: boolean
           tagline?: string | null
+          terms_accepted_at?: string | null
           theme_preference?: string
           username: string
         }
@@ -981,6 +983,7 @@ export type Database = {
           paused_at?: string | null
           show_this_corner?: boolean
           tagline?: string | null
+          terms_accepted_at?: string | null
           theme_preference?: string
           username?: string
         }

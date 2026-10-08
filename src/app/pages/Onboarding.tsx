@@ -4,6 +4,8 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { TagsField } from "../components/TagsField";
 import { AvatarPicker } from "../components/AvatarPicker";
 import { Log } from "./Log";
+import { TermsCheckbox } from "../components/TermsCheckbox";
+import { needsTermsAcceptance, recordTermsAcceptance } from "../lib/termsAcceptance";
 import { onboardingUsesMainForm } from "../config";
 import { FirstMomentStep } from "../components/FirstMomentStep";
 import { OnboardingInviteCard } from "../components/OnboardingInviteCard";
@@ -100,6 +102,18 @@ export function Onboarding() {
     if (nameTouched || !profile?.display_name) return;
     if (!isEmailPrefixName(profile.display_name, user?.email)) setNameInput(profile.display_name);
   }, [profile?.display_name, user?.email, nameTouched]);
+  // Anyone who got here without ticking the sign-up box (confirmed the email
+  // on another device, or Google from the log in form) is asked once here.
+  const [termsNeeded, setTermsNeeded] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    let live = true;
+    void needsTermsAcceptance(user.id).then((needed) => live && setTermsNeeded(needed));
+    return () => {
+      live = false;
+    };
+  }, [user?.id]);
   const [nameError, setNameError] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
   const [title, setTitle] = useState("");
@@ -110,6 +124,7 @@ export function Onboarding() {
 
   const saveName = async () => {
     if (savingName) return;
+    if (termsNeeded && !termsAgreed) return;
     const checked = validateDisplayName(nameInput);
     if (!checked.ok) {
       setNameError(checked.error);
@@ -123,6 +138,7 @@ export function Onboarding() {
         setNameError(ERROR_LINE);
         return;
       }
+      if (termsNeeded && user) await recordTermsAcceptance(user.id);
       setTitle(checked.name);
       setTitleTouched(true);
       goToStep(1);
@@ -266,6 +282,9 @@ export function Onboarding() {
                 }}
                 error={nameError}
                 saving={savingName}
+                termsNeeded={termsNeeded}
+                termsAgreed={termsAgreed}
+                onTermsChange={setTermsAgreed}
                 onContinue={() => void saveName()}
               />
             )}
@@ -342,12 +361,18 @@ function NameStep({
   onChange,
   error,
   saving,
+  termsNeeded,
+  termsAgreed,
+  onTermsChange,
   onContinue,
 }: {
   value: string;
   onChange: (next: string) => void;
   error: string | null;
   saving: boolean;
+  termsNeeded: boolean;
+  termsAgreed: boolean;
+  onTermsChange: (next: boolean) => void;
   onContinue: () => void;
 }) {
   const shown = value.replace(/\s+/g, " ").trim();
@@ -384,8 +409,14 @@ function NameStep({
         </p>
       </div>
 
+      {termsNeeded && (
+        <div className="mt-6">
+          <TermsCheckbox checked={termsAgreed} onChange={onTermsChange} id="onboarding-terms" />
+        </div>
+      )}
+
       <div className="mt-8 flex justify-end">
-        <Button busy={saving} type="submit" variant="coral" disabled={saving}>
+        <Button busy={saving} type="submit" variant="coral" disabled={saving || (termsNeeded && !termsAgreed)}>
           Continue
         </Button>
       </div>
