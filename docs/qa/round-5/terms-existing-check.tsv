@@ -1,0 +1,17 @@
+PASS	the Terms prompt shows on the next visit
+PASS	the name prompt waits behind it
+PASS	Continue is blocked until ticked
+PASS	there is no close button
+PASS	Escape does not dismiss it
+PASS	clicking outside does not dismiss it
+PASS	Continue unblocks once ticked
+PASS	accepting asks the database once
+PASS	the client sent no time (empty request body)
+PASS	the client wrote nothing to profiles itself
+PASS	the server side stamped the time
+PASS	the Terms prompt is gone
+PASS	the name prompt follows, once
+PASS	no horizontal scroll
+PASS	no page errors
+PASS	not asked again on the next visit
+PASS	an account with a recorded acceptance is never asked

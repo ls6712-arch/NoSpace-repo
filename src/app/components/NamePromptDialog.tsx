@@ -11,7 +11,7 @@ import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
  * prefix. It never rewrites the stored name on its own: the name changes
  * only if the person edits it and saves. Saving as-is confirms it. Closing
  * the dialog any way also counts as seen, so it never comes back. */
-export function NamePromptDialog() {
+export function NamePromptDialog({ enabled = true }: { enabled?: boolean } = {}) {
   const { user, profile, updateProfile } = useAuth();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
@@ -21,7 +21,7 @@ export function NamePromptDialog() {
   const userId = user?.id;
   const stored = profile?.display_name ?? "";
   const eligible =
-    !!userId && !!profile?.onboarding_completed && isEmailPrefixName(stored, user?.email);
+    enabled && !!userId && !!profile?.onboarding_completed && isEmailPrefixName(stored, user?.email);
 
   useEffect(() => {
     if (!eligible || !userId) return;
