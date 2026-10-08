@@ -157,14 +157,14 @@ export function PursuitShareDialog({
                 transition={{ ...PURSUIT_SPRING, duration: 0.3 }}
               >
                 {justCopied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                {justCopied ? "Link copied!" : "Copy link"}
+                {justCopied ? "Link copied" : "Copy link"}
               </motion.span>
             </Button>
 
             {canNativeShare && (
               <Button variant="outline" onClick={nativeShare} disabled={!canCopyOrShare}>
                 <Share2 className="size-4" />
-                Share…
+                Share
               </Button>
             )}
 
@@ -196,7 +196,7 @@ export function PursuitShareDialog({
               ? "Only the Pursuit’s owner can turn on its link."
               : project.shared
                 ? "Anyone with the link can view this Pursuit."
-                : "Copying the link or sharing turns it on — only this Pursuit, nothing else."}
+                : "Copying the link or sharing turns it on for this Pursuit only."}
           </p>
         </DialogContent>
       </Dialog>

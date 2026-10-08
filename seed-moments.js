@@ -83,7 +83,7 @@ const VISIBILITY = 'public'; // matches Visibility = "public" | "circle" | "frie
 const METADATA = {
   'IMG_2832': { space: 'travel-adventure', corner: 'exploration',        caption: "Skyline on fire, 7pm. This city doesn't do quiet sunsets." },
   'IMG_2868': { space: 'food-cooking',     corner: 'food-photography',   caption: "Panini that earned its char marks. Simple done right." },
-  'IMG_2886': { space: 'travel-adventure', corner: 'exploration',        caption: "Manhattan from the water — the only way to actually see it whole." },
+  'IMG_2886': { space: 'travel-adventure', corner: 'exploration',        caption: "Manhattan from the water. The only way to actually see it whole." },
   'IMG_2935': { space: 'travel-adventure', corner: 'exploration',        caption: "Brooklyn Bridge at dusk. Still stops me every time." },
   'IMG_2944': { space: 'travel-adventure', corner: 'exploration',        caption: "One sailboat, one bridge, one very lucky angle." },
   'IMG_2946': { space: 'travel-adventure', corner: 'exploration',        caption: "Lady Liberty at golden hour, from the cheap seats on a ferry." },

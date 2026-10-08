@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
 import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
-import { QuickLogGlobalSheet } from "../components/QuickLogGlobalSheet";
+import { AccountPrompts } from "../components/AccountPrompts";
 import { BottomTabBar } from "../components/BottomTabBar";
 import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
@@ -27,7 +27,7 @@ const PUBLIC_PATHS = new Set(["/", "/login", "/terms", "/privacy-policy"]);
 // unreachable dead code: a signed-out tap on the Profile tab, or a shared
 // /you/work/:hobbyKey link, silently bounced to the marketing homepage with
 // no explanation of why, rather than showing the page's own explanation and
-// a way to sign in. Exempting these two restores that intended prompt;
+// a way to log in. Exempting these two restores that intended prompt;
 // every other path still has no fallback of its own and keeps redirecting.
 // PublicProfile.tsx (/u/:username) is explicitly "open to anyone with the
 // link — no account needed to look" by its own docstring, and /u/:username's
@@ -36,7 +36,7 @@ const PUBLIC_PATHS = new Set(["/", "/login", "/terms", "/privacy-policy"]);
 // bounced a signed-out visitor to the marketing homepage, the exact failure
 // this pattern already exists to prevent for /you. The bare /studio route
 // (your own Studio) isn't itself visitor-facing, but Studio.tsx already
-// renders its own "Sign in to open your own Studio" message when signed out,
+// renders its own "Log in to open your own Studio" message when signed out,
 // the same self-handling contract as /you.
 const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   pathname === "/you" ||
@@ -71,7 +71,7 @@ export function Root() {
 
   // Only enforced once accounts are actually available — same rule every
   // other auth-aware check in this app follows (Header, You.tsx): with no
-  // Supabase project configured there's no way to sign in, so gating
+  // Supabase project configured there's no way to log in, so gating
   // everything behind it would just brick the app.
   if (
     isConfigured &&
@@ -114,8 +114,8 @@ export function Root() {
         <Outlet />
       </main>
       <CartDrawer />
-      <QuickLogGlobalSheet />
       <BadgeUnlockToast />
+      <AccountPrompts />
       <BottomTabBar />
     </div>
   );

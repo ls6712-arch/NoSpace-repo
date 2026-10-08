@@ -185,7 +185,7 @@ export function BePart({
       else if (result?.error === "no-recipient")
         setError("We can’t reach this maker yet. Try from their profile.");
       else if (result?.error === "failed")
-        setError("That didn’t send — you may have already asked. Check your Inbox.");
+        setError("That didn’t send. You may have already asked. Check your Inbox.");
       else setSent(true);
     } catch {
       setError(OFFLINE_LINE);
@@ -319,9 +319,7 @@ export function BePart({
               {active.id === "join_in" && postId && !isActivity && (
                 <>
                   <p className="text-small leading-relaxed text-muted-foreground">
-                    Nothing scheduled on this one. It’s a Moment, not an
-                    activity. There may be something happening in {hobbyLabel}{" "}
-                    you can take part in.
+                    This Moment has no event. See what’s happening in {hobbyLabel}.
                   </p>
                   <Link to={`/space/${hobbySlug}`} onClick={() => setOpen(false)}>
                     <Button variant="outline" className="w-full">

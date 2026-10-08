@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Button } from "./ui/button";
 import { cn } from "./ui/utils";
 import { LOAD_ERROR_LINE, TRY_AGAIN } from "../lib/stateCopy";
+import { endSentence } from "../lib/text";
 
 type Action =
   | { label: string; to: string; onClick?: never }
@@ -22,8 +23,8 @@ type Action =
  * first-run screen with an icon and a serif headline.
  */
 export function EmptyState({
-  line,
-  hint,
+  line: rawLine,
+  hint: rawHint,
   action,
   icon,
   size = "section",
@@ -36,6 +37,8 @@ export function EmptyState({
   size?: "rail" | "inline" | "section" | "page";
   className?: string;
 }) {
+  const line = endSentence(rawLine);
+  const hint = typeof rawHint === "string" ? endSentence(rawHint) : rawHint;
   if (size === "rail") {
     const linkClass = "text-caption text-accent hover:underline";
     return (

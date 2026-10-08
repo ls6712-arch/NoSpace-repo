@@ -13,6 +13,8 @@ import { ListSkeleton } from "../components/Skeletons";
 import { EmptyState } from "../components/StateViews";
 import { notifyError } from "../components/ui/toaster";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { notificationText } from "../lib/text";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Inbox: everything addressed to you, in one place.
@@ -40,15 +42,6 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function ago(ts: number) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  return `${Math.floor(hrs / 24)}d`;
-}
-
 export function Inbox() {
   const { user, isConfigured } = useAuth();
   const social = useSocial();
@@ -58,6 +51,7 @@ export function Inbox() {
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
   const requestCount = followRequests.length;
+  const unreadActivity = social.notifications.filter((n) => !n.read).length;
 
   const answerFollow = async (followerId: string, accept: boolean) => {
     if (!user || respondingTo) return;
@@ -79,7 +73,7 @@ export function Inbox() {
             Requests and activity live here once you have an account.
           </p>
           <Link to="/login?next=/inbox">
-            <Button variant="coral">Sign in</Button>
+            <Button variant="coral">Log in</Button>
           </Link>
         </div>
       </div>
@@ -93,7 +87,7 @@ export function Inbox() {
           Inbox
         </h1>
         <p className="mb-8 mt-2 text-small text-muted-foreground">
-          Everything addressed to you. Nothing here takes effect until you answer it.
+          Requests and notifications for you.
         </p>
 
         <Tabs defaultValue={requestCount > 0 ? "requests" : "activity"}>
@@ -101,7 +95,9 @@ export function Inbox() {
             <TabsTrigger value="requests">
               Requests{requestCount > 0 ? ` (${requestCount})` : ""}
             </TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="activity">
+              Activity{unreadActivity > 0 ? ` (${unreadActivity})` : ""}
+            </TabsTrigger>
           </TabsList>
 
           {/* ── Requests ─────────────────────────────────────────────── */}
@@ -178,7 +174,7 @@ export function Inbox() {
               <EmptyState
                 size={requestCount === 0 ? "page" : "section"}
                 icon={<InboxIcon />}
-                line="Quiet."
+                line="No notifications yet."
                 hint="Thoughts on your Moments and accepted follows all show up here."
                 action={{ label: "Log a Moment", to: "/create" }}
               />
@@ -187,14 +183,21 @@ export function Inbox() {
                 {social.notifications.map((n) => (
                   <li
                     key={n.id}
-                    className="rounded-card border border-border bg-card px-4 py-3.5 text-small"
+                    className={`rounded-card border px-4 py-3.5 text-small ${
+                      n.read
+                        ? "border-border bg-card"
+                        : "border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--yellow)_10%,var(--card))]"
+                    }`}
                   >
-                    <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
-                      {n.actorName ?? "Someone"}{" "}
-                    </strong>
-                    {n.body}
+                    {!n.read && <span className="sr-only">Unread. </span>}
+                    {!(n.actorName && n.body.startsWith(n.actorName)) && (
+                      <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
+                        {n.actorName ?? "Someone"}{" "}
+                      </strong>
+                    )}
+                    {notificationText(n.body)}
                     <span className="ml-2 text-caption text-muted-foreground">
-                      {ago(n.createdAt)}
+                      {formatWhen(n.createdAt, { ago: true })}
                     </span>
                   </li>
                 ))}

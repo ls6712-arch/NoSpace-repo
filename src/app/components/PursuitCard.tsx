@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Check, Lock, Share2, Sparkles, Target } from "lucide-react";
-import { getHobby } from "../data/hobbies";
+import { pursuitCorner } from "../lib/pursuitProgress";
 import { Post } from "../data/posts";
 import {
   Project,
@@ -75,9 +75,8 @@ export function PursuitCard({
     ? projectProgress(entryProject, posts, pursuit.id)
     : { count: 0, lastUpdatedAt: undefined };
 
-  const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
-  const spaceLabel = space?.shortName ?? pursuit.customSpace;
-  const status = pursuit.finishedAt ? "Completed" : count > 0 ? "In progress" : "Just started";
+  const cornerLabel = pursuitCorner(pursuit);
+  const status = pursuit.finishedAt ? "Finished" : count > 0 ? "In progress" : "Just started";
   const moved = pursuit.finishedAt ?? lastUpdatedAt ?? pursuit.startedAt;
 
   const toggleShare = async () => {
@@ -177,7 +176,7 @@ export function PursuitCard({
             className="absolute right-2.5 top-2.5 flex h-8 min-w-8 items-center gap-1.5 rounded-control bg-scrim-solid/55 px-2.5 backdrop-blur-md transition-colors hover:bg-scrim-solid/75"
           >
             {justCopied ? (
-              <span className="text-caption font-medium text-on-media">Copied!</span>
+              <span className="text-caption font-medium text-on-media">Copied</span>
             ) : shared ? (
               <Share2 className="size-3.5 text-on-media" strokeWidth={1.9} />
             ) : (
@@ -192,9 +191,9 @@ export function PursuitCard({
           <p className="line-clamp-2 break-words text-body leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
             {pursuit.title}
           </p>
-          {(pursuit.interest || spaceLabel) && (
+          {cornerLabel && (
             <p className="mt-1.5 text-caption text-muted-foreground">
-              {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
+              {cornerLabel}
             </p>
           )}
           <p className="mt-2 text-caption text-muted-foreground">
@@ -216,8 +215,8 @@ export function PursuitCard({
               }`}
             >
               <Target className="size-4 shrink-0" strokeWidth={1.8} />
-              <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`} title={goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}>
-                {goal ? (goal.reachedAt ? `Reached it — ${goalText}` : goalText) : "Set a goal"}
+              <span className={`truncate font-medium ${goal?.reachedAt ? "line-through decoration-1" : ""}`} title={goal ? (goal.reachedAt ? `Reached it: ${goalText}` : goalText) : "Set a goal"}>
+                {goal ? (goal.reachedAt ? `Reached it: ${goalText}` : goalText) : "Set a goal"}
               </span>
             </button>
           </div>
@@ -238,7 +237,7 @@ export function PursuitCard({
         {owner && (
           <div className="mt-3 flex items-center gap-2">
             <Link
-              to={`/pursuit/${pursuit.id}/moment`}
+              to={`/create?pursuit=${pursuit.id}`}
               className="flex-1 rounded-control border border-[var(--hairline)] bg-surface px-3 py-1.5 text-center text-caption font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
             >
               Log a Moment
@@ -257,7 +256,7 @@ export function PursuitCard({
               <button
                 type="button"
                 onClick={markDone}
-                title="Mark as completed"
+                title="Finish"
                 className="flex size-8 shrink-0 items-center justify-center rounded-control border border-[var(--hairline)] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
               >
                 <Check className="size-3.5" strokeWidth={2} />

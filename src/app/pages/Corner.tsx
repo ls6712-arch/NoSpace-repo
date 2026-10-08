@@ -46,9 +46,9 @@ export function CornerPage() {
     return (
       <div className="min-h-viewport flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-title mb-4">That corner doesn’t exist</h2>
+          <h2 className="text-title mb-4">That Corner doesn’t exist</h2>
           <Link to="/">
-            <Button variant="outline">Back home</Button>
+            <Button variant="outline">Back to Home</Button>
           </Link>
         </div>
       </div>

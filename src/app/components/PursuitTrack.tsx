@@ -3,12 +3,11 @@ import { Plus } from "lucide-react";
 import { Link } from "react-router";
 import { Post } from "../data/posts";
 import { Project, goalDeadlineText, goalProgressText } from "../lib/journal";
-import { getHobby } from "../data/hobbies";
+import { pursuitCorner } from "../lib/pursuitProgress";
 import { lastMomentText, pursuitMoments, startedLabel, TrailMoment } from "../lib/pursuitTrail";
 import { isOnlyYou } from "../lib/visibility";
 import { firstWords } from "../lib/text";
 import { MomentDetail } from "./MomentDetail";
-import { QuickLog } from "./QuickLog";
 import { ProgressBar } from "./pursuit/ui";
 import { formatAmount, hasMeasure, summarize } from "../lib/pursuitProgress";
 import { useJournalSlice, ProgressEntry } from "../lib/journal";
@@ -18,10 +17,6 @@ import { Time } from "./ui/time";
 const NO_PROGRESS: ProgressEntry[] = [];
 
 /** {SPACE} for the meta line — a real Space, a made-up one, or free-text interest. */
-function spaceLabel(pursuit: Project): string {
-  if (pursuit.hobbySlug) return getHobby(pursuit.hobbySlug)?.name ?? pursuit.hobbySlug;
-  return pursuit.customSpace || pursuit.interest || "General";
-}
 
 function shortDate(ms: number): string {
   return formatDate(ms);
@@ -150,7 +145,6 @@ export function PursuitTrack({
   quickLog?: boolean;
 }) {
   const [openMomentId, setOpenMomentId] = useState<number | string | null>(null);
-  const [logging, setLogging] = useState(false);
   const moments = pursuitMoments(posts, pursuit.id, entryProject);
   const lastMomentAt = lastActivity ?? moments[moments.length - 1]?.createdAt;
   const goal = pursuit.goal;
@@ -176,29 +170,18 @@ export function PursuitTrack({
             {pursuit.title}
           </Link>
           <p className="ns-section-kicker mt-0.5 text-muted-foreground">
-            {spaceLabel(pursuit).toUpperCase()} · {startedLabel(pursuit.startedAt).toUpperCase()}
+            {[pursuitCorner(pursuit), startedLabel(pursuit.startedAt)].filter(Boolean).join(" · ")}
           </p>
         </div>
-        {quickLog && measured ? (
+        {quickLog && (
           <Link
-            to={`/pursuit/${pursuit.id}/moment`}
+            to={`/create?pursuit=${pursuit.id}`}
             aria-label={`Log a Moment on ${pursuit.title}`}
             className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground transition-colors hover:border-[var(--coral-deep)]"
           >
             <Plus className="size-3" />
             Moment
           </Link>
-        ) : quickLog && (
-          <button
-            type="button"
-            onClick={() => setLogging((v) => !v)}
-            aria-expanded={logging}
-            aria-label={`Log a Moment on ${pursuit.title}`}
-            className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground transition-colors hover:border-[var(--coral-deep)]"
-          >
-            <Plus className="size-3" />
-            Moment
-          </button>
         )}
       </div>
 
@@ -216,12 +199,6 @@ export function PursuitTrack({
         goalLine && <p className="mt-2 text-caption text-foreground">{goalLine}</p>
       )}
       <p className="mt-0.5 text-caption text-muted-foreground">{lastMomentText(lastMomentAt)}</p>
-
-      {logging && (
-        <div className="mt-2.5">
-          <QuickLog pursuit={pursuit} compact onDone={() => setLogging(false)} />
-        </div>
-      )}
 
       <MomentDetail post={openPost} owned onOpenChange={(open) => !open && setOpenMomentId(null)} />
     </div>

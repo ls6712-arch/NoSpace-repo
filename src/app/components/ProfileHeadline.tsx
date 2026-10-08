@@ -106,12 +106,12 @@ export function ProfileHeadline({
   const label = hobbyLabel !== undefined ? hobbyLabel : derived?.label ?? null;
   const startedAt = firstActivityAt ?? derived?.firstActivityAt;
 
-  const headline = startedAt !== undefined ? milestoneText(label, startedAt) : "Just getting started";
+  const headline = startedAt !== undefined ? milestoneText(label, startedAt) : "No Moments yet";
 
   if (variant === "quiet") {
     return (
       <p className="text-small text-muted-foreground">
-        {headline} <span className="text-muted-foreground/60">· Keep going.</span>
+        {headline}
       </p>
     );
   }
@@ -121,7 +121,6 @@ export function ProfileHeadline({
       <div className="font-hud text-display mb-1 text-gradient-brand">
         {headline}
       </div>
-      <div className="text-small text-muted-foreground/70 font-hud">Keep going.</div>
     </div>
   );
 }

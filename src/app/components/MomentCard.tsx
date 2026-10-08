@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Bookmark,
   Eye,
-  PenLine,
   Lock,
   CalendarDays,
   MapPin,
@@ -70,7 +69,9 @@ const TILE_TOKENS = [
 
 export function tileTokenFor(postId: number | string) {
   const n = typeof postId === "number" ? postId : [...postId].reduce((a, c) => a + c.charCodeAt(0), 0);
-  return TILE_TOKENS[Math.abs(n) % TILE_TOKENS.length];
+  // A stand-in id that isn't a finite number (a log saved without an id yet)
+  // used to index past the palette and crash the whole Shelf.
+  return TILE_TOKENS[Number.isFinite(n) ? Math.abs(Math.trunc(n)) % TILE_TOKENS.length : 0];
 }
 
 /**
@@ -288,14 +289,20 @@ export function MomentActions({
     <div className="-ml-2 flex items-center">
       {mine ? (
         <>
-          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Love this, ${love}`} title="Love this" role="img">
-            <Heart className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
-            <Count n={love} />
-          </span>
-          <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Count me in, ${inCount}`} title="Count me in" role="img">
-            <Hand className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
-            <Count n={inCount} />
-          </span>
+          {/* Nobody else can see an "Only you" Moment, so there is
+              nothing to react to. */}
+          {!isOnlyYou(post) && (
+            <>
+              <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Love this, ${love}`} title="Love this" role="img">
+                <Heart className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+                <Count n={love} />
+              </span>
+              <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Count me in, ${inCount}`} title="Count me in" role="img">
+                <Hand className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+                <Count n={inCount} />
+              </span>
+            </>
+          )}
           <span className={`${ICON_BTN} text-muted-foreground`} aria-label={`Thoughts, ${thoughts}`} title="Thoughts" role="img">
             <MessageCircle className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
             <Count n={thoughts} />
@@ -507,7 +514,7 @@ export function MomentCard({
       transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(staggerIndex ?? 0, 7) * 0.05 }}
     >
       {/* The open button and the Save icon are siblings, never nested —
-          a button inside a button isn't valid, and Save must not also
+          a button inside a button isn’t valid, and Save must not also
           open the Moment. */}
       <div className="relative">
         <button
@@ -651,7 +658,6 @@ export function MomentCard({
             <span className="ns-section-kicker min-w-0 truncate text-muted-foreground" title={corner}>{corner}</span>
             <span className="ns-section-kicker flex shrink-0 items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
-              {post.reflection && <PenLine className="size-3" aria-label="Has a Reflection" />}
               <span className="hidden sm:inline">{visibilityWord(post)} · </span>
               <Time value={post.createdAt} />
             </span>

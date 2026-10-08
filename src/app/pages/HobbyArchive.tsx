@@ -7,7 +7,6 @@ import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal } from "../lib/journal";
-import { setCornerNote, useCornerNote } from "../lib/cornerNotes";
 import { parseArchiveKey } from "../components/HobbyShelf";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
@@ -53,14 +52,6 @@ export function HobbyArchive() {
 
   const target = useMemo(() => parseArchiveKey(hobbyKey), [hobbyKey]);
 
-  // Same key format as the Moments tile's tally (HobbyShelf.tsx), so a note
-  // written here shows up on the right tile there. Private to this account —
-  // not CornersContext's Corner.description, which is a Corner's one shared,
-  // public line, set by whoever created it and visible to everyone.
-  const noteKey = target ? target.subSlug ?? `space:${target.hobbySlug}` : "";
-  const savedNote = useCornerNote(noteKey);
-  const [noteDraft, setNoteDraft] = useState(savedNote);
-  useEffect(() => setNoteDraft(savedNote), [noteKey]);
 
   const moments = useMemo(() => {
     if (!target) return [];
@@ -94,9 +85,9 @@ export function HobbyArchive() {
   if (isConfigured && !user) {
     return (
       <SignUpPrompt
-        title="This is where your books live"
-        body="Every hobby you log gets a book here, holding every photo, video and note you’ve put in it. Make an account and yours starts filling up."
-        cta="Start my shelf"
+        title="Your Moments by Corner"
+        body="Every Corner you post in shows its photos, videos and notes here. Make an account and yours starts filling up."
+        cta="Start my Shelf"
       />
     );
   }
@@ -109,7 +100,7 @@ export function HobbyArchive() {
             No such hobby
           </h1>
           <p className="mb-6 text-small text-muted-foreground">
-            That Book isn’t on your Shelf.
+            That Corner isn’t on your Shelf.
           </p>
           <Link to="/you">
             <Button variant="outline">Back to your Shelf</Button>
@@ -155,25 +146,11 @@ export function HobbyArchive() {
           {moments.length > 0 ? ` · updated ${formatWhen(moments[0].createdAt, { ago: true })}` : ""}
         </p>
 
-        {/* A short, private note about this Corner — only you ever see it,
-            here or on its Moments tile. Saves on blur/Enter rather than
-            needing a separate edit mode; empty just clears it. */}
-        <input
-          value={noteDraft}
-          onChange={(e) => setNoteDraft(e.target.value)}
-          onBlur={() => setCornerNote(noteKey, noteDraft)}
-          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          maxLength={140}
-          placeholder="Add a short note about this Corner — only you see it."
-          aria-label={`Your private note about ${target.label}`}
-          className="mt-3 w-full max-w-md border-b border-transparent bg-transparent text-body text-muted-foreground outline-none transition-colors focus:border-border placeholder:text-muted-foreground/60"
-        />
-
         <div className="mt-5">
           <Link to={logTo}>
             <Button variant="coral">
               <PenLine className="size-4" />
-              Log a {target.label.toLowerCase()} moment
+              Log a {target.label.toLowerCase()} Moment
             </Button>
           </Link>
         </div>
@@ -316,7 +293,7 @@ export function HobbyArchive() {
             </div>
             <div className="rounded-card border border-border bg-card p-5">
               <h2 className="mb-2 text-body" style={{ fontFamily: "var(--font-serif)" }}>
-                This book
+                This Corner
               </h2>
               <dl className="grid gap-1.5 text-small">
                 <div className="flex justify-between gap-3">

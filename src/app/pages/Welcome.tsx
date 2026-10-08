@@ -101,7 +101,7 @@ export function Welcome() {
           onClick={() => void signOut()}
           className="mt-10 block w-full text-center text-small text-muted-foreground transition-colors hover:text-foreground"
         >
-          Sign out
+          Log out
         </button>
       </div>
     </div>

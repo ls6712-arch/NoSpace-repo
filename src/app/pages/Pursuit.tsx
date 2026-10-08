@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { PursuitShareDialog } from "../components/PursuitShareDialog";
 import { useContent } from "../context/ContentContext";
-import { getHobby, subHobbyLabel } from "../data/hobbies";
+import { subHobbyLabel } from "../data/hobbies";
 import { seedPosts, Post } from "../data/posts";
 import {
   CHECK_IN_OPTIONS,
@@ -15,7 +15,6 @@ import {
   deriveProjects,
   goalDeadlineText,
   markGoalReached,
-  letGoProject,
   pauseProject,
   pursuitStatus,
   resumeProject,
@@ -37,12 +36,11 @@ import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { GoalDialog } from "../components/GoalDialog";
 import { GoalProgressTap } from "../components/GoalProgressTap";
-import { QuickLog } from "../components/QuickLog";
 import { EndingDialog } from "../components/EndingDialog";
 import { PursuitProgressPanel } from "../components/pursuit/PursuitProgressPanel";
 import { NextSessionCard } from "../components/pursuit/NextSessionCard";
 import { ProgressBar } from "../components/pursuit/ui";
-import { formatAmount, hasMeasure, unitFor } from "../lib/pursuitProgress";
+import { formatAmount, hasMeasure, pursuitCorner, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
 import { formatDate, formatWhen } from "../lib/dates";
 import { plural } from "../lib/plural";
@@ -112,7 +110,6 @@ export function Pursuit() {
   const { logs: privateLogs } = usePrivateLogs();
   const [goalOpen, setGoalOpen] = useState(false);
   const [endingOpen, setEndingOpen] = useState<null | "finish" | "edit">(null);
-  const [logging, setLogging] = useState(false);
   const [searchParams] = useSearchParams();
   const isNew = searchParams.get("new") === "1";
   const [openPost, setOpenPost] = useState<Post | null>(null);
@@ -272,7 +269,7 @@ export function Pursuit() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4 text-center">
         <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-          This Pursuit isn’t here.
+          This Pursuit isn’t here
         </h1>
         <p className="max-w-sm text-small text-muted-foreground">
           It may have been kept private, or the link’s out of date.
@@ -288,8 +285,7 @@ export function Pursuit() {
   // A Pursuit you joined is in your journal too, but its goal, sharing and
   // ending belong to whoever created it.
   const isCreator = owner && ownProject?.role !== "member";
-  const space = view.hobbySlug ? getHobby(view.hobbySlug) : undefined;
-  const spaceLabel = space?.shortName ?? view.customSpace;
+  const cornerLabel = pursuitCorner(view);
   const goal = view.goal;
   const status = pursuitStatus(view);
   const photos = firstAndLatestPhoto(moments);
@@ -326,9 +322,9 @@ export function Pursuit() {
     status === "complete"
       ? `Finished ${timeAgo(view.finishedAt!)}`
       : status === "resting"
-        ? `Resting since ${formatDate(view.pausedAt!)}`
+        ? `Paused since ${formatDate(view.pausedAt!)}`
         : status === "let_go"
-          ? `Let go ${formatDate(view.letGoAt!)}`
+          ? `Finished ${formatDate(view.letGoAt!)}`
           : startedLabel(view.startedAt);
 
   // Step 5a: "[N] of [M] this week" counts only this person's own Moments —
@@ -372,10 +368,8 @@ export function Pursuit() {
         </h1>
 
         <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted-foreground">
-          {view.interest && <span>{view.interest}</span>}
-          {view.interest && spaceLabel && <span aria-hidden="true">·</span>}
-          {spaceLabel && <span>{spaceLabel}</span>}
-          {(view.interest || spaceLabel) && <span aria-hidden="true">·</span>}
+          {cornerLabel && <span>{cornerLabel}</span>}
+          {cornerLabel && <span aria-hidden="true">·</span>}
           <span>{statusLine}</span>
           {moments.length > 0 && (
             <>
@@ -411,10 +405,10 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-small">
               <Moon className="size-4 shrink-0 text-muted-foreground" />
-              Resting. Nothing’s lost, and there’s no clock running.
+              This Pursuit is paused.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
-              <Play className="size-3.5" /> Pick it back up
+              <Play className="size-3.5" /> Resume
             </Button>
           </div>
         )}
@@ -423,10 +417,10 @@ export function Pursuit() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-small">
               <Wind className="size-4 shrink-0 text-muted-foreground" />
-              Let go. Nothing’s lost.
+              This Pursuit is finished.
             </p>
             <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
-              <Play className="size-3.5" /> Pick it back up
+              <Play className="size-3.5" /> Reopen
             </Button>
           </div>
         )}
@@ -446,7 +440,7 @@ export function Pursuit() {
               <Target className={`size-4 shrink-0 ${goalReached ? "text-[var(--violet-electric-bright)]" : "text-muted-foreground"}`} />
               {goalReached ? (
                 <span>
-                  Goal reached — <span className="text-muted-foreground">{goal.label}</span>
+                  Goal reached: <span className="text-muted-foreground">{goal.label}</span>
                 </span>
               ) : (
                 <span className="tabular-nums">{goalSentence}</span>
@@ -474,7 +468,7 @@ export function Pursuit() {
 
         {/* A new Pursuit's empty state. There used to be a separate "Day
             Zero" box here with its own inline logger — a third way to add a
-            Moment, next to Log a Moment. It's gone: the before-and-after
+            Moment, next to Log a Moment. It’s gone: the before-and-after
             already uses whichever Moment has the first photo, so the only
             thing worth keeping is the nudge to make that one a photo. */}
         {owner && ownProject && moments.length === 0 && (
@@ -486,7 +480,7 @@ export function Pursuit() {
               A photo of where you’re starting makes the best before-and-after later.
             </p>
             {!hasMeasure(ownProject) && (
-              <Link to={`/pursuit/${ownProject.id}/moment`} className="mt-3 inline-block">
+              <Link to={`/create?pursuit=${ownProject.id}`} className="mt-3 inline-block">
                 <Button variant="coral" size="sm">
                   <Plus className="size-3.5" />
                   Log a Moment
@@ -499,16 +493,10 @@ export function Pursuit() {
         {owner && ownProject && (
           <>
             <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-3">
-              {moments.length > 0 && !hasMeasure(ownProject) && (
-                <Button variant="coral" size="sm" onClick={() => setLogging((v) => !v)} aria-expanded={logging}>
+              <Link to={`/create?pursuit=${view.id}`}>
+                <Button variant="coral" size="sm">
                   <Plus className="size-3.5" />
                   Log a Moment
-                </Button>
-              )}
-              <Link to={`/create?pursuit=${view.id}`}>
-                <Button variant="outline" size="sm">
-                  <PenLine className="size-3.5" />
-                  Full form
                 </Button>
               </Link>
               <Button
@@ -536,19 +524,13 @@ export function Pursuit() {
               {isCreator && status === "active" && (
                 <Button variant="outline" size="sm" onClick={() => mirror(pauseProject(view.id))}>
                   <Moon className="size-3.5" />
-                  Rest it
-                </Button>
-              )}
-              {isCreator && (status === "active" || status === "resting") && (
-                <Button variant="outline" size="sm" onClick={() => mirror(letGoProject(view.id))}>
-                  <Wind className="size-3.5" />
-                  Let go
+                  Pause
                 </Button>
               )}
               {!isCreator ? null : status !== "complete" ? (
                 <Button variant="outline" size="sm" onClick={() => setEndingOpen("finish")}>
                   <Check className="size-3.5" />
-                  Mark as completed
+                  Finish
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" onClick={() => mirror(resumeProject(view.id))}>
@@ -557,12 +539,6 @@ export function Pursuit() {
                 </Button>
               )}
             </div>
-
-            {logging && (
-              <div className="mb-4">
-                <QuickLog pursuit={ownProject} onDone={() => setLogging(false)} />
-              </div>
-            )}
 
             {status === "active" && (
               <div className="mb-8 flex flex-wrap items-center gap-x-2 gap-y-3 text-caption text-muted-foreground">

@@ -1,0 +1,15 @@
+PASS	flag off: name step shows first
+PASS	flag off: name is not prefilled from the email
+PASS	flag off: empty name is refused
+PASS	flag off: preview shows the trimmed name
+PASS	flag off: tags step follows
+PASS	flag off: no page errors
+PASS	flag on: name step shows first
+PASS	flag on: name is not prefilled from the email
+PASS	flag on: empty name is refused
+PASS	flag on: preview shows the trimmed name
+PASS	flag on: the Log a Moment form is the first Moment step
+PASS	flag on: Undo shows after saving
+PASS	flag on: Undo returns to the form
+PASS	flag on: tags step follows
+PASS	flag on: no page errors

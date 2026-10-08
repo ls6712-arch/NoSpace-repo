@@ -115,7 +115,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const setDefaultVisibility = async (next: DefaultVisibility) => {
-    if (!supabase || !user) return { error: "Not signed in." };
+    if (!supabase || !user) return { error: "You’re not logged in." };
     const prev = defaultVisibility;
     setDefaultVisibilityState(next);
     // profile_settings has no row-creating trigger the way profiles does
@@ -134,7 +134,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   };
 
   const setReadReceipts = async (next: boolean) => {
-    if (!supabase || !user) return { error: "Not signed in." };
+    if (!supabase || !user) return { error: "You’re not logged in." };
     const prev = readReceipts;
     setReadReceiptsState(next);
     const { error } = await supabase
@@ -154,7 +154,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // doesn't merge, so sending only `{ muted: [...] }` would silently wipe
   // the email prefs the very first time anyone touched a Phase 5 switch.
   const writeNotificationPreferences = async (next: NotificationPreferences) => {
-    if (!supabase || !user) return { error: "Not signed in." };
+    if (!supabase || !user) return { error: "You’re not logged in." };
     const prev = notificationPreferences;
     setNotificationPreferencesState(next);
     const { error } = await supabase

@@ -25,7 +25,7 @@ function monthKey(ts: number) {
 
 /**
  * Every one of this Shelf's own Moments, pickable to pin or unpin — opened
- * from the grid's own "Pin a moment" tile rather than a new button
+ * from the grid's own "Pin a Moment" tile rather than a new button
  * somewhere else, since that tile already existed as exactly this
  * invitation, just not wired to anything real yet.
  */
@@ -76,7 +76,7 @@ function PinPicker({
                   className="h-full w-full object-cover"
                 />
               </div>
-              <span className="min-w-0 flex-1 truncate text-small" title={post.caption || "Untitled moment"}>{post.caption || "Untitled moment"}</span>
+              <span className="min-w-0 flex-1 truncate text-small" title={post.caption || "Untitled Moment"}>{post.caption || "Untitled Moment"}</span>
               <span className={`text-caption ${post.pinned ? "text-[var(--coral-deep)]" : "text-muted-foreground"}`}>
                 {post.pinned ? "Pinned" : "Pin"}
               </span>
@@ -94,7 +94,7 @@ function PinPicker({
  * reactions-spec.md §2) instead of this grid's own bespoke tiles. A pinned
  * Moment is always the wide lead card up top, ungrouped; everything else
  * follows month by month (board 1), newest first, in a plain responsive
- * grid at standard size. "Pin a moment" closes out the last month's grid
+ * grid at standard size. "Pin a Moment" closes out the last month's grid
  * as a standing invitation to add another.
  *
  * Still simpler than board 1 in one way: no click-through "quiet read"
@@ -215,7 +215,7 @@ export function WorkGrid({
                   className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                 >
                   <ImagePlus className="size-5" strokeWidth={1.7} />
-                  <span className="text-small font-medium">Pin a moment</span>
+                  <span className="text-small font-medium">Pin a Moment</span>
                 </button>
               )}
             </div>
@@ -223,7 +223,7 @@ export function WorkGrid({
         ))}
 
         {/* Nothing left but the pinned lead card — still needs somewhere
-            to offer "Pin a moment" when there's no month section to
+            to offer "Pin a Moment" when there’s no month section to
             append it to. */}
         {byMonth.length === 0 && remaining === 0 && editable && (
           <button
@@ -232,7 +232,7 @@ export function WorkGrid({
             className="flex aspect-square w-full max-w-xs flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-[var(--line,var(--hairline))] text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
           >
             <ImagePlus className="size-5" strokeWidth={1.7} />
-            <span className="text-small font-medium">Pin a moment</span>
+            <span className="text-small font-medium">Pin a Moment</span>
           </button>
         )}
       </div>

@@ -252,10 +252,10 @@ export type LocationPrivacy = "exact" | "neighborhood" | "city" | "approximate" 
 
 export const LOCATION_PRIVACY: { value: LocationPrivacy; label: string; copy: string }[] = [
   { value: "exact", label: "Exact", copy: "The precise address or spot" },
-  { value: "neighborhood", label: "Neighborhood", copy: "The area, not the address" },
-  { value: "city", label: "City", copy: "Just the city" },
-  { value: "approximate", label: "Approximate", copy: "Roughly where, nothing more" },
-  { value: "hidden", label: "Hidden", copy: "Not shown to anyone" },
+  { value: "neighborhood", label: "Neighborhood", copy: "The area around it" },
+  { value: "city", label: "City", copy: "The city" },
+  { value: "approximate", label: "Approximate", copy: "A rough location" },
+  { value: "hidden", label: "Hidden", copy: "Not shown" },
 ];
 
 /**

@@ -18,7 +18,7 @@ export function DataSection() {
 
   return (
     <section>
-      <SectionHeader n={6} eyebrow="YOUR DATA" title="Your data" />
+      <SectionHeader n={6} eyebrow="Your data" title="Your data" />
       <p className="mb-4 text-small text-muted-foreground">
         What’s kept here, and only here.
       </p>
@@ -29,7 +29,7 @@ export function DataSection() {
           “Only you” Moments
         </div>
         <p className="mb-3 text-caption leading-relaxed text-muted-foreground">
-          Kept here and nowhere else. These never appear in a Space, a feed, or your public shelf.
+          Only you can see these. They don’t appear in a Space, on Home, or on your public Shelf.
         </p>
         {logs.length === 0 ? (
           <EmptyState size="rail" className="mt-0" line="Nothing here yet." action={{ label: "Log a Moment", to: "/create" }} />
@@ -75,7 +75,7 @@ export function DataSection() {
         open={confirmDeleteId !== null}
         onOpenChange={(o) => !o && setConfirmDeleteId(null)}
         title="Delete this?"
-        description="This can’t be undone — nobody else ever saw it, and once it’s gone there’s no copy left anywhere."
+        description="This can’t be undone. Nobody else saw it, and there is no copy left once it’s deleted."
         onConfirm={async () => {
           if (confirmDeleteId !== null) await remove(confirmDeleteId);
           setConfirmDeleteId(null);

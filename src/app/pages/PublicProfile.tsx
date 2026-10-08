@@ -1,3 +1,4 @@
+import { extraConceptsEnabled } from "../config";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { ArrowRight, MessageCircle, Plus, Share2 } from "lucide-react";
@@ -313,7 +314,7 @@ export function PublicProfile() {
 
   const { personId, displayName, avatarUrl, tagline, bio, posts } = state;
   const isMe = !!user && user.id === personId;
-  const firstName = displayName.split(" ")[0];
+  const shownName = displayName;
   const sessions = sessionsFromPosts(posts);
   const tags = tagsFromPosts(posts);
 
@@ -481,12 +482,14 @@ export function PublicProfile() {
                 <CopyLinkButton />
                 {!isMe && user && <PersonActionsMenu personId={personId} personName={displayName} onBlocked={() => navigate("/discover")} />}
               </div>
+              {extraConceptsEnabled && (
               <Link
                 to={`/u/${username}/studio`}
                 className="mt-2 inline-block text-caption text-muted-foreground transition-colors hover:text-foreground"
               >
                 Open Scrapbook →
               </Link>
+              )}
             </div>
         </div>
 
@@ -510,9 +513,9 @@ export function PublicProfile() {
         )}
 
         {/* Their Moments and their shared Pursuits, side by side — the same
-            portfolio-first layout as the owner's own profile. A Pursuit
+            portfolio-first layout as the owner’s own profile. A Pursuit
             only ever shows up here when its owner explicitly shared it;
-            the section itself doesn't render at all when there are none,
+            the section itself doesn’t render at all when there are none,
             rather than showing an empty "Pursuits" box. */}
         <div className="mb-12 grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
           <section>
@@ -522,7 +525,7 @@ export function PublicProfile() {
                   className="text-title sm:text-display"
                   style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
                 >
-                  {focusTag ? `What ${firstName} makes in ${focusTag.toLowerCase()}` : `What ${firstName} makes`}
+                  {focusTag ? `What ${shownName} makes in ${focusTag.toLowerCase()}` : `What ${shownName} makes`}
                 </h2>
                 <p className="mt-1 text-small text-muted-foreground">
                   A look into the things they’ve created, explored, and loved.
@@ -542,7 +545,7 @@ export function PublicProfile() {
               posts={shownPosts}
               onOpen={setOpenPost}
               editable={isMe}
-              emptyLabel={isMe ? "Nothing logged yet." : `${firstName} hasn’t shared any Moments publicly yet.`}
+              emptyLabel={isMe ? "Nothing logged yet." : `${shownName} hasn’t shared any Moments publicly yet.`}
               emptyAction={isMe ? { label: "Log a Moment", to: "/create" } : { label: "Go to Discover", to: "/discover" }}
             />
           </section>
@@ -550,10 +553,10 @@ export function PublicProfile() {
           {sharedPursuits.length > 0 && (
             <section>
               <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-                {firstName}’s Pursuits
+                {shownName}’s Pursuits
               </h2>
               <p className="mb-4 mt-1 text-small text-muted-foreground">
-                The things they’re bringing to life, that they’ve chosen to share.
+                Pursuits they chose to share.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {sharedPursuits.map((pursuit) => (
@@ -565,16 +568,16 @@ export function PublicProfile() {
         </div>
 
         {/* Private by default, one milestone at a time: this section simply
-            doesn't exist for a non-owner until there's something explicitly
+            doesn’t exist for a non-owner until there’s something explicitly
             shared to show. Visiting your own public link still gets the full
             owner view, locked milestones included — same as /you. */}
         {(isMe || sharedMilestoneIds.length > 0) && (
           <div className="mb-10">
             <h2 className="mb-1 flex items-center gap-2 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
-              Quiet Milestones
+              Milestones
             </h2>
             <p className="mb-3 text-small text-muted-foreground">
-              {isMe ? "Non-metric growth that feels good." : `What ${firstName} chose to share.`}
+              {isMe ? "Private by default." : `What ${shownName} chose to share.`}
             </p>
             {isMe ? (
               <QuietMilestones />
@@ -590,7 +593,7 @@ export function PublicProfile() {
               {primaryCorner.name}
             </h2>
             <p className="mb-4 text-small text-muted-foreground">
-              {firstName}’s Moments tagged {primaryCorner.name}.
+              {shownName}’s Moments tagged {primaryCorner.name}.
             </p>
             <div className={MOMENT_GRID}>
               {cornerMoments.slice(0, 6).map((post) => (
@@ -648,7 +651,7 @@ export function PublicProfile() {
         {/* The one place this page asks for anything */}
         <div className="ns-profile-cta glass-panel p-7 text-center">
           <h2 className="mb-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Start your own shelf
+            Start your own Shelf
           </h2>
           <p className="mx-auto mb-6 max-w-sm text-small text-muted-foreground">
             Pick a hobby, log what you make, and watch it stack up. Free, and there’s

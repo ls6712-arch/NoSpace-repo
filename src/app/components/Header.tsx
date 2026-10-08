@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { Flag, MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
+import { Flag, LogOut, MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
 import { useCart } from "../context/CartContext";
-import { useQuickLog } from "../context/QuickLogContext";
 import { useAuth } from "../context/AuthContext";
 import { useTheme, type ThemePreference } from "../context/ThemeContext";
 import { useCategories } from "../context/CategoriesContext";
@@ -67,6 +66,7 @@ function AccountMenuPopover() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const { preference, setPreference } = useTheme();
   const { isAdmin } = useCategories();
+  const { signOut } = useAuth();
   const location = useLocation();
   const [openReportCount, setOpenReportCount] = useState<number | null>(null);
 
@@ -129,6 +129,14 @@ function AccountMenuPopover() {
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-control border border-border bg-popover shadow-overlay">
           <Link
+            to="/you"
+            onClick={() => setOpen(false)}
+            className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-small transition-colors hover:bg-surface-muted"
+          >
+            <UserRound className="size-4 text-muted-foreground" aria-hidden="true" />
+            You
+          </Link>
+          <Link
             to="/settings"
             onClick={() => setOpen(false)}
             className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-small transition-colors hover:bg-surface-muted"
@@ -175,6 +183,17 @@ function AccountMenuPopover() {
               ))}
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              void signOut();
+            }}
+            className="flex min-h-11 w-full items-center gap-2.5 border-t border-[var(--hairline)] px-4 py-3 text-left text-small transition-colors hover:bg-surface-muted"
+          >
+            <LogOut className="size-4 text-muted-foreground" aria-hidden="true" />
+            Log out
+          </button>
         </div>
       )}
     </div>
@@ -245,17 +264,16 @@ const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
  * the same places in the same order rather than two different apps.
  */
 const PRIMARY_NAV = [
-  { to: "/discover", label: "Discover", hint: "Spaces, people and pursuits",
+  { to: "/discover", label: "Discover", hint: "Spaces, people and Pursuits",
     match: (p: string) => p.startsWith("/discover") || p.startsWith("/space") || p.startsWith("/people") },
   { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you’re part of",
     match: (p: string) => p.startsWith("/my-space") },
-  { to: "/create", label: "Log a Moment", hint: "Share a moment, or start a pursuit.", accent: true,
+  { to: "/create", label: "Log a Moment", hint: "Share a Moment or start a Pursuit.", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
 
 export function Header() {
   const { openCart, cartCount } = useCart();
-  const { openQuickLog } = useQuickLog();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -307,7 +325,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries
-              below — it's this wordmark — so it carries the same active
+              below — it’s this wordmark — so it carries the same active
               underline itself rather than leaving no primary item active
               (or, as before, leaving My Space wrongly claiming it). */}
           <Link
@@ -338,16 +356,15 @@ export function Header() {
               // linking straight to it.
               if (item.to === "/create") {
                 return (
-                  <button
+                  <Link
                     key={item.to}
-                    type="button"
+                    to="/create"
                     title={item.hint}
-                    onClick={openQuickLog}
                     className="flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-small text-accent-foreground transition-[filter] hover:brightness-110"
                   >
                     <Plus className="size-3.5" aria-hidden="true" />
                     {item.label}
-                  </button>
+                  </Link>
                 );
               }
               return (

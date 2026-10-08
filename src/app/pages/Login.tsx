@@ -7,6 +7,9 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { APP_NAME } from "../config";
 import { OFFLINE_LINE } from "../lib/stateCopy";
+import { TermsCheckbox } from "../components/TermsCheckbox";
+import { rememberTermsAcceptance } from "../lib/termsAcceptance";
+import { DISPLAY_NAME_MAX, validateDisplayName } from "../lib/displayName";
 
 export function Login() {
   const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
@@ -28,6 +31,7 @@ export function Login() {
     searchParams.get("mode") === "signin" ? "signin" : "signup",
   );
   const [resetSent, setResetSent] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,8 +52,9 @@ export function Login() {
     if (password.length < 8) {
       return "Your password needs at least 8 characters.";
     }
-    if (mode === "signup" && !displayName.trim()) {
-      return "What should people call you?";
+    if (mode === "signup") {
+      const checked = validateDisplayName(displayName);
+      if (!checked.ok) return checked.error;
     }
     return null;
   };
@@ -79,13 +84,16 @@ export function Login() {
   };
 
   const handleGoogle = async () => {
+    // The button is disabled until the box is ticked; this is the backstop.
+    if (mode === "signup" && !agreed) return;
+    if (mode === "signup") rememberTermsAcceptance();
     const result = await signInWithGoogle();
     if (result.error) setError(result.error);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || (mode === "signup" && !agreed)) return;
     const invalid = validate();
     if (invalid) {
       setError(invalid);
@@ -93,6 +101,7 @@ export function Login() {
     }
     setError(null);
     setSubmitting(true);
+    if (mode === "signup") rememberTermsAcceptance();
     try {
       const result =
         mode === "signup"
@@ -153,7 +162,7 @@ export function Login() {
           </h1>
           <p className="text-small text-muted-foreground">
             {mode === "signup"
-              ? "Your Moments, saved for real, not just this browser tab."
+              ? "Your Moments are saved to your account."
               : "Log in to pick up where you left off."}
           </p>
         </div>
@@ -161,13 +170,13 @@ export function Login() {
         {needsConfirmation ? (
           <div className="glass-panel rounded-card p-6 text-center">
             <p className="text-small leading-relaxed text-muted-foreground">
-              Check <span className="text-foreground">{email}</span> for a confirmation link —
-              you’ll be signed in once you click it.
+              Check <span className="text-foreground">{email}</span> for a confirmation link.
+              you’ll be logged in once you click it.
             </p>
             <p className="mt-3 text-caption leading-relaxed text-muted-foreground">
               {resent
-                ? "Sent again — check your spam folder if it still doesn’t turn up."
-                : "Nothing after a few minutes? It can land in spam, or just take a moment."}
+                ? "Sent again. Check your spam folder if it still doesn’t turn up."
+                : "Nothing after a few minutes? Check spam, or try again."}
             </p>
             {error && <p className="mt-2 text-caption text-[var(--coral-text)]">{error}</p>}
             <Button
@@ -183,11 +192,17 @@ export function Login() {
           </div>
         ) : (
           <>
+            {mode === "signup" && (
+              <div className="mb-4">
+                <TermsCheckbox checked={agreed} onChange={setAgreed} />
+              </div>
+            )}
             <Button
               type="button"
               variant="outline"
               size="lg"
               className="w-full"
+              disabled={mode === "signup" && !agreed}
               onClick={handleGoogle}
             >
               Continue with Google
@@ -210,6 +225,8 @@ export function Login() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="What should we call you?"
+                    maxLength={DISPLAY_NAME_MAX}
+                    autoComplete="name"
                     required
                   />
                 </div>
@@ -268,7 +285,7 @@ export function Login() {
                 </div>
               )}
 
-              <Button busy={submitting} type="submit" variant="brand" size="lg" className="w-full" disabled={submitting}>
+              <Button busy={submitting} type="submit" variant="brand" size="lg" className="w-full" disabled={submitting || (mode === "signup" && !agreed)}>
                 {mode === "signup" ? "Sign up" : "Log in"}
               </Button>
             </form>

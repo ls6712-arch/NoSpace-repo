@@ -134,7 +134,7 @@ export function PursuitItem({
 
         <motion.div whileTap={reduceMotion ? undefined : { scale: 0.9 }} className="absolute bottom-2.5 right-2.5 z-10">
           <Link
-            to={`/pursuit/${pursuit.id}/moment`}
+            to={`/create?pursuit=${pursuit.id}`}
             onClick={() => track({ name: "pursuits_in_progress_item_tapped", pursuitId: pursuit.id })}
             aria-label={`Log a Moment on ${pursuit.title}`}
             className="flex size-9 items-center justify-center rounded-full text-on-brand shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)]"

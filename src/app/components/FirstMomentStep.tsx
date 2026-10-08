@@ -7,7 +7,6 @@ import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { preparePickedPhoto } from "../lib/heicConversion";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { defaultSpaceSlug } from "../data/hobbies";
-import { saveMomentDefaults } from "../lib/momentDefaults";
 import { Post } from "../data/posts";
 import { EveryoneShareConfirm } from "./EveryoneShareConfirm";
 import { IsThisPartOfSomething } from "./IsThisPartOfSomething";
@@ -21,7 +20,7 @@ type Audience = "private" | "followers" | "public";
 const AUDIENCE_LABEL: Record<Audience, string> = {
   private: "Only you",
   followers: "Followers",
-  public: "Everyone",
+  public: "Public",
 };
 
 /**
@@ -95,13 +94,12 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
           }
           media = { path, type: "image", hobbySlug };
         }
-        const outcome = await addPrivateLog({ note: text || "My first moment" });
+        const outcome = await addPrivateLog({ note: text });
         if (outcome.skipped) return;
         if (!outcome.data) {
           setError(outcome.error || ERROR_LINE);
           return;
         }
-        if (user) saveMomentDefaults(user.id, { audience });
         setSaved({ post: null, privateLogId: outcome.data.id });
         return;
       }
@@ -111,11 +109,10 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         type: file ? "photo" : "written",
         files: file ? [file] : undefined,
         creator: profile?.display_name?.trim() || "You",
-        caption: text || "My first moment",
+        caption: text,
         visibility: audience,
       });
       if (isInFlightSkipped(entry)) return;
-      if (user) saveMomentDefaults(user.id, { audience });
       setLine("");
       setFile(null);
       setSaved({ post: entry, privateLogId: null });
@@ -146,14 +143,14 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
     return (
       <div className="space-y-3">
         <div className="flex h-11 items-center justify-between rounded-control border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 text-small">
-          <span>Your first moment is in.</span>
+          <span>Your first Moment is in.</span>
           <button type="button" onClick={undo} className="text-[var(--coral-text,var(--coral-deep))] hover:opacity-80">
             Undo
           </button>
         </div>
         {saved.post && (
           <p className="text-caption text-[var(--ink-soft)]">
-            {audience === "followers" ? "Your followers" : audience === "public" ? "Everyone" : "Only you"} will
+            {audience === "followers" ? "Your followers" : audience === "public" ? "Anyone" : "Only you"} will
             see it{audience === "followers" ? " first" : ""}.
           </p>
         )}
@@ -215,7 +212,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
   return (
     <>
       <h1 className="mb-1 text-title sm:text-display" style={{ fontFamily: "var(--font-serif)" }}>
-        Add your first moment.
+        Add your first Moment
       </h1>
       <p className="mb-6 text-small text-[var(--ink-soft)]">
         Anything you’re making, practising or learning. Half-done counts.

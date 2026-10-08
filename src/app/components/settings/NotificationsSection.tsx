@@ -25,7 +25,7 @@ const CATEGORY_ROWS: { category: NotificationCategory; label: string; descriptio
   {
     category: "message_requests",
     label: "Message requests",
-    description: "Turning this off only stops the bell — the request still waits for you in Messages.",
+    description: "Turning this off only stops the bell. The request still waits for you in Messages.",
   },
 ];
 

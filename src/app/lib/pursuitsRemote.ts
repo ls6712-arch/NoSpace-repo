@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import { Goal, GoalShape, Project, attachEntry, mergeRemoteProjects } from "./journal";
+import { Goal, GoalShape, Project, attachEntry, mergeRemoteProgress, mergeRemoteProjects } from "./journal";
 import type { Measure, PursuitMember, PursuitMode, ProgressEntry } from "./journal";
 import { friendlyError } from "./friendlyError";
 import { ERROR_LINE } from "./stateCopy";
@@ -270,6 +270,28 @@ export async function restoreOwnPursuits(userId: string) {
     const plans = await fetchMyPlans(userId).catch(() => new Map<string, Partial<Project>>());
     const withPlan = (p: Project): Project => ({ ...p, ...(plans.get(p.id) ?? {}) });
     mergeRemoteProjects((data as any[]).map((row) => withPlan(rowToProject(row))));
+
+    // Own logged progress, so every screen that reads the local journal
+    // (Shelf, Home) shows the same count as the Pursuit page.
+    const { data: progressRows } = await supabase
+      .from("pursuit_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true });
+    if (progressRows) {
+      mergeRemoteProgress(
+        (progressRows as any[]).map((r) => ({
+          id: r.id,
+          projectId: r.pursuit_id,
+          userId: r.user_id,
+          amount: Number(r.amount) || 0,
+          note: r.note ?? undefined,
+          image: r.image_url ?? undefined,
+          postId: r.post_id ?? undefined,
+          createdAt: new Date(r.created_at).getTime(),
+        })),
+      );
+    }
 
     // Pursuits other people created that this person joined. Without this,
     // signing out and back in dropped every joined Pursuit from the list.

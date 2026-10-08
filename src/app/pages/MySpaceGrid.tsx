@@ -1,3 +1,4 @@
+import { extraConceptsEnabled } from "../config";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
@@ -176,12 +177,12 @@ export function MySpaceGrid() {
     setSearchParams(next, { replace: true });
   };
 
-  const dateEyebrow = formatDate(Date.now(), { weekday: "long", month: "long" }).toUpperCase();
+  const dateEyebrow = formatDate(Date.now(), { weekday: "long", month: "long" });
 
   const numeral =
     sheet.length === 0
-      ? "00–00"
-      : `${String(1).padStart(2, "0")}–${String(sheet.length).padStart(2, "0")}`;
+      ? "00 to 00"
+      : `${String(1).padStart(2, "0")} to ${String(sheet.length).padStart(2, "0")}`;
 
   // For AllPursuitsSection, rendered once at the bottom of this page —
   // both PursuitsInProgressSection's and PursuitsRail's own "See all"
@@ -213,7 +214,7 @@ export function MySpaceGrid() {
           <div>
             {/* text-gold-text, not text-gold: this is a rendered label, and
                 --gold fails AA text contrast in light (2.76:1) — see
-                theme.css's own contrast-audit comment. --gold-text is the
+                theme.css’s own contrast-audit comment. --gold-text is the
                 darkened-in-light, same-in-dark variant built for exactly this
                 (any place gold is used as text, not decoration). */}
             <p className="ns-section-kicker text-gold-text">{dateEyebrow}</p>
@@ -228,19 +229,21 @@ export function MySpaceGrid() {
             </p>
           </div>
           {/* Numeral in foreground, not accent — docs/my-space-spec.md
-              section 1 explicitly overrides the mockup's warmer-looking
+              section 1 explicitly overrides the mockup’s warmer-looking
               numeral. lg+ only here; below lg it moves under the subtitle
               on one line instead (just below). */}
           <div className="hidden text-right text-foreground lg:block">
             <p className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
               {numeral}
             </p>
-            <p className="ns-section-kicker text-muted-foreground">TODAY’S SHEET</p>
+            {extraConceptsEnabled && <p className="ns-section-kicker text-muted-foreground">Today’s sheet</p>}
           </div>
         </div>
-        <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
-          {numeral} · TODAY’S SHEET
+        {extraConceptsEnabled && (
+          <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
+          {numeral} · Today’s sheet
         </p>
+        )}
       </header>
 
       <DayTwoInviteCard />
@@ -262,13 +265,13 @@ export function MySpaceGrid() {
                   size="page"
                   icon={<Sparkles />}
                   line="Nothing here yet."
-                  hint="Log your first Moment, then join a Space or follow a person to fill your Contact Sheet."
+                  hint="Log your first Moment, then follow a person or join a Space to see their Moments here."
                   action={{ label: "Log a Moment", to: "/create" }}
                 />
               ) : (
                 <EmptyState
                   line="Nothing here yet."
-                  hint="Join a Space or follow a person to start your Contact Sheet."
+                  hint="Follow a person or join a Space to see their Moments here."
                   action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }}
                 />
               )
@@ -300,7 +303,7 @@ export function MySpaceGrid() {
 
           {sheet.length > 0 && (
             <div className="mt-6 rounded-card border-t border-border pt-4">
-              <p className="ns-section-kicker text-muted-foreground">END OF THE SHEET</p>
+              {extraConceptsEnabled && <p className="ns-section-kicker text-muted-foreground">End of the sheet</p>}
               <p className="mt-1 text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 You’re caught up
               </p>
@@ -321,7 +324,7 @@ export function MySpaceGrid() {
             established unnumbered style avoids inventing a visible
             contradiction to chase a numbering scheme the live page never
             had; docs/my-space-deviations.md already flags that same
-            DOM/visual gap once, for tab order — this doesn't add a second,
+            DOM/visual gap once, for tab order — this doesn’t add a second,
             visible instance of it. */}
         <div className="myspace-rail mt-8 lg:mt-0">
           <div className="myspace-rail-shelf">

@@ -90,7 +90,7 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
         .
       </p>
       <Button busy={submitting} type="submit" variant="outline" className="w-full" disabled={submitting || !email.trim()}>
-        Join the waitlist
+        Request an invite
       </Button>
     </form>
   );

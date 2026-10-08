@@ -33,6 +33,7 @@ import { EmptyState } from "../components/StateViews";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
+import { formatWhen } from "../lib/dates";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -434,6 +435,11 @@ function ConversationPanel({
                     >
                       Not sent · tap to retry
                     </button>
+                  )}
+                  {!m.status && renderKind !== "deleted" && (
+                    <p className={`mt-0.5 text-caption text-muted-foreground ${mine ? "text-right" : ""}`}>
+                      {formatWhen(m.createdAt, { ago: true })}
+                    </p>
                   )}
                   {showSeen && <p className="mt-0.5 text-right text-caption text-muted-foreground">Seen</p>}
                 </div>

@@ -43,7 +43,7 @@ export const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
     n: 5,
     name: "Notifications",
     path: "/notifications",
-    summary: "What the bell tells you about, and what it stays quiet on.",
+    summary: "Choose which notifications you get.",
   },
   {
     key: "data",

@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Plus, Search, Share2, X } from "lucide-react";
-import { getHobby } from "../data/hobbies";
+import { pursuitCorner } from "../lib/pursuitProgress";
 import { Project } from "../lib/journal";
 import { startedLabel } from "../lib/pursuitTrail";
 import { formatWhen } from "../lib/dates";
 import { PursuitShareDialog } from "./PursuitShareDialog";
 import { track } from "../lib/analytics";
+import { plural } from "../lib/plural";
 
 function relative(ms: number): string {
   return formatWhen(ms, { ago: true });
@@ -16,7 +17,7 @@ function relative(ms: number): string {
  * AllPursuitsGroup already displays, pulled out so search matches exactly
  * what's on screen. */
 function spaceNameOf(p: Project): string | undefined {
-  return p.hobbySlug ? getHobby(p.hobbySlug)?.shortName : p.customSpace || p.interest;
+  return pursuitCorner(p);
 }
 
 /** One row — its own component (not inlined in the .map() below) purely so
@@ -54,7 +55,7 @@ function AllPursuitsRow({ pursuit: p, last }: { pursuit: Project; last: number |
         <Share2 className="size-3" />
       </button>
       <Link
-        to={`/pursuit/${p.id}/moment`}
+        to={`/create?pursuit=${p.id}`}
         aria-label={`Log a Moment on ${p.title}`}
         className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground hover:border-[var(--coral-deep)]"
       >
@@ -208,7 +209,7 @@ export function AllPursuitsSection({
       </div>
 
       {/* Counts here are the raw, un-searched totals — a stable "at a
-          glance" reference that doesn't flicker as the search box above is
+          glance" reference that doesn’t flicker as the search box above is
           typed into. The "N Pursuits matching" line below carries the
           search-filtered count instead. */}
       <div className="mt-3 flex flex-wrap gap-x-2 gap-y-3" role="group" aria-label="Filter by status">
@@ -219,15 +220,15 @@ export function AllPursuitsSection({
           In progress · {active.length}
         </StatusChip>
         <StatusChip active={status === "resting"} onClick={() => setStatus("resting")}>
-          Resting · {resting.length}
+          Paused · {resting.length}
         </StatusChip>
         <StatusChip active={status === "complete"} onClick={() => setStatus("complete")}>
-          Completed · {complete.length}
+          Finished · {complete.length}
         </StatusChip>
       </div>
 
       <p className="mt-3 text-caption text-muted-foreground" role="status" aria-live="polite">
-        {shownTotal} Pursuit{shownTotal === 1 ? "" : "s"}
+        {plural(shownTotal, "Pursuit")}
         {filtersApplied ? " matching" : ""}
       </p>
 
@@ -246,8 +247,8 @@ export function AllPursuitsSection({
       ) : (
         <div className="mt-4 space-y-6">
           <AllPursuitsGroup title="In progress" items={shownActive} lastOf={lastOf} />
-          <AllPursuitsGroup title="Resting" items={shownResting} lastOf={lastOf} />
-          <AllPursuitsGroup title="Completed" items={shownComplete} lastOf={lastOf} />
+          <AllPursuitsGroup title="Paused" items={shownResting} lastOf={lastOf} />
+          <AllPursuitsGroup title="Finished" items={shownComplete} lastOf={lastOf} />
         </div>
       )}
     </section>

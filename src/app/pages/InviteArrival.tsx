@@ -58,7 +58,7 @@ export function InviteArrival() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <p className="text-small text-muted-foreground">You’re already on {APP_NAME}.</p>
         <Link to="/my-space">
-          <Button variant="coral">Go to Home</Button>
+          <Button variant="coral">Back to Home</Button>
         </Link>
       </div>
     );
@@ -69,7 +69,7 @@ export function InviteArrival() {
       <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
         <div className="mx-auto max-w-sm text-center">
           <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            This invite has expired or was already used.
+            This invite has expired or was already used
           </h1>
           <div className="mt-8 text-left">
             <WaitlistForm />

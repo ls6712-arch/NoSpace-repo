@@ -42,12 +42,12 @@ export function PersonCard({ person, className = "" }: { person: Person; classNa
             ? hobbies.join(" · ")
             : person.postCount > 0
               ? `Sharing Moments on ${APP_NAME}`
-              : "Just joined, nothing shared yet"}>
+              : "Joined recently. No Moments yet."}>
           {hobbies.length > 0
             ? hobbies.join(" · ")
             : person.postCount > 0
               ? `Sharing Moments on ${APP_NAME}`
-              : "Just joined, nothing shared yet"}
+              : "Joined recently. No Moments yet."}
         </span>
       </span>
     </Link>

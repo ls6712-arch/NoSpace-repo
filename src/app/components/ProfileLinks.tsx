@@ -79,7 +79,7 @@ export function ProfileLinksEditor({
     }
     const added = addProfileLink(label, url);
     if (!added) {
-      setError("That doesn’t look like a working link — check it and try again.");
+      setError("That doesn’t look like a working link. Check it and try again.");
       return;
     }
     setLabel("");
@@ -173,13 +173,13 @@ export function ProfileLinksEditor({
           value={label}
           maxLength={30}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder="Label (optional — e.g. GitHub)"
+          placeholder="Label (optional, e.g. GitHub)"
           className="sm:w-44"
         />
         <Input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="github.com/you, yoursubstack.com…"
+          placeholder="github.com/you, yoursubstack.com"
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
         <Button variant="outline" onClick={submit} className="shrink-0">
@@ -189,7 +189,7 @@ export function ProfileLinksEditor({
       </div>
       {error && <p className="mt-1.5 text-caption text-[var(--coral-text)]">{error}</p>}
       <p className="mt-2 text-caption text-muted-foreground">
-        Shown on your public profile right away — GitHub, a design studio, a Substack, anything.
+        Shown on your public profile right away: GitHub, a design studio, a Substack, anything.
       </p>
     </div>
   );

@@ -117,7 +117,7 @@ export function SpaceForm({
         .eq("slug", c.slug)
         .maybeSingle();
       if (!data) {
-        setError(`Couldn’t find the Corner “${c.name}” — try picking it again.`);
+        setError(`Couldn’t find the Corner “${c.name}”. Try picking it again.`);
         return null;
       }
       ids.push(data.id as number);
@@ -128,7 +128,7 @@ export function SpaceForm({
   // A blocklisted name is worded the same everywhere this class of error
   // can surface, regardless of which RPC raised it.
   function friendlyError(message: string) {
-    return message === "That name isn't available." ? "That name isn’t allowed." : message;
+    return message === "That name isn’t available." ? "That name isn’t allowed." : message;
   }
 
   // update_space's own message once pending requests block a closed->open
@@ -161,7 +161,7 @@ export function SpaceForm({
       errors.location = "Needed for an in-person Space.";
     }
     if (corners.slice(0, cornerSlots).filter(Boolean).length === 0) {
-      errors.corners = "Pick 1–3 Corners.";
+      errors.corners = "Pick 1 to 3 Corners.";
     }
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -316,7 +316,7 @@ export function SpaceForm({
       </div>
 
       <div>
-        <Label>Corners (1–3) <span className="text-destructive">*</span></Label>
+        <Label>Corners (1 to 3) <span className="text-destructive">*</span></Label>
         <div className="mt-2 space-y-3">
           {Array.from({ length: cornerSlots }).map((_, i) => (
             <div key={i} className="flex items-start gap-2">
@@ -405,7 +405,7 @@ export function SpaceForm({
             placeholder="Only shown to members and RSVP’d guests"
           />
           <p className="mt-1 text-caption text-muted-foreground">
-            Never shown publicly — only to members, or a specific event’s RSVPs.
+            Only shown to members, or to a specific event’s RSVPs.
           </p>
         </div>
       )}
@@ -415,8 +415,8 @@ export function SpaceForm({
         <Select value={access} onValueChange={(v) => setAccess(v as typeof access)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="open">Open — anyone can join</SelectItem>
-            <SelectItem value="closed">Closed — hosts approve requests</SelectItem>
+            <SelectItem value="open">Open: anyone can join</SelectItem>
+            <SelectItem value="closed">Closed: hosts approve requests</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -479,7 +479,7 @@ export function SpaceForm({
           Cancel
         </Button>
         <Button busy={saving} type="submit" variant="coral" disabled={saving || uploading}>
-          {mode === "create" ? "Create Space" : "Save changes"}
+          {mode === "create" ? "Create a Space" : "Save changes"}
         </Button>
       </div>
     </form>

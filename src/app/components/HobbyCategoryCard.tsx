@@ -48,7 +48,7 @@ export function HobbyCategoryCard({
           )}
           <div className={`absolute inset-0 bg-gradient-to-t ${hobby.gradient} opacity-20 mix-blend-multiply`} />
           <div className="absolute inset-0 bg-scrim" />
-          <div className="ns-space-card-index">OPEN SPACE</div>
+          <div className="ns-space-card-index">Open Space</div>
           <div className="absolute inset-x-0 bottom-0 p-5">
             <div className="flex items-end justify-between gap-2">
               <div className="transition-transform duration-base ease-standard group-hover:-translate-y-1 group-focus-visible:-translate-y-1">
@@ -76,7 +76,7 @@ export function HobbyCategoryCard({
             </Link>
           ))}
           {/* Corners are created by tagging, not suggested for review: this
-              points at the one place that's actually true, logging a Moment,
+              points at the one place that’s actually true, logging a Moment,
               rather than opening a submission form for something that
               doesn't need approval. */}
           <Link

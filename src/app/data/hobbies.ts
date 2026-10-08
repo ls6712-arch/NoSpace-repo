@@ -99,7 +99,7 @@ export const hobbies: Hobby[] = [
     description: "Cooking, baking, coffee, bread, fermentation, BBQ.",
     subItems: [
       sub("Cooking"), sub("Baking"), sub("Sourdough"), sub("Fermentation"),
-      sub("Home coffee"), sub("Tea"), sub("Espresso"), sub("Food photography"),
+      sub("Home coffee"), sub("Tea"), sub("Espresso"),
       sub("Home brewing"), sub("Kombucha"), sub("Cocktail-making"), sub("Supper clubs"),
       sub("Coffee"), sub("BBQ"),
     ],
@@ -199,10 +199,10 @@ export const hobbies: Hobby[] = [
     name: "Books & Writing",
     shortName: "Books & Writing",
     tagline: "Words, read and written.",
-    plainLabel: "Reading, book clubs, poetry, journaling, creative writing",
-    description: "Reading, book clubs, poetry, journaling, creative writing.",
+    plainLabel: "Reading, book clubs, poetry, creative writing",
+    description: "Reading, book clubs, poetry, creative writing.",
     subItems: [
-      sub("Nature journaling"), sub("Writing"), sub("Poetry"), sub("Journaling"),
+      sub("Nature journaling"), sub("Writing"), sub("Poetry"),
       sub("Books"), sub("Book clubs"), sub("Language learning"), sub("Reading"),
       sub("Creative writing"),
     ],
@@ -210,9 +210,9 @@ export const hobbies: Hobby[] = [
     coverImage:
       "https://images.unsplash.com/photo-1512820790803-83ca734da794?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
-    examples: ["Reading", "Book clubs", "Poetry", "Journaling", "Creative writing"],
+    examples: ["Reading", "Book clubs", "Poetry", "Creative writing"],
     keywords: [
-      "reading", "books", "book clubs", "poetry", "journaling", "creative writing",
+      "reading", "books", "book clubs", "poetry", "creative writing",
       "writing", "fiction", "essays", "screenwriting", "blogging", "language learning",
       "storytelling", "zine writing", "literature",
     ],
@@ -321,7 +321,7 @@ export const hobbies: Hobby[] = [
     plainLabel: "Photography, film photography, filmmaking, video",
     description: "Photography, film photography, filmmaking, video.",
     subItems: [
-      sub("Food photography"), sub("Outdoor photography"), sub("Photography"), sub("Filmmaking"),
+      sub("Outdoor photography"), sub("Photography"), sub("Filmmaking"),
       sub("Film photography"), sub("Video"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",

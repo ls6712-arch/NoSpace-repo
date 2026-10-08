@@ -251,7 +251,7 @@ export function SpaceEventsTab({
                 <div className="mt-3 flex flex-wrap gap-x-2 gap-y-3">
                   {going ? (
                     <Button variant="outline" size="sm" disabled={busyId === e.id} onClick={() => unrsvp(e.id)}>
-                      Going — cancel
+                      Going, cancel
                     </Button>
                   ) : (
                     <Button

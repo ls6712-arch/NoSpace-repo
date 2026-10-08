@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Check, Plus, Share2, Target } from "lucide-react";
-import { getHobby } from "../data/hobbies";
 import { Post } from "../data/posts";
 import {
   Project,
@@ -18,7 +17,7 @@ import { GoalDialog } from "./GoalDialog";
 import { EndingDialog } from "./EndingDialog";
 import { GoalProgressTap } from "./GoalProgressTap";
 import { WorkGrid } from "./WorkGrid";
-import { formatAmount, hasMeasure, summarize } from "../lib/pursuitProgress";
+import { formatAmount, hasMeasure, pursuitCorner, summarize } from "../lib/pursuitProgress";
 import { ProgressEntry, useJournalSlice } from "../lib/journal";
 
 const NO_PROGRESS: ProgressEntry[] = [];
@@ -88,14 +87,13 @@ export function PursuitCompactCard({
   onToggle: () => void;
 }) {
   const { count } = projectProgress(entryProject, posts, pursuit.id);
-  const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
-  const spaceLabel = space?.shortName ?? pursuit.customSpace;
+  const cornerLabel = pursuitCorner(pursuit);
   // Corner first — a Pursuit's own Corner (free-text, same field the
   // creation dialog's "Which Corner does this belong to?" writes to) is
   // more specific than its parent Space, so it's what should label the
   // tile whenever one was actually given. Falls back to Space rather than
   // leaving the tile unlabeled when no Corner was set.
-  const label = pursuit.interest || spaceLabel;
+  const label = cornerLabel;
   const goal = pursuit.goal;
   // Tap-to-log (GoalProgressTap) is what actually moves a number goal's
   // current now — count (attached Updates) stays a separate, honest signal
@@ -105,7 +103,7 @@ export function PursuitCompactCard({
     ? summarize(pursuit.measure!, allProgress.filter((e) => e.projectId === pursuit.id))
     : undefined;
   const hasCount = !measured && goal?.shape === "number" && !!goal.targetNumber;
-  const status = pursuit.finishedAt ? "Completed" : pursuit.pausedAt ? "Resting" : count > 0 ? "In progress" : "Just started";
+  const status = pursuit.finishedAt ? "Finished" : pursuit.pausedAt ? "Paused" : count > 0 ? "In progress" : "Just started";
   const progressText = measured
     ? `${formatAmount(measured.current)} of ${formatAmount(measured.target)} ${pursuit.measure!.unit} · ${measured.percent}%`
     : goal?.shape === "number"
@@ -130,7 +128,7 @@ export function PursuitCompactCard({
       )}
       <span className="min-w-0 flex-1">
         {label && (
-          <span className="block truncate text-caption font-medium uppercase tracking-wide text-muted-foreground" title={label}>
+          <span className="block truncate text-caption font-medium tracking-wide text-muted-foreground" title={label}>
             {label}
           </span>
         )}
@@ -153,7 +151,7 @@ export function NewPursuitTile({ onClick }: { onClick: () => void }) {
       className="flex min-h-11 items-center justify-center gap-1.5 rounded-card border border-dashed border-border p-3 text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
     >
       <Plus className="size-4" strokeWidth={1.8} />
-      <span className="text-caption">New pursuit</span>
+      <span className="text-caption">Start a Pursuit</span>
     </button>
   );
 }
@@ -181,8 +179,7 @@ export function PursuitExpandedPanel({
   const [endingOpen, setEndingOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
 
-  const space = pursuit.hobbySlug ? getHobby(pursuit.hobbySlug) : undefined;
-  const spaceLabel = space?.shortName ?? pursuit.customSpace;
+  const cornerLabel = pursuitCorner(pursuit);
   const goal = pursuit.goal;
   const pastGoals = pursuit.pastGoals ?? [];
   const attached = posts
@@ -216,9 +213,9 @@ export function PursuitExpandedPanel({
     <div className="mt-3 rounded-card border border-border bg-card p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          {(pursuit.interest || spaceLabel) && (
+          {cornerLabel && (
             <p className="text-caption text-muted-foreground">
-              {[pursuit.interest, spaceLabel].filter(Boolean).join(" · ")}
+              {cornerLabel}
             </p>
           )}
           <h3 className="truncate text-lead" style={{ fontFamily: "var(--font-serif)" }} title={pursuit.title}>
@@ -226,7 +223,7 @@ export function PursuitExpandedPanel({
           </h3>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link to={`/pursuit/${pursuit.id}/moment`}>
+          <Link to={`/create?pursuit=${pursuit.id}`}>
             <Button variant="coral" size="sm">
               Log a Moment
             </Button>
@@ -242,7 +239,7 @@ export function PursuitExpandedPanel({
           )}
           <Button variant="outline" size="sm" onClick={toggleShare} aria-pressed={!!pursuit.shared}>
             {justCopied ? (
-              "Link copied!"
+              "Link copied"
             ) : pursuit.shared ? (
               <>
                 <Share2 className="size-3.5" />
@@ -258,16 +255,16 @@ export function PursuitExpandedPanel({
           {!pursuit.finishedAt && (
             <Button variant="outline" size="sm" onClick={markDone}>
               <Check className="size-3.5" />
-              Mark as completed
+              Finish
             </Button>
           )}
         </div>
       </div>
 
       <div className="mb-5 border-t border-border pt-4">
-        <h4 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">Goals</h4>
+        <h4 className="mb-2 text-caption font-medium tracking-wide text-muted-foreground">Goals</h4>
         {!goal && pastGoals.length === 0 ? (
-          <p className="text-small text-muted-foreground">No goal set yet</p>
+          <p className="text-small text-muted-foreground">No goal set yet.</p>
         ) : (
           <ul className="space-y-2">
             {goal && (
@@ -308,14 +305,14 @@ export function PursuitExpandedPanel({
       </div>
 
       <div className="border-t border-border pt-4">
-        <h4 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
+        <h4 className="mb-2 text-caption font-medium tracking-wide text-muted-foreground">
           Moments under this Pursuit
         </h4>
         <WorkGrid
           posts={attached}
           onOpen={onOpenPost}
           emptyLabel="Nothing logged under this Pursuit yet."
-          emptyAction={{ label: "Log a Moment", to: `/pursuit/${pursuit.id}/moment` }}
+          emptyAction={{ label: "Log a Moment", to: `/create?pursuit=${pursuit.id}` }}
         />
       </div>
 

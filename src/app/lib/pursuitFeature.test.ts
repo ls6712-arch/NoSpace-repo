@@ -146,5 +146,11 @@ describe("fixes from the Sep 23 test pass", () => {
     const m = { kind: "count", target: 20, unit: "paintings", allowPartial: false, allowDecimals: false, defaultAmount: 1, startingAmount: 0 } as const;
     expect(unitFor(m, 1)).toBe("painting");
     expect(unitFor(m, 5)).toBe("paintings");
+    const loaves = { ...m, unit: "loaves" };
+    expect(unitFor(loaves, 1)).toBe("loaf");
+    expect(unitFor(loaves, 0.5)).toBe("loaves");
+    expect(unitFor({ ...m, unit: "batches" }, 1)).toBe("batch");
+    expect(unitFor({ ...m, unit: "pieces" }, 1)).toBe("piece");
+    expect(unitFor({ ...m, unit: "knives" }, 1)).toBe("knife");
   });
 });

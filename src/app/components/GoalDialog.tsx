@@ -13,7 +13,7 @@ import { formatDate } from "../lib/dates";
 const SHAPES: { value: GoalShape; title: string; example: string; icon: typeof Hash }[] = [
   { value: "number", title: "A number", example: "Finish 10 pieces, run 3 times a week", icon: Hash },
   { value: "date", title: "A date", example: "Ready for the fall market", icon: CalendarDays },
-  { value: "feeling", title: "A feeling, not a number", example: "Comfortable enough to teach someone", icon: Heart },
+  { value: "feeling", title: "A feeling", example: "Comfortable enough to teach someone", icon: Heart },
 ];
 
 function templateLabel(shape: GoalShape, targetNumber: string, unit: string, targetDate: string) {
@@ -143,7 +143,7 @@ export function GoalDialog({
             {project.goal ? "Change your goal" : "Set a goal"}
           </DialogTitle>
           <DialogDescription className="text-small text-muted-foreground">
-            For “{project.title}.” Optional — skip anytime.
+            For “{project.title}.” Optional. Skip anytime.
           </DialogDescription>
         </DialogHeader>
 
@@ -188,7 +188,7 @@ export function GoalDialog({
                       if (parsed.unit) setUnit(parsed.unit);
                     }
                   }}
-                  placeholder="read 10 books, run 3 times a week…"
+                  placeholder="read 10 books, run 3 times a week"
                 />
               </div>
 
@@ -211,7 +211,7 @@ export function GoalDialog({
                     value={unit}
                     maxLength={30}
                     onChange={(e) => setUnit(e.target.value)}
-                    placeholder="pieces, sessions…"
+                    placeholder="pieces, sessions"
                   />
                 </div>
               </div>
@@ -309,7 +309,7 @@ export function GoalDialog({
             {project.goal ? "Save goal" : "Set goal"}
           </Button>
           <p className="text-center text-caption text-muted-foreground">
-            Just what you said you’re going for. Progress shows on the Pursuit.
+            Progress shows on the Pursuit.
           </p>
         </div>
       </DialogContent>

@@ -203,7 +203,7 @@ export function Studio() {
     if (!username && !user) {
       return (
         <div className="flex min-h-[70vh] items-center justify-center px-4 text-center">
-          <p className="text-small text-muted-foreground">Sign in to open your own Scrapbook.</p>
+          <p className="text-small text-muted-foreground">Log in to open your own Scrapbook.</p>
         </div>
       );
     }
@@ -275,7 +275,7 @@ export function Studio() {
         )}
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
-          <p className="mb-2 text-caption uppercase tracking-[0.16em] text-on-media/90">
+          <p className="mb-2 text-caption tracking-[0.16em] text-on-media/90">
             {plural(loaded.posts.length, "Moment")}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>

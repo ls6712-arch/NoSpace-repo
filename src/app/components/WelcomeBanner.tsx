@@ -1,3 +1,4 @@
+import { APP_NAME } from "../config";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { GeneratedArt } from "./GeneratedArt";
@@ -39,14 +40,13 @@ export function WelcomeBanner() {
     <div className="myspace-welcome relative mb-6 overflow-hidden rounded-card border border-border bg-card">
       <div className="flex flex-col items-stretch gap-6 p-6 sm:flex-row sm:items-center sm:p-7">
         <div className="min-w-0 flex-1">
-          <p className="ns-section-kicker text-gold-text">WELCOME TO MY SPACE</p>
+          <p className="ns-section-kicker text-gold-text">Welcome to {APP_NAME}</p>
           <h2 className="mt-2 text-title leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-            The one page here that is not ranked, curated, or competing for your time
+            Your Home and your Shelf
           </h2>
           <p className="mt-3 max-w-2xl text-small leading-relaxed text-muted-foreground">
-            Your Contact Sheet holds real days from the people and Spaces you follow.
-            Nothing algorithmic, nothing inserted. The Shelf tracks what you have
-            actually bound. Both grow only as honestly, and only as quickly, as you do.
+            Home shows Moments from the people and Spaces you follow.
+            Your Shelf holds everything you have logged.
           </p>
         </div>
         <GeneratedArt

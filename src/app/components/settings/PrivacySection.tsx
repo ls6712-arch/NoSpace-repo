@@ -65,7 +65,7 @@ function DefaultVisibilityRow() {
     <div className="px-4 py-4 sm:px-5">
       <div className="mb-0.5 text-small">Default visibility for new Moments</div>
       <p className="mb-3 text-caption leading-relaxed text-muted-foreground">
-        What a new Moment starts as in the composer — you can always change it there before sharing.
+        What a new Moment starts as in the composer. You can always change it there before sharing.
       </p>
       <RadioGroup
         value={defaultVisibility}
@@ -79,7 +79,7 @@ function DefaultVisibilityRow() {
         {(
           [
             { value: "private", label: "Only you" },
-            { value: "public", label: "Everyone" },
+            { value: "public", label: "Public" },
           ] as const
         ).map((opt) => (
           <Label

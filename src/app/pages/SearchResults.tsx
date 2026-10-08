@@ -74,9 +74,9 @@ export function SearchResults() {
   return (
     <div className="min-h-viewport bg-surface">
       <div className="container mx-auto max-w-4xl px-4 py-10">
-        <div className="ns-section-kicker mb-3">SEARCH</div>
+        <div className="ns-section-kicker mb-3">Search</div>
         <h1 className="mb-6 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-          {q ? `Results for “${q}"` : `Search ${APP_NAME}`}
+          {q ? `Results for “${q}”` : `Search ${APP_NAME}`}
         </h1>
 
         <form onSubmit={onSubmit} className="relative mb-8 max-w-xl">
@@ -114,9 +114,9 @@ export function SearchResults() {
                     {title}
                     <span className="text-caption text-muted-foreground/70">({hits.length})</span>
                   </h2>
-                  <ul className="grid gap-2 sm:grid-cols-2">
+                  <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {hits.slice(0, 12).map((hit) => (
-                      <li key={hit.key}>
+                      <li key={hit.key} className="min-w-0">
                         <Link
                           to={hit.to}
                           className="flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 transition-colors hover:border-[var(--violet-electric)]"

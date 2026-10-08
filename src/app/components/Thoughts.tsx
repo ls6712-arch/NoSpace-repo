@@ -127,7 +127,7 @@ export function Thoughts({
             <AvatarFallback className="text-caption">{initials(myName)}</AvatarFallback>
           </Avatar>
           <span className={`flex-1 truncate text-muted-foreground ${compact ? "text-caption" : "text-small"}`}>
-            {compact ? "Add a thought" : "Add a thought…"}
+            Add a thought
           </span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
         </button>
@@ -171,7 +171,7 @@ export function Thoughts({
             <span className="text-caption text-muted-foreground">
               {privateThoughts
                 ? "Only you and the maker will see this."
-                : "Visible to anyone who can see this moment."}
+                : "Visible to anyone who can see this Moment."}
             </span>
             <span className="flex shrink-0 gap-2">
               <Button
@@ -185,7 +185,7 @@ export function Thoughts({
                 Cancel
               </Button>
               <Button busy={saving} variant="coral" size="sm" disabled={!body.trim() || saving} onClick={submit}>
-                Add thought
+                Add a thought
               </Button>
             </span>
           </div>
@@ -200,7 +200,7 @@ export function Thoughts({
               className="rounded-card border border-[var(--hairline)] bg-surface px-3.5 py-3"
             >
               {t.prompt && (
-                <div className="mb-1.5 flex items-center gap-1.5 text-caption uppercase tracking-wide text-[var(--coral-text)]">
+                <div className="mb-1.5 flex items-center gap-1.5 text-caption tracking-wide text-[var(--coral-text)]">
                   <MessageCircleQuestion className="size-3" />
                   {t.prompt}
                 </div>
@@ -250,7 +250,7 @@ export function Thoughts({
 
       {!social.isShared && thoughts.length > 0 && (
         <p className="mt-2 text-caption text-muted-foreground">
-          Saved in this browser only. Sign in for thoughts other people can see.
+          Saved in this browser only. Log in for thoughts other people can see.
         </p>
       )}
 
@@ -258,7 +258,7 @@ export function Thoughts({
         open={confirmDeleteId !== null}
         onOpenChange={(o) => !o && setConfirmDeleteId(null)}
         title="Delete this thought?"
-        description="This can’t be undone — it’s gone for whoever else could see it too."
+        description="This can’t be undone. It’s gone for whoever else could see it too."
         onConfirm={async () => {
           if (confirmDeleteId !== null) await social.removeThought(confirmDeleteId);
           setConfirmDeleteId(null);

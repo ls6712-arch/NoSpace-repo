@@ -1,3 +1,4 @@
+import { extraConceptsEnabled } from "../config";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import * as Icons from "lucide-react";
@@ -106,9 +107,9 @@ export function You() {
   if (isConfigured && !user) {
     return (
       <SignUpPrompt
-        title="Your shelf lives here"
-        body="Make an account and everything you log builds up on a shelf of your own: hobbies, sessions, milestones. You can keep browsing everything else without one."
-        cta="Start my shelf"
+        title="Your Shelf lives here"
+        body="Make an account and everything you log builds up on a Shelf of your own: hobbies, sessions, milestones. You can keep browsing everything else without one."
+        cta="Start my Shelf"
       />
     );
   }
@@ -116,8 +117,8 @@ export function You() {
   return (
     <div className="ns-paper-theme min-h-viewport bg-background py-8 sm:py-12">
       <div className="container mx-auto max-w-5xl px-4">
-        <div className="mb-5 text-caption font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          YOUR SHELF
+        <div className="mb-5 text-caption font-medium tracking-[0.14em] text-muted-foreground">
+          Your Shelf
         </div>
 
         <div className="mb-6 flex flex-col gap-3">
@@ -131,7 +132,7 @@ export function You() {
               />
               <div className="min-w-0">
                 <h2
-                  className="truncate text-title leading-tight sm:text-display"
+                  className="break-words text-title leading-tight sm:text-display"
                   style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
                  title={user ? displayName : "You"}>
                   {user ? displayName : "You"}
@@ -149,7 +150,7 @@ export function You() {
                       to="/profile"
                       className="mt-1 inline-block rounded-control border border-dashed border-[var(--hairline)] px-2 py-1 text-left text-caption text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
                     >
-                      Tell your story: what got you into this, and where it’s going.
+                      Add a bio
                     </Link>
                   )
                 )}
@@ -159,7 +160,7 @@ export function You() {
                     {pluralWord(totalSessions, "Moment")} logged
                     {sinceLabel ? ` since ${sinceLabel}` : ""}
                   </span>
-                  {followerCount !== null && followerCount > 0 && (
+                  {followerCount !== null && (
                     <>
                       <span className="text-muted-foreground/60" aria-hidden="true">·</span>
                       <button
@@ -175,14 +176,8 @@ export function You() {
                       </button>
                     </>
                   )}
-                  {followerCount === 0 && (
-                    <>
-                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
-                      <span>No one’s following yet</span>
-                    </>
-                  )}
                   {/* No count shown here — "who you follow" isn't a number
-                      worth advertising the way follower count is, it's just
+                      worth advertising the way follower count is, it’s just
                       a place to get to the list. */}
                   {user && (
                     <>
@@ -212,7 +207,7 @@ export function You() {
                         <span
                           key={b.id}
                           title={b.description}
-                          className="flex items-center gap-1.5 text-caption font-medium uppercase tracking-[0.08em] text-muted-foreground"
+                          className="flex items-center gap-1.5 text-caption font-medium tracking-[0.08em] text-muted-foreground"
                         >
                           <Icon className="size-3.5 text-[var(--coral-deep)]" strokeWidth={1.8} aria-hidden="true" />
                           {badgeName(b, primaryHobbySlug, primaryHobbyLabel)}
@@ -228,7 +223,7 @@ export function You() {
               <div className="flex items-center">
                 <Link
                   to="/create"
-                  className="flex min-h-11 items-center text-caption font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
+                  className="flex min-h-11 items-center text-caption font-medium tracking-[0.08em] text-foreground transition-colors hover:text-[var(--coral-text)]"
                 >
                   Log a Moment
                 </Link>
@@ -240,17 +235,21 @@ export function You() {
                 <button
                   type="button"
                   onClick={() => setShareOpen(true)}
-                  className="min-h-11 text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="min-h-11 text-caption tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Share
                 </button>
+                {extraConceptsEnabled && (
+                  <>
                 <span className="text-muted-foreground/50" aria-hidden="true">·</span>
                 <Link
                   to="/studio"
-                  className="flex min-h-11 items-center text-caption uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex min-h-11 items-center text-caption tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Public Scrapbook ↗
                 </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -267,7 +266,7 @@ export function You() {
         </div>
 
         {/* Open tags now, not the fixed 15-Space list — tap one to narrow
-            Every moment below to just that tag, tap it again to clear. */}
+            Every Moment below to just that tag, tap it again to clear. */}
         {myTags.length > 0 && (
           <div
             className="mb-5 flex flex-wrap items-center gap-2 text-body"
@@ -310,7 +309,7 @@ export function You() {
         {isConfigured && !user && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-card border border-border bg-surface-muted px-4 py-3">
             <p className="text-caption text-muted-foreground">
-              You’re not logged in. Sessions here are just local to this browser.
+              You’re not logged in. Sessions here are saved only in this browser.
             </p>
             <Link to="/login" className="shrink-0">
               <Button variant="outline" size="sm">Log in</Button>
@@ -319,7 +318,7 @@ export function You() {
         )}
 
         {/* Three sections, stacked full-width. "Every moment" is the major
-            section here — it's what the Shelf is actually for — so it gets
+            section here — it’s what the Shelf is actually for — so it gets
             the biggest type and the most air around it. Pursuits and Quiet
             Milestones are minor sections: smaller headers, tighter rules,
             less padding, so the page reads as one important thing plus
@@ -328,12 +327,12 @@ export function You() {
         <section className="mb-12">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-title sm:text-display" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
-              Every moment
+              Every Moment
             </h2>
-            {/* All moments (plain chronological) is the default now — By
+            {/* All Moments (plain chronological) is the default now — By
                 Corner stays available for anyone who wants the grouped
                 view. HobbyShelf.tsx no longer renders Space-level section
-                headers at all — it's one flat grid of Corners, sorted by
+                headers at all — it’s one flat grid of Corners, sorted by
                 whichever was most recently updated — so "By Corner" is
                 what actually describes it now. (An earlier pass called
                 this "By space" when the view still had Space headers with
@@ -347,7 +346,7 @@ export function You() {
                   momentsView === "grid" ? "bg-[var(--coral-deep)] text-on-brand" : "text-muted-foreground"
                 }`}
               >
-                All moments
+                All Moments
               </button>
               <button
                 type="button"
@@ -362,10 +361,10 @@ export function You() {
           </div>
           <p className="mb-5 mt-1 flex flex-wrap items-center gap-2 text-small text-muted-foreground">
             {momentsView === "shelf"
-              ? "By Corner, most recently updated first — open one to see every moment inside it."
+              ? "By Corner, most recently updated first. Open one to see every Moment inside it."
               : tagFilter
                 ? `Tagged “${tagFilter}.”`
-                : "A visual record of what you’ve made, explored, and loved, newest first."}
+                : "Newest first."}
             {momentsView === "grid" && tagFilter && (
               <button
                 type="button"
@@ -410,7 +409,6 @@ export function You() {
               Start a Pursuit
             </Button>
           </div>
-          <p className="mb-5 text-small text-muted-foreground">The things you’re bringing to life.</p>
 
           {myPursuits.length === 0 ? (
             <EmptyState
@@ -476,11 +474,11 @@ export function You() {
           <div className="mb-1 flex items-baseline justify-between gap-4">
             <h2 className="flex items-center gap-2 text-body sm:text-lead" style={{ fontFamily: "var(--font-serif)" }}>
               <Sprout className="size-4 text-foreground" strokeWidth={1.8} />
-              Quiet Milestones
+              Milestones
             </h2>
           </div>
           <p className="mb-5 text-small text-muted-foreground">
-            Non-metric growth that feels good. Private by default — share one at a time, only if you want to.
+            Private by default. Share one at a time.
           </p>
           <QuietMilestones />
         </section>

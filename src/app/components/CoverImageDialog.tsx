@@ -40,7 +40,7 @@ export function CoverImageDialog({
   const pick = (picked: File | null) => {
     setError(null);
     if (picked && !picked.type.startsWith("image/")) {
-      setError("That file isn’t a photo — pick an image instead.");
+      setError("That file isn’t a photo. Pick an image instead.");
       return;
     }
     if (picked && picked.size > MAX_COVER_BYTES) {
@@ -56,13 +56,13 @@ export function CoverImageDialog({
     let path: string | null | undefined = undefined; // undefined = leave the existing custom cover untouched
     if (file) {
       if (!user) {
-        setError("Sign in to upload a cover photo.");
+        setError("Log in to upload a cover photo.");
         setSaving(false);
         return;
       }
       const { path: uploaded, error: uploadError } = await uploadMomentFile(user.id, file);
       if (uploadError || !uploaded) {
-        setError(uploadError || "That upload didn’t go through — try again.");
+        setError(uploadError || "That upload didn’t go through. Try again.");
         setSaving(false);
         return;
       }
@@ -95,7 +95,7 @@ export function CoverImageDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Cover photo</DialogTitle>
-          <DialogDescription>For “{project.title}”. Optional — skip anytime.</DialogDescription>
+          <DialogDescription>For “{project.title}”. Optional. Skip anytime.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

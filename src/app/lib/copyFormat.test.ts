@@ -8,6 +8,12 @@ describe("plural", () => {
     expect(plural(1, "Moment")).toBe("1 Moment");
     expect(plural(2, "Moment")).toBe("2 Moments");
   });
+  it("handles irregular units", () => {
+    expect(plural(1, "loaf", "loaves")).toBe("1 loaf");
+    expect(plural(2, "loaf", "loaves")).toBe("2 loaves");
+    expect(plural(0.5, "loaf", "loaves")).toBe("0.5 loaves");
+    expect(plural(1, "knife", "knives")).toBe("1 knife");
+  });
   it("takes an irregular plural", () => {
     expect(plural(1, "person", "people")).toBe("1 person");
     expect(plural(5, "person", "people")).toBe("5 people");
@@ -37,6 +43,10 @@ describe("formatWhen", () => {
     expect(formatWhen(NOW - 10_000, { now: NOW, ago: true })).toBe("just now");
     expect(formatWhen(at(2026, 9, 29), { now: NOW, ago: true })).toBe("3d ago");
   });
+  it("says Yesterday for the day before inside a sentence", () => {
+    expect(formatWhen(NOW - 26 * 3_600_000, { now: NOW, ago: true })).toBe("Yesterday");
+    expect(formatWhen(NOW - 26 * 3_600_000, { now: NOW })).toBe("1d");
+  });
   it("switches to a date at 7 days, with the year only if not this year", () => {
     expect(formatWhen(at(2026, 9, 24), { now: NOW })).toBe("Sep 24");
     expect(formatWhen(at(2026, 9, 24), { now: NOW, ago: true })).toBe("Sep 24");
@@ -63,9 +73,9 @@ describe("formatDate and friends", () => {
     expect(formatDateTime(at(2026, 10, 3, 19), { now: NOW })).toBe("Sat, Oct 3, 7:00 PM");
   });
   it("uses an en dash for ranges", () => {
-    expect(formatDateRange(at(2026, 10, 1), at(2026, 10, 5), { now: NOW })).toBe("Oct 1–5");
-    expect(formatDateRange(at(2026, 9, 28), at(2026, 10, 3), { now: NOW })).toBe("Sep 28–Oct 3");
-    expect(formatDateRange(at(2025, 12, 30), at(2026, 1, 2), { now: NOW })).toBe("Dec 30, 2025–Jan 2, 2026");
+    expect(formatDateRange(at(2026, 10, 1), at(2026, 10, 5), { now: NOW })).toBe("Oct 1 to 5");
+    expect(formatDateRange(at(2026, 9, 28), at(2026, 10, 3), { now: NOW })).toBe("Sep 28 to Oct 3");
+    expect(formatDateRange(at(2025, 12, 30), at(2026, 1, 2), { now: NOW })).toBe("Dec 30, 2025 to Jan 2, 2026");
   });
   it("returns empty text for a bad date", () => {
     expect(formatWhen("not a date")).toBe("");

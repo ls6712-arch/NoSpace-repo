@@ -38,7 +38,7 @@ export function ShelfRail() {
       <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
         The Shelf
       </h2>
-      <p className="mt-0.5 text-caption text-muted-foreground">Where your Moments get bound into Books.</p>
+      <p className="mt-0.5 text-caption text-muted-foreground">Your Moments, grouped by Corner.</p>
 
       {sessions.length === 0 ? (
         <EmptyState size="rail" line="Nothing on the Shelf yet." action={{ label: "Log a Moment", to: "/create" }} />
@@ -80,7 +80,7 @@ export function ShelfRail() {
                     </span>
                   </span>
                   <span className="ns-section-kicker shrink-0 text-muted-foreground">
-                    {plural(s.sessions, "Moment").toUpperCase()}
+                    {plural(s.sessions, "Moment")}
                   </span>
                 </Link>
               </li>

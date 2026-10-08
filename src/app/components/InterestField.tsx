@@ -19,7 +19,7 @@ export function InterestField({
   value,
   onChange,
   id = "interest",
-  placeholder = "Pottery, bouldering, sourdough…",
+  placeholder = "Pottery, bouldering, sourdough",
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -75,7 +75,7 @@ export function InterestField({
             </span>
           ) : closeMatch ? (
             <span>
-              Close to “{closeMatch.label}” —{" "}
+              Close to “{closeMatch.label}”.{" "}
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
@@ -125,7 +125,7 @@ export function InterestField({
               </button>
             ) : (
               <span className="text-caption text-muted-foreground">
-                Not listed? Just type your own.
+                Not listed? Type your own.
               </span>
             )}
           </li>

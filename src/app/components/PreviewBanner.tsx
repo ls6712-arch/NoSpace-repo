@@ -1,9 +1,11 @@
-const PRODUCTION_HOSTNAMES = new Set(["trynospace.com", "www.trynospace.com"]);
+import { PRODUCTION_HOSTNAMES as PRODUCTION_HOSTS } from "../config";
+
+const PRODUCTION_HOSTNAMES = new Set(PRODUCTION_HOSTS);
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
 
 /** A slim "this isn't the live site" notice above the Header — shown on
  * every hostname except the two production domains, so a Vercel preview or
- * a local dev server is never mistaken for trynospace.com itself. Sits in
+ * a local dev server is never mistaken for the live site itself. Sits in
  * normal document flow (not fixed/overlaid) so it pushes the Header and
  * everything below it down by its own height, rather than covering the
  * Header's buttons. The hostname can't change without a full page reload,

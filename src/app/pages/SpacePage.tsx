@@ -231,7 +231,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       <div className="mx-auto w-full max-w-3xl px-4 pt-5">
         {space.status === "read_only" && (
           <div className="mb-4 rounded-card border border-clay/30 bg-clay-soft px-4 py-3 text-small">
-            This Space is read-only right now — no new members, requests, or events until it’s reactivated.
+            This Space is read-only right now. No new members, requests, or events until it’s reactivated.
           </div>
         )}
         {space.status === "deleted" && (
@@ -341,7 +341,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
               )}
             </>
           ) : isPending ? (
-            <Button variant="outline" size="sm" disabled={actionBusy} onClick={cancelRequest}>Requested — cancel</Button>
+            <Button variant="outline" size="sm" disabled={actionBusy} onClick={cancelRequest}>Requested, cancel</Button>
           ) : space.access === "open" ? (
             <Button variant="coral" size="sm" disabled={actionBusy || !user || space.status !== "active"} onClick={join}>
               Join Space

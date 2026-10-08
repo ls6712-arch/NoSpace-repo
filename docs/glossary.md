@@ -20,7 +20,8 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Log a Moment | Main create button (mobile tab may shorten to "Log") |
 | You | Your profile, in the nav (desktop and mobile) |
 | Messages / Inbox | Chats / notifications and requests |
-| Search Moments, people, Spaces | Every search box placeholder |
+| Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
+| Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
 
 ## Hobbies and Spaces
 
@@ -47,8 +48,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 |---|---|
 | Moment | Anything you log |
 | Log a Moment / Add from my Moments | Create a new one / add an existing one to a Space |
-| Reflection | Private note on a Moment |
-| Only you / Followers / Everyone | Who sees a Moment |
+| Only you / Followers / Public | Who sees a Moment |
 | Pinned | You choose, on your own profile. Buttons: "Pin" / "Unpin" |
 | Host picks | Hosts choose, in a Space. Buttons: "Add to host picks" / "Remove from host picks" (max 3) |
 | Spotlight | The Soosh team chooses, on Discover |
@@ -63,7 +63,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Stepping stones | Steps toward the goal |
 | Aim for | Optional target date (no urgency language) |
 | Check in with me | Gentle Pursuit reminders. "Check in" means only this |
-| Just started / In progress / Resting / Completed / Let go | Statuses. Buttons: "Mark as completed", "Let go" (stop without finishing; "Pick it back up" undoes it) |
+| Just started / In progress / Paused / Finished | Statuses. Buttons: "Pause", "Resume", "Finish", "Reopen". Filter: "Paused" |
 | Next session | Card at the top of an active Pursuit: when, plus an optional note |
 | Times a week / [N] of [M] this week | Your own weekly aim for a Pursuit, and the count toward it (days with a Moment, Mon–Sun) |
 | One shared goal / Side by side | Shared Pursuit modes |
@@ -75,19 +75,21 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Term | Meaning |
 |---|---|
 | Shelf | Your profile page |
-| Book | One Corner's history on your Shelf ("Your Pottery book") |
-| Scrapbook | The photo-book view of your Moments (the /studio page) |
 | Cover | Profile cover area |
 | Tell your story | Bio |
+| What should people call you? / This is how your name shows on your Shelf. | Onboarding name step: required display name, with a live preview under "Your Shelf" |
 | Moments logged | Headline stat |
-| Quiet Milestones | Private badges, shared one at a time |
+| Is this how you’d like to be known? / Save name | One-time prompt for accounts named after their email; saving unchanged confirms the name |
+| I’m 16 or older and agree to the Terms and Privacy Policy | Required sign-up checkbox (email and Google). Both documents are linked. Shown once more, with a Continue button, to any account with no recorded acceptance: in onboarding for a new account, as a prompt that can't be closed for an existing one (Log out is the only other way out) |
+| Terms and Privacy Policy | Title of that one-time prompt for existing accounts |
+| Milestones | Private badges, shared one at a time |
 | Followers / Following | People connections |
 
 ## Home, reactions, connection
 
 | Term | Meaning |
 |---|---|
-| Contact Sheet / You Inspired / You're caught up | Home sections |
+| You inspired / You're caught up | Home sections |
 | Love this / Count me in / Thoughts | Reactions |
 | [Name] loved your moment. / [Name] and N others loved your moment. | The Love this notification, at most one per moment per day |
 | Add a thought / Keep going | Comment / quick starter |
@@ -107,54 +109,16 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 
 ## Landing page
 
+The page follows the locked narrative: hero, How it works, Corners, Pursuits, friends and Spaces, invite ask, footer.
+
 | Term | Meaning |
 |---|---|
-| Invite-only for now | Eyebrow above the hero headline, and the waitlist section's kicker |
-| A place for everything you do and make. | Hero headline |
-| I have an invite | Secondary hero button / waitlist-section button, both going to sign-in |
-| Soosh is for people 16 and older. | Age-eligibility line (hero, footer) — read the app name from `APP_NAME`, never hardcode it |
-| Choose who sees it / Keep going with a Pursuit | Landing-page value-card titles (the third, "Log a Moment," reuses the existing term above) |
-| Find your people, or just your thing. | "Spaces and Corners" section heading |
-| Share what you want, with who you want, or with no one. | Statement band, replacing the old "no feed algorithm / no streaks" quote |
+| Everything you do outside work, in one place. | Hero headline |
+| Request an invite | Hero button and waitlist form button, both going to the waitlist form |
+| I have an invite | Secondary hero button / invite-section button, both going to sign-in |
+| Soosh is for people 16 and older. | Age-eligibility line (hero, footer). Read the app name from `APP_NAME`, never hardcode it |
+| Post a Moment / It goes on your Shelf / Share your Shelf anywhere | How it works steps |
+| Pick a Corner for every Moment. | Corners section heading |
+| Show what you're working toward. | Pursuits section heading |
+| See what your friends are making. | Friends and Spaces section heading |
 | Terms / Privacy Policy / Contact | Footer links and the waitlist form's consent line |
-
-## Saving, states and confirmations
-
-All of these live in `src/app/lib/stateCopy.ts`; use them from there.
-
-| Term | Meaning |
-|---|---|
-| One sec… | Label beside the spinner while a button's save is in flight |
-| Something went wrong. Mind trying again? / Try again | The one error line and its retry |
-| Something went wrong loading this. Mind trying again? | The same, when content didn't load |
-| You're offline. Anything you've typed stays put. | Banner while offline |
-| This is taking a while. Still trying. | Banner when a request runs past 8 seconds |
-| Changes saved / Saved / Link copied / Invite sent / You left [Space] | Toasts. "Saved" alone is only for bookmarking |
-| That iPhone photo couldn't be converted. Try again, or export it as a JPG first. | HEIC failure |
-| That file is too big. Try a smaller one. / That file is over [N] MB. Try a smaller one. | Size failure |
-| That upload didn't finish. Check your connection and try again. | Upload failure |
-| That Moment is already in this Space. | Adding a Moment twice |
-| Keep it | The back-out button on "Cancel this event?" |
-| Browse Spaces / Browse Moments / Go to Chats | Empty-state actions, alongside Log a Moment, Start a Pursuit, Go to Discover |
-
-Empty states: a short line ending in a period, an optional one-line hint, one action.
-
-## Writing rules
-
-- Capitalize Soosh's own nouns: Moment, Pursuit, Space, Corner, Reflection,
-  Shelf, Book, Scrapbook.
-- "hobby" is fine as an everyday word in explanations; any label for a hobby
-  tag says Corner.
-- "Explore" means only "Explore together". Browsing links say "Browse" or name
-  the place ("Go to Discover").
-
-## Retired (never use in UI copy)
-
-Sushii, No Space, Clan, Circle, Update, Category (member-facing), My Space,
-Featured, Featured by the hosts, Pinned by the hosts, Pin to Home, On the table
-(as a heading), Save to your Space, Feed (outside Home), Studio, archive,
-Lifetime sessions, "work" (as a noun for Moments), Start your log, Add Moment,
-Add a Moment, Quick moment, Write a moment, Post (as a button), Create a
-Pursuit, Create Your Pursuit, Begin Pursuit, Milestones (in Pursuits), Deadline,
-Participating, Moving (as a status), Complete (as a status), Thread, Try This,
-Obsessed, Needed it, Creation, Entry, Project.

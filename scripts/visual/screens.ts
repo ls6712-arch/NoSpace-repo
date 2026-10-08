@@ -20,7 +20,6 @@ export const SCREENS: Screen[] = [
   { name: "messages-thread", route: "/messages", setup: click("Want to pull shots together") },
   { name: "messages-new-message", route: "/messages", setup: click("New message") },
   { name: "pursuit", route: `/pursuit/${PURSUIT_ID}` },
-  { name: "pursuit-add-moment", route: `/pursuit/${PURSUIT_ID}/moment` },
   { name: "space-table", route: `/space/${SPACE_SLUG}` },
   { name: "space-moments", route: `/space/${SPACE_SLUG}?tab=moments` },
   { name: "space-events", route: `/space/${SPACE_SLUG}?tab=events` },
@@ -32,6 +31,4 @@ export const SCREENS: Screen[] = [
   { name: "my-space-search-clear", route: "/my-space", setup: async (page) => { const q = page.getByLabel("Search your Pursuits"); await q.scrollIntoViewIfNeeded({ timeout: 8000 }); await q.fill("pot"); await page.waitForTimeout(500); } },
   { name: "dialog-pursuit-cover", route: "/my-space", setup: async (page) => { await page.getByRole("button", { name: /Change the cover photo for Throw 24 bowls/ }).first().click({ timeout: 8000, force: true }); await page.waitForTimeout(700); } },
   { name: "dialog-pursuit-goal", route: "/my-space", setup: async (page) => { await page.getByRole("button", { name: /Edit the goal for Throw 24 bowls/ }).first().click({ timeout: 8000, force: true }); await page.waitForTimeout(700); } },
-  { name: "overlay-quicklog-desktop", route: "/my-space", widths: [768, 1440], setup: async (page) => { await page.getByRole("button", { name: /Log a Moment/ }).first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
-  { name: "overlay-quicklog", route: "/my-space", widths: [375, 393, 412], setup: async (page) => { await page.locator('nav[aria-label="Main"] button:has-text("Create")').first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
 ];

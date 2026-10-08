@@ -6,10 +6,8 @@ import { AvatarPicker } from "../AvatarPicker";
 import { SettingsPanel } from "./SettingsRow";
 import { EditableTextRow } from "./EditableTextRow";
 import { friendlyError } from "../../lib/friendlyError";
+import { nameDismissKey } from "../../lib/displayName";
 
-function nameDismissKey(userId: string) {
-  return `sushii-name-prompt-dismissed-${userId}`;
-}
 
 /** A signup with the email-prefix bug (fixed on this branch, but existing
  * accounts created before the fix still have it) ended up named after
@@ -32,7 +30,7 @@ function EmailPrefixPrompt({ userId, emailPrefix }: { userId: string; emailPrefi
     <div className="mb-4 flex items-start justify-between gap-4 rounded-control border border-accent/40 bg-accent/5 p-4">
       <p className="text-small leading-relaxed">
         Is this how you’d like to be known? Your name is currently{" "}
-        <span style={{ fontFamily: "var(--font-serif)" }}>“{emailPrefix}”</span> — taken from your
+        <span style={{ fontFamily: "var(--font-serif)" }}>“{emailPrefix}”</span>, taken from your
         email. You can change it below any time.
       </p>
       <button
@@ -67,7 +65,7 @@ export function ProfileSection() {
     <section>
       <SectionHeader n={2} eyebrow="PROFILE" title="Profile" />
       <p className="mb-4 text-small text-muted-foreground">
-        What people see — your Shelf, your Scrapbook, and anywhere you show up.
+        What people see on your Shelf and anywhere you show up.
       </p>
 
       {showEmailPrefixPrompt && <EmailPrefixPrompt userId={user.id} emailPrefix={emailPrefix} />}
@@ -98,9 +96,9 @@ export function ProfileSection() {
         />
         <EditableTextRow
           label="Bio"
-          description="A short line under your name. Never required."
+          description="A short line under your name (optional)."
           value={profile.bio ?? ""}
-          placeholder="What got you into this, and where it’s going…"
+          placeholder="What got you into this, and where it’s going"
           multiline
           maxLength={280}
           emptyLabel="Not set"

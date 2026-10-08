@@ -10,6 +10,8 @@ import { badges, RewardStats } from "../data/badges";
 import { useAuth } from "./AuthContext";
 import { shareMilestone, unshareMilestone } from "../lib/milestonesRemote";
 import { plural } from "../lib/plural";
+import { supabase } from "../../lib/supabase";
+import { reconcilePostsCreated } from "../lib/reconcilePostsCreated";
 
 const STORAGE_KEY = "sushii.rewards.v1";
 
@@ -96,6 +98,31 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
       // best effort only — a private window or full storage shouldn't break the app
     }
   }, [state]);
+
+  // The counter above lives in this browser. On a new device, or after
+  // storage was cleared, it starts at 0 for an account that already has
+  // Moments, and the next post then looked like a first one ("First Session").
+  // Raise it to the account's real Moment count, silently: no unlock toast
+  // for something earned long ago.
+  useEffect(() => {
+    if (!user || !supabase) return;
+    let cancelled = false;
+    (async () => {
+      const [posts, logs] = await Promise.all([
+        supabase.from("posts").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("private_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+      if (cancelled || posts.error || logs.error) return;
+      const remote = (posts.count ?? 0) + (logs.count ?? 0);
+      setState((prev) => {
+        const postsCreated = reconcilePostsCreated(prev.postsCreated, remote);
+        return postsCreated === prev.postsCreated ? prev : { ...prev, postsCreated };
+      });
+    })().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const stats: RewardStats = useMemo(
     () => ({

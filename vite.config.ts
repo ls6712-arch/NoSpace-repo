@@ -2,9 +2,28 @@ import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { findLaunchPlaceholders } from './scripts/launchPlaceholders'
+
+// Fails the production build while placeholder text (the example.com contact
+// address, "[PLACEHOLDER" legal lines) is still in the source. Preview builds
+// (and local builds) only warn. LAUNCH_CHECK=strict forces a failure anywhere.
+function launchPlaceholderCheck() {
+  return {
+    name: 'launch-placeholder-check',
+    buildStart() {
+      const hits = findLaunchPlaceholders(__dirname)
+      if (hits.length === 0) return
+      const list = hits.map((h) => `  ${h.file}:${h.line}  ${h.text.slice(0, 100)}`).join('\n')
+      const message = `Placeholder text is still in the source:\n${list}`
+      const strict = process.env.VERCEL_ENV === 'production' || process.env.LAUNCH_CHECK === 'strict'
+      if (strict) this.error(message)
+      else this.warn(message)
+    },
+  }
+}
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), launchPlaceholderCheck()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

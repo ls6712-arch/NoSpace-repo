@@ -223,7 +223,7 @@ export function CreatePursuit() {
               className="mt-6 w-full resize-none rounded-control border border-border bg-card p-4 text-body text-foreground outline-none focus:border-[var(--coral-deep)]"
             />
             <p className="mt-3 text-caption text-muted-foreground">
-              For example: Paint 10 paintings, Run 100 miles, Practice guitar 50 hours
+              For example: Paint 10 paintings, Run 100 miles, Practice guitar 50 hours.
             </p>
           </section>
         )}
@@ -285,7 +285,7 @@ export function CreatePursuit() {
                             list[i] = e.target.value.slice(0, 60);
                             patch({ milestones: list });
                           }}
-                          placeholder={["Learn three songs", "Play for friends", "First open mic"][i] ?? "Next stepping stone"}
+                          placeholder={["Learn 3 songs", "Play for friends", "First open mic"][i] ?? "Next stepping stone"}
                           className="h-10 flex-1 rounded-control border border-border bg-card px-3 text-body outline-none focus:border-[var(--coral-deep)]"
                         />
                       </div>
@@ -420,7 +420,7 @@ export function CreatePursuit() {
                     active={mode === "together"}
                     onClick={() => setMode("together")}
                     title="Side by side"
-                    copy="Everyone has their own goal and journey."
+                    copy="Everyone has their own goal and progress."
                   />
                   <ModeOption
                     active={mode === "group"}

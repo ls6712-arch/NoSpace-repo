@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import { Post, postCorner } from "../data/posts";
 import { useContent } from "../context/ContentContext";
 import { getHobby, hobbies, subHobbyLabel, titleCaseSlug } from "../data/hobbies";
-import { useCornerNote } from "../lib/cornerNotes";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
 import { MOMENT_GRID, MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./MomentCard";
@@ -144,7 +143,7 @@ export function sessionsFromPosts(posts: Post[]): HobbySession[] {
       // title-cased slug rather than the raw dashed slug.
       label: corner
         ? subHobbyLabel(corner) ?? titleCaseSlug(corner)
-        : getHobby(post.hobbySlug)?.shortName ?? post.hobbySlug,
+        : "No Corner",
       hobbySlug: post.hobbySlug,
       subSlug: corner,
       sessions: 1,
@@ -190,7 +189,6 @@ function CornerTile({
   /** Where this tile opens. Defaults to your own archive. */
   linkTo?: (item: HobbySession) => string;
 }) {
-  const note = useCornerNote(item.key);
 
   const tile = tileTokenFor(item.key);
 
@@ -244,9 +242,6 @@ function CornerTile({
       >
         {item.label}
       </p>
-      <p className="mt-0.5 min-h-[1.25rem] truncate text-caption text-muted-foreground" title={note ?? undefined}>
-        {note ?? ""}
-      </p>
     </Link>
   );
 }
@@ -282,7 +277,7 @@ export function HobbyShelf({
     return (
       <EmptyState
         line={emptyCopy ?? "Your Shelf is empty."}
-        hint={emptyCopy ? undefined : "Every Corner you log in gets its own Book here."}
+        hint={emptyCopy ? undefined : "Every Corner you post in shows up here."}
         action={emptyCta ? { label: "Log a Moment", to: "/create" } : undefined}
       />
     );

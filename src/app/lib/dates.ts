@@ -3,10 +3,10 @@
  * these so a date reads the same everywhere:
  *
  * - Past, under 7 days: relative and short — "now", "5m", "3h", "3d"
- *   (or "just now", "5m ago" … with `{ ago: true }` inside a sentence).
+ *   (or "just now", "5m ago", "Yesterday" with `{ ago: true }` inside a sentence).
  * - Otherwise: "Sep 24", with the year only when it isn't this year
  *   ("Sep 24, 2025").
- * - Ranges use an en dash: "Oct 1–5", "Sep 28–Oct 3".
+ * - Ranges use "to": "Oct 1 to 5", "Sep 28 to Oct 3".
  *
  * Copy is English-only, so the locale is fixed rather than taken from the
  * browser — a date in a list shouldn't change shape from one person to the
@@ -101,6 +101,7 @@ export function formatWhen(input: DateInput, opts: WhenOptions = {}): string {
   if (diff < MINUTE) return opts.ago ? "just now" : "now";
   if (diff < HOUR) return `${Math.floor(diff / MINUTE)}m${ago}`;
   if (diff < DAY) return `${Math.floor(diff / HOUR)}h${ago}`;
+  if (opts.ago && diff < 2 * DAY) return "Yesterday";
   return `${Math.floor(diff / DAY)}d${ago}`;
 }
 
@@ -145,20 +146,20 @@ export function formatDateTime(
   return `${date}, ${formatTime(d, opts.timeZone)}`;
 }
 
-/** "Oct 1–5", "Sep 28–Oct 3", "Dec 30, 2025–Jan 2, 2026" (en dash, no spaces). */
+/** "Oct 1 to 5", "Sep 28 to Oct 3", "Dec 30, 2025 to Jan 2, 2026". */
 export function formatDateRange(start: DateInput, end: DateInput, opts: { now?: number } = {}): string {
   const a = toDate(start);
   const b = toDate(end);
   if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return "";
   const now = opts.now ?? Date.now();
   const sameYear = a.getFullYear() === b.getFullYear();
-  if (!sameYear) return `${formatDate(a, { year: true })}–${formatDate(b, { year: true })}`;
+  if (!sameYear) return `${formatDate(a, { year: true })} to ${formatDate(b, { year: true })}`;
   const thisYear = isThisYear(a, now);
   const tail = thisYear ? "" : `, ${a.getFullYear()}`;
   const startText = fmt({ month: "short", day: "numeric" }).format(a);
   if (a.getMonth() === b.getMonth()) {
     if (a.getDate() === b.getDate()) return `${startText}${tail}`;
-    return `${startText}–${b.getDate()}${tail}`;
+    return `${startText} to ${b.getDate()}${tail}`;
   }
-  return `${startText}–${fmt({ month: "short", day: "numeric" }).format(b)}${tail}`;
+  return `${startText} to ${fmt({ month: "short", day: "numeric" }).format(b)}${tail}`;
 }

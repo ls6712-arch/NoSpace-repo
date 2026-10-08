@@ -8,7 +8,7 @@
 //   node scripts/visual/run.ts --baseline <dist>       also diff against another build
 //   node scripts/visual/run.ts --screens space-table,pursuit --widths 375 --themes dark
 //   node scripts/visual/run.ts --selftest              prove the detector flags +45% type
-//   node scripts/visual/run.ts --flows                click through the critical flows (quick log, Moment, Pursuit dialogs, Space, Messages, theme) and fail on any page or console error
+//   node scripts/visual/run.ts --flows                click through the critical flows (log a Moment, Moment, Pursuit dialogs, Space, Messages, theme) and fail on any page or console error
 //   node scripts/visual/run.ts --carousel             the multi-photo carousel: announced, keyboard, mouse arrows, dots
 //   node scripts/visual/run.ts --art --out <dir>      crops every illustration in dark and light and reports its luminance (glow)
 //   node scripts/visual/run.ts --images               image boxes keep their size when photos arrive, below-fold images are lazy, broken photos fall back
@@ -321,11 +321,13 @@ async function main() {
           console.log(`  card buttons on touch: ${r.n} buttons on ${r.cards} cards, opacity ${r.minOpacity}, 44px overlaps ${r.overlap}, icon contrast worst case ${r.worst}:1`);
         } else if (r.minOpacity !== 0) throw new Error(`mouse: buttons should stay hidden until hover, opacity ${r.minOpacity}`);
       });
-      await flow("quick log: type a line and Log it", async () => {
+      await flow("log a Moment: open the form, write a line, keep it private", async () => {
         await go("/my-space");
-        if (touch) await page.locator('nav[aria-label="Main"] button:has-text("Create")').first().click(T); else await page.getByRole("button", { name: /Log a Moment/ }).first().click(T);
-        await page.getByPlaceholder(/what changed/i).first().fill("Smoke test Moment"); await page.getByRole("button", { name: /^Log$/ }).first().click(T);
-        await page.waitForTimeout(900);
+        if (touch) await page.locator('nav[aria-label="Main"] a:has-text("Create")').first().click(T); else await page.getByRole("link", { name: /Log a Moment/ }).first().click(T);
+        await page.getByText("Write it down").first().click(T);
+        await page.getByPlaceholder(/what happened/i).first().fill("Smoke test Moment");
+        await page.getByRole("button", { name: /Keep it private|Share/ }).first().click(T);
+        await page.getByText(/^Saved$/).first().waitFor(T);
       });
       await flow("open a Moment, Send to… opens and Escape closes it", async () => {
         await go("/moment/91"); await page.getByText("Three shots from the kiln opening").first().waitFor(T);

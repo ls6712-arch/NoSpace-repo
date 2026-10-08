@@ -19,19 +19,19 @@ const APPEARANCE_OPTIONS: {
   {
     value: "system",
     label: "System default",
-    sublabel: "FOLLOWS YOUR DEVICE",
+    sublabel: "Follows your device",
     swatch: { bg: "var(--theme-light-bg)", card: "var(--theme-dark-bg)", ink: "var(--theme-light-accent)" },
   },
   {
     value: "light",
     label: "Light",
-    sublabel: "WARM PAPER",
+    sublabel: "Warm paper",
     swatch: { bg: "var(--theme-light-bg)", card: "var(--theme-light-card)", ink: "var(--theme-light-accent)" },
   },
   {
     value: "dark",
     label: "Dark",
-    sublabel: "WARM CHARCOAL",
+    sublabel: "Warm charcoal",
     swatch: { bg: "var(--theme-dark-bg)", card: "var(--theme-dark-card)", ink: "var(--theme-dark-accent)" },
   },
 ];

@@ -1043,8 +1043,7 @@
     font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
 
   .ns-hero-eyebrow {
@@ -1450,8 +1449,7 @@
     color: var(--violet-electric-bright);
     font-family: var(--font-mono);
     font-size: var(--text-caption);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
     transition: transform var(--duration-fast) var(--ease-standard);
   }
 

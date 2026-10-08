@@ -22,16 +22,18 @@ import {
 import { hobbies, subHobbyLabel, findSpaceForInterest, defaultSpaceSlug } from "../data/hobbies";
 import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
-import { Visibility, postCorner } from "../data/posts";
+import { Visibility } from "../data/posts";
 import { classifyMomentType } from "../lib/momentType";
 import { convertHeicFiles, convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { useSettings } from "../context/SettingsContext";
 import { useRewards } from "../context/RewardsContext";
-import { startProject, useJournal } from "../lib/journal";
+import { addProgress, removeProgress, startProject, useJournal } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
-import { attachPostToPursuit, mirrorPursuit } from "../lib/pursuitsRemote";
+import { attachPostToPursuit, deleteRemoteProgress, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
+import { formatAmount, hasMeasure, stepFor, summarize, targetText, unitFor } from "../lib/pursuitProgress";
+import { AmountStepper, SoftPanel, Toggle } from "../components/pursuit/ui";
 import { uploadMomentFile } from "../lib/momentMedia";
 import { isInFlightSkipped } from "../lib/inFlightGuard";
 import { extractFirstUrl } from "../lib/linkPreview";
@@ -97,17 +99,7 @@ import { ImageWithFallback } from "../components/ImageWithFallback";
  * to the same private outcome — the caption screen is one screen, with one
  * submit button whose label follows the audience picked on it.
  */
-type Screen = "choose" | "camera" | "caption" | "saved" | "detail";
-
-/** The considered path: four kinds of record, chosen up front. */
-type Mode = "project" | "update" | "moment" | "private";
-
-const MODES: { id: Mode; title: string; copy: string; icon: typeof Plus }[] = [
-  { id: "project", title: "Start a Pursuit", copy: "Give a new thing a home", icon: Plus },
-  { id: "update", title: "Add to a Pursuit", copy: "Keep an existing Pursuit moving", icon: PenLine },
-  { id: "moment", title: "Log a Moment", copy: "A photo, win, question, or small discovery", icon: Sparkle },
-  { id: "private", title: "Reflect privately", copy: "Keep a note just for you", icon: Lock },
-];
+type Screen = "choose" | "camera" | "caption" | "saved";
 
 /** The four audiences, widest privacy first, in the words the app uses everywhere. */
 const AUDIENCE: {
@@ -116,9 +108,9 @@ const AUDIENCE: {
   copy: string;
   icon: typeof Globe2;
 }[] = [
-  { value: "private", label: "Only you", copy: "Kept as a private log, nobody else ever sees it", icon: Lock },
+  { value: "private", label: "Only you", copy: "Only you can see it", icon: Lock },
   { value: "followers", label: "Followers", copy: "People who follow you, once you’ve accepted them", icon: UserRound },
-  { value: "public", label: "Everyone", copy: "Anyone browsing this space can find it", icon: Globe2 },
+  { value: "public", label: "Public", copy: "Anyone can find it", icon: Globe2 },
 ];
 
 const THOUGHT_LIMIT = 300;
@@ -151,7 +143,9 @@ function BackLink({ onClick }: { onClick: () => void }) {
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, bare }: { children: React.ReactNode; bare?: boolean }) {
+  // bare: inside onboarding, whose own page already provides the frame.
+  if (bare) return <>{children}</>;
   return (
     <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-lg px-4">{children}</div>
@@ -205,7 +199,7 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
           interaction outright. */}
       <button
         type="button"
-        aria-label="Offer this for sale — coming soon"
+        aria-label="Offer this for sale (coming soon)"
         title={SALE_COMING_SOON_COPY}
         onClick={() => setShowNotice((v) => !v)}
         className="flex w-full items-center justify-between gap-3 text-left"
@@ -228,13 +222,13 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
   );
 }
 
-export function Log() {
+export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}) {
   const [searchParams] = useSearchParams();
-  const { addPost, myPosts, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
+  const { addPost, deletePost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const { defaultVisibility, defaultVisibilityLoaded } = useSettings();
   const rewards = useRewards();
-  const { add: addPrivateLog } = usePrivateLogs();
+  const { add: addPrivateLog, remove: removePrivateLog } = usePrivateLogs();
   const journal = useJournal();
 
   // "Add progress" on a Pursuit links here with ?pursuit=<id> — resolve it
@@ -260,8 +254,7 @@ export function Log() {
   // be a chooser first ("Add an update" vs "Reflect privately"), but the
   // form already has a private reflection section and an "Only you"
   // audience, so that screen was a step that decided nothing.
-  const [screen, setScreen] = useState<Screen>(pursuitScoped ? "detail" : "choose");
-  const [mode, setMode] = useState<Mode | null>(pursuitScoped ? "update" : null);
+  const [screen, setScreen] = useState<Screen>(pursuitScoped || onboarding ? "caption" : "choose");
   const [pursuitDialogOpen, setPursuitDialogOpen] = useState(false);
   // Where the caption screen's Back link returns to — "camera" when a photo
   // or video was actually captured/picked there, "choose" when "Write a
@@ -294,18 +287,27 @@ export function Log() {
   // the Gift-making Corner (this) at once.
   //
   // Required now (spec change: "Corners carry discovery" — a Moment always
-  // needs one), but with a smart default so picking one is usually zero
-  // taps: inside a Pursuit, its own Corner; otherwise whichever Corner this
-  // person's most recent Moment used. Either way it's just a starting
-  // point — CornerTagField below still lets them change it. Existing
-  // Moments are never retroactively tagged; this only ever seeds a new one.
+  // needs one). Only pre-filled from context the person chose: inside a
+  // Pursuit, its own Corner; arriving from a Corner's own "create" link
+  // (?sub=). Otherwise empty, never guessed from their last Moment.
   const [corner, setCorner] = useState<string>(() => {
     if (initialPursuit?.subHobby) return initialPursuit.subHobby;
-    const lastTagged = [...myPosts].sort((a, b) => b.createdAt - a.createdAt).find((p) => postCorner(p));
-    return lastTagged ? (postCorner(lastTagged) ?? "") : "";
+    return searchParams.get("sub") ?? "";
   });
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
+  // A Pursuit with a measure (10 loaves, 5 paintings) can take an amount from
+  // the same form: how much this Moment moved it forward.
+  const selectedProject = journal.projects.find((p) => p.id === projectId);
+  const selectedMeasure = selectedProject && hasMeasure(selectedProject) ? selectedProject.measure : undefined;
+  const [amount, setAmount] = useState<number>(1);
+  const [counts, setCounts] = useState(true);
+  useEffect(() => {
+    setAmount(selectedMeasure?.defaultAmount ?? 1);
+    setCounts(true);
+  }, [selectedMeasure?.defaultAmount, projectId]);
+  const loggedAmount = selectedMeasure && counts ? amount : 0;
+  const [savedProgressLine, setSavedProgressLine] = useState<string | null>(null);
   // The type actually sent to addPost is computed at publish time from
   // whether a file is attached (see publish() below), not read straight
   // from this — this only tracks which of photo/video the picked file(s)
@@ -338,8 +340,6 @@ export function Log() {
   const [thought, setThought] = useState("");
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
-  const [reflection, setReflection] = useState("");
-  const [reflectionOpen, setReflectionOpen] = useState(false);
   // Starts at the account's own default (Settings → Privacy → "Default
   // visibility for new Moments"), "Only you" unless changed there. Falls
   // back to private for the instant before that setting has loaded.
@@ -371,6 +371,15 @@ export function Log() {
   // layout morph into its Shelf-grid styling — see WorkGrid.tsx, which
   // tracks the same layoutId for the real tile.
   const [savedPostId, setSavedPostId] = useState<number | null>(null);
+  // What Undo takes back, whichever way in the Moment was saved: the post or
+  // private log itself, plus the Pursuit amount logged with it, if any.
+  const [undoTarget, setUndoTarget] = useState<null | {
+    postId?: number;
+    logId?: number;
+    progressId?: string;
+  }>(null);
+  const [undoing, setUndoing] = useState(false);
+  const [undoError, setUndoError] = useState<string | null>(null);
   // Two stages on the "Saved." screen: the big composer-style preview,
   // then — a beat later — the same box morphing (via layout/layoutId) into
   // the small square the Shelf grid actually shows it as. Reduced motion
@@ -442,13 +451,18 @@ export function Log() {
   // instead. React Router doesn't remount this component for a search-param
   // change on the same route, so the initial-screen choice above needs this
   // to actually follow along.
+  //
+  // pursuitScoped also turns true late: arriving on /create?pursuit=<id> from
+  // a link or a new device, the Pursuit is restored from the database a moment
+  // after first render. The Pursuit's Corner and name come along then too.
+  const pursuitReady = !!initialPursuit;
   useEffect(() => {
-    if (pursuitScoped) {
-      setScreen("detail");
-      setMode("update");
-      setProjectId(initialPursuitId);
-    }
-  }, [initialPursuitId]);
+    if (!pursuitScoped) return;
+    setScreen((s) => (s === "choose" ? "caption" : s));
+    setProjectId(initialPursuitId);
+    if (initialPursuit?.subHobby) setCorner((c) => c || initialPursuit.subHobby!);
+    if (initialPursuit?.interest) setTags((t) => (t.length ? t : [initialPursuit.interest!]));
+  }, [initialPursuitId, pursuitReady]);
 
   // Same reason as the resync above: React Router doesn't remount this
   // component for a search-param change on the same route, so a later
@@ -463,21 +477,6 @@ export function Log() {
     setHobbySlug(hobbyParam ?? initialPursuit?.hobbySlug ?? defaultSpaceSlug());
     setSpaceSet(!!hobbyParam || !!initialPursuit?.hobbySlug);
   }, [hobbyParam, initialPursuit?.hobbySlug]);
-
-  // Picking the dedicated "Reflect privately" mode still forces the
-  // audience to private (so a person who'd already changed it can't end up
-  // on that screen sharing by accident). It used to also do the reverse —
-  // bounce audience back to "friends" the moment any other mode was picked
-  // — which made sense back when "friends" was the initial default, but
-  // now silently overwrote the new private default the instant a mode was
-  // chosen. Audience should only ever change here, or by the person's own
-  // click on the selector below.
-  useEffect(() => {
-    if (mode === "private") {
-      audienceDecidedRef.current = true;
-      setAudience("private");
-    }
-  }, [mode]);
 
   // ── Draft recovery: checked once, on entry, before anything else touches
   // storage. Never applies to a Pursuit-scoped visit — that flow's own
@@ -624,7 +623,7 @@ export function Log() {
       !!projectId ||
       projectTitle.trim().length > 0);
 
-  const blocker = useBlocker(hasUnsavedChanges);
+  const blocker = useBlocker(hasUnsavedChanges && !onboarding);
 
   useEffect(() => {
     if (blocker.state === "blocked") setDiscardPromptOpen(true);
@@ -670,7 +669,7 @@ export function Log() {
     <Dialog open={discardPromptOpen} onOpenChange={(o) => !o && stayInComposer()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Discard this moment?</DialogTitle>
+          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Discard this Moment?</DialogTitle>
           <DialogDescription>Leaving now won’t keep what you’ve added.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -735,7 +734,7 @@ export function Log() {
    * function again — the exact bug that put a moment's photo into
    * private_logs three times over one upload. */
   const saveAsPrivateLog = async () => {
-    const note = [thought.trim(), progress.trim(), changed.trim(), reflection.trim()]
+    const note = [thought.trim(), progress.trim(), changed.trim()]
       .filter(Boolean)
       .join("\n\n");
     if (!note && files.length === 0) return;
@@ -799,7 +798,7 @@ export function Log() {
     }
 
     const result = await addPrivateLog({
-      note: note || (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment"),
+      note,
       projectId: linkTo || undefined,
       media,
     });
@@ -821,6 +820,10 @@ export function Log() {
       return;
     }
     setPrivateSaveError(null);
+    lastProgressId.current = undefined;
+    setSavedProgressLine(recordProgress(undefined, result.data.id, note));
+    setUndoTarget({ logId: result.data.id, progressId: lastProgressId.current });
+    setUndoError(null);
 
     // Quiet Milestones count every real Moment, private ones included — this
     // is the only recording call a private log ever reaches, since it never
@@ -837,6 +840,26 @@ export function Log() {
     setScreen("saved");
   };
 
+  /** Logs the amount toward the chosen Pursuit's measure and returns the line
+   * the saved screen shows ("+1 painting · 3 of 5 paintings"). */
+  const lastProgressId = useRef<string | undefined>(undefined);
+  const recordProgress = (postId?: number, logId?: number, note?: string): string | null => {
+    if (!selectedProject || !selectedMeasure || loggedAmount <= 0) return null;
+    const entry = addProgress({
+      projectId: selectedProject.id,
+      amount: loggedAmount,
+      userId: user?.id,
+      postId,
+      logId,
+      note: note || undefined,
+    });
+    if (user) void mirrorProgress(user.id, entry);
+    lastProgressId.current = entry.id;
+    const mine = (journal.progress ?? []).filter((e) => e.projectId === selectedProject.id);
+    const sum = summarize(selectedMeasure, [...mine, entry]);
+    return `+${formatAmount(loggedAmount)} ${unitFor(selectedMeasure, loggedAmount)} · ${formatAmount(sum.current)} of ${targetText(selectedMeasure)}`;
+  };
+
   const publish = async () => {
     if (saving) return;
     if (audience === "private") {
@@ -850,9 +873,13 @@ export function Log() {
     setSaving(true);
     setError(null);
     try {
+      // No caption typed means no caption stored (a photo can stand alone).
+      const typedCaption = [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ");
       const caption =
-        [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ") ||
-        (tagLabel ? `A ${tagLabel.toLowerCase()} moment` : "A moment");
+        typedCaption ||
+        (loggedAmount > 0 && selectedMeasure && selectedProject
+          ? `+${formatAmount(loggedAmount)} ${unitFor(selectedMeasure, loggedAmount)} on ${selectedProject.title}`
+          : "");
 
       // Decided from the actual attached files, not the `type` state (which
       // only ever reflects whichever single pick set it last) — video wins
@@ -876,7 +903,6 @@ export function Log() {
         files: files.length ? files : undefined,
         creator: profile?.display_name?.trim() || "You",
         caption,
-        reflection: reflection.trim() || undefined,
         visibility: audience,
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
         locationName: locationName.trim() ? locationName.trim() : undefined,
@@ -925,6 +951,10 @@ export function Log() {
       if (initialSpaceId && supabase) {
         void supabase.from("space_moments").insert({ space_id: initialSpaceId, post_id: entry.id });
       }
+      lastProgressId.current = undefined;
+      setSavedProgressLine(recordProgress(entry.id, undefined, typedCaption));
+      setUndoTarget({ postId: entry.id, progressId: lastProgressId.current });
+      setUndoError(null);
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
       setSavedPostId(entry.id);
@@ -936,14 +966,41 @@ export function Log() {
     }
   };
 
+  /** Takes back the Moment just saved (and any amount logged with it), then
+   * returns to the form with everything still filled in. */
+  const undoSave = async () => {
+    if (!undoTarget || undoing) return;
+    setUndoing(true);
+    setUndoError(null);
+    try {
+      if (undoTarget.postId !== undefined) await deletePost(undoTarget.postId);
+      else if (undoTarget.logId !== undefined) await removePrivateLog(undoTarget.logId);
+      if (undoTarget.progressId) {
+        removeProgress(undoTarget.progressId);
+        if (user) void deleteRemoteProgress(undoTarget.progressId);
+      }
+      setUndoTarget(null);
+      setSavedPostId(null);
+      setSavedAs(null);
+      setSavedProgressLine(null);
+      setSavedTileSettled(false);
+      setScreen("caption");
+    } catch {
+      setUndoError(ERROR_LINE);
+    } finally {
+      setUndoing(false);
+    }
+  };
+
   const reset = () => {
+    setUndoTarget(null);
+    setUndoError(null);
     clearMediaError();
     clearSaveError();
     setPrivateSaveError(null);
     setThought("");
     setProgress("");
     setChanged("");
-    setReflection("");
     setForSale(false);
     setSaleTitle("");
     setTags([]);
@@ -953,8 +1010,7 @@ export function Log() {
     setError(null);
     setSavedAs(null);
     setSavedPostId(null);
-    setMode(pursuitScoped ? "update" : null);
-    setReflectionOpen(false);
+    setSavedProgressLine(null);
     // Without these, posting an activity with a location and then logging
     // another (plain) Moment right after silently carried both over onto
     // the new post — a pre-existing gap that location being always visible
@@ -963,7 +1019,7 @@ export function Log() {
     setStartsAt("");
     setLocationName("");
     setLocationPrivacy("neighborhood");
-    setScreen(pursuitScoped ? "detail" : "choose");
+    setScreen(pursuitScoped ? "caption" : "choose");
     audienceDecidedRef.current = false;
     setAudience(defaultVisibilityLoaded ? defaultVisibility : "private");
   };
@@ -973,8 +1029,7 @@ export function Log() {
     !user &&
     screen !== "camera" &&
     screen !== "choose" &&
-    audience !== "private" &&
-    mode !== "private";
+    audience !== "private";
 
   // Both of these are declared inside Log(), so they get a new component
   // identity on every render and React remounts their subtree. For Back that
@@ -1007,11 +1062,11 @@ export function Log() {
   // new is being built here, just asked before reaching for the camera.
   if (screen === "choose") {
     return (
-      <Shell>
+      <Shell bare={!!onboarding}>
         <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Log a Moment
         </h1>
-        <p className="mb-8 text-muted-foreground">Share a moment, or start a pursuit.</p>
+        <p className="mb-8 text-muted-foreground">Share a Moment or start a Pursuit.</p>
 
         <div className="space-y-3">
           <button
@@ -1048,7 +1103,7 @@ export function Log() {
               <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 Write it down
               </span>
-              <span className="block text-caption text-muted-foreground">Just a sentence counts.</span>
+              <span className="block text-caption text-muted-foreground">A sentence is enough.</span>
             </span>
           </button>
 
@@ -1065,7 +1120,7 @@ export function Log() {
                 Start a Pursuit
               </span>
               <span className="block text-caption text-muted-foreground">
-                Something you’re bringing to life over time.
+                Set a goal and log Moments toward it.
               </span>
             </span>
           </button>
@@ -1114,11 +1169,11 @@ export function Log() {
                 {draftPrompt.thought.trim() ? (
                   <p className="line-clamp-3 text-foreground" title={draftPrompt.thought.trim()}>“{draftPrompt.thought.trim()}”</p>
                 ) : (
-                  <p>No caption yet</p>
+                  <p>No caption yet.</p>
                 )}
                 {draftPrompt.mediaType && !draftPromptMedia && (
                   <p className="mt-2 text-caption">
-                    A {draftPrompt.mediaType} was attached on another device — not available here.
+                    A {draftPrompt.mediaType} was attached on another device and is not available here.
                   </p>
                 )}
               </div>
@@ -1140,7 +1195,7 @@ export function Log() {
   // ── 1 · Camera — reached only once "Photo or video" is actually tapped ──
   if (screen === "camera") {
     return (
-      <Shell>
+      <Shell bare={!!onboarding}>
         <CameraCapture
           onCaptured={handleCaptured}
           onPickedLibrary={handlePickedLibrary}
@@ -1163,15 +1218,14 @@ export function Log() {
           </span>
           <h2 className="mb-2 text-title">Log in to keep your Moments</h2>
           <p className="mb-6 text-muted-foreground">
-            Your moments are tied to your account, so they’re still here next
-            time, not just in this browser tab.
+            Your Moments are saved to your account and are here next time you log in.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link to="/login?redirect=/create">
               <Button variant="coral">Log in or sign up</Button>
             </Link>
             <Button busy={saving} variant="outline" disabled={saving} onClick={saveAsPrivateLog}>
-              Just keep it for myself
+              Keep it private
             </Button>
           </div>
         </div>
@@ -1188,7 +1242,7 @@ export function Log() {
     // screen has to say so, not just whichever one happened to be checked.
     const anySaveError = saveError || privateSaveError;
     return (
-      <Shell>
+      <Shell bare={!!onboarding}>
         <div className="rounded-card border border-border bg-card px-6 py-10 text-center">
           <span className="relative mx-auto mb-5 flex size-16 items-center justify-center">
             {/* A small burst, not confetti */}
@@ -1220,14 +1274,14 @@ export function Log() {
           </span>
 
           <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
-            {anySaveError ? "Not saved." : "Saved."}
+            {anySaveError ? "Not saved" : "Saved"}
           </h1>
           <p className="mt-1 text-small text-muted-foreground">
             {interest.trim() ? `${tagLabel} · ${cornerLabel}` : cornerLabel}
           </p>
           {!anySaveError && (
             <p className="mx-auto mt-3 max-w-[16rem] border-t border-[var(--hairline)] pt-3 text-small">
-              {savedAs === "private" ? "Kept just for you." : "Another one made."}
+              {savedAs === "private" ? "Only you can see it." : "Moment logged."}
             </p>
           )}
 
@@ -1247,6 +1301,9 @@ export function Log() {
           >
             <MediaPreview className="aspect-square w-full" />
           </motion.div>
+          {savedProgressLine && !anySaveError && (
+            <p className="-mt-3 mb-3 text-small tabular-nums">{savedProgressLine}</p>
+          )}
           {savedAs === "shared" && !anySaveError && (
             <p
               className={`-mt-3 mb-3 text-caption text-muted-foreground transition-opacity duration-base ${
@@ -1272,25 +1329,52 @@ export function Log() {
             </p>
           )}
 
+          {undoTarget && !anySaveError && (
+            <div
+              role="status"
+              className="fixed inset-x-4 bottom-20 z-50 mx-auto flex h-12 max-w-sm items-center justify-between rounded-control border border-border bg-card px-4 text-small shadow-overlay"
+            >
+              <span>{undoError ?? "Saved."}</span>
+              <button
+                type="button"
+                disabled={undoing}
+                onClick={() => void undoSave()}
+                className="min-h-11 px-2 text-[var(--coral-text)] hover:opacity-80 disabled:opacity-50"
+              >
+                Undo
+              </button>
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Link
-              to={
-                savedAs === "private"
-                  ? "/you"
-                  : `/you/work/${archiveKey({ subSlug: subHobby || undefined, hobbySlug })}`
-              }
-            >
-              <Button variant="coral" className="w-full">
-                Done
+            {onboarding ? (
+              <Button variant="coral" className="w-full" onClick={onboarding.onDone}>
+                Continue
               </Button>
-            </Link>
-            <button
-              type="button"
-              onClick={reset}
-              className="w-full py-1 text-small text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Create another
-            </button>
+            ) : (
+              <>
+                <Link
+                  to={
+                    pursuitScoped
+                      ? `/pursuit/${initialPursuitId}`
+                      : savedAs === "private"
+                        ? "/you"
+                        : `/you/work/${archiveKey({ subSlug: subHobby || undefined, hobbySlug })}`
+                  }
+                >
+                  <Button variant="coral" className="w-full">
+                    Done
+                  </Button>
+                </Link>
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="w-full py-1 text-small text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Log another
+                </button>
+              </>
+            )}
           </div>
         </div>
       </Shell>
@@ -1299,13 +1383,23 @@ export function Log() {
 
   // ── 2 · Caption + audience — one screen, whatever the capture was ────────
   if (screen === "caption") {
-    const hasSomething = files.length > 0 || thought.trim().length > 0;
+    const hasSomething = files.length > 0 || thought.trim().length > 0 || loggedAmount > 0;
     const detectedUrl = extractFirstUrl(thought);
     return (
-      <Shell>
-        <Back to={captionBackTo} />
+      <Shell bare={!!onboarding}>
+        {onboarding ? null : pursuitScoped ? (
+          <Link
+            to={`/pursuit/${initialPursuitId}`}
+            className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Back
+          </Link>
+        ) : (
+          <Back to={captionBackTo} />
+        )}
         <h1 className="mb-6 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-          Your moment
+          Log a Moment
         </h1>
 
         {/* A video is always exactly one file — same single preview as
@@ -1401,7 +1495,7 @@ export function Log() {
             value={thought}
             maxLength={THOUGHT_LIMIT}
             onChange={(e) => setThought(e.target.value)}
-            placeholder={files.length > 0 ? "Add a thought…" : "What happened? Even a sentence counts."}
+            placeholder={files.length > 0 ? "Add a thought" : "What happened? Even a sentence counts."}
           />
           <div className="mt-1 text-right text-caption text-muted-foreground">
             {thought.length}/{THOUGHT_LIMIT}
@@ -1452,17 +1546,17 @@ export function Log() {
           {/* Its own field, independent of the tag match above: a Moment
               can be tagged Woodwork (whichever tag above matched a Corner
               name, setting subHobby) and filed under the Gift-making Corner
-              here at the same time — one is what it's made of, this is
-              which Corner it's filed under for Discover browsing.
+              here at the same time — one is what it’s made of, this is
+              which Corner it’s filed under for Discover browsing.
               Required now (spec change: "Corners carry discovery"), but
               pre-filled above (Pursuit's Corner, or your last one) so
-              picking one is usually zero taps — see the corner state's own
-              comment. Category never appears in this copy: it's internal
+              picking one is usually zero taps — see the corner state’s own
+              comment. Category never appears in this copy: it’s internal
               plumbing now, derived from whichever Corner is picked.
               Global (no spaceSlug) until spaceSet is true — hobbySlug is
               still just sitting at its silent technical default at that
               point (see spaceSet's own comment above), not a Category
-              anyone actually chose, so there's nothing real to scope to
+              anyone actually chose, so there’s nothing real to scope to
               yet. Picking a Corner (or the tag match above resolving one)
               sets both hobbySlug and spaceSet, which then scopes this
               field the same way it always used to. */}
@@ -1559,7 +1653,7 @@ export function Log() {
                   </SelectContent>
                 </Select>
                 <p className="mt-1.5 text-caption text-muted-foreground">
-                  Neighborhood by default. Exact is never assumed.
+                  Neighborhood by default.
                 </p>
               </div>
             )}
@@ -1592,13 +1686,13 @@ export function Log() {
             </ul>
 
             {/* Only a public Moment could become a listing — Connections
-                couldn't be sold to anyway, same rule the Pursuit-scoped
+                couldn’t be sold to anyway, same rule the Pursuit-scoped
                 flow's own version of this control uses. */}
             {audience === "public" && <ForSaleComingSoon className="mt-3" />}
 
             <p className="mt-4 text-center text-caption leading-relaxed text-muted-foreground">
               {audience === "private"
-                ? "This stays a private log. Nobody else will see it."
+                ? "Only you can see this."
                 : `This will appear in ${
                     audience === "public"
                       ? `${cornerLabel}`
@@ -1625,6 +1719,14 @@ export function Log() {
                 onSelectExisting={(id) => {
                   setProjectId(id);
                   setProjectTitle("");
+                  const picked = journal.projects.find((p) => p.id === id);
+                  if (picked?.subHobby && !corner) {
+                    setCorner(picked.subHobby);
+                    if (picked.hobbySlug) {
+                      setHobbySlug(picked.hobbySlug);
+                      setSpaceSet(true);
+                    }
+                  }
                 }}
                 onCreateNew={(title) => {
                   setProjectTitle(title);
@@ -1637,6 +1739,25 @@ export function Log() {
               />
             </div>
           </div>
+
+          {selectedMeasure && selectedProject && (
+            <SoftPanel>
+              <p className="text-small">How much did this move it forward?</p>
+              <div className="mt-3">
+                <AmountStepper
+                  value={amount}
+                  onChange={setAmount}
+                  step={stepFor(selectedMeasure)}
+                  unit={unitFor(selectedMeasure, amount)}
+                  allowDecimals={selectedMeasure.allowDecimals || selectedMeasure.allowPartial}
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-caption text-muted-foreground">Count toward Pursuit progress</span>
+                <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
+              </div>
+            </SoftPanel>
+          )}
         </div>
 
         {error && <p className="mb-3 text-center text-caption text-[var(--coral-text)]">{error}</p>}
@@ -1667,275 +1788,5 @@ export function Log() {
   }
 
 
-  // ── The considered form, reached from "More ways to create" or "Add details" ─
-  const activeMode = MODES.find((m) => m.id === mode) ?? MODES[2];
-  const isPrivateOnly = mode === "private";
-
-  return (
-    <div className="min-h-viewport bg-surface py-10 sm:py-14">
-      <div className="container mx-auto max-w-2xl px-4">
-        {pursuitScoped ? (
-          <Link
-            to={`/pursuit/${initialPursuit!.id}`}
-            className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            Back
-          </Link>
-        ) : (
-          <Back to="camera" />
-        )}
-
-        <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-          {activeMode.title}
-        </h1>
-        <p className="mb-9 text-muted-foreground">
-          {pursuitScoped ? initialPursuit!.title : activeMode.copy}
-        </p>
-
-        <div className="space-y-8 rounded-card border border-border bg-card p-6 md:p-8">
-          {!isPrivateOnly && (
-            <>
-              {!pursuitScoped && (
-                <section>
-                  <h2 className="mb-1 text-small">What are you working on?</h2>
-                  <p className="mb-3 text-caption text-muted-foreground">
-                    {mode === "update"
-                      ? "Choose the Pursuit this belongs to."
-                      : mode === "project"
-                        ? "Give it a name you’ll recognise in six months."
-                        : "Where does this sit?"}
-                  </p>
-
-                  {mode === "update" ? (
-                    <PursuitField
-                      projects={openProjects}
-                      projectId={projectId}
-                      projectTitle={projectTitle}
-                      onSelectExisting={(id) => {
-                        setProjectId(id);
-                        setProjectTitle("");
-                      }}
-                      onCreateNew={(title) => {
-                        setProjectTitle(title);
-                        setProjectId("");
-                      }}
-                      onClear={() => {
-                        setProjectId("");
-                        setProjectTitle("");
-                      }}
-                      placeholder="Choose a Pursuit"
-                    />
-                  ) : (
-                    mode === "project" && (
-                      <Input
-                        value={projectTitle}
-                        onChange={(e) => setProjectTitle(e.target.value)}
-                        placeholder="e.g. Six matching mugs"
-                      />
-                    )
-                  )}
-
-                  {/* No Category picker: Category is internal-only now,
-                      derived silently from whichever Corner is picked
-                      below (spec change — "Corners carry discovery").
-                      Global (no spaceSlug), same as the "Which Corner?"
-                      field above, for the same reason: nothing upstream of
-                      this section has already established a Category to
-                      scope to. */}
-                  <div className="mt-3">
-                    <CornerTagField
-                      value={subHobby}
-                      onChange={(slug, _name, resolvedSpaceSlug) => {
-                        setSubHobby(slug);
-                        setHobbySlug(resolvedSpaceSlug);
-                      }}
-                    />
-                  </div>
-                </section>
-              )}
-
-              <section>
-                <h2 className="mb-1 text-small">Show where it’s at</h2>
-                <p className="mb-3 text-caption text-muted-foreground">
-                  Add a photo, video, or short note.
-                </p>
-
-                <div className="mb-3 flex items-center gap-4">
-                  <div className="relative size-20 shrink-0 overflow-hidden rounded-control border border-border">
-                    <MediaPreview className="h-full w-full" />
-                    {files.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setFiles([])}
-                        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media"
-                        aria-label="Remove file"
-                      >
-                        <X className="size-3" />
-                      </button>
-                    )}
-                  </div>
-                  <div>
-                    {/* This secondary form stays single-file, on purpose —
-                        the multi-photo picker lives on the main "quick
-                        moment" caption screen above. */}
-                    <input
-                      ref={detailFileRef}
-                      type="file"
-                      accept="image/*,video/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const raw = e.target.files?.[0];
-                        e.target.value = "";
-                        if (!raw) return;
-                        setHeicWarning(null);
-                        const picked = await convertHeicIfNeeded(raw);
-                        if (isHeicFile(picked)) {
-                          setHeicWarning(
-                            UPLOAD_COPY.heic,
-                          );
-                          return;
-                        }
-                        setFiles([picked]);
-                        setType(picked.type.startsWith("video") ? "video" : "photo");
-                      }}
-                    />
-                    {heicWarning && (
-                      <p className="mb-2 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-3 py-2 text-left text-caption leading-relaxed text-foreground">
-                        {heicWarning}
-                      </p>
-                    )}
-                    <div className="mb-2 flex gap-2">
-                      <span className="flex items-center gap-1.5 rounded-control border border-border px-3 py-1 text-caption text-muted-foreground">
-                        {type === "video" ? (
-                          <Video className="size-3.5" />
-                        ) : (
-                          <Camera className="size-3.5" />
-                        )}
-                        {type === "video" ? "Video" : "Photo"}
-                      </span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => detailFileRef.current?.click()}
-                    >
-                      <Images className="size-3.5" />
-                      {files.length > 0 ? "Choose a different file" : "Add a photo or video"}
-                    </Button>
-                  </div>
-                </div>
-
-                <Textarea
-                  id="progress"
-                  placeholder="Where it’s at right now"
-                  value={progress}
-                  onChange={(e) => setProgress(e.target.value)}
-                />
-              </section>
-
-              <section>
-                <h2 className="mb-1 text-small">What changed?</h2>
-                <p className="mb-3 text-caption text-muted-foreground">
-                  A small win, a lesson, a question, or what comes next.
-                </p>
-                <Textarea
-                  id="changed"
-                  placeholder="Centred it on the third try, next time, wetter hands"
-                  value={changed}
-                  onChange={(e) => setChanged(e.target.value)}
-                />
-              </section>
-            </>
-          )}
-
-          {/* Collapsed by default on a regular Moment — it's optional, and a
-              third open text box made posting feel like homework. Always
-              open for a private-only entry, where it's the whole point. */}
-          {isPrivateOnly || reflectionOpen || reflection.trim() ? (
-            <section>
-              <h2 className="mb-1 flex items-center gap-1.5 text-small">
-                <Lock className="size-3.5" /> Private reflection
-              </h2>
-              <p className="mb-3 text-caption text-muted-foreground">
-                What do you want to remember for yourself?
-              </p>
-              <Textarea
-                id="reflection"
-                placeholder="Never shown to anyone, this part is only ever yours"
-                value={reflection}
-                autoFocus={reflectionOpen && !reflection}
-                onChange={(e) => setReflection(e.target.value)}
-              />
-            </section>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setReflectionOpen(true)}
-              className="flex w-full items-center gap-2 rounded-card border border-dashed border-border px-4 py-3 text-left text-small text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Lock className="size-3.5" />
-              Add a private reflection <span className="text-caption">(only you)</span>
-            </button>
-          )}
-
-          {!isPrivateOnly && (
-            <section>
-              <h2 className="mb-3 text-small">Choose who sees this</h2>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {AUDIENCE.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => chooseAudience(opt.value)}
-                    aria-pressed={audience === opt.value}
-                    className={`flex flex-col items-center gap-1.5 rounded-control border px-2 py-3 text-center transition-colors ${
-                      audience === opt.value
-                        ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <opt.icon className="size-4" />
-                    <span className="text-caption leading-tight">{opt.label}</span>
-                  </button>
-                ))}
-              </div>
-              <p className="mt-2 text-caption text-muted-foreground">
-                {AUDIENCE.find((o) => o.value === audience)?.copy}
-              </p>
-            </section>
-          )}
-
-          {!isPrivateOnly && audience === "public" && <ForSaleComingSoon />}
-
-          {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Button
-              variant="coral"
-              size="lg"
-              className="flex-1"
-              disabled={saving}
-              onClick={publish}
-            >
-              <PenLine className="size-4" />
-              {saving ? "Saving…" : "Create"}
-            </Button>
-            {!isPrivateOnly && (
-              <Button
-                variant="outline"
-                size="lg"
-                className="shrink-0"
-                onClick={saveAsPrivateLog}
-                disabled={saving}
-              >
-                <Lock className="size-4" />
-                {saving ? "Saving…" : "Save as private log"}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }

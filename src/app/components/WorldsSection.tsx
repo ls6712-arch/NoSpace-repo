@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Link } from "react-router";
 import { WORLD_SPACES } from "../data/worldSpaces";
 import { WorldIllustration } from "./WorldIllustration";
 import { useScrollReveal } from "../lib/useScrollReveal";
@@ -84,13 +83,11 @@ export function WorldsSection() {
     <section ref={sectionRef} className="ns-worlds-section" data-driven={driven}>
       <div className="mx-auto w-full max-w-[1440px] px-5 pt-20 sm:px-8 lg:px-12 lg:pt-28 xl:px-16">
         <div ref={headingRef} className="ns-reveal mb-10 max-w-xl lg:mb-14">
-          <div className="ns-section-kicker mb-4">WHATEVER PULLS YOU IN</div>
           <h2 className="mb-3 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-            Whatever pulls you in, it belongs here.
+            Pick a Corner for every Moment
           </h2>
           <p className="text-body leading-relaxed text-muted-foreground">
-            There are many ways to be a person. You don’t have to choose just
-            one — whatever genuinely pulls you in has a place to live.
+            Corners group your Moments on your Shelf and help people find what you post.
           </p>
         </div>
       </div>
@@ -113,7 +110,7 @@ export function WorldsSection() {
                 key={world.slug}
                 style={{ transform: `translateY(${i % 2 === 0 ? "-0.6rem" : "0.7rem"})` }}
               >
-                <Link to={world.to} className="ns-world-card block no-underline" style={cardStyle}>
+                <div className="ns-world-card block" style={cardStyle}>
                   <div className="aspect-[4/5] w-full">
                     <WorldIllustration
                       illustration={world.illustration}
@@ -132,7 +129,7 @@ export function WorldsSection() {
                     </div>
                     <p className="text-caption leading-relaxed text-muted-foreground">{world.description}</p>
                   </div>
-                </Link>
+                </div>
               </div>
             );
           })}

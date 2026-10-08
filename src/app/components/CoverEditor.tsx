@@ -76,7 +76,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
       </button>
 
       {/* Radix Dialog: focus moves in, Escape and the backdrop close it,
-          focus returns to "Edit cover", and the page behind can't scroll.
+          focus returns to "Edit cover", and the page behind can’t scroll.
           It stays put while a save is in flight. */}
       <DialogPrimitive.Root open={open} onOpenChange={(next) => !saving && setOpen(next)}>
         <DialogPrimitive.Portal>
@@ -134,7 +134,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
             <p className="mb-1.5 text-caption text-[var(--ink-soft)]">Cover photo</p>
             {candidates.length === 0 ? (
               <p className="mb-4 text-caption text-[var(--ink-faint)]">
-                Pin a Moment with a photo first — that’s what shows up here.
+                Pin a Moment with a photo first. That’s what shows up here.
               </p>
             ) : (
               <div className="mb-5 flex gap-2">

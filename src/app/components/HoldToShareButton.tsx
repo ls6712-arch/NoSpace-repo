@@ -25,7 +25,7 @@ const HOLD_MS = 600;
 export function HoldToShareButton({
   onConfirm,
   disabled = false,
-  label = "Hold to share with everyone",
+  label = "Hold to share publicly",
 }: {
   onConfirm: () => void;
   disabled?: boolean;
@@ -75,7 +75,7 @@ export function HoldToShareButton({
         className="flex h-12 w-full items-center justify-center gap-2 rounded-control bg-accent text-small font-semibold text-accent-foreground transition-colors hover:brightness-110 disabled:pointer-events-none disabled:opacity-50"
       >
         <Globe2 className="size-4" />
-        Share with everyone
+        Share publicly
       </button>
     );
   }

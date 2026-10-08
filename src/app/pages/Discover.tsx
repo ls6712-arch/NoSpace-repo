@@ -78,8 +78,17 @@ const DISCOVER_TABS = [
 type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
 const VISIBLE_DISCOVER_TABS = DISCOVER_TABS.filter((t) => !t.hidden);
 
+/** The box searches what the open tab lists, so the placeholder says that. The
+ * Corners tab also filters the Moments list below it. */
+const SEARCH_PLACEHOLDER: Record<DiscoverTab, string> = {
+  corners: "Search Corners and Moments",
+  spaces: "Search Spaces",
+  people: "Search people",
+  marketplace: "Search the marketplace",
+};
+
 const FEED_TABS = [
-  { id: "forYou", label: "For You" },
+  { id: "forYou", label: "For you" },
   { id: "following", label: "Following" },
   { id: "recent", label: "Recent" },
 ] as const;
@@ -101,7 +110,7 @@ const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
  * doing something.
  */
 function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
-  return `border-b-2 font-medium uppercase tracking-wider transition-colors ${
+  return `border-b-2 font-medium tracking-wider transition-colors ${
     size === "sm" ? "pb-2 text-caption" : "pb-1 text-caption"
   } ${
     active
@@ -279,7 +288,7 @@ function AllCornersBrowser({ query }: { query: string }) {
         <Link
           key={`${c.spaceSlug}-${c.slug}`}
           to={`/corner/${c.slug}`}
-          aria-label={`Browse the ${c.name} corner`}
+          aria-label={`Browse the ${c.name} Corner`}
           // Reveal-on-load: .ns-enter is the same rise-and-fade every other
           // entrance in this app uses (theme.css), already switched off
           // wholesale under prefers-reduced-motion. The per-item delay is
@@ -297,6 +306,7 @@ function AllCornersBrowser({ query }: { query: string }) {
           style={{ "--corner-color": cornerColorFor(`${c.spaceSlug}-${c.slug}`), animationDelay: `${Math.min(i, 11) * 0.03}s` } as CSSProperties}
         >
           <span
+            // design-token-ignore: Corner name tile, sits between the title and display sizes
             className="text-[24px] font-semibold leading-tight text-[var(--corner-color)] transition-transform duration-base ease-standard group-hover:scale-105 sm:text-[32px]"
             style={{ fontFamily: "var(--font-serif)" }}
           >
@@ -590,7 +600,7 @@ export function Discover() {
                 setShown(PAGE_SIZE);
                 if (searchParams.get("about")) setSearchParams({}, { replace: true });
               }}
-              placeholder="Search Moments, people, Spaces"
+              placeholder={SEARCH_PLACEHOLDER[tab]}
               className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-body text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
             />
             {query && (
@@ -848,13 +858,13 @@ export function Discover() {
                         That’s everything here.
                       </p>
                       <p className="mb-5 text-small text-muted-foreground">
-                        A good place to stop scrolling and go make something.
+                        Log a Moment of your own.
                       </p>
                       <div className="flex flex-wrap items-center justify-center gap-3">
                         <Link to="/create">
                           <Button variant="coral">
                             <PenLine className="size-4" />
-                            Create something
+                            Log a Moment
                           </Button>
                         </Link>
                       </div>

@@ -8,7 +8,6 @@ import { MOMENT_VISIBILITY_OPTIONS } from "../lib/visibility";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { ERROR_LINE, TOAST } from "../lib/stateCopy";
 import { notify } from "./ui/toaster";
@@ -35,7 +34,6 @@ export function AddDetailsSheet({
   const [corner, setCorner] = useState(post ? subHobbyLabel(post.corner ?? "") ?? post.corner ?? "" : "");
   const [locationName, setLocationName] = useState(post?.locationName ?? "");
   const [locationPrivacy, setLocationPrivacy] = useState<LocationPrivacy>(post?.locationPrivacy ?? "neighborhood");
-  const [reflection, setReflection] = useState(post?.reflection ?? "");
   const [audience, setAudience] = useState(post?.visibility ?? "followers");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +62,6 @@ export function AddDetailsSheet({
         corner: cornerSlug,
         locationName: locationName.trim() || undefined,
         locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
-        reflection,
         visibility: audience,
       });
       if (!ok) {
@@ -83,7 +80,7 @@ export function AddDetailsSheet({
       <SheetContent side="bottom" className="mx-auto max-w-lg rounded-t-card">
         <SheetHeader>
           <SheetTitle style={{ fontFamily: "var(--font-serif)" }}>Add details</SheetTitle>
-          <SheetDescription>Optional — nothing here was needed to save this Moment.</SheetDescription>
+          <SheetDescription>Optional. Nothing here is needed to save this Moment.</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 px-4 pb-4">
           <div>
@@ -98,7 +95,7 @@ export function AddDetailsSheet({
                 setCorner(e.target.value);
                 setCornerBlocked(false);
               }}
-              placeholder="Pottery, sourdough, bouldering…"
+              placeholder="Pottery, sourdough, bouldering"
             />
             {cornerBlocked && (
               <p className="mt-1.5 text-caption text-destructive">Try a more general name.</p>
@@ -135,20 +132,6 @@ export function AddDetailsSheet({
                 ))}
               </div>
             )}
-          </div>
-
-          <div>
-            <Label htmlFor="details-reflection" className="mb-1.5 block text-caption">
-              Private reflection <span className="text-muted-foreground">(only you)</span>
-            </Label>
-            <Textarea
-              id="details-reflection"
-              value={reflection}
-              onChange={(e) => setReflection(e.target.value)}
-              maxLength={2000}
-              placeholder="Never shown to anyone."
-              className="min-h-20"
-            />
           </div>
 
           <div>

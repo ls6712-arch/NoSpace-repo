@@ -10,12 +10,18 @@ import { APP_NAME } from "../config";
 
 export function PrivacyPolicy() {
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="[PLACEHOLDER — draft, not yet published]">
+    <LegalPage title="Privacy Policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
+      {/* TODO(privacy: remove after reflection data deleted): drop the
+          "private reflections" sentence once the drop-reflections migration
+          (20261021000000_drop_reflections.sql, its own follow-up PR) has run on
+          the live project. */}
       <h2>What we collect</h2>
       <p>
-        Your email, display name, and password (or your Google account, if you sign in
-        that way), and whatever you add to your profile. The Moments you log — photos,
-        notes, and Reflections — plus Thoughts, messages, and who you follow. If you
+        Your email, display name, and password (or your Google account, if you log in
+        that way), and whatever you add to your profile. The Moments you log (photos
+        and notes), plus thoughts, messages, and who you follow. We may
+        also still hold private reflections you wrote before that feature was
+        removed. If you
         join the waitlist before you have an invite, we keep the email and the optional
         "what do you make?" answer you give us.
       </p>
@@ -25,28 +31,28 @@ export function PrivacyPolicy() {
 
       <h2>Who else sees it</h2>
       <p>
-        {APP_NAME} runs on Supabase, which hosts our database, handles sign-in, and
-        stores your photos, and on Vercel, which hosts the app itself. If you sign in
-        with Google, Google is involved in that one step. We don't sell your
+        {APP_NAME} runs on Supabase, which hosts our database, handles login, and
+        stores your photos, and on Vercel, which hosts the app itself. If you log in
+        with Google, Google is involved in that one step. We don’t sell your
         information to anyone.
       </p>
 
       <h2>What you control</h2>
       <p>
-        Every Moment you log, you choose who sees it — just you, your followers, a
-        Space, or everyone — each time you post it. A Moment marked "only you" is kept
+        Every Moment you log, you choose who sees it: only you, your followers, or
+        the public, each time you post it. A Moment marked “Only you” is kept
         and never shown anywhere else, including to {APP_NAME} staff reviewing a
         report.
       </p>
 
       <h2>Pausing or deleting your account</h2>
       <p>
-        Self-serve account pausing and deletion are coming soon and aren't built yet.
+        Self-serve account pausing and deletion are coming soon and aren’t built yet.
         Until then, if you'd like your account or data deleted, contact us at{" "}
         <a href="mailto:hello@example.com" className="underline hover:text-foreground">
           [PLACEHOLDER contact email]
         </a>{" "}
-        and we'll handle it directly.
+        and we’ll handle it directly.
       </p>
 
       <h2>Questions</h2>

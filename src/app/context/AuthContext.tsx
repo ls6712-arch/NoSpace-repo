@@ -13,6 +13,8 @@ import { takeSavedInviteCode } from "../lib/inviteCode";
 import { claimInvite } from "../lib/invites";
 import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 import { friendlyError } from "../lib/friendlyError";
+import { flushTermsAcceptance } from "../lib/termsAcceptance";
+import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
 
 export interface Profile {
   id: string;
@@ -54,6 +56,10 @@ export interface Profile {
   access?: "active" | "pending";
   invited_by?: string | null;
   invite_allowance?: number;
+  /** Own-only (see lib/ownProfile.ts): nobody else can read these any more. */
+  is_admin?: boolean;
+  discoverable?: boolean;
+  show_this_corner?: boolean;
 }
 
 interface AuthContextType {
@@ -81,7 +87,7 @@ interface AuthContextType {
   updatePassword: (next: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   /** Revokes every refresh token for this account, not just this browser's —
-   * Settings > Account's "Sign out everywhere". A revoked session's own
+   * Settings > Account's "Log out everywhere". A revoked session's own
    * access token still works until it expires on its own (see
    * docs/pause-session-revocation-plan.md); this stops any NEW token from
    * being minted on any other device, same as the pause flow's own
@@ -151,20 +157,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // deploy order applies that migration before this app ever ships, so a
     // database missing them is the one case the ordering already prevents.
     for (let attempt = 0; attempt < 4; attempt++) {
-      const columns = themeColumnKnownMissing
-        ? "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, access, invited_by, invite_allowance"
-        : "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, theme_preference, access, invited_by, invite_allowance";
+      // The owner-only columns come from my_profile_private() once that is in
+      // the database; until then (its migration hasn't run) they are read
+      // straight from profiles, exactly as before.
+      const own = await fetchOwnPrivateProfile();
+      if (own.status === "error") {
+        await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+        continue;
+      }
+      const columns =
+        own.status === "ok"
+          ? PUBLIC_PROFILE_COLUMNS
+          : themeColumnKnownMissing
+            ? "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, access, invited_by, invite_allowance"
+            : "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, theme_preference, access, invited_by, invite_allowance";
       const { data, error } = await supabase
         .from("profiles")
         .select(columns)
         .eq("id", userId)
         .maybeSingle();
-      if (error && !themeColumnKnownMissing && error.code === "42703") {
+      if (error && own.status === "missing" && !themeColumnKnownMissing && error.code === "42703") {
         themeColumnKnownMissing = true;
         attempt -= 1;
         continue;
       }
-      const row = data as Profile | null;
+      const row = data
+        ? ({ ...(data as object), ...(own.status === "ok" ? own.data : {}) } as Profile)
+        : null;
       if (row) {
         setProfile(row);
         lastRow = row;
@@ -190,6 +209,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const bootstrapProfile = async (userId: string, expectName?: string) => {
     const row = await loadProfile(userId, expectName);
+    // Writes the time from the sign-up checkbox, if one is waiting.
+    void flushTermsAcceptance();
     if (row?.access !== "pending") return;
     const code = takeSavedInviteCode();
     if (!code) return;
@@ -366,7 +387,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     // Clear the browser's copy first, and regardless of whether the network
     // call succeeds. Private logs, saved work and reactions all live in
-    // localStorage; leaving them behind meant the next person to sign in on
+    // localStorage; leaving them behind meant the next person to log in on
     // a shared laptop inherited the last person's private reflections.
     clearLocalData();
     if (!supabase) return;
@@ -393,7 +414,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateProfile: AuthContextType["updateProfile"] = async (fields) => {
-    if (!supabase || !session) return { error: "Not signed in." };
+    if (!supabase || !session) return { error: "You’re not logged in." };
     try {
       // A plain update, not an upsert: the row always already exists (the
       // trigger that creates it fires the moment the account is made), and

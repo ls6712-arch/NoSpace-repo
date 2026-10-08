@@ -64,7 +64,7 @@ export function JoinPursuit() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-          This invite isn’t active.
+          This invite isn’t active
         </h1>
         <p className="max-w-sm text-small text-muted-foreground">
           The link may have been turned off. Ask whoever sent it for a new one.
@@ -103,7 +103,7 @@ export function JoinPursuit() {
             <Users className="size-4 shrink-0 text-muted-foreground" />
             {preview.mode === "group"
               ? "Everyone contributes to the same total."
-              : "Everyone has their own goal and journey, side by side."}
+              : "Everyone has their own goal and progress, side by side."}
           </p>
           {preview.memberCount > 0 && (
             <p className="pl-[26px] text-caption text-muted-foreground tabular-nums">
@@ -116,7 +116,7 @@ export function JoinPursuit() {
           {isOwner ? (
             <Link to={`/pursuit/${preview.pursuitId}`}>
               <Button variant="coral" className="h-11 w-full rounded-control">
-                This is your Pursuit — open it
+                This is your Pursuit. Open it
               </Button>
             </Link>
           ) : user ? (

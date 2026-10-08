@@ -11,3 +11,4 @@ seed-photos/
 /.agents/
 /.claude/skills/
 /skills-lock.json
+docs/qa/round-2/.dist

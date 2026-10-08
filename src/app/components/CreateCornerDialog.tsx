@@ -181,7 +181,7 @@ export function CreateCornerDialog({
 
           {!pendingConfirm && (
             <Button busy={saving} variant="coral" className="w-full" disabled={saving} onClick={submit}>
-              Create Corner
+              Create a Corner
             </Button>
           )}
         </div>

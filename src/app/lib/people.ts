@@ -197,8 +197,7 @@ export async function peopleInHobby(hobbySlug: string, limit = 12): Promise<Pers
 /**
  * A default browsable set of people, for landing on /people with nothing
  * typed and no hobby picked. Ordered by recency (newest profiles first),
- * never by post count, likes, or any popularity signal — consistent with
- * "no follower counts anywhere on Sushii."
+ * never by post count, likes, or any popularity signal.
  */
 export async function browsePeople(limit = 24): Promise<Person[]> {
   if (!supabase) return [];

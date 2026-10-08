@@ -8,6 +8,7 @@ import {
 } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
+import { fetchOwnPrivateProfile } from "../lib/ownProfile";
 import { CATEGORIES, type Category } from "../data/categories";
 import { applySpaceRows, isBuiltInSpace, type SpaceRow } from "../data/hobbies";
 import { OFFLINE_LINE } from "../lib/stateCopy";
@@ -137,12 +138,23 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const { data: me } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .maybeSingle();
-      const admin = !!(me as any)?.is_admin;
+      // Whether this account is an admin is its own business: other people
+      // can't read it from the profiles table. Until my_profile_private() is
+      // in the database, the old direct read still works.
+      const own = await fetchOwnPrivateProfile();
+      let admin: boolean;
+      if (own.status === "ok") {
+        admin = !!own.data.is_admin;
+      } else if (own.status === "missing") {
+        const { data: me } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .maybeSingle();
+        admin = !!(me as any)?.is_admin;
+      } else {
+        admin = false;
+      }
       setIsAdmin(admin);
 
       const { data } = await supabase
@@ -191,7 +203,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const suggest: CategoriesContextType["suggest"] = async (input) => {
-    if (!supabase || !user) return { error: "Sign in to suggest a category." };
+    if (!supabase || !user) return { error: "Log in to suggest a category." };
     const name = input.name.trim();
     if (!name) return { error: "Give it a name." };
     try {
@@ -216,7 +228,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   };
 
   const review: CategoriesContextType["review"] = async (id, decision, opts) => {
-    if (!supabase || !user) return { error: "Sign in first." };
+    if (!supabase || !user) return { error: "Log in first." };
     const target = suggestions.find((s) => s.id === id);
     if (!target) return { error: "That suggestion is gone." };
 
@@ -266,7 +278,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   };
 
   const saveSpace: CategoriesContextType["saveSpace"] = async (input) => {
-    if (!supabase || !user) return { error: "Sign in first." };
+    if (!supabase || !user) return { error: "Log in first." };
     if (!isAdmin) return { error: "Only an admin can do that." };
     const name = input.name.trim();
     if (!name) return { error: "Give the Space a name." };

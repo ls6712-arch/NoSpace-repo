@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Your Soosh login link</title>
+</head>
+<body style="margin:0;padding:0;background:#EFE7D8;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EFE7D8;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#F8F2E5;border:1px solid #DCD0B8;border-radius:12px;">
+<tr><td style="padding:32px 28px 8px 28px;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:bold;color:#C43F22;">Soosh</td></tr>
+<tr><td style="padding:8px 28px 0 28px;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:32px;font-weight:bold;color:#2A241D;">Log in to Soosh</td></tr>
+<tr><td style="padding:12px 28px 0 28px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:#2A241D;">Use this link to log in as {{ .Email }}. It works once and expires soon.</td></tr>
+<tr><td style="padding:24px 28px 8px 28px;">
+<a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#C43F22;color:#FFFFFF;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;line-height:20px;text-decoration:none;padding:14px 24px;border-radius:8px;">Log in</a>
+</td></tr>
+<tr><td style="padding:16px 28px 0 28px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#726657;">If the button doesn’t work, paste this link into your browser:<br><a href="{{ .ConfirmationURL }}" style="color:#726657;word-break:break-all;">{{ .ConfirmationURL }}</a></td></tr>
+<tr><td style="padding:16px 28px 32px 28px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#726657;">If you didn’t ask for this, you can ignore this email.</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

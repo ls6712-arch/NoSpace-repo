@@ -28,6 +28,7 @@ import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
 import { Time } from "./ui/time";
 import { EmptyState } from "./StateViews";
+import { notificationText } from "../lib/text";
 
 /**
  * Notifications that describe what actually happened — "Reo accepted your Make
@@ -249,7 +250,7 @@ export function NotificationsMenu() {
                   <span className="flex items-start gap-3 px-4 py-2.5">
                     <Icon className="mt-0.5 size-4 shrink-0 text-[var(--violet-electric-bright)]" />
                     <span className="min-w-0">
-                      <span className="block text-small leading-snug">{g.body}</span>
+                      <span className="block text-small leading-snug">{notificationText(g.body)}</span>
                       <span className="block text-caption text-muted-foreground">
                         <Time value={g.createdAt} ago />
                       </span>
@@ -289,7 +290,7 @@ export function NotificationsMenu() {
 
           {!social.isShared && (
             <p className="border-t border-[var(--hairline)] px-4 py-2.5 text-caption leading-relaxed text-muted-foreground">
-              You’re not signed in, so requests can’t reach anyone else yet.
+              You’re not logged in, so requests can’t reach anyone else yet.
             </p>
           )}
         </div>

@@ -70,7 +70,7 @@ export function IsThisPartOfSomething({ post, onDone }: { post: Post; onDone: ()
         onKeyDown={(e) => e.key === "Enter" && next()}
         className="mt-2.5"
       />
-      <p className="mt-1.5 text-caption text-muted-foreground">Your next moments can go with it.</p>
+      <p className="mt-1.5 text-caption text-muted-foreground">Your next Moments can go with it.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Button variant="outline" onClick={notNow} disabled={creating}>
           Not now

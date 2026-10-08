@@ -99,7 +99,7 @@ export function NextSessionCard({
             <p className="mt-2 text-small text-muted-foreground">Not set yet.</p>
           )}
           <div className="mt-3 flex flex-wrap gap-2">
-            <Link to={`/pursuit/${project.id}/moment`}>
+            <Link to={`/create?pursuit=${project.id}`}>
               <Button variant="coral" size="sm">
                 <Plus className="size-3.5" />
                 Log a Moment

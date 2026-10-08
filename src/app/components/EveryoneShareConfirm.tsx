@@ -31,7 +31,7 @@ export function EveryoneShareConfirm({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-caption font-medium uppercase tracking-[0.06em] text-muted-foreground">
+      <p className="text-caption font-medium tracking-[0.06em] text-muted-foreground">
         What strangers will see
       </p>
       <div className="overflow-hidden rounded-card border border-border bg-card">
@@ -56,7 +56,6 @@ export function EveryoneShareConfirm({
         </div>
       </div>
       <HoldToShareButton onConfirm={onConfirm} disabled={disabled} />
-      <p className="text-center text-caption text-muted-foreground">Your reflection is never shared.</p>
     </div>
   );
 }

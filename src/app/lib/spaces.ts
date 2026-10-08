@@ -62,7 +62,7 @@ export type SpaceEventRow = {
 };
 
 async function call<T = null>(fn: string, args: Record<string, unknown>): Promise<{ data: T | null; error: string | null }> {
-  if (!supabase) return { data: null, error: "Not signed in." };
+  if (!supabase) return { data: null, error: "You’re not logged in." };
   const { data, error } = await supabase.rpc(fn, args);
   if (error) {
     console.warn(`[spaces] ${fn} failed:`, error);

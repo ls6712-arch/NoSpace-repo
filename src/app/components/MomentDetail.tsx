@@ -62,7 +62,7 @@ import { ImageWithFallback } from "./ImageWithFallback";
 
 /** The audience words, identical to the ones chosen in the Log flow. */
 const AUDIENCE: Record<string, { label: string; icon: typeof Globe2 }> = {
-  public: { label: "Everyone", icon: Globe2 },
+  public: { label: "Public", icon: Globe2 },
   followers: { label: "Followers", icon: UserRound },
 };
 
@@ -110,7 +110,6 @@ export function MomentDetail({
   const [sendToOpen, setSendToOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState("");
-  const [reflection, setReflection] = useState("");
   const [editHobbySlug, setEditHobbySlug] = useState("");
   const [editSubHobby, setEditSubHobby] = useState("");
   const [newMediaFile, setNewMediaFile] = useState<File | null>(null);
@@ -130,7 +129,6 @@ export function MomentDetail({
   useEffect(() => {
     if (!post) return;
     setCaption(post.caption);
-    setReflection(post.reflection ?? "");
     setEditHobbySlug(post.hobbySlug);
     setEditSubHobby(post.subHobby ?? "");
     setNewMediaFile(null);
@@ -188,7 +186,6 @@ export function MomentDetail({
         ? Boolean((await updatePrivateLogEntry(post.privateLogId!, { note: caption })).data)
         : await updatePost(post.id, {
             caption,
-            reflection,
             hobbySlug: editHobbySlug,
             subHobby: editSubHobby || undefined,
             ...(uploadedMediaPath ? { mediaPath: uploadedMediaPath } : {}),
@@ -250,7 +247,7 @@ export function MomentDetail({
 
         {/* Who posted it — this dialog can now open from feeds that mix
             authors (Corner, Discover, CategoryFeed, Pursuit), so it can't
-            assume "you already know whose page you're on" the way it
+            assume "you already know whose page you’re on" the way it
             could when every caller was your own Shelf or My Space. */}
         {!owned && (
           <div className="flex min-w-0 items-center gap-2.5">
@@ -320,13 +317,13 @@ export function MomentDetail({
 
             {/* The one real (cross-user) way pursuits.inspired_by_post_id
                 (sql/pursuits.sql) ever gets set to someone else's Moment —
-                PursuitDialog's own seedPost prop already existed and already
+                PursuitDialog’s own seedPost prop already existed and already
                 wired inspiredByPostId through, but until now nothing ever
-                called it with another person's post: Log.tsx's "Start a
-                Pursuit" only ever seeds from the Moment you're publishing
-                yourself, and MomentDetail's owned-only "Add to Pursuit"
-                action doesn't set inspiredByPostId at all. Without this,
-                My Space's "You Inspired" rail could never have a real row to
+                called it with another person’s post: Log.tsx’s "Start a
+                Pursuit" only ever seeds from the Moment you’re publishing
+                yourself, and MomentDetail’s owned-only "Add to Pursuit"
+                action doesn’t set inspiredByPostId at all. Without this,
+                My Space’s "You Inspired" rail could never have a real row to
                 show — this button is what actually produces one. */}
             {!owned && (
               <button
@@ -334,22 +331,22 @@ export function MomentDetail({
                 onClick={() => setInspiredDialogOpen(true)}
                 className="inline-flex min-h-11 items-center text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
-                Start a Pursuit — inspired by this
+                Start a Pursuit inspired by this
               </button>
             )}
 
             {/* Send to… — available whether or not you own it (sharing your
                 own Moment into a chat is just as ordinary as sharing
                 someone else's). The card that shows up on the other end
-                reloads it under THEIR permissions, not this viewer's — see
-                docs/communication-strategy.md's Phase 4 "Not available"
+                reloads it under THEIR permissions, not this viewer’s — see
+                docs/communication-strategy.md’s Phase 4 "Not available"
                 requirement and SharedContentCard.tsx. Not offered at all
                 for an "Only you" Moment (a real just_me post — a private-
                 log stand-in never reaches this row to begin with, see the
                 !post.isPrivateLog guard above): it's meant for nobody but
-                its owner, so there's nothing SharedContentCard could ever
+                its owner, so there’s nothing SharedContentCard could ever
                 load on the other end. The explanation lives in the
-                metadata block above, next to "Who sees this", since that's
+                metadata block above, next to "Who sees this", since that’s
                 the one place that reaches both kinds of "Only you"
                 Moment. */}
             {!isOnlyYou(post) && (
@@ -359,7 +356,7 @@ export function MomentDetail({
                 className="flex min-h-11 items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 <Send className="size-3" />
-                Send to…
+                Send to
               </button>
             )}
 
@@ -538,16 +535,6 @@ export function MomentDetail({
                 onChange={(e) => setCaption(e.target.value)}
               />
             </div>
-            <div>
-              <label htmlFor="m-reflection" className="mb-1.5 block text-caption text-muted-foreground">
-                Private reflection, only you ever see this
-              </label>
-              <Textarea
-                id="m-reflection"
-                value={reflection}
-                onChange={(e) => setReflection(e.target.value)}
-              />
-            </div>
             <div className="flex gap-2">
               <Button busy={saving} variant="coral" size="sm" onClick={save} disabled={saving}>
                 Save changes
@@ -573,9 +560,9 @@ export function MomentDetail({
             </dd>
           </div>
           {/* entryProject is local, per-browser data (see lib/journal.ts) —
-              it can only ever answer for the signed-in viewer's own
+              it can only ever answer for the signed-in viewer’s own
               Pursuits, never for whoever actually posted this Moment. On
-              someone else's Moment this always read "Not part of a
+              someone else’s Moment this always read "Not part of a
               Pursuit," even when it demonstrably was one, which
               contradicted the Pursuit info this page already shows
               correctly elsewhere (PublicProfile's own shared-Pursuits
@@ -598,17 +585,6 @@ export function MomentDetail({
             every "Only you" Moment, not just a real just_me post. */}
         {isOnlyYou(post) && (
           <p className="-mt-1 text-caption text-muted-foreground">Only you Moments can’t be shared.</p>
-        )}
-
-        {/* Owner-only: the note they wrote for themselves */}
-        {owned && !editing && post.reflection && (
-          <div className="rounded-card border border-[var(--hairline)] bg-card px-4 py-3">
-            <div className="mb-1.5 flex items-center gap-1.5 text-caption text-muted-foreground">
-              <Lock className="size-3" />
-              Private reflection, only you
-            </div>
-            <p className="whitespace-pre-line text-small leading-relaxed">{post.reflection}</p>
-          </div>
         )}
 
         {saveError && <p className="text-caption text-[var(--coral-text)]">{saveError}</p>}
@@ -637,7 +613,7 @@ export function MomentDetail({
             )}
             <Button variant="outline" size="sm" onClick={share}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? "Link copied" : "Share this moment"}
+              {copied ? "Link copied" : "Share this Moment"}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setConfirmDeleteOpen(true)}>
               <Trash2 className="size-3.5" />
@@ -652,7 +628,7 @@ export function MomentDetail({
               <>
                 <p className="text-caption text-muted-foreground">
                   You don’t have a Pursuit yet. Starting one from here files this
-                  moment as its first update.
+                  Moment as its first update.
                 </p>
                 <Button
                   variant="coral"
@@ -698,7 +674,7 @@ export function MomentDetail({
         open={confirmDeleteOpen}
         onOpenChange={setConfirmDeleteOpen}
         title="Delete this Moment?"
-        description="This can’t be undone — the photo, caption, and any thoughts on it are gone for good."
+        description="This can’t be undone. The photo, caption, and any thoughts on it are deleted."
         onConfirm={handleDelete}
       />
       <AddDetailsSheet post={post} open={detailsOpen} onOpenChange={setDetailsOpen} />

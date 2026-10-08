@@ -239,7 +239,7 @@ export function SpaceManageTab({
     if (data === "deleted") {
       window.location.hash = "#/discover";
     } else {
-      setNotice("Deletion requested — every other host needs to approve within 7 days.");
+      setNotice("Deletion requested. Every other host needs to approve within 7 days.");
       refetch();
     }
   };
@@ -257,7 +257,7 @@ export function SpaceManageTab({
     }
     if (data === "expired") setNotice("That request had already expired and is now cancelled.");
     else if (data === "cancelled") setNotice("The deletion request was cancelled.");
-    else if (data === "pending") setNotice("Your response is recorded — waiting on other hosts.");
+    else if (data === "pending") setNotice("Your response is recorded. Waiting on other hosts.");
     refetch();
   };
 
@@ -270,7 +270,7 @@ export function SpaceManageTab({
             {eligibleForHandoff ? (
               <>
                 <p className="mt-1 text-caption text-muted-foreground">
-                  You were here before it lost its host — you can step up.
+                  You were here before it lost its host. You can step up.
                 </p>
                 <Button busy={busy === "claim"} className="mt-3" variant="coral" size="sm" disabled={busy === "claim"} onClick={claimHosting}>
                   Claim hosting
@@ -418,7 +418,7 @@ export function SpaceManageTab({
           <h3 className="mb-2 text-small font-medium">Pending host invites</h3>
           <ul className="space-y-1">
             {invites.map((i) => (
-              <li key={i.id} className="text-caption text-muted-foreground">{i.displayName} — waiting on their response</li>
+              <li key={i.id} className="text-caption text-muted-foreground">{i.displayName}: waiting on their response</li>
             ))}
           </ul>
         </section>
@@ -463,7 +463,7 @@ export function SpaceManageTab({
           <div className="max-w-sm space-y-2">
             {members.filter((m) => m.role === "host" && m.status === "active").length <= 1 && (
               <>
-                <p className="text-caption text-muted-foreground">You’re the only host — type the Space’s name to delete it now.</p>
+                <p className="text-caption text-muted-foreground">You’re the only host. Type the Space’s name to delete it now.</p>
                 <Input value={deleteConfirmName} onChange={(e) => setDeleteConfirmName(e.target.value)} placeholder={space.name} />
               </>
             )}

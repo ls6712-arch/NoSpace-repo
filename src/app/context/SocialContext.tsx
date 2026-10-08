@@ -1417,7 +1417,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         // repeated Thoughts on different Moments can be told apart (and,
         // for the bell's own grouping, only ever merge with another
         // Thought on this SAME Moment). Never rewrites old rows' hrefs.
-        await notify(postOwnerId, "thought", `${myName} left a thought on your moment.`, `/moment/${postId}`);
+        await notify(postOwnerId, "thought", `${myName} left a thought on your Moment.`, `/moment/${postId}`);
       }
       refresh();
       return;

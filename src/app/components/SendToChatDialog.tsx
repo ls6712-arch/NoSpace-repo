@@ -69,11 +69,11 @@ export function SendToChatDialog({
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Send to…</DialogTitle>
+          <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Send to</DialogTitle>
         </DialogHeader>
         {chats.length === 0 ? (
           <p className="py-6 text-center text-caption text-muted-foreground">
-            No open chats yet — start one from someone’s profile first.
+            No open chats yet. Start one from someone’s profile first.
           </p>
         ) : (
           <ul className="max-h-72 space-y-1 overflow-y-auto">

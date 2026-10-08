@@ -26,7 +26,7 @@ function ComingSoonDialog({
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>{title}</DialogTitle>
           <DialogDescription>
-            This is coming soon and isn’t built yet — nothing happens if you select it.
+            This is coming soon and isn’t built yet. Nothing happens if you select it.
           </DialogDescription>
         </DialogHeader>
       </DialogContent>
@@ -41,7 +41,7 @@ export function PauseOrLeaveSection() {
 
   return (
     <section>
-      <SectionHeader n={7} eyebrow="PAUSE OR LEAVE" title="Pause or leave" />
+      <SectionHeader n={7} eyebrow="Pause or leave" title="Pause or leave" />
       <p className="mb-4 text-small text-muted-foreground">
         Step back for a while, or leave for good. Neither is built yet.
       </p>
@@ -57,7 +57,7 @@ export function PauseOrLeaveSection() {
           </Button>
         </SettingsRow>
         {user && (
-          <SettingsRow label="Log out" description="Sign out of this device.">
+          <SettingsRow label="Log out" description="Ends your session on this device.">
             <Button variant="outline" size="sm" onClick={() => void signOut()}>
               Log out
             </Button>
