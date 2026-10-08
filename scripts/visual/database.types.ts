@@ -935,7 +935,6 @@ export type Database = {
           paused_at: string | null
           show_this_corner: boolean
           tagline: string | null
-          terms_accepted_at: string | null
           theme_preference: string
           username: string
         }
@@ -959,7 +958,6 @@ export type Database = {
           paused_at?: string | null
           show_this_corner?: boolean
           tagline?: string | null
-          terms_accepted_at?: string | null
           theme_preference?: string
           username: string
         }
@@ -983,7 +981,6 @@ export type Database = {
           paused_at?: string | null
           show_this_corner?: boolean
           tagline?: string | null
-          terms_accepted_at?: string | null
           theme_preference?: string
           username?: string
         }
@@ -1740,6 +1737,24 @@ export type Database = {
           studio_capacity?: number | null
           studio_hourly_rate?: number | null
           studio_hours?: string | null
+        }
+        Relationships: []
+      }
+      terms_acceptances: {
+        Row: {
+          accepted_at: string
+          terms_version: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          terms_version: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          terms_version?: string
+          user_id?: string
         }
         Relationships: []
       }

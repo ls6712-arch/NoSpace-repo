@@ -44,7 +44,9 @@ async function existingAccount(browser: Awaited<ReturnType<typeof chromium.launc
   // An onboarded account from before the checkbox existed: nothing recorded,
   // and named after its email so the name prompt is waiting behind the Terms.
   const me = (fx.profiles as Array<Record<string, unknown>>).find((p) => p.id === ME)!;
-  me.terms_accepted_at = null; me.display_name = "maya";
+  me.display_name = "maya";
+  const acceptances = (fx as Record<string, unknown>).terms_acceptances as Array<Record<string, unknown>>;
+  (fx as Record<string, unknown>).terms_acceptances = acceptances.filter((a) => a.user_id !== ME);
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, colorScheme: "light", reducedMotion: "reduce", deviceScaleFactor: 2 });
   await installSupabaseMock(ctx, fx, TYPES);
   await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* blocked */ } }, seededSession());
@@ -78,10 +80,10 @@ async function existingAccount(browser: Awaited<ReturnType<typeof chromium.launc
   await cont.click(); await page.waitForTimeout(1200);
 
   check("accepting asks the database once", rpcBodies.length === 1);
-  check("the client sent no time (empty request body)", rpcBodies.every((b) => b === "" || b === "{}" || b === "null"));
+  check("the client sent only the version, no time", rpcBodies.every((b) => { try { return Object.keys(JSON.parse(b)).join() === "p_version"; } catch { return false; } }));
   check("the client wrote nothing to profiles itself", profileWrites.length === 0);
-  const stamped = (fx.profiles as Array<Record<string, unknown>>).find((p) => p.id === ME)!.terms_accepted_at;
-  check("the server side stamped the time", typeof stamped === "string");
+  const mine = ((fx as Record<string, unknown>).terms_acceptances as Array<Record<string, unknown>>).filter((a) => a.user_id === ME);
+  check("one record of the current version, stamped by the server side", mine.length === 1 && typeof mine[0].accepted_at === "string");
   check("the Terms prompt is gone", !(await box.isVisible().catch(() => false)));
   check("the name prompt follows, once", await page.getByText("Is this how you’d like to be known?").isVisible().catch(() => false));
   await page.screenshot({ path: path.join(OUT, "existing-account-after-accept.png") });
@@ -95,13 +97,26 @@ async function existingAccount(browser: Awaited<ReturnType<typeof chromium.launc
   await ctx.close();
 }
 
+async function acceptedAnOlderVersion(browser: Awaited<ReturnType<typeof chromium.launch>>, port: number) {
+  const fx = buildFixtures();
+  // Accepted before: but only an older version, so a new version asks again.
+  (fx as Record<string, unknown>).terms_acceptances = [{ user_id: ME, terms_version: "2026-01-01", accepted_at: "2026-01-01T00:00:00Z" }];
+  const ctx = await browser.newContext({ viewport: { width: W, height: H }, colorScheme: "light", reducedMotion: "reduce", deviceScaleFactor: 2 });
+  await installSupabaseMock(ctx, fx, TYPES);
+  await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* blocked */ } }, seededSession());
+  const page = await ctx.newPage();
+  await page.goto(`http://localhost:${port}/#/my-space`); await page.waitForTimeout(2500);
+  check("a record of only an older version asks again", await page.getByLabel(LABEL).isVisible().catch(() => false));
+  await ctx.close();
+}
+
 async function alreadyAccepted(browser: Awaited<ReturnType<typeof chromium.launch>>, port: number) {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, colorScheme: "light", reducedMotion: "reduce", deviceScaleFactor: 2 });
   await installSupabaseMock(ctx, buildFixtures(), TYPES);
   await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* blocked */ } }, seededSession());
   const page = await ctx.newPage();
   await page.goto(`http://localhost:${port}/#/my-space`); await page.waitForTimeout(2500);
-  check("an account with a recorded acceptance is never asked", !(await page.getByLabel(LABEL).isVisible().catch(() => false)));
+  check("an account with a record of the current version is never asked", !(await page.getByLabel(LABEL).isVisible().catch(() => false)));
   await ctx.close();
 }
 
@@ -111,7 +126,7 @@ const main = async () => {
   const dist = path.join(OUT, ".dist");
   build(dist);
   const srv = await serve(dist);
-  try { await existingAccount(browser, srv.port); await alreadyAccepted(browser, srv.port); }
+  try { await existingAccount(browser, srv.port); await acceptedAnOlderVersion(browser, srv.port); await alreadyAccepted(browser, srv.port); }
   catch (e) { check(`ran to the end (${String(e).split("\n")[0].slice(0, 100)})`, false); }
   srv.close(); fs.rmSync(dist, { recursive: true, force: true });
   await browser.close();

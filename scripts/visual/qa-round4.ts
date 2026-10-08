@@ -69,7 +69,7 @@ async function signup(browser: Awaited<ReturnType<typeof chromium.launch>>, port
 async function onboardingFallback(browser: Awaited<ReturnType<typeof chromium.launch>>, port: number) {
   const fx = buildFixtures();
   const me = (fx.profiles as Array<Record<string, unknown>>).find((p) => p.id === ME)!;
-  me.onboarding_completed = false; me.onboarding_completed_at = null; me.terms_accepted_at = null; me.display_name = "maya";
+  me.onboarding_completed = false; me.onboarding_completed_at = null; me.display_name = "maya"; (fx as Record<string, unknown>).terms_acceptances = [];
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, colorScheme: "light", reducedMotion: "reduce", deviceScaleFactor: 2 });
   await installSupabaseMock(ctx, fx, TYPES);
   await ctx.addInitScript((session) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", "light"); } catch { /* blocked */ } }, seededSession());

@@ -2,6 +2,7 @@
 // (database.types.ts) — a missing or renamed column is a compile error here,
 // not a silently empty screen. Times are relative to `now` so "starts in 3h"
 // and "this week" stay true whenever the harness runs.
+import fs from "node:fs";
 import type { Fixtures, Row } from "./postgrest.ts";
 
 export const ME = "11111111-1111-4111-8111-111111111111";
@@ -24,7 +25,7 @@ export function buildFixtures(now = new Date()): Fixtures {
     id, username, display_name, tagline, bio: null, avatar_url: null, access: "active", cover_post_id: null, cover_tagline: null,
     cover_title: null, created_at: ago(120), deletion_requested_at: null, discoverable: true, invite_allowance: 3, invited_by: null,
     is_admin: false, onboarding_completed: true, onboarding_completed_at: ago(119), paused_at: null, show_this_corner: true,
-    theme_preference: "system", terms_accepted_at: ago(119),
+    theme_preference: "system",
   });
   const profiles: Row<"profiles">[] = [
     person(ME, "maya", "Maya Okafor", "Making things slowly, on purpose"),
@@ -123,5 +124,10 @@ export function buildFixtures(now = new Date()): Fixtures {
   const profile_settings: Row<"profile_settings">[] = [];
   const app_config: Row<"app_config">[] = [{ key: "corner_min_moments_30d", value: 3, updated_at: ago(30) }, { key: "trademark_blocklist", value: [], updated_at: ago(30) }];
   const categories: Row<"categories">[] = [{ slug: "crafts-making", name: "Crafts & Making", description: null, examples: null, keywords: null, prompt: null, active: true, sort_order: 1, created_at: ago(200), updated_at: ago(200) }];
-  return { ...empties, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
+  // Everyone in the fixture has accepted the current Terms version, so the
+  // Terms prompt stays out of every other screen. The version is read from
+  // config.ts (which can't be imported here: it reads import.meta.env).
+  const termsVersion = fs.readFileSync(new URL("../../src/app/config.ts", import.meta.url), "utf8").match(/TERMS_VERSION = "([^"]+)"/)?.[1] ?? "";
+  const terms_acceptances = profiles.map((p) => ({ user_id: p.id, terms_version: termsVersion, accepted_at: ago(119) }));
+  return { ...empties, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
 }

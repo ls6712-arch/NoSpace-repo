@@ -37,6 +37,15 @@ export const extraConceptsEnabled = false;
 // or more Spaces are active.
 export const landingShowsSpaces = false;
 
+// The version of the Terms and Privacy Policy that people accept at sign-up.
+// It is the date that version took effect ("YYYY-MM-DD"), and it is the one
+// place it is written: the checkbox sends it, the database records it with its
+// own clock, and anyone with no record of THIS version is asked again. Change
+// it when the Terms or Privacy Policy change in a way people should accept
+// again, and when the real text replaces the draft. Never a future date: the
+// database refuses one more than a day ahead.
+export const TERMS_VERSION = "2026-10-08";
+
 // Onboarding's first step normally uses its own short "first Moment" form.
 // When this is on, it shows the one Log a Moment form instead (same fields,
 // same Undo, same Pursuit and Corner choices), so there is one form to
