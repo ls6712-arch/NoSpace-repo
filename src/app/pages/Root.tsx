@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
 import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
+import { NamePromptDialog } from "../components/NamePromptDialog";
 import { BottomTabBar } from "../components/BottomTabBar";
 import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
@@ -114,6 +115,7 @@ export function Root() {
       </main>
       <CartDrawer />
       <BadgeUnlockToast />
+      <NamePromptDialog />
       <BottomTabBar />
     </div>
   );
