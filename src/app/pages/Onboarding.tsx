@@ -133,12 +133,19 @@ export function Onboarding() {
     setNameError(null);
     setSavingName(true);
     try {
+      if (termsNeeded) {
+        const recorded = await recordTermsAcceptance();
+        if (recorded.error) {
+          setNameError(ERROR_LINE);
+          return;
+        }
+        setTermsNeeded(false);
+      }
       const { error } = await updateProfile({ display_name: checked.name });
       if (error) {
         setNameError(ERROR_LINE);
         return;
       }
-      if (termsNeeded && user) await recordTermsAcceptance(user.id);
       setTitle(checked.name);
       setTitleTouched(true);
       goToStep(1);

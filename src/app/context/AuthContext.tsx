@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const bootstrapProfile = async (userId: string, expectName?: string) => {
     const row = await loadProfile(userId, expectName);
     // Writes the time from the sign-up checkbox, if one is waiting.
-    void flushTermsAcceptance(userId);
+    void flushTermsAcceptance();
     if (row?.access !== "pending") return;
     const code = takeSavedInviteCode();
     if (!code) return;
