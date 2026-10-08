@@ -22,7 +22,7 @@ Against which database: project `eyzokuhhbyidvmuqfmwm`, the same one `src` point
 
 ## M2. Would today's production code break if the migrations ran first?
 
-Production runs the code on `main`. Four migrations were written: `20261017` (QA notifications), the reflection drop, `20261019` (merge Corners) and `20261020` (terms column and `accept_terms()`). **Update, round 5:** the reflection drop is no longer in PR #163. It is its own follow-up PR as `20261021000000_drop_reflections.sql` (renamed from `20261018` so its version is newer than every migration that will already be applied; an older version would be an out-of-order migration the Supabase tooling refuses or skips). The table below still explains why it must wait.
+Production runs the code on `main`. Migrations written across the rounds: `20261017` (QA notifications), `20261019` (merge Corners), `20261020` (the Terms acceptance table and `accept_terms(text)`) and `20261021` (hide follow requests) are in PR #163. **Update, rounds 5 and 6:** two migrations are separate draft PRs because the live client breaks if they run first: the reflection drop (`20261022000000_drop_reflections.sql`, [#164](https://github.com/ls6712-arch/NoSpace-repo/pull/164)) and the profile column privacy migration (`20261023000000_profiles_column_privacy.sql`, [#165](https://github.com/ls6712-arch/NoSpace-repo/pull/165)). Their versions are newer than everything in #163 on purpose: a version older than one already applied is an out-of-order migration that the Supabase tooling refuses or skips. **Merge #164 before #165** for the same reason (22 before 23).
 
 | Thing | Old client does | If the migration ran before the new code | Breaks? |
 |---|---|---|---|
@@ -44,21 +44,32 @@ So the reflection drop is the only migration that breaks the live client, which 
 
 ## Merge and deploy order
 
-PR #163 now carries only the migrations that are safe with the live client: `20261017`, `20261019` and `20261020`. The reflection drop is a separate draft PR, branched from #163's branch and based on it (it shows only its own two files). It stays a draft until #163 is live.
+PR #163 carries only migrations that are safe with the live client: `20261017`, `20261019`, `20261020` and `20261021`. The other two are draft PRs, branched from #163's branch and based on it (each shows only its own files), and stay drafts until #163 is live.
 
 1. **Check the toggle.** Supabase dashboard, Project Settings, Integrations, GitHub: note whether **Deploy to production** is on.
-2. **Legal text.** Replace the Terms and Privacy Policy placeholders (founder and lawyer text), so the production build can pass. Without this, no step after the merge reaches production.
-3. **Merge PR #163.** If the toggle is on, `20261017`, `20261019` and `20261020` apply. All three are safe with the old client, whether or not the deploy succeeds.
-4. **Production smoke test.** Wait for the Vercel production deployment to be Ready. On the live site: log in (an existing account is asked to accept the Terms once), log a Moment, open it and edit it, sign up in a private window (the checkbox).
-5. **Merge the reflection PR** (the draft: mark it ready, and if its base is still #163's branch, change the base to `main` first). It applies `20261021000000_drop_reflections.sql`. After that the table and column are gone and no client reads them.
-6. **Run the verification scripts**, read-only, and confirm no fixture rows were left behind: `profiles_terms_accepted_at_check.sql` (after step 3) and `drop_reflections_check.sql` (after step 5).
+2. **Legal text.** Replace the Terms and Privacy Policy placeholders (founder and lawyer text), so the production build can pass. Without this, no step after the merge reaches production. When the real text replaces the draft, also change `TERMS_VERSION` in `src/app/config.ts` to that day, so everyone who accepted the draft is asked again.
+3. **Merge PR #163.** If the toggle is on, `20261017`, `20261019`, `20261020` and `20261021` apply. All four are safe with the old client, whether or not the deploy succeeds.
+4. **Production smoke test.** Wait for the Vercel production deployment to be Ready. On the live site: log in (an existing account is asked to accept the Terms once), log a Moment, open and edit it, check an admin account still sees the admin pages, sign up in a private window (the checkbox).
+5. **Merge #164** (reflections): change its base to `main`, mark it ready, merge.
+6. **Merge #165** (profile column privacy), after #164. Change its base to `main`, mark it ready, merge. Then log in as an ordinary account and as an admin to confirm the profile still loads.
+7. **Run the verification scripts**, read-only, and confirm no fixture rows were left behind: `terms_acceptances_check.sql` and `hide_follow_requests_check.sql` (after step 3), `drop_reflections_check.sql` (after step 5), `profiles_column_privacy_check.sql` (after step 6).
 
-If the toggle is **off**, nothing applies on merge. Apply the migrations afterwards in the same order (`20261017`, `20261019`, `20261020`, then `20261021` after step 4) by whatever method you use for hand-run migrations.
+If the toggle is **off**, nothing applies on merge. Apply the migrations afterwards in version order (`20261017`, `19`, `20`, `21`, then `22` after step 4, then `23` after step 5) by whatever method you use for hand-run migrations.
 
-Why the reflection drop waits: if it ran before the new code is live, "Add details" and the Moment edit form in the old client report a failed save even though the edit saved. The new code never reads `post_reflections` or `posts.reflection`, so #163 does not need the drop.
+Why the two follow-ups wait:
 
-## Terms acceptance: how the time is recorded (round 5)
+- **Reflection drop.** If it ran before the new code is live, "Add details" and the Moment edit form in the old client report a failed save even though the edit saved. The new code never reads `post_reflections` or `posts.reflection`.
+- **Profile column privacy.** The old client selects `access`, `invited_by`, `invite_allowance`, `onboarding_completed(_at)` and `theme_preference` straight from `profiles`. Once those columns are hidden that read fails and **no profile loads for anyone**. The new code reads them through `my_profile_private()` when it exists and falls back to the old read when it does not.
 
-The client never sends a time. `public.accept_terms()` takes no arguments and stamps `now()` on the caller's own profile, once. `authenticated` has no UPDATE grant on `terms_accepted_at`, so a direct write of the column is refused (`insufficient_privilege`), and a second call changes nothing. Nothing backfills any existing row: accounts with no recorded acceptance are asked once on their next visit (new accounts in onboarding), and the database records the time when they accept. `profiles_terms_accepted_at_check.sql` covers each of these, including that a client-supplied time is refused and that the stored time equals the transaction's `now()`.
+## Terms acceptance: how it is recorded (rounds 5 and 6)
 
-Known limit: `profiles` is readable like the rest of the profile, so the acceptance time is visible wherever the profile row is. It is a low-risk timestamp, not a secret, but say if it should be hidden behind its own table.
+- **Own table.** `public.terms_acceptances (user_id, terms_version, accepted_at)`, primary key `(user_id, terms_version)`: one row per person per version. It is not on `profiles`, so it is not part of what other people can read.
+- **Server time, version only.** The client calls `public.accept_terms(p_version text)`. That is its only argument. The database stamps `now()`; there is no time argument and no direct write. `authenticated` can only `SELECT` from the table, with one policy that returns the caller's own rows. The function refuses (SQLSTATE 22023) any version that is not a real date or is more than a day in the future, and (28000) a caller with no session.
+- **One version.** `TERMS_VERSION` in `src/app/config.ts` is the only place the version is written: the checkbox sends it, and the prompt asks whoever has no row for it. A new version means no row, so the prompt shows again. Today it is `2026-10-08`.
+- **Who is asked.** A new account ticks the sign-up checkbox (email or Google); an account that reaches onboarding with no row for the current version is asked there; an existing account is asked once on its next visit in a prompt that cannot be closed (accept, or log out). Nothing is backfilled: no existing account gets a row until it accepts.
+- **Deletion.** The table cascades with the account (`auth.users`), like the other per-person tables. If acceptance records must outlive an account for legal reasons, that needs a decision and a different design.
+- **Safe on either side of the migration.** Before it runs, the client treats the missing function and table as "nothing to do" and blocks nobody.
+
+## Profile privacy (round 6)
+
+See `docs/qa/round-6/privacy-audit.md`. Two fixes: pending and declined follow requests are readable only by the two people in them (`20261021`, in #163), and the owner-only `profiles` columns, including `is_admin`, are readable only by their owner (`20261023`, #165).
