@@ -1,4 +1,4 @@
--- Verifies 20261021000000_drop_reflections.sql. Run AFTER that migration.
+-- Verifies 20261022000000_drop_reflections.sql. Run AFTER that migration.
 -- Not a migration: nothing here alters the schema.
 --
 -- One transaction, one do $$ ... $$ block, ends unconditionally in

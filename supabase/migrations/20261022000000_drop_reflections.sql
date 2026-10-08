@@ -9,7 +9,7 @@
 -- first, editing a Moment would save but report a failure, and a reflection
 -- typed into a new Moment would be silently lost.
 --
--- Its own version (20261021...) is newer than 20261020 on purpose: a version
+-- Its own version (20261022...) is newer than every migration in #163 (the newest is 20261021) on purpose: a version
 -- older than one already applied is an out-of-order migration that the
 -- Supabase tooling refuses or skips.
 -- NOT YET RUN on the live project.
