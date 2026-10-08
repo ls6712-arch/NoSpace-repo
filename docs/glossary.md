@@ -77,6 +77,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Shelf | Your profile page |
 | Cover | Profile cover area |
 | Tell your story | Bio |
+| What should people call you? / This is how your name shows on your Shelf. | Onboarding name step: required display name, with a live preview under "Your Shelf" |
 | Moments logged | Headline stat |
 | Milestones | Private badges, shared one at a time |
 | Followers / Following | People connections |

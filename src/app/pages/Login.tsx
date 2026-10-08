@@ -7,6 +7,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { APP_NAME } from "../config";
 import { OFFLINE_LINE } from "../lib/stateCopy";
+import { DISPLAY_NAME_MAX, validateDisplayName } from "../lib/displayName";
 
 export function Login() {
   const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
@@ -48,8 +49,9 @@ export function Login() {
     if (password.length < 8) {
       return "Your password needs at least 8 characters.";
     }
-    if (mode === "signup" && !displayName.trim()) {
-      return "What should people call you?";
+    if (mode === "signup") {
+      const checked = validateDisplayName(displayName);
+      if (!checked.ok) return checked.error;
     }
     return null;
   };
@@ -210,6 +212,8 @@ export function Login() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="What should we call you?"
+                    maxLength={DISPLAY_NAME_MAX}
+                    autoComplete="name"
                     required
                   />
                 </div>

@@ -6,10 +6,8 @@ import { AvatarPicker } from "../AvatarPicker";
 import { SettingsPanel } from "./SettingsRow";
 import { EditableTextRow } from "./EditableTextRow";
 import { friendlyError } from "../../lib/friendlyError";
+import { nameDismissKey } from "../../lib/displayName";
 
-function nameDismissKey(userId: string) {
-  return `sushii-name-prompt-dismissed-${userId}`;
-}
 
 /** A signup with the email-prefix bug (fixed on this branch, but existing
  * accounts created before the fix still have it) ended up named after
