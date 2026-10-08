@@ -52,7 +52,8 @@ PR #163 carries only migrations that are safe with the live client: `20261017`, 
 4. **Production smoke test.** Wait for the Vercel production deployment to be Ready. On the live site: log in (an existing account is asked to accept the Terms once), log a Moment, open and edit it, check an admin account still sees the admin pages, sign up in a private window (the checkbox).
 5. **Merge #164** (reflections): change its base to `main`, mark it ready, merge.
 6. **Merge #165** (profile column privacy), after #164. Change its base to `main`, mark it ready, merge. Then log in as an ordinary account and as an admin to confirm the profile still loads.
-7. **Run the verification scripts**, read-only, and confirm no fixture rows were left behind: `terms_acceptances_check.sql` and `hide_follow_requests_check.sql` (after step 3), `drop_reflections_check.sql` (after step 5), `profiles_column_privacy_check.sql` (after step 6).
+7. **Run the verification scripts**, read-only, and confirm no fixture rows were left behind: `terms_acceptances_check.sql`, `hide_follow_requests_check.sql` and `merge_corners_check.sql` (after step 4, once the production deployment is Ready), `drop_reflections_check.sql` (after step 5), `profiles_column_privacy_check.sql` (after step 6).
+8. **Run `merge_corners_check.sql` again a day later.** It creates nothing and changes nothing. A FAIL then is not necessarily the migration: the Food photography Corner is still in the picker of any old browser tab, and a public Moment posted from one re-creates the Corner row. Reload any open tab, and re-run the migration's statements (they are idempotent) if it does.
 
 If the toggle is **off**, nothing applies on merge. Apply the migrations afterwards in version order (`20261017`, `19`, `20`, `21`, then `22` after step 4, then `23` after step 5) by whatever method you use for hand-run migrations.
 
