@@ -43,6 +43,13 @@ describe("copy rules", () => {
     expect(show(hits)).toEqual([]);
   });
 
+  // The two named documents keep their capitals (style guide, "Proper names").
+  it("writes Terms and Privacy Policy as proper names", () => {
+    const wrong = /\b[Pp]rivacy policy\b|\b[Tt]erms of [sS]ervice\b/;
+    const hits = strings.filter((s) => s.file.startsWith("src/") && wrong.test(s.text));
+    expect(show(hits)).toEqual([]);
+  });
+
   // G6: counts go through plural() so 1 and 2 are always right.
   it("builds no plurals by hand", () => {
     const hits = strings.filter(

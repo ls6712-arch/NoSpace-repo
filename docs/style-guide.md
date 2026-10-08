@@ -19,6 +19,14 @@ things and are never labeled as each other. A broader group a Corner sits in
 (the old "Category") is internal and never shown. A Pursuit shows its specific
 Corner ("Badminton"), not that group.
 
+### Proper names that keep their capitals
+
+Two documents are named, not described, so they keep their capitals mid-sentence
+and in every label: **Terms** and **Privacy Policy** ("agree to the Terms and
+Privacy Policy", footer links, page titles). Never "terms of service" or
+"Privacy policy". Everything else follows the sentence case rule. These two are
+not product nouns and are not extended to other documents without asking.
+
 ## Rules
 
 ### Punctuation

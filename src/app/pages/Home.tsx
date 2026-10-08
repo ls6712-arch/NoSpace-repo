@@ -295,7 +295,7 @@ export function Home() {
           )}
           <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-small text-muted-foreground">
             <Link to="/terms" className="hover:text-foreground">Terms</Link>
-            <Link to="/privacy-policy" className="hover:text-foreground">Privacy policy</Link>
+            <Link to="/privacy-policy" className="hover:text-foreground">Privacy Policy</Link>
             {/* TODO(landing page spec §2.7, §10.5): placeholder address —
                 needs a real contact email before launch. */}
             <a href="mailto:hello@example.com" className="hover:text-foreground">Contact</a>

@@ -80,7 +80,8 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | What should people call you? / This is how your name shows on your Shelf. | Onboarding name step: required display name, with a live preview under "Your Shelf" |
 | Moments logged | Headline stat |
 | Is this how you’d like to be known? / Save name | One-time prompt for accounts named after their email; saving unchanged confirms the name |
-| I’m 16 or older and agree to the Terms and Privacy Policy | Required sign-up checkbox (email and Google). Both documents are linked. Shown again once in onboarding for an account with no recorded acceptance |
+| I’m 16 or older and agree to the Terms and Privacy Policy | Required sign-up checkbox (email and Google). Both documents are linked. Shown once more, with a Continue button, to any account with no recorded acceptance: in onboarding for a new account, as a prompt that can't be closed for an existing one (Log out is the only other way out) |
+| Terms and Privacy Policy | Title of that one-time prompt for existing accounts |
 | Milestones | Private badges, shared one at a time |
 | Followers / Following | People connections |
 
@@ -120,4 +121,4 @@ The page follows the locked narrative: hero, How it works, Corners, Pursuits, fr
 | Pick a Corner for every Moment. | Corners section heading |
 | Show what you're working toward. | Pursuits section heading |
 | See what your friends are making. | Friends and Spaces section heading |
-| Terms / Privacy policy / Contact | Footer links and the waitlist form's consent line |
+| Terms / Privacy Policy / Contact | Footer links and the waitlist form's consent line |

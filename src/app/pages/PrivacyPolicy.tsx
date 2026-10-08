@@ -10,10 +10,11 @@ import { APP_NAME } from "../config";
 
 export function PrivacyPolicy() {
   return (
-    <LegalPage title="Privacy policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
+    <LegalPage title="Privacy Policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
       {/* TODO(privacy: remove after reflection data deleted): drop the
-          "private reflections" sentence once 20261018000000_drop_reflections.sql
-          has run on the live project. */}
+          "private reflections" sentence once the drop-reflections migration
+          (20261021000000_drop_reflections.sql, its own follow-up PR) has run on
+          the live project. */}
       <h2>What we collect</h2>
       <p>
         Your email, display name, and password (or your Google account, if you log in
