@@ -29,9 +29,9 @@ import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { useSettings } from "../context/SettingsContext";
 import { useRewards } from "../context/RewardsContext";
-import { addProgress, startProject, useJournal } from "../lib/journal";
+import { addProgress, removeProgress, startProject, useJournal } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
-import { attachPostToPursuit, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
+import { attachPostToPursuit, deleteRemoteProgress, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
 import { formatAmount, hasMeasure, stepFor, summarize, targetText, unitFor } from "../lib/pursuitProgress";
 import { AmountStepper, SoftPanel, Toggle } from "../components/pursuit/ui";
 import { uploadMomentFile } from "../lib/momentMedia";
@@ -222,11 +222,11 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
 
 export function Log() {
   const [searchParams] = useSearchParams();
-  const { addPost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
+  const { addPost, deletePost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const { defaultVisibility, defaultVisibilityLoaded } = useSettings();
   const rewards = useRewards();
-  const { add: addPrivateLog } = usePrivateLogs();
+  const { add: addPrivateLog, remove: removePrivateLog } = usePrivateLogs();
   const journal = useJournal();
 
   // "Add progress" on a Pursuit links here with ?pursuit=<id> — resolve it
@@ -369,6 +369,15 @@ export function Log() {
   // layout morph into its Shelf-grid styling — see WorkGrid.tsx, which
   // tracks the same layoutId for the real tile.
   const [savedPostId, setSavedPostId] = useState<number | null>(null);
+  // What Undo takes back, whichever way in the Moment was saved: the post or
+  // private log itself, plus the Pursuit amount logged with it, if any.
+  const [undoTarget, setUndoTarget] = useState<null | {
+    postId?: number;
+    logId?: number;
+    progressId?: string;
+  }>(null);
+  const [undoing, setUndoing] = useState(false);
+  const [undoError, setUndoError] = useState<string | null>(null);
   // Two stages on the "Saved." screen: the big composer-style preview,
   // then — a beat later — the same box morphing (via layout/layoutId) into
   // the small square the Shelf grid actually shows it as. Reduced motion
@@ -809,7 +818,10 @@ export function Log() {
       return;
     }
     setPrivateSaveError(null);
+    lastProgressId.current = undefined;
     setSavedProgressLine(recordProgress(undefined, result.data.id, note));
+    setUndoTarget({ logId: result.data.id, progressId: lastProgressId.current });
+    setUndoError(null);
 
     // Quiet Milestones count every real Moment, private ones included — this
     // is the only recording call a private log ever reaches, since it never
@@ -828,6 +840,7 @@ export function Log() {
 
   /** Logs the amount toward the chosen Pursuit's measure and returns the line
    * the saved screen shows ("+1 painting · 3 of 5 paintings"). */
+  const lastProgressId = useRef<string | undefined>(undefined);
   const recordProgress = (postId?: number, logId?: number, note?: string): string | null => {
     if (!selectedProject || !selectedMeasure || loggedAmount <= 0) return null;
     const entry = addProgress({
@@ -839,6 +852,7 @@ export function Log() {
       note: note || undefined,
     });
     if (user) void mirrorProgress(user.id, entry);
+    lastProgressId.current = entry.id;
     const mine = (journal.progress ?? []).filter((e) => e.projectId === selectedProject.id);
     const sum = summarize(selectedMeasure, [...mine, entry]);
     return `+${formatAmount(loggedAmount)} ${unitFor(selectedMeasure, loggedAmount)} · ${formatAmount(sum.current)} of ${targetText(selectedMeasure)}`;
@@ -935,7 +949,10 @@ export function Log() {
       if (initialSpaceId && supabase) {
         void supabase.from("space_moments").insert({ space_id: initialSpaceId, post_id: entry.id });
       }
+      lastProgressId.current = undefined;
       setSavedProgressLine(recordProgress(entry.id, undefined, typedCaption));
+      setUndoTarget({ postId: entry.id, progressId: lastProgressId.current });
+      setUndoError(null);
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
       setSavedPostId(entry.id);
@@ -947,7 +964,35 @@ export function Log() {
     }
   };
 
+  /** Takes back the Moment just saved (and any amount logged with it), then
+   * returns to the form with everything still filled in. */
+  const undoSave = async () => {
+    if (!undoTarget || undoing) return;
+    setUndoing(true);
+    setUndoError(null);
+    try {
+      if (undoTarget.postId !== undefined) await deletePost(undoTarget.postId);
+      else if (undoTarget.logId !== undefined) await removePrivateLog(undoTarget.logId);
+      if (undoTarget.progressId) {
+        removeProgress(undoTarget.progressId);
+        if (user) void deleteRemoteProgress(undoTarget.progressId);
+      }
+      setUndoTarget(null);
+      setSavedPostId(null);
+      setSavedAs(null);
+      setSavedProgressLine(null);
+      setSavedTileSettled(false);
+      setScreen("caption");
+    } catch {
+      setUndoError(ERROR_LINE);
+    } finally {
+      setUndoing(false);
+    }
+  };
+
   const reset = () => {
+    setUndoTarget(null);
+    setUndoError(null);
     clearMediaError();
     clearSaveError();
     setPrivateSaveError(null);
@@ -1280,6 +1325,23 @@ export function Log() {
             <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
               {mediaError}
             </p>
+          )}
+
+          {undoTarget && !anySaveError && (
+            <div
+              role="status"
+              className="fixed inset-x-4 bottom-20 z-50 mx-auto flex h-12 max-w-sm items-center justify-between rounded-control border border-border bg-card px-4 text-small shadow-lg"
+            >
+              <span>{undoError ?? "Saved."}</span>
+              <button
+                type="button"
+                disabled={undoing}
+                onClick={() => void undoSave()}
+                className="min-h-11 px-2 text-[var(--coral-text)] hover:opacity-80 disabled:opacity-50"
+              >
+                Undo
+              </button>
+            </div>
           )}
 
           <div className="space-y-2">
