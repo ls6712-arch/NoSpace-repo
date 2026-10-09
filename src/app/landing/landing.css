@@ -1,0 +1,314 @@
+/* Signed-out landing page. Plain CSS, scoped under .lp. Colors are the page's
+   own warm palette on purpose: the page looks the same in light and dark mode,
+   because the gradient behind it does. */
+.lp {
+  --lp-gap: 72px;
+  --lp-nav-h: 64px;
+  --lp-phone-w: clamp(240px, min(34vw, 33svh), 380px);
+  --lp-lap: 0.34;
+  --lp-font-heading: 'Bricolage Grotesque', 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  position: relative;
+  color: var(--lp-ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.55;
+  overflow-x: clip;
+}
+@media (min-width: 768px) {
+  .lp { --lp-gap: 120px; font-size: 20px; }
+}
+
+/* The page's one gradient. Fixed behind everything: the hero and the invite
+   section are see-through, every section between has its own warm surface. */
+.lp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--lp-base);
+  pointer-events: none;
+}
+.lp-backdrop-img,
+.lp-backdrop-live {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.lp-backdrop-img { object-fit: cover; }
+.lp-backdrop-live { opacity: 0; transition: opacity var(--lp-fade) var(--ease-standard); }
+.lp-backdrop-live.is-ready { opacity: 1; }
+
+.lp-body { position: relative; z-index: 1; }
+
+/* Nav: frosted glass. The fill is semi-opaque on its own, so a browser without
+   backdrop-filter still shows a readable bar. */
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--lp-nav-h);
+  margin-bottom: calc(var(--lp-nav-h) * -1);
+  background: var(--lp-nav-fill);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid var(--lp-nav-line);
+}
+.lp-nav-inner {
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+@media (min-width: 768px) { .lp-nav-inner { padding: 0 32px; } }
+.lp-logo {
+  font-family: var(--lp-font-heading);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  color: var(--lp-ink);
+  text-decoration: none;
+}
+
+.lp-nav-actions { display: flex; align-items: center; gap: 14px; }
+.lp-login {
+  color: var(--lp-ink);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 10px 4px;
+}
+.lp-login:focus-visible { outline: 3px solid var(--lp-ink); outline-offset: 3px; }
+@media (min-width: 768px) { .lp-login { font-size: 16px; } .lp-nav-actions { gap: 24px; } }
+@media (max-width: 380px) { .lp-nav-actions .lp-btn { padding: 0 14px; font-size: 15px; } }
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lp-cta);
+  color: var(--lp-cta-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+.lp-btn:hover { filter: brightness(1.08); }
+.lp-btn:active { transform: scale(0.98); }
+.lp-btn:focus-visible,
+.lp-logo:focus-visible,
+.lp-footer a:focus-visible,
+.lp-shelf:focus-visible { outline: 3px solid var(--lp-ink); outline-offset: 3px; }
+.lp-btn-lg { min-height: 54px; padding: 0 32px; font-size: 18px; }
+
+/* Shared type */
+.lp-h2 {
+  margin: 0 0 20px;
+  font-family: var(--lp-font-heading);
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.lp-copy { margin: 0 auto; max-width: 680px; }
+.lp-center { text-align: center; }
+.lp-section { padding: calc(var(--lp-gap) / 2) 20px; }
+@media (min-width: 768px) { .lp-section { padding-left: 32px; padding-right: 32px; } }
+.lp-wide { max-width: 1200px; margin: 0 auto; }
+.lp-surface {
+  background: linear-gradient(180deg, var(--lp-cream) 0%, var(--lp-blush) 100%);
+}
+.lp-surface-alt {
+  background: linear-gradient(180deg, var(--lp-blush) 0%, var(--lp-rose) 55%, var(--lp-cream) 100%);
+}
+
+/* 1. Hero */
+.lp-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--lp-nav-h) + 40px) 20px 0;
+  text-align: center;
+}
+.lp-hero-text { max-width: 1100px; }
+.lp-hero h1 {
+  margin: 0 0 20px;
+  font-family: var(--lp-font-heading);
+  font-weight: 800;
+  font-size: clamp(48px, 8vw, 112px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.lp-hero-sub { margin: 0 auto 28px; max-width: 680px; color: var(--lp-ink); }
+.lp-hero-phone {
+  margin-top: auto;
+  padding-top: 40px;
+  margin-bottom: calc(var(--lp-phone-w) * 2.2 * var(--lp-lap) * -1);
+  position: relative;
+  z-index: 2;
+}
+
+/* 2. The line */
+.lp-line {
+  padding-top: calc(var(--lp-phone-w) * 2.2 * var(--lp-lap) + var(--lp-gap) / 2);
+  padding-bottom: calc(var(--lp-gap) / 2);
+}
+.lp-line p {
+  margin: 0 auto;
+  max-width: 1000px;
+  font-family: var(--lp-font-heading);
+  font-weight: 700;
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.lp-line-no-phone { padding-top: calc(var(--lp-gap) / 2); }
+
+/* Phone frame: one style, used everywhere. */
+.lp-phone {
+  --w: var(--lp-phone-w);
+  position: relative;
+  width: var(--w);
+  margin: 0 auto;
+  padding: calc(var(--w) * 0.03);
+  background: var(--lp-frame);
+  border-radius: calc(var(--w) * 0.15);
+  box-shadow: 0 24px 60px var(--lp-shadow-lg), 0 6px 16px var(--lp-shadow-md);
+}
+.lp-phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: calc(var(--w) * 0.12);
+  background: var(--lp-cream);
+}
+.lp-phone-md { --lp-phone-w: min(300px, 78vw); }
+
+/* 3. Steps */
+.lp-steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 56px;
+  margin-top: 48px;
+}
+@media (min-width: 900px) {
+  .lp-steps { grid-template-columns: repeat(3, 1fr); gap: 40px; }
+}
+.lp-step { text-align: center; }
+.lp-step-label {
+  margin: 28px 0 8px;
+  font-family: var(--lp-font-heading);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+.lp-step p { margin: 0 auto; max-width: 340px; font-size: 18px; }
+
+/* 5 and 6 */
+.lp-split { display: grid; gap: 40px; align-items: center; }
+@media (min-width: 900px) {
+  .lp-split { grid-template-columns: 1fr 1fr; gap: 80px; }
+  .lp-split-flip .lp-split-text { order: 2; }
+}
+.lp-split-text .lp-h2 { margin-bottom: 16px; }
+.lp-split-text p { margin: 0; max-width: 520px; }
+@media (max-width: 899px) { .lp-split-text { text-align: center; } .lp-split-text p { margin: 0 auto; } }
+
+/* 7. Shelves */
+.lp-shelves {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 4px 4px 20px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.lp-shelf {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+  display: block;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--lp-white);
+  color: var(--lp-ink);
+  text-decoration: none;
+  box-shadow: 0 10px 28px var(--lp-shadow-sm);
+}
+.lp-shelf img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.lp-shelf-text { padding: 14px 16px 18px; font-size: 16px; line-height: 1.35; }
+.lp-shelf-name { font-weight: 700; }
+
+/* 8. Invite */
+.lp-invite { padding-bottom: calc(var(--lp-gap) / 2 + 16px); }
+.lp-invite-card {
+  max-width: 440px;
+  margin: 32px auto 0;
+  padding: 24px;
+  text-align: left;
+  border-radius: 28px;
+  background: var(--lp-card-fill);
+  box-shadow: 0 16px 40px var(--lp-shadow-md);
+}
+
+/* 9. Footer */
+.lp-footer {
+  padding: 32px 20px 40px;
+  background: var(--lp-cream);
+  text-align: center;
+}
+.lp-footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
+.lp-footer a { color: var(--lp-ink); font-size: 16px; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Scroll reveal: fade and rise, under 400ms. */
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
+}
+.lp-reveal.is-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
+  .lp-reveal { opacity: 1; transform: none; }
+}
+
+/* Hero, two columns from 1024px: text left, phone right, both centered in the
+   screen. Below that the stacked layout above applies. */
+@media (min-width: 1024px) {
+  .lp {
+    --lp-lap: 0;
+    --lp-phone-w: clamp(360px, min(400px, calc((100svh - var(--lp-nav-h) - 48px) / 2.2)), 400px);
+  }
+  .lp-hero {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 64px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: calc(var(--lp-nav-h) + 24px) 32px 24px;
+    text-align: left;
+  }
+  .lp-hero-text { flex: 1 1 0; max-width: 600px; }
+  .lp-hero h1 { font-size: clamp(52px, 5.6vw, 84px); }
+  .lp-hero-sub { margin-left: 0; }
+  .lp-hero-phone { margin: 0; padding: 0; flex: 0 0 auto; }
+  .lp-hero-solo { text-align: center; }
+  .lp-hero-solo .lp-hero-text { flex: 0 1 auto; max-width: 900px; }
+  .lp-hero-solo h1 { font-size: clamp(52px, 6.4vw, 96px); }
+  .lp-hero-solo .lp-hero-sub { margin-left: auto; }
+}

@@ -2,7 +2,31 @@ import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import fs from 'fs'
 import { findLaunchPlaceholders } from './scripts/launchPlaceholders'
+
+// Lists the screen images in public/landing/ as a virtual module, so the
+// landing page knows at build time which sections have their screenshot and
+// hides the ones that don't. See public/landing/README.md.
+function landingImages() {
+  const id = 'virtual:landing-images'
+  const resolved = '\0' + id
+  const dir = path.resolve(__dirname, 'public/landing')
+  return {
+    name: 'landing-images',
+    resolveId(source: string) {
+      return source === id ? resolved : null
+    },
+    load(loadId: string) {
+      if (loadId !== resolved) return null
+      const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /\.webp$/.test(f)).sort() : []
+      return `export const landingImages = ${JSON.stringify(files)}`
+    },
+    configureServer(server: { watcher: { add: (p: string) => void } }) {
+      server.watcher.add(dir)
+    },
+  }
+}
 
 // Fails the production build while placeholder text (the example.com contact
 // address, "[PLACEHOLDER" legal lines) is still in the source. Preview builds
@@ -23,7 +47,7 @@ function launchPlaceholderCheck() {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), launchPlaceholderCheck()],
+  plugins: [react(), tailwindcss(), launchPlaceholderCheck(), landingImages()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

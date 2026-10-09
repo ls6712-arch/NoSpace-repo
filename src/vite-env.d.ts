@@ -10,3 +10,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare module "virtual:landing-images" {
+  /** File names found in public/landing/ at build time. */
+  export const landingImages: string[];
+}

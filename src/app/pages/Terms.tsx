@@ -1,4 +1,4 @@
-import { LegalPage } from "../components/LegalPage";
+import { ContactEmail, LegalPage } from "../components/LegalPage";
 import { APP_NAME } from "../config";
 
 // DRAFT FOR REVIEW — landing page spec §2.5, §10.5. Needs a lawyer's read
@@ -48,9 +48,7 @@ export function Terms() {
       <h2>Questions</h2>
       <p>
         Contact us at{" "}
-        <a href="mailto:hello@example.com" className="underline hover:text-foreground">
-          [PLACEHOLDER contact email]
-        </a>
+        <ContactEmail />
         . {APP_NAME} is operated by [PLACEHOLDER legal name/entity]. These terms are
         governed by the laws of [PLACEHOLDER governing law/jurisdiction].
       </p>
