@@ -72,6 +72,19 @@
   text-decoration: none;
 }
 
+.lp-nav-actions { display: flex; align-items: center; gap: 14px; }
+.lp-login {
+  color: var(--lp-ink);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 10px 4px;
+}
+.lp-login:focus-visible { outline: 3px solid var(--lp-ink); outline-offset: 3px; }
+@media (min-width: 768px) { .lp-login { font-size: 16px; } .lp-nav-actions { gap: 24px; } }
+@media (max-width: 380px) { .lp-nav-actions .lp-btn { padding: 0 14px; font-size: 15px; } }
+
 .lp-btn {
   display: inline-flex;
   align-items: center;
@@ -271,4 +284,31 @@
 @media (prefers-reduced-motion: reduce) {
   .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
   .lp-reveal { opacity: 1; transform: none; }
+}
+
+/* Hero, two columns from 1024px: text left, phone right, both centered in the
+   screen. Below that the stacked layout above applies. */
+@media (min-width: 1024px) {
+  .lp {
+    --lp-lap: 0;
+    --lp-phone-w: clamp(360px, min(400px, calc((100svh - var(--lp-nav-h) - 48px) / 2.2)), 400px);
+  }
+  .lp-hero {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 64px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: calc(var(--lp-nav-h) + 24px) 32px 24px;
+    text-align: left;
+  }
+  .lp-hero-text { flex: 1 1 0; max-width: 600px; }
+  .lp-hero h1 { font-size: clamp(52px, 5.6vw, 84px); }
+  .lp-hero-sub { margin-left: 0; }
+  .lp-hero-phone { margin: 0; padding: 0; flex: 0 0 auto; }
+  .lp-hero-solo { text-align: center; }
+  .lp-hero-solo .lp-hero-text { flex: 0 1 auto; max-width: 900px; }
+  .lp-hero-solo h1 { font-size: clamp(52px, 6.4vw, 96px); }
+  .lp-hero-solo .lp-hero-sub { margin-left: auto; }
 }

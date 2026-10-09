@@ -48,7 +48,12 @@ function Nav() {
         <Link to="/" className="lp-logo" aria-label={APP_NAME}>
           {APP_NAME}
         </Link>
-        <RequestInviteButton />
+        <div className="lp-nav-actions">
+          <Link to="/login" className="lp-login">
+            {COPY.logIn}
+          </Link>
+          <RequestInviteButton />
+        </div>
       </div>
     </header>
   );
@@ -186,7 +191,7 @@ export function Landing() {
       <div className="lp-body">
         <Nav />
         <main>
-          <section ref={heroRef} className="lp-hero">
+          <section ref={heroRef} className={`lp-hero ${heroShot ? "" : "lp-hero-solo"}`}>
             <div className="lp-hero-text">
               <h1>{COPY.heroHeadline}</h1>
               <p className="lp-hero-sub">{COPY.heroSub}</p>

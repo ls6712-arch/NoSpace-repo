@@ -3,6 +3,7 @@ import { APP_NAME } from "../config";
 /** Every line on the signed-out landing page, in one place. */
 export const LANDING_COPY = {
   requestInvite: "Request an invite",
+  logIn: "Log in",
   heroHeadline: "Welcome to the rest of you.",
   heroSub: "Save what you want to try, go do it, and share who you’re becoming.",
   line: `LinkedIn has your job. Instagram has your highlights. ${APP_NAME} has the rest of you.`,

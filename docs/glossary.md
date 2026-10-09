@@ -118,6 +118,7 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 | Term | Meaning |
 |---|---|
 | Welcome to the rest of you. | Hero headline |
+| Log in | Text link in the landing nav, to /login |
 | Request an invite | Every landing button and the waitlist form button, all going to the waitlist form |
 | Save it. Try it. Share it. | Section heading and the three step labels (website only) |
 | Your friends can come along. | Friends section heading. The button it names is "Count me in" |
