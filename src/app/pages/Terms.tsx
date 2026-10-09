@@ -2,13 +2,12 @@ import { ContactEmail, LegalPage } from "../components/LegalPage";
 import { APP_NAME } from "../config";
 
 // DRAFT FOR REVIEW — landing page spec §2.5, §10.5. Needs a lawyer's read
-// before launch. Placeholders still to fill in: the legal name/entity
-// operating Soosh, a real contact email, and the governing law/jurisdiction
-// (both marked [PLACEHOLDER] below).
+// before launch. The operator, contact email, governing law and last-updated
+// date are filled in; the production build refuses to ship any placeholder.
 
 export function Terms() {
   return (
-    <LegalPage title="Terms" lastUpdated="[PLACEHOLDER: draft, not yet published]">
+    <LegalPage title="Terms" lastUpdated="October 9, 2026">
       <h2>Who can use {APP_NAME}</h2>
       <p>
         You must be at least 16 years old to create an account. By signing up, you’re
@@ -49,8 +48,8 @@ export function Terms() {
       <p>
         Contact us at{" "}
         <ContactEmail />
-        . {APP_NAME} is operated by [PLACEHOLDER legal name/entity]. These terms are
-        governed by the laws of [PLACEHOLDER governing law/jurisdiction].
+        . {APP_NAME} is operated by Sushmitha Lekkala, an individual. These terms are
+        governed by the laws of the State of New Jersey, United States.
       </p>
     </LegalPage>
   );

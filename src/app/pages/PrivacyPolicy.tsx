@@ -2,26 +2,21 @@ import { ContactEmail, LegalPage } from "../components/LegalPage";
 import { APP_NAME } from "../config";
 
 // DRAFT FOR REVIEW — landing page spec §2.5, §10.5. Needs a lawyer's read
-// before launch. Placeholders still to fill in: the legal name/entity
-// operating Soosh, a real contact email, and the governing law/jurisdiction
-// (both marked [PLACEHOLDER] below). Written only from what the code
+// before launch. The operator, contact email, governing law and last-updated
+// date are filled in; the production build refuses to ship any placeholder.
+// Written only from what the code
 // actually does (AuthContext, WaitlistForm, DataSection.tsx,
 // PauseOrLeaveSection.tsx) — nothing here is aspirational.
 
 export function PrivacyPolicy() {
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="[PLACEHOLDER: draft, not yet published]">
-      {/* TODO(privacy: remove after reflection data deleted): drop the
-          "private reflections" sentence once the drop-reflections migration
-          (20261021000000_drop_reflections.sql, its own follow-up PR) has run on
-          the live project. */}
+    <LegalPage title="Privacy Policy" lastUpdated="October 9, 2026">
       <h2>What we collect</h2>
       <p>
         Your email, display name, and password (or your Google account, if you log in
         that way), and whatever you add to your profile. The Moments you log (photos
-        and notes), plus thoughts, messages, and who you follow. We may
-        also still hold private reflections you wrote before that feature was
-        removed. If you
+        and notes), plus thoughts, messages, who you follow, and the Moments you
+        save. If you
         join the waitlist before you have an invite, we keep the email and the optional
         "what do you make?" answer you give us.
       </p>
@@ -35,6 +30,12 @@ export function PrivacyPolicy() {
         stores your photos, and on Vercel, which hosts the app itself. If you log in
         with Google, Google is involved in that one step. We don’t sell your
         information to anyone.
+      </p>
+      <p>
+        The Moments you save are stored with your account, so they are there on every
+        device you log in on. Nobody else can see which Moments you saved. The person
+        who posted a Moment is told how many people saved it, never who, and can turn
+        that notification off in Notifications settings.
       </p>
 
       <h2>What you control</h2>
@@ -57,8 +58,8 @@ export function PrivacyPolicy() {
       <p>
         Contact us at{" "}
         <ContactEmail />
-        . {APP_NAME} is operated by [PLACEHOLDER legal name/entity], governed by the
-        laws of [PLACEHOLDER governing law/jurisdiction].
+        . {APP_NAME} is operated by Sushmitha Lekkala, an individual, governed by the
+        laws of the State of New Jersey, United States.
       </p>
     </LegalPage>
   );
