@@ -33,10 +33,8 @@ describe("copy rules", () => {
   // G4. "Nature journaling" is a Corner name, so it is allowed.
   it("has no banned phrases", () => {
     const banned = /\b(journal(ing|s)?|diary|diaries|reflect(s|ion|ions)?|habits?|streaks?)\b|not ranked|non-metric|never scored/i;
-    // Allowed: the Nature journaling Corner, and the one Privacy page line that
-    // must stay until reflection data is deleted (TODO(privacy) in
-    // PrivacyPolicy.tsx; remove this entry with that line).
-    const allowed = /nature[- ]journaling|private reflections you wrote before that feature was/i;
+    // Allowed: the Nature journaling Corner.
+    const allowed = /nature[- ]journaling/i;
     // Import paths and storage keys ("../lib/journal", "sushii.journal.v1") are code, not copy.
     const isCode = (t: string) => /^(\.{1,2}\/|[\w-]+(\.[\w-]+)+$)/.test(t);
     const hits = strings.filter((s) => banned.test(s.text) && !allowed.test(s.text) && !isCode(s.text));

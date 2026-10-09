@@ -33,10 +33,9 @@ export function LegalPage({
   );
 }
 
-/** The contact address as a link, from config. Until one is set it stays the
- * placeholder line, which the production build refuses to ship. */
+/** The contact address as a link, from config. config.test.ts fails if
+ * CONTACT_EMAIL is ever emptied, so this never renders an empty link. */
 export function ContactEmail() {
-  if (!CONTACT_EMAIL) return <>[PLACEHOLDER contact email]</>;
   return (
     <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-foreground">
       {CONTACT_EMAIL}

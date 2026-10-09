@@ -55,8 +55,8 @@ export const onboardingUsesMainForm = import.meta.env.VITE_ONBOARDING_MAIN_FORM 
 
 // Footer links on the signed-out landing page. Each renders only when it has a
 // value, so adding one later is a one-line change here and no layout work.
-// CONTACT_EMAIL is a bare address ("hello@yourdomain"); the others are full URLs.
+// CONTACT_EMAIL is a bare address; the others are full URLs. A test keeps it set.
 // The Terms and Privacy Policy pages read CONTACT_EMAIL too.
-export const CONTACT_EMAIL = "";
+export const CONTACT_EMAIL = "sushmithalekkala@gmail.com";
 export const INSTAGRAM_URL = "";
 export const TIKTOK_URL = "";
