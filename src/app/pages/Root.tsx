@@ -105,6 +105,20 @@ export function Root() {
     return <Navigate to={`/onboarding?redirect=${encodeURIComponent(next)}`} replace />;
   }
 
+  // The signed-out landing page has its own nav (Home.tsx renders it), and a
+  // visitor never sees the member nav, tab bar or prompts.
+  if (!user && location.pathname === "/") {
+    return (
+      <div className="min-h-viewport">
+        <PreviewBanner />
+        <NetworkBanner />
+        <main>
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-viewport">
       <PreviewBanner />

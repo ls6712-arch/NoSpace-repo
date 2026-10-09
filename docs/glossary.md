@@ -107,18 +107,21 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Waitlist / You're on the list | Asking to join without an invite |
 | Welcome to Soosh | The inviter's button on "[Name] added their first moment": opens it with the reply box ready |
 
-## Landing page
+## Landing page copy (website only)
 
-The page follows the locked narrative: hero, How it works, Corners, Pursuits, friends and Spaces, invite ask, footer.
+These lines are for the signed-out landing page (`src/app/landing`). They are
+marketing wording, not app terms: never use them in the app UI. The page follows
+the locked narrative: hero, the line, Save it / Try it / Share it, friends can
+come along, privacy, real Shelves (hidden until 6 exist), invite, footer.
+In-app labels on the page still follow the glossary above: "Count me in", "Finished", "In progress", "Privacy Policy".
 
 | Term | Meaning |
 |---|---|
-| Everything you do outside work, in one place. | Hero headline |
-| Request an invite | Hero button and waitlist form button, both going to the waitlist form |
-| I have an invite | Secondary hero button / invite-section button, both going to sign-in |
-| Soosh is for people 16 and older. | Age-eligibility line (hero, footer). Read the app name from `APP_NAME`, never hardcode it |
-| Post a Moment / It goes on your Shelf / Share your Shelf anywhere | How it works steps |
-| Pick a Corner for every Moment. | Corners section heading |
-| Show what you're working toward. | Pursuits section heading |
-| See what your friends are making. | Friends and Spaces section heading |
-| Terms / Privacy Policy / Contact | Footer links and the waitlist form's consent line |
+| Welcome to the rest of you. | Hero headline |
+| Request an invite | Every landing button and the waitlist form button, all going to the waitlist form |
+| Save it. Try it. Share it. | Section heading and the three step labels (website only) |
+| Your friends can come along. | Friends section heading. The button it names is "Count me in" |
+| You choose who sees each post. | Privacy section heading |
+| See who's on Soosh. | Real Shelves heading |
+| Soosh is invite-only. | Invite section heading |
+| Privacy Policy / Terms | Footer links. Contact, Instagram and TikTok appear once set in `src/app/config.ts` |

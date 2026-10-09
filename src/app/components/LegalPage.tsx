@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { APP_NAME } from "../config";
+import { APP_NAME, CONTACT_EMAIL } from "../config";
 
 /**
  * Shared layout for /terms and /privacy-policy (landing page spec §2.5).
@@ -30,5 +30,16 @@ export function LegalPage({
         ← Back to {APP_NAME}
       </Link>
     </div>
+  );
+}
+
+/** The contact address as a link, from config. Until one is set it stays the
+ * placeholder line, which the production build refuses to ship. */
+export function ContactEmail() {
+  if (!CONTACT_EMAIL) return <>[PLACEHOLDER contact email]</>;
+  return (
+    <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-foreground">
+      {CONTACT_EMAIL}
+    </a>
   );
 }

@@ -14,7 +14,13 @@ import { OFFLINE_LINE } from "../lib/stateCopy";
  * success for a duplicate email too, so "You're on the list." is honest
  * either way rather than needing its own already-joined copy.
  */
-export function WaitlistForm({ className = "" }: { className?: string }) {
+export function WaitlistForm({
+  className = "",
+  buttonVariant = "outline",
+}: {
+  className?: string;
+  buttonVariant?: "outline" | "coral";
+}) {
   const [email, setEmail] = useState("");
   const [hobby, setHobby] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -89,7 +95,7 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
         </Link>
         .
       </p>
-      <Button busy={submitting} type="submit" variant="outline" className="w-full" disabled={submitting || !email.trim()}>
+      <Button busy={submitting} type="submit" variant={buttonVariant} className="w-full" disabled={submitting || !email.trim()}>
         Request an invite
       </Button>
     </form>

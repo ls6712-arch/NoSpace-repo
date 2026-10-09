@@ -1902,3 +1902,46 @@ summary:focus-visible,
     --duration-base: 0ms;
   }
 }
+
+/* ── Signed-out landing page (src/app/landing) ────────────────────────────
+   The page has its own warm palette and looks the same in light and dark mode,
+   because the gradient behind it does. Layout lives in landing.css. */
+.lp {
+  --lp-ink: #2A1510;
+  --lp-ink-soft: #5A3A30;
+  --lp-cta: #A93E22;
+  --lp-cta-text: #FFFFFF;
+  --lp-peach: #F3A98C;
+  --lp-lilac: #C9B8E8;
+  --lp-sun: #F2D58A;
+  --lp-fade: 600ms;
+  --lp-base: #F3C9B2;
+  --lp-cream: #FFF4EB;
+  --lp-blush: #FCE3D3;
+  --lp-rose: #F8D9E0;
+  --lp-white: #FFFFFF;
+  --lp-frame: #1B0F0B;
+  --lp-nav-fill: rgba(255, 244, 235, 0.72);
+  --lp-nav-line: rgba(169, 62, 34, 0.12);
+  --lp-card-fill: rgba(255, 255, 255, 0.88);
+  --lp-shadow-sm: rgba(60, 20, 10, 0.14);
+  --lp-shadow-md: rgba(60, 20, 10, 0.18);
+  --lp-shadow-lg: rgba(60, 20, 10, 0.28);
+}
+
+/* The waitlist form reads the app's theme tokens; pin them to the light set. */
+.lp-light {
+  color-scheme: light;
+  --foreground: #2B2622;
+  --muted-foreground: #5C534B;
+  --background: #FFFFFF;
+  --card: #FFFFFF;
+  --border: #DDD3C0;
+  --input: #8A7447;
+  --input-border: #8A7447;
+  --accent: #A93E22;
+  --accent-foreground: #FFFFFF;
+  --surface-muted: #F6F1E7;
+  --destructive: #A13A2E;
+  color: var(--foreground);
+}
