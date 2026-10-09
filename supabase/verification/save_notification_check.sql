@@ -33,6 +33,8 @@ declare
   v_blocked_post bigint;
   v_long_post bigint;
   v_blank_post bigint;
+  v_sync_post bigint;
+  v_mix_post bigint;
   v_notice_id bigint;
   v_before int;
 begin
@@ -53,7 +55,9 @@ begin
     (v_muted_owner, 'pottery', 'photo', 'https://example.test/sv.jpg', 'sv muted owner post', 'public'),
     (v_owner, 'pottery', 'photo', 'https://example.test/sv.jpg', 'sv blocked saver post', 'public'),
     (v_owner, 'pottery', 'photo', 'https://example.test/sv.jpg', E'sv first line that is much longer than forty characters in total\nsecond line stays out', 'public'),
-    (v_owner, 'pottery', 'photo', 'https://example.test/sv.jpg', '', 'public');
+    (v_owner, 'pottery', 'photo', 'https://example.test/sv.jpg', '', 'public'),
+    (v_owner, 'pottery', 'photo', 'https://example.test/sv.jpg', 'sv synced only post', 'public'),
+    (v_owner, 'pottery', 'photo', 'https://example.test/sv.jpg', 'sv mixed post', 'public');
 
   v_post := (select public.posts.id from public.posts where public.posts.user_id = v_owner and public.posts.caption = 'sv Sourdough with rye starter');
   v_own_post := (select public.posts.id from public.posts where public.posts.user_id = v_saver1 and public.posts.caption = 'sv saver1 own post');
@@ -61,6 +65,8 @@ begin
   v_blocked_post := (select public.posts.id from public.posts where public.posts.user_id = v_owner and public.posts.caption = 'sv blocked saver post');
   v_long_post := (select public.posts.id from public.posts where public.posts.user_id = v_owner and public.posts.caption like 'sv first line that is much longer%');
   v_blank_post := (select public.posts.id from public.posts where public.posts.user_id = v_owner and public.posts.caption = '');
+  v_sync_post := (select public.posts.id from public.posts where public.posts.user_id = v_owner and public.posts.caption = 'sv synced only post');
+  v_mix_post := (select public.posts.id from public.posts where public.posts.user_id = v_owner and public.posts.caption = 'sv mixed post');
 
   insert into public.profile_settings (user_id, notification_preferences)
   values (v_muted_owner, '{"muted": ["saves"]}'::jsonb)
@@ -98,6 +104,21 @@ begin
 
   v_text := public.save_notification_body(2, E'Sourdough\r\nwith rye');
   results := array_append(results, case when v_text = '2 people want to try “Sourdough”.' then 'PASS first line only (windows line ends)' else 'FAIL first line only (windows line ends): ' || v_text end);
+
+  v_text := public.save_notification_body(2, E'\n\nSourdough');
+  results := array_append(results, case when v_text = '2 people want to try “Sourdough”.' then 'PASS first non-blank line (blank lines first)' else 'FAIL first non-blank line (blank lines first): ' || v_text end);
+
+  v_text := public.save_notification_body(2, E'  \n \t \n  Sourdough  \nwith rye');
+  results := array_append(results, case when v_text = '2 people want to try “Sourdough”.' then 'PASS first non-blank line (spaces-only lines first, trimmed)' else 'FAIL first non-blank line (spaces-only lines first): ' || v_text end);
+
+  v_text := public.save_notification_body(2, E'\r\n\r\nSourdough\r\nwith rye');
+  results := array_append(results, case when v_text = '2 people want to try “Sourdough”.' then 'PASS first non-blank line (windows line ends)' else 'FAIL first non-blank line (windows line ends): ' || v_text end);
+
+  v_text := public.save_notification_body(3, E' \n \t \n ');
+  results := array_append(results, case when v_text = '3 people want to try your Moment.' then 'PASS whitespace-only multi-line caption falls back' else 'FAIL whitespace-only multi-line caption: ' || v_text end);
+
+  v_text := public.save_notification_body(1, E'\n' || repeat('a', 41));
+  results := array_append(results, case when v_text = 'Someone wants to try “' || repeat('a', 40) || '…”.' then 'PASS long first non-blank line is cut at 40' else 'FAIL long first non-blank line: ' || v_text end);
 
   v_text := public.save_notification_body(1, repeat('a', 40));
   results := array_append(results, case when v_text = 'Someone wants to try “' || repeat('a', 40) || '”.' then 'PASS exactly 40 characters is not cut' else 'FAIL exactly 40 characters: ' || v_text end);
@@ -219,6 +240,49 @@ begin
 
   v_n := (select count(*) from pg_policies where pg_policies.schemaname = 'public' and pg_policies.tablename = 'bookmarks' and pg_policies.qual like '%auth.uid()%' and pg_policies.qual like '%user_id%');
   results := array_append(results, case when v_n = 1 then 'PASS bookmarks policy is owner-only' else 'FAIL bookmarks policy is not owner-only' end);
+
+  -- 13. Saves copied up from a phone never notify ──────────────────────
+  insert into public.bookmarks (user_id, post_id, source) values (v_saver1, v_sync_post, 'local_sync');
+  insert into public.bookmarks (user_id, post_id, source) values (v_saver2, v_sync_post, 'local_sync');
+  v_n := (select count(*) from public.notifications where public.notifications.kind = 'save' and public.notifications.href = '/moment/' || v_sync_post);
+  results := array_append(results, case when v_n = 0 then 'PASS synced saves make no notification' else 'FAIL synced saves notified: ' || v_n end);
+
+  -- A synced save before a live one is not counted, and does not announce.
+  insert into public.bookmarks (user_id, post_id, source) values (v_saver1, v_mix_post, 'local_sync');
+  v_n := (select count(*) from public.notifications where public.notifications.kind = 'save' and public.notifications.href = '/moment/' || v_mix_post);
+  results := array_append(results, case when v_n = 0 then 'PASS a synced save before a live one makes no notification' else 'FAIL synced save announced: ' || v_n end);
+
+  insert into public.bookmarks (user_id, post_id) values (v_saver2, v_mix_post);
+  v_text := (select public.notifications.body from public.notifications where public.notifications.user_id = v_owner and public.notifications.kind = 'save' and public.notifications.href = '/moment/' || v_mix_post);
+  results := array_append(results, case when v_text = 'Someone wants to try “sv mixed post”.' then 'PASS the first live save still notifies, counted as one' else 'FAIL live save after sync: ' || coalesce(v_text, 'no row') end);
+
+  -- A synced save after a live one does not change the count or wake the row.
+  v_notice_id := (select public.notifications.id from public.notifications where public.notifications.user_id = v_owner and public.notifications.kind = 'save' and public.notifications.href = '/moment/' || v_mix_post);
+  update public.notifications set read = true where public.notifications.id = v_notice_id;
+  insert into public.bookmarks (user_id, post_id, source) values (v_saver3, v_mix_post, 'local_sync');
+  v_text := (select public.notifications.body from public.notifications where public.notifications.id = v_notice_id);
+  v_flag := (select public.notifications.read from public.notifications where public.notifications.id = v_notice_id);
+  results := array_append(results, case when v_text = 'Someone wants to try “sv mixed post”.' and v_flag = true then 'PASS a synced save leaves the count and the read state alone' else 'FAIL synced save changed the row: ' || v_text end);
+
+  v_n := (select count(*) from public.notifications where public.notifications.kind = 'save' and public.notifications.href = '/moment/' || v_mix_post);
+  results := array_append(results, case when v_n = 1 then 'PASS still one row for the Moment' else 'FAIL rows for the Moment: ' || v_n end);
+
+  -- Where a row came from is recorded, and a plain save is live.
+  v_text := (select public.bookmarks.source from public.bookmarks where public.bookmarks.user_id = v_saver2 and public.bookmarks.post_id = v_mix_post);
+  results := array_append(results, case when v_text = 'live' then 'PASS a plain save is live by default' else 'FAIL default source: ' || coalesce(v_text, 'no row') end);
+
+  v_text := (select public.bookmarks.source from public.bookmarks where public.bookmarks.user_id = v_saver1 and public.bookmarks.post_id = v_mix_post);
+  results := array_append(results, case when v_text = 'local_sync' then 'PASS a synced save is recorded as local_sync' else 'FAIL synced source: ' || coalesce(v_text, 'no row') end);
+
+  begin
+    insert into public.bookmarks (user_id, post_id, source) values (v_blocked, v_mix_post, 'something_else');
+    results := array_append(results, 'FAIL an unknown source was accepted');
+  exception
+    when check_violation then
+      results := array_append(results, 'PASS an unknown source is refused');
+    when others then
+      results := array_append(results, 'ERROR unknown source: ' || sqlstate || ' ' || sqlerrm);
+  end;
 
   raise exception 'RESULTS: %', array_to_string(results, ', ');
 end;

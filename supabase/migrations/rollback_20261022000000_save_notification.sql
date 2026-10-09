@@ -4,14 +4,18 @@
 -- to their exact live definitions from before the save notification, drops the
 -- trigger and the two functions it added, and deletes the 'save' notifications
 -- that were sent (the app would otherwise keep showing them, and after this
--- rollback nothing recognizes the kind). public.bookmarks and its rows are not
--- touched. Safe to re-run.
+-- rollback nothing recognizes the kind). public.bookmarks keeps its rows (only the
+-- source column is dropped). Safe to re-run.
 
 drop trigger if exists bookmarks_notify_save on public.bookmarks;
 drop function if exists public.notify_save();
 drop function if exists public.save_notification_body(int, text);
 
 delete from public.notifications where public.notifications.kind = 'save';
+
+-- The source column goes after the trigger function that reads it. Any rows
+-- stay; only where they came from is forgotten.
+alter table public.bookmarks drop column if exists source;
 
 CREATE OR REPLACE FUNCTION public.enforce_notification_insert()
  RETURNS trigger

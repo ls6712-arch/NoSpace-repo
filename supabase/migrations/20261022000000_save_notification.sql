@@ -16,9 +16,10 @@
 -- Wording (docs/glossary.md, Home, reactions, connection)
 --   1 save:     Someone wants to try “[caption]”.
 --   N saves:    N people want to try “[caption]”.
---   Caption:    first line only, cut at 40 characters with an ellipsis inside
---               the quotes. Empty caption: your Moment, in place of the quoted
---               caption ("3 people want to try your Moment.").
+--   Caption:    the first non-blank line, cut at 40 characters with an ellipsis
+--               inside the quotes. "your Moment" in place of the quoted caption
+--               only when the whole caption is empty or whitespace
+--               ("3 people want to try your Moment.").
 --   Built by public.save_notification_body(count, caption).
 --
 -- Rules
@@ -27,6 +28,15 @@
 --     bookmarks, and nothing here reads or counts older rows. No backfill.
 --     (Saves have only ever been kept on the phone, so bookmarks is empty
 --     today; the app starts writing it in the same release.)
+--   - Saves copied up from a phone never notify. The app's one-time sync of the
+--     saves a device already holds writes them with source = 'local_sync'; the
+--     trigger skips those rows and the grouped count ignores them. Why a
+--     column and not an "old created_at" rule: a phone keeps only a list of
+--     post ids, with no save times, so there is no real date to write; an age
+--     cut-off would be a guess that a slow or offline sync could miss, and it
+--     would hide the intent. A column says exactly what the row is. The client
+--     can set it, but the only thing that does is skip a notification for
+--     itself, so there is nothing to guard.
 --   - A person you have blocked, or who blocked you, is not counted.
 --   - The new 'saves' category is on the mute list: private.notification_kind_muted
 --     maps kind 'save' to it, and the Notifications settings page gets a switch.
@@ -52,6 +62,14 @@
 -- Safe to re-run: create-or-replace and drop-trigger-if-exists throughout.
 
 -- ─────────────────────────────────────────────────────────────────────────
+-- 0. Where a save came from. 'live' is a save made now (the default, and the
+--    only kind that can notify); 'local_sync' is a save copied up from a phone.
+-- ─────────────────────────────────────────────────────────────────────────
+alter table public.bookmarks
+  add column if not exists source text not null default 'live'
+  check (source in ('live', 'local_sync'));
+
+-- ─────────────────────────────────────────────────────────────────────────
 -- 1. The wording, in one place. Pure, so it can be checked on its own.
 -- ─────────────────────────────────────────────────────────────────────────
 create or replace function public.save_notification_body(p_count int, p_caption text)
@@ -70,7 +88,7 @@ as $$
        end
     || '.'
   from (
-    select nullif(btrim(split_part(replace(coalesce(p_caption, ''), E'\r', ''), E'\n', 1)), '') as text
+    select btrim((regexp_match(coalesce(p_caption, ''), '(?:^|[\r\n])([^\r\n]*[^\s][^\r\n]*)'))[1]) as text
   ) as first_line;
 $$;
 
@@ -238,6 +256,11 @@ begin
     return new;
   end if;
 
+  -- A save copied up from a phone is not news.
+  if new.source <> 'live' then
+    return new;
+  end if;
+
   begin
     -- Blocked in either direction: this save is not counted or announced.
     if private.is_blocked_between(new.user_id, v_owner) then
@@ -273,6 +296,7 @@ begin
       from bookmarks
       where bookmarks.post_id = new.post_id
         and bookmarks.created_at >= v_since
+        and bookmarks.source = 'live'
         and bookmarks.user_id <> v_owner
         and not private.is_blocked_between(bookmarks.user_id, v_owner);
 
