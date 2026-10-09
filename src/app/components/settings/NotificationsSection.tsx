@@ -27,6 +27,11 @@ const CATEGORY_ROWS: { category: NotificationCategory; label: string; descriptio
     label: "Message requests",
     description: "Turning this off only stops the bell. The request still waits for you in Messages.",
   },
+  {
+    category: "saves",
+    label: "Saves of your Moments",
+    description: "Someone saves a Moment of yours to try. You see how many, never who.",
+  },
 ];
 
 function CategoryRow({ category, label, description }: { category: NotificationCategory; label: string; description: string }) {

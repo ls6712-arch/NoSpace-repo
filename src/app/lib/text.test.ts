@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { endSentence, notificationText, withoutDashes } from "./text";
+import { endSentence, notificationBodyText, notificationText, withoutDashes } from "./text";
 
 describe("withoutDashes", () => {
   it("turns a spaced dash into a sentence break", () => {
@@ -28,5 +28,20 @@ describe("endSentence", () => {
     expect(endSentence("No Moments yet")).toBe("No Moments yet.");
     expect(endSentence("Try again.")).toBe("Try again.");
     expect(endSentence("Ready?")).toBe("Ready?");
+  });
+});
+
+describe("notificationBodyText", () => {
+  it("runs the usual clean-up on other kinds", () => {
+    expect(notificationBodyText("love", "Maya loved your moment.")).toBe("Maya loved your Moment.");
+  });
+  it("shows a save notification exactly as stored, grouped wording included", () => {
+    expect(notificationBodyText("save", "3 people want to try your Moment.")).toBe("3 people want to try your Moment.");
+    expect(notificationBodyText("save", "Someone wants to try \u201CSourdough\u201D.")).toBe("Someone wants to try \u201CSourdough\u201D.");
+  });
+  it("leaves the author's own caption alone: no re-capitalized nouns, no stripped dashes", () => {
+    const caption = "2 people want to try \u201Cmy corner space \u2014 day 3\u2026\u201D.";
+    expect(notificationBodyText("save", caption)).toBe(caption);
+    expect(notificationBodyText("thought", caption)).not.toBe(caption);
   });
 });

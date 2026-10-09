@@ -92,6 +92,8 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | You inspired / You're caught up | Home sections |
 | Love this / Count me in / Thoughts | Reactions |
 | [Name] loved your moment. / [Name] and N others loved your moment. | The Love this notification, at most one per moment per day |
+| Someone wants to try “[caption]”. / N people want to try “[caption]”. | The Save notification, at most one per Moment per day. It shows how many people saved, never who. The caption is the first line, cut at 40 characters with an ellipsis; with no caption it says "your Moment" instead ("3 people want to try your Moment."). "wants to try" appears only in this notification: the button stays "Save" and the state "Saved" |
+| Saves of your Moments | Notifications settings switch for the Save notification |
 | Add a thought / Keep going | Comment / quick starter |
 | Follow / Follow requests | Connecting |
 | Make together / Explore together | Invites that open a chat |

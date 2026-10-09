@@ -34,6 +34,14 @@ export function notificationText(body: string): string {
   return withProductNouns(withoutDashes(body));
 }
 
+/** What the bell shows for one stored notification. A save notification quotes
+ * the Moment's caption, which is the author's own text, so it is shown exactly
+ * as stored: no re-capitalized nouns, no stripped dashes. Everything else gets
+ * notificationText. */
+export function notificationBodyText(kind: string, body: string): string {
+  return kind === "save" ? body : notificationText(body);
+}
+
 /** Full sentences end with a period. Empty-state lines and hints are written
  * without one at the call site; this adds it when the text doesn't already end
  * in punctuation. */

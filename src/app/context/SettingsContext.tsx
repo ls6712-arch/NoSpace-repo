@@ -24,13 +24,15 @@ export type NotificationCategory =
   | "thoughts"
   | "pursuit_activity"
   | "make_together_explore_together"
-  | "message_requests";
+  | "message_requests"
+  | "saves";
 
 const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
   "thoughts",
   "pursuit_activity",
   "make_together_explore_together",
   "message_requests",
+  "saves",
 ];
 
 interface SettingsContextType {
