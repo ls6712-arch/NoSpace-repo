@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Github, Globe, Link2, Palette, Rss, X, Plus } from "lucide-react";
-import { ProfileLink, addProfileLink, removeProfileLink } from "../lib/profileLinks";
+import { ProfileLink, addProfileLink, removeProfileLink, safeHttpUrl } from "../lib/profileLinks";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
@@ -28,11 +28,13 @@ export function ProfileLinksRow({ links, className = "" }: { links: ProfileLink[
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
       {links.map((link) => {
+        const href = safeHttpUrl(link.url);
+        if (!href) return null;
         const Icon = iconFor(link.url);
         return (
           <a
             key={link.id}
-            href={link.url}
+            href={href}
             target="_blank"
             rel="noreferrer noopener"
             className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-1.5 text-caption font-medium text-foreground transition-colors hover:border-[var(--coral-deep)]"
@@ -105,7 +107,7 @@ export function ProfileLinksEditor({
                   className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-1.5 text-caption text-foreground"
                 >
                   <Icon className="size-3.5 shrink-0" strokeWidth={1.8} />
-                  <a href={link.url} target="_blank" rel="noreferrer noopener" className="hover:text-[var(--coral-text)]">
+                  <a href={safeHttpUrl(link.url) ?? undefined} target="_blank" rel="noreferrer noopener" className="hover:text-[var(--coral-text)]">
                     {link.label}
                   </a>
                   <button

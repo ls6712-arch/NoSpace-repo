@@ -79,6 +79,19 @@ export function normalizeUrl(raw: string): string {
   return `https://${trimmed}`;
 }
 
+/** The URL itself if it is a plain http(s) link, otherwise null. Links from
+ * other people arrive from the database, which anyone can write to directly,
+ * so a stored `javascript:` or `data:` URL must never reach an href. */
+export function safeHttpUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export function addProfileLink(label: string, rawUrl: string): ProfileLink | null {
   const url = normalizeUrl(rawUrl);
   if (!url) return null;
