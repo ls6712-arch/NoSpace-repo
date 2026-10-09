@@ -703,6 +703,17 @@ export function isSaved(postId: number) {
   return state.saved.includes(postId);
 }
 
+/** Every saved post id on this device, newest first. */
+export function getSavedIds(): number[] {
+  return state.saved;
+}
+
+/** Replaces the saved list wholesale. Used by lib/bookmarksRemote.ts to make
+ * this device match the database once a signed-in person's saves are synced. */
+export function replaceSaved(ids: number[]) {
+  commit({ ...state, saved: ids });
+}
+
 /**
  * Everyone else's work, grouped into projects the same way yours is: one
  * maker, one hobby, more than a single entry. This is what lets the rest of

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
@@ -9,6 +10,7 @@ import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
+import { reconcileSaves } from "../lib/bookmarksRemote";
 
 // Only the landing page, the login/signup screen, and the two legal pages
 // are open to a signed-out visitor. Everything else — Discover, Spaces,
@@ -55,6 +57,13 @@ export function Root() {
   const location = useLocation();
   useTruncationReveal();
   useScrollMemory();
+
+  // Once a signed-in person is in, bring their saves in line with the database
+  // (and send any that only this phone knows about, once). See bookmarksRemote.ts.
+  const userId = user?.id;
+  useEffect(() => {
+    if (userId) void reconcileSaves(userId);
+  }, [userId]);
 
   // Still waits for the initial session check, so a signed-in visitor isn't
   // bounced to the landing page for a moment before their session loads.

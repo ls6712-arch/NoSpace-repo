@@ -34,7 +34,16 @@ function specificTarget(href: string | undefined): { entity: "moment" | "pursuit
  * isn't inserted by anything today — see Part A's own fact-check) — listed
  * explicitly anyway so this stays correct if any of that changes, rather
  * than relying on href shape alone. */
-const NEVER_MERGE_KINDS = new Set(["connect_request", "message_request", "make_together", "explore_together"]);
+const NEVER_MERGE_KINDS = new Set([
+  "connect_request",
+  "message_request",
+  "make_together",
+  "explore_together",
+  // The database already keeps one "N people want to try" row per Moment per
+  // 24 hours and writes the count itself. It names nobody, so there is nothing
+  // here to fold, and a client-built "and N others" line would be wrong.
+  "save",
+]);
 
 function isMergeEligible(n: Notification): boolean {
   if (n.kind.startsWith("space_")) return false;

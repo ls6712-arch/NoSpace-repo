@@ -7,6 +7,7 @@ import {
   Crown,
   DoorOpen,
   Handshake,
+  Bookmark,
   Heart,
   MessageCircleQuestion,
   MessagesSquare,
@@ -28,7 +29,7 @@ import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
 import { Time } from "./ui/time";
 import { EmptyState } from "./StateViews";
-import { notificationText } from "../lib/text";
+import { notificationBodyText } from "../lib/text";
 
 /**
  * Notifications that describe what actually happened — "Reo accepted your Make
@@ -60,6 +61,7 @@ const ICON: Record<string, typeof Bell> = {
   space_moment_approved: Check,
   first_moment: Sprout,
   love: Heart,
+  save: Bookmark,
 };
 
 
@@ -250,7 +252,7 @@ export function NotificationsMenu() {
                   <span className="flex items-start gap-3 px-4 py-2.5">
                     <Icon className="mt-0.5 size-4 shrink-0 text-[var(--violet-electric-bright)]" />
                     <span className="min-w-0">
-                      <span className="block text-small leading-snug">{notificationText(g.body)}</span>
+                      <span className="block text-small leading-snug">{notificationBodyText(g.kind, g.body)}</span>
                       <span className="block text-caption text-muted-foreground">
                         <Time value={g.createdAt} ago />
                       </span>

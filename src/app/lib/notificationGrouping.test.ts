@@ -298,3 +298,47 @@ describe("groupNotifications: Step 4 kinds", () => {
     expect(groups[0].body).toBe("Ana added their first moment.");
   });
 });
+
+describe("groupNotifications: save notifications", () => {
+  // The database keeps one row per Moment per 24 hours and writes the count into
+  // the body itself. It names nobody, so the bell shows it exactly as stored.
+  it("shows a grouped save notification's own wording", () => {
+    const now = Date.now();
+    const groups = groupNotifications([
+      notif({
+        kind: "save",
+        href: "/moment/12",
+        actorName: undefined,
+        createdAt: now,
+        body: "3 people want to try \u201CSourdough with rye\u201D.",
+      }),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].body).toBe("3 people want to try \u201CSourdough with rye\u201D.");
+  });
+
+  it("keeps the empty-caption fallback as stored", () => {
+    const now = Date.now();
+    const groups = groupNotifications([
+      notif({ kind: "save", href: "/moment/13", actorName: undefined, createdAt: now, body: "3 people want to try your Moment." }),
+    ]);
+    expect(groups[0].body).toBe("3 people want to try your Moment.");
+  });
+
+  it("never folds two save rows into an 'and N others' line", () => {
+    const now = Date.now();
+    const groups = groupNotifications([
+      notif({ kind: "save", href: "/moment/14", actorName: undefined, createdAt: now, body: "Someone wants to try your Moment." }),
+      notif({ kind: "save", href: "/moment/14", actorName: undefined, createdAt: now - 25 * HOUR, body: "2 people want to try your Moment." }),
+    ]);
+    expect(groups).toHaveLength(2);
+    expect(groups.map((g) => g.body)).toEqual(["Someone wants to try your Moment.", "2 people want to try your Moment."]);
+  });
+
+  it("opens the Moment", () => {
+    const groups = groupNotifications([
+      notif({ kind: "save", href: "/moment/15", actorName: undefined, createdAt: Date.now(), body: "Someone wants to try your Moment." }),
+    ]);
+    expect(groups[0].href).toBe("/moment/15");
+  });
+});

@@ -25,6 +25,7 @@ import { PostMediaCarousel } from "./PostMediaCarousel";
 import { Thoughts } from "./Thoughts";
 import { BePart } from "./BePart";
 import { toggleSaved, useJournalSlice } from "../lib/journal";
+import { syncBookmark } from "../lib/bookmarksRemote";
 import { formatCount } from "../lib/formatCount";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -210,6 +211,7 @@ export function BookmarkOverlay({
   const onClick = () => {
     const wasSaved = saved;
     toggleSaved(Number(postId));
+    void syncBookmark(Number(postId), !wasSaved);
     if (!wasSaved) notify(TOAST.bookmarked);
   };
 
