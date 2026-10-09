@@ -235,11 +235,22 @@ begin
   results := array_append(results, case when v_flag then 'PASS the save flag is cleared after the trigger' else 'FAIL the save flag is still on' end);
 
   -- 12. Saves stay private: bookmarks is still owner-only ───────────────
-  v_n := (select count(*) from pg_policies where pg_policies.schemaname = 'public' and pg_policies.tablename = 'bookmarks');
-  results := array_append(results, case when v_n = 1 then 'PASS bookmarks still has one policy' else 'FAIL bookmarks policies: ' || v_n end);
+  -- Only permissive policies can open access up. Restrictive ones (the live
+  -- table has an "active accounts only" insert policy) can only narrow it.
+  v_n := (select count(*) from pg_policies where pg_policies.schemaname = 'public' and pg_policies.tablename = 'bookmarks' and pg_policies.permissive = 'PERMISSIVE');
+  results := array_append(results, case when v_n = 1 then 'PASS bookmarks has exactly one permissive policy' else 'FAIL bookmarks permissive policies: ' || v_n end);
 
-  v_n := (select count(*) from pg_policies where pg_policies.schemaname = 'public' and pg_policies.tablename = 'bookmarks' and pg_policies.qual like '%auth.uid()%' and pg_policies.qual like '%user_id%');
-  results := array_append(results, case when v_n = 1 then 'PASS bookmarks policy is owner-only' else 'FAIL bookmarks policy is not owner-only' end);
+  v_n := (select count(*) from pg_policies where pg_policies.schemaname = 'public' and pg_policies.tablename = 'bookmarks' and pg_policies.permissive = 'PERMISSIVE' and pg_policies.qual like '%auth.uid()%' and pg_policies.qual like '%user_id%');
+  results := array_append(results, case when v_n = 1 then 'PASS the permissive bookmarks policy is owner-only' else 'FAIL the permissive bookmarks policy is not owner-only' end);
+
+  -- Any other policy must be restrictive, so it can only take access away.
+  v_n := (select count(*) from pg_policies where pg_policies.schemaname = 'public' and pg_policies.tablename = 'bookmarks' and pg_policies.permissive <> 'PERMISSIVE' and pg_policies.permissive <> 'RESTRICTIVE');
+  results := array_append(results, case when v_n = 0 then 'PASS every other bookmarks policy is restrictive' else 'FAIL a bookmarks policy is neither permissive nor restrictive: ' || v_n end);
+
+  -- A restrictive policy never grants anything, but it must not be the only
+  -- thing guarding reads: the owner policy has to cover SELECT as well.
+  v_n := (select count(*) from pg_policies where pg_policies.schemaname = 'public' and pg_policies.tablename = 'bookmarks' and pg_policies.permissive = 'PERMISSIVE' and pg_policies.cmd in ('ALL', 'SELECT'));
+  results := array_append(results, case when v_n = 1 then 'PASS the owner policy covers reads' else 'FAIL no owner policy covers reads: ' || v_n end);
 
   -- 13. Saves copied up from a phone never notify ──────────────────────
   insert into public.bookmarks (user_id, post_id, source) values (v_saver1, v_sync_post, 'local_sync');
