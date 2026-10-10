@@ -6,9 +6,10 @@ posts need photos. Put them in `landing-preview/photos/` with these exact
 names (JPG, at least 1200 px on the long side). They are not committed here;
 the screenshots are.
 
-Rules: a real photo of the activity only (Unsplash or Pexels, free commercial
-license), no identifiable faces, no AI images. Record the source and
-photographer of each in `public/landing/README.md`.
+Rules: the activity only, no identifiable faces, no readable text or logos.
+The current set is AI-generated (owner's decision for these example screens);
+real photos (Unsplash or Pexels, free commercial license) are preferred when
+available. Record the credit of each in `public/landing/README.md`.
 
 | File | What the photo shows |
 |---|---|

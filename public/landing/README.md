@@ -29,11 +29,24 @@ as real members. The "See who's on Soosh" section stays real-only.
 
 ## Photo credits
 
-Photos are listed in `landing-preview/README.md`. Add one row per photo once
-supplied. Do not add a row for a photo that is not in use.
+The example screens use AI-generated images, by the owner's decision for these
+example screens only (the earlier "no AI images" rule does not apply here).
+The ten images arrived as one collage and were cropped to the file names
+listed in `landing-preview/README.md`. They are not committed; only the
+screens are. Source files are about 400 to 630 px wide, so photos look soft at
+full size. Replace them with real photos when available.
 
-| Photo | Source URL | Photographer | License |
-|---|---|---|---|
-| _to be added when the photos are supplied_ | | | |
+| Photo | Credit |
+|---|---|
+| `maya-sourdough` | AI-generated with Figma |
+| `maya-running` | AI-generated with Figma |
+| `maya-film` | AI-generated with Figma. **Replace:** the camera and film canister carry garbled lettering |
+| `maya-bouldering` | AI-generated with Figma |
+| `nick-bouldering` | AI-generated with Figma |
+| `nick-cutting-board` | AI-generated with Figma |
+| `nick-guitar` | AI-generated with Figma |
+| `theo-wheel` | AI-generated with Figma |
+| `theo-ramen` | AI-generated with Figma |
+| `theo-sketchbook` | AI-generated with Figma |
 
 Screens that differ in size from 1170 x 2532 will be scaled to fit the frame.

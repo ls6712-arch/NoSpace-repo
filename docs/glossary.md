@@ -124,9 +124,11 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 | Request an invite | Every landing button and the waitlist form button, all going to the waitlist form |
 | Save it. Try it. Share it. | Section heading and the three step labels (website only) |
 | Example Shelf | Small caption under the hero and step screens (website only). Those people are examples, never real members |
+| Example | Small caption under the reward, friends and privacy screens (website only) |
 | Your friends can come along. | Friends section heading. The button it names is "Count me in" |
 | On Soosh, the best feeling isn't a like. It's someone wanting to do what you did. | Reward section statement (website only) |
 | You choose who sees each post. | Privacy section heading |
+| Pick Only you, Followers or Public for each post. Nothing about your account has to be public. | Privacy section line. Names the real picker options (website only) |
 | See who's on Soosh. | Real Shelves heading |
 | Soosh is invite-only. | Invite section heading |
 | Privacy Policy / Terms | Footer links. Contact, Instagram and TikTok appear once set in `src/app/config.ts` |

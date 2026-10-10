@@ -107,7 +107,7 @@ function Split({
             {heading && <h2 className="lp-h2">{heading}</h2>}
             <p className={heading ? undefined : "lp-statement"}>{line}</p>
           </div>
-          <PhoneFrame image={image} alt={alt} className="lp-phone-md" />
+          <PhoneFrame image={image} alt={alt} caption={COPY.exampleScreenCaption} className="lp-phone-md" />
         </Reveal>
       </div>
     </section>
