@@ -32,11 +32,6 @@ export const marketplaceEnabled = false;
 // shows no "Today's sheet" labels.
 export const extraConceptsEnabled = false;
 
-// Landing page section 5 also promises Spaces ("join a group around what you
-// do"). Only one Space is active, so that line is hidden. Turn this on when 3
-// or more Spaces are active.
-export const landingShowsSpaces = false;
-
 // The version of the Terms and Privacy Policy that people accept at sign-up.
 // It is the date that version took effect ("YYYY-MM-DD"), and it is the one
 // place it is written: the checkbox sends it, the database records it with its

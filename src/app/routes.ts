@@ -57,10 +57,8 @@ export const router = createHashRouter([
     path: "/",
     Component: Root,
     children: [
-      // "/" is the landing page, for everyone. The wordmark points here from
-      // every page and is the way back to what Sushii says it is — sending a
-      // signed-in person to their feed instead took that away. My Space is a
-      // destination of its own, at /my-space.
+      // "/" is the signed-out landing page. Signed in, it goes straight to
+      // Home (/my-space), the page behind the "Home" nav link and the wordmark.
       { index: true, Component: Home },
       // Step 2 (invite-only sign-up): the door screen Root.tsx routes every
       // pending account to, and the arrival page an invite link points at.
