@@ -1034,10 +1034,6 @@
     border: 1px solid var(--border);
   }
 
-  .ns-home-hero {
-    background: var(--atmo-purple);
-  }
-
   .ns-hero-eyebrow,
   .ns-section-kicker {
     font-family: var(--font-mono);
@@ -1053,50 +1049,6 @@
     border-block: 1px solid var(--hairline);
     padding-block: 0.55rem;
     color: var(--foreground);
-  }
-
-  
-
-  
-
-  /* Secondary action: dark/transparent with a quiet border, brightening on
-     hover rather than filling in — the primary action is the only one that
-     gets a violet fill and glow. */
-  .ns-hero-secondary-link {
-    display: inline-flex;
-    height: 2.75rem;
-    align-items: center;
-    border: 1px solid var(--hairline);
-    border-radius: var(--radius-control);
-    background: color-mix(in srgb, var(--void) 45%, transparent);
-    padding: 0 1rem;
-    color: var(--offwhite);
-    font-size: var(--text-caption);
-    transition: border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
-  }
-
-  @media (hover: hover) {
-    .ns-hero-secondary-link:hover {
-   border-color: var(--violet-electric); transform: translateY(-1px); 
-    }
-  }
-
-  /* The hero's single large illustration — a real image now
-     (src/assets/hero-worlds.webp), a big generously-rounded window rather
-     than a banner filling edge to edge. Replaced an earlier 3-photo-card
-     collage and, before that, an SVG approximation of the same composition
-     (both now removed along with their now-dead CSS below this rule). A
-     soft violet glow rather than a dark drop-shadow, so it reads as lit
-     from within the purple environment rather than sitting on top of it. */
-  .ns-hero-worlds-art {
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-card);
-  }
-  /* The bundled hero is a bright, pastel illustration; on the dark page it reads
-     as a lit panel, so it sits a step down. (Generated art already has dark
-     palette overrides; photos are left as shot.) */
-  .dark .ns-hero-worlds-art img {
-    filter: brightness(0.78) saturate(0.88);
   }
 
   .ns-text-link {
@@ -1139,189 +1091,6 @@
 
   
 
-  /* ── Value cards — "Create moments / Document / Explore," right below the
-     hero. Dark-plum elevated surfaces with a soft violet-tinted shadow, and
-     a hover lift restrained enough to still read as premium rather than
-     playful. ── */
-  .ns-value-card {
-    position: relative;
-    border: 1px solid var(--hairline);
-    background: var(--surface-elevated);
-    box-shadow: var(--shadow-card);
-    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
-  }
-
-  .ns-value-card:focus-within {
-    transform: translate(0, -4px);
-    border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
-    box-shadow: var(--shadow-overlay);
-  }
-
-  @media (hover: hover) {
-    .ns-value-card:hover {
-      transform: translate(0, -4px);
-      border-color: color-mix(in srgb, var(--violet-electric) 45%, transparent);
-      box-shadow: var(--shadow-overlay);
-    }
-  }
-
-  .ns-value-card-icon {
-    transition: transform var(--duration-base) var(--ease-standard);
-  }
-
-  .ns-value-card:focus-within .ns-value-card-icon {
-    transform: translateY(-3px) rotate(-4deg);
-  }
-
-  @media (hover: hover) {
-    .ns-value-card:hover .ns-value-card-icon {
-      transform: translateY(-3px) rotate(-4deg);
-    }
-  }
-
-  /* ── Whatever pulls you in — the Worlds section ─────────────────────────
-     A row of small illustrated worlds. `data-driven` is set by JS
-     (useWorldsScroll in WorldsSection.tsx) once it's confirmed both a wide
-     viewport AND no prefers-reduced-motion — the same two-part guard
-     useHeroParallax already uses — so everything below keys off that one
-     attribute rather than a duplicate width media query. When it's false
-     (narrow viewport, or reduced motion at any width), this collapses to a
-     plain native horizontal scroller: shorter, snap-scrolled, no sticky
-     math, exactly the "simplify" the section calls for either way. */
-  .ns-worlds-section {
-    position: relative;
-  }
-
-  .ns-worlds-section[data-driven="true"] {
-    height: 260vh;
-  }
-
-  .ns-worlds-sticky {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .ns-worlds-section[data-driven="true"] .ns-worlds-sticky {
-    position: sticky;
-    top: 0;
-    display: flex;
-    height: 100vh;
-    height: 100dvh;
-    align-items: center;
-    /* Stays hidden (inherited from the base rule above) — this is the
-       viewport-width "window" the track's translateX moves the cards
-       through. It has to actually clip, both so the track's un-translated
-       content can't create a horizontal page scrollbar, and so its own
-       clientWidth (what the scroll math treats as "visible width") means
-       something — with overflow: visible here (an earlier draft), the
-       track could render at its full natural width with nothing
-       constraining it, so scrollWidth - clientWidth came out to ~0 and the
-       whole translateX computation had nowhere to go. */
-  }
-
-  .ns-worlds-track {
-    display: flex;
-    gap: clamp(1.25rem, 3vw, 2.25rem);
-    padding-inline: 5vw;
-    will-change: transform;
-  }
-
-  .ns-worlds-section:not([data-driven="true"]) .ns-worlds-track {
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-block: 0.5rem;
-  }
-
-  .ns-worlds-section:not([data-driven="true"]) .ns-worlds-track::-webkit-scrollbar {
-    display: none;
-  }
-
-  .ns-worlds-section:not([data-driven="true"]) .ns-world-card {
-    scroll-snap-align: center;
-  }
-
-  .ns-worlds-path {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    overflow: visible;
-    pointer-events: none;
-  }
-
-  /* design-token-ignore: ambient loops below (flow, float, pulse, breathe, sway, drift, twinkle); long, decorative, off under reduced motion */
-  .ns-worlds-path path {
-    fill: none;
-    stroke: color-mix(in srgb, var(--coral) 55%, var(--yellow) 45%);
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    stroke-dasharray: 1 15;
-    opacity: 0.5;
-    animation: ns-flow 26s linear infinite; /* design-token-ignore: ambient loop */
-  }
-
-  .ns-world-card {
-    position: relative;
-    z-index: 1;
-    flex: 0 0 auto;
-    width: clamp(14.5rem, 19vw, 18.5rem);
-    scroll-margin-inline: 5vw;
-    border-radius: var(--radius-card);
-    overflow: hidden;
-    border: 1px solid var(--hairline);
-    background: var(--surface-elevated);
-    box-shadow: var(--shadow-card);
-    transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
-  }
-
-  .ns-world-card:focus-within {
-    transform: translateY(-10px) scale(1.015);
-    box-shadow: var(--shadow-overlay);
-  }
-
-  @media (hover: hover) {
-    .ns-world-card:hover {
-      transform: translateY(-10px) scale(1.015);
-      box-shadow: var(--shadow-overlay);
-    }
-  }
-
-  /* design-token-ignore: ambient loop */
-  .ns-world-card:focus-within .ns-world-card-life {
-    animation-duration: 1.6s; /* design-token-ignore: ambient loop */
-  }
-
-  @media (hover: hover) {
-    .ns-world-card:hover .ns-world-card-life {
-      animation-duration: 1.6s; /* design-token-ignore: ambient loop */
-    }
-  }
-
-  /* Real photo cards get the same gentle push-in HobbyCategoryCard's Space
-     photos use, instead of the illustrated fallback's idle breathe/sway. */
-  .ns-world-card:focus-within img {
-    transform: scale(1.06);
-  }
-
-  @media (hover: hover) {
-    .ns-world-card:hover img {
-      transform: scale(1.06);
-    }
-  }
-
-  .ns-world-card-label {
-    padding: 1rem 1.15rem 1.25rem;
-  }
-
-  .ns-world-card-dot {
-    display: inline-block;
-    width: 0.4rem;
-    height: 0.4rem;
-    border-radius: 999px;
-    background: var(--world-accent, var(--coral));
-  }
-
   .ns-space-card {
     background: var(--surface-elevated);
     transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
@@ -1353,69 +1122,11 @@
     letter-spacing: 0.1em;
   }
 
-  
-
-  
-
-  
-
-  
-  
-
-  
-  
-
-  .ns-invitation {
-    position: relative;
-    border-block: 1px solid var(--hairline);
-    padding: clamp(3.5rem, 8vw, 6.5rem) 1rem;
-  }
-
-  .ns-invitation-spark {
-    position: absolute;
-    top: -1.5rem;
-    left: 50%;
-    display: grid;
-    width: 3rem;
-    height: 3rem;
-    place-items: center;
-    background: var(--surface-elevated);
-    color: var(--violet-electric-bright);
-    font-size: var(--text-display);
-    transform: translateX(-50%);
-    border: 1px solid var(--hairline);
-    box-shadow: var(--shadow-card);
-  }
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
   .ns-public-profile {
     background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px);
     background-size: 24px 24px;
     background-color: var(--void);
   }
-
-  
-
-  
-
-  
-
-  
-
-  
 
   .ns-profile-cta {
     border-color: var(--border);
@@ -1436,14 +1147,6 @@
     transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
   }
 
-  
-
-  
-
-  
-
-  
-
   .ns-discover-open {
     flex-shrink: 0;
     color: var(--violet-electric-bright);
@@ -1452,10 +1155,6 @@
     letter-spacing: 0.02em;
     transition: transform var(--duration-fast) var(--ease-standard);
   }
-
-  
-
-  
 
   .ns-discover-filters button {
     border-radius: var(--radius-control);
@@ -1471,26 +1170,6 @@
     background: var(--violet-electric);
     color: var(--ink-on-violet);
   }
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
 
   .ns-you-avatar-compact {
     display: flex;
@@ -1604,30 +1283,11 @@
     color: var(--coral-text);
   }
 
-  
-
-  
-
   @media (max-width: 639px) {
     
     
     
   }
-
-  
-
-  
-
-  
-
-  
-  
-  
-  
-
-  
-
-  
 
   .ns-site-header {
     background-color: color-mix(in srgb, var(--void) 86%, transparent);
@@ -1871,10 +1531,7 @@ summary:focus-visible,
     animation: none !important;
     transform: none !important;
   }
-  .ns-parallax { transform: none !important; }
   
-  .ns-worlds-path path { animation: none !important; }
-  .ns-worlds-track { transform: none !important; }
   .ns-reveal {
     opacity: 1 !important;
     transform: none !important;
