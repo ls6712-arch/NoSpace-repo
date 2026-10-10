@@ -72,12 +72,20 @@ export const posts: PostRow[] = [
   post({ id: 9203, user_id: THEO, hobby_slug: "art-creative", corner: "Sketching", caption: "Café number seven", media_url: photo("theo-sketchbook.jpg"), love_count: 6, in_count: 1, created_at: ago(7), pursuit_id: "p-cafes" }),
 ];
 
-/** Who each person follows, so the app sees them as connected. */
+/** Who follows whom. Maya has 128 accepted followers: Nick, Theo and 126
+ * unnamed example accounts (their ids match no profile, so lists skip them). */
+const extraFollowers = Array.from({ length: 126 }, (_, i) => ({
+  follower_id: `a0000000-0000-4000-8000-${String(100000 + i).padStart(12, "0")}`,
+  followed_id: MAYA,
+  status: "accepted",
+}));
+
 export const profileFollows = [
-  { follower_id: MAYA, followee_id: NICK, status: "accepted" },
-  { follower_id: MAYA, followee_id: THEO, status: "accepted" },
-  { follower_id: NICK, followee_id: MAYA, status: "accepted" },
-  { follower_id: THEO, followee_id: MAYA, status: "accepted" },
+  { follower_id: MAYA, followed_id: NICK, status: "accepted" },
+  { follower_id: MAYA, followed_id: THEO, status: "accepted" },
+  { follower_id: NICK, followed_id: MAYA, status: "accepted" },
+  { follower_id: THEO, followed_id: MAYA, status: "accepted" },
+  ...extraFollowers,
 ];
 
 const pursuitRow = (r: Record<string, unknown>) => ({
