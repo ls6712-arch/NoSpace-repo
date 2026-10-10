@@ -9,6 +9,7 @@ export const LANDING_FILES = {
   save: "step-save.webp",
   try: "step-try.webp",
   share: "step-share.webp",
+  reward: "reward-notification.webp",
   comeAlong: "come-along.webp",
   privacy: "privacy-picker.webp",
 } as const;

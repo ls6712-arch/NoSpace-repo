@@ -1,0 +1,3 @@
+# Photos are licensed images, added by hand. See README.md.
+photos/*
+!photos/.gitkeep

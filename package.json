@@ -13,7 +13,8 @@
     "visual": "node scripts/visual/run.ts",
     "visual:selftest": "node scripts/visual/run.ts --selftest",
     "build:app": "vite build",
-    "build:gradient": "vite build --config vite.gradient.config.ts"
+    "build:gradient": "vite build --config vite.gradient.config.ts",
+    "landing:screens": "node scripts/landing-screens/capture.mjs"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.23",

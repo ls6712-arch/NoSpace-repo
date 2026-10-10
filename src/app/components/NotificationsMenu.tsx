@@ -157,8 +157,10 @@ export function NotificationsMenu() {
         )}
       </Button>
 
+      {/* Under 640px the panel is pinned to the screen edges. Anchored to the
+          bell (right-0, w-80) it ran 40px off the left edge of a 390px phone. */}
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-popover shadow-overlay">
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-popover shadow-overlay max-sm:fixed max-sm:inset-x-3 max-sm:top-[calc(var(--safe-top)+4.5rem)] max-sm:mt-0 max-sm:w-auto">
           <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3 text-small">
             Notifications
             {groupedUnread > 0 && (
