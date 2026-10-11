@@ -128,6 +128,6 @@ export const pursuits = [
  * people saving "Sourdough, loaf #10": see public.save_notification_body. */
 export const notifications = [
   { id: 1, user_id: MAYA, kind: "save", body: "14 people want to try “Sourdough, loaf #10”.", href: "/moment/9001", actor_name: null, actor_id: null, read: false, created_at: ago(0, 0.2), target_post_id: 9001 },
-  { id: 2, user_id: MAYA, kind: "love", body: "Nick loved your moment.", href: "/moment/9003", actor_name: "Nick", actor_id: NICK, read: false, created_at: ago(0, 5), target_post_id: 9002 },
+  { id: 2, user_id: MAYA, kind: "love", body: "Nick loved your moment.", href: "/moment/9002", actor_name: "Nick", actor_id: NICK, read: false, created_at: ago(0, 5), target_post_id: 9002 },
   { id: 3, user_id: MAYA, kind: "thought", body: "Theo left a thought on your moment.", href: "/moment/9003", actor_name: "Theo", actor_id: THEO, read: true, created_at: ago(1, 3), target_post_id: 9003 },
 ];

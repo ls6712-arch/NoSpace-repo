@@ -43,16 +43,24 @@ Made with gpt-image-2.5-sunburst via ElevenLabs (portrait 3:4, 1536 x 2048):
 | `maya-film` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs (printed 35mm photos) |
 | `maya-bouldering` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs |
 
-From a collage supplied by the owner (tool not recorded; cropped to about 400
-to 630 px wide, so they look soft at full size). Still to be regenerated:
+Visible on a landing screen, still from the owner's collage (tool not
+recorded; cropped to about 400 to 630 px wide, so they look soft). To be
+regenerated:
 
-| Photo | Credit |
+| Photo | Screen | Share of that screen | Credit |
+|---|---|---|---|
+| `nick-bouldering` | `step-save` | about 39% | AI-generated, from the collage |
+| `theo-wheel` | `come-along` | about 39% | AI-generated, from the collage |
+
+Unused: these example photos do not appear on any landing screen (checked by
+swapping each for a solid color and capturing all seven screens). They are not
+needed and are not being regenerated:
+
+| Photo | Note |
 |---|---|
-| `nick-bouldering` | AI-generated, from the collage |
-| `nick-cutting-board` | AI-generated, from the collage |
-| `nick-guitar` | AI-generated, from the collage |
-| `theo-wheel` | AI-generated, from the collage |
-| `theo-ramen` | AI-generated, from the collage |
-| `theo-sketchbook` | AI-generated, from the collage |
+| `nick-cutting-board` | Unused. Only on Nick's other Moments, not on any screen |
+| `nick-guitar` | Unused |
+| `theo-ramen` | Unused |
+| `theo-sketchbook` | Unused |
 
 Screens that differ in size from 1170 x 2532 will be scaled to fit the frame.
