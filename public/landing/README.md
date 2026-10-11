@@ -34,20 +34,25 @@ example screens only (the earlier "no AI images" rule does not apply here).
 They are not committed; only the screens are. Replace them with real photos
 when available.
 
+Made with gpt-image-2.5-sunburst via ElevenLabs (portrait 3:4, 1536 x 2048):
+
 | Photo | Credit |
 |---|---|
-| `maya-sourdough` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs (1536 x 2048) |
-| `maya-running` | AI-generated, from a collage supplied by the owner (tool not recorded) |
-| `maya-bouldering` | AI-generated, from the same collage |
-| `nick-bouldering` | AI-generated, from the same collage |
-| `nick-cutting-board` | AI-generated, from the same collage |
-| `nick-guitar` | AI-generated, from the same collage |
-| `theo-wheel` | AI-generated, from the same collage |
-| `theo-ramen` | AI-generated, from the same collage |
-| `theo-sketchbook` | AI-generated, from the same collage |
+| `maya-sourdough` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs |
+| `maya-running` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs |
+| `maya-film` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs (printed 35mm photos) |
+| `maya-bouldering` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs |
 
-The collage images were cropped to about 400 to 630 px wide, so they look soft
-at full size. A film-photography post was removed from the example data
-because its image had garbled lettering; it is not shown on any screen.
+From a collage supplied by the owner (tool not recorded; cropped to about 400
+to 630 px wide, so they look soft at full size). Still to be regenerated:
+
+| Photo | Credit |
+|---|---|
+| `nick-bouldering` | AI-generated, from the collage |
+| `nick-cutting-board` | AI-generated, from the collage |
+| `nick-guitar` | AI-generated, from the collage |
+| `theo-wheel` | AI-generated, from the collage |
+| `theo-ramen` | AI-generated, from the collage |
+| `theo-sketchbook` | AI-generated, from the collage |
 
 Screens that differ in size from 1170 x 2532 will be scaled to fit the frame.
