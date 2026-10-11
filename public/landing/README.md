@@ -31,22 +31,23 @@ as real members. The "See who's on Soosh" section stays real-only.
 
 The example screens use AI-generated images, by the owner's decision for these
 example screens only (the earlier "no AI images" rule does not apply here).
-The ten images arrived as one collage and were cropped to the file names
-listed in `landing-preview/README.md`. They are not committed; only the
-screens are. Source files are about 400 to 630 px wide, so photos look soft at
-full size. Replace them with real photos when available.
+They are not committed; only the screens are. Replace them with real photos
+when available.
 
 | Photo | Credit |
 |---|---|
-| `maya-sourdough` | AI-generated with Figma |
-| `maya-running` | AI-generated with Figma |
-| `maya-film` | AI-generated with Figma. **Replace:** the camera and film canister carry garbled lettering |
-| `maya-bouldering` | AI-generated with Figma |
-| `nick-bouldering` | AI-generated with Figma |
-| `nick-cutting-board` | AI-generated with Figma |
-| `nick-guitar` | AI-generated with Figma |
-| `theo-wheel` | AI-generated with Figma |
-| `theo-ramen` | AI-generated with Figma |
-| `theo-sketchbook` | AI-generated with Figma |
+| `maya-sourdough` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs (1536 x 2048) |
+| `maya-running` | AI-generated, from a collage supplied by the owner (tool not recorded) |
+| `maya-bouldering` | AI-generated, from the same collage |
+| `nick-bouldering` | AI-generated, from the same collage |
+| `nick-cutting-board` | AI-generated, from the same collage |
+| `nick-guitar` | AI-generated, from the same collage |
+| `theo-wheel` | AI-generated, from the same collage |
+| `theo-ramen` | AI-generated, from the same collage |
+| `theo-sketchbook` | AI-generated, from the same collage |
+
+The collage images were cropped to about 400 to 630 px wide, so they look soft
+at full size. A film-photography post was removed from the example data
+because its image had garbled lettering; it is not shown on any screen.
 
 Screens that differ in size from 1170 x 2532 will be scaled to fit the frame.

@@ -32,7 +32,7 @@ const SCREENS = {
   // progress ("Climb my first V2") and one Finished ("First roll of film").
   "hero-shelf": async (pg) => {
     await go(pg, "landing-preview/shelf");
-    await scrollTo(pg, "Your Pursuits", 400);
+    await scrollTo(pg, "Your Pursuits", 455);
   },
   // Nick's "First V3!" with the Save button on its photo.
   "step-save": async (pg) => {
