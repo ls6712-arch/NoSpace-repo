@@ -52,6 +52,25 @@ import {
 } from "./pages/Settings";
 import { NotFound } from "./pages/NotFound";
 
+// The landing-page screenshot preview. These routes exist only when the app is
+// built or served with `--mode landing-preview` (npm run landing:screens), where
+// the database client is an in-memory one holding example people. In every other
+// mode this is an empty list and the dynamic imports are compiled out, so the
+// preview code and its fixtures never reach a production build.
+const landingPreviewRoutes =
+  import.meta.env.MODE === "landing-preview"
+    ? [
+        {
+          path: "landing-preview/:screen",
+          lazy: () => import("../landing-preview/PreviewScreen").then((m) => ({ Component: m.PreviewScreen })),
+        },
+        {
+          path: "landing-preview/pursuit/:id",
+          lazy: () => import("../landing-preview/PreviewScreen").then((m) => ({ Component: m.PreviewPursuit })),
+        },
+      ]
+    : [];
+
 export const router = createHashRouter([
   {
     path: "/",
@@ -141,6 +160,7 @@ export const router = createHashRouter([
       // Profile section route instead (redesign/settings), so that redirect
       // is gone; nothing else pointed at it.
 
+      ...landingPreviewRoutes,
       { path: "*", Component: NotFound },
     ],
   },

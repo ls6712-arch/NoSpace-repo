@@ -132,7 +132,7 @@ export function PursuitCompactCard({
             {label}
           </span>
         )}
-        <span className="block truncate text-small leading-tight" style={{ fontFamily: "var(--font-serif)" }} title={pursuit.title}>
+        <span className="line-clamp-2 break-words text-small leading-tight" style={{ fontFamily: "var(--font-serif)" }} title={pursuit.title}>
           {pursuit.title}
         </span>
         <span className="block truncate text-caption text-muted-foreground" title={progressText ?? status}>{progressText ?? status}</span>

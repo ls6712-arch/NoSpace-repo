@@ -70,7 +70,7 @@ function Steps() {
           <div className="lp-steps">
             {COPY.steps.map((step, i) => (
               <div key={step.label} className="lp-step">
-                <PhoneFrame image={shots[i]} alt={LANDING_ALT[shots[i]]} className="lp-phone-md" />
+                <PhoneFrame image={shots[i]} alt={LANDING_ALT[shots[i]]} caption={COPY.exampleCaption} className="lp-phone-md" />
                 <h3 className="lp-step-label">{step.label}</h3>
                 <p>{step.line}</p>
               </div>
@@ -90,9 +90,10 @@ function Split({
   flip = false,
   tone,
 }: {
-  image: "comeAlong" | "privacy";
+  image: "comeAlong" | "privacy" | "reward";
   alt: string;
-  heading: string;
+  /** Left out when the line stands alone, as in the reward section. */
+  heading?: string;
   line: string;
   flip?: boolean;
   tone: "lp-surface" | "lp-surface-alt";
@@ -103,10 +104,10 @@ function Split({
       <div className="lp-wide">
         <Reveal className={`lp-split ${flip ? "lp-split-flip" : ""}`}>
           <div className="lp-split-text">
-            <h2 className="lp-h2">{heading}</h2>
-            <p>{line}</p>
+            {heading && <h2 className="lp-h2">{heading}</h2>}
+            <p className={heading ? undefined : "lp-statement"}>{line}</p>
           </div>
-          <PhoneFrame image={image} alt={alt} className="lp-phone-md" />
+          <PhoneFrame image={image} alt={alt} caption={COPY.exampleScreenCaption} className="lp-phone-md" />
         </Reveal>
       </div>
     </section>
@@ -199,7 +200,7 @@ export function Landing() {
             </div>
             {heroShot && (
               <div className="lp-hero-phone">
-                <PhoneFrame image="hero" alt={LANDING_ALT.hero} priority />
+                <PhoneFrame image="hero" alt={LANDING_ALT.hero} caption={COPY.exampleCaption} priority />
               </div>
             )}
           </section>
@@ -212,20 +213,21 @@ export function Landing() {
 
           <Steps />
 
+          <Split image="reward" alt={LANDING_ALT.reward} line={COPY.rewardLine} tone="lp-surface-alt" />
           <Split
             image="comeAlong"
             alt={LANDING_ALT.comeAlong}
             heading={COPY.comeAlongHeading}
             line={COPY.comeAlongLine}
-            tone="lp-surface-alt"
+            flip
+            tone="lp-surface"
           />
           <Split
             image="privacy"
             alt={LANDING_ALT.privacy}
             heading={COPY.privacyHeading}
             line={COPY.privacyLine}
-            flip
-            tone="lp-surface"
+            tone="lp-surface-alt"
           />
 
           <RealShelves />

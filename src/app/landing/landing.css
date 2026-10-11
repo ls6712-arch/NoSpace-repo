@@ -196,6 +196,18 @@
   background: var(--lp-cream);
 }
 .lp-phone-md { --lp-phone-w: min(300px, 78vw); }
+.lp-shot { margin: 0 auto; }
+.lp-caption {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 500;
+  color: var(--lp-ink);
+}
+/* Under the hero phone the caption hangs below it, so the overlap math above
+   (which only knows the phone's height) stays right. */
+.lp-hero-phone .lp-caption { position: absolute; left: 0; right: 0; top: 100%; margin-top: 8px; }
 
 /* 3. Steps */
 .lp-steps {
@@ -225,6 +237,15 @@
 }
 .lp-split-text .lp-h2 { margin-bottom: 16px; }
 .lp-split-text p { margin: 0; max-width: 520px; }
+.lp-split-text .lp-statement {
+  max-width: 560px;
+  font-family: var(--lp-font-heading);
+  font-weight: 700;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
 @media (max-width: 899px) { .lp-split-text { text-align: center; } .lp-split-text p { margin: 0 auto; } }
 
 /* 7. Shelves */

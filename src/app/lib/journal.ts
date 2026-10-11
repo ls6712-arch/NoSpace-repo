@@ -699,6 +699,13 @@ export function toggleSaved(postId: number) {
   commit({ ...state, saved });
 }
 
+/** Replaces the whole local journal. Only the landing-page screenshot preview
+ * (src/landing-preview, `--mode landing-preview`) calls this, to load example
+ * Pursuits; nothing in the app itself does. */
+export function seedJournal(next: Partial<JournalState>) {
+  commit({ ...EMPTY, ...next });
+}
+
 export function isSaved(postId: number) {
   return state.saved.includes(postId);
 }
