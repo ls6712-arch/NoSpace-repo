@@ -29,25 +29,36 @@ as real members. The "See who's on Soosh" section stays real-only.
 
 ## Photo credits
 
-The example screens use AI-generated images, by the owner's decision for these
-example screens only (the earlier "no AI images" rule does not apply here).
-They are not committed; only the screens are. Replace them with real photos
-when available.
+The example screens mix real photos with AI-generated ones, by the owner's
+decision for these example screens only (the earlier "no AI images" rule does
+not apply to the AI-generated ones). Photos are not committed; only the screens
+are.
+
+Real photos (Unsplash license), supplied by the owner:
+
+| Photo | Screen | Source | Photographer |
+|---|---|---|---|
+| `nick-bouldering` | `step-save` | Unsplash | Name to be added by the owner (not recorded when supplied) |
+| `theo-wheel` | `come-along` | Unsplash | Name to be added by the owner (not recorded when supplied) |
+
+AI-generated with gpt-image-2.5-sunburst via ElevenLabs (portrait 3:4, 1536 x 2048):
 
 | Photo | Credit |
 |---|---|
-| `maya-sourdough` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs (1536 x 2048) |
-| `maya-running` | AI-generated, from a collage supplied by the owner (tool not recorded) |
-| `maya-bouldering` | AI-generated, from the same collage |
-| `nick-bouldering` | AI-generated, from the same collage |
-| `nick-cutting-board` | AI-generated, from the same collage |
-| `nick-guitar` | AI-generated, from the same collage |
-| `theo-wheel` | AI-generated, from the same collage |
-| `theo-ramen` | AI-generated, from the same collage |
-| `theo-sketchbook` | AI-generated, from the same collage |
+| `maya-sourdough` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs |
+| `maya-running` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs |
+| `maya-film` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs (printed 35mm photos) |
+| `maya-bouldering` | AI-generated with gpt-image-2.5-sunburst via ElevenLabs |
 
-The collage images were cropped to about 400 to 630 px wide, so they look soft
-at full size. A film-photography post was removed from the example data
-because its image had garbled lettering; it is not shown on any screen.
+Unused: these example photos do not appear on any landing screen (checked by
+swapping each for a solid color and capturing all seven screens). They are not
+needed and are not being replaced:
+
+| Photo | Note |
+|---|---|
+| `nick-cutting-board` | Unused. Not on any screen |
+| `nick-guitar` | Unused |
+| `theo-ramen` | Unused |
+| `theo-sketchbook` | Unused |
 
 Screens that differ in size from 1170 x 2532 will be scaled to fit the frame.
