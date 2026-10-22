@@ -1,8 +1,8 @@
-import type { CSSProperties } from "react";
-import { Link } from "react-router";
 import { hobbies } from "../../data/hobbies";
 import { quickGuides } from "../../data/cornerGuides";
-import { cornerColorFor } from "../../lib/cornerColor";
+import { fieldStyle } from "../../lib/fieldColor";
+import { useRowScrollMemory } from "../../lib/useHistoryState";
+import { PressLink } from "../afterhours/PressLink";
 
 /**
  * "Got 15 minutes?" on Discover: Corners whose first step fits in about
@@ -17,6 +17,7 @@ import { cornerColorFor } from "../../lib/cornerColor";
 const MAX = 10;
 
 export function QuickStarts() {
+  const row = useRowScrollMemory("discover.quickStarts");
   const items = quickGuides()
     .map((q) => {
       const hobby = hobbies.find((h) => h.slug === q.spaceSlug);
@@ -29,25 +30,23 @@ export function QuickStarts() {
   if (items.length === 0) return null;
 
   return (
-    <section className="mb-12" aria-labelledby="quick-starts-title">
-      <h2 id="quick-starts-title" className="mb-5 text-title" style={{ fontFamily: "var(--font-serif)" }}>
+    <section className="mb-10" aria-labelledby="quick-starts-title">
+      <h2 id="quick-starts-title" className="mb-5 text-display" style={{ fontFamily: "var(--font-poster)" }}>
         Got 15 minutes?
       </h2>
-      <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
+      <ul {...row} className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
         {items.map((q) => (
-          <li key={`${q.spaceSlug}-${q.cornerSlug}`} className="w-60 shrink-0 snap-start">
-            <Link
+          <li key={`${q.spaceSlug}-${q.cornerSlug}`} className="w-64 shrink-0 snap-start" style={fieldStyle(q.spaceSlug)}>
+            {/* The page's one bold colour moment: each step on its Space's colour. */}
+            <PressLink
               to={`/corner/${q.cornerSlug}`}
-              className="flex h-full flex-col gap-3 rounded-card border border-border bg-card p-4 transition-[transform,border-color,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-[var(--coral-deep)] hover:shadow-card active:scale-[0.98]"
-              style={{ "--corner-color": cornerColorFor(`${q.spaceSlug}-${q.cornerSlug}`) } as CSSProperties}
+              className="group flex h-full min-h-[11rem] flex-col justify-between gap-6 rounded-card bg-[var(--field)] p-4 text-[var(--on-field)]"
             >
-              <span
-                className="self-start rounded-full bg-[color-mix(in_srgb,var(--card)_86%,var(--corner-color)_14%)] px-2.5 py-1 text-caption font-medium text-[var(--corner-color)]"
-              >
-                {q.label}
+              <span className="text-small font-medium">{q.label}</span>
+              <span className="text-title leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
+                {q.guide.step}
               </span>
-              <span className="text-body text-foreground">{q.guide.step}</span>
-            </Link>
+            </PressLink>
           </li>
         ))}
       </ul>

@@ -192,6 +192,28 @@
   --corner-rose: #8A3449;
   --corner-sky: #1F5E86;
 
+  /* ── After hours (Discover and Corner pilot, Oct 2026) ───────────────────
+     Colour as identity, used the way a magazine uses it: sparingly. Every
+     Space owns one hue and its Corners inherit it, shown as a dot or a short
+     rule, or once per page as a bold band (white text on it, --on-field); on
+     the page itself text uses the --corner-* variants above, which clear
+     5.6:1 in both themes. Which Space gets which hue lives
+     in lib/fieldColor.ts. Dark mode deepens them a little so marks sit in the
+     charcoal instead of glaring. */
+  --field-terracotta: #B5482B;
+  --field-plum: #7A3D74;
+  --field-forest: #2C6E4F;
+  --field-denim: #3B6E93;
+  --field-ochre: #8F6410;
+  --field-olive: #62743A;
+  --field-rose: #B33F5E;
+  --field-sky: #2579A8;
+  /* Text on a --field band: white. Every light hue clears 4.8:1 with it, and
+     the dark-mode hues are deeper still. */
+  --on-field: #FFFFFF;
+  /* The display face for poster-scale type (Corner headers, field tiles). */
+  --font-poster: 'Instrument Serif', 'Fraunces', Georgia, serif;
+
   /* ── GeneratedArt.tsx illustration palette ───────────────────────────────
      The flat-vector hobby illustrations' own colors — deliberately a
      separate family from the UI tokens above (illustrations read as warm,
@@ -347,6 +369,16 @@
    properties resolve against the final cascaded value at use time. */
 .dark {
   color-scheme: dark;
+  /* After hours: hues deepened ~18% so marks sit in the charcoal. */
+  --field-terracotta: #943B23;
+  --field-plum: #64325F;
+  --field-forest: #245A41;
+  --field-denim: #305A79;
+  --field-ochre: #75520D;
+  --field-olive: #505F30;
+  --field-rose: #93344D;
+  --field-sky: #1E638A;
+
   --background: var(--theme-dark-bg);
   --card: var(--theme-dark-card);
   --foreground: #EFE8DA;
@@ -635,6 +667,11 @@
      above; scripts/design-audit.py flags it anywhere else. */
   --text-hero: clamp(2.5rem, 1.5rem + 4vw, 4.75rem);
   --text-hero--line-height: 1.05;
+  /* Poster scale: Corner headers and field tiles only (the after-hours pilot).
+     Tight leading, set in --font-poster. The guard flags it anywhere else. */
+  --text-poster: clamp(4rem, 1.5rem + 11vw, 9rem);
+  --text-poster--line-height: 0.9;
+  --text-poster--letter-spacing: -0.02em;
 
   /* Landing-page section gap (Home.tsx only), the way --text-hero is the
      landing-only type size: py-section-hero, pt-section-hero, … In-app
