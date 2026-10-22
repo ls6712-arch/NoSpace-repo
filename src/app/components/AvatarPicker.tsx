@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { friendlyError } from "../lib/friendlyError";
 import { UPLOAD_COPY } from "../lib/stateCopy";
+import { prepareForUpload, storageExtension } from "../lib/uploadMedia";
 
 /**
  * A picture of you, or your initials. Both are fine — the initials are a real
@@ -60,16 +61,18 @@ export function AvatarPicker({
       return;
     }
 
-    const dot = file.name.lastIndexOf(".");
-    const ext = (dot > -1 ? file.name.slice(dot + 1) : "jpg")
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "")
-      .slice(0, 5);
-    const path = `${user.id}/avatars/${Date.now()}.${ext || "jpg"}`;
+    const prepared = await prepareForUpload(file, { allowVideo: false, maxEdge: 1024 });
+    if (prepared.error !== null) {
+      setError(prepared.error);
+      setBusy(false);
+      return;
+    }
+    const ready = prepared.file;
+    const path = `${user.id}/avatars/${Date.now()}.${storageExtension(ready)}`;
 
     const { error: uploadError } = await supabase.storage
       .from("post-media")
-      .upload(path, file, { contentType: file.type || undefined, upsert: true });
+      .upload(path, ready, { contentType: ready.type || undefined, upsert: true });
 
     if (uploadError) {
       console.warn("[AvatarPicker] upload failed:", uploadError);

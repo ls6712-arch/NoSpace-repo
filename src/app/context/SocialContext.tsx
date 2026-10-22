@@ -29,6 +29,7 @@ import {
 } from "../lib/messageSync";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
 import { deleteMessagePhoto, uploadMessagePhoto } from "../lib/messageMedia";
+import { prepareForUpload, storageExtension } from "../lib/uploadMedia";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -1392,12 +1393,14 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       // ones for a second bucket.
       let mediaUrl: string | undefined;
       if (media) {
-        const dot = media.name.lastIndexOf(".");
-        const ext = (dot > -1 ? media.name.slice(dot + 1) : "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? `.${ext}` : ""}`;
-        const { error: uploadError } = await supabase.storage
-          .from("post-media")
-          .upload(path, media, { contentType: media.type || undefined, upsert: false });
+        const prepared = await prepareForUpload(media);
+        const ready = prepared.file;
+        const path = ready ? `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${storageExtension(ready)}` : "";
+        const { error: uploadError } = ready
+          ? await supabase.storage
+              .from("post-media")
+              .upload(path, ready, { contentType: ready.type || undefined, upsert: false })
+          : { error: new Error(prepared.error ?? "not prepared") };
         if (uploadError) {
           console.error("[SocialContext] thought media upload failed:", uploadError);
         } else {

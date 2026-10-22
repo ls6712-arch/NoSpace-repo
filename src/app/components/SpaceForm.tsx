@@ -19,6 +19,7 @@ import {
 import { notify } from "./ui/toaster";
 import { TOAST } from "../lib/stateCopy";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { prepareForUpload, storageExtension } from "../lib/uploadMedia";
 
 function slugify(name: string) {
   return name
@@ -88,12 +89,17 @@ export function SpaceForm({
     if (!file || !supabase || !user) return;
     setUploading(true);
     setError(null);
-    const dot = file.name.lastIndexOf(".");
-    const ext = (dot > -1 ? file.name.slice(dot + 1) : "jpg").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
-    const path = `${user.id}/spaces/${Date.now()}.${ext || "jpg"}`;
+    const prepared = await prepareForUpload(file, { allowVideo: false });
+    if (prepared.error !== null) {
+      setError(prepared.error);
+      setUploading(false);
+      return;
+    }
+    const ready = prepared.file;
+    const path = `${user.id}/spaces/${Date.now()}.${storageExtension(ready)}`;
     const { error: uploadError } = await supabase.storage
       .from("post-media")
-      .upload(path, file, { contentType: file.type || undefined, upsert: false });
+      .upload(path, ready, { contentType: ready.type || undefined, upsert: false });
     if (uploadError) {
       console.warn("[SpaceForm] cover upload failed:", uploadError);
       setError("That photo didn’t upload. Try again.");
