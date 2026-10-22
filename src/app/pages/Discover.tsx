@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
+import { useDarkByDefault } from "../context/ThemeContext";
+import { fieldStyle } from "../lib/fieldColor";
+import { PressLink } from "../components/afterhours/PressLink";
+import { BlurFade } from "../components/afterhours/BlurFade";
+import { MomentFigure } from "../components/afterhours/MomentFigure";
 import {
   Compass,
   LayoutGrid,
@@ -48,6 +53,8 @@ import { scrollBehavior } from "../lib/scrollToElement";
  * presses on purpose; nothing here loads on scroll.
  */
 const PAGE_SIZE = 24;
+/** The cards' small print (corner, date) reads in the sans on this page. */
+const GRID_SANS = "[&_.ns-section-kicker]:[font-family:var(--font-body)] [&_time]:[font-family:var(--font-body)]";
 
 const DAY = 86_400_000;
 const HOUR = 3_600_000;
@@ -112,7 +119,7 @@ const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
  * doing something.
  */
 function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
-  return `border-b-2 font-medium tracking-wider transition-colors ${
+  return `border-b-2 font-medium tracking-wide [font-family:var(--font-body)] transition-colors ${
     size === "sm" ? "pb-2 text-caption" : "pb-1 text-caption"
   } ${
     active
@@ -260,8 +267,12 @@ function MarketplaceTab({ query }: { query: string }) {
  * by 30-day activity, never by follower/member counts. Category is
  * internal-only now, so nothing here names one — just the Corner.
  */
+/** On a phone the index shows this many Corners, then "See all". */
+const PHONE_INDEX = 8;
+
 function AllCornersBrowser({ query }: { query: string }) {
   const { cornersFor, cornerThreshold } = useCorners();
+  const [showAll, setShowAll] = useHistoryState("discover.cornersAll", false);
   useCategories();
   const q = query.trim().toLowerCase();
 
@@ -285,37 +296,46 @@ function AllCornersBrowser({ query }: { query: string }) {
   }
 
   return (
-    <div className="mb-14 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    // An index, like a magazine's contents: names set large, hairlines
+    // between, a small dot in the Space's colour. No tiles.
+    <div className="mb-14">
+    <ul className="grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
       {matching.map((c, i) => (
-        <Link
+        <li
           key={`${c.spaceSlug}-${c.slug}`}
-          to={`/corner/${c.slug}`}
-          aria-label={`Browse the ${c.name} Corner`}
-          // Reveal-on-load: .ns-enter is the same rise-and-fade every other
-          // entrance in this app uses (theme.css), already switched off
-          // wholesale under prefers-reduced-motion. The per-item delay is
-          // necessarily dynamic (an unbounded grid, not theme.css's fixed
-          // ns-enter-1..4 steps) and capped so a long list still reads as
-          // one wave, not a slow trickle. design-token-ignore: stagger delay
-          //
-          // Background is the card's own color-mix'd 14% toward the
-          // Corner's own text color (computed below into --corner-color),
-          // deepening to 22% on hover — a colored whisper at rest, a little
-          // more playful on interaction. Every one of the 8 hues was
-          // contrast-checked at both strengths against light and dark
-          // --card, not just the flat --card this used before.
-          className="ns-enter group flex min-h-[9rem] flex-col items-center justify-center rounded-card border border-border bg-[color-mix(in_srgb,var(--card)_86%,var(--corner-color)_14%)] px-4 py-6 text-center transition-[transform,border-color,box-shadow,background-color] duration-base ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:bg-[color-mix(in_srgb,var(--card)_78%,var(--corner-color)_22%)] hover:shadow-card active:scale-[0.98] sm:min-h-[11rem] sm:px-5"
-          style={{ "--corner-color": cornerColorFor(`${c.spaceSlug}-${c.slug}`), animationDelay: `${Math.min(i, 11) * 0.03}s` } as CSSProperties}
+          className={!showAll && i >= PHONE_INDEX ? "max-sm:hidden" : undefined}
+          style={fieldStyle(c.spaceSlug)}
         >
-          <span
-            // design-token-ignore: Corner name tile, sits between the title and display sizes
-            className="text-[24px] font-semibold leading-tight text-[var(--corner-color)] transition-transform duration-base ease-standard group-hover:scale-105 sm:text-[32px]"
-            style={{ fontFamily: "var(--font-serif)" }}
+          <PressLink
+            to={`/corner/${c.slug}`}
+            aria-label={`Browse the ${c.name} Corner`}
+            // Reveal-on-load: .ns-enter is the rise-and-fade every entrance
+            // here uses, off under reduced motion; the per-item delay is
+            // dynamic (an unbounded list) and capped so it reads as one
+            // wave. design-token-ignore: stagger delay
+            className="ns-enter group flex min-h-14 items-center justify-between gap-4 border-t border-border py-3"
+            style={{ animationDelay: `${Math.min(i, 11) * 0.03}s` }}
           >
-            {c.name}
-          </span>
-        </Link>
+            <span
+              className="text-display leading-tight text-foreground transition-colors duration-fast group-hover:text-[var(--field-text)]"
+              style={{ fontFamily: "var(--font-poster)" }}
+            >
+              {c.name}
+            </span>
+            <span className="size-2 shrink-0 rounded-full bg-[var(--field)]" aria-hidden="true" />
+          </PressLink>
+        </li>
       ))}
+    </ul>
+    {!showAll && matching.length > PHONE_INDEX && (
+      <button
+        type="button"
+        onClick={() => setShowAll(true)}
+        className="min-h-11 border-t border-border pt-3 text-small font-medium text-[var(--coral-text)] underline-offset-4 hover:underline sm:hidden"
+      >
+        See all
+      </button>
+    )}
     </div>
   );
 }
@@ -326,8 +346,8 @@ function SpotlightSkeleton() {
   return (
     <section className={`mb-12 ${show ? "" : "invisible"}`} aria-busy="true">
       <div className="mb-5">
-        <div className="ns-section-kicker mb-2">Popular Moments from across {APP_NAME}</div>
-        <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>Spotlight</h2>
+        <div className="mb-2 text-caption font-medium text-muted-foreground">Popular Moments from across {APP_NAME}</div>
+        <h2 className="text-display" style={{ fontFamily: "var(--font-poster)" }}>Spotlight</h2>
       </div>
       <div className="flex gap-4 overflow-hidden pb-2">
         {[0, 1, 2, 3].map((i) => (
@@ -341,6 +361,8 @@ function SpotlightSkeleton() {
 }
 
 export function Discover() {
+  // Designed dark first: dark unless the person chose Light themselves.
+  useDarkByDefault();
   const { publicFeed, postsStatus, reloadPosts } = useContent();
   const { user } = useAuth();
   // Subscribing re-renders this page when admin Space changes load.
@@ -594,9 +616,9 @@ export function Discover() {
 
   return (
     <div className="min-h-viewport">
-      <section className="relative overflow-hidden py-12 sm:py-12">
+      <section className="relative overflow-hidden py-10 sm:py-12">
         <div className="container relative mx-auto max-w-3xl px-4">
-          <div className="ns-discover-search relative">
+          <div className="relative border-b border-foreground">
             <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
             <input
               type="text"
@@ -653,17 +675,24 @@ export function Discover() {
           {tab === "corners" && (
             <>
               {/* Ideas, not search results: hidden while a search is open. */}
-              {!query.trim() && <QuickStarts />}
-              <AllCornersBrowser query={query} />
+              {!query.trim() && (
+                <BlurFade inView>
+                  <QuickStarts />
+                </BlurFade>
+              )}
+              {/* While searching, the matching Corners come first; otherwise the
+                  order is search, Got 15 minutes?, Spotlight, then the index. */}
+              {query.trim() && <AllCornersBrowser query={query} />}
 
               {/* Spotlight */}
               {postsStatus === "loading" && <SpotlightSkeleton />}
               {featured.length > 0 && (
+                <BlurFade inView>
                 <section className="mb-12">
                   <div className="mb-5 flex items-end justify-between gap-4">
                     <div>
-                      <div className="ns-section-kicker mb-2">Popular Moments from across {APP_NAME}</div>
-                      <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>Spotlight</h2>
+                      <div className="mb-2 text-caption font-medium text-muted-foreground">Popular Moments from across {APP_NAME}</div>
+                      <h2 className="text-display" style={{ fontFamily: "var(--font-poster)" }}>Spotlight</h2>
                     </div>
                     <a
                       href="#all-moments"
@@ -680,26 +709,24 @@ export function Discover() {
                       See all →
                     </a>
                   </div>
-                  <div {...spotlightRow} className="flex gap-4 overflow-x-auto pb-2">
-                    {featured.map((post) => (
-                      <div key={post.id} className="w-64 shrink-0">
-                        <MomentCard
-                          post={post}
-                          surface="discover"
-                          size="compact"
-                          onOpen={() => setOpenPost(post)}
-                        />
-                      </div>
+                  <div {...spotlightRow} className="-mx-4 flex snap-x gap-2 overflow-x-auto pb-2 [scrollbar-width:none] sm:mx-0 sm:gap-5">
+                    {featured.map((post, i) => (
+                      <BlurFade key={post.id} delay={i * 0.04} className="w-[92vw] shrink-0 snap-start sm:w-64">
+                        <MomentFigure post={post} bleed priority={i < 2} onOpen={() => setOpenPost(post)} />
+                      </BlurFade>
                     ))}
                   </div>
                 </section>
+                </BlurFade>
               )}
+
+              {!query.trim() && <AllCornersBrowser query={query} />}
 
               {/* All Moments */}
               <div id="all-moments" className="mb-4 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <div className="ns-section-kicker mb-2">Moments from across {APP_NAME}</div>
-                  <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>All Moments</h2>
+                  <div className="mb-2 text-caption font-medium text-muted-foreground">Moments from across {APP_NAME}</div>
+                  <h2 className="text-display" style={{ fontFamily: "var(--font-poster)" }}>All Moments</h2>
                 </div>
                 <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-control border border-border bg-card p-1">
                   {FEED_TABS.map(({ id, label }) => {
@@ -833,7 +860,7 @@ export function Discover() {
                   <EmptyState line="Nothing matches that yet." hint="Try a broader word or a different filter." />
                 )
               ) : (
-                <div className={MOMENT_GRID}>
+                <div className={`${MOMENT_GRID} ${GRID_SANS}`}>
                   {visible.map((post) => (
                     <MomentCard
                       key={post.id}

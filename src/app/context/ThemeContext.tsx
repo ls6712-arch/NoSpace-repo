@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   ReactNode,
@@ -16,6 +17,10 @@ interface ThemeContextType {
   preference: ThemePreference;
   resolvedTheme: ResolvedTheme;
   setPreference: (pref: ThemePreference) => void;
+  /** Screens that are designed dark first (Discover, Corner pages) turn this on
+   * while they are open. It only matters when the person's preference is
+   * "system" (the default): an explicit Light or Dark always wins. */
+  setDarkByDefault: (on: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -84,29 +89,40 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // React mounted — the first effect run here must not re-announce that as
   // a "change" and cross-fade into the state it's already in.
   const isFirstApply = useRef(true);
+  const [darkByDefault, setDarkByDefault] = useState(false);
+  const resolveNow = (pref: ThemePreference): ResolvedTheme =>
+    pref === "system" && darkByDefault ? "dark" : resolve(pref);
   // Only ever take the server's value once per sign-in, not on every profile
   // refresh — otherwise a local change made right after loading would keep
   // getting overwritten back to the last-saved server value.
   const tookServerPreference = useRef(false);
 
-  useEffect(() => {
-    const next = resolve(preference);
+  const lastPreference = useRef(preference);
+  // A layout effect, so a dark-first screen never paints one light frame.
+  useLayoutEffect(() => {
+    const next = resolveNow(preference);
     setResolvedTheme(next);
-    applyToDom(next, !isFirstApply.current);
+    // Only the person changing their preference cross-fades. Moving to or from
+    // a dark-first screen is a navigation, not a theme change.
+    const changedByPerson = lastPreference.current !== preference;
+    lastPreference.current = preference;
+    applyToDom(next, !isFirstApply.current && changedByPerson);
     isFirstApply.current = false;
-  }, [preference]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preference, darkByDefault]);
 
   useEffect(() => {
     if (preference !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
-      const next = resolve("system");
+      const next = resolveNow("system");
       setResolvedTheme(next);
       applyToDom(next, true);
     };
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, [preference]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preference, darkByDefault]);
 
   useEffect(() => {
     if (tookServerPreference.current) return;
@@ -140,7 +156,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ preference, resolvedTheme, setPreference }}>
+    <ThemeContext.Provider value={{ preference, resolvedTheme, setPreference, setDarkByDefault }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -150,4 +166,14 @@ export function useTheme() {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error("useTheme must be used within a ThemeProvider");
   return ctx;
+}
+
+/** Call from a screen designed dark first. Dark while it is open, unless the
+ * person has chosen Light (or Dark) themselves. */
+export function useDarkByDefault() {
+  const { setDarkByDefault } = useTheme();
+  useLayoutEffect(() => {
+    setDarkByDefault(true);
+    return () => setDarkByDefault(false);
+  }, [setDarkByDefault]);
 }

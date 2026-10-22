@@ -8,7 +8,7 @@
  * every write succeeds without storing anything.
  */
 import { TERMS_VERSION } from "../app/config";
-import { MAYA, notifications, ownPrivate, posts, profileFollows, profiles, pursuits } from "./fixtures";
+import { MAYA, cornerActivity, cornerRows, notifications, ownPrivate, posts, profileFollows, profiles, pursuits } from "./fixtures";
 
 type Row = Record<string, any>;
 
@@ -18,6 +18,7 @@ const ME = MAYA;
 const tables: Record<string, Row[]> = {
   profiles,
   posts,
+  corners: cornerRows,
   pursuits,
   notifications,
   profile_follows: profileFollows,
@@ -115,6 +116,7 @@ class Query implements PromiseLike<{ data: any; error: null; count?: number }> {
 
 const rpcResults: Record<string, (args: any) => any> = {
   my_profile_private: () => [ownPrivate(ME)],
+  corner_activity_30d: () => cornerActivity,
 };
 
 const channel = () => {

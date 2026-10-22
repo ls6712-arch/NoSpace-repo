@@ -125,6 +125,8 @@ scan type "no arbitrary text sizes; use the type scale" "${B}text-\[clamp\(" '*.
 SKIP_FILES="$SRC/app/pages/Home.tsx"
 scan type "text-hero is for the marketing page (Home.tsx) only" "${B}text-hero${E}" '*.ts' '*.tsx'
 scan spacing "section-hero spacing is for the marketing page (Home.tsx) only" "${B}([a-z0-9]+:)*-?(p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y)-section-hero${E}" '*.ts' '*.tsx'
+SKIP_FILES="$SRC/app/components/afterhours/PosterTitle.tsx"
+scan type "text-poster is for the Corner header (afterhours/PosterTitle.tsx) only" "${B}text-poster${E}" '*.ts' '*.tsx'
 SKIP_FILES=""
 
 # ── radius ─────────────────────────────────────────────────────────────────

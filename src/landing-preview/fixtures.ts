@@ -8,6 +8,8 @@
 export const MAYA = "a0000000-0000-4000-8000-00000000a001";
 export const NICK = "a0000000-0000-4000-8000-00000000a002";
 export const THEO = "a0000000-0000-4000-8000-00000000a003";
+/** Only in the Discover and Corner design preview: crochet Moments. Not on any landing screen. */
+export const HANA = "a0000000-0000-4000-8000-00000000a004";
 
 const origin = () => (typeof window === "undefined" ? "" : window.location.origin);
 /** Post media must be an absolute http(s) URL to count as a real photo. */
@@ -19,8 +21,20 @@ const ago = (days: number, hours = 0) => new Date(Date.now() - days * DAY - hour
 export const profiles = [
   { id: MAYA, username: "maya", display_name: "Maya", avatar_url: null, tagline: "Running, baking, film photography", bio: "Half marathon in the spring. Sourdough on Sundays. A roll of film in every coat pocket.", cover_title: null, cover_tagline: null, cover_post_id: null },
   { id: NICK, username: "nick", display_name: "Nick", avatar_url: null, tagline: "Bouldering, guitar, woodworking", bio: "Climbs on weeknights, builds things on weekends.", cover_title: null, cover_tagline: null, cover_post_id: null },
+  { id: HANA, username: "hana", display_name: "Hana", avatar_url: null, tagline: "Crochet", bio: "One hook, a lot of yarn.", cover_title: null, cover_tagline: null, cover_post_id: null },
   { id: THEO, username: "theo", display_name: "Theo", avatar_url: null, tagline: "Pottery, cooking, sketching", bio: "Learning the wheel. Cooking everything from scratch.", cover_title: null, cover_tagline: null, cover_post_id: null },
 ];
+
+/** The design preview can ask for a theme with localStorage "preview-theme"
+ * ("light" or "dark"); otherwise it is "system", like a new account. */
+const previewTheme = () => {
+  try {
+    const v = localStorage.getItem("preview-theme");
+    return v === "light" || v === "dark" ? v : "system";
+  } catch {
+    return "system";
+  }
+};
 
 /** What the signed-in session sees about itself: an active, onboarded member. */
 export const ownPrivate = (id: string) => ({
@@ -29,7 +43,7 @@ export const ownPrivate = (id: string) => ({
   invite_allowance: 3,
   onboarding_completed: true,
   onboarding_completed_at: ago(40),
-  theme_preference: "light",
+  theme_preference: previewTheme(),
   is_admin: false,
   discoverable: true,
   show_this_corner: true,
@@ -70,7 +84,37 @@ export const posts: PostRow[] = [
   post({ id: 9201, user_id: THEO, hobby_slug: "crafts-making", corner: "Pottery", caption: "Wheel class Saturday", media_url: photo("theo-wheel.jpg"), love_count: 11, in_count: 6, created_at: ago(2) }),
   post({ id: 9202, user_id: THEO, hobby_slug: "food-cooking", corner: "Cooking", caption: "Ramen from scratch", media_url: photo("theo-ramen.jpg"), love_count: 14, in_count: 5, created_at: ago(4) }),
   post({ id: 9203, user_id: THEO, hobby_slug: "art-creative", corner: "Sketching", caption: "Café number seven", media_url: photo("theo-sketchbook.jpg"), love_count: 6, in_count: 1, created_at: ago(7), pursuit_id: "p-cafes" }),
+  // Hana: crochet only (the Corner page preview)
+  post({ id: 9301, user_id: HANA, hobby_slug: "crafts-making", corner: "crochet", sub_hobby: "crochet", caption: "Granny square number nine", media_url: photo("hana-crochet-1.jpg"), love_count: 9, in_count: 3, created_at: ago(0, 5) }),
+  post({ id: 9302, user_id: HANA, hobby_slug: "crafts-making", corner: "crochet", sub_hobby: "crochet", caption: "First amigurumi, a very lopsided sun", media_url: photo("hana-crochet-2.jpg"), love_count: 6, in_count: 2, created_at: ago(2) }),
+  post({ id: 9303, user_id: HANA, hobby_slug: "crafts-making", corner: "crochet", sub_hobby: "crochet", caption: "Cotton dishcloths in sage", media_url: photo("hana-crochet-3.jpg"), love_count: 4, in_count: 1, created_at: ago(4) }),
+  post({ id: 9304, user_id: HANA, hobby_slug: "crafts-making", corner: "crochet", sub_hobby: "crochet", caption: "Chunky blanket, row 40", media_url: photo("hana-crochet-4.jpg"), love_count: 11, in_count: 5, created_at: ago(6) }),
+  post({ id: 9305, user_id: HANA, hobby_slug: "crafts-making", corner: "crochet", sub_hobby: "crochet", caption: "Yarn haul", media_url: photo("hana-crochet-5.jpg"), love_count: 3, in_count: 0, created_at: ago(9) }),
 ];
+
+/** Public Moments in the last 30 days per Corner, as public.corner_activity_30d()
+ * returns them. Only the Discover design preview reads this, to fill the Corners
+ * tab with a spread of Spaces. */
+export const cornerActivity = ([
+  ["crafts-making", "crochet", 5], ["crafts-making", "pottery", 4], ["crafts-making", "woodworking", 3],
+  ["food-cooking", "baking", 6], ["food-cooking", "sourdough", 4], ["food-cooking", "cooking", 5],
+  ["sports-fitness", "bouldering", 6], ["sports-fitness", "running", 5],
+  ["music", "guitar", 4], ["art-creative", "sketching", 4],
+  ["photography-film", "film-photography", 3], ["nature-outdoors", "hiking", 4],
+  ["books-writing", "writing", 3], ["home-garden", "houseplants", 3],
+] as [string, string, number][]).map(([space_slug, slug, moments_30d]) => ({ space_slug, slug, moments_30d }));
+
+/** The matching `corners` rows (id, name, counts), same preview-only purpose. */
+export const cornerRows = cornerActivity.map((c, i) => ({
+  id: 7000 + i,
+  space_slug: c.space_slug,
+  slug: c.slug,
+  name: c.slug.replace(/-/g, " ").replace(/^./, (ch) => ch.toUpperCase()),
+  moment_count: Number(c.moments_30d) + 2,
+  description: null,
+  created_at: ago(60),
+  hidden: false,
+}));
 
 /** Who follows whom. Maya has 128 accepted followers: Nick, Theo and 126
  * unnamed example accounts (their ids match no profile, so lists skip them). */
