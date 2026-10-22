@@ -22,13 +22,13 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Messages / Inbox | Chats / notifications and requests |
 | Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
 | Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
-| See all | Opens the full list when a list shows only some: Discover's Spotlight, and the Corners index on a phone (which shows the first 8) |
+| See all | Opens the full list when a list shows only some: Discover's Spotlight, and the group tiles on Discover's Corners tab (which show the first 8) |
 
 ## Hobbies and Spaces
 
 | Term | Meaning |
 |---|---|
-| Category | The 15 hobby groups. Internal only, never shown to members |
+| Category | Internal word, never shown to members. Two meanings: the 18 groups of Corners (Yarn and fabric, Food and drink, and so on), shown only by their own name as a heading or tile; and the 15 old groups behind Spaces in the code, never shown |
 | Corner | A hobby tag anyone can create |
 | Space | A group someone creates, with hosts and members |
 | Table | A Space's first tab. Sections: "Host picks", then "Latest" |

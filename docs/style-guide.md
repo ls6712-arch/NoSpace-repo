@@ -15,9 +15,13 @@ and by `npm test`. Terms live in `docs/glossary.md`.
 | **Space** | A host-created community. |
 
 Nothing else in the UI gets a capitalized name. Corners and Spaces are different
-things and are never labeled as each other. A broader group a Corner sits in
-(the old "Category") is internal and never shown. A Pursuit shows its specific
-Corner ("Badminton"), not that group.
+things and are never labeled as each other. The 18 groups a Corner sits in
+(Yarn and fabric, Food and drink, Rest and ritual, and so on) are shown by their
+own names, as headings and tiles on Discover: the name is the heading and the
+word "category" is never shown. Their names are not capitalized product nouns:
+sentence case, like any label. The 15 old groups ("Category" in the code) stay
+internal and are never shown. A Pursuit shows its specific Corner ("Badminton"),
+not its group.
 
 ### Proper names that keep their capitals
 

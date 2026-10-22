@@ -10,7 +10,8 @@ import { PosterTitle } from "../components/afterhours/PosterTitle";
 import { PressLink } from "../components/afterhours/PressLink";
 import { BlurFade } from "../components/afterhours/BlurFade";
 import { MomentFigure } from "../components/afterhours/MomentFigure";
-import { fieldStyle } from "../lib/fieldColor";
+import { cornerStyle } from "../lib/categoryStyle";
+import { fillRows } from "../lib/fillRows";
 import { MomentDetail } from "../components/MomentDetail";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
@@ -18,9 +19,6 @@ import { EmptyState } from "../components/StateViews";
 import { Loadable } from "../components/ui/skeleton";
 import { MomentGridSkeleton } from "../components/Skeletons";
 import { cornerGuide } from "../data/cornerGuides";
-
-/** Moments shown after the lead, before and after "Show more". */
-const REST_PAGE = 6;
 
 /**
  * A single Corner's own page — Feed/Moments only, no Home/People/Events/
@@ -78,20 +76,15 @@ export function CornerPage() {
 
   const spaceName = hobbies.find((h) => h.slug === spaceSlug)?.shortName ?? spaceSlug;
   const [lead, ...rest] = posts;
-  // How many plates follow the lead: always whole rows, per breakpoint (2
-  // across below lg, 3 across from lg). 6 fills both; with fewer than 6 the
-  // first view takes the largest whole-row count at each size and "Show more"
-  // brings in the rest.
+  // Whole rows only (see lib/fillRows.ts); "Show more" brings in the rest.
   const n = rest.length;
-  const grown = Math.min(n, REST_PAGE + morePages * REST_PAGE);
-  const lgCount = morePages > 0 || n >= REST_PAGE ? grown : n >= 3 ? n - (n % 3) : n;
-  const smCount = morePages > 0 || n >= REST_PAGE ? grown : n >= 2 ? n - (n % 2) : n;
+  const { lgCount, smCount } = fillRows(n, morePages);
   const shownRest = rest.slice(0, Math.max(lgCount, smCount));
   const hiddenLg = n > lgCount;
   const hiddenSm = n > smCount;
 
   return (
-    <div className="min-h-viewport" style={fieldStyle(spaceSlug)}>
+    <div className="min-h-viewport" style={cornerStyle(spaceSlug, corner.slug)}>
       {/* The page's one bold colour moment: a full-width band in the Space's
           colour behind the name. Everything else is paper and type. */}
       <header className="bg-[var(--field)] text-[var(--on-field)]">

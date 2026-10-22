@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
 import { useDarkByDefault } from "../context/ThemeContext";
-import { fieldStyle } from "../lib/fieldColor";
+import { cornerStyle } from "../lib/categoryStyle";
+import { CategoryGrid } from "../components/discover/CategoryGrid";
 import { PressLink } from "../components/afterhours/PressLink";
 import { BlurFade } from "../components/afterhours/BlurFade";
 import { MomentFigure } from "../components/afterhours/MomentFigure";
@@ -267,12 +268,8 @@ function MarketplaceTab({ query }: { query: string }) {
  * by 30-day activity, never by follower/member counts. Category is
  * internal-only now, so nothing here names one — just the Corner.
  */
-/** On a phone the index shows this many Corners, then "See all". */
-const PHONE_INDEX = 8;
-
 function AllCornersBrowser({ query }: { query: string }) {
   const { cornersFor, cornerThreshold } = useCorners();
-  const [showAll, setShowAll] = useHistoryState("discover.cornersAll", false);
   useCategories();
   const q = query.trim().toLowerCase();
 
@@ -296,16 +293,11 @@ function AllCornersBrowser({ query }: { query: string }) {
   }
 
   return (
-    // An index, like a magazine's contents: names set large, hairlines
-    // between, a small dot in the Space's colour. No tiles.
-    <div className="mb-14">
-    <ul className="grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
+    // Search results: names set large, hairlines between, a small dot in the
+    // category's colour. (Browsing is the category grid.)
+    <ul className="mb-14 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
       {matching.map((c, i) => (
-        <li
-          key={`${c.spaceSlug}-${c.slug}`}
-          className={!showAll && i >= PHONE_INDEX ? "max-sm:hidden" : undefined}
-          style={fieldStyle(c.spaceSlug)}
-        >
+        <li key={`${c.spaceSlug}-${c.slug}`} style={cornerStyle(c.spaceSlug, c.slug)}>
           <PressLink
             to={`/corner/${c.slug}`}
             aria-label={`Browse the ${c.name} Corner`}
@@ -327,16 +319,6 @@ function AllCornersBrowser({ query }: { query: string }) {
         </li>
       ))}
     </ul>
-    {!showAll && matching.length > PHONE_INDEX && (
-      <button
-        type="button"
-        onClick={() => setShowAll(true)}
-        className="min-h-11 border-t border-border pt-3 text-small font-medium text-[var(--coral-text)] underline-offset-4 hover:underline sm:hidden"
-      >
-        See all
-      </button>
-    )}
-    </div>
   );
 }
 
@@ -720,7 +702,7 @@ export function Discover() {
                 </BlurFade>
               )}
 
-              {!query.trim() && <AllCornersBrowser query={query} />}
+              {!query.trim() && <CategoryGrid />}
 
               {/* All Moments */}
               <div id="all-moments" className="mb-4 flex flex-wrap items-end justify-between gap-4">

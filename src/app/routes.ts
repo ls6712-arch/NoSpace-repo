@@ -9,6 +9,7 @@ import { extraConceptsEnabled, marketplaceEnabled } from "./config";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
+import { CategoryPage } from "./pages/Category";
 import { SpaceRoute } from "./pages/SpaceRoute";
 import { CreateSpace } from "./pages/CreateSpace";
 import { EditSpace } from "./pages/EditSpace";
@@ -126,6 +127,7 @@ export const router = createHashRouter([
       { path: "space/:slug/edit", Component: EditSpace },
       { path: "create-space", Component: CreateSpace },
       { path: "corner/:slug", Component: CornerPage },
+      { path: "browse/:slug", Component: CategoryPage },
       { path: "pursuits/new", Component: CreatePursuit },
       { path: "join/:token", Component: JoinPursuit },
       // The old per-Pursuit form is gone: one Log a Moment form, with the Pursuit pre-filled.
