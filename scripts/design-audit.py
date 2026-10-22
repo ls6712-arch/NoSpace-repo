@@ -41,7 +41,7 @@ for p in files:
 report["radius"] = (radius, radius_files, css_radius)
 
 # ── Type ───────────────────────────────────────────────────────────────────
-TW_SIZES = "xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl|caption|small|body|lead|title|display|hero"
+TW_SIZES = "xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl|caption|small|body|lead|title|display|hero|poster"
 TEXT_SIZE = re.compile(rf"(?<![\w-])text-(?:{TW_SIZES}|\[[\d.]+(?:px|rem|em)\]|\[clamp\([^\]]+\)\])(?![\w-])")
 textsz = Counter()
 textsz_files = defaultdict(Counter)

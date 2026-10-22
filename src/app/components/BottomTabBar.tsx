@@ -7,12 +7,12 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
  * Phone and tablet navigation: four labelled destinations, matching the
  * desktop top nav's Discover / Home / Create in the same order (plus
  * Profile, which hangs off the avatar on desktop) — one mental model, not
- * two. The desktop button reads "Log a Moment"; this tab stays the
- * shorter "Create" since a 10px, single-line tab has no room for it.
+ * two. The desktop button reads "Log a Moment"; this tab says "Log" (the
+ * glossary's short form) since a single-line tab has no room for more.
  *
- * Create sits in the middle because it's the thing you came to do. It is the
+ * Log sits in the middle because it's the thing you came to do. It is the
  * one solid tile on the bar: an accent square with a plus, over the same
- * "Create" label as before (the label stays, the tile only adds weight).
+ * "Log" label (the tile only adds weight).
  *
  * Inbox isn't a tab of its own here: the header's notification bell and
  * message icon (Header.tsx) are visible on every breakpoint, including this
@@ -42,7 +42,7 @@ export const TABS = [
   },
   {
     to: "/create",
-    label: "Create",
+    label: "Log",
     icon: Plus,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log"),
     accent: true,
