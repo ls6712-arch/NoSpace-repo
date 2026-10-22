@@ -190,6 +190,7 @@ function browserDeps(): MediaDeps {
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("no canvas");
       // JPEG has no transparency: a transparent PNG goes on white, not black.
+      // design-token-ignore: pixel data baked into the uploaded file, not UI
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, height);
       ctx.imageSmoothingQuality = "high";

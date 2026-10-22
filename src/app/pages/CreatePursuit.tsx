@@ -30,6 +30,7 @@ import {
   PursuitMode,
   startProject,
 } from "../lib/journal";
+import { hobbies } from "../data/hobbies";
 import { MEASURE_KINDS, defaultMeasure, formatAmount, guessSpace, localDateMs, targetText, unitFor } from "../lib/pursuitProgress";
 import { mirrorPursuit, mirrorPursuitMeasure, saveInvites } from "../lib/pursuitsRemote";
 import { Person, fetchPerson, usePeopleSearch } from "../lib/people";
@@ -74,6 +75,11 @@ export function CreatePursuit() {
   // side by side, and the new Pursuit remembers the moment that started it.
   const withId = searchParams.get("with");
   const fromPostId = Number(searchParams.get("from")) || undefined;
+  // Arriving from a Corner's own page (?hobby=&sub=): the new Pursuit files
+  // under that Corner instead of guessing a Space from the goal's words.
+  const hobbyParam = searchParams.get("hobby");
+  const fromHobby = hobbyParam && hobbies.some((h) => h.slug === hobbyParam) ? hobbyParam : undefined;
+  const fromCorner = fromHobby ? searchParams.get("sub") || undefined : undefined;
   useEffect(() => {
     if (!withId || withId === user?.id) return;
     let cancelled = false;
@@ -163,7 +169,8 @@ export function CreatePursuit() {
           ];
     const project = startProject({
       title: title.trim(),
-      hobbySlug: guessSpace(title),
+      hobbySlug: fromHobby ?? guessSpace(title),
+      subHobby: fromCorner,
       measure: finalMeasure,
       mode: pursuitMode,
       members,

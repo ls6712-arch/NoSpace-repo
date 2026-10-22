@@ -33,6 +33,7 @@ import { EmptyState, ErrorNotice } from "../components/StateViews";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
+import { QuickStarts } from "../components/discover/QuickStarts";
 import { plural } from "../lib/plural";
 import { scrollBehavior } from "../lib/scrollToElement";
 
@@ -646,6 +647,8 @@ export function Discover() {
 
           {tab === "corners" && (
             <>
+              {/* Ideas, not search results: hidden while a search is open. */}
+              {!query.trim() && <QuickStarts />}
               <AllCornersBrowser query={query} />
 
               {/* Spotlight */}
