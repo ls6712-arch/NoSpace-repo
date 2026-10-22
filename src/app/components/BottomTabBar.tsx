@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { Compass, Library, PlusCircle, UserRound } from "lucide-react";
+import { Compass, Library, Plus, UserRound } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 
@@ -10,8 +10,9 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
  * two. The desktop button reads "Log a Moment"; this tab stays the
  * shorter "Create" since a 10px, single-line tab has no room for it.
  *
- * Create sits in the middle because it's the thing you came to do, and it
- * keeps its word rather than becoming an anonymous "+".
+ * Create sits in the middle because it's the thing you came to do. It is the
+ * one solid tile on the bar: an accent square with a plus, over the same
+ * "Create" label as before (the label stays, the tile only adds weight).
  *
  * Inbox isn't a tab of its own here: the header's notification bell and
  * message icon (Header.tsx) are visible on every breakpoint, including this
@@ -42,7 +43,7 @@ export const TABS = [
   {
     to: "/create",
     label: "Create",
-    icon: PlusCircle,
+    icon: Plus,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log"),
     accent: true,
   },
@@ -82,8 +83,11 @@ export function BottomTabBar() {
 
             const content = (
               <>
-                <span className="relative">
-                  <Icon className="size-5" strokeWidth={active || tab.accent ? 2.1 : 1.7} />
+                <span
+                  className={`relative flex h-7 items-center justify-center ${tab.accent ? "w-7 rounded-control" : ""}`}
+                  style={tab.accent ? { backgroundColor: "var(--accent)", color: "var(--accent-foreground)" } : undefined}
+                >
+                  <Icon className="size-5" strokeWidth={tab.accent ? 2.4 : active ? 2.1 : 1.7} />
                   {/* A dot, not a number: something is waiting, not how much. */}
                   {tab.to === "/you" && waiting && (
                     <span
@@ -99,13 +103,7 @@ export function BottomTabBar() {
             const className = `flex min-h-12 flex-col items-center justify-center gap-1 rounded-card py-1.5 transition-colors ${
               tint ? "" : "text-muted-foreground"
             }`;
-            const style = {
-              color: tint,
-              backgroundColor:
-                tab.accent && active
-                  ? "color-mix(in srgb, var(--violet-electric) 10%, transparent)"
-                  : undefined,
-            };
+            const style = { color: tint };
 
 
             return (
