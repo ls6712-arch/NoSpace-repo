@@ -52,8 +52,12 @@ const TEXT_VAR: Record<Field, string> = {
   sky: "--corner-sky",
 };
 
-/** Sets --field (for marks: dots, rules) and --field-text (for words) on an element. */
-export function fieldStyle(spaceSlug: string): CSSProperties {
-  const f = fieldFor(spaceSlug);
+/** Sets --field (for marks: dots, rules) and --field-text (for words) from a hue. */
+export function fieldStyleFor(f: Field): CSSProperties {
   return { "--field": `var(--field-${f})`, "--field-text": `var(${TEXT_VAR[f]})` } as CSSProperties;
+}
+
+/** The same, from an old Space slug. Prefer cornerStyle() (lib/categoryStyle.ts) for a Corner. */
+export function fieldStyle(spaceSlug: string): CSSProperties {
+  return fieldStyleFor(fieldFor(spaceSlug));
 }

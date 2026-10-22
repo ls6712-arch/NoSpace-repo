@@ -1,6 +1,6 @@
 import { hobbies } from "../../data/hobbies";
 import { quickGuides } from "../../data/cornerGuides";
-import { fieldStyle } from "../../lib/fieldColor";
+import { cornerStyle } from "../../lib/categoryStyle";
 import { useRowScrollMemory } from "../../lib/useHistoryState";
 import { PressLink } from "../afterhours/PressLink";
 
@@ -36,7 +36,7 @@ export function QuickStarts() {
       </h2>
       <ul {...row} className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
         {items.map((q) => (
-          <li key={`${q.spaceSlug}-${q.cornerSlug}`} className="w-64 shrink-0 snap-start" style={fieldStyle(q.spaceSlug)}>
+          <li key={`${q.spaceSlug}-${q.cornerSlug}`} className="w-64 shrink-0 snap-start" style={cornerStyle(q.spaceSlug, q.cornerSlug)}>
             {/* The page's one bold colour moment: each step on its Space's colour. */}
             <PressLink
               to={`/corner/${q.cornerSlug}`}

@@ -1639,3 +1639,14 @@ summary:focus-visible,
   --destructive: #A13A2E;
   color: var(--foreground);
 }
+
+/* View transitions (a Discover tile growing into its page's header, Step 7).
+   Same duration and curve as every other enter; a browser without view
+   transitions never runs this, and links only ask for one when the person has
+   not asked for reduced motion (lib/useViewTransition.ts). */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(*) {
+    animation-duration: var(--duration-base);
+    animation-timing-function: var(--ease-standard);
+  }
+}
