@@ -60,6 +60,7 @@ export const posts: PostRow[] = [
   // Maya
   post({ id: 9001, user_id: MAYA, hobby_slug: "food-cooking", corner: "Baking", caption: "Sourdough, loaf #10", media_url: photo("maya-sourdough.jpg"), love_count: 7, in_count: 14, created_at: ago(14), pursuit_id: "p-sourdough" }),
   post({ id: 9002, user_id: MAYA, hobby_slug: "sports-fitness", corner: "Running", caption: "Eleven miles along the river", media_url: photo("maya-running.jpg"), love_count: 5, in_count: 2, created_at: ago(3), pursuit_id: "p-halfmarathon" }),
+  post({ id: 9003, user_id: MAYA, hobby_slug: "photography-film", corner: "Film photography", caption: "First roll of film, back from the lab", media_url: photo("maya-film.jpg"), love_count: 9, in_count: 1, created_at: ago(2), pursuit_id: "p-film" }),
   post({ id: 9004, user_id: MAYA, hobby_slug: "sports-fitness", corner: "Bouldering", caption: "Day one on the V2 wall", media_url: photo("maya-bouldering.jpg"), love_count: 3, in_count: 1, created_at: ago(6), pursuit_id: "p-v2" }),
   // Nick
   post({ id: 9101, user_id: NICK, hobby_slug: "sports-fitness", corner: "Bouldering", caption: "First V3!", media_url: photo("nick-bouldering.jpg"), love_count: 12, in_count: 4, created_at: ago(1) }),
@@ -128,5 +129,5 @@ export const pursuits = [
 export const notifications = [
   { id: 1, user_id: MAYA, kind: "save", body: "14 people want to try “Sourdough, loaf #10”.", href: "/moment/9001", actor_name: null, actor_id: null, read: false, created_at: ago(0, 0.2), target_post_id: 9001 },
   { id: 2, user_id: MAYA, kind: "love", body: "Nick loved your moment.", href: "/moment/9002", actor_name: "Nick", actor_id: NICK, read: false, created_at: ago(0, 5), target_post_id: 9002 },
-  { id: 3, user_id: MAYA, kind: "thought", body: "Theo left a thought on your moment.", href: "/moment/9002", actor_name: "Theo", actor_id: THEO, read: true, created_at: ago(1, 3), target_post_id: 9003 },
+  { id: 3, user_id: MAYA, kind: "thought", body: "Theo left a thought on your moment.", href: "/moment/9003", actor_name: "Theo", actor_id: THEO, read: true, created_at: ago(1, 3), target_post_id: 9003 },
 ];
