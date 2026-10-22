@@ -323,7 +323,7 @@ async function main() {
       });
       await flow("log a Moment: open the form, write a line, keep it private", async () => {
         await go("/my-space");
-        if (touch) await page.locator('nav[aria-label="Main"] a:has-text("Create")').first().click(T); else await page.getByRole("link", { name: /Log a Moment/ }).first().click(T);
+        if (touch) await page.locator('nav[aria-label="Main"] a:has-text("Log")').first().click(T); else await page.getByRole("link", { name: /Log a Moment/ }).first().click(T);
         await page.getByText("Write it down").first().click(T);
         await page.getByPlaceholder(/what happened/i).first().fill("Smoke test Moment");
         await page.getByRole("button", { name: /Keep it private|Share/ }).first().click(T);
