@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router";
+import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
 import {
   Compass,
   LayoutGrid,
@@ -371,14 +372,18 @@ export function Discover() {
     setSearchParams(params, { replace: true });
   }
 
-  const [feedTab, setFeedTab] = useState<FeedTab>("forYou");
-  const [chip, setChip] = useState("all");
-  const [shown, setShown] = useState(PAGE_SIZE);
+  // Kept across Back so returning from a Moment or Corner finds the list as
+  // long as you left it (see useHistoryState).
+  const [feedTab, setFeedTab] = useHistoryState<FeedTab>("discover.feedTab", "forYou");
+  const [chip, setChip] = useHistoryState("discover.chip", "all");
+  const [shown, setShown] = useHistoryState("discover.shown", PAGE_SIZE);
   // Flat now, not nested under a Space filter — Corners are the top-level
   // browse/filter unit (spec change: "Corners carry discovery"). Synced to
   // ?corner= so a filtered view is shareable, same as ?tab=.
   const [cornerFilter, setCornerFilter] = useState(searchParams.get("corner") ?? "");
-  const [mediaFilter, setMediaFilter] = useState<MediaFilter>("all");
+  const [mediaFilter, setMediaFilter] = useHistoryState<MediaFilter>("discover.mediaFilter", "all");
+  const spotlightRow = useRowScrollMemory("discover.spotlight");
+  const tabsRow = useRowScrollMemory("discover.tabs");
 
   // "For You" personalization signals — real ones, not an ML model: who you
   // actually follow (accepted profile_follows) and which Spaces you're an
@@ -619,7 +624,7 @@ export function Discover() {
               horizontally (edge-to-edge, bleeding past the container's own
               padding) instead of overflowing the screen or wrapping into a
               second, layout-shifting row. */}
-          <div className="-mx-4 -mt-2.5 mb-3.5 overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
+          <div {...tabsRow} className="-mx-4 -mt-2.5 mb-3.5 overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
             <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
               {VISIBLE_DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
                 const active = tab === id;
@@ -672,7 +677,7 @@ export function Discover() {
                       See all →
                     </a>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-2">
+                  <div {...spotlightRow} className="flex gap-4 overflow-x-auto pb-2">
                     {featured.map((post) => (
                       <div key={post.id} className="w-64 shrink-0">
                         <MomentCard
