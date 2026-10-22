@@ -1,6 +1,7 @@
 import { supabase } from "../../lib/supabase";
 import { friendlyError } from "./friendlyError";
 import { UPLOAD_COPY } from "./stateCopy";
+import { prepareForUpload, storageExtension, MAX_MESSAGE_UPLOAD_MB } from "./uploadMedia";
 
 /** Phase 4's private bucket for chat photos (public = false — see
  * supabase/migrations/20261005000000_communication_phase4_rich.sql). Every
@@ -17,13 +18,6 @@ export const MESSAGE_MEDIA_BUCKET = "message-media";
  * longer window for exactly that reason. */
 export const MESSAGE_MEDIA_URL_TTL_SECONDS = 60 * 5;
 
-function extensionOf(file: File): string {
-  const dot = file.name.lastIndexOf(".");
-  const raw = dot > -1 ? file.name.slice(dot + 1) : "";
-  const cleaned = raw.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
-  return cleaned || "jpg";
-}
-
 /** Uploads an already-HEIC-converted file into this participation's own
  * folder — `<participation_id>/<uuid>.<ext>`, the path shape the storage
  * policies and the messages INSERT policy's media_path check both expect. */
@@ -32,10 +26,13 @@ export async function uploadMessagePhoto(
   file: File,
 ): Promise<{ path: string | null; error: string | null }> {
   if (!supabase) return { path: null, error: "not configured" };
-  const path = `${participationId}/${crypto.randomUUID()}.${extensionOf(file)}`;
+  const prepared = await prepareForUpload(file, { allowVideo: false, maxMb: MAX_MESSAGE_UPLOAD_MB });
+  if (prepared.error !== null) return { path: null, error: prepared.error };
+  const ready = prepared.file;
+  const path = `${participationId}/${crypto.randomUUID()}.${storageExtension(ready)}`;
   const { error } = await supabase.storage
     .from(MESSAGE_MEDIA_BUCKET)
-    .upload(path, file, { contentType: file.type || undefined, upsert: false });
+    .upload(path, ready, { contentType: ready.type || undefined, upsert: false });
   if (error) return { path: null, error: friendlyError(error, UPLOAD_COPY.failed) };
   return { path, error: null };
 }

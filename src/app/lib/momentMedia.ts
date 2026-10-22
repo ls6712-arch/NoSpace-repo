@@ -2,6 +2,7 @@ import { supabase } from "../../lib/supabase";
 import { Post } from "../data/posts";
 import { friendlyError } from "./friendlyError";
 import { UPLOAD_COPY } from "./stateCopy";
+import { prepareForUpload, storageExtension } from "./uploadMedia";
 
 /**
  * Step 1's private bucket for Moment photos (public = false — see
@@ -29,13 +30,6 @@ export const MOMENT_MEDIA_URL_TTL_SECONDS = 60 * 60;
  * been open a while never serves a URL that's seconds from going dead. */
 const CACHE_REFRESH_FRACTION = 0.8;
 
-function extensionOf(file: File): string {
-  const dot = file.name.lastIndexOf(".");
-  const raw = dot > -1 ? file.name.slice(dot + 1) : "";
-  const cleaned = raw.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
-  return cleaned || "jpg";
-}
-
 /** Uploads a Moment photo (already HEIC-converted, same as every other
  * photo upload in this app) into the uploader's own folder —
  * `<user_id>/<uuid>.<ext>`, the path shape the storage policies' INSERT
@@ -46,10 +40,13 @@ export async function uploadMomentFile(
   file: File,
 ): Promise<{ path: string | null; error: string | null }> {
   if (!supabase) return { path: null, error: "not configured" };
-  const path = `${userId}/${crypto.randomUUID()}.${extensionOf(file)}`;
+  const prepared = await prepareForUpload(file);
+  if (prepared.error !== null) return { path: null, error: prepared.error };
+  const ready = prepared.file;
+  const path = `${userId}/${crypto.randomUUID()}.${storageExtension(ready)}`;
   const { error } = await supabase.storage
     .from(MOMENT_MEDIA_BUCKET)
-    .upload(path, file, { contentType: file.type || undefined, upsert: false });
+    .upload(path, ready, { contentType: ready.type || undefined, upsert: false });
   if (error) return { path: null, error: friendlyError(error, UPLOAD_COPY.failed) };
   return { path, error: null };
 }

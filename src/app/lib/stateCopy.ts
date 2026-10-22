@@ -30,7 +30,10 @@ export const TOAST = {
 export const UPLOAD_COPY = {
   tooBig: (maxMb?: number) =>
     maxMb ? `That file is over ${maxMb} MB. Try a smaller one.` : "That file is too big. Try a smaller one.",
-  wrongType: "That kind of file can’t be added. Try a JPG, PNG or WebP photo.",
+  wrongType: "That kind of file can’t be added. Try a photo or an MP4 video.",
+  photoOnly: "Only photos can be added here.",
+  unreadable: "That photo couldn’t be read. Try a JPG or PNG.",
+  videoUnplayable: "That video won’t play in a browser. Try a shorter clip, or save it as an MP4 first.",
   heic: "That iPhone photo couldn’t be converted. Try again, or export it as a JPG first.",
   heicMany: (n: number) =>
     n === 1
