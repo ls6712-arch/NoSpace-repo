@@ -25,6 +25,23 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | See all | Opens the full list when a list shows only some: Discover's Spotlight, and the group tiles on Discover's Corners tab (which show the first 8) |
 | Browse | Heading above the group tiles on Discover's Corners tab (the first 8, then See all) |
 
+## Moods
+
+Discover's row of chips and cards (approved in visual spec v1.1). A mood names what you would be doing, never what it will do for you. No counts on chips.
+
+| Term | Meaning |
+|---|---|
+| What are you in the mood for? | Title of the mood row on Discover |
+| 15 minutes | Chip (the default): Corners whose first step fits in about 15 minutes |
+| Make something | Chip: Corners where you make or build something |
+| Move | Chip: Corners that get you moving |
+| Be around people | Chip: Corners you do with other people |
+| Some time to yourself | Chip: Corners you do on your own |
+| Get outside | Chip: Corners you do outdoors |
+| Learn something | Chip: Corners where you pick up a skill |
+| Play a game | Chip: game and puzzle Corners |
+| Start with what you have | Chip: Corners you can start with what you already have |
+
 ## Hobbies and Spaces
 
 | Term | Meaning |

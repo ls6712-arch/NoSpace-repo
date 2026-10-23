@@ -36,7 +36,7 @@ import { MomentCardSkeleton, MomentGridSkeleton } from "../components/Skeletons"
 import { EmptyState, ErrorNotice } from "../components/StateViews";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
-import { QuickStarts } from "../components/discover/QuickStarts";
+import { MoodRow } from "../components/discover/MoodRow";
 import { plural } from "../lib/plural";
 import { scrollBehavior } from "../lib/scrollToElement";
 
@@ -521,9 +521,9 @@ export function Discover() {
           {tab === "corners" && (
             <>
               {/* Ideas, not search results: hidden while a search is open. */}
-              {!query.trim() && <QuickStarts />}
+              {!query.trim() && <MoodRow />}
               {/* While searching, the matching Corners come first; otherwise the
-                  order is search, Got 15 minutes?, Spotlight, then the index. */}
+                  order is search, the mood row, Spotlight, then the index. */}
               {query.trim() && <AllCornersBrowser query={query} />}
 
               {/* Spotlight */}

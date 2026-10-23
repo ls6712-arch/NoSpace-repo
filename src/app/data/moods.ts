@@ -9,7 +9,7 @@ import { categoryOfCorner } from "./cornerCategories";
  * fit"), per the trust rules: a mood names what you'd be doing, never what
  * it will do for you.
  *
- * Labels are proposals until the founder approves them for docs/glossary.md.
+ * The labels are approved (visual spec v1.1) and listed in docs/glossary.md under Moods.
  */
 export type MoodId = "make" | "move" | "people" | "alone" | "outside" | "learn" | "play" | "haveIt";
 
