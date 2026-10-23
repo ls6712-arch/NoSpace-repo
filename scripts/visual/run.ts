@@ -130,6 +130,12 @@ async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, Touc
   srv.close(); return out;
 }
 
+/** Colour transitions finish at once, so a contrast reading never catches a theme mid-fade (WebKit measured the new text colour on the old background). */
+async function settleStyles(page: Page) {
+  await page.addStyleTag({ content: "*, *::before, *::after { transition: none !important; animation: none !important; }" });
+  await page.waitForTimeout(300);
+}
+
 async function contrastPass(browser: Browser, o: RunOpts): Promise<Map<string, ContrastResult>> {
   const srv = await serve(o.dist, o.fontsDir); const out = new Map<string, ContrastResult>();
   for (const theme of o.themes) for (const w of o.widths) {
@@ -139,7 +145,7 @@ async function contrastPass(browser: Browser, o: RunOpts): Promise<Map<string, C
     const page = await ctx.newPage();
     for (const s of o.screens) {
       if (s.widths && !s.widths.includes(w)) continue;
-      try { await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page); out.set(`${theme}/${w}/${s.name}`, await page.evaluate(contrastInPage)); }
+      try { await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page); await settleStyles(page); out.set(`${theme}/${w}/${s.name}`, await page.evaluate(contrastInPage)); }
       catch (e) { console.log(`note: contrast ${theme}/${w}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
     }
     await ctx.close();
