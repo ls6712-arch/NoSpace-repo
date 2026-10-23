@@ -162,7 +162,7 @@ export function You() {
                   </span>
                   {followerCount !== null && (
                     <>
-                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                      <span className="text-muted-foreground" aria-hidden="true">·</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -181,7 +181,7 @@ export function You() {
                       a place to get to the list. */}
                   {user && (
                     <>
-                      <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                      <span className="text-muted-foreground" aria-hidden="true">·</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -241,7 +241,7 @@ export function You() {
                 </button>
                 {extraConceptsEnabled && (
                   <>
-                <span className="text-muted-foreground/50" aria-hidden="true">·</span>
+                <span className="text-muted-foreground" aria-hidden="true">·</span>
                 <Link
                   to="/studio"
                   className="flex min-h-11 items-center text-caption tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
@@ -275,7 +275,7 @@ export function You() {
             {myTags.slice(0, 6).map(({ tag }, i) => (
               <span key={tag} className="flex items-center gap-2">
                 {i > 0 && (
-                  <span className="text-muted-foreground/50" aria-hidden="true">
+                  <span className="text-muted-foreground" aria-hidden="true">
                     ·
                   </span>
                 )}

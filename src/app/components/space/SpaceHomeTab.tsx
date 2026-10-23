@@ -413,18 +413,18 @@ export function SpaceHomeTab({
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
         <div className="-mx-4 rounded-card bg-bark px-5 py-5 text-on-bark sm:mx-0">
-          <p className="text-caption tracking-wide text-on-bark/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
+          <p className="text-caption tracking-wide text-on-bark tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
           <p className="mt-1 line-clamp-2 break-words text-title" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
-          <p className="mt-1 text-small text-on-bark/80 tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
+          <p className="mt-1 text-small text-on-bark tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
           {(todayEvent.neighborhood || todayEvent.city || todayAddress) && (
-            <p className="mt-1 flex items-center gap-1 text-small text-on-bark/80">
+            <p className="mt-1 flex items-center gap-1 text-small text-on-bark">
               <MapPin className="size-3.5" />
               {todayAddress || [todayEvent.neighborhood, todayEvent.city].filter(Boolean).join(", ")}
             </p>
           )}
           <div className="mt-3 flex items-center gap-3">
             <AvatarRow people={todayAttendees} max={4} />
-            {todayGoing > 0 && <span className="text-caption text-on-bark/70 tabular-nums">{todayGoing} going</span>}
+            {todayGoing > 0 && <span className="text-caption text-on-bark tabular-nums">{todayGoing} going</span>}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button
@@ -437,16 +437,16 @@ export function SpaceHomeTab({
               {myRsvps.has(todayEvent.id) && <Check aria-hidden="true" />}
               I’m going
             </Button>
-            <Link to={`/space/${space.slug}?tab=events`} className="text-caption text-on-bark/70 underline">
+            <Link to={`/space/${space.slug}?tab=events`} className="text-caption text-on-bark underline">
               See all events
             </Link>
           </div>
           {laterThisWeek.length > 0 && (
             <div className="mt-4 border-t border-on-bark/20 pt-3">
-              <p className="text-caption tracking-wide text-on-bark/60">Later this week</p>
+              <p className="text-caption tracking-wide text-on-bark">Later this week</p>
               <ul className="mt-1.5 space-y-1">
                 {laterThisWeek.map((e) => (
-                  <li key={e.id} className="text-small text-on-bark/85">
+                  <li key={e.id} className="text-small text-on-bark">
                     {fmtDay(e.starts_at)} · {e.title}
                   </li>
                 ))}

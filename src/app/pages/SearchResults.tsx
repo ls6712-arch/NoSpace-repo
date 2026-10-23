@@ -112,7 +112,7 @@ export function SearchResults() {
                   <h2 className="mb-3 flex items-center gap-2 text-small font-medium text-muted-foreground">
                     <Icon className="size-4" />
                     {title}
-                    <span className="text-caption text-muted-foreground/70">({hits.length})</span>
+                    <span className="text-caption text-muted-foreground">({hits.length})</span>
                   </h2>
                   <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {hits.slice(0, 12).map((hit) => (

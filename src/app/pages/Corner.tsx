@@ -87,20 +87,17 @@ export function CornerPage() {
   const hiddenWide = n > wideCount;
   const hiddenNarrow = n > narrowCount;
 
-  // Back link at 70% ink, the description at 80% (spec v1; both clear 4.5:1 on the v1.1 colours).
-  const dimLink = "text-[color-mix(in_srgb,var(--ink)_70%,transparent)]";
-  const dimText = "text-[color-mix(in_srgb,var(--ink)_80%,transparent)]";
 
   return (
     <div className="ns-afterhours min-h-viewport" style={cornerStyle(spaceSlug, corner.slug)}>
       {/* The Corner's category colour, full width, behind its name. */}
       <header className="bg-[var(--cat)] text-[var(--ink)]">
         <div className={`${PAGE_X} py-8 md:py-12`}>
-          <Link to={back.to} className={`inline-flex min-h-11 items-center text-small hover:underline ${dimLink}`}>
+          <Link to={back.to} className={`inline-flex min-h-11 items-center text-small font-semibold text-[var(--ink)] hover:underline`}>
             ← Back to {back.label}
           </Link>
           <h1 className="mt-6 text-display">{corner.name}</h1>
-          {about && <p className={`mt-3 max-w-xl text-body ${dimText}`}>{about}</p>}
+          {about && <p className={`mt-3 max-w-xl text-body text-[var(--ink)]`}>{about}</p>}
         </div>
       </header>
 

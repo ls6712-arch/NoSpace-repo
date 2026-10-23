@@ -397,7 +397,7 @@ export function PublicProfile() {
                 </span>
                 {followerCount !== null && followerCount > 0 && (
                   <>
-                    <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                    <span className="text-muted-foreground" aria-hidden="true">·</span>
                     <button
                       type="button"
                       onClick={() => setFollowListOpen(true)}

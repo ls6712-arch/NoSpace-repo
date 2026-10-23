@@ -142,8 +142,14 @@ scan color "colour literal outside theme.css; define a token there" '#([0-9A-Fa-
 scan color "colour literal outside theme.css; define a token there" '(^|[^A-Za-z-])(rgba?|hsla?)\([[:space:]]*[0-9.]' '*.ts' '*.tsx' '*.css'
 SKIP_FILES=""
 
-# ── text on photos ─────────────────────────────────────────────────────────
-scan image "text-on-media below /90 fails contrast on a bright photo; use text-on-media or /90" "(^|[^:A-Za-z0-9_-])text-on-media/([0-9]|[1-8][0-9])([^0-9]|\$)" '*.ts' '*.tsx'
+# ── text is solid ──────────────────────────────────────────────────────────
+# Partly transparent text is blended by the browser, and Safari's blend lands
+# under 4.5:1 on a category colour or a photo. Use size and weight for
+# hierarchy, never opacity: solid --ink on a category colour, solid
+# --photo-text over a photo, a solid muted token elsewhere.
+scan textalpha "text colours are solid: drop the /NN opacity (text-foreground/80, text-on-media/90 ...)" "${B}([a-z0-9[\]&>*_-]+:)*text-[a-z][a-z0-9-]*/[0-9]+" '*.ts' '*.tsx' '*.css'
+scan textalpha "text colours are solid: no color-mix with transparent on text" "${B}([a-z0-9[\]&>*_-]+:)*text-\[color-mix\([^]]*transparent" '*.ts' '*.tsx' '*.css'
+scan textalpha "text colours are solid: no color-mix with transparent on text" "(^|[^-A-Za-z])color:[[:space:]]*color-mix\([^;]*transparent" '*.ts' '*.tsx' '*.css'
 
 # ── images ─────────────────────────────────────────────────────────────────
 # Photos go through ImageWithFallback (fixed box, placeholder + fade-in, lazy, fallback).

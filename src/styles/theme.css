@@ -199,7 +199,6 @@
   --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   /* Text on a photo, over --scrim-card. Same in both themes. */
   --photo-text: #F4EFE8;
-  --photo-text-muted: #A39A90;
   --scrim-card: linear-gradient(to top, rgba(14, 13, 12, 0.85), transparent 55%);
 
   /* ── GeneratedArt.tsx illustration palette ───────────────────────────────

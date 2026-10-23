@@ -73,7 +73,7 @@ export function HobbyActivity({
     <ul className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-small ${className}`}>
       {items.map((item, i) => (
         <li key={item} className="flex items-center gap-2">
-          {i > 0 && <span aria-hidden="true" className="text-muted-foreground/50">·</span>}
+          {i > 0 && <span aria-hidden="true" className="text-muted-foreground">·</span>}
           {item}
         </li>
       ))}
