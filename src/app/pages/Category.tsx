@@ -64,7 +64,9 @@ export function CategoryPage() {
 
   if (!category) return <Navigate to="/discover" replace />;
 
-  const dim = "text-[color-mix(in_srgb,var(--ink)_80%,transparent)]";
+  // Back link at 70% ink, the description at 80% (spec v1; both clear 4.5:1 on the v1.1 colours).
+  const dimLink = "text-[color-mix(in_srgb,var(--ink)_70%,transparent)]";
+  const dimText = "text-[color-mix(in_srgb,var(--ink)_80%,transparent)]";
   const [lead, ...rest] = posts;
   const n = rest.length;
   const { wideCount, narrowCount } = fillRows(n, morePages);
@@ -79,11 +81,11 @@ export function CategoryPage() {
         style={{ viewTransitionName: categoryTransitionName(category.slug) }}
       >
         <div className={`${PAGE_X} py-8 md:py-12`}>
-          <Link to="/discover" className={`inline-flex min-h-11 items-center text-small hover:underline ${dim}`}>
+          <Link to="/discover" className={`inline-flex min-h-11 items-center text-small hover:underline ${dimLink}`}>
             ← Back to Discover
           </Link>
           <h1 className="mt-6 text-display">{category.name}</h1>
-          <p className={`mt-3 max-w-xl text-body ${dim}`}>{category.about}</p>
+          <p className={`mt-3 max-w-xl text-body ${dimText}`}>{category.about}</p>
         </div>
       </header>
 

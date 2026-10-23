@@ -181,17 +181,18 @@
   --warning: var(--yellow);
 
   /* ── After hours (spec v1, Oct 22, 2026) ─────────────────────────────────
-     Category colours: vivid, the same in both themes. Text on them is always
+     Category colours (v1.1: calmer and even, OKLCH L 0.74, C 0.13, so none
+     outshouts another): the same in both themes. Text on them is always
      --ink (6:1 or better at full strength). A category and its Corners share
      one; the map is in lib/categoryStyle.ts. */
-  --cat-rose: #FF5C8A;
-  --cat-orange: #FF8A3D;
-  --cat-violet: #9B7BFF;
-  --cat-blue: #4C93FF;
-  --cat-amber: #FFB224;
-  --cat-lime: #B6E04A;
-  --cat-teal: #22C7B0;
-  --cat-pink: #F27BD1;
+  --cat-rose: #EF869B;
+  --cat-orange: #EE8F63;
+  --cat-violet: #B199F4;
+  --cat-blue: #6BAFFA;
+  --cat-amber: #D7A03D;
+  --cat-lime: #93BA5C;
+  --cat-teal: #04C5B5;
+  --cat-pink: #E488BE;
   /* Display face for the pages in this look (Discover, Corner, category). */
   --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   /* Text on a photo, over --scrim-card. Same in both themes. */
