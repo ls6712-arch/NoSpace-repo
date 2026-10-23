@@ -24,8 +24,6 @@ import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useCorners, isBrowsableOnDiscover } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
-import { fetchFollowingIds } from "../lib/profileFollows";
-import { supabase } from "../../lib/supabase";
 import { track } from "../lib/analytics";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
@@ -42,7 +40,9 @@ import { MoodGrid } from "../components/door/MoodGrid";
 import { StartHere } from "../components/door/StartHere";
 import { SeenTonight } from "../components/door/SeenTonight";
 import { Rooms } from "../components/door/Rooms";
-import { moodCards, type MoodChipId } from "../data/moodCards";
+import { moodCandidates, type MoodChipId } from "../data/moodCards";
+import { rankMoments, rankRooms, rankTickets, seenTonight as seenTonightOf } from "../lib/ranking";
+import { useRankingSignals } from "../lib/useRankingSignals";
 import { doorFor, readLastMood, writeLastMood } from "../lib/doorList";
 import { plural } from "../lib/plural";
 
@@ -110,50 +110,6 @@ function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
       ? "border-[var(--accent)] text-foreground"
       : "border-transparent text-muted-foreground hover:text-foreground"
   }`;
-}
-
-/**
- * Featured Moments selection: recency first, a small boost for hobbies
- * you're actually in — no engagement/like term. Counts (reaction or legacy
- * `likes`) never sort, rank, filter or promote anything here, per
- * docs/moment-card-and-reactions-spec.md §4.6; "Featured Moments stays
- * curated," not a popularity ranking. Then the result is spread across
- * creators and Spaces so one Moment or one Space can't fill the whole row.
- * No score is ever shown; it only decides the order.
- */
-/**
- * "For You"'s own ranking — real signals (who you actually follow, your
- * Interest Corners, Spaces you're an active member of), not an ML model:
- * there's no training pipeline or event log behind this app to build one
- * on, and the honest version of "personalized" here is a short, named list
- * of real connections, same spirit as scorePost's own hobby/tag bonus in
- * ContentContext.tsx. Deliberately NOT engagement-weighted — no love/in/
- * thought count anywhere in this score — per the same guardrail scorePost
- * already follows (docs/moment-card-and-reactions-spec.md §4.6). Kept
- * local to this tab rather than folded into scorePost/publicFeed, which
- * every other surface (My Space, Space pages, "Recent"/"Following") reads
- * too — this only ever changes what "For You" itself shows.
- */
-function scoreForYou(
-  post: Post,
-  followingIds: Set<string>,
-  followedHobbySlugs: Set<string>,
-  memberSpacePostIds: Set<number>,
-): number {
-  const ageHours = (Date.now() - post.createdAt) / HOUR;
-  const recencyScore = Math.max(0, 240 - ageHours); // same ~10-day decay as scorePost
-  const fromSomeoneYouFollow = !!post.userId && followingIds.has(post.userId);
-  // Same hobby-follow set + the same "match post.hobbySlug directly" rule
-  // the "Following" tab already uses just below (social.followedHobbies
-  // mixes space/hobby/Corner-level keys; a plain hobby slug is the only
-  // shape that lines up with post.hobbySlug).
-  const inYourInterests = followedHobbySlugs.has(post.hobbySlug);
-  const fromYourSpace = memberSpacePostIds.has(post.id);
-  // Three independent, additive bonuses rather than one flag — a Moment
-  // that's both from someone you follow AND in a Space you're part of is
-  // more relevant than either alone, not capped at the same bump.
-  const bonus = (fromSomeoneYouFollow ? 90 : 0) + (inYourInterests ? 50 : 0) + (fromYourSpace ? 40 : 0);
-  return recencyScore + bonus;
 }
 
 /**
@@ -311,45 +267,8 @@ export function Discover() {
   const [feedTab, setFeedTab] = useHistoryState<FeedTab>("discover.feedTab", "forYou");
   const tabsRow = useRowScrollMemory("discover.tabs");
 
-  // "For You" personalization signals — real ones, not an ML model: who you
-  // actually follow (accepted profile_follows) and which Spaces you're an
-  // active member of. Fetched once per account, same guard pattern
-  // MySpaceGrid.tsx already uses for both of these exact queries.
-  const [followingIds, setFollowingIds] = useState<string[]>([]);
-  const [memberSpacePostIds, setMemberSpacePostIds] = useState<Set<number>>(new Set());
-
-  useEffect(() => {
-    if (!user) return;
-    fetchFollowingIds(user.id).then(setFollowingIds);
-  }, [user?.id]);
-
-  useEffect(() => {
-    const client = supabase;
-    if (!user || !client) return;
-    let cancelled = false;
-    (async () => {
-      const { data: memberships } = await client
-        .from("space_members")
-        .select("space_id")
-        .eq("user_id", user.id)
-        .eq("status", "active");
-      const spaceIds = (memberships ?? []).map((m) => m.space_id as string);
-      if (spaceIds.length === 0) {
-        if (!cancelled) setMemberSpacePostIds(new Set());
-        return;
-      }
-      const { data: moments } = await client
-        .from("space_moments")
-        .select("post_id")
-        .in("space_id", spaceIds)
-        .eq("status", "approved")
-        .eq("removed_by_host", false);
-      if (!cancelled) setMemberSpacePostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
+  // What the ranking knows about this viewer (see lib/ranking). One read of their own rows.
+  const { signals, weights, rankPosts, people } = useRankingSignals();
 
   const q = query.trim().toLowerCase();
 
@@ -372,12 +291,33 @@ export function Discover() {
     }, 150);
     return () => window.clearTimeout(t);
   }, [mood, shownMood]);
-  const tickets = useMemo(() => moodCards(shownMood), [shownMood]);
+  const tickets = useMemo(
+    () => rankTickets(moodCandidates(shownMood), rankPosts, signals, weights),
+    [shownMood, rankPosts, signals, weights],
+  );
   // The cover is the highest-ranked ticket whose Corner has a public photo; "Start here" holds the rest.
-  const cover = useMemo(() => pickCover(tickets, publicFeed, new Set(followingIds)), [tickets, publicFeed, followingIds]);
+  const cover = useMemo(() => pickCover(tickets, publicFeed, new Set(signals.following.keys())), [tickets, publicFeed, signals.following]);
   const startCards = useMemo(
-    () => tickets.map((card, i) => ({ card, serial: i + 1 })).filter((t) => t.card !== cover?.card),
+    () =>
+      tickets
+        .filter((t) => t !== cover?.ticket)
+        .map((t) => ({ card: t.card, serial: tickets.indexOf(t) + 1, reason: t.reason })),
     [tickets, cover],
+  );
+
+  // Seen tonight, Rooms and the "For you" order all come from the same ranking.
+  const postById = useMemo(() => new Map(publicFeed.map((p) => [p.id, p])), [publicFeed]);
+  const seen = useMemo(() => {
+    const { photos, quote } = seenTonightOf(rankMoments(rankPosts, signals, weights, { windowDays: 7 }));
+    return {
+      photos: photos.map((p) => postById.get(p.id)).filter((p): p is Post => !!p),
+      quote: quote ? (postById.get(quote.id) ?? null) : null,
+    };
+  }, [rankPosts, signals, weights, postById]);
+  const rooms = useMemo(() => rankRooms(rankPosts, signals, weights), [rankPosts, signals, weights]);
+  const forYou = useMemo(
+    () => rankMoments(rankPosts, signals, weights).map((m) => postById.get(m.post.id)).filter((p): p is Post => !!p),
+    [rankPosts, signals, weights, postById],
   );
 
   // Category is internal-only now (never shown), but its name/keywords
@@ -392,32 +332,19 @@ export function Discover() {
       const followed = new Set(social.followedHobbies);
       return publicFeed.filter((p) => followed.has(p.hobbySlug));
     }
-    // "For You" — real personalization: people you follow, hobbies you
-    // follow, Spaces you're a member of (see scoreForYou above). Every post
-    // still shows (never narrowed like "Following" is), just reordered —
-    // this is a re-sort, not a filter, so it degrades to plain recency for
-    // a signed-out visitor or anyone with no connections yet, rather than
-    // ever showing an empty "For You" tab.
-    if (feedTab === "forYou") {
-      const followingSet = new Set(followingIds);
-      const followedHobbySet = new Set(social.followedHobbies);
-      return [...publicFeed].sort(
-        (a, b) =>
-          scoreForYou(b, followingSet, followedHobbySet, memberSpacePostIds) -
-          scoreForYou(a, followingSet, followedHobbySet, memberSpacePostIds),
-      );
-    }
+    // "For you": the same ranking as Seen tonight (lib/ranking), over everything public.
+    if (feedTab === "forYou") return forYou;
     return publicFeed;
-  }, [publicFeed, feedTab, social.followedHobbies, followingIds, memberSpacePostIds]);
+  }, [publicFeed, feedTab, social.followedHobbies, forYou]);
 
   // Once per meaningful signal change, not per render/keystroke — how many
   // real personalization signals this account actually has right now.
   useEffect(() => {
     if (feedTab !== "forYou") return;
-    const signalCount = (followingIds.length > 0 ? 1 : 0) + (memberSpacePostIds.size > 0 ? 1 : 0);
+    const signalCount = (signals.following.size > 0 ? 1 : 0) + (signals.interactions.length > 0 ? 1 : 0);
     track({ name: "discover_for_you_personalized", signalCount });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feedTab, followingIds.length, memberSpacePostIds.size]);
+  }, [feedTab, signals.following.size, signals.interactions.length]);
 
   // The feed, narrowed only by the search (the All Moments row is For you,
   // Following or Recent; there are no other filters).
@@ -509,7 +436,7 @@ export function Discover() {
                   <Masthead />
                   {/* From 1024px the top is a spread: the cover on 7 of 12 columns, the doors on 5. */}
                   <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-10">
-                  {cover && <CoverStory card={cover.card} photo={cover.photo} fading={shownMood !== mood} />}
+                  {cover && <CoverStory card={cover.ticket.card} photo={cover.photo} reason={cover.ticket.reason} fading={shownMood !== mood} />}
                   <MoodGrid
                     value={mood}
                     greeting={door.greeting}
@@ -520,8 +447,8 @@ export function Discover() {
                   />
                   </div>
                   <StartHere ref={startRef} cards={startCards} fading={shownMood !== mood} />
-                  <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
-                  <Rooms />
+                  <SeenTonight photos={seen.photos} quote={seen.quote} onOpen={setOpenPost} />
+                  <Rooms rooms={rooms} avatarOf={(id) => people.get(id)?.avatarUrl} />
                 </>
               )}
               {/* While searching, the matching Corners come first. */}

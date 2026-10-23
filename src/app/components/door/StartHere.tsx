@@ -19,15 +19,18 @@ function Arrow() {
 }
 
 /** A ticket: the Corner and the step on the category colour, a stub on the right behind a dashed divider. */
-function Ticket({ card, serial }: { card: MoodCard; serial: string }) {
+function Ticket({ card, serial, reason }: { card: MoodCard; serial: string; reason?: string }) {
   return (
     <PressLink
       to={`/corner/${card.cornerSlug}`}
-      className="flex h-[236px] w-[236px] overflow-hidden rounded-control bg-[var(--cat)] text-[var(--ink)]"
+      className="flex h-[264px] w-[236px] overflow-hidden rounded-control bg-[var(--cat)] text-[var(--ink)]"
     >
       <span className="flex min-w-0 flex-1 flex-col justify-between p-4">
         <span className="truncate text-caption font-semibold">{card.label}</span>
-        <span style={displayStyle(22, { lineHeight: 1.1 })}>{tieNumbers(card.guide.step)}</span>
+        <span className="flex flex-col gap-2">
+          <span style={displayStyle(22, { lineHeight: 1.1 })}>{tieNumbers(card.guide.step)}</span>
+          {reason && <span className="text-caption font-semibold">{reason}</span>}
+        </span>
       </span>
       <span className="flex w-[50px] shrink-0 items-center justify-center border-l-2 border-dashed border-[color-mix(in_srgb,var(--ink)_55%,transparent)]">
         <span className="text-caption font-semibold [text-orientation:mixed] [writing-mode:vertical-rl]">{`Admit one · ${serial}`}</span>
@@ -36,7 +39,7 @@ function Ticket({ card, serial }: { card: MoodCard; serial: string }) {
   );
 }
 
-export const StartHere = forwardRef<HTMLUListElement, { cards: { card: MoodCard; serial: number }[]; fading: boolean }>(
+export const StartHere = forwardRef<HTMLUListElement, { cards: { card: MoodCard; serial: number; reason?: string }[]; fading: boolean }>(
   function StartHere({ cards, fading }, ref) {
     const row = useRowScrollMemory("discover.startHere");
     if (cards.length === 0) return null;
@@ -57,10 +60,10 @@ export const StartHere = forwardRef<HTMLUListElement, { cards: { card: MoodCard;
           }}
           className={`-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 transition-opacity duration-fast [scrollbar-width:none] md:-mx-8 md:gap-4 md:px-8 md:scroll-px-8 ${fading ? "opacity-0" : "opacity-100"}`}
         >
-          {cards.map(({ card, serial }, i) => (
+          {cards.map(({ card, serial, reason }, i) => (
             <li key={`${card.spaceSlug}-${card.cornerSlug}`} className="shrink-0 snap-start" style={cornerStyle(card.spaceSlug, card.cornerSlug)}>
               <Reveal index={i}>
-                <Ticket card={card} serial={String(serial).padStart(4, "0")} />
+                <Ticket card={card} serial={String(serial).padStart(4, "0")} reason={reason} />
               </Reveal>
             </li>
           ))}

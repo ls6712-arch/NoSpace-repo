@@ -27,15 +27,20 @@ export interface MoodCard {
   label: string;
 }
 
-export function moodCards(id: MoodChipId): MoodCard[] {
+/** Every Corner behind a chip whose first step fits a card, unordered. The ranking orders them (lib/ranking). */
+export function moodCandidates(id: MoodChipId): MoodCard[] {
   const source = id === "quick" ? quickGuides() : cornersForMood(id);
-  const cards = source
+  return source
     .map((c) => {
       const hobby = hobbies.find((h) => h.slug === c.spaceSlug);
       const label = hobby?.subItems.find((s) => s.slug === c.cornerSlug)?.label;
       return hobby && !hobby.hidden && label && c.guide.step.length <= MAX_STEP ? { ...c, label } : null;
     })
     .filter((c): c is MoodCard => c !== null);
+}
+
+export function moodCards(id: MoodChipId): MoodCard[] {
+  const cards = moodCandidates(id);
   // One card from each category in turn, so a chip full of one category (food, running)
   // still shows a mix; spreadByKey then fixes any repeat where two rounds meet.
   const keyOf = (c: MoodCard) => categoryOfCorner(c.spaceSlug, c.cornerSlug)?.slug ?? c.spaceSlug;

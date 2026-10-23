@@ -48,6 +48,15 @@ Discover's Corners tab (approved Oct 23, 2026). A ticket is a first step to take
 | Friday night. Pick a door. / Saturday night. Pick a door. | Greeting on Friday and Saturday from 17:00 |
 | Weekend. Pick a door. | Greeting on Saturday and Sunday before 17:00 |
 | Sunday night. Pick a door. | Greeting on Sunday from 17:00 |
+| {Name} did this this week | Ticket reason: someone you follow logged a Moment in that Corner in the last 7 days |
+| Pairs with your {Corner} | Ticket reason: it sits in a group where your strongest Corner is {Corner} |
+| New to you | Ticket reason: you have never logged a Moment in that Corner |
+| Fits a weeknight / Fits a weekend | Ticket reason: the Corner suits the day and time you are looking |
+| A good first step | Ticket reason: the library's own order, when nothing else applies |
+| Something new for you | Ticket reason: the discovery slot (4th, then every 5th) |
+| {A} is here / {A} and {B} are here | Rooms line: one or two people you follow logged in that room this week (first names, never a number, never a stranger) |
+| New this week | Rooms line: a Corner in that room got its first Moment this week |
+| Quiet right now | Rooms line: nobody you follow logged there this week; the row is muted |
 
 ## Moods
 
