@@ -84,19 +84,24 @@
      component already reading --input/`border-input` — Input, Textarea,
      Select's trigger, RadioGroupItem, the button outline variant — picks
      this up automatically. */
-  --theme-light-bg: #F6F1E7;
-  --theme-light-card: #FBF8F1;
-  --theme-light-accent: #9A4A34;
-  --theme-dark-bg: #1C1816;
-  --theme-dark-card: #26211D;
-  --theme-dark-accent: #D38571;
+  --theme-light-bg: #F7F5F2;
+  --theme-light-card: #FFFFFF;
+  --theme-light-accent: #FF6B4A;
+  --theme-dark-bg: #0E0D0C;
+  --theme-dark-card: #171514;
+  --theme-dark-accent: #FF6B4A;
   --background: var(--theme-light-bg);
   --card: var(--theme-light-card);
-  --foreground: #2B2622;
-  --muted-foreground: #6B6259;
-  --border: #DDD3C0;
+  --foreground: #0E0D0C;
+  --muted-foreground: #6B635B;
+  --border: rgba(14, 13, 12, 0.10);
   --accent: var(--theme-light-accent);
-  --accent-foreground: #FBF8F1;
+  /* After hours (spec v1): the accent is coral in both themes with dark text on
+     it (white on coral fails contrast). --accent-text is the accent as TEXT. */
+  --accent-foreground: #0E0D0C;
+  --accent-text: #C2391B;
+  --ink: #0E0D0C;
+  --surface-raised: #FFFFFF;
   --gold: #B08D4A;
   --gold-text: #7E6535;
   --input-border: #957D50;
@@ -105,7 +110,7 @@
 
   /* ── Derived semantic tokens ──────────────────────────────────────────── */
   --surface: var(--card);
-  --surface-elevated: #FFFFFF;
+  --surface-elevated: var(--surface-raised);
   --surface-muted: color-mix(in srgb, var(--background) 55%, var(--card));
   --foreground-muted: var(--muted-foreground);
   --hairline: var(--border);
@@ -175,44 +180,24 @@
   --success: #4ADE80;
   --warning: var(--yellow);
 
-  /* ── Corner name palette (Discover's Corners tab) ────────────────────────
-     Eight hues a Corner's name is deterministically assigned from (see
-     lib/cornerColor.ts), each a distinct accessible TEXT variant — same
-     "light needs the deeper shade, dark restores a bright one" rule as
-     --coral-text above, verified at >=4.5:1 against both --card values
-     (light #FBF8F1, dark #26211D). Not used for anything but corner-name
-     text; GeneratedArt.tsx's --gen-art-* family below is for illustration
-     fills and isn't contrast-checked for text. */
-  --corner-terracotta: #9C3E24;
-  --corner-plum: #5B3454;
-  --corner-forest: #1C5B3F;
-  --corner-denim: #2A5878;
-  --corner-mustard: #7A5A12;
-  --corner-olive: #4F5E35;
-  --corner-rose: #8A3449;
-  --corner-sky: #1F5E86;
-
-  /* ── After hours (Discover and Corner pilot, Oct 2026) ───────────────────
-     Colour as identity, used the way a magazine uses it: sparingly. Every
-     Space owns one hue and its Corners inherit it, shown as a dot or a short
-     rule, or once per page as a bold band (white text on it, --on-field); on
-     the page itself text uses the --corner-* variants above, which clear
-     5.6:1 in both themes. Which Space gets which hue lives
-     in lib/fieldColor.ts. Dark mode deepens them a little so marks sit in the
-     charcoal instead of glaring. */
-  --field-terracotta: #B5482B;
-  --field-plum: #7A3D74;
-  --field-forest: #2C6E4F;
-  --field-denim: #3B6E93;
-  --field-ochre: #8F6410;
-  --field-olive: #62743A;
-  --field-rose: #B33F5E;
-  --field-sky: #2579A8;
-  /* Text on a --field band: white. Every light hue clears 4.8:1 with it, and
-     the dark-mode hues are deeper still. */
-  --on-field: #FFFFFF;
-  /* The display face for poster-scale type (Corner headers, field tiles). */
-  --font-poster: 'Instrument Serif', 'Fraunces', Georgia, serif;
+  /* ── After hours (spec v1, Oct 22, 2026) ─────────────────────────────────
+     Category colours: vivid, the same in both themes. Text on them is always
+     --ink (6:1 or better at full strength). A category and its Corners share
+     one; the map is in lib/categoryStyle.ts. */
+  --cat-rose: #FF5C8A;
+  --cat-orange: #FF8A3D;
+  --cat-violet: #9B7BFF;
+  --cat-blue: #4C93FF;
+  --cat-amber: #FFB224;
+  --cat-lime: #B6E04A;
+  --cat-teal: #22C7B0;
+  --cat-pink: #F27BD1;
+  /* Display face for the pages in this look (Discover, Corner, category). */
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  /* Text on a photo, over --scrim-card. Same in both themes. */
+  --photo-text: #F4EFE8;
+  --photo-text-muted: #A39A90;
+  --scrim-card: linear-gradient(to top, rgba(14, 13, 12, 0.85), transparent 55%);
 
   /* ── GeneratedArt.tsx illustration palette ───────────────────────────────
      The flat-vector hobby illustrations' own colors — deliberately a
@@ -280,7 +265,7 @@
 
   /* Elevation, light mode only. Dark mode has no shadows: elevation there
      is --surface plus a 1px --border (see .dark). */
-  --shadow-card: 0 8px 24px rgb(43 38 34 / 0.06);
+  --shadow-card: 0 1px 2px rgb(14 13 12 / 0.06);
   --shadow-overlay: 0 16px 40px -12px rgb(43 38 34 / 0.24), 0 2px 8px rgb(43 38 34 / 0.06);
 
   /* Motion: fast = hover/press, base = enter/exit (pages and panels too).
@@ -369,34 +354,16 @@
    properties resolve against the final cascaded value at use time. */
 .dark {
   color-scheme: dark;
-  /* After hours: hues deepened ~18% so marks sit in the charcoal. */
-  --field-terracotta: #943B23;
-  --field-plum: #64325F;
-  --field-forest: #245A41;
-  --field-denim: #305A79;
-  --field-ochre: #75520D;
-  --field-olive: #505F30;
-  --field-rose: #93344D;
-  --field-sky: #1E638A;
-
   --background: var(--theme-dark-bg);
   --card: var(--theme-dark-card);
-  --foreground: #EFE8DA;
-  --muted-foreground: #A39885;
-  --border: #3A332B;
+  --foreground: #F4EFE8;
+  --muted-foreground: #A39A90;
+  --border: rgba(255, 255, 255, 0.08);
   --accent: var(--theme-dark-accent);
-  --accent-foreground: #1C1816;
+  --accent-foreground: #0E0D0C;
+  --accent-text: #FF6B4A;
+  --surface-raised: #201D1B;
   --coral-text: #FF8B6E;
-  /* Corner name palette, dark variants — same eight hues, brightened back up
-     for contrast against the dark card (#26211D), each re-verified >=4.5:1. */
-  --corner-terracotta: #F0A47E;
-  --corner-plum: #D8AEDD;
-  --corner-forest: #8FD6B2;
-  --corner-denim: #9AC4E3;
-  --corner-mustard: #E8C364;
-  --corner-olive: #B7C98F;
-  --corner-rose: #F0A3B5;
-  --corner-sky: #8FC7EC;
   /* Brand-gradient fills carry white --on-brand text and keep their colour in
      both modes, so dark uses the light accent (6.17:1 under white) rather
      than the lighter dark --accent (3.4:1). */
@@ -410,7 +377,6 @@
   --input-border: #847462;
   --destructive: #D9776A;
   --destructive-foreground: #1C1816;
-  --surface-elevated: #2E2822;
 
   /* No shadows in dark — elevation there comes from --surface plus a 1px
      --border (see "Dark elevation" in the base layer).
@@ -645,8 +611,8 @@
 
   /* Radius: cards vs. controls (buttons, inputs, chips, tabs). rounded-full
      stays for avatars, dots, knobs, spinners and other true circles only. */
-  --radius-card: 12px;
-  --radius-control: 8px;
+  --radius-card: 16px;
+  --radius-control: 12px;
 
   /* Type, in rem so the reader's text-size setting scales all of it.
      Nothing below 12px. text-body is also the size of every form field
@@ -667,11 +633,6 @@
      above; scripts/design-audit.py flags it anywhere else. */
   --text-hero: clamp(2.5rem, 1.5rem + 4vw, 4.75rem);
   --text-hero--line-height: 1.05;
-  /* Poster scale: Corner headers and field tiles only (the after-hours pilot).
-     Tight leading, set in --font-poster. The guard flags it anywhere else. */
-  --text-poster: clamp(4rem, 1.5rem + 11vw, 9rem);
-  --text-poster--line-height: 0.9;
-  --text-poster--letter-spacing: -0.02em;
 
   /* Landing-page section gap (Home.tsx only), the way --text-hero is the
      landing-only type size: py-section-hero, pt-section-hero, … In-app
@@ -1649,4 +1610,71 @@ summary:focus-visible,
     animation-duration: var(--duration-base);
     animation-timing-function: var(--ease-standard);
   }
+}
+
+/* ── After hours type (spec v1) ──────────────────────────────────────────────
+   Discover, Corner and category pages carry this class on their root. It
+   re-points the seven size tokens at the spec's scale (mobile, then lg), and
+   sets the display face on the three headline sizes. Scoped on purpose: the
+   other pages keep their own type until they are moved over, so a serif
+   heading elsewhere is never given a sans weight it was not drawn for.
+   Nothing here is italic, monospace or uppercase, and nothing is under 12px. */
+.ns-afterhours {
+  --text-display: 2.25rem;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 800;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.01em;
+  --text-title--font-weight: 700;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.2;
+  --text-lead--letter-spacing: -0.01em;
+  --text-lead--font-weight: 700;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5;
+  --text-body--letter-spacing: 0;
+  --text-body--font-weight: 400;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.4;
+  --text-small--letter-spacing: 0;
+  --text-small--font-weight: 500;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.3;
+  --text-caption--letter-spacing: 0.01em;
+  --text-caption--font-weight: 600;
+  font-style: normal;
+}
+
+@media (min-width: 64rem) {
+  .ns-afterhours {
+    --text-display: 3.5rem;
+    --text-title: 1.75rem;
+    --text-lead: 1.25rem;
+    --text-body: 1rem;
+    --text-caption: 0.8125rem;
+  }
+}
+
+.ns-afterhours :is(.text-display, .text-title, .text-lead) {
+  font-family: var(--font-display);
+}
+
+/* Weight and tracking per size. Tailwind's text-* utilities do not read the
+   --text-*--font-weight tokens above, so they are set here. In the base layer,
+   so an explicit font-semibold (and every other utility) still wins. */
+@layer base {
+  .ns-afterhours .text-display { font-weight: 800; letter-spacing: -0.02em; }
+  .ns-afterhours .text-title { font-weight: 700; letter-spacing: -0.01em; }
+  .ns-afterhours .text-lead { font-weight: 700; letter-spacing: -0.01em; }
+  .ns-afterhours .text-body { font-weight: 400; }
+  .ns-afterhours .text-small { font-weight: 500; }
+  .ns-afterhours .text-caption { font-weight: 600; letter-spacing: 0.01em; }
+}
+
+/* A form field stays 16px on a phone even here: below that, iOS zooms the page
+   when the field is focused. */
+.ns-afterhours :is(input, textarea, select) {
+  font-size: 1rem;
 }
