@@ -1,8 +1,12 @@
 import { hobbies } from "../../data/hobbies";
 import { quickGuides } from "../../data/cornerGuides";
+import { categoryOfCorner } from "../../data/cornerCategories";
 import { cornerStyle } from "../../lib/categoryStyle";
+import { spreadByKey } from "../../lib/spreadByKey";
+import { tieNumbers } from "../../lib/typography";
 import { useRowScrollMemory } from "../../lib/useHistoryState";
 import { PressLink } from "../afterhours/PressLink";
+import { ROW_GRID, ROW_ITEM } from "./rowGrid";
 
 /**
  * "Got 15 minutes?" on Discover: Corners whose first step fits in about
@@ -18,14 +22,18 @@ const MAX = 10;
 
 export function QuickStarts() {
   const row = useRowScrollMemory("discover.quickStarts");
-  const items = quickGuides()
+  const items = spreadByKey(
+    quickGuides()
     .map((q) => {
       const hobby = hobbies.find((h) => h.slug === q.spaceSlug);
       const label = hobby?.subItems.find((s) => s.slug === q.cornerSlug)?.label;
       return hobby && !hobby.hidden && label ? { ...q, label } : null;
     })
     .filter((q): q is NonNullable<typeof q> => q !== null)
-    .slice(0, MAX);
+    .slice(0, MAX),
+    // Two cards from the same category never sit side by side.
+    (q) => categoryOfCorner(q.spaceSlug, q.cornerSlug)?.slug ?? q.spaceSlug,
+  );
 
   if (items.length === 0) return null;
 
@@ -34,9 +42,9 @@ export function QuickStarts() {
       <h2 id="quick-starts-title" className="mb-5 text-display" style={{ fontFamily: "var(--font-poster)" }}>
         Got 15 minutes?
       </h2>
-      <ul {...row} className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
+      <ul {...row} className={`-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] ${ROW_GRID}`}>
         {items.map((q) => (
-          <li key={`${q.spaceSlug}-${q.cornerSlug}`} className="w-64 shrink-0 snap-start" style={cornerStyle(q.spaceSlug, q.cornerSlug)}>
+          <li key={`${q.spaceSlug}-${q.cornerSlug}`} className={`w-64 shrink-0 snap-start ${ROW_ITEM}`} style={cornerStyle(q.spaceSlug, q.cornerSlug)}>
             {/* The page's one bold colour moment: each step on its Space's colour. */}
             <PressLink
               to={`/corner/${q.cornerSlug}`}
@@ -44,7 +52,7 @@ export function QuickStarts() {
             >
               <span className="text-small font-medium">{q.label}</span>
               <span className="text-title leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-                {q.guide.step}
+                {tieNumbers(q.guide.step)}
               </span>
             </PressLink>
           </li>

@@ -4,6 +4,7 @@ import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
 import { useDarkByDefault } from "../context/ThemeContext";
 import { cornerStyle } from "../lib/categoryStyle";
 import { CategoryGrid } from "../components/discover/CategoryGrid";
+import { ROW_GRID, ROW_ITEM } from "../components/discover/rowGrid";
 import { PressLink } from "../components/afterhours/PressLink";
 import { BlurFade } from "../components/afterhours/BlurFade";
 import { MomentFigure } from "../components/afterhours/MomentFigure";
@@ -670,7 +671,7 @@ export function Discover() {
               {postsStatus === "loading" && <SpotlightSkeleton />}
               {featured.length > 0 && (
                 <BlurFade inView>
-                <section className="mb-12">
+                <section className="mb-10">
                   <div className="mb-5 flex items-end justify-between gap-4">
                     <div>
                       <div className="mb-2 text-caption font-medium text-muted-foreground">Popular Moments from across {APP_NAME}</div>
@@ -678,7 +679,7 @@ export function Discover() {
                     </div>
                     <a
                       href="#all-moments"
-                      className="shrink-0 text-caption text-[var(--coral-text)] hover:underline"
+                      className="inline-flex min-h-11 shrink-0 items-center text-caption text-[var(--coral-text)] hover:underline"
                       onClick={(e) => {
                         // A plain href would set location.hash, which the
                         // HashRouter reads as a navigation to path
@@ -691,9 +692,9 @@ export function Discover() {
                       See all →
                     </a>
                   </div>
-                  <div {...spotlightRow} className="-mx-4 flex snap-x gap-2 overflow-x-auto pb-2 [scrollbar-width:none] sm:mx-0 sm:gap-5">
+                  <div {...spotlightRow} className={`-mx-4 flex snap-x gap-2 overflow-x-auto pb-2 [scrollbar-width:none] ${ROW_GRID}`}>
                     {featured.map((post, i) => (
-                      <BlurFade key={post.id} delay={i * 0.04} className="w-[92vw] shrink-0 snap-start sm:w-64">
+                      <BlurFade key={post.id} delay={i * 0.04} className={`w-[92vw] shrink-0 snap-start ${ROW_ITEM}`}>
                         <MomentFigure post={post} bleed priority={i < 2} onOpen={() => setOpenPost(post)} />
                       </BlurFade>
                     ))}
