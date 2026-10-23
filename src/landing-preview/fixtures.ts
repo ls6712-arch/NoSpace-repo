@@ -84,6 +84,9 @@ export const posts: PostRow[] = [
   post({ id: 9201, user_id: THEO, hobby_slug: "crafts-making", corner: "Pottery", caption: "Wheel class Saturday", media_url: photo("theo-wheel.jpg"), love_count: 11, in_count: 6, created_at: ago(2) }),
   post({ id: 9202, user_id: THEO, hobby_slug: "food-cooking", corner: "Cooking", caption: "Ramen from scratch", media_url: photo("theo-ramen.jpg"), love_count: 14, in_count: 5, created_at: ago(4) }),
   post({ id: 9203, user_id: THEO, hobby_slug: "art-creative", corner: "Sketching", caption: "Café number seven", media_url: photo("theo-sketchbook.jpg"), love_count: 6, in_count: 1, created_at: ago(7), pursuit_id: "p-cafes" }),
+  // Written Moments (no photo), for the Discover and Corner design preview
+  post({ id: 9310, user_id: THEO, hobby_slug: "food-cooking", corner: "cooking", type: "written", caption: "Ramen broth, day two. It needs more kombu and a lot more patience.", media_url: null, created_at: ago(0, 3), love_count: 5 }),
+  post({ id: 9311, user_id: MAYA, hobby_slug: "sports-fitness", corner: "running", type: "written", caption: "Eleven miles felt easy until mile nine. Slower next week.", media_url: null, created_at: ago(1, 4), love_count: 2 }),
   // Hana: crochet only (the Corner page preview)
   post({ id: 9301, user_id: HANA, hobby_slug: "crafts-making", corner: "crochet", sub_hobby: "crochet", caption: "Granny square number nine", media_url: photo("hana-crochet-1.jpg"), love_count: 9, in_count: 3, created_at: ago(0, 5) }),
   post({ id: 9302, user_id: HANA, hobby_slug: "crafts-making", corner: "crochet", sub_hobby: "crochet", caption: "First amigurumi, a very lopsided sun", media_url: photo("hana-crochet-2.jpg"), love_count: 6, in_count: 2, created_at: ago(2) }),

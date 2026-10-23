@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
-import { useDarkByDefault } from "../context/ThemeContext";
 import { cornerStyle } from "../lib/categoryStyle";
 import { CategoryGrid } from "../components/discover/CategoryGrid";
-import { ROW_GRID, ROW_ITEM } from "../components/discover/rowGrid";
+import { PAGE_X, SECTION_GAP, TITLE_GAP } from "../lib/pageGrid";
 import { PressLink } from "../components/afterhours/PressLink";
-import { BlurFade } from "../components/afterhours/BlurFade";
-import { MomentFigure } from "../components/afterhours/MomentFigure";
+import { Reveal } from "../components/afterhours/Reveal";
+import { MomentTile } from "../components/afterhours/MomentTile";
 import {
   Compass,
   LayoutGrid,
@@ -28,10 +27,8 @@ import { useCorners, isBrowsableOnDiscover, cornerFollowKey } from "../context/C
 import { useCategories } from "../context/CategoriesContext";
 import { deriveProjects } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
-import { cornerColorFor } from "../lib/cornerColor";
 import { supabase } from "../../lib/supabase";
 import { track } from "../lib/analytics";
-import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { SpacesBrowser } from "../components/SpacesBrowser";
@@ -55,8 +52,6 @@ import { scrollBehavior } from "../lib/scrollToElement";
  * presses on purpose; nothing here loads on scroll.
  */
 const PAGE_SIZE = 24;
-/** The cards' small print (corner, date) reads in the sans on this page. */
-const GRID_SANS = "[&_.ns-section-kicker]:[font-family:var(--font-body)] [&_time]:[font-family:var(--font-body)]";
 
 const DAY = 86_400_000;
 const HOUR = 3_600_000;
@@ -121,11 +116,11 @@ const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
  * doing something.
  */
 function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
-  return `border-b-2 font-medium tracking-wide [font-family:var(--font-body)] transition-colors ${
-    size === "sm" ? "pb-2 text-caption" : "pb-1 text-caption"
+  return `min-h-11 border-b-2 font-semibold [font-family:var(--font-body)] transition-colors ${
+    size === "sm" ? "text-body" : "text-small"
   } ${
     active
-      ? "border-[var(--coral-deep)] text-foreground"
+      ? "border-[var(--accent)] text-foreground"
       : "border-transparent text-muted-foreground hover:text-foreground"
   }`;
 }
@@ -294,29 +289,23 @@ function AllCornersBrowser({ query }: { query: string }) {
   }
 
   return (
-    // Search results: names set large, hairlines between, a small dot in the
+    // Search results: names set large, hairlines between, a dot in the
     // category's colour. (Browsing is the category grid.)
-    <ul className="mb-14 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="mb-10 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3 md:mb-12">
       {matching.map((c, i) => (
         <li key={`${c.spaceSlug}-${c.slug}`} style={cornerStyle(c.spaceSlug, c.slug)}>
-          <PressLink
-            to={`/corner/${c.slug}`}
-            aria-label={`Browse the ${c.name} Corner`}
-            // Reveal-on-load: .ns-enter is the rise-and-fade every entrance
-            // here uses, off under reduced motion; the per-item delay is
-            // dynamic (an unbounded list) and capped so it reads as one
-            // wave. design-token-ignore: stagger delay
-            className="ns-enter group flex min-h-14 items-center justify-between gap-4 border-t border-border py-3"
-            style={{ animationDelay: `${Math.min(i, 11) * 0.03}s` }}
-          >
-            <span
-              className="text-display leading-tight text-foreground transition-colors duration-fast group-hover:text-[var(--field-text)]"
-              style={{ fontFamily: "var(--font-poster)" }}
+          <Reveal index={Math.min(i, 11)}>
+            <PressLink
+              to={`/corner/${c.slug}`}
+              aria-label={`Browse the ${c.name} Corner`}
+              className="group flex min-h-14 items-center justify-between gap-4 border-t border-border py-3"
             >
-              {c.name}
-            </span>
-            <span className="size-2 shrink-0 rounded-full bg-[var(--field)]" aria-hidden="true" />
-          </PressLink>
+              <span className="text-title text-foreground transition-colors duration-fast group-hover:text-[var(--accent-text)]">
+                {c.name}
+              </span>
+              <span className="size-2 shrink-0 rounded-full bg-[var(--cat)]" aria-hidden="true" />
+            </PressLink>
+          </Reveal>
         </li>
       ))}
     </ul>
@@ -327,14 +316,11 @@ function AllCornersBrowser({ query }: { query: string }) {
 function SpotlightSkeleton() {
   const show = useDelayedFlag(true);
   return (
-    <section className={`mb-12 ${show ? "" : "invisible"}`} aria-busy="true">
-      <div className="mb-5">
-        <div className="mb-2 text-caption font-medium text-muted-foreground">Popular Moments from across {APP_NAME}</div>
-        <h2 className="text-display" style={{ fontFamily: "var(--font-poster)" }}>Spotlight</h2>
-      </div>
-      <div className="flex gap-4 overflow-hidden pb-2">
+    <section className={`${SECTION_GAP} ${show ? "" : "invisible"}`} aria-busy="true">
+      <h2 className={`${TITLE_GAP} text-title`}>Spotlight</h2>
+      <div className="flex gap-3 overflow-hidden pb-2 md:gap-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="w-64 shrink-0">
+          <div key={i} className="w-[240px] shrink-0 md:w-[calc((100%-3rem)/4)]">
             <MomentCardSkeleton />
           </div>
         ))}
@@ -344,8 +330,6 @@ function SpotlightSkeleton() {
 }
 
 export function Discover() {
-  // Designed dark first: dark unless the person chose Light themselves.
-  useDarkByDefault();
   const { publicFeed, postsStatus, reloadPosts } = useContent();
   const { user } = useAuth();
   // Subscribing re-renders this page when admin Space changes load.
@@ -598,39 +582,45 @@ export function Discover() {
   const remaining = filtered.length - visible.length;
 
   return (
-    <div className="min-h-viewport">
-      <section className="relative overflow-hidden py-10 sm:py-12">
-        <div className="container relative mx-auto max-w-3xl px-4">
-          <div className="relative border-b border-foreground">
-            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-foreground" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setShown(PAGE_SIZE);
-                if (searchParams.get("about")) setSearchParams({}, { replace: true });
-              }}
-              placeholder={SEARCH_PLACEHOLDER[tab]}
-              className="w-full border-0 bg-transparent py-4 pl-11 pr-11 text-body text-foreground outline-none placeholder:text-foreground/65 focus:ring-0"
-            />
-            {query && (
-              <button type="button" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground hover:text-[var(--coral-deep)]" aria-label="Clear search">
-                <X className="size-4" />
-              </button>
-            )}
-          </div>
+    <div className="ns-afterhours min-h-viewport">
+      {/* One search only: the top bar's, on a wide screen. Where there is no
+          top-bar search (a phone), this one field stands in for it. */}
+      <div className={`${PAGE_X} pt-4 lg:hidden`}>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setShown(PAGE_SIZE);
+              if (searchParams.get("about")) setSearchParams({}, { replace: true });
+            }}
+            placeholder={SEARCH_PLACEHOLDER[tab]}
+            aria-label={SEARCH_PLACEHOLDER[tab]}
+            className="h-11 w-full rounded-control border-0 bg-surface pl-10 pr-11 text-body text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="absolute right-0 top-0 flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <X className="size-4" />
+            </button>
+          )}
         </div>
-      </section>
+      </div>
 
-      <div className="bg-surface pb-24 pt-5">
-        <div className="container mx-auto max-w-6xl px-4">
+      <div className="pb-24 pt-2 lg:pt-8">
+        <div className={PAGE_X}>
           {/* Corners / Spaces / People / Marketplace — Discover's own front
               door. These tabs never fit a phone-width pill at once, so this scrolls
               horizontally (edge-to-edge, bleeding past the container's own
               padding) instead of overflowing the screen or wrapping into a
               second, layout-shifting row. */}
-          <div {...tabsRow} className="-mx-4 -mt-2.5 mb-3.5 overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:overflow-visible sm:px-0">
+          <div {...tabsRow} className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
             <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
               {VISIBLE_DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
                 const active = tab === id;
@@ -658,11 +648,7 @@ export function Discover() {
           {tab === "corners" && (
             <>
               {/* Ideas, not search results: hidden while a search is open. */}
-              {!query.trim() && (
-                <BlurFade inView>
-                  <QuickStarts />
-                </BlurFade>
-              )}
+              {!query.trim() && <QuickStarts />}
               {/* While searching, the matching Corners come first; otherwise the
                   order is search, Got 15 minutes?, Spotlight, then the index. */}
               {query.trim() && <AllCornersBrowser query={query} />}
@@ -670,16 +656,12 @@ export function Discover() {
               {/* Spotlight */}
               {postsStatus === "loading" && <SpotlightSkeleton />}
               {featured.length > 0 && (
-                <BlurFade inView>
-                <section className="mb-10">
-                  <div className="mb-5 flex items-end justify-between gap-4">
-                    <div>
-                      <div className="mb-2 text-caption font-medium text-muted-foreground">Popular Moments from across {APP_NAME}</div>
-                      <h2 className="text-display" style={{ fontFamily: "var(--font-poster)" }}>Spotlight</h2>
-                    </div>
+                <section className={SECTION_GAP}>
+                  <div className={`${TITLE_GAP} flex items-center justify-between gap-4`}>
+                    <h2 className="text-title">Spotlight</h2>
                     <a
                       href="#all-moments"
-                      className="inline-flex min-h-11 shrink-0 items-center text-caption text-[var(--coral-text)] hover:underline"
+                      className="inline-flex min-h-11 shrink-0 items-center text-small text-[var(--accent-text)] hover:underline"
                       onClick={(e) => {
                         // A plain href would set location.hash, which the
                         // HashRouter reads as a navigation to path
@@ -689,27 +671,29 @@ export function Discover() {
                         document.getElementById("all-moments")?.scrollIntoView({ behavior: scrollBehavior() });
                       }}
                     >
-                      See all →
+                      See all
                     </a>
                   </div>
-                  <div {...spotlightRow} className={`-mx-4 flex snap-x gap-2 overflow-x-auto pb-2 [scrollbar-width:none] ${ROW_GRID}`}>
+                  <div
+                    {...spotlightRow}
+                    className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:mx-0 md:gap-4 md:px-0"
+                  >
                     {featured.map((post, i) => (
-                      <BlurFade key={post.id} delay={i * 0.04} className={`w-[92vw] shrink-0 snap-start ${ROW_ITEM}`}>
-                        <MomentFigure post={post} bleed priority={i < 2} onOpen={() => setOpenPost(post)} />
-                      </BlurFade>
+                      <Reveal key={post.id} index={i} className="w-[240px] shrink-0 snap-start md:w-[calc((100%-3rem)/4)]">
+                        <MomentTile post={post} priority={i < 4} onOpen={() => setOpenPost(post)} />
+                      </Reveal>
                     ))}
                   </div>
                 </section>
-                </BlurFade>
               )}
 
               {!query.trim() && <CategoryGrid />}
 
               {/* All Moments */}
-              <div id="all-moments" className="mb-4 flex flex-wrap items-end justify-between gap-4">
+              <div id="all-moments" className={`${TITLE_GAP} flex flex-wrap items-center justify-between gap-4`}>
                 <div>
-                  <div className="mb-2 text-caption font-medium text-muted-foreground">Moments from across {APP_NAME}</div>
-                  <h2 className="text-display" style={{ fontFamily: "var(--font-poster)" }}>All Moments</h2>
+                  <div className="mb-2 text-caption text-muted-foreground">Moments from across {APP_NAME}</div>
+                  <h2 className="text-title">All Moments</h2>
                 </div>
                 <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-control border border-border bg-card p-1">
                   {FEED_TABS.map(({ id, label }) => {
@@ -724,9 +708,9 @@ export function Discover() {
                             setFeedTab(id);
                             setShown(PAGE_SIZE);
                           }}
-                          className={`rounded-control px-3.5 py-1.5 text-caption font-medium transition-colors ${
+                          className={`min-h-9 rounded-control px-3.5 text-small font-semibold transition-colors ${
                             active
-                              ? "text-on-brand [background-image:var(--gradient-brand)]"
+                              ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
@@ -751,10 +735,10 @@ export function Discover() {
                           setChip(c.id);
                           setShown(PAGE_SIZE);
                         }}
-                        className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
+                        className={`min-h-9 rounded-control border px-3.5 text-small font-semibold transition-colors ${
                           active
-                            ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
-                            : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
+                            ? "border-transparent bg-[var(--accent)] text-[var(--accent-foreground)]"
+                            : "border-border bg-card text-foreground hover:bg-surface-raised"
                         }`}
                       >
                         {c.label}
@@ -843,15 +827,11 @@ export function Discover() {
                   <EmptyState line="Nothing matches that yet." hint="Try a broader word or a different filter." />
                 )
               ) : (
-                <div className={`${MOMENT_GRID} ${GRID_SANS}`}>
-                  {visible.map((post) => (
-                    <MomentCard
-                      key={post.id}
-                      post={post}
-                      surface="discover"
-                      size="standard"
-                      onOpen={() => setOpenPost(post)}
-                    />
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                  {visible.map((post, i) => (
+                    <Reveal key={post.id} index={i % 8}>
+                      <MomentTile post={post} onOpen={() => setOpenPost(post)} />
+                    </Reveal>
                   ))}
                 </div>
               )}
@@ -872,7 +852,7 @@ export function Discover() {
                     </>
                   ) : (
                     <>
-                      <p className="mb-1 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
+                      <p className="mb-1 text-lead">
                         That’s everything here.
                       </p>
                       <p className="mb-5 text-small text-muted-foreground">

@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { useDarkByDefault } from "../context/ThemeContext";
 import { useHistoryState } from "../lib/useHistoryState";
 import { Link, useParams } from "react-router";
 import { hobbies } from "../data/hobbies";
 import { Post, postCorner } from "../data/posts";
 import { useCorners } from "../context/CornersContext";
 import { useContent } from "../context/ContentContext";
-import { PosterTitle } from "../components/afterhours/PosterTitle";
 import { PressLink } from "../components/afterhours/PressLink";
-import { BlurFade } from "../components/afterhours/BlurFade";
-import { MomentFigure } from "../components/afterhours/MomentFigure";
+import { Reveal } from "../components/afterhours/Reveal";
+import { MomentTile } from "../components/afterhours/MomentTile";
 import { cornerStyle } from "../lib/categoryStyle";
 import { fillRows } from "../lib/fillRows";
+import { PAGE_X } from "../lib/pageGrid";
 import { tieNumbers } from "../lib/typography";
 import { MomentDetail } from "../components/MomentDetail";
 import { useAuth } from "../context/AuthContext";
@@ -27,8 +26,6 @@ import { cornerGuide } from "../data/cornerGuides";
  * link to the parent Space; there's no other navigation here.
  */
 export function CornerPage() {
-  // Designed dark first: dark unless the person chose Light themselves.
-  useDarkByDefault();
   const { slug = "" } = useParams();
   const { cornersFor } = useCorners();
   const { publicFeed, postsStatus } = useContent();
@@ -79,113 +76,86 @@ export function CornerPage() {
   const [lead, ...rest] = posts;
   // Whole rows only (see lib/fillRows.ts); "Show more" brings in the rest.
   const n = rest.length;
-  const { lgCount, smCount } = fillRows(n, morePages);
-  const shownRest = rest.slice(0, Math.max(lgCount, smCount));
-  const hiddenLg = n > lgCount;
-  const hiddenSm = n > smCount;
+  const { wideCount, narrowCount } = fillRows(n, morePages);
+  const shownRest = rest.slice(0, Math.max(wideCount, narrowCount));
+  const hiddenWide = n > wideCount;
+  const hiddenNarrow = n > narrowCount;
+
+  const dim = "text-[color-mix(in_srgb,var(--ink)_80%,transparent)]";
 
   return (
-    <div className="min-h-viewport" style={cornerStyle(spaceSlug, corner.slug)}>
-      {/* The page's one bold colour moment: a full-width band in the Space's
-          colour behind the name. Everything else is paper and type. */}
-      <header className="bg-[var(--field)] text-[var(--on-field)]">
-        <div className="container mx-auto max-w-5xl px-4 pb-10 pt-6 sm:pb-14 sm:pt-10">
-          <Link
-            to={`/space/${spaceSlug}`}
-            className="mb-10 inline-flex min-h-11 items-center text-small underline-offset-4 hover:underline"
-          >
+    <div className="ns-afterhours min-h-viewport" style={cornerStyle(spaceSlug, corner.slug)}>
+      {/* The Corner's category colour, full width, behind its name. */}
+      <header className="bg-[var(--cat)] text-[var(--ink)]">
+        <div className={`${PAGE_X} py-8 md:py-12`}>
+          <Link to={`/space/${spaceSlug}`} className={`inline-flex min-h-11 items-center text-small hover:underline ${dim}`}>
             ← Back to {spaceName}
           </Link>
-          <PosterTitle onField>{corner.name}</PosterTitle>
-          {about && (
-            <BlurFade delay={0.3}>
-              <p className="mt-5 max-w-xl text-title italic" style={{ fontFamily: "var(--font-serif)" }}>
-                {about}
-              </p>
-            </BlurFade>
-          )}
+          <h1 className="mt-6 text-display">{corner.name}</h1>
+          {about && <p className={`mt-3 max-w-xl text-body ${dim}`}>{about}</p>}
         </div>
       </header>
 
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className={`${PAGE_X} mt-6`}>
         {/* One concrete first step, from the activity library. A suggestion,
             never a promise (trust rules): just the step and the two ways to
             act on it. */}
         {guide && (
-          <BlurFade delay={0.45} inView>
-            <div className="max-w-2xl border-b border-border py-8">
-              <p className="text-title leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-                {tieNumbers(guide.step)}
-              </p>
-              <div className="mt-5 flex flex-col items-stretch gap-x-6 gap-y-1 sm:flex-row sm:items-center">
+          <Reveal>
+            <div className="max-w-2xl rounded-card border border-border bg-card p-5 shadow-card">
+              <p className="text-lead text-foreground">{tieNumbers(guide.step)}</p>
+              <div className="mt-5 flex flex-col gap-3 md:flex-row">
                 <PressLink
                   to={`/pursuits/new?${prefill}`}
-                  className="inline-flex min-h-12 w-full items-center justify-center rounded-control bg-accent px-5 text-body font-medium text-accent-foreground sm:w-auto"
+                  className="flex min-h-12 w-full items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)] md:w-auto"
                 >
                   Start a Pursuit
                 </PressLink>
-                <Link
+                <PressLink
                   to={`/create?${prefill}`}
-                  className="inline-flex min-h-12 items-center justify-center text-body font-medium text-[var(--field-text)] underline underline-offset-4 sm:min-h-11"
+                  className="flex min-h-12 w-full items-center justify-center rounded-control border border-border px-6 text-body font-semibold text-foreground md:w-auto"
                 >
                   Log a Moment
-                </Link>
+                </PressLink>
               </div>
             </div>
-          </BlurFade>
+          </Reveal>
         )}
       </div>
 
-      <section className="pb-16 pt-8">
+      <section className={`${PAGE_X} pb-16 pt-10 md:pt-12`}>
         {postsStatus === "loading" && posts.length === 0 ? (
-          <div className="container mx-auto max-w-5xl px-4">
-            <Loadable loading skeleton={<MomentGridSkeleton count={6} />}>{null}</Loadable>
-          </div>
+          <Loadable loading skeleton={<MomentGridSkeleton count={6} />}>{null}</Loadable>
         ) : posts.length === 0 ? (
-          <div className="container mx-auto max-w-5xl px-4">
-            <EmptyState
-              line={`No ${corner.name.toLowerCase()} Moments yet.`}
-              hint="Be the first."
-              // With a guide, Log a Moment is already right above.
-              action={guide ? undefined : { label: "Log a Moment", to: `/create?${prefill}` }}
-            />
-          </div>
+          <EmptyState
+            line={`No ${corner.name.toLowerCase()} Moments yet.`}
+            hint="Be the first."
+            // With a guide, Log a Moment is already right above.
+            action={guide ? undefined : { label: "Log a Moment", to: `/create?${prefill}` }}
+          />
         ) : (
-          // Moments lead, as plates. The newest runs edge to edge on a phone
-          // (4:5 or taller), the rest sit in a grid whose count always fills
-          // its last row: 6 at a time, which is whole rows at 2 and 3 across.
-          <div className="space-y-12">
-            <BlurFade inView>
-              <div className="sm:container sm:mx-auto sm:max-w-5xl sm:px-4">
-                <MomentFigure
-                  post={lead}
-                  priority
-                  large
-                  bleed
-                  aspect="aspect-[4/5] sm:aspect-[16/9]"
-                  onOpen={() => setOpenPost(lead)}
-                />
-              </div>
-            </BlurFade>
+          // Moments lead. The newest is full width (4:5 on a phone, 16:9 from md);
+          // the rest are tiles in whole rows, 8 at a time.
+          <div className="space-y-10 md:space-y-12">
+            <Reveal>
+              <MomentTile post={lead} priority width={1200} aspect="aspect-[4/5] md:aspect-[16/9]" onOpen={() => setOpenPost(lead)} />
+            </Reveal>
             {shownRest.length > 0 && (
-              <div className="container mx-auto max-w-5xl px-4">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-3">
+              <div>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                   {shownRest.map((post, i) => (
-                    <BlurFade
+                    <Reveal
                       key={post.id}
-                      delay={Math.min(i, 8) * 0.04}
-                      inView
-                      className={`${i >= smCount ? "max-lg:hidden" : ""} ${i >= lgCount ? "lg:hidden" : ""}`}
+                      index={i % 8}
+                      className={`${i >= narrowCount ? "max-md:hidden" : ""} ${i >= wideCount ? "md:hidden" : ""}`}
                     >
-                      <MomentFigure post={post} onOpen={() => setOpenPost(post)} />
-                    </BlurFade>
+                      <MomentTile post={post} onOpen={() => setOpenPost(post)} />
+                    </Reveal>
                   ))}
                 </div>
-                {(hiddenLg || hiddenSm) && (
-                  <div
-                    className={`mt-10 border-t border-border pt-4 ${hiddenSm ? "" : "max-lg:hidden"} ${hiddenLg ? "" : "lg:hidden"}`}
-                  >
-                    <Button variant="outline" onClick={() => setMorePages((n) => n + 1)}>
+                {(hiddenWide || hiddenNarrow) && (
+                  <div className={`mt-10 border-t border-border pt-4 ${hiddenNarrow ? "" : "max-md:hidden"} ${hiddenWide ? "" : "md:hidden"}`}>
+                    <Button variant="outline" onClick={() => setMorePages((m) => m + 1)}>
                       Show more
                     </Button>
                   </div>
