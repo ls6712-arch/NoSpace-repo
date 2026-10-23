@@ -23,6 +23,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
 | Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
 | See all | Opens the full list when a list shows only some: Discover's Spotlight, and the group tiles on Discover's Corners tab (which show the first 8) |
+| Browse | Heading above the group tiles on Discover's Corners tab (the first 8, then See all) |
 
 ## Hobbies and Spaces
 

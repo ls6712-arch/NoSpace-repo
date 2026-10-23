@@ -12,6 +12,7 @@ import { BlurFade } from "../components/afterhours/BlurFade";
 import { MomentFigure } from "../components/afterhours/MomentFigure";
 import { cornerStyle } from "../lib/categoryStyle";
 import { fillRows } from "../lib/fillRows";
+import { tieNumbers } from "../lib/typography";
 import { MomentDetail } from "../components/MomentDetail";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
@@ -114,7 +115,7 @@ export function CornerPage() {
           <BlurFade delay={0.45} inView>
             <div className="max-w-2xl border-b border-border py-8">
               <p className="text-title leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-                {guide.step}
+                {tieNumbers(guide.step)}
               </p>
               <div className="mt-5 flex flex-col items-stretch gap-x-6 gap-y-1 sm:flex-row sm:items-center">
                 <PressLink
