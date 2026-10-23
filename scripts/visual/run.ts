@@ -461,6 +461,16 @@ async function main() {
       details.push({ profile: p.name, engine: label, w: p.w, h: p.h, flags, hscroll: hs, contrastFailures: cf, touchSmall: small, overlaps: ov, smallInputs: smallInputs ? [...smallInputs] : null, safeAreaBadViews: ios ? safeBad : null, safeAreaBarViewsChecked: ios ? safeSeen : null, fixedChromeProblems: fxProblems < 0 ? null : fxProblems });
       rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${fxProblems >= 0 ? `  fixed-chrome ${fxProblems} (+${fxWarn} warn)` : ""}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad === 0 && safeSeen > 0 ? "ok" : "FAIL"} (${safeSeen} views)` : ""}`);
       if (smallInputs?.size) for (const x of smallInputs) rows.push(`    input under 16px: ${x}`);
+      if (cf > 0) {
+        // Name each failing pair, so a red run says what to fix without downloading the report.
+        const seen = new Set<string>();
+        for (const [k, r] of con) for (const f of r.failures) {
+          const id = `${k.split("/")[0]}|${f.sel}|${f.text}|${f.fg}|${f.bg}`;
+          if (seen.has(id)) continue;
+          seen.add(id);
+          rows.push(`    contrast ${f.ratio.toFixed(2)}:1 (need ${f.need}) ${f.fg} on ${f.bg} ${f.size}px ${k.split("/")[0]} ${f.sel} "${f.text}" [${k.split("/").slice(1).join("/")}]`);
+        }
+      }
       await b.close();
     }
     console.log("\ndevice profiles (light + dark each):"); for (const r of rows) console.log("  " + r);

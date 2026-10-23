@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
 import { cornerStyle } from "../lib/categoryStyle";
-import { CategoryGrid } from "../components/discover/CategoryGrid";
-import { PAGE_X, SECTION_GAP, TITLE_GAP } from "../lib/pageGrid";
+import { PAGE_X, TITLE_GAP } from "../lib/pageGrid";
 import { PressLink } from "../components/afterhours/PressLink";
 import { Reveal } from "../components/afterhours/Reveal";
 import { MomentTile } from "../components/afterhours/MomentTile";
@@ -31,14 +30,21 @@ import { track } from "../lib/analytics";
 import { MomentDetail } from "../components/MomentDetail";
 import { ProductCard } from "../components/ProductCard";
 import { SpacesBrowser } from "../components/SpacesBrowser";
-import { Loadable, useDelayedFlag } from "../components/ui/skeleton";
-import { MomentCardSkeleton, MomentGridSkeleton } from "../components/Skeletons";
+import { Loadable } from "../components/ui/skeleton";
+import { MomentGridSkeleton } from "../components/Skeletons";
 import { EmptyState, ErrorNotice } from "../components/StateViews";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
-import { MoodRow } from "../components/discover/MoodRow";
+import { Masthead } from "../components/door/Masthead";
+import { CoverStory } from "../components/door/CoverStory";
+import { pickCover } from "../components/door/pickCover";
+import { MoodGrid } from "../components/door/MoodGrid";
+import { StartHere } from "../components/door/StartHere";
+import { SeenTonight } from "../components/door/SeenTonight";
+import { Rooms } from "../components/door/Rooms";
+import { moodCards, type MoodChipId } from "../data/moodCards";
+import { doorFor, readLastMood, writeLastMood } from "../lib/doorList";
 import { plural } from "../lib/plural";
-import { scrollBehavior } from "../lib/scrollToElement";
 
 /**
  * Discover has an end. That is the whole design: a bounded gallery of work,
@@ -46,10 +52,10 @@ import { scrollBehavior } from "../lib/scrollToElement";
  * something of your own — rather than another page of work loading itself
  * under your thumb.
  *
- * PAGE_SIZE is the size of one "look". "Show more" is a button someone
- * presses on purpose; nothing here loads on scroll.
+ * PAGE_SIZE is the whole of All Moments: 30, then "You're caught up". Nothing
+ * here loads on scroll.
  */
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 30;
 
 const HOUR = 3_600_000;
 
@@ -148,31 +154,6 @@ function scoreForYou(
   // more relevant than either alone, not capped at the same bump.
   const bonus = (fromSomeoneYouFollow ? 90 : 0) + (inYourInterests ? 50 : 0) + (fromYourSpace ? 40 : 0);
   return recencyScore + bonus;
-}
-
-function rankFeatured(posts: Post[], followedHobbies: string[], take: number): Post[] {
-  const followed = new Set(followedHobbies);
-  const scored = posts.map((post) => {
-    const ageHours = (Date.now() - post.createdAt) / HOUR;
-    const recency = Math.max(0, 200 - ageHours);
-    const relevance = followed.has(post.hobbySlug) ? 40 : 0;
-    return { post, score: recency + relevance };
-  });
-  scored.sort((a, b) => b.score - a.score);
-
-  const perCreator = new Map<string, number>();
-  const perSpace = new Map<string, number>();
-  const picked: Post[] = [];
-  for (const { post } of scored) {
-    const c = perCreator.get(post.creator) ?? 0;
-    const s = perSpace.get(post.hobbySlug) ?? 0;
-    if (c >= 2 || s >= 2) continue;
-    picked.push(post);
-    perCreator.set(post.creator, c + 1);
-    perSpace.set(post.hobbySlug, s + 1);
-    if (picked.length >= take) break;
-  }
-  return picked;
 }
 
 /**
@@ -293,25 +274,8 @@ function AllCornersBrowser({ query }: { query: string }) {
   );
 }
 
-/** Holds Spotlight's place while Moments load: same heading, a row of cards. */
-function SpotlightSkeleton() {
-  const show = useDelayedFlag(true);
-  return (
-    <section className={`${SECTION_GAP} ${show ? "" : "invisible"}`} aria-busy="true">
-      <h2 className={`${TITLE_GAP} text-title`}>Spotlight</h2>
-      <div className="flex gap-3 overflow-hidden pb-2 md:gap-4">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="w-[240px] shrink-0 md:w-[calc((100%-3rem)/4)]">
-            <MomentCardSkeleton />
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export function Discover() {
-  const { publicFeed, postsStatus, reloadPosts } = useContent();
+  const { publicFeed, postsStatus, reloadPosts, myPosts } = useContent();
   const { user } = useAuth();
   // Subscribing re-renders this page when admin Space changes load.
   const { spaceRows } = useCategories();
@@ -345,8 +309,6 @@ export function Discover() {
   // Kept across Back so returning from a Moment or Corner finds the list as
   // long as you left it (see useHistoryState).
   const [feedTab, setFeedTab] = useHistoryState<FeedTab>("discover.feedTab", "forYou");
-  const [shown, setShown] = useHistoryState("discover.shown", PAGE_SIZE);
-  const spotlightRow = useRowScrollMemory("discover.spotlight");
   const tabsRow = useRowScrollMemory("discover.tabs");
 
   // "For You" personalization signals — real ones, not an ML model: who you
@@ -391,9 +353,31 @@ export function Discover() {
 
   const q = query.trim().toLowerCase();
 
-  const featured = useMemo(
-    () => rankFeatured(publicFeed, social.followedHobbies, 10),
-    [publicFeed, social.followedHobbies],
+  // The Door list: the greeting and default door by local time (a viewer with
+  // no Moments is welcomed in), then the chosen door's tickets. The cover is the
+  // top ticket; "Start here" is the rest. The tickets and the cover fade out and
+  // back in over 150ms when the door changes.
+  const door = useMemo(
+    () => doorFor(new Date(), user && postsStatus !== "loading" ? myPosts.length : null),
+    [user, postsStatus, myPosts.length],
+  );
+  const [mood, setMood] = useHistoryState<MoodChipId>("discover.mood", readLastMood() ?? door.mood);
+  const [shownMood, setShownMood] = useState(mood);
+  const startRef = useRef<HTMLUListElement | null>(null);
+  useEffect(() => {
+    if (shownMood === mood) return;
+    const t = window.setTimeout(() => {
+      setShownMood(mood);
+      startRef.current?.scrollTo({ left: 0 });
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [mood, shownMood]);
+  const tickets = useMemo(() => moodCards(shownMood), [shownMood]);
+  // The cover is the highest-ranked ticket whose Corner has a public photo; "Start here" holds the rest.
+  const cover = useMemo(() => pickCover(tickets, publicFeed, new Set(followingIds)), [tickets, publicFeed, followingIds]);
+  const startCards = useMemo(
+    () => tickets.map((card, i) => ({ card, serial: i + 1 })).filter((t) => t.card !== cover?.card),
+    [tickets, cover],
   );
 
   // Category is internal-only now (never shown), but its name/keywords
@@ -451,8 +435,8 @@ export function Discover() {
     });
   }, [feedBase, q, hobbyBySlug]);
 
-  const visible = filtered.slice(0, shown);
-  const remaining = filtered.length - visible.length;
+  // 30 and no more: the end of the page is a stop, not another load.
+  const visible = filtered.slice(0, PAGE_SIZE);
 
   return (
     <div className="ns-afterhours min-h-viewport">
@@ -466,7 +450,6 @@ export function Discover() {
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
-              setShown(PAGE_SIZE);
               if (searchParams.get("about")) setSearchParams({}, { replace: true });
             }}
             placeholder={SEARCH_PLACEHOLDER[tab]}
@@ -521,46 +504,28 @@ export function Discover() {
           {tab === "corners" && (
             <>
               {/* Ideas, not search results: hidden while a search is open. */}
-              {!query.trim() && <MoodRow />}
-              {/* While searching, the matching Corners come first; otherwise the
-                  order is search, the mood row, Spotlight, then the index. */}
-              {query.trim() && <AllCornersBrowser query={query} />}
-
-              {/* Spotlight */}
-              {postsStatus === "loading" && <SpotlightSkeleton />}
-              {featured.length > 0 && (
-                <section className={SECTION_GAP}>
-                  <div className={`${TITLE_GAP} flex items-center justify-between gap-4`}>
-                    <h2 className="text-title">Spotlight</h2>
-                    <a
-                      href="#all-moments"
-                      className="inline-flex min-h-11 shrink-0 items-center text-small text-[var(--accent-text)] hover:underline"
-                      onClick={(e) => {
-                        // A plain href would set location.hash, which the
-                        // HashRouter reads as a navigation to path
-                        // "/all-moments" — a route that doesn't exist, so it
-                        // lands on the 404 page instead of scrolling.
-                        e.preventDefault();
-                        document.getElementById("all-moments")?.scrollIntoView({ behavior: scrollBehavior() });
-                      }}
-                    >
-                      See all
-                    </a>
+              {!query.trim() && (
+                <>
+                  <Masthead />
+                  {/* From 1024px the top is a spread: the cover on 7 of 12 columns, the doors on 5. */}
+                  <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-10">
+                  {cover && <CoverStory card={cover.card} photo={cover.photo} fading={shownMood !== mood} />}
+                  <MoodGrid
+                    value={mood}
+                    greeting={door.greeting}
+                    onPick={(id) => {
+                      setMood(id);
+                      writeLastMood(id);
+                    }}
+                  />
                   </div>
-                  <div
-                    {...spotlightRow}
-                    className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:mx-0 md:gap-4 md:px-0"
-                  >
-                    {featured.map((post, i) => (
-                      <Reveal key={post.id} index={i} className="w-[240px] shrink-0 snap-start md:w-[calc((100%-3rem)/4)]">
-                        <MomentTile post={post} priority={i < 4} onOpen={() => setOpenPost(post)} />
-                      </Reveal>
-                    ))}
-                  </div>
-                </section>
+                  <StartHere ref={startRef} cards={startCards} fading={shownMood !== mood} />
+                  <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
+                  <Rooms />
+                </>
               )}
-
-              {!query.trim() && <CategoryGrid />}
+              {/* While searching, the matching Corners come first. */}
+              {query.trim() && <AllCornersBrowser query={query} />}
 
               {/* All Moments */}
               <div id="all-moments" className={`${TITLE_GAP} flex flex-wrap items-center justify-between gap-4`}>
@@ -576,7 +541,6 @@ export function Discover() {
                           aria-selected={active}
                           onClick={() => {
                             setFeedTab(id);
-                            setShown(PAGE_SIZE);
                           }}
                           className={`min-h-9 rounded-control px-3.5 text-small font-semibold transition-colors ${
                             active
@@ -620,37 +584,19 @@ export function Discover() {
               )}
               </Loadable>
 
-              {/* The end of the gallery — an intentional choice, not more scroll */}
+              {/* The end of the gallery: a stop, not more scroll */}
               {visible.length > 0 && (
                 <div className="mt-10 rounded-card border border-border bg-card px-6 py-9 text-center">
-                  {remaining > 0 ? (
-                    <>
-                      <p className="mb-4 text-small text-muted-foreground">
-                        That’s {visible.length} of {filtered.length}. Nothing loads on
-                        its own. Keep going only if you want to.
-                      </p>
-                      <Button variant="outline" onClick={() => setShown((n) => n + PAGE_SIZE)}>
-                        Show more
+                  <p className="mb-1 text-lead">You’re caught up</p>
+                  <p className="mb-5 text-small text-muted-foreground">Log a Moment of your own.</p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Link to="/create">
+                      <Button variant="coral">
+                        <PenLine className="size-4" />
+                        Log a Moment
                       </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mb-1 text-lead">
-                        That’s everything here.
-                      </p>
-                      <p className="mb-5 text-small text-muted-foreground">
-                        Log a Moment of your own.
-                      </p>
-                      <div className="flex flex-wrap items-center justify-center gap-3">
-                        <Link to="/create">
-                          <Button variant="coral">
-                            <PenLine className="size-4" />
-                            Log a Moment
-                          </Button>
-                        </Link>
-                      </div>
-                    </>
-                  )}
+                    </Link>
+                  </div>
                 </div>
               )}
             </>
