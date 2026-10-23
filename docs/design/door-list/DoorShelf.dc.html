@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Door list: Shelf stubs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+a{color:#FF6B4A}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1100px; box-sizing: border-box; background: #0E0D0C; color: #F4EFE8; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+
+  <header style="padding: 26px 20px 0; display: flex; gap: 14px; align-items: center">
+    <div role="img" aria-label="Sushmitha’s profile photo" style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(160deg, #6E5A8A, #241C33)"></div>
+    <div>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; letter-spacing: -0.02em; font-size: 34px; line-height: 1">Sushmitha</h1>
+      <p style="margin: 2px 0 0; font-size: 13px; color: #A39A90">Member 0147 · since Sept 2026</p>
+    </div>
+  </header>
+
+  <nav aria-label="Shelf" style="padding: 18px 20px 0; display: flex; gap: 22px; font-size: 15px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <a href="#" style="color: #A39A90; text-decoration: none; min-height: 42px; display: flex; align-items: center">Moments</a>
+    <a href="#" style="color: #A39A90; text-decoration: none; min-height: 42px; display: flex; align-items: center">Pursuits</a>
+    <a href="#" style="color: #FFFFFF; text-decoration: none; border-bottom: 2px solid #FF6B4A; min-height: 42px; display: flex; align-items: center">Stubs</a>
+  </nav>
+
+  <section style="padding: 18px 20px 0">
+    <div role="group" aria-label="Filter stubs by Corner" style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none">
+      <button style="flex: 0 0 auto; min-height: 36px; padding: 0 14px; border-radius: 12px; border: 1px solid #F4EFE8; background: #F4EFE8; color: #0E0D0C; font: 600 14px Inter, sans-serif">All</button>
+      <button style="flex: 0 0 auto; min-height: 36px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: #171514; color: #F4EFE8; font: 600 14px Inter, sans-serif">Painting</button>
+      <button style="flex: 0 0 auto; min-height: 36px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: #171514; color: #F4EFE8; font: 600 14px Inter, sans-serif">Board games</button>
+      <button style="flex: 0 0 auto; min-height: 36px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: #171514; color: #F4EFE8; font: 600 14px Inter, sans-serif">City exploring</button>
+    </div>
+    <div style="display: flex; gap: 16px; margin-top: 14px; font-size: 12px; color: #A39A90">
+      <span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: linear-gradient(135deg, #F2F2F4, #B8B8C2)"></span>First in a Corner</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: #B199F4"></span>From a ticket</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: #F4EFE8"></span>Moment</span>
+    </div>
+  </section>
+
+  <sc-for list="{{ months }}" as="m" hint-placeholder-count="2">
+    <section style="padding: 26px 20px 0">
+      <h2 style="margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.12); font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; letter-spacing: -0.02em; font-size: 22px">{{ m.name }}</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{ m.stubs }}" as="s" hint-placeholder-count="4">
+          <a href="#" style="display: flex; flex-direction: column; min-height: 132px; background: {{ s.bg }}; color: #0E0D0C; border-radius: 12px; text-decoration: none; overflow: hidden">
+            <span style="flex: 1; padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; font-weight: 600; opacity: 0.7">{{ s.corner }}</span>
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; letter-spacing: -0.02em; font-size: 20px; line-height: 1">{{ s.title }}</span>
+            </span>
+            <span style="border-top: 2px dashed rgba(14,13,12,0.4); padding: 8px 12px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; opacity: 0.75"><span>{{ s.when }}</span><span>{{ s.no }}</span></span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+  </sc-for>
+  <div style="height: 40px"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var silver = 'linear-gradient(135deg, #F2F2F4 0%, #C9C9D1 40%, #FFFFFF 55%, #B8B8C2 100%)';
+    var months = [
+      { name: 'October 2026', stubs: [
+        { corner: 'Board games', no: 'No. 0014', title: 'Catan at Theo’s', when: 'Fri 23 Oct', bg: silver },
+        { corner: 'Painting', no: 'No. 0013', title: 'Painting 5 of 5', when: 'Wed 21 Oct', bg: '#B199F4' },
+        { corner: 'City exploring', no: 'No. 0012', title: 'Dumbo at dusk', when: 'Sun 18 Oct', bg: silver },
+        { corner: 'Painting', no: 'No. 0011', title: 'Painting 4 of 5', when: 'Thu 15 Oct', bg: '#F4EFE8' },
+        { corner: 'Painting', no: 'No. 0010', title: 'Sky study', when: 'Sat 10 Oct', bg: '#B199F4' },
+        { corner: 'Painting', no: 'No. 0009', title: 'Painting 3 of 5', when: 'Mon 5 Oct', bg: '#F4EFE8' }
+      ] },
+      { name: 'September 2026', stubs: [
+        { corner: 'Painting', no: 'No. 0002', title: 'Painting 1 of 5', when: 'Sat 12 Sept', bg: '#F4EFE8' },
+        { corner: 'Painting', no: 'No. 0001', title: 'First canvas', when: 'Tue 8 Sept', bg: silver }
+      ] }
+    ];
+    return { months: months };
+  }
+}
+</script>
+</body>
+</html>
