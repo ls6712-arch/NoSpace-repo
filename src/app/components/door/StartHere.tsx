@@ -8,17 +8,12 @@ import { SECTION_GAP } from "../../lib/pageGrid";
 import { tieNumbers } from "../../lib/typography";
 import { forwardRef } from "react";
 
-/** The "Start here" label's hand-drawn arrow, pointing down to the row. */
+/** The "Start here" label's hand-drawn arrow (the path from the approved design, docs/design/door-list). */
 function Arrow() {
   return (
-    <svg width="44" height="28" viewBox="0 0 44 28" fill="none" aria-hidden="true" className="text-[var(--accent)]">
-      <path
-        d="M3 4 C 14 2, 26 6, 31 20"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-      <path d="M22 18 L31 21 L36 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="64" height="26" viewBox="0 0 64 26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-[var(--accent)]">
+      <path d="M2 6c14 14 30 16 54 10" />
+      <path d="M48 9l9 7-10 4" />
     </svg>
   );
 }
@@ -41,14 +36,14 @@ function Ticket({ card, serial }: { card: MoodCard; serial: string }) {
   );
 }
 
-export const StartHere = forwardRef<HTMLUListElement, { cards: MoodCard[]; fading: boolean; firstSerial: number }>(
-  function StartHere({ cards, fading, firstSerial }, ref) {
+export const StartHere = forwardRef<HTMLUListElement, { cards: { card: MoodCard; serial: number }[]; fading: boolean }>(
+  function StartHere({ cards, fading }, ref) {
     const row = useRowScrollMemory("discover.startHere");
     if (cards.length === 0) return null;
     return (
       <section className={SECTION_GAP} aria-labelledby="start-here-title">
-        <div className="mb-3 flex items-end gap-2">
-          <h2 id="start-here-title" className="text-lead text-[var(--accent-text)]">
+        <div className="mb-3 flex items-center gap-2">
+          <h2 id="start-here-title" className="text-lead text-[var(--accent-text)]" style={displayStyle(18, { fontWeight: 700, letterSpacing: "0" })}>
             Start here
           </h2>
           <Arrow />
@@ -62,10 +57,10 @@ export const StartHere = forwardRef<HTMLUListElement, { cards: MoodCard[]; fadin
           }}
           className={`-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 transition-opacity duration-fast [scrollbar-width:none] md:-mx-8 md:gap-4 md:px-8 md:scroll-px-8 ${fading ? "opacity-0" : "opacity-100"}`}
         >
-          {cards.map((card, i) => (
+          {cards.map(({ card, serial }, i) => (
             <li key={`${card.spaceSlug}-${card.cornerSlug}`} className="shrink-0 snap-start" style={cornerStyle(card.spaceSlug, card.cornerSlug)}>
               <Reveal index={i}>
-                <Ticket card={card} serial={String(firstSerial + i).padStart(4, "0")} />
+                <Ticket card={card} serial={String(serial).padStart(4, "0")} />
               </Reveal>
             </li>
           ))}

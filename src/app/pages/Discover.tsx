@@ -36,7 +36,8 @@ import { EmptyState, ErrorNotice } from "../components/StateViews";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
 import { Masthead } from "../components/door/Masthead";
-import { CoverStory, pickCoverPhoto } from "../components/door/CoverStory";
+import { CoverStory } from "../components/door/CoverStory";
+import { pickCover } from "../components/door/pickCover";
 import { MoodGrid } from "../components/door/MoodGrid";
 import { StartHere } from "../components/door/StartHere";
 import { SeenTonight } from "../components/door/SeenTonight";
@@ -372,10 +373,11 @@ export function Discover() {
     return () => window.clearTimeout(t);
   }, [mood, shownMood]);
   const tickets = useMemo(() => moodCards(shownMood), [shownMood]);
-  const cover = tickets[0];
-  const coverPhoto = useMemo(
-    () => (cover ? pickCoverPhoto(publicFeed, cover, new Set(followingIds)) : null),
-    [cover, publicFeed, followingIds],
+  // The cover is the highest-ranked ticket whose Corner has a public photo; "Start here" holds the rest.
+  const cover = useMemo(() => pickCover(tickets, publicFeed, new Set(followingIds)), [tickets, publicFeed, followingIds]);
+  const startCards = useMemo(
+    () => tickets.map((card, i) => ({ card, serial: i + 1 })).filter((t) => t.card !== cover?.card),
+    [tickets, cover],
   );
 
   // Category is internal-only now (never shown), but its name/keywords
@@ -505,7 +507,9 @@ export function Discover() {
               {!query.trim() && (
                 <>
                   <Masthead />
-                  {cover && <CoverStory card={cover} photo={coverPhoto} fading={shownMood !== mood} />}
+                  {/* From 1024px the top is a spread: the cover on 7 of 12 columns, the doors on 5. */}
+                  <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-10">
+                  {cover && <CoverStory card={cover.card} photo={cover.photo} fading={shownMood !== mood} />}
                   <MoodGrid
                     value={mood}
                     greeting={door.greeting}
@@ -514,7 +518,8 @@ export function Discover() {
                       writeLastMood(id);
                     }}
                   />
-                  <StartHere ref={startRef} cards={tickets.slice(1)} firstSerial={2} fading={shownMood !== mood} />
+                  </div>
+                  <StartHere ref={startRef} cards={startCards} fading={shownMood !== mood} />
                   <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
                   <Rooms />
                 </>
