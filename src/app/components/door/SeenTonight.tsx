@@ -47,8 +47,14 @@ function Photo({ post, className, onOpen }: { post: Post; className: string; onO
         fallback={<GeneratedArt hobbySlug={post.hobbySlug} seed={post.id} className="size-full" />}
       />
       <div className="absolute inset-0 bg-[image:var(--scrim-card)]" aria-hidden="true" />
-      <p className="absolute inset-x-3 bottom-3 line-clamp-2 text-caption text-[var(--photo-text-muted)]">
-        <span className="font-semibold text-[var(--photo-text)]">{post.creator}</span>
+      {/* A second, stronger scrim under the caption: on the small stacked photos the caption sits well up the image. */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-3/4"
+        style={{ backgroundImage: "linear-gradient(to top, color-mix(in srgb, var(--ink) 92%, transparent), transparent)" }}
+        aria-hidden="true"
+      />
+      <p className="absolute inset-x-3 bottom-3 line-clamp-2 text-caption text-[var(--photo-text)]">
+        <span className="font-semibold">{post.creator}</span>
         {` in ${cornerLabel(post)} · ${formatWhen(post.createdAt, { ago: true })}`}
       </p>
     </motion.button>
