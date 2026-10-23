@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
 import { cornerStyle } from "../lib/categoryStyle";
@@ -16,16 +16,15 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { marketplaceEnabled, APP_NAME } from "../config";
+import { marketplaceEnabled } from "../config";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
-import { Post, postCorner } from "../data/posts";
+import { Post } from "../data/posts";
 import { Product } from "../data/products";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
-import { useCorners, isBrowsableOnDiscover, cornerFollowKey } from "../context/CornersContext";
+import { useCorners, isBrowsableOnDiscover } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
-import { deriveProjects } from "../lib/journal";
 import { fetchFollowingIds } from "../lib/profileFollows";
 import { supabase } from "../../lib/supabase";
 import { track } from "../lib/analytics";
@@ -37,7 +36,6 @@ import { MomentCardSkeleton, MomentGridSkeleton } from "../components/Skeletons"
 import { EmptyState, ErrorNotice } from "../components/StateViews";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
-import { MediaFilter, matchesMediaFilter } from "../components/discover/discoverMedia";
 import { QuickStarts } from "../components/discover/QuickStarts";
 import { plural } from "../lib/plural";
 import { scrollBehavior } from "../lib/scrollToElement";
@@ -53,17 +51,7 @@ import { scrollBehavior } from "../lib/scrollToElement";
  */
 const PAGE_SIZE = 24;
 
-const DAY = 86_400_000;
 const HOUR = 3_600_000;
-
-type Chip = { id: string; label: string };
-
-const BASE_CHIPS: Chip[] = [
-  { id: "all", label: "All" },
-  { id: "new", label: "New today" },
-  { id: "near", label: "Near me" },
-  { id: "progress", label: "Pursuits in progress" },
-];
 
 /** Corners / Spaces / People / Marketplace — Discover's own front door, kept
  * in ?tab= so it's shareable and survives a back button, same as any other
@@ -99,13 +87,6 @@ const FEED_TABS = [
   { id: "recent", label: "Recent" },
 ] as const;
 type FeedTab = (typeof FEED_TABS)[number]["id"];
-
-const MEDIA_FILTERS: { id: MediaFilter; label: string }[] = [
-  { id: "all", label: "Everything" },
-  { id: "photo", label: "Photos" },
-  { id: "video", label: "Video" },
-  { id: "written", label: "Written" },
-];
 
 /**
  * Shared look for every navigational tab/filter on this page: plain
@@ -335,7 +316,6 @@ export function Discover() {
   // Subscribing re-renders this page when admin Space changes load.
   const { spaceRows } = useCategories();
   const social = useSocial();
-  const { cornersFor, cornerThreshold } = useCorners();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("about") ?? "");
   // Opening a Featured Moment is how you react to it or leave a thought —
@@ -365,13 +345,7 @@ export function Discover() {
   // Kept across Back so returning from a Moment or Corner finds the list as
   // long as you left it (see useHistoryState).
   const [feedTab, setFeedTab] = useHistoryState<FeedTab>("discover.feedTab", "forYou");
-  const [chip, setChip] = useHistoryState("discover.chip", "all");
   const [shown, setShown] = useHistoryState("discover.shown", PAGE_SIZE);
-  // Flat now, not nested under a Space filter — Corners are the top-level
-  // browse/filter unit (spec change: "Corners carry discovery"). Synced to
-  // ?corner= so a filtered view is shareable, same as ?tab=.
-  const [cornerFilter, setCornerFilter] = useState(searchParams.get("corner") ?? "");
-  const [mediaFilter, setMediaFilter] = useHistoryState<MediaFilter>("discover.mediaFilter", "all");
   const spotlightRow = useRowScrollMemory("discover.spotlight");
   const tabsRow = useRowScrollMemory("discover.tabs");
 
@@ -417,17 +391,6 @@ export function Discover() {
 
   const q = query.trim().toLowerCase();
 
-  // Ongoing work, so "Projects in progress" means something specific rather
-  // than being a mood.
-  const projects = useMemo(
-    () => deriveProjects(publicFeed, subHobbyLabel),
-    [publicFeed],
-  );
-  const inProgressIds = useMemo(
-    () => new Set(projects.flatMap((p) => p.updates.map((u) => u.id))),
-    [projects],
-  );
-
   const featured = useMemo(
     () => rankFeatured(publicFeed, social.followedHobbies, 10),
     [publicFeed, social.followedHobbies],
@@ -436,46 +399,6 @@ export function Discover() {
   // Category is internal-only now (never shown), but its name/keywords
   // still feed search matching — see spaceScoped's own text match below.
   const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), [spaceRows]);
-
-  // Every Corner across every (internal) Category, flat — Corners are the
-  // one browse/filter unit Discover shows now. Query-matched by name, same
-  // promise the search box always made ("pottery" should find Pottery).
-  const allCorners = useMemo(
-    () => hobbies.filter((h) => !h.hidden).flatMap((h) => cornersFor(h.slug)),
-    [cornersFor, spaceRows],
-  );
-  const matchingCorners = useMemo(() => {
-    if (!q) return allCorners;
-    return allCorners.filter((c) => c.name.toLowerCase().includes(q));
-  }, [allCorners, q]);
-  // Private Interests (hobby_follows, Corner-level — see CornersContext's
-  // cornerFollowKey) get first billing here, the one place this rework
-  // wires them into anything: your own Interest Corners that clear the
-  // same Discover threshold as everyone else (no exemption — an Interest
-  // nobody's posted in lately still doesn't show), then everything else.
-  // No other ranking changes; this is deliberately the only place Interests
-  // touch Discover right now.
-  const myInterestCorners = useMemo(
-    () => new Set(social.followedHobbies.filter((k) => k.includes(":") && !k.startsWith("space:"))),
-    [social.followedHobbies],
-  );
-
-  // What Discover actually shows: no empty Corner, curated or not — at
-  // least `cornerThreshold` Moments in the last 30 days, or an active
-  // Space. Ordered by that same 30-day activity within each group, never
-  // by follower/member counts (per this rework's own instruction).
-  const browsableCorners = useMemo(
-    () =>
-      matchingCorners
-        .filter((c) => isBrowsableOnDiscover(c, cornerThreshold))
-        .sort((a, b) => {
-          const aMine = myInterestCorners.has(cornerFollowKey(a.spaceSlug, a.slug));
-          const bMine = myInterestCorners.has(cornerFollowKey(b.spaceSlug, b.slug));
-          if (aMine !== bMine) return aMine ? -1 : 1;
-          return b.momentCount30d - a.momentCount30d;
-        }),
-    [matchingCorners, cornerThreshold, myInterestCorners],
-  );
 
   const feedBase = useMemo(() => {
     if (feedTab === "recent") return [...publicFeed].sort((a, b) => b.createdAt - a.createdAt);
@@ -512,71 +435,21 @@ export function Discover() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedTab, followingIds.length, memberSpacePostIds.size]);
 
-  // Space-scoped, but not yet narrowed by Corner or media type — this is
-  // what the Corner filter row's own live counts are measured against, so
-  // picking a Corner doesn't make every other Corner's count collapse to 0.
-  const chipScoped = useMemo(() => {
-    let list = feedBase;
-    if (chip === "new") list = list.filter((p) => Date.now() - p.createdAt < DAY);
-    else if (chip === "progress") list = list.filter((p) => inProgressIds.has(p.id));
-
-    if (q) {
-      list = list.filter((p) => {
-        const hobby = hobbyBySlug.get(p.hobbySlug);
-        return (
-          p.caption.toLowerCase().includes(q) ||
-          p.creator.toLowerCase().includes(q) ||
-          (p.interest ?? "").toLowerCase().includes(q) ||
-          (p.subHobby ? (subHobbyLabel(p.subHobby) ?? "").toLowerCase().includes(q) : false) ||
-          (hobby ? hobby.shortName.toLowerCase().includes(q) || hobby.name.toLowerCase().includes(q) : false)
-        );
-      });
-    }
-    return list;
-  }, [feedBase, chip, q, inProgressIds, hobbyBySlug]);
-
-  // Live counts for the flat Corner-filter row below, measured against the
-  // chip/query-scoped feed so picking a Corner doesn't collapse every
-  // other Corner's count to 0.
-  const cornerCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const p of chipScoped) {
-      const slug = postCorner(p);
-      if (!slug) continue;
-      counts.set(slug, (counts.get(slug) ?? 0) + 1);
-    }
-    return counts;
-  }, [chipScoped]);
-
-  const scoped = useMemo(
-    () => (cornerFilter ? chipScoped.filter((p) => postCorner(p) === cornerFilter) : chipScoped),
-    [chipScoped, cornerFilter],
-  );
-
-  const mediaCounts = useMemo(
-    () => ({
-      all: scoped.length,
-      photo: scoped.filter((p) => matchesMediaFilter(p, "photo")).length,
-      video: scoped.filter((p) => matchesMediaFilter(p, "video")).length,
-      written: scoped.filter((p) => matchesMediaFilter(p, "written")).length,
-    }),
-    [scoped],
-  );
-
-  const filtered = useMemo(
-    () => (mediaFilter === "all" ? scoped : scoped.filter((p) => matchesMediaFilter(p, mediaFilter))),
-    [scoped, mediaFilter],
-  );
-
-  function selectCorner(slug: string) {
-    const next = cornerFilter === slug ? "" : slug;
-    setCornerFilter(next);
-    setShown(PAGE_SIZE);
-    const params = new URLSearchParams(searchParams);
-    if (next) params.set("corner", next);
-    else params.delete("corner");
-    setSearchParams(params, { replace: true });
-  }
+  // The feed, narrowed only by the search (the All Moments row is For you,
+  // Following or Recent; there are no other filters).
+  const filtered = useMemo(() => {
+    if (!q) return feedBase;
+    return feedBase.filter((p) => {
+      const hobby = hobbyBySlug.get(p.hobbySlug);
+      return (
+        p.caption.toLowerCase().includes(q) ||
+        p.creator.toLowerCase().includes(q) ||
+        (p.interest ?? "").toLowerCase().includes(q) ||
+        (p.subHobby ? (subHobbyLabel(p.subHobby) ?? "").toLowerCase().includes(q) : false) ||
+        (hobby ? hobby.shortName.toLowerCase().includes(q) || hobby.name.toLowerCase().includes(q) : false)
+      );
+    });
+  }, [feedBase, q, hobbyBySlug]);
 
   const visible = filtered.slice(0, shown);
   const remaining = filtered.length - visible.length;
@@ -691,10 +564,7 @@ export function Discover() {
 
               {/* All Moments */}
               <div id="all-moments" className={`${TITLE_GAP} flex flex-wrap items-center justify-between gap-4`}>
-                <div>
-                  <div className="mb-2 text-caption text-muted-foreground">Moments from across {APP_NAME}</div>
-                  <h2 className="text-title">All Moments</h2>
-                </div>
+                <h2 className="text-title">All Moments</h2>
                 <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-control border border-border bg-card p-1">
                   {FEED_TABS.map(({ id, label }) => {
                     const active = feedTab === id;
@@ -722,100 +592,13 @@ export function Discover() {
                 </ul>
               </div>
 
-              {/* De-emphasized filters — real, but secondary to the tabs above */}
-              <ul className="ns-discover-filters mb-6 flex flex-wrap gap-2">
-                {BASE_CHIPS.map((c) => {
-                  const active = chip === c.id;
-                  return (
-                    <li key={c.id}>
-                      <button
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => {
-                          setChip(c.id);
-                          setShown(PAGE_SIZE);
-                        }}
-                        className={`min-h-9 rounded-control border px-3.5 text-small font-semibold transition-colors ${
-                          active
-                            ? "border-transparent bg-[var(--accent)] text-[var(--accent-foreground)]"
-                            : "border-border bg-card text-foreground hover:bg-surface-raised"
-                        }`}
-                      >
-                        {c.label}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {/* Corner filter — flat now, not a Space-then-Corner drill-down:
-                  Corners are Discover's one browse/filter unit (spec change,
-                  "Corners carry discovery"). Same no-empty-Corner set
-                  browsableCorners already filters for the grid above,
-                  ordered by 30-day activity — never by follower/member
-                  counts. */}
-              {browsableCorners.length > 0 && (
-                <ul className="mb-4 flex flex-wrap items-center gap-5">
-                  {browsableCorners.map((c) => {
-                    const active = cornerFilter === c.slug;
-                    const count = cornerCounts.get(c.slug) ?? 0;
-                    return (
-                      <li key={`${c.spaceSlug}-${c.slug}`}>
-                        <button
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => selectCorner(c.slug)}
-                          className={tabLabelClass(active, "xs")}
-                        >
-                          {c.name} · {count}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+              {q && filtered.length > 0 && (
+                <p className="mb-6 text-small text-muted-foreground">{`${plural(filtered.length, "Moment")} matching “${query}”`}</p>
               )}
-
-              {/* Media type — same plain-text, underline-on-active look as
-                  the top-level Discover tabs and the Corner row above, per
-                  the brief: navigational filters read as text choices, not
-                  filled pills. "Log a Moment" is the one thing on this page
-                  that stays a solid button. */}
-              <ul className="mb-6 flex items-center gap-6" role="tablist" aria-label="Media type">
-                {MEDIA_FILTERS.map(({ id, label }) => {
-                  const active = mediaFilter === id;
-                  return (
-                    <li key={id}>
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={active}
-                        onClick={() => {
-                          setMediaFilter(id);
-                          setShown(PAGE_SIZE);
-                        }}
-                        className={tabLabelClass(active)}
-                      >
-                        {label} · {mediaCounts[id]}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <p className="mb-6 text-small text-muted-foreground">
-                {chip === "near"
-                  ? "Location isn’t switched on yet."
-                  : `${plural(filtered.length, "Moment")}${q ? ` matching “${query}”` : ""}`}
-              </p>
 
               <Loadable loading={postsStatus === "loading"} skeleton={<MomentGridSkeleton count={6} />}>
               {postsStatus === "error" && publicFeed.length === 0 ? (
                 <ErrorNotice onRetry={reloadPosts} />
-              ) : chip === "near" ? (
-                <EmptyState
-                  line={`${APP_NAME} doesn’t know where you are, and won’t until you tell it.`}
-                  action={{ label: "Browse Moments", onClick: () => setChip("all") }}
-                />
               ) : visible.length === 0 ? (
                 feedTab === "following" ? (
                   <EmptyState

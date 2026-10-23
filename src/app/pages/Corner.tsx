@@ -8,6 +8,7 @@ import { useContent } from "../context/ContentContext";
 import { PressLink } from "../components/afterhours/PressLink";
 import { Reveal } from "../components/afterhours/Reveal";
 import { MomentTile } from "../components/afterhours/MomentTile";
+import { categoryOfCorner } from "../data/cornerCategories";
 import { cornerStyle } from "../lib/categoryStyle";
 import { fillRows } from "../lib/fillRows";
 import { PAGE_X } from "../lib/pageGrid";
@@ -72,7 +73,12 @@ export function CornerPage() {
   const prefill = `hobby=${encodeURIComponent(spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`;
   const posts = publicFeed.filter((p) => p.hobbySlug === spaceSlug && postCorner(p) === corner.slug);
 
-  const spaceName = hobbies.find((h) => h.slug === spaceSlug)?.shortName ?? spaceSlug;
+  // Back goes to the Corner's category page ("Back to Yarn and fabric"). Only a
+  // Corner not in any category yet falls back to its old Space.
+  const category = categoryOfCorner(spaceSlug, corner.slug);
+  const back = category
+    ? { to: `/browse/${category.slug}`, label: category.name }
+    : { to: `/space/${spaceSlug}`, label: hobbies.find((h) => h.slug === spaceSlug)?.shortName ?? spaceSlug };
   const [lead, ...rest] = posts;
   // Whole rows only (see lib/fillRows.ts); "Show more" brings in the rest.
   const n = rest.length;
@@ -88,8 +94,8 @@ export function CornerPage() {
       {/* The Corner's category colour, full width, behind its name. */}
       <header className="bg-[var(--cat)] text-[var(--ink)]">
         <div className={`${PAGE_X} py-8 md:py-12`}>
-          <Link to={`/space/${spaceSlug}`} className={`inline-flex min-h-11 items-center text-small hover:underline ${dim}`}>
-            ← Back to {spaceName}
+          <Link to={back.to} className={`inline-flex min-h-11 items-center text-small hover:underline ${dim}`}>
+            ← Back to {back.label}
           </Link>
           <h1 className="mt-6 text-display">{corner.name}</h1>
           {about && <p className={`mt-3 max-w-xl text-body ${dim}`}>{about}</p>}
