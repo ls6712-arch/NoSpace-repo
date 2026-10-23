@@ -193,6 +193,8 @@
   --cat-lime: #93BA5C;
   --cat-teal: #04C5B5;
   --cat-pink: #E488BE;
+  /* Door list (Oct 23, 2026): the silver of a stub kept for a first time in a Corner. */
+  --stub-silver: linear-gradient(135deg, #F2F2F4 0%, #C9C9D1 40%, #FFFFFF 55%, #B8B8C2 100%);
   /* Display face for the pages in this look (Discover, Corner, category). */
   --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   /* Text on a photo, over --scrim-card. Same in both themes. */
@@ -1678,4 +1680,20 @@ summary:focus-visible,
    when the field is focused. */
 .ns-afterhours :is(input, textarea, select) {
   font-size: 1rem;
+}
+
+/* The "Admit one" sticker on the cover story: a gentle wobble, off for reduced motion. */
+@keyframes door-wobble {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(-3deg); }
+}
+.door-wobble {
+  /* design-token-ignore: the sticker's wobble is specified as 4s ease-in-out (door list brief 1.1) */
+  animation: door-wobble 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .door-wobble {
+    animation: none;
+    transform: rotate(-5deg);
+  }
 }

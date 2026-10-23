@@ -23,7 +23,31 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
 | Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
 | See all | Opens the full list when a list shows only some: Discover's Spotlight, and the group tiles on Discover's Corners tab (which show the first 8) |
-| Browse | Heading above the group tiles on Discover's Corners tab (the first 8, then See all) |
+
+## Door list
+
+Discover's Corners tab (approved Oct 23, 2026). A ticket is a first step to take; "Admit one" is its stamp.
+
+| Term | Meaning |
+|---|---|
+| Issue {n} | Whole weeks since Sept 1, 2026, plus 1, on the line above the masthead |
+| Things to do tonight / For members | The two halves of the strip under the masthead |
+| Cover story | Kicker on the top ticket, shown big |
+| ticket | A Corner's first step, shown as a card or the cover story |
+| Admit one | The stamp on a ticket and on the cover story's sticker |
+| Take the ticket | Link under the cover story that opens the Corner |
+| Start here | Heading above the row of tickets |
+| Seen tonight | Heading above the collage of recent public Moments |
+| Rooms | Heading above the 18 groups of Corners, shown as rows |
+| Who's in where | Muted note on the right of the Rooms heading |
+| See all rooms | Opens the rest of the Rooms rows |
+| You're caught up | End of All Moments, after 30 Moments |
+| Welcome in. Pick a door. | Greeting for a member with no Moments yet |
+| Got a minute? Pick a door. | Greeting Monday to Friday before 17:00 |
+| Evening. Pick a door. | Greeting Monday to Thursday from 17:00 |
+| Friday night. Pick a door. / Saturday night. Pick a door. | Greeting on Friday and Saturday from 17:00 |
+| Weekend. Pick a door. | Greeting on Saturday and Sunday before 17:00 |
+| Sunday night. Pick a door. | Greeting on Sunday from 17:00 |
 
 ## Moods
 
