@@ -35,7 +35,7 @@ function AllPursuitsRow({ pursuit: p, last }: { pursuit: Project; last: number |
                  title={p.title}>
           {p.title}
         </span>
-        <span className="block truncate text-caption text-foreground/80" title={[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
+        <span className="block truncate text-caption text-foreground" title={[space, startedLabel(p.startedAt), last ? `last Moment ${relative(last)}` : "no Moments yet"]
                     .filter(Boolean)
                     .join(" · ")}>
           {[space, startedLabel(p.startedAt), last ? `Last Moment ${relative(last)}` : "No Moments yet"]

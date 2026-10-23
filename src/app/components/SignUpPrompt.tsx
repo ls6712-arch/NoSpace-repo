@@ -41,7 +41,7 @@ export function SignUpPrompt({
             </Button>
           </Link>
         </div>
-        <p className="mt-5 text-caption text-muted-foreground/70">
+        <p className="mt-5 text-caption text-muted-foreground">
           Browsing stays free. An account is only for keeping what you make.
         </p>
       </div>

@@ -38,7 +38,7 @@ function Maker({ name, tone }: { name: string; tone: "photo" | "ink" }) {
         <AvatarFallback className="text-caption">{name.trim().charAt(0).toUpperCase()}</AvatarFallback>
       </Avatar>
       <span
-        className={`truncate text-caption ${tone === "photo" ? "text-[var(--photo-text-muted)]" : "text-[color-mix(in_srgb,var(--ink)_70%,transparent)]"}`}
+        className={`truncate text-caption ${tone === "photo" ? "text-[var(--photo-text)]" : "text-[var(--ink)]"}`}
       >
         {name}
       </span>

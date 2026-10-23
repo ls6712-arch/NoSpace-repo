@@ -262,7 +262,7 @@ export function Studio() {
         </button>
 
         <span
-          className="absolute right-8 top-7 text-small italic text-on-media/90"
+          className="absolute right-8 top-7 text-small italic text-on-media"
           style={{ fontFamily: "var(--font-serif)" }}
         >
           {APP_NAME}
@@ -275,7 +275,7 @@ export function Studio() {
         )}
 
         <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
-          <p className="mb-2 text-caption tracking-[0.16em] text-on-media/90">
+          <p className="mb-2 text-caption tracking-[0.16em] text-on-media">
             {plural(loaded.posts.length, "Moment")}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
@@ -287,7 +287,7 @@ export function Studio() {
           </h1>
           {coverTagline && (
             <p
-              className="mt-3 max-w-md text-lead italic text-on-media/90 sm:text-title"
+              className="mt-3 max-w-md text-lead italic text-on-media sm:text-title"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {coverTagline}

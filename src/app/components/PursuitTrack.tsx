@@ -76,7 +76,7 @@ function Trail({
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" aria-hidden="true" />
         {truncated && (
           <span
-            className="ns-section-kicker relative z-10 mr-1.5 shrink-0 text-muted-foreground/70"
+            className="ns-section-kicker relative z-10 mr-1.5 shrink-0 text-muted-foreground"
             aria-hidden="true"
           >
             +earlier

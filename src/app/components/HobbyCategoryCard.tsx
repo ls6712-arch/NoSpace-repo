@@ -53,7 +53,7 @@ export function HobbyCategoryCard({
             <div className="flex items-end justify-between gap-2">
               <div className="transition-transform duration-base ease-standard group-hover:-translate-y-1 group-focus-visible:-translate-y-1">
                 <h3 className="mb-1 text-title leading-none text-on-media" style={{ fontFamily: "var(--font-serif)" }}>{hobby.shortName}</h3>
-                <p className="text-small text-on-media/90">{hobby.tagline}</p>
+                <p className="text-small text-on-media">{hobby.tagline}</p>
               </div>
               <ArrowUpRight className="mb-1 size-5 shrink-0 text-on-media transition-transform duration-base ease-standard group-hover:translate-x-1 group-hover:-translate-y-1 group-focus-visible:translate-x-1 group-focus-visible:-translate-y-1" />
             </div>
@@ -71,7 +71,7 @@ export function HobbyCategoryCard({
             >
               {corner.name}
               {corner.momentCount > 0 && (
-                <span className="ml-1 text-caption opacity-60">{corner.momentCount}</span>
+                <span className="ml-1 text-caption">{corner.momentCount}</span>
               )}
             </Link>
           ))}

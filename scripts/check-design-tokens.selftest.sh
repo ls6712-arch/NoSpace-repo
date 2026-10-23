@@ -20,7 +20,7 @@ export const Bad = () => (
     <i className="text-white" /> <i style={{ color: "#ff00aa" }} /> <i style={{ color: "rgb(1, 2, 3)" }} />
     <i className="bg-scrim-solid" /> <i className="bg-scrim-solid/[#fff]" /> <i className="bg-scrim-solid/100" />
     <i className="space-y-[18px]" /> <section className="py-[70px]" /> <i className="py-section-hero" />
-    <img src="/x.png" alt="" /> <p className="text-on-media/70" />
+    <img src="/x.png" alt="" /> <p className="text-on-media/70" /> <p className="text-[color-mix(in_srgb,var(--ink)_70%,transparent)]" /> <p className="md:text-foreground/80" />
     <i className="duration-300" /> <i className="ease-out" /> <i style={{ transition: "opacity 300ms" }} />
     {/* design-token-ignore: */}
   </div>
@@ -44,7 +44,7 @@ OUT="$(TOKEN_CHECK_ROOT="$T" "$HERE/check-design-tokens.sh")"; RC=$?
 echo "$OUT"
 rc=0
 [ "$RC" -eq 1 ] || { echo "selftest FAIL: expected exit 1, got $RC"; rc=1; }
-for rule in viewport type radius shadow color scrim spacing image motion ignore; do
+for rule in viewport type radius shadow color scrim spacing image textalpha motion ignore; do
   echo "$OUT" | grep -q "^FAIL \[$rule\]" || { echo "selftest FAIL: rule '$rule' did not fire"; rc=1; }
 done
 echo "$OUT" | grep -q "good\.\(tsx\|css\)" && { echo "selftest FAIL: flagged a line it should allow (good.*)"; rc=1; }

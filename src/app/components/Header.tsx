@@ -377,7 +377,7 @@ export function Header() {
                     item.accent
                       ? "flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-small text-accent-foreground transition-[filter] hover:brightness-110"
                       : `relative py-1 text-small transition-colors ${
-                          active ? "text-accent" : "text-foreground/75 hover:text-foreground"
+                          active ? "text-accent" : "text-foreground hover:text-foreground"
                         }`
                   }
                 >

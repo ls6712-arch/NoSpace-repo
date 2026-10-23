@@ -77,7 +77,7 @@ export function ProductDetail() {
                   <Star
                     key={i}
                     className={`size-4 ${
-                      i < Math.floor(product.rating) ? "fill-[var(--mustard)] text-[var(--mustard)]" : "text-muted-foreground/40"
+                      i < Math.floor(product.rating) ? "fill-[var(--mustard)] text-[var(--mustard)]" : "text-muted-foreground"
                     }`}
                   />
                 ))}
