@@ -15,7 +15,7 @@ import { SECTION_GAP } from "../../lib/pageGrid";
  * is the newest public Moment in that Corner from someone you follow, else any
  * public one; with none, the category colour fills the frame.
  */
-export function CoverStory({ card, photo, fading }: { card: MoodCard; photo: Post | null; fading: boolean }) {
+export function CoverStory({ card, photo, reason, fading }: { card: MoodCard; photo: Post | null; reason?: string; fading: boolean }) {
   const to = `/corner/${card.cornerSlug}`;
   const sticker = (
     <span
@@ -61,11 +61,12 @@ export function CoverStory({ card, photo, fading }: { card: MoodCard; photo: Pos
           {sticker}
         </PressLink>
       )}
-      <div className="mt-3 flex items-center justify-end gap-4">
-        <Link to={to} className="inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+      <p className="mt-3 flex min-h-11 flex-wrap items-center justify-between gap-x-4 text-small">
+        <span className="text-muted-foreground">{reason}</span>
+        <Link to={to} className="font-semibold text-[var(--accent-text)] hover:underline">
           Take the ticket
         </Link>
-      </div>
+      </p>
     </section>
   );
 }

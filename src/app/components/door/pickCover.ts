@@ -19,15 +19,14 @@ export function pickCoverPhoto(posts: readonly Post[], card: MoodCard, following
 }
 
 /** The highest-ranked ticket whose Corner has a public photo Moment, with that photo. None have one: the top ticket, no photo. */
-export function pickCover(
-  tickets: readonly MoodCard[],
+export function pickCover<T extends { card: MoodCard }>(
+  tickets: readonly T[],
   posts: readonly Post[],
   followingIds: ReadonlySet<string>,
-): { card: MoodCard; photo: Post | null } | null {
-  for (const card of tickets) {
-    const photo = pickCoverPhoto(posts, card, followingIds);
-    if (photo) return { card, photo };
+): { ticket: T; photo: Post | null } | null {
+  for (const ticket of tickets) {
+    const photo = pickCoverPhoto(posts, ticket.card, followingIds);
+    if (photo) return { ticket, photo };
   }
-  return tickets[0] ? { card: tickets[0], photo: null } : null;
+  return tickets[0] ? { ticket: tickets[0], photo: null } : null;
 }
-

@@ -1,7 +1,6 @@
 import { motion } from "motion/react";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { GeneratedArt } from "../GeneratedArt";
-import { hasRealMedia } from "../MomentCard";
 import { hobbies, subHobbyLabel } from "../../data/hobbies";
 import { postCorner, type Post } from "../../data/posts";
 import { categoryOfCorner } from "../../data/cornerCategories";
@@ -11,18 +10,6 @@ import { displayStyle } from "../../lib/doorList";
 import { SECTION_GAP } from "../../lib/pageGrid";
 import { PRESS_SCALE, springs } from "../../lib/springs";
 import { scrollBehavior } from "../../lib/scrollToElement";
-
-const DAYS = 24 * 3_600_000;
-
-/** 3 photos and 1 quote from the public Moments of the last 7 days, newest first. */
-export function seenTonight(posts: readonly Post[], now: number = Date.now()): { photos: Post[]; quote: Post | null } {
-  const recent = posts
-    .filter((p) => p.visibility === "public" && now - p.createdAt < 7 * DAYS)
-    .sort((a, b) => b.createdAt - a.createdAt);
-  const photos = recent.filter((p) => p.type === "photo" && hasRealMedia(p)).slice(0, 3);
-  const quote = recent.find((p) => !hasRealMedia(p) && p.caption.trim().length > 0) ?? null;
-  return { photos, quote };
-}
 
 function cornerLabel(post: Post): string {
   const corner = postCorner(post);
@@ -65,8 +52,7 @@ function Photo({ post, className, onOpen }: { post: Post; className: string; onO
  * "Seen tonight": a collage of three photos (one tall, two stacked) and a pull
  * quote card. Each caption is the maker's name in their Corner and how long ago.
  */
-export function SeenTonight({ posts, onOpen }: { posts: Post[]; onOpen: (post: Post) => void }) {
-  const { photos, quote } = seenTonight(posts);
+export function SeenTonight({ photos, quote, onOpen }: { photos: Post[]; quote: Post | null; onOpen: (post: Post) => void }) {
   if (photos.length === 0 && !quote) return null;
   const [tall, ...stacked] = photos;
   const cat = quote ? (() => {
