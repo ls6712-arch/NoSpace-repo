@@ -4,7 +4,7 @@ Every change to user-facing text follows this page. The rules below are checked
 by `src/app/lib/copyRules.test.ts` (dashes, banned phrases, hand-built plurals)
 and by `npm test`. Terms live in `docs/glossary.md`.
 
-## The five product nouns
+## The product nouns
 
 | Noun | What it is |
 |---|---|
@@ -13,8 +13,9 @@ and by `npm test`. Terms live in `docs/glossary.md`.
 | **Pursuit** | Something you are working toward, with countable progress. Shown on the Shelf. |
 | **Corner** | A category for discovery (Pottery, Coding, Running). |
 | **Space** | A host-created community. |
+| **Stub** | Proof you attended a Space event, issued by the host. Never self-awarded. |
 
-Nothing else in the UI gets a capitalized name. Corners and Spaces are different
+Nothing else in the UI gets a capitalized name (Stub was added with the Corners home, approved Oct 26, 2026). Corners and Spaces are different
 things and are never labeled as each other. The 18 groups a Corner sits in
 (Yarn and fabric, Food and drink, Rest and ritual, and so on) are shown by their
 own names, as headings and tiles on Discover: the name is the heading and the
@@ -43,7 +44,7 @@ not product nouns and are not extended to other documents without asking.
 
 ### Capitalization
 7. Sentence case for every label, button, tab, header, menu item and title.
-8. The five nouns are always capitalized, mid-sentence too.
+8. The product nouns above are always capitalized, mid-sentence too.
 9. Every other word is lowercase mid-sentence (followers, friends, profile, invite).
 10. No ALL CAPS and no `text-transform: uppercase` on text labels.
 

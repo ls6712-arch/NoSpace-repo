@@ -81,13 +81,13 @@ begin
   from space_events se
   where se.id = p_event_id;
   if v_event.id is null then
-    raise exception 'That event doesn''t exist.';
+    raise exception 'That event doesn’t exist.';
   end if;
   if v_event.status <> 'scheduled' then
     raise exception 'This event was cancelled.';
   end if;
   if not exists (select 1 from spaces s where s.id = v_event.space_id and s.status <> 'deleted') then
-    raise exception 'That event doesn''t exist.';
+    raise exception 'That event doesn’t exist.';
   end if;
   if not public.is_space_host(v_event.space_id, auth.uid()) then
     raise exception 'Only a host can confirm who came.';
@@ -99,7 +99,7 @@ begin
     raise exception 'Pick at least one person.';
   end if;
   if array_length(p_user_ids, 1) > 500 then
-    raise exception 'That''s too many people at once.';
+    raise exception 'That’s too many people at once.';
   end if;
   if auth.uid() = any (p_user_ids) then
     raise exception 'Another host has to confirm you.';

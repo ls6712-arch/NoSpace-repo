@@ -85,6 +85,52 @@ Discover's row of chips and cards (approved in visual spec v1.1). A mood names w
 | New Spaces | Home section |
 | Book the studio | Hidden until the marketplace is on |
 
+## Corners home and Stubs
+
+New in the Corners home (`/corners`, `/corners/:slug`) and Stubs. **Every row below is a new string for approval.** The per-Corner copy (the steps under "How to start" and the facts under "What you’ll need" for each of the 33 curated Corners) is in `docs/curated-corners.md`.
+
+| Term | Meaning |
+|---|---|
+| Stub | Proof you attended a Space event, issued by the host. Never self-awarded. The only collectible, and a product noun (always capitalized) |
+| Stubs | Heading of the Stubs section on a Shelf |
+| Group by Corner | Toggle on a Shelf's Stubs: groups them under each Corner's name instead of newest first |
+| Corners | Link at the top of Discover's Corners tab, and the title of the Corners home when no Corner is busy |
+| Busy this week | Kicker on the Corners home hero |
+| N events this week | The hero line and the live line on a Corner card, when it has events in the next 7 days. Counts only Open Spaces' events |
+| N Spaces | The live line on a Corner card with no events this week but at least one Space |
+| Be the first to start a Space | The live line on a Corner card with no Spaces |
+| Explore {Corner} | The hero button on the Corners home |
+| I have / In the mood for / I’m | Labels of the three chip rows on the Corners home |
+| Up to 1 hour / Up to 2 hours / Up to 4 hours | Chips under "I have": Corners that take about that long or less |
+| At home / Outdoors / Anywhere | Chips under "I’m". "At home" and "Outdoors" also show Corners that work anywhere |
+| (the eight Moods labels) | Chips under "In the mood for", the same labels and meanings as in Moods above, minus "15 minutes" |
+| No Corners match those choices. / Clear a choice to see more. / Clear choices | Empty state of the chip rows, and its action |
+| Back to Corners | Link above a single Corner |
+| Happening this week | Heading above the events of the next 7 days on a Corner |
+| Spaces in {Corner} | Heading above that Corner's Space cards |
+| People into {Corner} | Heading above the Shelves of people with the most Stubs there, then the most public Moments in the last 30 days |
+| Recent Moments | Heading above a Corner's latest public Moments |
+| How to start | Heading above a Corner's numbered steps |
+| What you’ll need | Heading above 3 to 5 plain facts: gear, place, cost, people. Never a claim about results |
+| More Corners like this | Heading above Corners in the same group of 18 |
+| Starts in 20m | Time to the next event inside the next hour. Inside 24 hours it is "Starts in 4h"; later it is the day and time |
+| You’ve been to one of their events. | Line on a Closed Space card when you hold a Stub from that Space |
+| Past events | Heading of a host's list of ended events, on the Space's Events tab |
+| Confirm who came | Host button on a past event: opens "Who came?" |
+| Who came? | Title of the dialog where a host ticks who showed up from the people who said "I’m going" |
+| Confirm / Confirmed | The dialog button / a person already holding a Stub for that event |
+| No one said they were going. | Empty state of that dialog |
+| N Stubs confirmed. | Toast after a host confirms |
+| Only a host can confirm who came. | Error to anyone else |
+| You can confirm who came once the event has ended. | Error before the end |
+| This event was cancelled. | Error on a cancelled event |
+| Pick at least one person. | Error with nobody ticked |
+| Another host has to confirm you. | Error when a host ticks themselves |
+| You can only confirm people who said they were going. | Error for someone with no "I’m going" |
+| That’s too many people at once. | Error above 500 people |
+
+The Corners home reuses existing wording for: Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
+
 ## Moments
 
 | Term | Meaning |
