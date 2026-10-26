@@ -30,7 +30,7 @@ These apply to every session working in this repo, not just Spaces-related work.
 ## Copy and style
 
 - **Every change to user-facing text follows `docs/style-guide.md`.** It is checked by `src/app/lib/copyRules.test.ts`, so a violation fails `npm test`.
-- **The only five product nouns** (always capitalized, nothing else gets a capitalized name): **Moment, Shelf, Pursuit, Corner, Space.**
+- **The only six product nouns** (always capitalized, nothing else gets a capitalized name): **Moment, Shelf, Pursuit, Corner, Space, Stub.** Stub was approved by the owner on Oct 26, 2026.
 - **The three hardest rules, always in force:**
   1. **No em or en dashes** in any string (use a period, comma, colon, or "to").
   2. **Sentence case** for every label, button, tab, header and title. No ALL CAPS.
