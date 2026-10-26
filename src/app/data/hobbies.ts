@@ -101,7 +101,7 @@ export const hobbies: Hobby[] = [
       sub("Cooking"), sub("Baking"), sub("Sourdough"), sub("Fermentation"),
       sub("Home coffee"), sub("Tea"), sub("Espresso"),
       sub("Home brewing"), sub("Kombucha"), sub("Cocktail-making"), sub("Supper clubs"),
-      sub("Coffee"), sub("BBQ"),
+      sub("Coffee"), sub("BBQ"), sub("Pasta"),
     ],
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
@@ -128,7 +128,7 @@ export const hobbies: Hobby[] = [
       sub("Running"), sub("Run clubs"), sub("Climbing"), sub("Cycling"),
       sub("Dance"), sub("Pickleball"), sub("Padel"), sub("Tennis"),
       sub("Swimming"), sub("Martial arts"), sub("Strength training"), sub("Basketball"),
-      sub("Soccer"), sub("Volleyball"),
+      sub("Soccer"), sub("Volleyball"), sub("Boxing"), sub("Skateboarding"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
@@ -153,7 +153,7 @@ export const hobbies: Hobby[] = [
     description: "Drawing, painting, illustration, ceramics, sculpture.",
     subItems: [
       sub("Ceramics"), sub("Painting"), sub("Drawing"), sub("Watercolor"),
-      sub("Calligraphy"), sub("Theater"), sub("Illustration"), sub("Sculpture"),
+      sub("Calligraphy"), sub("Theater"), sub("Illustration"), sub("Sculpture"), sub("Improv"),
     ],
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
@@ -228,6 +228,7 @@ export const hobbies: Hobby[] = [
     subItems: [
       sub("Hiking"), sub("Birdwatching"), sub("Foraging"), sub("Camping"),
       sub("Fishing"), sub("Outdoor photography"), sub("Nature journaling"),
+      sub("Kayaking"), sub("Surfing"), sub("Wild swimming"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
@@ -276,7 +277,7 @@ export const hobbies: Hobby[] = [
     description: "Video games, board games, D&D, cards, puzzles, RPGs.",
     subItems: [
       sub("Board games"), sub("Chess"), sub("Tabletop RPGs"), sub("Trading cards"),
-      sub("Puzzles"), sub("D&D"), sub("Video games"),
+      sub("Puzzles"), sub("D&D"), sub("Video games"), sub("Trivia"),
     ],
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
@@ -299,7 +300,7 @@ export const hobbies: Hobby[] = [
     description: "Instruments, singing, songwriting, DJing, music production.",
     subItems: [
       sub("Music production"), sub("Singing"), sub("Guitar"), sub("Songwriting"),
-      sub("DJing"),
+      sub("DJing"), sub("Make a beat"), sub("Karaoke"), sub("Live music"), sub("Choir"),
     ],
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
@@ -345,7 +346,7 @@ export const hobbies: Hobby[] = [
     description: "Yoga, Pilates, meditation, mindfulness, breathwork.",
     subItems: [
       sub("Yoga"), sub("Pilates"), sub("Meditation"), sub("Mindfulness"),
-      sub("Breathwork"),
+      sub("Breathwork"), sub("Sauna & cold plunge"),
     ],
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
@@ -440,7 +441,7 @@ export const hobbies: Hobby[] = [
     description: "Travel, road trips, backpacking, skiing, exploration.",
     subItems: [
       sub("Travel"), sub("Road trips"), sub("Backpacking"), sub("Skiing"),
-      sub("Exploration"),
+      sub("Exploration"), sub("Volunteering"),
     ],
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
