@@ -163,3 +163,22 @@ export function formatDateRange(start: DateInput, end: DateInput, opts: { now?: 
   }
   return `${startText} to ${fmt({ month: "short", day: "numeric" }).format(b)}${tail}`;
 }
+
+/**
+ * When an upcoming event starts: "Starts in 20m" inside the next hour,
+ * "Starts in 4h" inside the next 24 hours, otherwise the day and time
+ * ("Sat, Oct 4, 7:00 PM"). An event already under way or over reads as its
+ * day and time.
+ */
+export function formatStarts(
+  input: DateInput,
+  opts: { timeZone?: string; now?: number } = {},
+): string {
+  const d = toDate(input);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = opts.now ?? Date.now();
+  const diff = d.getTime() - now;
+  if (diff > 0 && diff < HOUR) return `Starts in ${Math.max(1, Math.ceil(diff / MINUTE))}m`;
+  if (diff >= HOUR && diff < DAY) return `Starts in ${Math.ceil(diff / HOUR)}h`;
+  return formatDateTime(d, { timeZone: opts.timeZone, now });
+}

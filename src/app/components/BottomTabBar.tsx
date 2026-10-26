@@ -31,6 +31,7 @@ export const TABS = [
     icon: Compass,
     match: (p: string) =>
       p.startsWith("/discover") ||
+      p.startsWith("/corners") ||
       p.startsWith("/space") ||
       p.startsWith("/people"),
   },

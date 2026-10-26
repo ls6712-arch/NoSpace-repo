@@ -506,6 +506,11 @@ export function Discover() {
               {/* Ideas, not search results: hidden while a search is open. */}
               {!query.trim() && (
                 <>
+                  <div className="flex justify-end">
+                    <PressLink to="/corners" className="inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+                      Corners
+                    </PressLink>
+                  </div>
                   <Masthead />
                   {/* From 1024px the top is a spread: the cover on 7 of 12 columns, the doors on 5. */}
                   <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-10">
