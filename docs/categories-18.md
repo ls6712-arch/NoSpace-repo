@@ -29,7 +29,7 @@ Source of truth for Step 4 of `claude-code-brief-discover-v2.md`. Approved by th
 
 `home-garden` is already a slug today and keeps its meaning, so it is reused as is. The other 17 are new slugs; the 14 old slugs stay resolvable (see below).
 
-## Every built-in Corner (135 rows in `hobbies.ts`)
+## Every built-in Corner (149 rows in `hobbies.ts`)
 
 "Source" says where the category came from: the activity library entry it matched, or a judgement call where the library had no match. Judgement calls are the ones to double-check.
 
@@ -133,6 +133,20 @@ Source of truth for Step 4 of `claude-code-brief-discover-v2.md`. Approved by th
 | Sports & Fitness (`sports-fitness`) | Strength training | `strength-training` | Running and fitness (`running-fitness`) | library: Strength training |
 | Sports & Fitness (`sports-fitness`) | Swimming | `swimming` | Running and fitness (`running-fitness`) | library: Swimming |
 | Health & Wellness (`health-wellness`) | Yoga | `yoga` | Running and fitness (`running-fitness`) | library: Yoga |
+| Food & Cooking (`food-cooking`) | Pasta | `pasta` | Food and drink (`food-drink`) | judgement (added with Corners home) |
+| Sports & Fitness (`sports-fitness`) | Boxing | `boxing` | Sports and martial arts (`sports-martial-arts`) | judgement (added with Corners home) |
+| Sports & Fitness (`sports-fitness`) | Skateboarding | `skateboarding` | Sports and martial arts (`sports-martial-arts`) | judgement (added with Corners home) |
+| Nature & Outdoors (`nature-outdoors`) | Kayaking | `kayaking` | Outdoors and adventure (`outdoors-adventure`) | judgement (added with Corners home) |
+| Nature & Outdoors (`nature-outdoors`) | Surfing | `surfing` | Outdoors and adventure (`outdoors-adventure`) | judgement (added with Corners home) |
+| Nature & Outdoors (`nature-outdoors`) | Wild swimming | `wild-swimming` | Outdoors and adventure (`outdoors-adventure`) | judgement (added with Corners home) |
+| Gaming & Tabletop (`gaming-tabletop`) | Trivia | `trivia` | Games and puzzles (`games-puzzles`) | judgement (added with Corners home) |
+| Music (`music`) | Make a beat | `make-a-beat` | Music and sound (`music-sound`) | judgement (added with Corners home) |
+| Music (`music`) | Karaoke | `karaoke` | Dance and stage (`dance-stage`) | judgement (added with Corners home) |
+| Music (`music`) | Live music | `live-music` | Culture and community (`culture-community`) | judgement (added with Corners home) |
+| Music (`music`) | Choir | `choir` | Music and sound (`music-sound`) | judgement (added with Corners home) |
+| Health & Wellness (`health-wellness`) | Sauna & cold plunge | `sauna-cold-plunge` | Rest and ritual (`rest-ritual`) | judgement (added with Corners home) |
+| Art & Creative (`art-creative`) | Improv | `improv` | Dance and stage (`dance-stage`) | judgement (added with Corners home) |
+| Travel & Adventure (`travel-adventure`) | Volunteering | `volunteering` | Culture and community (`culture-community`) | judgement (added with Corners home) |
 | Tech & Building (`tech-building`) | AI projects | `ai-projects` | Skills and side projects (`skills-side-projects`) | library: Learning AI tools |
 | Tech & Building (`tech-building`) | Coding | `coding` | Skills and side projects (`skills-side-projects`) | library: Side projects and coding |
 | Tech & Building (`tech-building`) | Creative coding | `creative-coding` | Skills and side projects (`skills-side-projects`) | judgement |
