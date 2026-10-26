@@ -15,6 +15,7 @@ import {
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { CreateEventDialog } from "./CreateEventDialog";
+import { ConfirmAttendanceDialog } from "./ConfirmAttendanceDialog";
 import { Time } from "../ui/time";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Loadable } from "../ui/skeleton";
@@ -52,6 +53,7 @@ export function SpaceEventsTab({
   const [attendeesByEvent, setAttendeesByEvent] = useState<Map<number, Attendee[]>>(new Map());
   const [createOpen, setCreateOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<SpaceEventRow | null>(null);
+  const [attendanceEvent, setAttendanceEvent] = useState<SpaceEventRow | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -205,6 +207,11 @@ export function SpaceEventsTab({
   const featured = upcoming.find((e) => e.featured);
   const rest = upcoming.filter((e) => e.id !== featured?.id);
   const ordered = featured ? [featured, ...rest] : rest;
+  // Events that have ended, newest first: where a host confirms who came.
+  const ended = events
+    .filter((e) => e.status === "scheduled" && new Date(e.ends_at ?? e.starts_at).getTime() <= now)
+    .sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime())
+    .slice(0, 10);
 
   return (
     <div className="py-6">
@@ -309,6 +316,33 @@ export function SpaceEventsTab({
             );
           })}
         </ul>
+      )}
+
+      {isHost && ended.length > 0 && (
+        <section className="mt-8" aria-labelledby="ended-events-title">
+          <h3 id="ended-events-title" className="mb-3 text-small font-semibold">Past events</h3>
+          <ul className="space-y-2">
+            {ended.map((e) => (
+              <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border px-4 py-3">
+                <div className="min-w-0">
+                  <p className="line-clamp-2 break-words text-small">{e.title}</p>
+                  <p className="text-caption text-muted-foreground"><Time value={e.starts_at} format="datetime" timeZone={e.timezone} /></p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setAttendanceEvent(e)}>
+                  Confirm who came
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {attendanceEvent && (
+        <ConfirmAttendanceDialog
+          event={attendanceEvent}
+          open={!!attendanceEvent}
+          onOpenChange={(o) => !o && setAttendanceEvent(null)}
+        />
       )}
 
       <CreateEventDialog space={space} open={createOpen} onOpenChange={setCreateOpen} onSaved={refetch} />

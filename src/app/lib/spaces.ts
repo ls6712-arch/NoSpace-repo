@@ -299,6 +299,11 @@ export function rsvpToEvent(eventId: number) {
 export function cancelRsvp(eventId: number) {
   return call("cancel_rsvp", { p_event_id: eventId });
 }
+/** A host confirms who came to an ended event; each person gets one Stub. Returns how many were new. */
+export function confirmEventAttendance(eventId: number, userIds: string[]) {
+  return call<number>("confirm_event_attendance", { p_event_id: eventId, p_user_ids: userIds });
+}
+
 export function listEventTeasers(spaceId: string) {
   return call<{ id: number; title: string; starts_at: string; timezone: string; featured: boolean }[]>(
     "list_event_teasers",
