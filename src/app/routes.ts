@@ -10,6 +10,8 @@ import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
 import { CategoryPage } from "./pages/Category";
+import { CornersHome } from "./pages/CornersHome";
+import { CornerDetail } from "./pages/CornerDetail";
 import { SpaceRoute } from "./pages/SpaceRoute";
 import { CreateSpace } from "./pages/CreateSpace";
 import { EditSpace } from "./pages/EditSpace";
@@ -127,6 +129,8 @@ export const router = createHashRouter([
       { path: "space/:slug/edit", Component: EditSpace },
       { path: "create-space", Component: CreateSpace },
       { path: "corner/:slug", Component: CornerPage },
+      { path: "corners", Component: CornersHome },
+      { path: "corners/:slug", Component: CornerDetail },
       { path: "browse/:slug", Component: CategoryPage },
       { path: "pursuits/new", Component: CreatePursuit },
       { path: "join/:token", Component: JoinPursuit },
