@@ -13,6 +13,7 @@ import { Button } from "../components/ui/button";
 import { QuietMilestones } from "../components/QuietMilestones";
 import { AvatarPicker } from "../components/AvatarPicker";
 import { WorkGrid } from "../components/WorkGrid";
+import { StubsSection } from "../components/StubsSection";
 import { PursuitCompactCard, NewPursuitTile, PursuitExpandedPanel } from "../components/PursuitCompact";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
@@ -469,6 +470,8 @@ export function You() {
             </>
           )}
         </section>
+
+        {user && <StubsSection userId={user.id} className="mb-12 border-t border-[var(--line,var(--border))] pt-8" />}
 
         <section className="mb-12 border-t border-[var(--line,var(--border))] pt-8">
           <div className="mb-1 flex items-baseline justify-between gap-4">
