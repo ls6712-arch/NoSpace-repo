@@ -137,7 +137,12 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           eventIds.length
             ? supabase.from("event_rsvps").select("event_id").eq("user_id", user.id).in("event_id", eventIds)
             : Promise.resolve({ data: [] }),
-          supabase.from("stubs").select("space_id").eq("user_id", user.id).in("space_id", spaceIds),
+          // Fails soft: before the Stubs migration is applied the table is missing,
+          // and the page just leaves out the "You've been to one of their events." line.
+          Promise.resolve(supabase.from("stubs").select("space_id").eq("user_id", user.id).in("space_id", spaceIds)).then(
+            (r) => (r.error ? { data: [] as { space_id: string }[] } : r),
+            () => ({ data: [] as { space_id: string }[] }),
+          ),
         ]);
         if (cancelled) return;
         setMemberships(new Map((mine.data ?? []).map((m) => [m.space_id as string, { role: m.role as string, status: m.status as string }])));
