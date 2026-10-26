@@ -468,7 +468,7 @@ function HeroEvent({
       <h1 className="mt-2 line-clamp-3 break-words text-display">{event.title}</h1>
       {space && (
         <p className="mt-2 text-body">
-          <Link to={`/space/${space.slug}`} className="hover:underline">{space.name}</Link>
+          <Link to={`/space/${space.slug}`} className="inline-flex min-h-11 items-center hover:underline">{space.name}</Link>
         </p>
       )}
       {host && (
@@ -543,8 +543,8 @@ function SpaceCard({
           )}
         </Link>
         <div className="flex flex-1 flex-col gap-1 p-3.5">
-          <Link to={`/space/${space.slug}`} className="truncate text-small font-semibold hover:underline" title={space.name}>
-            {space.name}
+          <Link to={`/space/${space.slug}`} className="flex min-h-11 items-center text-small font-semibold hover:underline" title={space.name}>
+            <span className="truncate">{space.name}</span>
           </Link>
           {host && (
             <span className="flex items-center gap-1.5 text-caption text-muted-foreground">
