@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { confirmEventAttendance, type SpaceEventRow } from "../../lib/spaces";
@@ -7,7 +8,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { EmptyState, InlineError } from "../StateViews";
-import { notify } from "../ui/toaster";
 
 interface Guest {
   userId: string;
@@ -37,6 +37,8 @@ export function ConfirmAttendanceDialog({
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set once a confirm goes through: how many Stubs it issued.
+  const [issued, setIssued] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open || !supabase) return;
@@ -45,6 +47,7 @@ export function ConfirmAttendanceDialog({
       setGuests("loading");
       setPicked(new Set());
       setError(null);
+      setIssued(null);
       const [rsvps, stubs] = await Promise.all([
         supabase!.from("event_rsvps").select("user_id").eq("event_id", event.id),
         supabase!.from("stubs").select("user_id").eq("event_id", event.id),
@@ -84,8 +87,10 @@ export function ConfirmAttendanceDialog({
     const { data, error: err } = await confirmEventAttendance(event.id, [...picked]);
     setBusy(false);
     if (err) return setError(err);
-    notify(`${plural(data ?? picked.size, "Stub")} confirmed.`);
-    onOpenChange(false);
+    // Stay open: the people just confirmed show as Confirmed, and nothing is left ticked.
+    setGuests((prev) => (prev === "loading" ? prev : prev.map((g) => (picked.has(g.userId) ? { ...g, confirmed: true } : g))));
+    setPicked(new Set());
+    setIssued(data ?? picked.size);
   }
 
   const list = Array.isArray(guests) ? guests : [];
@@ -116,15 +121,25 @@ export function ConfirmAttendanceDialog({
                     <AvatarFallback className="text-caption">{initials(g.name)}</AvatarFallback>
                   </Avatar>
                   <span className="min-w-0 flex-1 truncate text-small">{g.name}</span>
-                  {g.confirmed && <span className="text-caption text-muted-foreground">Confirmed</span>}
+                  {g.confirmed && (
+                    <span className="flex items-center gap-1 text-caption font-semibold text-foreground">
+                      <Check className="size-3.5" aria-hidden="true" />
+                      Confirmed
+                    </span>
+                  )}
                 </label>
               </li>
             ))}
           </ul>
         )}
         <InlineError message={error} />
+        {issued !== null && (
+          <p role="status" className="text-small font-semibold">
+            {`${plural(issued, "Stub")} confirmed.`}
+          </p>
+        )}
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{issued !== null ? "Done" : "Cancel"}</Button>
           <Button variant="coral" disabled={busy || picked.size === 0} onClick={confirm}>
             Confirm
           </Button>

@@ -103,13 +103,14 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 
 | Term | Meaning |
 |---|---|
-| Stub | A keepsake on your Shelf, shown in the Shelf's Stubs tab. One concept with five types: silver, ticket, with someone, event and plain. The Door list brief defines the types and derives them from your Moments; the **event** type is proof you attended a Space event, confirmed by the host, and is never self-awarded. A product noun, always capitalized. No counts, rankings or leaderboards |
+| Stub | A keepsake on your Shelf, shown in the Shelf's Stubs tab. Types: **silver** (your first Moment in that Corner, by `hobby_slug` and `corner`), **ticket** (a Moment with `from_ticket` set, logged from a ticket), **with someone** (a Moment with a `pursuit_id` whose Pursuit has more than 1 active member), **event** (a host-confirmed row in `public.stubs`: proof you attended a Space event, never self-awarded) and **plain** (everything else). The serial is the Moment's position among your own Moments by `created_at`. No totals or counts of Stubs anywhere. A product noun, always capitalized |
 | Past events | Heading of a host's list of ended events, on the Space's Events tab |
 | Confirm who came | Host button on a past event: opens "Who came?" |
 | Who came? | Title of the dialog where a host ticks who showed up from the people who said "I’m going" |
-| Confirm / Confirmed | The dialog button / a person already holding a Stub for that event |
+| Confirm / Confirmed | The dialog button / a person already holding a Stub for that event, with a check mark, including right after you confirm them |
+| Done | Replaces Cancel in that dialog after a confirm goes through |
 | No one said they were going. | Empty state of that dialog |
-| N Stubs confirmed. | Toast after a host confirms |
+| N Stubs confirmed. | Message inside the dialog after a host confirms. The dialog stays open |
 | Only a host can confirm who came. | Error to anyone else |
 | You can confirm who came once the event has ended. | Error before the end |
 | This event was cancelled. | Error on a cancelled event |
