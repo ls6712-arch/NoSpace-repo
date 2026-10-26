@@ -30,8 +30,6 @@ export interface LiveEvent {
 }
 
 export interface CornerLive {
-  /** corners.id for the curated Corner, when it has a row. */
-  cornerId?: number;
   spaces: LiveSpace[];
   events: LiveEvent[];
 }
@@ -55,6 +53,8 @@ interface Options {
   only?: string;
   /** Include events further out than a week, and Closed Space teasers. */
   full?: boolean;
+  /** Leave Closed Spaces out entirely, teasers included (signed-out and not-yet-approved viewers). */
+  openOnly?: boolean;
 }
 
 export async function fetchCornersLive(opts: Options = {}): Promise<Map<string, CornerLive>> {
@@ -72,7 +72,6 @@ export async function fetchCornersLive(opts: Options = {}): Promise<Map<string, 
     const curated = curatedFor(r.space_slug as string, r.slug as string);
     if (!curated || !result.has(curated.slug)) continue;
     cornerSlugById.set(r.id as number, curated.slug);
-    result.get(curated.slug)!.cornerId = r.id as number;
   }
   if (cornerSlugById.size === 0) return result;
 
@@ -88,7 +87,9 @@ export async function fetchCornersLive(opts: Options = {}): Promise<Map<string, 
     .select("id, slug, name, cover_image, access, created_by, city, neighborhood")
     .in("id", spaceIds)
     .eq("status", "active");
-  const spaceById = new Map((spaceRows as LiveSpace[] | null ?? []).map((s) => [s.id, s]));
+  const spaceById = new Map(
+    ((spaceRows as LiveSpace[] | null) ?? []).filter((s) => !opts.openOnly || s.access === "open").map((s) => [s.id, s]),
+  );
 
   const slugsBySpace = new Map<string, string[]>();
   for (const l of links ?? []) {

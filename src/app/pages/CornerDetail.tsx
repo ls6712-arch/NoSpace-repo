@@ -22,6 +22,7 @@ import {
   howToStart,
   type CuratedCorner,
 } from "../data/curatedCorners";
+import { cornerGuide } from "../data/cornerGuides";
 import { cornerStyle } from "../lib/categoryStyle";
 import { fetchCornersLive, thisWeek, type CornerLive, type LiveEvent, type LiveSpace } from "../lib/cornersLive";
 import { formatStarts } from "../lib/dates";
@@ -33,7 +34,10 @@ import { tieNumbers } from "../lib/typography";
 import { cornerSignal } from "./CornersHome";
 
 /**
- * A single curated Corner (/corners/:slug), open to signed-out visitors.
+ * A single curated Corner (/corners/:slug), open to signed-out and
+ * not-yet-approved visitors, who see Corners, guides, Open Spaces and event
+ * titles and times only (no people, Moments, hosts or Closed Spaces) and one
+ * line saying members see who's going.
  * Top to bottom: the next event, this week's events, the Corner's Spaces,
  * the people into it, recent Moments, how to start and what you'll need,
  * then more Corners like it. A section with nothing in it is not shown, and
@@ -42,7 +46,7 @@ import { cornerSignal } from "./CornersHome";
  * and time.
  */
 
-const MONTH_MS = 30 * 24 * 3_600_000;
+const MOMENTS_PAGE = 8;
 const initials = (name: string) => name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 
 type Person = { id: string; name: string; avatarUrl?: string; username?: string };
@@ -75,7 +79,7 @@ export function CornerDetail() {
 }
 
 function CornerBody({ corner }: { corner: CuratedCorner }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { publicFeed } = useContent();
   const [live, setLive] = useState<CornerLive | null>(null);
@@ -84,12 +88,14 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   const [going, setGoing] = useState<Set<number>>(new Set());
   const [momentCounts, setMomentCounts] = useState<Map<string, number>>(new Map());
   const [stubSpaces, setStubSpaces] = useState<Set<string>>(new Set());
-  const [stubLeaders, setStubLeaders] = useState<Map<string, number>>(new Map());
   const [people, setPeople] = useState<Map<string, Person>>(new Map());
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  const [momentPages, setMomentPages] = useState(1);
 
+  // Signed out, or signed in but not approved yet.
+  const restricted = !user || profile?.access === "pending";
   const here = encodeURIComponent(`/corners/${corner.slug}`);
   const signIn = () => navigate(`/login?redirect=${here}`);
 
@@ -102,15 +108,15 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const result = (await fetchCornersLive({ only: corner.slug, full: true })).get(corner.slug);
+      const result = (await fetchCornersLive({ only: corner.slug, full: !restricted, openOnly: restricted })).get(corner.slug);
       if (cancelled || !result) return;
       setLive(result);
       if (!supabase) return;
 
       const spaces = result.spaces;
       const hostIds = [...new Set(spaces.map((s) => s.created_by).filter((id): id is string => !!id))];
-      const [hostRows, counts, leaders] = await Promise.all([
-        hostIds.length
+      const [hostRows, counts] = await Promise.all([
+        hostIds.length && !restricted
           ? supabase.from("profiles").select("id, display_name, avatar_url, username").in("id", hostIds)
           : Promise.resolve({ data: [] }),
         Promise.all(
@@ -118,16 +124,12 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
             .filter((s) => s.access === "open")
             .map(async (s) => [s.id, (await supabase!.rpc("space_moment_count_30d", { p_space_id: s.id })).data as number | null] as const),
         ),
-        result.cornerId != null
-          ? supabase.rpc("corner_stub_leaders", { p_corner_id: result.cornerId, p_limit: 12 })
-          : Promise.resolve({ data: [] }),
       ]);
       if (cancelled) return;
       setHosts(new Map((hostRows.data ?? []).map((r) => [r.id as string, toPerson(r)])));
       setMomentCounts(new Map(counts.filter(([, n]) => typeof n === "number").map(([id, n]) => [id, n as number])));
-      setStubLeaders(new Map(((leaders.data ?? []) as { user_id: string; stub_count: number }[]).map((l) => [l.user_id, Number(l.stub_count)])));
 
-      if (user && spaces.length > 0) {
+      if (user && !restricted && spaces.length > 0) {
         const spaceIds = spaces.map((s) => s.id);
         const eventIds = result.events.map((e) => e.id);
         const [mine, rsvps, stubs] = await Promise.all([
@@ -146,28 +148,23 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
     return () => {
       cancelled = true;
     };
-  }, [corner, user?.id]);
+  }, [corner, user?.id, restricted]);
 
-  // People into this Corner: most Stubs here first, then most public Moments in the last 30 days.
+  // People into this Corner: whoever shared a public Moment here most recently, newest first. No counts.
   const ranked = useMemo(() => {
-    const cutoff = Date.now() - MONTH_MS;
-    const momentsBy = new Map<string, { count: number; latest?: Post }>();
-    for (const p of posts) {
-      if (!p.userId || p.createdAt < cutoff) continue;
-      const entry = momentsBy.get(p.userId) ?? { count: 0 };
-      entry.count += 1;
-      if (p.type === "photo" && (!entry.latest || p.createdAt > entry.latest.createdAt)) entry.latest = p;
-      momentsBy.set(p.userId, entry);
+    const seen = new Set<string>();
+    const out: { id: string; latest?: Post }[] = [];
+    for (const p of [...posts].sort((a, b) => b.createdAt - a.createdAt)) {
+      if (!p.userId || seen.has(p.userId)) continue;
+      seen.add(p.userId);
+      out.push({ id: p.userId, latest: p.type === "photo" ? p : posts.filter((q) => q.userId === p.userId && q.type === "photo").sort((a, b) => b.createdAt - a.createdAt)[0] });
+      if (out.length === 8) break;
     }
-    const ids = new Set([...stubLeaders.keys(), ...momentsBy.keys()]);
-    return [...ids]
-      .map((id) => ({ id, stubs: stubLeaders.get(id) ?? 0, moments: momentsBy.get(id)?.count ?? 0, latest: momentsBy.get(id)?.latest }))
-      .sort((a, b) => b.stubs - a.stubs || b.moments - a.moments)
-      .slice(0, 8);
-  }, [posts, stubLeaders]);
+    return out;
+  }, [posts]);
 
   useEffect(() => {
-    if (!supabase || ranked.length === 0) return;
+    if (!supabase || restricted || ranked.length === 0) return;
     let cancelled = false;
     supabase
       .from("profiles")
@@ -179,18 +176,21 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
     return () => {
       cancelled = true;
     };
-  }, [ranked]);
+  }, [ranked, restricted]);
 
   const spaceById = useMemo(() => new Map((live?.spaces ?? []).map((s) => [s.id, s])), [live]);
   const events = live?.events ?? [];
   const heroEvent = events[0];
   const week = live ? thisWeek(events) : [];
   const steps = howToStart(corner);
+  const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
+  const prefill = `hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`;
   const more = (() => {
     const cat = curatedCategory(corner);
     return cat ? curatedInCategory(cat).filter((x) => x.slug !== corner.slug) : [];
   })();
 
+  const showMoments = !restricted && posts.length > 0;
   const isMember = (s: LiveSpace) => memberships.get(s.id)?.status === "active";
   const isPending = (s: LiveSpace) => memberships.get(s.id)?.status === "pending";
 
@@ -238,7 +238,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
               corner={corner}
               event={heroEvent}
               space={spaceById.get(heroEvent.spaceId)}
-              host={hosts.get(spaceById.get(heroEvent.spaceId)?.created_by ?? "")}
+              host={restricted ? undefined : hosts.get(spaceById.get(heroEvent.spaceId)?.created_by ?? "")}
               going={going.has(heroEvent.id)}
               member={!!spaceById.get(heroEvent.spaceId) && isMember(spaceById.get(heroEvent.spaceId)!)}
               pending={!!spaceById.get(heroEvent.spaceId) && isPending(spaceById.get(heroEvent.spaceId)!)}
@@ -295,7 +295,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
                 <SpaceCard
                   key={s.id}
                   space={s}
-                  host={hosts.get(s.created_by ?? "")}
+                  host={restricted ? undefined : hosts.get(s.created_by ?? "")}
                   moments={momentCounts.get(s.id)}
                   member={isMember(s)}
                   pending={isPending(s)}
@@ -309,7 +309,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           </section>
         )}
 
-        {ranked.length > 0 && (
+        {!restricted && ranked.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="people-title">
             <SectionTitle id="people-title">{`People into ${corner.name}`}</SectionTitle>
             <HorizontalRow name={`corner.${corner.slug}.people`} label={`People into ${corner.name}`}>
@@ -338,22 +338,34 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           </section>
         )}
 
-        {posts.length > 0 && (
+        {restricted && (
+          <p className={`${SECTION_GAP} text-body text-muted-foreground`}>Members see who’s going.</p>
+        )}
+
+        {showMoments && (
           <section className={SECTION_GAP} aria-labelledby="moments-title">
             <SectionTitle id="moments-title">Recent Moments</SectionTitle>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              {posts.slice(0, 8).map((post, i) => (
-                <Reveal key={post.id} index={i % 8}>
+              {posts.slice(0, momentPages * MOMENTS_PAGE).map((post, i) => (
+                <Reveal key={post.id} index={i % MOMENTS_PAGE}>
                   <MomentTile post={post} onOpen={() => setOpenPost(post)} />
                 </Reveal>
               ))}
             </div>
+            {posts.length > momentPages * MOMENTS_PAGE && (
+              <div className="mt-10 border-t border-border pt-4">
+                <Button variant="outline" onClick={() => setMomentPages((n) => n + 1)}>
+                  Show more
+                </Button>
+              </div>
+            )}
           </section>
         )}
 
         <div className={`${SECTION_GAP} grid gap-10 md:grid-cols-2 md:gap-8`}>
           <section aria-labelledby="start-title">
             <SectionTitle id="start-title">How to start</SectionTitle>
+            {about && <p className="mb-4 text-body text-muted-foreground">{about}</p>}
             <ol className="space-y-3">
               {steps.map((step, i) => (
                 <li key={step} className="flex gap-4 rounded-card border border-border bg-card p-4">
@@ -362,6 +374,22 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
                 </li>
               ))}
             </ol>
+            {!restricted && (
+              <div className="mt-5 flex flex-col gap-3 md:flex-row">
+                <PressLink
+                  to={`/pursuits/new?${prefill}`}
+                  className="flex min-h-12 w-full items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)] md:w-auto"
+                >
+                  Start a Pursuit
+                </PressLink>
+                <PressLink
+                  to={`/create?${prefill}`}
+                  className="flex min-h-12 w-full items-center justify-center rounded-control border border-border px-6 text-body font-semibold text-foreground md:w-auto"
+                >
+                  Log a Moment
+                </PressLink>
+              </div>
+            )}
           </section>
           <section aria-labelledby="need-title">
             <SectionTitle id="need-title">What you’ll need</SectionTitle>

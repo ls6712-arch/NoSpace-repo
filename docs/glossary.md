@@ -85,15 +85,12 @@ Discover's row of chips and cards (approved in visual spec v1.1). A mood names w
 | New Spaces | Home section |
 | Book the studio | Hidden until the marketplace is on |
 
-## Corners home and Stubs
+## Corners home
 
-New in the Corners home (`/corners`, `/corners/:slug`) and Stubs. **Every row below is a new string for approval.** The per-Corner copy (the steps under "How to start" and the facts under "What you’ll need" for each of the 33 curated Corners) is in `docs/curated-corners.md`.
+New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a new string for approval.** The per-Corner copy (the steps under "How to start" and the facts under "What you’ll need" for each of the 33 curated Corners) is in `docs/curated-corners.md`.
 
 | Term | Meaning |
 |---|---|
-| Stub | Proof you attended a Space event, issued by the host. Never self-awarded. The only collectible, and a product noun (always capitalized) |
-| Stubs | Heading of the Stubs section on a Shelf |
-| Group by Corner | Toggle on a Shelf's Stubs: groups them under each Corner's name instead of newest first |
 | Corners | Link at the top of Discover's Corners tab, and the title of the Corners home when no Corner is busy |
 | Busy this week | Kicker on the Corners home hero |
 | N events this week | The hero line and the live line on a Corner card, when it has events in the next 7 days. Counts only Open Spaces' events |
@@ -108,13 +105,36 @@ New in the Corners home (`/corners`, `/corners/:slug`) and Stubs. **Every row be
 | Back to Corners | Link above a single Corner |
 | Happening this week | Heading above the events of the next 7 days on a Corner |
 | Spaces in {Corner} | Heading above that Corner's Space cards |
-| People into {Corner} | Heading above the Shelves of people with the most Stubs there, then the most public Moments in the last 30 days |
+| People into {Corner} | Heading above the Shelves of people who shared a public Moment in that Corner most recently, newest first. No counts. Not shown to signed-out or not-yet-approved visitors |
+| Members see who’s going. | The one line a signed-out or not-yet-approved visitor sees on a Corner in place of People into, Recent Moments, hosts and who is going |
 | Recent Moments | Heading above a Corner's latest public Moments |
 | How to start | Heading above a Corner's numbered steps |
 | What you’ll need | Heading above 3 to 5 plain facts: gear, place, cost, people. Never a claim about results |
 | More Corners like this | Heading above Corners in the same group of 18 |
 | Starts in 20m | Time to the next event inside the next hour. Inside 24 hours it is "Starts in 4h"; later it is the day and time |
 | You’ve been to one of their events. | Line on a Closed Space card when you hold a Stub from that Space |
+
+The Corners pages reuse existing wording for: Start a Pursuit, Log a Moment, Show more, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
+
+## Moments
+
+| Term | Meaning |
+|---|---|
+| Moment | Anything you log |
+| Log a Moment / Add from my Moments | Create a new one / add an existing one to a Space |
+| Only you / Followers / Public | Who sees a Moment |
+| Pinned | You choose, on your own profile. Buttons: "Pin" / "Unpin" |
+| Host picks | Hosts choose, in a Space. Buttons: "Add to host picks" / "Remove from host picks" (max 3) |
+| Spotlight | The Soosh team chooses, on Discover |
+| Save / Saved | Bookmark a Moment. Form buttons say "Save changes", so "Save" alone always means bookmarking |
+
+## Stubs
+
+New (Oct 26, 2026). **Every row below is a new string for approval.**
+
+| Term | Meaning |
+|---|---|
+| Stub | A keepsake on your Shelf, shown in the Shelf's Stubs tab. One concept with five types: silver, ticket, with someone, event and plain. The Door list brief defines the types and derives them from your Moments; the **event** type is proof you attended a Space event, confirmed by the host, and is never self-awarded. A product noun, always capitalized. No counts, rankings or leaderboards |
 | Past events | Heading of a host's list of ended events, on the Space's Events tab |
 | Confirm who came | Host button on a past event: opens "Who came?" |
 | Who came? | Title of the dialog where a host ticks who showed up from the people who said "I’m going" |
@@ -128,20 +148,6 @@ New in the Corners home (`/corners`, `/corners/:slug`) and Stubs. **Every row be
 | Another host has to confirm you. | Error when a host ticks themselves |
 | You can only confirm people who said they were going. | Error for someone with no "I’m going" |
 | That’s too many people at once. | Error above 500 people |
-
-The Corners home reuses existing wording for: Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
-
-## Moments
-
-| Term | Meaning |
-|---|---|
-| Moment | Anything you log |
-| Log a Moment / Add from my Moments | Create a new one / add an existing one to a Space |
-| Only you / Followers / Public | Who sees a Moment |
-| Pinned | You choose, on your own profile. Buttons: "Pin" / "Unpin" |
-| Host picks | Hosts choose, in a Space. Buttons: "Add to host picks" / "Remove from host picks" (max 3) |
-| Spotlight | The Soosh team chooses, on Discover |
-| Save / Saved | Bookmark a Moment. Form buttons say "Save changes", so "Save" alone always means bookmarking |
 
 ## Pursuits
 

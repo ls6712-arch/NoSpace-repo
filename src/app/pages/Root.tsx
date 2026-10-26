@@ -40,7 +40,14 @@ const PUBLIC_PATHS = new Set(["/", "/login", "/terms", "/privacy-policy"]);
 // (your own Studio) isn't itself visitor-facing, but Studio.tsx already
 // renders its own "Log in to open your own Studio" message when signed out,
 // the same self-handling contract as /you.
+// Corners (the browse page and a single Corner) are open to everyone, including
+// a signed-out visitor and a not-yet-approved account: Corners are never
+// gated, Spaces are where exclusivity lives. Those pages show such a viewer
+// Corners, guides, Open Spaces and event titles and times only.
+const IS_CORNERS_PATH = (pathname: string) => pathname === "/corners" || pathname.startsWith("/corners/");
+
 const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
+  IS_CORNERS_PATH(pathname) ||
   pathname === "/you" ||
   pathname.startsWith("/you/") ||
   pathname === "/studio" ||
@@ -97,7 +104,13 @@ export function Root() {
   // is false too, and onboarding writes to several tables that migration
   // blocks pending accounts from touching. Same transient-null caveat as
   // the onboarding gate: `profile` can be briefly null right after sign-in.
-  if (user && profile && profile.access === "pending" && location.pathname !== "/welcome") {
+  if (
+    user &&
+    profile &&
+    profile.access === "pending" &&
+    location.pathname !== "/welcome" &&
+    !IS_CORNERS_PATH(location.pathname)
+  ) {
     return <Navigate to="/welcome" replace />;
   }
 

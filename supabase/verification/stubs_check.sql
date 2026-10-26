@@ -1,5 +1,4 @@
--- Soosh: Stubs (public.stubs, confirm_event_attendance, stubs_for_profile,
--- corner_stub_leaders).
+-- Soosh: Stubs, the event source (public.stubs, confirm_event_attendance).
 --
 -- Not a migration, nothing here alters the schema. Run this AFTER
 -- 20261028000000_stubs.sql. Run before it, the script stops at the first
@@ -30,8 +29,6 @@ do $$
 declare
   v_i int := 0;
   v_n int;
-  v_text text;
-  v_bool boolean;
   results text[] := '{}';
   v_owner_role text;
   v_corner bigint;
@@ -266,7 +263,7 @@ begin
                                         else format('%s FAIL', v_i) end);
 
   -- ───────────────────────────────────────────────────────────────────────
-  -- Who can read the table directly: you and the hosts, nobody else.
+  -- Who can read the table: you and the hosts, nobody else.
   -- ───────────────────────────────────────────────────────────────────────
   perform set_config('role', 'authenticated', true);
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_a), true);
@@ -286,70 +283,6 @@ begin
   v_n := (select count(*) from public.stubs s where s.event_id in (v_open_past, v_closed_past));
   results := array_append(results, case when v_n = 3 then format('%s PASS (the host reads the 3 they issued)', v_i)
                                         else format('%s FAIL (host sees %s)', v_i, v_n) end);
-
-  -- ───────────────────────────────────────────────────────────────────────
-  -- stubs_for_profile: the Closed Space rule.
-  -- ───────────────────────────────────────────────────────────────────────
-  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_outsider), true);
-  v_i := v_i + 1;
-  v_n := (select count(*) from public.stubs_for_profile(v_a) f where f.event_id in (v_open_past, v_closed_past));
-  results := array_append(results, case when v_n = 2 then format('%s PASS (outsider sees both rows)', v_i)
-                                        else format('%s FAIL (rows: %s)', v_i, v_n) end);
-
-  v_i := v_i + 1;
-  v_text := (select f.event_title from public.stubs_for_profile(v_a) f where f.event_id = v_open_past);
-  results := array_append(results, case when v_text = 'Stubs check open past' then format('%s PASS (Open Space row shows its title)', v_i)
-                                        else format('%s FAIL (title: %s)', v_i, coalesce(v_text, 'null')) end);
-
-  v_i := v_i + 1;
-  v_n := (select count(*) from public.stubs_for_profile(v_a) f
-          where f.event_id = v_closed_past and f.redacted
-            and f.space_name is null and f.space_slug is null and f.event_title is null
-            and f.neighborhood is null and f.city is null
-            and f.corner_name = 'Stubs check corner' and f.starts_at is not null);
-  results := array_append(results, case when v_n = 1 then format('%s PASS (Closed Space row to a non-member: Corner and date only)', v_i)
-                                        else format('%s FAIL', v_i) end);
-
-  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_member), true);
-  v_i := v_i + 1;
-  v_text := (select f.event_title from public.stubs_for_profile(v_a) f where f.event_id = v_closed_past and not f.redacted);
-  results := array_append(results, case when v_text = 'Stubs check closed past' then format('%s PASS (a member of the Closed Space sees the title)', v_i)
-                                        else format('%s FAIL (title: %s)', v_i, coalesce(v_text, 'null')) end);
-
-  -- A paused Shelf returns nothing to anyone but its owner.
-  perform set_config('role', v_owner_role, true);
-  update public.profiles p set paused_at = now() where p.id = v_a;
-  perform set_config('role', 'authenticated', true);
-  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_outsider), true);
-  v_i := v_i + 1;
-  v_n := (select count(*) from public.stubs_for_profile(v_a) f where f.event_id in (v_open_past, v_closed_past));
-  results := array_append(results, case when v_n = 0 then format('%s PASS (paused Shelf: nothing to a stranger)', v_i)
-                                        else format('%s FAIL (rows: %s)', v_i, v_n) end);
-  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_a), true);
-  v_i := v_i + 1;
-  v_n := (select count(*) from public.stubs_for_profile(v_a) f where f.event_id in (v_open_past, v_closed_past));
-  results := array_append(results, case when v_n = 2 then format('%s PASS (paused Shelf: the owner still sees theirs)', v_i)
-                                        else format('%s FAIL (rows: %s)', v_i, v_n) end);
-  perform set_config('role', v_owner_role, true);
-  update public.profiles p set paused_at = null where p.id = v_a;
-
-  -- ───────────────────────────────────────────────────────────────────────
-  -- corner_stub_leaders: A has 2 in the fixture Corner, MEMBER has 1.
-  -- ───────────────────────────────────────────────────────────────────────
-  perform set_config('role', 'anon', true);
-  perform set_config('request.jwt.claims', '{}', true);
-  v_i := v_i + 1;
-  v_n := (select l.stub_count from public.corner_stub_leaders(v_corner, 12) l where l.user_id = v_a);
-  results := array_append(results, case when v_n = 2 then format('%s PASS (A leads with 2, readable signed out)', v_i)
-                                        else format('%s FAIL (A count: %s)', v_i, coalesce(v_n::text, 'null')) end);
-  v_i := v_i + 1;
-  v_text := (select l.user_id::text from public.corner_stub_leaders(v_corner, 12) l order by l.stub_count desc limit 1);
-  results := array_append(results, case when v_text = v_a::text then format('%s PASS (most Stubs first)', v_i)
-                                        else format('%s FAIL (first: %s)', v_i, coalesce(v_text, 'null')) end);
-  v_i := v_i + 1;
-  v_n := (select count(*) from public.corner_stub_leaders(v_corner, 12) l where l.user_id = v_b);
-  results := array_append(results, case when v_n = 0 then format('%s PASS (B, with no Stub, is not listed)', v_i)
-                                        else format('%s FAIL', v_i) end);
 
   perform set_config('role', v_owner_role, true);
   raise exception 'RESULTS: %', array_to_string(results, ', ');

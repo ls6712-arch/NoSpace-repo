@@ -14,7 +14,6 @@ import { tagsFromPosts } from "../lib/postTags";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { WorkGrid } from "../components/WorkGrid";
-import { StubsSection } from "../components/StubsSection";
 import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
 import { PursuitCard } from "../components/PursuitCard";
 import { QuietMilestones, SharedMilestones } from "../components/QuietMilestones";
@@ -567,8 +566,6 @@ export function PublicProfile() {
             </section>
           )}
         </div>
-
-        <StubsSection userId={personId} className="mb-12" />
 
         {/* Private by default, one milestone at a time: this section simply
             doesn’t exist for a non-owner until there’s something explicitly

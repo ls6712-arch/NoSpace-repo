@@ -1,3 +1,4 @@
+import { cornerPath } from "../../lib/cornerPath";
 import { useRowScrollMemory } from "../../lib/useHistoryState";
 import { PressLink } from "../afterhours/PressLink";
 import { Reveal } from "../afterhours/Reveal";
@@ -22,7 +23,7 @@ function Arrow() {
 function Ticket({ card, serial }: { card: MoodCard; serial: string }) {
   return (
     <PressLink
-      to={`/corner/${card.cornerSlug}`}
+      to={cornerPath(card.spaceSlug, card.cornerSlug)}
       className="flex h-[236px] w-[236px] overflow-hidden rounded-control bg-[var(--cat)] text-[var(--ink)]"
     >
       <span className="flex min-w-0 flex-1 flex-col justify-between p-4">
