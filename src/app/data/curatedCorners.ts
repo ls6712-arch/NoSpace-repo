@@ -1,4 +1,5 @@
 import { cornerGuide, type CornerGuide, type GuideKind } from "./cornerGuides";
+import { formatDuration } from "../lib/dates";
 import { MOODS, type MoodId } from "./moods";
 import { categoryOfCorner } from "./cornerCategories";
 
@@ -323,4 +324,22 @@ export function photoSearchLinks(x: CuratedCorner): { unsplash: string; pexels: 
     unsplash: `https://unsplash.com/s/photos/${encodeURIComponent(q).replace(/%20/g, "-")}`,
     pexels: `https://www.pexels.com/search/${encodeURIComponent(q)}/`,
   };
+}
+
+const SETTING_LABEL: Record<CornerSetting, string> = { home: "At home", outdoors: "Outdoors", anywhere: "Anywhere" };
+
+/** "1 hr · Outdoors": how long a curated Corner takes and where. */
+export function cornerMeta(x: CuratedCorner): string {
+  return [formatDuration(x.durationMinutes), SETTING_LABEL[x.setting]].filter(Boolean).join(" · ");
+}
+
+/**
+ * The moods.ts moods for any built-in Corner that has a guide in
+ * cornerGuides.ts, adults-only ones left out (as on Discover's mood row).
+ * A Corner with no guide has no moods.
+ */
+export function guideMoods(spaceSlug: string, cornerSlug: string): MoodId[] {
+  const g = cornerGuide(spaceSlug, cornerSlug);
+  if (!g || g.adultsOnly) return [];
+  return MOODS.filter((m) => m.matches(g, spaceSlug, cornerSlug)).map((m) => m.id);
 }

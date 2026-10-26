@@ -1,5 +1,4 @@
 import { supabase } from "../../lib/supabase";
-import { CURATED_CORNERS, curatedFor } from "../data/curatedCorners";
 import type { SpaceRow } from "./spaces";
 
 /**
@@ -49,29 +48,30 @@ export function thisWeek(events: LiveEvent[], now = Date.now()): LiveEvent[] {
 }
 
 interface Options {
-  /** Load one curated Corner only (its slug). */
-  only?: string;
+  /** The Corners to load; results are keyed `${spaceSlug}/${slug}`. */
+  targets: { spaceSlug: string; slug: string }[];
   /** Include events further out than a week, and Closed Space teasers. */
   full?: boolean;
   /** Leave Closed Spaces out entirely, teasers included (signed-out and not-yet-approved viewers). */
   openOnly?: boolean;
 }
 
-export async function fetchCornersLive(opts: Options = {}): Promise<Map<string, CornerLive>> {
+export async function fetchCornersLive(opts: Options): Promise<Map<string, CornerLive>> {
   const result = new Map<string, CornerLive>();
-  const wanted = opts.only ? CURATED_CORNERS.filter((x) => x.slug === opts.only) : CURATED_CORNERS;
-  for (const x of wanted) result.set(x.slug, emptyLive());
+  const wanted = opts.targets;
+  const keyOf = (t: { spaceSlug: string; slug: string }) => `${t.spaceSlug}/${t.slug}`;
+  for (const x of wanted) result.set(keyOf(x), emptyLive());
   if (!supabase || wanted.length === 0) return result;
 
   const { data: cornerRows } = await supabase
     .from("corners")
     .select("id, space_slug, slug")
-    .in("slug", wanted.map((x) => x.slug));
+    .in("slug", [...new Set(wanted.map((x) => x.slug))]);
   const cornerSlugById = new Map<number, string>();
   for (const r of cornerRows ?? []) {
-    const curated = curatedFor(r.space_slug as string, r.slug as string);
-    if (!curated || !result.has(curated.slug)) continue;
-    cornerSlugById.set(r.id as number, curated.slug);
+    const key = `${r.space_slug as string}/${r.slug as string}`;
+    if (!result.has(key)) continue;
+    cornerSlugById.set(r.id as number, key);
   }
   if (cornerSlugById.size === 0) return result;
 

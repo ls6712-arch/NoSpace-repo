@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
-import { CoverEmoji } from "../components/corners/CoverEmoji";
 import { PressLink } from "../components/afterhours/PressLink";
 import { Reveal } from "../components/afterhours/Reveal";
 import { MomentTile } from "../components/afterhours/MomentTile";
@@ -18,12 +17,13 @@ import { type Post, postCorner } from "../data/posts";
 import {
   curatedBySlug,
   curatedCategory,
-  curatedInCategory,
   howToStart,
   type CuratedCorner,
 } from "../data/curatedCorners";
 import { cornerGuide } from "../data/cornerGuides";
-import { cornerStyle } from "../lib/categoryStyle";
+import { cornerKey, homeCornersIn } from "../data/homeCorners";
+import { cornerPhoto } from "../lib/cornerPhoto";
+import { cornerSubline } from "../lib/cornerSubline";
 import { fetchCornersLive, thisWeek, type CornerLive, type LiveEvent, type LiveSpace } from "../lib/cornersLive";
 import { formatStarts } from "../lib/dates";
 import { displayStyle } from "../lib/doorList";
@@ -31,7 +31,6 @@ import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
 import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
 import { tieNumbers } from "../lib/typography";
-import { cornerSignal } from "./CornersHome";
 
 /**
  * A single curated Corner (/corners/:slug), open to signed-out and
@@ -108,7 +107,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const result = (await fetchCornersLive({ only: corner.slug, full: !restricted, openOnly: restricted })).get(corner.slug);
+      const result = (await fetchCornersLive({ targets: [corner], full: !restricted, openOnly: restricted })).get(cornerKey(corner));
       if (cancelled || !result) return;
       setLive(result);
       if (!supabase) return;
@@ -190,9 +189,13 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   const steps = howToStart(corner);
   const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
   const prefill = `hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`;
+  // Other Corners in the same group: curated first, then A to Z.
   const more = (() => {
     const cat = curatedCategory(corner);
-    return cat ? curatedInCategory(cat).filter((x) => x.slug !== corner.slug) : [];
+    return (cat ? homeCornersIn(cat) : [])
+      .filter((x) => x.slug !== corner.slug)
+      .sort((a, b) => Number(!!b.curated) - Number(!!a.curated) || a.name.localeCompare(b.name))
+      .slice(0, 12);
   })();
 
   const showMoments = !restricted && posts.length > 0;
@@ -226,15 +229,22 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   }
 
   const buttonClass =
-    "inline-flex min-h-12 items-center justify-center rounded-control bg-[var(--ink)] px-6 text-body font-semibold text-[var(--cat)] disabled:opacity-60";
+    "inline-flex min-h-12 items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)] disabled:opacity-60";
 
   return (
-    <div className="ns-afterhours min-h-viewport" style={cornerStyle(corner.spaceSlug, corner.slug)}>
-      {/* Hero: the next event, or the Corner's cover and a way to start a Space. */}
-      <header className="relative overflow-hidden bg-[var(--cat)] text-[var(--ink)]">
-        <CoverEmoji emoji={corner.emoji} size="hero" className="pointer-events-none absolute right-6 top-6 md:right-16" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background to-transparent" />
-        <div className={`${PAGE_X} relative pb-16 pt-6 md:pb-20`}>
+    <div className="ns-afterhours min-h-viewport">
+      {/* Hero: the Corner's photo, with the next event over it when there is one. */}
+      <header className="relative overflow-hidden bg-surface-muted text-on-media">
+        <ImageWithFallback
+          src={cornerPhoto(corner.spaceSlug, corner.slug, 1600)}
+          alt=""
+          priority
+          width={1200}
+          className="absolute inset-0 size-full"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-scrim-solid/45" aria-hidden="true" />
+        <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
+        <div className={`${PAGE_X} relative pb-10 pt-6 md:pb-14`}>
           <Link to="/corners" className="inline-flex min-h-11 items-center text-small hover:underline">
             ← Back to Corners
           </Link>
@@ -254,11 +264,6 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           ) : (
             <div className="mt-6">
               <h1 className="text-display">{corner.name}</h1>
-              {live && (
-                <PressLink to={user ? "/create-space" : `/login?redirect=${encodeURIComponent("/create-space")}`} className={`${buttonClass} mt-5`}>
-                  Create a Space
-                </PressLink>
-              )}
             </div>
           )}
         </div>
@@ -413,11 +418,18 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
             <SectionTitle id="more-title">More Corners like this</SectionTitle>
             <HorizontalRow name={`corner.${corner.slug}.more`} label="More Corners like this">
               {more.map((x) => (
-                <CornerCard key={x.slug} corner={x} signal={cornerSignal(undefined)} />
+                <CornerCard key={x.slug} corner={x} subline={cornerSubline(x, undefined)} />
               ))}
             </HorizontalRow>
           </section>
         )}
+
+        {/* The one place on the Corners pages that asks for a new Space. */}
+        <section className={SECTION_GAP}>
+          <PressLink to={user ? "/create-space" : `/login?redirect=${encodeURIComponent("/create-space")}`} className={buttonClass}>
+            Create a Space
+          </PressLink>
+        </section>
       </div>
 
       <MomentDetail
