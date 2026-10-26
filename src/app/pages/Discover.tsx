@@ -71,7 +71,9 @@ const HOUR = 3_600_000;
  * SpacesBrowser) — host-created communities, unrelated to the old
  * Category-browsing "Spaces" this same tab id used to mean. */
 const DISCOVER_TABS = [
-  { id: "corners", label: "Corners", icon: Compass, hidden: false },
+  // "Corners" is not a tab here: it is a link to the Corners page (/corners). This id is only the
+  // default view, the door list, shown when no other tab is open.
+  { id: "corners", label: "Corners", icon: Compass, hidden: true },
   { id: "spaces", label: "Spaces", icon: LayoutGrid, hidden: false },
   { id: "people", label: "People", icon: UserRound, hidden: false },
   { id: "marketplace", label: "Marketplace", icon: ShoppingBag, hidden: !marketplaceEnabled },
@@ -478,7 +480,12 @@ export function Discover() {
               padding) instead of overflowing the screen or wrapping into a
               second, layout-shifting row. */}
           <div {...tabsRow} className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
-            <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
+            <div className="inline-flex w-max items-center gap-6">
+              <PressLink to="/corners" className={`flex shrink-0 items-center gap-1.5 ${tabLabelClass(false)}`}>
+                <Compass className="size-3.5" strokeWidth={1.8} />
+                Corners
+              </PressLink>
+              <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
               {VISIBLE_DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
                 const active = tab === id;
                 return (
@@ -495,6 +502,7 @@ export function Discover() {
                   </button>
                 );
               })}
+              </div>
             </div>
           </div>
 
@@ -507,11 +515,6 @@ export function Discover() {
               {/* Ideas, not search results: hidden while a search is open. */}
               {!query.trim() && (
                 <>
-                  <div className="flex justify-end">
-                    <PressLink to="/corners" className="inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
-                      Corners
-                    </PressLink>
-                  </div>
                   <Masthead />
                   {/* From 1024px the top is a spread: the cover on 7 of 12 columns, the doors on 5. */}
                   <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-10">
