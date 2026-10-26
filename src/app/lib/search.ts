@@ -1,3 +1,4 @@
+import { cornerPath } from "./cornerPath";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { hobbies, subHobbyLabel } from "../data/hobbies";
@@ -117,7 +118,7 @@ export function useUnifiedSearchIndex(query: string) {
             key: `corner-${hobbySlug}-${corner.slug}`,
             label: corner.name,
             sub: "",
-            to: `/corner/${corner.slug}`,
+            to: cornerPath(hobbySlug, corner.slug),
           });
         }
       }
@@ -130,7 +131,7 @@ export function useUnifiedSearchIndex(query: string) {
           key: `pursuit-${pursuit.key}`,
           label: pursuit.title,
           sub: [pursuit.creator, pursuitCorner(pursuit)].filter(Boolean).join(" · "),
-          to: pursuit.subHobby ? `/corner/${pursuit.subHobby}` : "/discover",
+          to: pursuit.subHobby ? cornerPath(undefined, pursuit.subHobby) : "/discover",
         });
       }
     }

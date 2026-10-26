@@ -1,3 +1,4 @@
+import { cornerPath } from "../lib/cornerPath";
 import { useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router";
 import { hobbies, titleCaseSlug } from "../data/hobbies";
@@ -96,7 +97,7 @@ export function CategoryPage() {
             <li key={`${c.spaceSlug}-${c.cornerSlug}`} style={cornerStyle(c.spaceSlug, c.cornerSlug)}>
               <Reveal index={Math.min(i, 11)}>
                 <PressLink
-                  to={`/corner/${c.cornerSlug}`}
+                  to={cornerPath(c.spaceSlug, c.cornerSlug)}
                   aria-label={`Browse the ${c.name} Corner`}
                   className="group block min-h-14 border-t border-border py-4"
                 >

@@ -1,3 +1,4 @@
+import { cornerPath } from "../lib/cornerPath";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
@@ -258,7 +259,7 @@ function AllCornersBrowser({ query }: { query: string }) {
         <li key={`${c.spaceSlug}-${c.slug}`} style={cornerStyle(c.spaceSlug, c.slug)}>
           <Reveal index={Math.min(i, 11)}>
             <PressLink
-              to={`/corner/${c.slug}`}
+              to={cornerPath(c.spaceSlug, c.slug)}
               aria-label={`Browse the ${c.name} Corner`}
               className="group flex min-h-14 items-center justify-between gap-4 border-t border-border py-3"
             >

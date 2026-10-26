@@ -1,3 +1,4 @@
+import { cornerPath } from "../../lib/cornerPath";
 import { Link } from "react-router";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { GeneratedArt } from "../GeneratedArt";
@@ -16,7 +17,7 @@ import { SECTION_GAP } from "../../lib/pageGrid";
  * public one; with none, the category colour fills the frame.
  */
 export function CoverStory({ card, photo, fading }: { card: MoodCard; photo: Post | null; fading: boolean }) {
-  const to = `/corner/${card.cornerSlug}`;
+  const to = cornerPath(card.spaceSlug, card.cornerSlug);
   const sticker = (
     <span
       className={`door-wobble absolute flex size-[92px] items-center justify-center rounded-full bg-[var(--accent)] text-center text-[var(--accent-foreground)] ${photo ? "right-4 top-4" : "bottom-4 right-4"}`}
