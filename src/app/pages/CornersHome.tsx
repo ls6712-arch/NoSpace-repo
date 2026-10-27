@@ -18,7 +18,10 @@ import {
   type CornerSetting,
   type CuratedCorner,
 } from "../data/curatedCorners";
+import { cornerGuide } from "../data/cornerGuides";
 import { cornerKey, homeCornersIn, type HomeCorner } from "../data/homeCorners";
+import { categoryStyle } from "../lib/categoryStyle";
+import { formatStarts } from "../lib/dates";
 import { MOODS, type MoodId } from "../data/moods";
 import { postCorner } from "../data/posts";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
@@ -162,6 +165,9 @@ export function CornersHome() {
     corners: homeCornersIn(cat.slug).filter((c) => matches(c, picker)).sort(byRow(latest)),
   })).filter((r) => r.corners.length > 0);
 
+  const heroAbout = hero ? cornerGuide(hero.spaceSlug, hero.slug)?.about : undefined;
+  const heroNext = hero ? thisWeek(live?.get(cornerKey(hero))?.events ?? [])[0] : undefined;
+
   const picked = picker.duration !== null || picker.mood !== null || picker.setting !== null;
   const logTo = hero
     ? `/create?hobby=${encodeURIComponent(hero.spaceSlug)}&sub=${encodeURIComponent(hero.slug)}`
@@ -187,6 +193,13 @@ export function CornersHome() {
                 {hero.name}
               </h1>
               <p className="text-body text-on-media/90">{cornerMeta(hero)}</p>
+              {heroAbout && <p className="max-w-xl text-body text-on-media/90 max-md:hidden">{heroAbout}</p>}
+              {heroNext && (
+                <p className="text-small font-semibold text-on-media">
+                  {heroNext.title}
+                  <span className="font-normal text-on-media/90">{` · ${formatStarts(heroNext.startsAt, { timeZone: heroNext.timezone })}`}</span>
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap gap-3">
                 <PressLink
                   to={`/corners/${hero.slug}`}
@@ -233,7 +246,8 @@ export function CornersHome() {
         rows.map(({ cat, corners }) => (
           <section key={cat.slug} className={SECTION_GAP} aria-labelledby={`row-${cat.slug}`}>
             <div className="mb-3 flex items-baseline justify-between gap-4">
-              <h2 id={`row-${cat.slug}`} className="text-title font-semibold">
+              <h2 id={`row-${cat.slug}`} className="flex items-center gap-2.5 text-title font-semibold" style={categoryStyle(cat.slug)}>
+                <span className="size-2.5 shrink-0 rounded-full bg-[var(--cat)]" aria-hidden="true" />
                 {cat.name}
               </h2>
               <Link to={`/browse/${cat.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
