@@ -164,6 +164,47 @@ const PHOTO: Record<string, string> = {
   fragrance: "photo-1541643600914-78b084683601",
   puzzles: "photo-1611996575749-79a3a250f948",
   "language-learning": "photo-1546410531-bb4caa6b424d",
+
+  // Added with the Corners home: Corners that had no photo of their own. Credits below.
+  boxing: "photo-1731955138970-fc88fd48b80f",
+  skateboarding: "photo-1659462247462-2d4dd84680aa",
+  kayaking: "photo-1746901292452-0cfc287a411d",
+  surfing: "photo-1761249571329-69d623df6fae",
+  "wild-swimming": "photo-1582617925084-3d1b080dd9ea",
+  "sauna-cold-plunge": "photo-1741601274210-14b7ab1ef99c",
+  "make-a-beat": "photo-1637759898746-283c2d6c24c5",
+  karaoke: "photo-1741594412133-ffd6530482ad",
+  "live-music": "photo-1723743809756-d8576dc3fe59",
+  choir: "photo-1548795835-264877304664",
+  pasta: "photo-1447279506476-3faec8071eee",
+  trivia: "photo-1558210598-89ba75b1724e",
+  improv: "photo-1576724196070-cf259e69503f",
+  volunteering: "photo-1599059813005-11265ba4b4ce",
+  "d-d": "photo-1677248245752-f45092b09e5a",
+};
+
+/**
+ * Who took each photo added with the Corners home, where it lives, and what it
+ * shows. Unsplash License (free, no Unsplash+). Shown as "Photo: {credit} on
+ * Unsplash" under the hero of a single Corner page; `alt` is the image's alt text.
+ * Older entries in PHOTO have no credit on record and show none.
+ */
+export const CREDITS: Record<string, { credit: string; source: string; alt: string }> = {
+  boxing: { credit: "Lisa Marie Theck", source: "https://unsplash.com/photos/VpAp_3AKIIY", alt: "Woman throwing a punch in boxing gloves at a gym" },
+  skateboarding: { credit: "Bobby Thapa", source: "https://unsplash.com/photos/7N1TqEn0aYI", alt: "Skateboarder doing a trick at Venice Beach skate park" },
+  kayaking: { credit: "T (@tanyabarrow)", source: "https://unsplash.com/photos/-zDqIMKa7BA", alt: "People kayaking together on a lake" },
+  surfing: { credit: "Red Zeppelin", source: "https://unsplash.com/photos/w1IKykb2YmQ", alt: "Surfers riding waves at sunset" },
+  "wild-swimming": { credit: "Arisa S.", source: "https://unsplash.com/photos/OiftrDG44JE", alt: "People swimming in a clear natural pool" },
+  "sauna-cold-plunge": { credit: "HUUM", source: "https://unsplash.com/photos/S3DQDLWe_Ps", alt: "Two friends laughing together in a steamy sauna" },
+  "make-a-beat": { credit: "Veikko Venemies", source: "https://unsplash.com/photos/obU1Dubo3vM", alt: "Producer making music at a studio desk" },
+  karaoke: { credit: "Singa Karaoke", source: "https://unsplash.com/photos/4w_8pDze9ys", alt: "Friends in costumes singing karaoke into shared microphones" },
+  "live-music": { credit: "Negley Stockman", source: "https://unsplash.com/photos/aYDgO7Hf0B8", alt: "Crowd with hands raised in front of a concert stage" },
+  choir: { credit: "Joshua Hanson", source: "https://unsplash.com/photos/ZhTYr3YKgqQ", alt: "Group of people singing together in a dim hall" },
+  pasta: { credit: "Jorge Zapata", source: "https://unsplash.com/photos/4nXkhLCrkLo", alt: "Hands rolling fresh pasta dough through a machine" },
+  trivia: { credit: "Victor Clime", source: "https://unsplash.com/photos/0L-IgR1-3fE", alt: "Friends at a pub bar, drinking and talking" },
+  improv: { credit: "Yiran Ding", source: "https://unsplash.com/photos/vtZqNeV_dlA", alt: "Performers on a small blue-lit stage" },
+  volunteering: { credit: "Joel Muniz", source: "https://unsplash.com/photos/3k3l2brxmwQ", alt: "Volunteers sorting canned food donations" },
+  "d-d": { credit: "2H Media", source: "https://unsplash.com/photos/QIlA9IRKY6g", alt: "Two friends rolling dice during a D&D session" },
 };
 
 const SPACE_COVER_HOBBY: Record<string, string> = {
@@ -208,4 +249,14 @@ export function hobbyPhoto(subSlug: string, hobbySlug?: string, width = 600) {
 
 export function hasHobbyPhoto(subSlug: string) {
   return subSlug in PHOTO;
+}
+
+/** Credit, source page and alt text for a Corner's own photo, when one is on record. */
+export function photoCredit(subSlug: string) {
+  return CREDITS[subSlug];
+}
+
+/** Every photo id in PHOTO, with the Corner slug it belongs to (for the one-photo-per-Corner test). */
+export function photoEntries(): [string, string][] {
+  return Object.entries(PHOTO);
 }

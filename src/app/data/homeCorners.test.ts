@@ -4,6 +4,7 @@ import { CORNER_CATEGORIES } from "./cornerCategories";
 import { CURATED_CORNERS } from "./curatedCorners";
 import { homeCornersIn } from "./homeCorners";
 import { cornerPhoto } from "../lib/cornerPhoto";
+import { hasHobbyPhoto } from "./hobbyPhotos";
 
 const all = CORNER_CATEGORIES.flatMap((c) => homeCornersIn(c.slug));
 
@@ -20,8 +21,8 @@ describe("home Corners", () => {
     expect(all.filter((c) => c.curated).map((c) => c.slug).sort()).toEqual(CURATED_CORNERS.map((c) => c.slug).sort());
   });
 
-  it("give every Corner a real photo", () => {
-    const missing = all.filter((c) => !cornerPhoto(c.spaceSlug, c.slug));
+  it("give every Corner a photo of its own, never its Space's cover", () => {
+    const missing = all.filter((c) => !hasHobbyPhoto(c.slug) || !cornerPhoto(c.spaceSlug, c.slug));
     expect(missing.map((c) => `${c.spaceSlug}/${c.slug}`)).toEqual([]);
   });
 });

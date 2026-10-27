@@ -22,7 +22,7 @@ import {
 } from "../data/curatedCorners";
 import { cornerGuide } from "../data/cornerGuides";
 import { cornerKey, homeCornersIn } from "../data/homeCorners";
-import { cornerPhoto } from "../lib/cornerPhoto";
+import { cornerPhoto, cornerPhotoAlt, cornerPhotoCredit } from "../lib/cornerPhoto";
 import { cornerSubline } from "../lib/cornerSubline";
 import { fetchCornersLive, thisWeek, type CornerLive, type LiveEvent, type LiveSpace } from "../lib/cornersLive";
 import { formatStarts } from "../lib/dates";
@@ -188,6 +188,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   const week = live ? thisWeek(events) : [];
   const steps = howToStart(corner);
   const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
+  const photo = cornerPhotoCredit(corner.slug);
   const prefill = `hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`;
   // Other Corners in the same group: curated first, then A to Z.
   const more = (() => {
@@ -237,13 +238,23 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
       <header className="relative overflow-hidden bg-surface-muted text-on-media">
         <ImageWithFallback
           src={cornerPhoto(corner.spaceSlug, corner.slug, 1600)}
-          alt=""
+          alt={cornerPhotoAlt(corner.slug)}
           priority
           width={1200}
           className="absolute inset-0 size-full"
         />
         <div className="pointer-events-none absolute inset-0 bg-scrim-solid/45" aria-hidden="true" />
         <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
+        {photo && (
+          <a
+            href={photo.source}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-0 right-4 inline-flex min-h-11 items-center text-caption text-on-media/90 hover:underline md:right-8"
+          >
+            {`Photo: ${photo.credit} on Unsplash`}
+          </a>
+        )}
         <div className={`${PAGE_X} relative pb-10 pt-6 md:pb-14`}>
           <Link to="/corners" className="inline-flex min-h-11 items-center text-small hover:underline">
             ← Back to Corners
