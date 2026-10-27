@@ -24,6 +24,10 @@ export interface LiveEvent {
   startsAt: string;
   endsAt: string | null;
   timezone: string;
+  /** "in_person", "online" or "both"; null on a teaser. */
+  meets: string | null;
+  neighborhood: string | null;
+  city: string | null;
   /** From a Closed Space: title and time only. */
   teaser: boolean;
 }
@@ -106,7 +110,7 @@ export async function fetchCornersLive(opts: Options): Promise<Map<string, Corne
     const now = new Date();
     let q = supabase
       .from("space_events")
-      .select("id, space_id, title, starts_at, ends_at, timezone")
+      .select("id, space_id, title, starts_at, ends_at, timezone, meets, neighborhood, city")
       .in("space_id", openIds)
       .eq("status", "scheduled")
       .gt("starts_at", now.toISOString())
@@ -122,6 +126,9 @@ export async function fetchCornersLive(opts: Options): Promise<Map<string, Corne
         startsAt: e.starts_at as string,
         endsAt: (e.ends_at as string | null) ?? null,
         timezone: e.timezone as string,
+        meets: (e.meets as string | null) ?? null,
+        neighborhood: (e.neighborhood as string | null) ?? null,
+        city: (e.city as string | null) ?? null,
         teaser: false,
       });
     }
@@ -140,6 +147,9 @@ export async function fetchCornersLive(opts: Options): Promise<Map<string, Corne
           startsAt: e.starts_at,
           endsAt: null,
           timezone: e.timezone,
+          meets: null,
+          neighborhood: null,
+          city: null,
           teaser: true,
         });
       }
