@@ -43,7 +43,7 @@ import { MoodGrid } from "../components/door/MoodGrid";
 import { StartHere } from "../components/door/StartHere";
 import { SeenTonight } from "../components/door/SeenTonight";
 import { Rooms } from "../components/door/Rooms";
-import { moodCards, type MoodChipId } from "../data/moodCards";
+import { moodCards, MOOD_LINE, type MoodChipId } from "../data/moodCards";
 import { doorFor, readLastMood, writeLastMood } from "../lib/doorList";
 import { plural } from "../lib/plural";
 
@@ -528,7 +528,7 @@ export function Discover() {
                     }}
                   />
                   </div>
-                  <StartHere ref={startRef} cards={startCards} fading={shownMood !== mood} />
+                  <StartHere ref={startRef} cards={startCards} moodLine={MOOD_LINE[shownMood]} fading={shownMood !== mood} />
                   <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
                   <Rooms />
                 </>

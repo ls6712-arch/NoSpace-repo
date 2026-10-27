@@ -48,6 +48,22 @@ export function moodCards(id: MoodChipId): MoodCard[] {
   return spreadByKey(rounds, keyOf).slice(0, MAX_CARDS);
 }
 
+/**
+ * The line over the tickets once a chip is picked, so the row below visibly
+ * answers the chip. In docs/glossary.md under "Moods".
+ */
+export const MOOD_LINE: Record<MoodChipId, string> = {
+  quick: "Things you can do in 15 minutes",
+  make: "Things to make tonight",
+  move: "Ways to move tonight",
+  people: "Things to do with other people",
+  alone: "Things to do on your own",
+  outside: "Things to do outside",
+  learn: "Things to learn tonight",
+  play: "Games to play tonight",
+  haveIt: "Things to start with what you have",
+};
+
 /** The chips, in order. Labels are in docs/glossary.md under "Moods". */
 export const MOOD_CHIPS: { id: MoodChipId; label: string }[] = [
   { id: "quick", label: "15 minutes" },

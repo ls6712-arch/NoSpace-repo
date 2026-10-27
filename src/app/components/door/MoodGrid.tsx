@@ -1,6 +1,5 @@
 import { motion } from "motion/react";
 import { MOOD_CHIPS, type MoodChipId } from "../../data/moodCards";
-import { displayStyle } from "../../lib/doorList";
 import { SECTION_GAP } from "../../lib/pageGrid";
 import { PRESS_SCALE, springs } from "../../lib/springs";
 
@@ -20,10 +19,10 @@ export function MoodGrid({
 }) {
   return (
     <section className={`${SECTION_GAP} lg:col-span-5`} aria-labelledby="mood-title">
-      <h2 id="mood-title" style={displayStyle(40, { lineHeight: 1.05 })}>
+      <h2 id="mood-title" className="text-lead lg:text-title">
         What are you in the mood for?
       </h2>
-      <p className="mb-4 mt-2 text-body text-muted-foreground">{greeting}</p>
+      <p className="mb-3 mt-1 text-body text-muted-foreground">{greeting}</p>
       <ul className="grid grid-cols-2 gap-2 lg:grid-cols-3" aria-label="Moods">
         {MOOD_CHIPS.map((m, i) => {
           const on = m.id === value;

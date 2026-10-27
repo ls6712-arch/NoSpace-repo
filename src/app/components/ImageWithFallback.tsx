@@ -26,6 +26,8 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "loading" | "widt
   fallback?: ReactNode;
   /** Called once when the photo (and its original, if a resized copy failed) can't load. */
   onFail?: () => void;
+  /** While the photo loads, and if it can't, fill the box with the surrounding `--cat` colour (set on an ancestor) instead of grey. */
+  tint?: boolean;
 };
 
 /**
@@ -47,6 +49,7 @@ export function ImageWithFallback({
   width,
   fallback,
   onFail,
+  tint = false,
   style,
   onLoad,
   onError,
@@ -91,7 +94,7 @@ export function ImageWithFallback({
       <span
         // Decorative (alt="") stays hidden from screen readers when it fails too; a described photo keeps its description.
         {...(alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}
-        className={cn("relative flex items-center justify-center overflow-hidden bg-surface-muted text-muted-foreground", className)}
+        className={cn("relative flex items-center justify-center overflow-hidden text-muted-foreground", tint ? "bg-[var(--cat)] text-[var(--ink)]" : "bg-surface-muted", className)}
         style={boxStyle}
       >
         {fallback ?? <ImageOff className="size-6" strokeWidth={1.6} aria-hidden="true" />}
@@ -101,7 +104,7 @@ export function ImageWithFallback({
 
   const url = stage === "resized" ? resized : original;
   return (
-    <span className={cn("relative block overflow-hidden bg-surface-muted", className)} style={boxStyle}>
+    <span className={cn("relative block overflow-hidden", tint ? "bg-[var(--cat)]" : "bg-surface-muted", className)} style={boxStyle}>
       <img
         {...rest}
         ref={setImg}

@@ -2,6 +2,7 @@ import { PressLink } from "../afterhours/PressLink";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { cornerPath } from "../../lib/cornerPath";
 import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
+import { cornerStyle } from "../../lib/categoryStyle";
 import { cornerGuide } from "../../data/cornerGuides";
 
 /**
@@ -21,15 +22,16 @@ export function CornerCard({
 }) {
   const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
   return (
-    <li className="w-[70vw] shrink-0 snap-start md:w-[240px]">
+    <li className="w-[70vw] shrink-0 snap-start md:w-[240px]" style={cornerStyle(corner.spaceSlug, corner.slug)}>
       <PressLink
         to={cornerPath(corner.spaceSlug, corner.slug)}
-        className="group relative block aspect-[4/5] overflow-hidden rounded-card bg-surface-muted text-on-media shadow-card transition-shadow duration-base hover:shadow-overlay focus-visible:shadow-overlay"
+        className="group relative block aspect-[4/5] overflow-hidden rounded-card bg-[var(--cat)] text-on-media shadow-card transition-shadow duration-base hover:shadow-overlay focus-visible:shadow-overlay"
       >
         <ImageWithFallback
           src={cornerPhoto(corner.spaceSlug, corner.slug, 600)}
           alt={cornerPhotoAlt(corner.slug)}
           width={240}
+          tint
           className="absolute inset-0 size-full"
         />
         <span className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />

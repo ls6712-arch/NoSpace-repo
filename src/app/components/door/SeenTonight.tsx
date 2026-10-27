@@ -7,7 +7,7 @@ import { postCorner, type Post } from "../../data/posts";
 import { categoryOfCorner } from "../../data/cornerCategories";
 import { catStyle, categoryColor } from "../../lib/categoryStyle";
 import { formatWhen } from "../../lib/dates";
-import { displayStyle } from "../../lib/doorList";
+import { momentAlt, momentCaption } from "../../lib/momentCaption";
 import { SECTION_GAP } from "../../lib/pageGrid";
 import { PRESS_SCALE, springs } from "../../lib/springs";
 import { scrollBehavior } from "../../lib/scrollToElement";
@@ -20,7 +20,7 @@ export function seenTonight(posts: readonly Post[], now: number = Date.now()): {
     .filter((p) => p.visibility === "public" && now - p.createdAt < 7 * DAYS)
     .sort((a, b) => b.createdAt - a.createdAt);
   const photos = recent.filter((p) => p.type === "photo" && hasRealMedia(p)).slice(0, 3);
-  const quote = recent.find((p) => !hasRealMedia(p) && p.caption.trim().length > 0) ?? null;
+  const quote = recent.find((p) => !hasRealMedia(p) && momentCaption(p).length > 0) ?? null;
   return { photos, quote };
 }
 
@@ -37,12 +37,14 @@ function Photo({ post, className, onOpen }: { post: Post; className: string; onO
       onClick={onOpen}
       whileTap={{ scale: PRESS_SCALE }}
       transition={springs.press}
-      className={`relative block w-full overflow-hidden rounded-card bg-surface-muted text-left ${className}`}
+      className={`relative block w-full overflow-hidden rounded-card bg-[var(--cat)] text-left ${className}`}
+      style={catStyle(categoryColor(categoryOfCorner(post.hobbySlug, postCorner(post) ?? "")?.slug ?? ""))}
     >
       <ImageWithFallback
         src={post.mediaUrls?.[0] ?? post.media}
-        alt=""
+        alt={momentAlt(post, cornerLabel(post))}
         width={640}
+        tint
         className="absolute inset-0 size-full"
         fallback={<GeneratedArt hobbySlug={post.hobbySlug} seed={post.id} className="size-full" />}
       />
@@ -76,7 +78,7 @@ export function SeenTonight({ posts, onOpen }: { posts: Post[]; onOpen: (post: P
   return (
     <section className={SECTION_GAP} aria-labelledby="seen-title">
       <div className="mb-4 flex items-baseline justify-between gap-4 border-t-2 border-foreground pt-3">
-        <h2 id="seen-title" style={displayStyle(34, { lineHeight: 1.05 })}>
+        <h2 id="seen-title" className="text-title">
           Seen tonight
         </h2>
         <a
@@ -115,8 +117,8 @@ export function SeenTonight({ posts, onOpen }: { posts: Post[]; onOpen: (post: P
             style={catStyle(categoryColor(cat?.slug ?? ""))}
             className="flex min-h-[200px] flex-col justify-between gap-6 rounded-card bg-[var(--cat)] p-5 text-left text-[var(--ink)]"
           >
-            <span style={displayStyle(28, { lineHeight: 1.1 })} className="line-clamp-6">
-              {`“${quote.caption.trim()}”`}
+            <span className="line-clamp-6 text-title">
+              {`“${momentCaption(quote)}”`}
             </span>
             <span className="text-caption font-semibold">
               {`${quote.creator}, in ${cat?.name ?? hobbies.find((h) => h.slug === quote.hobbySlug)?.shortName ?? ""}`}

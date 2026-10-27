@@ -66,6 +66,20 @@ Discover's row of chips and cards (approved in visual spec v1.1). A mood names w
 | Play a game | Chip: game and puzzle Corners |
 | Start with what you have | Chip: Corners you can start with what you already have |
 
+Once a chip is picked, this line names it over the row of tickets (under "Start here"), so the row visibly answers the chip. New strings, for approval.
+
+| Chip | Line over the tickets |
+|---|---|
+| 15 minutes | Things you can do in 15 minutes |
+| Make something | Things to make tonight |
+| Move | Ways to move tonight |
+| Be around people | Things to do with other people |
+| Some time to yourself | Things to do on your own |
+| Get outside | Things to do outside |
+| Learn something | Things to learn tonight |
+| Play a game | Games to play tonight |
+| Start with what you have | Things to start with what you have |
+
 ## Hobbies and Spaces
 
 | Term | Meaning |
