@@ -96,6 +96,7 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | N events this week | The line under a Corner’s name on its card when it has events in the next 7 days. Counts only Open Spaces’ events |
 | N Spaces | The line under the name on a card with no events this week but at least one Space |
 | 1 hr · Outdoors | The line under the name on a curated Corner’s card, and on the hero, when it has no events and no Spaces: how long it takes and where. An uncurated Corner with nothing to say shows no line. A card never asks you to start a Space |
+| Photo: {name} on Unsplash | Small credit in a single Corner page hero, linking to the photo on Unsplash. Shown only for photos with a credit on record |
 | Explore {Corner} | The hero button that opens the Corner. Beside it, "Log a Moment" |
 | Any time / Any mood / Anywhere | The three filter chips on the Corners home. Each opens its options; one that is chosen shows the option and fills with the accent. "Anywhere" is the unset state of the third chip |
 | Up to 1 hour / Up to 2 hours / Up to 4 hours | Options under "Any time": Corners that take about that long or less. A Corner with no length on record is left out |

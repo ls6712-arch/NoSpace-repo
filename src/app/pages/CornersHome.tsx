@@ -22,7 +22,7 @@ import { cornerKey, homeCornersIn, type HomeCorner } from "../data/homeCorners";
 import { MOODS, type MoodId } from "../data/moods";
 import { postCorner } from "../data/posts";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
-import { cornerPhoto } from "../lib/cornerPhoto";
+import { cornerPhoto, cornerPhotoAlt } from "../lib/cornerPhoto";
 import { cornerSubline } from "../lib/cornerSubline";
 import { displayStyle } from "../lib/doorList";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
@@ -175,7 +175,7 @@ export function CornersHome() {
           <>
             <ImageWithFallback
               src={cornerPhoto(hero.spaceSlug, hero.slug, 1600)}
-              alt=""
+              alt={cornerPhotoAlt(hero.slug)}
               priority
               width={1200}
               className="absolute inset-0 size-full"
