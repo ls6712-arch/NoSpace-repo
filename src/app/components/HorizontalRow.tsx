@@ -1,11 +1,15 @@
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRowScrollMemory } from "../lib/useHistoryState";
+import { usePrefersReducedMotion } from "../lib/useReducedMotion";
 
 /**
  * A row of cards that scrolls sideways with scroll-snap and no visible
  * scrollbar. It runs to the page edge (16px gutter on a phone, 32px from md)
  * and cards have a fixed width, so the last one is cut off to show there is
- * more. Same frame as Discover's "Start here" row.
+ * more. From md, with a mouse, round arrows appear at each end on hover or
+ * focus and move the row by most of its width; an arrow hides when the row is
+ * already at that end. Touch and trackpads just scroll.
  */
 export function HorizontalRow({
   name,
@@ -18,13 +22,59 @@ export function HorizontalRow({
   children: ReactNode;
 }) {
   const row = useRowScrollMemory(name);
+  const el = useRef<HTMLUListElement | null>(null);
+  const reduced = usePrefersReducedMotion();
+  const [ends, setEnds] = useState({ start: true, end: false });
+
+  const measure = useCallback(() => {
+    const node = el.current;
+    if (!node) return;
+    setEnds({ start: node.scrollLeft <= 2, end: node.scrollLeft >= node.scrollWidth - node.clientWidth - 2 });
+  }, []);
+
+  useEffect(() => {
+    measure();
+    const node = el.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(node);
+    return () => ro.disconnect();
+  }, [measure]);
+
+  const page = (dir: -1 | 1) => {
+    const node = el.current;
+    if (node) node.scrollBy({ left: dir * node.clientWidth * 0.8, behavior: reduced ? "auto" : "smooth" });
+  };
+
+  const arrow =
+    "absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/95 text-foreground shadow-card transition-opacity duration-fast focus-visible:opacity-100 md:flex [@media(hover:none)]:hidden";
+
   return (
-    <ul
-      {...row}
-      aria-label={label}
-      className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:-mx-8 md:gap-4 md:px-8 md:scroll-px-8 [&::-webkit-scrollbar]:hidden"
-    >
-      {children}
-    </ul>
+    <div className="group/row relative -mx-4 md:-mx-8">
+      <ul
+        ref={(node) => {
+          el.current = node;
+          row.ref(node);
+        }}
+        onScroll={() => {
+          row.onScroll();
+          measure();
+        }}
+        aria-label={label}
+        className="flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:scroll-px-8 md:gap-4 md:px-8 [&::-webkit-scrollbar]:hidden"
+      >
+        {children}
+      </ul>
+      {!ends.start && (
+        <button type="button" aria-label="Scroll left" onClick={() => page(-1)} className={`${arrow} left-3 opacity-0 group-hover/row:opacity-100`}>
+          <ChevronLeft className="size-5" aria-hidden="true" />
+        </button>
+      )}
+      {!ends.end && (
+        <button type="button" aria-label="Scroll right" onClick={() => page(1)} className={`${arrow} right-3 opacity-0 group-hover/row:opacity-100`}>
+          <ChevronRight className="size-5" aria-hidden="true" />
+        </button>
+      )}
+    </div>
   );
 }
