@@ -8,7 +8,8 @@ import { cornerGuide } from "../../data/cornerGuides";
 /**
  * A Corner as a photo card, 4:5: its photo fills the card, a dark gradient at
  * the bottom carries the name and one line under it. 240px wide from md, 70% of
- * the screen on a phone, so the next card is always cut off at the edge.
+ * the screen on a phone, so the next card is always cut off at the edge. A `wide` card is landscape and
+ * shows the Corner's description all the time instead of on hover.
  * `subline` is empty when there is nothing to say. With a mouse, hovering or
  * focusing a card also shows what the Corner is, in a line or two, above the
  * name (from cornerGuides.ts; a Corner without one shows nothing extra).
@@ -16,28 +17,32 @@ import { cornerGuide } from "../../data/cornerGuides";
 export function CornerCard({
   corner,
   subline,
+  wide = false,
 }: {
   corner: { spaceSlug: string; slug: string; name: string };
   subline: string;
+  /** Landscape 16:9, 85% of a phone and 400px from md, with what the Corner is always showing. For a row that should not look like the rest. */
+  wide?: boolean;
 }) {
   const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
   return (
-    <li className="w-[70vw] shrink-0 snap-start md:w-[240px]" style={cornerStyle(corner.spaceSlug, corner.slug)}>
+    <li className={`shrink-0 snap-start ${wide ? "w-[85vw] md:w-[400px]" : "w-[70vw] md:w-[240px]"}`} style={cornerStyle(corner.spaceSlug, corner.slug)}>
       <PressLink
         to={cornerPath(corner.spaceSlug, corner.slug)}
-        className="group relative block aspect-[4/5] overflow-hidden rounded-card bg-[var(--cat)] text-on-media shadow-card transition-shadow duration-base hover:shadow-overlay focus-visible:shadow-overlay"
+        className={`group relative block ${wide ? "aspect-[16/9]" : "aspect-[4/5]"} overflow-hidden rounded-card bg-[var(--cat)] text-on-media shadow-card transition-shadow duration-base hover:shadow-overlay focus-visible:shadow-overlay`}
       >
         <ImageWithFallback
           src={cornerPhoto(corner.spaceSlug, corner.slug, 600)}
           alt={cornerPhotoAlt(corner.slug)}
-          width={240}
+          width={wide ? 400 : 240}
           tint
           className="absolute inset-0 size-full"
         />
         <span className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
         {about && <span className="pointer-events-none absolute inset-0 bg-scrim-solid/25 opacity-0 transition-opacity duration-base group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:hidden" aria-hidden="true" />}
         <span className="absolute inset-x-0 bottom-0 flex flex-col gap-0.5 p-4">
-          {about && (
+          {about && wide && <span className="line-clamp-2 text-small text-on-media/90 max-md:hidden">{about}</span>}
+          {about && !wide && (
             <span className="line-clamp-3 max-h-0 overflow-hidden text-small text-on-media/90 opacity-0 transition-[max-height,opacity,margin] duration-base group-hover:mb-1 group-hover:max-h-20 group-hover:opacity-100 group-focus-visible:mb-1 group-focus-visible:max-h-20 group-focus-visible:opacity-100 [@media(hover:none)]:hidden">
               {about}
             </span>

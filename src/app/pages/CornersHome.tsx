@@ -3,8 +3,7 @@ import { Link } from "react-router";
 import { FilterChip } from "../components/FilterChip";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
-import { PressLink } from "../components/afterhours/PressLink";
-import { ImageWithFallback } from "../components/ImageWithFallback";
+import { Billboard, type BillboardSlide } from "../components/corners/Billboard";
 import { EmptyState } from "../components/StateViews";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
@@ -12,22 +11,18 @@ import { CORNER_CATEGORIES } from "../data/cornerCategories";
 import {
   CURATED_CORNERS,
   DURATION_LIMITS,
-  cornerMeta,
   cornerMoods,
   guideMoods,
   type CornerSetting,
-  type CuratedCorner,
 } from "../data/curatedCorners";
-import { cornerGuide } from "../data/cornerGuides";
 import { cornerKey, homeCornersIn, type HomeCorner } from "../data/homeCorners";
 import { categoryStyle } from "../lib/categoryStyle";
-import { formatStarts } from "../lib/dates";
 import { MOODS, type MoodId } from "../data/moods";
 import { postCorner } from "../data/posts";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
-import { cornerPhoto, cornerPhotoAlt } from "../lib/cornerPhoto";
+import { billboardCorners } from "../lib/billboard";
+import { LENSES, MAX_LENS_CORNERS, MIN_LENS_CORNERS, interleaveRows, isWideLens, type LensId } from "../lib/cornerLenses";
 import { cornerSubline } from "../lib/cornerSubline";
-import { displayStyle } from "../lib/doorList";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
 
@@ -40,7 +35,6 @@ import { plural } from "../lib/plural";
  */
 
 const PICKER_KEY = "soosh.corners.picker.v1";
-const WEEK_MS = 7 * 24 * 3_600_000;
 
 type Setting = Exclude<CornerSetting, "anywhere">;
 
@@ -111,16 +105,13 @@ function byRow(latest: Map<string, number>) {
   };
 }
 
-/** The curated Corner with the most events this week; with none, one per week in turn. */
-function heroCorner(live: Map<string, CornerLive>, now = Date.now()): CuratedCorner | null {
-  let best: { x: CuratedCorner; n: number } | null = null;
-  for (const x of CURATED_CORNERS) {
-    const n = thisWeek(live.get(cornerKey(x))?.events ?? [], now).length;
-    if (n > 0 && (!best || n > best.n)) best = { x, n };
-  }
-  if (best) return best.x;
-  const withPhoto = CURATED_CORNERS.filter((x) => cornerPhoto(x.spaceSlug, x.slug));
-  return withPhoto.length ? withPhoto[Math.floor(now / WEEK_MS) % withPhoto.length] : null;
+/** Does a Corner belong in this lens row? Reads the same data the picker does. */
+function inLens(id: LensId, c: HomeCorner, live: Map<string, CornerLive> | null): boolean {
+  if (id === "week") return thisWeek(live?.get(cornerKey(c))?.events ?? []).length > 0;
+  if (id === "hour") return matches(c, { ...NO_PICK, duration: 60 });
+  if (id === "home") return matches(c, { ...NO_PICK, setting: "home" });
+  if (id === "outdoors") return matches(c, { ...NO_PICK, setting: "outdoors" });
+  return matches(c, { ...NO_PICK, mood: id.slice("mood-".length) as MoodId });
 }
 
 export function CornersHome() {
@@ -158,67 +149,45 @@ export function CornersHome() {
     return m;
   }, [publicFeed]);
 
-  const hero = useMemo(() => (live ? heroCorner(live) : null), [live]);
+  const slides = useMemo<BillboardSlide[]>(
+    () =>
+      live
+        ? billboardCorners(live).map((corner) => ({
+            corner,
+            next: thisWeek(live.get(cornerKey(corner))?.events ?? [])[0],
+            logTo: user
+              ? `/create?hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`
+              : `/login?redirect=${encodeURIComponent(`/create?hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`)}`,
+          }))
+        : [],
+    [live, user],
+  );
 
-  const rows = CORNER_CATEGORIES.map((cat) => ({
+  const order = byRow(latest);
+  const groupRows = CORNER_CATEGORIES.map((cat) => ({
+    kind: "group" as const,
     cat,
-    corners: homeCornersIn(cat.slug).filter((c) => matches(c, picker)).sort(byRow(latest)),
+    corners: homeCornersIn(cat.slug).filter((c) => matches(c, picker)).sort(order),
   })).filter((r) => r.corners.length > 0);
-
-  const heroAbout = hero ? cornerGuide(hero.spaceSlug, hero.slug)?.about : undefined;
-  const heroNext = hero ? thisWeek(live?.get(cornerKey(hero))?.events ?? [])[0] : undefined;
+  // A different way into the same Corners, woven in among the groups. A lens with too few Corners is left out.
+  const lensRows = LENSES.map((lens) => ({
+    kind: "lens" as const,
+    lens,
+    corners: everyCorner.filter((c) => matches(c, picker) && inLens(lens.id, c, live)).sort(order).slice(0, MAX_LENS_CORNERS),
+  })).filter((r) => r.corners.length >= MIN_LENS_CORNERS);
+  const rows = interleaveRows(lensRows, groupRows);
+  let lensIndex = -1;
 
   const picked = picker.duration !== null || picker.mood !== null || picker.setting !== null;
-  const logTo = hero
-    ? `/create?hobby=${encodeURIComponent(hero.spaceSlug)}&sub=${encodeURIComponent(hero.slug)}`
-    : "/create";
-
   return (
     <div className={`ns-afterhours min-h-viewport ${PAGE_X} pb-24 pt-4 md:pt-8`}>
-      {/* Hero: a photo card. The space is held while the week's events load, so nothing jumps. */}
-      <div className="relative mb-5 aspect-[4/5] overflow-hidden rounded-card bg-surface-muted text-on-media md:aspect-[16/9]">
-        {hero && (
-          <>
-            <ImageWithFallback
-              src={cornerPhoto(hero.spaceSlug, hero.slug, 1600)}
-              alt={cornerPhotoAlt(hero.slug)}
-              priority
-              width={1200}
-              className="absolute inset-0 size-full"
-            />
-            <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
-            <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-2 p-5 md:p-8">
-              <p className="text-small font-semibold text-on-media/90">Corner of the week</p>
-              <h1 className="text-display" style={displayStyle(40, { lineHeight: 1.05 })}>
-                {hero.name}
-              </h1>
-              <p className="text-body text-on-media/90">{cornerMeta(hero)}</p>
-              {heroAbout && <p className="max-w-xl text-body text-on-media/90 max-md:hidden">{heroAbout}</p>}
-              {heroNext && (
-                <p className="text-small font-semibold text-on-media">
-                  {heroNext.title}
-                  <span className="font-normal text-on-media/90">{` · ${formatStarts(heroNext.startsAt, { timeZone: heroNext.timezone })}`}</span>
-                </p>
-              )}
-              <div className="mt-2 flex flex-wrap gap-3">
-                <PressLink
-                  to={`/corners/${hero.slug}`}
-                  className="inline-flex min-h-12 items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)]"
-                >
-                  {`Explore ${hero.name}`}
-                </PressLink>
-                <PressLink
-                  to={user ? logTo : `/login?redirect=${encodeURIComponent(logTo)}`}
-                  className="inline-flex min-h-12 items-center justify-center rounded-control border border-on-media/70 px-6 text-body font-semibold text-on-media"
-                >
-                  Log a Moment
-                </PressLink>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-      {!hero && <h1 className="sr-only">Corners</h1>}
+      {/* The billboard. The space is held while the week's events load, so nothing jumps. */}
+      {slides.length > 0 ? (
+        <Billboard slides={slides} />
+      ) : (
+        <div className="mb-5 aspect-[4/5] rounded-card bg-surface-muted md:aspect-[21/9]" aria-hidden="true" />
+      )}
+      <h1 className="sr-only">Corners</h1>
 
       {/* One compact row of three filters. */}
       <section className={`${SECTION_GAP} -mx-4 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`} aria-label="Choose what fits">
@@ -243,24 +212,43 @@ export function CornersHome() {
           action={picked ? { label: "Clear choices", onClick: () => update(NO_PICK) } : undefined}
         />
       ) : (
-        rows.map(({ cat, corners }) => (
-          <section key={cat.slug} className={SECTION_GAP} aria-labelledby={`row-${cat.slug}`}>
-            <div className="mb-3 flex items-baseline justify-between gap-4">
-              <h2 id={`row-${cat.slug}`} className="flex items-center gap-2.5 text-title font-semibold" style={categoryStyle(cat.slug)}>
-                <span className="size-2.5 shrink-0 rounded-full bg-[var(--cat)]" aria-hidden="true" />
-                {cat.name}
-              </h2>
-              <Link to={`/browse/${cat.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
-                See all
-              </Link>
-            </div>
-            <HorizontalRow name={`corners.row.${cat.slug}`} label={cat.name}>
-              {corners.map((c) => (
-                <CornerCard key={cornerKey(c)} corner={c} subline={cornerSubline(c, live?.get(cornerKey(c)))} />
-              ))}
-            </HorizontalRow>
-          </section>
-        ))
+        rows.map((row) => {
+          if (row.kind === "lens") {
+            lensIndex += 1;
+            const wide = isWideLens(lensIndex);
+            return (
+              <section key={row.lens.id} className={SECTION_GAP} aria-labelledby={`row-${row.lens.id}`}>
+                <h2 id={`row-${row.lens.id}`} className="mb-3 text-title font-semibold">
+                  {row.lens.title}
+                </h2>
+                <HorizontalRow name={`corners.row.${row.lens.id}`} label={row.lens.title}>
+                  {row.corners.map((c) => (
+                    <CornerCard key={cornerKey(c)} corner={c} wide={wide} subline={cornerSubline(c, live?.get(cornerKey(c)))} />
+                  ))}
+                </HorizontalRow>
+              </section>
+            );
+          }
+          const { cat, corners } = row;
+          return (
+            <section key={cat.slug} className={SECTION_GAP} aria-labelledby={`row-${cat.slug}`}>
+              <div className="mb-3 flex items-baseline justify-between gap-4">
+                <h2 id={`row-${cat.slug}`} className="flex items-center gap-2.5 text-title font-semibold" style={categoryStyle(cat.slug)}>
+                  <span className="size-2.5 shrink-0 rounded-full bg-[var(--cat)]" aria-hidden="true" />
+                  {cat.name}
+                </h2>
+                <Link to={`/browse/${cat.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+                  See all
+                </Link>
+              </div>
+              <HorizontalRow name={`corners.row.${cat.slug}`} label={cat.name}>
+                {corners.map((c) => (
+                  <CornerCard key={cornerKey(c)} corner={c} subline={cornerSubline(c, live?.get(cornerKey(c)))} />
+                ))}
+              </HorizontalRow>
+            </section>
+          );
+        })
       )}
     </div>
   );

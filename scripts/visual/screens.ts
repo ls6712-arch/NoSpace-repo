@@ -14,6 +14,7 @@ export const SCREENS: Screen[] = [
   { name: "moment-multi-photo", route: "/moment/91" },
   { name: "studio-cover", route: "/u/maya/studio" },
   { name: "discover", route: "/discover" },
+  { name: "corners", route: "/corners" },
   { name: "log", route: "/create" },
   { name: "create-pursuit", route: "/pursuits/new" },
   { name: "messages", route: "/messages" },

@@ -106,7 +106,11 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Term | Meaning |
 |---|---|
 | Corners | Link at the start of Discover’s tab row that opens the Corners page |
-| Corner of the week | Small caption on the Corners home hero: the curated Corner with the most events this week, or with none one curated Corner per week in turn |
+| Corner of the week | Small caption on the first slide of the Corners home billboard: the curated Corner with the most events this week, or with none one curated Corner per week in turn. The other slides have no caption |
+| Featured Corners | Accessible name of the billboard (a carousel); not shown on screen. New, for approval |
+| Show {Corner} | Accessible name of a billboard dot: shows that slide; not shown as text. New, for approval |
+| {n} of {total} | Accessible name of a billboard slide; not shown as text. New, for approval |
+| Row headings on the Corners home | Between the groups of Corners, rows that reuse existing labels as headings: Happening this week, the eight mood chips (Make something, Be around people, Move, Learn something, Get outside, Some time to yourself, Play a game, Start with what you have), Up to 1 hour, At home and Outdoors. A row shows only with 3 or more Corners. No new wording |
 | N events this week | The line under a Corner’s name on its card when it has events in the next 7 days. Counts only Open Spaces’ events |
 | N Spaces | The line under the name on a card with no events this week but at least one Space |
 | 1 hr · Outdoors | The line under the name on a curated Corner’s card, and on the hero, when it has no events and no Spaces: how long it takes and where. An uncurated Corner with nothing to say shows no line. A card never asks you to start a Space |
