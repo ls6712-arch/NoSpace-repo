@@ -199,7 +199,7 @@
   --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   /* Text on a photo, over --scrim-card. Same in both themes. */
   --photo-text: #F4EFE8;
-  --photo-text-muted: #A39A90;
+  --photo-text-muted: #D9D1C7;
   --scrim-card: linear-gradient(to top, rgba(14, 13, 12, 0.85), transparent 55%);
 
   /* ── GeneratedArt.tsx illustration palette ───────────────────────────────
@@ -1292,7 +1292,6 @@
 
   .ns-site-header {
     background-color: color-mix(in srgb, var(--void) 86%, transparent);
-    background-image: linear-gradient(180deg, color-mix(in srgb, var(--violet-electric) 7%, transparent), transparent 70%);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
@@ -1623,40 +1622,39 @@ summary:focus-visible,
    heading elsewhere is never given a sans weight it was not drawn for.
    Nothing here is italic, monospace or uppercase, and nothing is under 12px. */
 .ns-afterhours {
+  /* Six sizes: 12 caption, 14 small (meta), 16 body, 20 lead, 28 title, and display.
+     Weights: 400 for body and meta, 600 for labels and buttons (explicit
+     font-semibold), 800 for the display face (display, title, lead). */
   --text-display: 2.25rem;
   --text-display--line-height: 1;
   --text-display--letter-spacing: -0.02em;
   --text-display--font-weight: 800;
-  --text-title: 1.5rem;
+  --text-title: 1.75rem;
   --text-title--line-height: 1.15;
   --text-title--letter-spacing: -0.01em;
-  --text-title--font-weight: 700;
-  --text-lead: 1.125rem;
+  --text-title--font-weight: 800;
+  --text-lead: 1.25rem;
   --text-lead--line-height: 1.2;
   --text-lead--letter-spacing: -0.01em;
-  --text-lead--font-weight: 700;
-  --text-body: 0.9375rem;
+  --text-lead--font-weight: 800;
+  --text-body: 1rem;
   --text-body--line-height: 1.5;
   --text-body--letter-spacing: 0;
   --text-body--font-weight: 400;
   --text-small: 0.875rem;
   --text-small--line-height: 1.4;
   --text-small--letter-spacing: 0;
-  --text-small--font-weight: 500;
+  --text-small--font-weight: 400;
   --text-caption: 0.75rem;
   --text-caption--line-height: 1.3;
   --text-caption--letter-spacing: 0.01em;
-  --text-caption--font-weight: 600;
+  --text-caption--font-weight: 400;
   font-style: normal;
 }
 
 @media (min-width: 64rem) {
   .ns-afterhours {
     --text-display: 3.5rem;
-    --text-title: 1.75rem;
-    --text-lead: 1.25rem;
-    --text-body: 1rem;
-    --text-caption: 0.8125rem;
   }
 }
 
@@ -1669,11 +1667,11 @@ summary:focus-visible,
    so an explicit font-semibold (and every other utility) still wins. */
 @layer base {
   .ns-afterhours .text-display { font-weight: 800; letter-spacing: -0.02em; }
-  .ns-afterhours .text-title { font-weight: 700; letter-spacing: -0.01em; }
-  .ns-afterhours .text-lead { font-weight: 700; letter-spacing: -0.01em; }
+  .ns-afterhours .text-title { font-weight: 800; letter-spacing: -0.01em; }
+  .ns-afterhours .text-lead { font-weight: 800; letter-spacing: -0.01em; }
   .ns-afterhours .text-body { font-weight: 400; }
-  .ns-afterhours .text-small { font-weight: 500; }
-  .ns-afterhours .text-caption { font-weight: 600; letter-spacing: 0.01em; }
+  .ns-afterhours .text-small { font-weight: 400; }
+  .ns-afterhours .text-caption { font-weight: 400; letter-spacing: 0.01em; }
 }
 
 /* A form field stays 16px on a phone even here: below that, iOS zooms the page

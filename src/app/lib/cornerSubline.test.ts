@@ -6,7 +6,7 @@ import type { CornerLive, LiveEvent, LiveSpace } from "./cornersLive";
 const running = homeCornersIn("running-fitness").find((c) => c.slug === "running")!;
 const padel = homeCornersIn("sports-martial-arts").find((c) => c.slug === "padel")!;
 const space = { id: "s1" } as LiveSpace;
-const soon = (hours: number): LiveEvent => ({ id: 1, spaceId: "s1", title: "t", startsAt: new Date(Date.now() + hours * 3_600_000).toISOString(), endsAt: null, timezone: "UTC", teaser: false });
+const soon = (hours: number): LiveEvent => ({ id: 1, spaceId: "s1", title: "t", startsAt: new Date(Date.now() + hours * 3_600_000).toISOString(), endsAt: null, timezone: "UTC", meets: null, neighborhood: null, city: null, teaser: false });
 
 describe("cornerSubline", () => {
   it("prefers events this week", () => {

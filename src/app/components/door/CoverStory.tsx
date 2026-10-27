@@ -1,72 +1,103 @@
 import { cornerPath } from "../../lib/cornerPath";
-import { Link } from "react-router";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { GeneratedArt } from "../GeneratedArt";
 import { PressLink } from "../afterhours/PressLink";
+import { GoingButton, TicketFrame, eventTime, spaceAndPlace, ticketPath } from "./EventParts";
 import type { Post } from "../../data/posts";
 import type { MoodCard } from "../../data/moodCards";
 import { cornerStyle } from "../../lib/categoryStyle";
-import { displayStyle } from "../../lib/doorList";
+import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
+import type { EventTicket } from "../../lib/eventTicket";
+import { momentAlt } from "../../lib/momentCaption";
 import { tieNumbers } from "../../lib/typography";
-import { SECTION_GAP } from "../../lib/pageGrid";
 
 /**
- * The cover story: the top ticket with a public photo, shown big. A 4:5 photo with the Corner and
- * the step over a bottom scrim and the "Admit one" sticker top right. The photo
- * is the newest public Moment in that Corner from someone you follow, else any
- * public one; with none, the category colour fills the frame.
+ * The cover story: the top card, shown big over a photo with the text on a
+ * bottom scrim. The photo is the newest public Moment in that Corner from
+ * someone you follow, else any public one; with none, the Corner's own photo
+ * (hobbyPhotos.ts). Never a flat colour block.
+ *
+ * With an upcoming event in an Open Space it is a ticket to that event: the
+ * event, its Space, time and place, "I’m going", and the "Admit one" sticker;
+ * tapping the card or the sticker opens it. With none it is a plain "How to
+ * start" card, with no sticker, that links to the Corner.
  */
-export function CoverStory({ card, photo, fading }: { card: MoodCard; photo: Post | null; fading: boolean }) {
-  const to = cornerPath(card.spaceSlug, card.cornerSlug);
-  const sticker = (
-    <span
-      className={`door-wobble absolute flex size-[92px] items-center justify-center rounded-full bg-[var(--accent)] text-center text-[var(--accent-foreground)] ${photo ? "right-4 top-4" : "bottom-4 right-4"}`}
-      style={displayStyle(18, { lineHeight: 1 })}
-      aria-hidden="true"
-    >
-      Admit one
-    </span>
+export function CoverStory({
+  card,
+  photo,
+  ticket,
+  going,
+  busy,
+  onGoing,
+  fading,
+}: {
+  card: MoodCard;
+  photo: Post | null;
+  ticket: EventTicket | null;
+  going: boolean;
+  busy: boolean;
+  onGoing: () => void;
+  fading: boolean;
+}) {
+  const src = photo ? (photo.mediaUrls?.[0] ?? photo.media) : cornerPhoto(card.spaceSlug, card.cornerSlug, 1200);
+  const alt = photo ? momentAlt(photo, card.label) : cornerPhotoAlt(card.cornerSlug) || card.label;
+  const frame = `relative block overflow-hidden rounded-card bg-[var(--cat)] text-[var(--photo-text)] ${ticket ? "aspect-[4/3] sm:aspect-[16/10]" : "aspect-[16/10]"}`;
+  const art = (
+    <>
+      <ImageWithFallback
+        src={src}
+        alt={alt}
+        width={photo ? 720 : 1200}
+        priority
+        tint
+        className="absolute inset-0 size-full"
+        fallback={photo ? <GeneratedArt hobbySlug={photo.hobbySlug} seed={photo.id} className="size-full" /> : undefined}
+      />
+      <div className="absolute inset-0 bg-[image:var(--scrim-card)]" aria-hidden="true" />
+      {/* A second, stronger scrim under the text: a two-line title puts the kicker well up the photo. */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-full"
+        style={{ backgroundImage: "linear-gradient(to top, color-mix(in srgb, var(--ink) 92%, transparent), color-mix(in srgb, var(--ink) 80%, transparent) 65%, transparent)" }}
+        aria-hidden="true"
+      />
+    </>
   );
   return (
     <section
-      className={`${SECTION_GAP} transition-opacity duration-fast lg:col-span-7 ${fading ? "opacity-0" : "opacity-100"}`}
+      className={`mb-1 transition-opacity duration-fast md:mb-12 lg:col-span-7 ${fading ? "opacity-0" : "opacity-100"}`}
       aria-label="Cover story"
       style={cornerStyle(card.spaceSlug, card.cornerSlug)}
     >
-      {photo ? (
-        <PressLink to={to} className="relative block aspect-[4/5] overflow-hidden rounded-card bg-surface-muted lg:max-h-[80vh] lg:w-full">
-          <ImageWithFallback
-            src={photo.mediaUrls?.[0] ?? photo.media}
-            alt=""
-            width={720}
-            priority
-            className="absolute inset-0 size-full"
-            fallback={<GeneratedArt hobbySlug={photo.hobbySlug} seed={photo.id} className="size-full" />}
-          />
-          <div className="absolute inset-0 bg-[image:var(--scrim-card)]" aria-hidden="true" />
-          <div className="absolute inset-x-5 bottom-5 flex flex-col gap-2">
-            <span className="text-caption font-semibold text-[var(--cat)]">{`Cover story · ${card.label}`}</span>
-            <span style={displayStyle(44, { lineHeight: 1.02 })} className="text-[var(--photo-text)]">
-              {tieNumbers(card.guide.step)}
+      {ticket ? (
+        <TicketFrame to={ticketPath(ticket)} label={`${ticket.event.title}, ${ticket.space.name}`} className={frame}>
+          {art}
+          <div className="pointer-events-none absolute inset-x-5 bottom-5 flex flex-col items-start gap-2">
+            <span className="text-small font-semibold">{`Cover story · ${card.label}`}</span>
+            <span className="line-clamp-2 break-words text-title lg:text-display">{ticket.event.title}</span>
+            <span className="text-body tabular-nums">
+              <time dateTime={ticket.event.startsAt}>{eventTime(ticket)}</time>
+              {` · ${spaceAndPlace(ticket)}`}
             </span>
+            <GoingButton going={going} busy={busy} onClick={onGoing} className="mt-1 bg-[var(--accent)] text-[var(--accent-foreground)]" />
           </div>
-          {sticker}
-        </PressLink>
-      ) : (
-        // No Corner has a public photo yet: a typographic cover, the step set large at the top left.
-        <PressLink to={to} className="relative block aspect-[4/3] overflow-hidden rounded-card bg-[var(--cat)] p-5 lg:aspect-auto lg:min-h-[320px] text-[var(--ink)]">
-          <span className="block text-caption font-semibold">{`Cover story · ${card.label}`}</span>
-          <span className="mt-2 block" style={displayStyle(40, { lineHeight: 1.02 })}>
-            {tieNumbers(card.guide.step)}
+          {/* The sticker is decoration over the card's own link, so tapping it opens the ticket too. */}
+          <span
+            className="door-wobble pointer-events-none absolute right-3 top-3 flex size-14 items-center justify-center rounded-full bg-[var(--accent)] text-center text-caption font-semibold text-[var(--accent-foreground)] lg:right-4 lg:top-4 lg:size-[92px] lg:text-lead"
+            aria-hidden="true"
+          >
+            Admit one
           </span>
-          {sticker}
+        </TicketFrame>
+      ) : (
+        <PressLink to={cornerPath(card.spaceSlug, card.cornerSlug)} className={frame}>
+          {art}
+          <div className="absolute inset-x-5 bottom-5 flex flex-col gap-2">
+            <span className="text-small font-semibold">{`Cover story · ${card.label}`}</span>
+            <span className="text-small font-semibold">How to start</span>
+            <span className="text-title lg:text-display">{tieNumbers(card.guide.step)}</span>
+          </div>
         </PressLink>
       )}
-      <div className="mt-3 flex items-center justify-end gap-4">
-        <Link to={to} className="inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
-          Take the ticket
-        </Link>
-      </div>
     </section>
   );
 }

@@ -3,9 +3,11 @@ import { ImageWithFallback } from "../ImageWithFallback";
 import { GeneratedArt } from "../GeneratedArt";
 import { MomentMedia, hasRealMedia } from "../MomentCard";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import { hobbies, subHobbyLabel } from "../../data/hobbies";
 import { postCorner, type Post } from "../../data/posts";
 import { categoryOfCorner } from "../../data/cornerCategories";
 import { catStyle, categoryColor, type CatColor } from "../../lib/categoryStyle";
+import { momentAlt, momentCaption } from "../../lib/momentCaption";
 import { HOVER_SCALE, PRESS_SCALE, springs } from "../../lib/springs";
 
 /**
@@ -29,6 +31,13 @@ function momentColor(post: Post): CatColor {
   let n = 0;
   for (let i = 0; i < post.hobbySlug.length; i++) n = (n * 31 + post.hobbySlug.charCodeAt(i)) >>> 0;
   return ALL[n % ALL.length];
+}
+
+/** The Moment's Corner as a label, for alt text. */
+function cornerName(post: Post): string {
+  const corner = postCorner(post);
+  const hobby = hobbies.find((h) => h.slug === post.hobbySlug);
+  return (corner && hobby?.subItems.find((s) => s.slug === corner)?.label) || (post.subHobby ? subHobbyLabel(post.subHobby) : undefined) || hobby?.shortName || "";
 }
 
 function Maker({ name, tone }: { name: string; tone: "photo" | "ink" }) {
@@ -81,26 +90,21 @@ export function MomentTile({
         className={`${base} flex flex-col justify-between bg-[var(--cat)] p-4 text-[var(--ink)]`}
         style={catStyle(momentColor(post))}
       >
-        <p
-          className="line-clamp-6"
-          // The display face at 22px, per spec v1 (between the lead and title sizes).
-          style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "22px", lineHeight: 1.2, letterSpacing: "-0.01em" }}
-        >
-          {post.caption}
-        </p>
+        <p className="line-clamp-6 text-lead">{momentCaption(post) || ""}</p>
         <Maker name={post.creator} tone="ink" />
       </motion.button>
     );
   }
 
   return (
-    <motion.button type="button" onClick={onOpen} {...motionProps} className={`${base} bg-surface-muted`}>
+    <motion.button type="button" onClick={onOpen} {...motionProps} className={`${base} bg-[var(--cat)]`} style={catStyle(momentColor(post))}>
       {photo ? (
         <ImageWithFallback
           src={src}
-          alt=""
+          alt={momentAlt(post, cornerName(post))}
           width={width}
           priority={priority}
+          tint
           className="absolute inset-0 size-full"
           fallback={<GeneratedArt hobbySlug={post.hobbySlug} seed={post.id} className="size-full" />}
         />
@@ -111,8 +115,8 @@ export function MomentTile({
       )}
       <div className="absolute inset-0 bg-[image:var(--scrim-card)]" aria-hidden="true" />
       <div className="absolute inset-x-3.5 bottom-3.5 flex flex-col gap-2">
-        {post.caption && (
-          <p className="line-clamp-2 text-small font-semibold text-[var(--photo-text)]">{post.caption}</p>
+        {momentCaption(post) && (
+          <p className="line-clamp-2 text-small font-semibold text-[var(--photo-text)]">{momentCaption(post)}</p>
         )}
         <Maker name={post.creator} tone="photo" />
       </div>

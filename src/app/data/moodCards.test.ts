@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_CARDS, MAX_STEP, MOOD_CHIPS, moodCards } from "./moodCards";
+import { MAX_CARDS, MAX_STEP, MOOD_CHIPS, MOOD_LINE, moodCards } from "./moodCards";
 import { categoryOfCorner } from "./cornerCategories";
 
 describe("mood cards", () => {
@@ -33,5 +33,12 @@ describe("mood cards", () => {
       if (new Set(cats).size < 2) continue;
       for (let i = 1; i < cats.length; i++) expect(cats[i], `${chip.id} at ${i}`).not.toBe(cats[i - 1]);
     }
+  });
+
+  it("has a distinct line for every chip, none with a dash", () => {
+    const lines = MOOD_CHIPS.map((c) => MOOD_LINE[c.id]);
+    expect(lines.every(Boolean)).toBe(true);
+    expect(new Set(lines).size).toBe(lines.length);
+    expect(lines.filter((l) => /[—–]/.test(l))).toEqual([]);
   });
 });

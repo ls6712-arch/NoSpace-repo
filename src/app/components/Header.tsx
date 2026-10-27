@@ -15,6 +15,11 @@ import { useSocial } from "../context/SocialContext";
 import { formatBadgeCount } from "../lib/messageSync";
 import { APP_NAME } from "../config";
 import { isDismissKey } from "../lib/menuDismiss";
+import { PAGE_X } from "../lib/pageGrid";
+
+/** Pages in the after hours look share one page frame (PAGE_X), so the wordmark lines up with their content. */
+const FRAMED_PATHS = ["/discover", "/corners", "/corner", "/browse"];
+const isFramed = (pathname: string) => FRAMED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
 function initials(name: string) {
   return name
@@ -276,6 +281,7 @@ export function Header() {
   const { openCart, cartCount } = useCart();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const framed = isFramed(pathname);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -322,7 +328,7 @@ export function Header() {
 
   return (
     <header className="ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)]">
-      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
+      <div className={`${framed ? PAGE_X : "container mx-auto px-4"} flex h-16 items-center justify-between gap-4`}>
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries
               below — it’s this wordmark — so it carries the same active
@@ -334,7 +340,7 @@ export function Header() {
             aria-current={pathname === "/" ? "page" : undefined}
           >
             <span className="ns-wordmark-mark" aria-hidden="true" />
-            <span className="text-title font-semibold text-foreground" style={{ fontFamily: "var(--font-serif)" }}>{APP_NAME}</span>
+            <span className="text-title font-extrabold text-foreground" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>{APP_NAME}</span>
             {pathname === "/" && (
               <span
                 className="absolute -bottom-0.5 left-0 right-0 h-px"
@@ -398,7 +404,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="hidden w-56 md:block lg:w-64">
+          <div className="hidden w-56 md:block lg:w-72 xl:w-80">
           <div className="relative w-full" ref={searchRef}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input

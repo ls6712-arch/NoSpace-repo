@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ForwardedRef, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRowScrollMemory } from "../lib/useHistoryState";
 import { usePrefersReducedMotion } from "../lib/useReducedMotion";
@@ -14,11 +14,14 @@ import { usePrefersReducedMotion } from "../lib/useReducedMotion";
 export function HorizontalRow({
   name,
   label,
+  listRef,
   children,
 }: {
   /** Scroll position is remembered per name when going back. */
   name: string;
   label: string;
+  /** The scrolling list itself, for a page that moves it (scroll back to the start). */
+  listRef?: ForwardedRef<HTMLUListElement>;
   children: ReactNode;
 }) {
   const row = useRowScrollMemory(name);
@@ -55,6 +58,8 @@ export function HorizontalRow({
         ref={(node) => {
           el.current = node;
           row.ref(node);
+          if (typeof listRef === "function") listRef(node);
+          else if (listRef) listRef.current = node;
         }}
         onScroll={() => {
           row.onScroll();

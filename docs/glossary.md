@@ -26,17 +26,16 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 
 ## Door list
 
-Discover's Corners tab (approved Oct 23, 2026). A ticket is a first step to take; "Admit one" is its stamp.
+Discover's Corners tab (approved Oct 23, 2026). A ticket is a ticket to a real event (decision logged in `claude/corners-build-decisions.md`, Oct 27, 2026). A Corner with no upcoming event shows a plain "How to start" card instead.
 
 | Term | Meaning |
 |---|---|
 | Issue {n} | Whole weeks since Sept 1, 2026, plus 1, on the line above the masthead |
 | Things to do tonight / For members | The two halves of the strip under the masthead |
-| Cover story | Kicker on the top ticket, shown big |
-| ticket | A Corner's first step, shown as a card or the cover story |
-| Admit one | The stamp on a ticket and on the cover story's sticker |
-| Take the ticket | Link under the cover story that opens the Corner |
-| Start here | Heading above the row of tickets |
+| Cover story | Kicker on the top card, shown big: a ticket to an event, else a "How to start" card |
+| ticket | A ticket to an upcoming event in an Open Space, on Discover: the event title, Space, time, place and "I’m going". Tapping the card opens the event in its Space. Never a first step |
+| Admit one | The stamp on an event ticket and on the cover story's sticker when it is an event ticket. Not on a "How to start" card |
+| Start here | Heading above the row of cards (event tickets and "How to start" cards) |
 | Seen tonight | Heading above the collage of recent public Moments |
 | Rooms | Heading above the 18 groups of Corners, shown as rows |
 | Who's in where | Muted note on the right of the Rooms heading |
@@ -66,6 +65,20 @@ Discover's row of chips and cards (approved in visual spec v1.1). A mood names w
 | Play a game | Chip: game and puzzle Corners |
 | Start with what you have | Chip: Corners you can start with what you already have |
 
+Once a chip is picked, this line names it over the row of cards (under "Start here"), so the row visibly answers the chip. New strings, for approval.
+
+| Chip | Line over the tickets |
+|---|---|
+| 15 minutes | Things you can do in 15 minutes |
+| Make something | Things to make tonight |
+| Move | Ways to move tonight |
+| Be around people | Things to do with other people |
+| Some time to yourself | Things to do on your own |
+| Get outside | Things to do outside |
+| Learn something | Things to learn tonight |
+| Play a game | Games to play tonight |
+| Start with what you have | Things to start with what you have |
+
 ## Hobbies and Spaces
 
 | Term | Meaning |
@@ -82,6 +95,7 @@ Discover's row of chips and cards (approved in visual spec v1.1). A mood names w
 | Settling in / Set up your Space | New-member / host checklists |
 | Manage | Hosts' tab: requests, members, approvals |
 | Event / I'm going / Starts in 4h | Gatherings and RSVP |
+| Online | The place on an event ticket when the event is online and has no neighborhood or city (already the label in the event form; new here, for approval) |
 | New Spaces | Home section |
 | Book the studio | Hidden until the marketplace is on |
 
@@ -112,7 +126,7 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | People into {Corner} | Heading above the Shelves of people who shared a public Moment in that Corner most recently, newest first. No counts. Not shown to signed-out or not-yet-approved visitors |
 | Members see who’s going. | The one line a signed-out or not-yet-approved visitor sees on a Corner in place of People into, Recent Moments, hosts and who is going |
 | Recent Moments | Heading above a Corner's latest public Moments |
-| How to start | Heading above a Corner's numbered steps |
+| How to start | Heading above a Corner's numbered steps. Also the label on a Discover card with no event, which shows the Corner's first step and links to the Corner |
 | What you’ll need | Heading above 3 to 5 plain facts: gear, place, cost, people. Never a claim about results |
 | More Corners like this | Heading above Corners in the same group of 18 |
 | Starts in 20m | Time to the next event inside the next hour. Inside 24 hours it is "Starts in 4h"; later it is the day and time |

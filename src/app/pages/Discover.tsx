@@ -1,6 +1,6 @@
 import { cornerPath } from "../lib/cornerPath";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
 import { cornerStyle } from "../lib/categoryStyle";
 import { PAGE_X, TITLE_GAP } from "../lib/pageGrid";
@@ -41,9 +41,10 @@ import { CoverStory } from "../components/door/CoverStory";
 import { pickCover } from "../components/door/pickCover";
 import { MoodGrid } from "../components/door/MoodGrid";
 import { StartHere } from "../components/door/StartHere";
+import { useEventTickets } from "../components/door/useEventTickets";
 import { SeenTonight } from "../components/door/SeenTonight";
 import { Rooms } from "../components/door/Rooms";
-import { moodCards, type MoodChipId } from "../data/moodCards";
+import { moodCards, MOOD_LINE, type MoodChipId } from "../data/moodCards";
 import { doorFor, readLastMood, writeLastMood } from "../lib/doorList";
 import { plural } from "../lib/plural";
 
@@ -383,6 +384,13 @@ export function Discover() {
     [tickets, cover],
   );
 
+  // A ticket to the Corner's next event in an Open Space when it has one; else a "How to start" card.
+  const navigate = useNavigate();
+  const { ticketFor, going, busy: goingBusy, error: goingError, toggleGoing } = useEventTickets(tickets, user?.id);
+  const onGoing = (eventId: number) =>
+    user ? toggleGoing(eventId) : navigate(`/login?redirect=${encodeURIComponent("/discover")}`);
+  const coverTicket = cover ? ticketFor(cover.card) : null;
+
   // Category is internal-only now (never shown), but its name/keywords
   // still feed search matching — see spaceScoped's own text match below.
   const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), [spaceRows]);
@@ -518,7 +526,17 @@ export function Discover() {
                   <Masthead />
                   {/* From 1024px the top is a spread: the cover on 7 of 12 columns, the doors on 5. */}
                   <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-10">
-                  {cover && <CoverStory card={cover.card} photo={cover.photo} fading={shownMood !== mood} />}
+                  {cover && (
+                    <CoverStory
+                      card={cover.card}
+                      photo={cover.photo}
+                      ticket={coverTicket}
+                      going={!!coverTicket && going.has(coverTicket.event.id)}
+                      busy={!!coverTicket && goingBusy === coverTicket.event.id}
+                      onGoing={() => coverTicket && onGoing(coverTicket.event.id)}
+                      fading={shownMood !== mood}
+                    />
+                  )}
                   <MoodGrid
                     value={mood}
                     greeting={door.greeting}
@@ -528,7 +546,8 @@ export function Discover() {
                     }}
                   />
                   </div>
-                  <StartHere ref={startRef} cards={startCards} fading={shownMood !== mood} />
+                  {goingError && <p role="alert" className="mt-4 text-small text-destructive">{goingError}</p>}
+                  <StartHere ref={startRef} cards={startCards} ticketFor={ticketFor} going={going} busyEvent={goingBusy} onGoing={onGoing} moodLine={MOOD_LINE[shownMood]} fading={shownMood !== mood} />
                   <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
                   <Rooms />
                 </>
