@@ -1,7 +1,7 @@
 import { PressLink } from "../afterhours/PressLink";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { cornerPath } from "../../lib/cornerPath";
-import { cornerPhoto } from "../../lib/cornerPhoto";
+import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
 import { cornerGuide } from "../../data/cornerGuides";
 
 /**
@@ -28,7 +28,7 @@ export function CornerCard({
       >
         <ImageWithFallback
           src={cornerPhoto(corner.spaceSlug, corner.slug, 600)}
-          alt=""
+          alt={cornerPhotoAlt(corner.slug)}
           width={240}
           className="absolute inset-0 size-full"
         />
