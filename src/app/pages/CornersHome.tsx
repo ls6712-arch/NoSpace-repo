@@ -1,49 +1,59 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChipRow } from "../components/ChipRow";
+import { Link } from "react-router";
+import { FilterChip } from "../components/FilterChip";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
-import { CoverEmoji } from "../components/corners/CoverEmoji";
 import { PressLink } from "../components/afterhours/PressLink";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 import { EmptyState } from "../components/StateViews";
+import { useAuth } from "../context/AuthContext";
+import { useContent } from "../context/ContentContext";
 import { CORNER_CATEGORIES } from "../data/cornerCategories";
 import {
   CURATED_CORNERS,
   DURATION_LIMITS,
+  cornerMeta,
   cornerMoods,
-  curatedInCategory,
+  guideMoods,
   type CornerSetting,
   type CuratedCorner,
 } from "../data/curatedCorners";
+import { cornerKey, homeCornersIn, type HomeCorner } from "../data/homeCorners";
 import { MOODS, type MoodId } from "../data/moods";
-import { cornerStyle } from "../lib/categoryStyle";
+import { postCorner } from "../data/posts";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
+import { cornerPhoto } from "../lib/cornerPhoto";
+import { cornerSubline } from "../lib/cornerSubline";
 import { displayStyle } from "../lib/doorList";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
 
 /**
- * Corners home (/corners): the curated Corners, open to anyone including
- * signed-out visitors. A hero for the busiest Corner this week, a picker
- * (how long, what mood, where) and one row per category. A row with nothing
- * in it is not shown.
+ * Corners home (/corners): every built-in Corner, open to anyone including
+ * signed-out visitors. A photo hero for one curated Corner, a one-line picker
+ * (how long, what mood, where) and one row per group of 18. In a row the
+ * curated Corners come first, then the rest by most recent Moment, then A to Z.
+ * A row with nothing in it is not shown.
  */
 
 const PICKER_KEY = "soosh.corners.picker.v1";
+const WEEK_MS = 7 * 24 * 3_600_000;
+
+type Setting = Exclude<CornerSetting, "anywhere">;
 
 interface Picker {
   duration: number | null;
   mood: MoodId | null;
-  setting: CornerSetting | null;
+  setting: Setting | null;
 }
 
 const NO_PICK: Picker = { duration: null, mood: null, setting: null };
 
-const DURATION_OPTIONS = DURATION_LIMITS.map((h) => ({ id: h, label: `Up to ${plural(h / 60, "hour")}` }));
+const DURATION_OPTIONS = DURATION_LIMITS.map((m) => ({ id: m as number, label: `Up to ${plural(m / 60, "hour")}` }));
 const MOOD_OPTIONS = MOODS.map((m) => ({ id: m.id, label: m.label }));
-const SETTING_OPTIONS: { id: CornerSetting; label: string }[] = [
+const SETTING_OPTIONS: { id: Setting; label: string }[] = [
   { id: "home", label: "At home" },
   { id: "outdoors", label: "Outdoors" },
-  { id: "anywhere", label: "Anywhere" },
 ];
 
 /** The last choices on this device, or none. Storage can be blocked or hold junk. */
@@ -69,34 +79,62 @@ function writePicker(p: Picker) {
   }
 }
 
-function matches(x: CuratedCorner, moods: MoodId[], p: Picker): boolean {
-  if (p.duration !== null && x.durationMinutes > p.duration) return false;
-  if (p.mood !== null && !moods.includes(p.mood)) return false;
+/** A Corner without a guide has no length, place or mood on record, so a choice on that filter leaves it out. */
+function matches(c: HomeCorner, p: Picker): boolean {
+  const x = c.curated;
+  if (p.duration !== null && !(x && x.durationMinutes <= p.duration)) return false;
   // "At home" and "Outdoors" also keep the Corners that work anywhere.
-  if (p.setting !== null && x.setting !== p.setting && !(x.setting === "anywhere" && p.setting !== "anywhere")) return false;
+  if (p.setting !== null && !(x && (x.setting === p.setting || x.setting === "anywhere"))) return false;
+  if (p.mood !== null) {
+    const moods = x ? cornerMoods(x) : guideMoods(c.spaceSlug, c.slug);
+    if (!moods.includes(p.mood)) return false;
+  }
   return true;
 }
 
-/** The one live line on a card: events this week, else Spaces, else an invitation. */
-export function cornerSignal(live: CornerLive | undefined): string {
-  if (!live) return "";
-  const events = thisWeek(live.events).length;
-  if (events > 0) return `${plural(events, "event")} this week`;
-  if (live.spaces.length > 0) return plural(live.spaces.length, "Space");
-  return "Be the first to start a Space";
+const slugOf = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const curatedIndex = new Map(CURATED_CORNERS.map((x, i) => [x.slug, i]));
+
+/** Curated first, then the most recent Moment, then A to Z. */
+function byRow(latest: Map<string, number>) {
+  return (a: HomeCorner, b: HomeCorner) => {
+    const ca = a.curated ? curatedIndex.get(a.slug)! : Infinity;
+    const cb = b.curated ? curatedIndex.get(b.slug)! : Infinity;
+    if (ca !== cb) return ca - cb;
+    const la = latest.get(cornerKey(a)) ?? 0;
+    const lb = latest.get(cornerKey(b)) ?? 0;
+    if (la !== lb) return lb - la;
+    return a.name.localeCompare(b.name);
+  };
+}
+
+/** The curated Corner with the most events this week; with none, one per week in turn. */
+function heroCorner(live: Map<string, CornerLive>, now = Date.now()): CuratedCorner | null {
+  let best: { x: CuratedCorner; n: number } | null = null;
+  for (const x of CURATED_CORNERS) {
+    const n = thisWeek(live.get(cornerKey(x))?.events ?? [], now).length;
+    if (n > 0 && (!best || n > best.n)) best = { x, n };
+  }
+  if (best) return best.x;
+  const withPhoto = CURATED_CORNERS.filter((x) => cornerPhoto(x.spaceSlug, x.slug));
+  return withPhoto.length ? withPhoto[Math.floor(now / WEEK_MS) % withPhoto.length] : null;
 }
 
 export function CornersHome() {
+  const { user } = useAuth();
+  const { publicFeed } = useContent();
   const [live, setLive] = useState<Map<string, CornerLive> | null>(null);
   const [picker, setPicker] = useState<Picker>(readPicker);
 
+  const everyCorner = useMemo(() => CORNER_CATEGORIES.flatMap((c) => homeCornersIn(c.slug)), []);
+
   useEffect(() => {
     let cancelled = false;
-    fetchCornersLive().then((m) => !cancelled && setLive(m));
+    fetchCornersLive({ targets: everyCorner }).then((m) => !cancelled && setLive(m));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [everyCorner]);
 
   const update = (patch: Partial<Picker>) =>
     setPicker((prev) => {
@@ -105,76 +143,111 @@ export function CornersHome() {
       return next;
     });
 
-  const moodsBySlug = useMemo(() => new Map(CURATED_CORNERS.map((x) => [x.slug, cornerMoods(x)])), []);
-
-  // The busiest Corner this week. No events anywhere: no hero.
-  const hero = useMemo(() => {
-    if (!live) return null;
-    let best: { corner: CuratedCorner; events: number } | null = null;
-    for (const x of CURATED_CORNERS) {
-      const events = thisWeek(live.get(x.slug)?.events ?? []).length;
-      if (events > 0 && (!best || events > best.events)) best = { corner: x, events };
+  // The newest public Moment in each Corner, for ordering the rows.
+  const latest = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of publicFeed) {
+      const c = postCorner(p);
+      if (!c) continue;
+      const key = `${p.hobbySlug}/${slugOf(c)}`;
+      if (p.createdAt > (m.get(key) ?? 0)) m.set(key, p.createdAt);
     }
-    return best;
-  }, [live]);
+    return m;
+  }, [publicFeed]);
+
+  const hero = useMemo(() => (live ? heroCorner(live) : null), [live]);
 
   const rows = CORNER_CATEGORIES.map((cat) => ({
     cat,
-    corners: curatedInCategory(cat.slug).filter((x) => matches(x, moodsBySlug.get(x.slug) ?? [], picker)),
+    corners: homeCornersIn(cat.slug).filter((c) => matches(c, picker)).sort(byRow(latest)),
   })).filter((r) => r.corners.length > 0);
 
   const picked = picker.duration !== null || picker.mood !== null || picker.setting !== null;
+  const logTo = hero
+    ? `/create?hobby=${encodeURIComponent(hero.spaceSlug)}&sub=${encodeURIComponent(hero.slug)}`
+    : "/create";
 
   return (
-    <div className="ns-afterhours min-h-viewport">
-      {hero && (
-        <header className="relative overflow-hidden bg-[var(--cat)] text-[var(--ink)]" style={cornerStyle(hero.corner.spaceSlug, hero.corner.slug)}>
-          <CoverEmoji emoji={hero.corner.emoji} size="hero" className="pointer-events-none absolute right-6 top-6 md:right-16" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background to-transparent" />
-          <div className={`${PAGE_X} relative pb-16 pt-14 md:pb-20 md:pt-20`}>
-            <p className="text-small font-semibold">Busy this week</p>
-            <h1 className="mt-2 text-display">{hero.corner.name}</h1>
-            <p className="mt-2 text-body">{`${plural(hero.events, "event")} this week`}</p>
-            <PressLink
-              to={`/corners/${hero.corner.slug}`}
-              className="mt-5 inline-flex min-h-12 items-center justify-center rounded-control bg-[var(--ink)] px-6 text-body font-semibold text-[var(--cat)]"
-            >
-              {`Explore ${hero.corner.name}`}
-            </PressLink>
-          </div>
-        </header>
-      )}
-
-      <div className={`${PAGE_X} ${hero ? "pt-8" : "pt-10 md:pt-14"} pb-24`}>
-        {!hero && <h1 className="mb-8 text-display">Corners</h1>}
-
-        <section className={`${SECTION_GAP} space-y-5`} aria-label="Choose what fits">
-          <ChipRow label="I have" options={DURATION_OPTIONS} value={picker.duration} onChange={(duration) => update({ duration })} />
-          <ChipRow label="In the mood for" options={MOOD_OPTIONS} value={picker.mood} onChange={(mood) => update({ mood })} />
-          <ChipRow label="I’m" options={SETTING_OPTIONS} value={picker.setting} onChange={(setting) => update({ setting })} />
-        </section>
-
-        {rows.length === 0 ? (
-          <EmptyState
-            line="No Corners match those choices."
-            hint="Clear a choice to see more."
-            action={picked ? { label: "Clear choices", onClick: () => update(NO_PICK) } : undefined}
-          />
-        ) : (
-          rows.map(({ cat, corners }) => (
-            <section key={cat.slug} className={SECTION_GAP} aria-labelledby={`row-${cat.slug}`}>
-              <h2 id={`row-${cat.slug}`} className="mb-3" style={displayStyle(26, { lineHeight: 1.1 })}>
-                {cat.name}
-              </h2>
-              <HorizontalRow name={`corners.row.${cat.slug}`} label={cat.name}>
-                {corners.map((x) => (
-                  <CornerCard key={x.slug} corner={x} signal={cornerSignal(live?.get(x.slug))} />
-                ))}
-              </HorizontalRow>
-            </section>
-          ))
+    <div className={`ns-afterhours min-h-viewport ${PAGE_X} pb-24 pt-4 md:pt-8`}>
+      {/* Hero: a photo card. The space is held while the week's events load, so nothing jumps. */}
+      <div className="relative mb-5 aspect-[4/5] overflow-hidden rounded-card bg-surface-muted text-on-media md:aspect-[16/9]">
+        {hero && (
+          <>
+            <ImageWithFallback
+              src={cornerPhoto(hero.spaceSlug, hero.slug, 1600)}
+              alt=""
+              priority
+              width={1200}
+              className="absolute inset-0 size-full"
+            />
+            <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
+            <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-2 p-5 md:p-8">
+              <p className="text-small font-semibold text-on-media/90">Corner of the week</p>
+              <h1 className="text-display" style={displayStyle(40, { lineHeight: 1.05 })}>
+                {hero.name}
+              </h1>
+              <p className="text-body text-on-media/90">{cornerMeta(hero)}</p>
+              <div className="mt-2 flex flex-wrap gap-3">
+                <PressLink
+                  to={`/corners/${hero.slug}`}
+                  className="inline-flex min-h-12 items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)]"
+                >
+                  {`Explore ${hero.name}`}
+                </PressLink>
+                <PressLink
+                  to={user ? logTo : `/login?redirect=${encodeURIComponent(logTo)}`}
+                  className="inline-flex min-h-12 items-center justify-center rounded-control border border-on-media/70 px-6 text-body font-semibold text-on-media"
+                >
+                  Log a Moment
+                </PressLink>
+              </div>
+            </div>
+          </>
         )}
       </div>
+      {!hero && <h1 className="sr-only">Corners</h1>}
+
+      {/* One compact row of three filters. */}
+      <section className={`${SECTION_GAP} -mx-4 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`} aria-label="Choose what fits">
+        <FilterChip anyLabel="Any time" options={DURATION_OPTIONS} value={picker.duration} onChange={(duration) => update({ duration })} />
+        <FilterChip anyLabel="Any mood" options={MOOD_OPTIONS} value={picker.mood} onChange={(mood) => update({ mood })} />
+        <FilterChip anyLabel="Anywhere" options={SETTING_OPTIONS} value={picker.setting} onChange={(setting) => update({ setting })} />
+        {picked && (
+          <button
+            type="button"
+            onClick={() => update(NO_PICK)}
+            className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-[var(--accent-text)] hover:underline"
+          >
+            Clear
+          </button>
+        )}
+      </section>
+
+      {rows.length === 0 ? (
+        <EmptyState
+          line="No Corners match those choices."
+          hint="Clear a choice to see more."
+          action={picked ? { label: "Clear choices", onClick: () => update(NO_PICK) } : undefined}
+        />
+      ) : (
+        rows.map(({ cat, corners }) => (
+          <section key={cat.slug} className={SECTION_GAP} aria-labelledby={`row-${cat.slug}`}>
+            <div className="mb-3 flex items-baseline justify-between gap-4">
+              <h2 id={`row-${cat.slug}`} className="text-title font-semibold">
+                {cat.name}
+              </h2>
+              <Link to={`/browse/${cat.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+                See all
+              </Link>
+            </div>
+            <HorizontalRow name={`corners.row.${cat.slug}`} label={cat.name}>
+              {corners.map((c) => (
+                <CornerCard key={cornerKey(c)} corner={c} subline={cornerSubline(c, live?.get(cornerKey(c)))} />
+              ))}
+            </HorizontalRow>
+          </section>
+        ))
+      )}
     </div>
   );
 }

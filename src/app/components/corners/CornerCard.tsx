@@ -1,25 +1,37 @@
 import { PressLink } from "../afterhours/PressLink";
-import type { CuratedCorner } from "../../data/curatedCorners";
-import { CoverEmoji } from "./CoverEmoji";
-import { cornerStyle } from "../../lib/categoryStyle";
+import { ImageWithFallback } from "../ImageWithFallback";
+import { cornerPath } from "../../lib/cornerPath";
+import { cornerPhoto } from "../../lib/cornerPhoto";
 
 /**
- * A curated Corner as a card: 16:10, the category colour with the emoji large
- * in the middle (the cover photo goes here when there is one), the name at the
- * bottom left and one live line under it. `signal` is empty while the live
- * counts load, so the line never flashes a wrong value.
+ * A Corner as a photo card, 4:5: its photo fills the card, a dark gradient at
+ * the bottom carries the name and one line under it. 240px wide from md, 70% of
+ * the screen on a phone, so the next card is always cut off at the edge.
+ * `subline` is empty when there is nothing to say.
  */
-export function CornerCard({ corner, signal }: { corner: CuratedCorner; signal: string }) {
+export function CornerCard({
+  corner,
+  subline,
+}: {
+  corner: { spaceSlug: string; slug: string; name: string };
+  subline: string;
+}) {
   return (
-    <li className="w-[260px] shrink-0 snap-start sm:w-[300px]" style={cornerStyle(corner.spaceSlug, corner.slug)}>
+    <li className="w-[70vw] shrink-0 snap-start md:w-[240px]">
       <PressLink
-        to={`/corners/${corner.slug}`}
-        className="relative block aspect-[16/10] overflow-hidden rounded-card bg-[var(--cat)] text-[var(--ink)]"
+        to={cornerPath(corner.spaceSlug, corner.slug)}
+        className="relative block aspect-[4/5] overflow-hidden rounded-card bg-surface-muted text-on-media"
       >
-        <CoverEmoji emoji={corner.emoji} size="card" className="absolute inset-0 flex items-center justify-center pb-8" />
-        <span className="absolute inset-x-0 bottom-0 flex flex-col gap-0.5 p-3.5">
-          <span className="truncate text-small font-semibold">{corner.name}</span>
-          <span className="min-h-[1.25rem] truncate text-caption">{signal}</span>
+        <ImageWithFallback
+          src={cornerPhoto(corner.spaceSlug, corner.slug, 600)}
+          alt=""
+          width={240}
+          className="absolute inset-0 size-full"
+        />
+        <span className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
+        <span className="absolute inset-x-0 bottom-0 flex flex-col gap-0.5 p-4">
+          <span className="truncate text-lead font-semibold">{corner.name}</span>
+          {subline && <span className="truncate text-small text-on-media/90">{subline}</span>}
         </span>
       </PressLink>
     </li>

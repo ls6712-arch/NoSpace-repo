@@ -22,7 +22,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Messages / Inbox | Chats / notifications and requests |
 | Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
 | Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
-| See all | Opens the full list when a list shows only some: Discover's Spotlight, and the group tiles on Discover's Corners tab (which show the first 8) |
+| See all | Opens the full list when a list shows only some: Discover's Spotlight, the group tiles on Discover's Corners tab (which show the first 8), and a group's row on the Corners home (opens that group's page) |
 
 ## Door list
 
@@ -91,16 +91,17 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 
 | Term | Meaning |
 |---|---|
-| Corners | Link at the top of Discover's Corners tab, and the title of the Corners home when no Corner is busy |
-| Busy this week | Kicker on the Corners home hero |
-| N events this week | The hero line and the live line on a Corner card, when it has events in the next 7 days. Counts only Open Spaces' events |
-| N Spaces | The live line on a Corner card with no events this week but at least one Space |
-| Be the first to start a Space | The live line on a Corner card with no Spaces |
-| Explore {Corner} | The hero button on the Corners home |
-| I have / In the mood for / I’m | Labels of the three chip rows on the Corners home |
-| Up to 1 hour / Up to 2 hours / Up to 4 hours | Chips under "I have": Corners that take about that long or less |
-| At home / Outdoors / Anywhere | Chips under "I’m". "At home" and "Outdoors" also show Corners that work anywhere |
-| (the eight Moods labels) | Chips under "In the mood for", the same labels and meanings as in Moods above, minus "15 minutes" |
+| Corners | Link at the start of Discover’s tab row that opens the Corners page |
+| Corner of the week | Small caption on the Corners home hero: the curated Corner with the most events this week, or with none one curated Corner per week in turn |
+| N events this week | The line under a Corner’s name on its card when it has events in the next 7 days. Counts only Open Spaces’ events |
+| N Spaces | The line under the name on a card with no events this week but at least one Space |
+| 1 hr · Outdoors | The line under the name on a curated Corner’s card, and on the hero, when it has no events and no Spaces: how long it takes and where. An uncurated Corner with nothing to say shows no line. A card never asks you to start a Space |
+| Explore {Corner} | The hero button that opens the Corner. Beside it, "Log a Moment" |
+| Any time / Any mood / Anywhere | The three filter chips on the Corners home. Each opens its options; one that is chosen shows the option and fills with the accent. "Anywhere" is the unset state of the third chip |
+| Up to 1 hour / Up to 2 hours / Up to 4 hours | Options under "Any time": Corners that take about that long or less. A Corner with no length on record is left out |
+| At home / Outdoors | Options under "Anywhere". Both also show the Corners that work anywhere |
+| Clear | Link beside the chips while any is chosen: unsets all three |
+| (the eight Moods labels) | Options under "Any mood", the same labels and meanings as in Moods above, minus "15 minutes" |
 | No Corners match those choices. / Clear a choice to see more. / Clear choices | Empty state of the chip rows, and its action |
 | Back to Corners | Link above a single Corner |
 | Happening this week | Heading above the events of the next 7 days on a Corner |
@@ -114,7 +115,7 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Starts in 20m | Time to the next event inside the next hour. Inside 24 hours it is "Starts in 4h"; later it is the day and time |
 | You’ve been to one of their events. | Line on a Closed Space card when you hold a Stub from that Space |
 
-The Corners pages reuse existing wording for: Start a Pursuit, Log a Moment, Show more, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
+The Corners pages reuse existing wording for: Create a Space (once, at the bottom of a single Corner), Start a Pursuit, Log a Moment, Show more, See all, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
 
 ## Moments
 

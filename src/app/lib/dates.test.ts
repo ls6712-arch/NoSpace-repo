@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatStarts } from "./dates";
+import { formatDuration, formatStarts } from "./dates";
 
 const NOW = Date.UTC(2026, 9, 26, 12, 0, 0);
 
@@ -15,5 +15,18 @@ describe("formatStarts", () => {
   });
   it("gives the day and time once it has started", () => {
     expect(formatStarts(NOW - 3_600_000, { now: NOW, timeZone: "UTC" })).toBe("Mon, Oct 26, 11:00 AM");
+  });
+});
+
+describe("formatDuration", () => {
+  it("reads whole hours as hours and the rest as minutes", () => {
+    expect(formatDuration(30)).toBe("30 min");
+    expect(formatDuration(60)).toBe("1 hr");
+    expect(formatDuration(90)).toBe("90 min");
+    expect(formatDuration(240)).toBe("4 hr");
+  });
+  it("gives nothing for a missing or zero length", () => {
+    expect(formatDuration(0)).toBe("");
+    expect(formatDuration(Number.NaN)).toBe("");
   });
 });

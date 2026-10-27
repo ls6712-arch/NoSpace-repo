@@ -182,3 +182,13 @@ export function formatStarts(
   if (diff >= HOUR && diff < DAY) return `Starts in ${Math.ceil(diff / HOUR)}h`;
   return formatDateTime(d, { timeZone: opts.timeZone, now });
 }
+
+/**
+ * How long something takes, short: "30 min", "1 hr", "2 hr", "90 min".
+ * Whole hours read as hours, everything else as minutes.
+ */
+export function formatDuration(minutes: number): string {
+  if (!Number.isFinite(minutes) || minutes <= 0) return "";
+  const m = Math.round(minutes);
+  return m >= 60 && m % 60 === 0 ? `${m / 60} hr` : `${m} min`;
+}
