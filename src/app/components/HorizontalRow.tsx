@@ -15,6 +15,7 @@ export function HorizontalRow({
   name,
   label,
   listRef,
+  contentKey,
   children,
 }: {
   /** Scroll position is remembered per name when going back. */
@@ -22,9 +23,11 @@ export function HorizontalRow({
   label: string;
   /** The scrolling list itself, for a page that moves it (scroll back to the start). */
   listRef?: ForwardedRef<HTMLUListElement>;
+  /** What the row holds (its ids, joined). A saved scroll offset is restored only when this is unchanged, so a row whose contents changed starts at the left. */
+  contentKey?: string;
   children: ReactNode;
 }) {
-  const row = useRowScrollMemory(name);
+  const row = useRowScrollMemory(name, contentKey);
   const el = useRef<HTMLUListElement | null>(null);
   const reduced = usePrefersReducedMotion();
   const [ends, setEnds] = useState({ start: true, end: false });

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
 import { cornerStyle } from "../lib/categoryStyle";
-import { PAGE_X, TITLE_GAP } from "../lib/pageGrid";
+import { PAGE_X, SECTION_GAP, TITLE_GAP } from "../lib/pageGrid";
 import { PressLink } from "../components/afterhours/PressLink";
 import { Reveal } from "../components/afterhours/Reveal";
 import { MomentTile } from "../components/afterhours/MomentTile";
@@ -41,6 +41,7 @@ import { CoverStory } from "../components/door/CoverStory";
 import { pickCover } from "../components/door/pickCover";
 import { MoodGrid } from "../components/door/MoodGrid";
 import { StartHere } from "../components/door/StartHere";
+import { BrowseByChips } from "../components/corners/BrowseByChips";
 import { useEventTickets } from "../components/door/useEventTickets";
 import { SeenTonight } from "../components/door/SeenTonight";
 import { Rooms } from "../components/door/Rooms";
@@ -547,7 +548,10 @@ export function Discover() {
                   />
                   </div>
                   {goingError && <p role="alert" className="mt-4 text-small text-destructive">{goingError}</p>}
-                  <StartHere ref={startRef} cards={startCards} ticketFor={ticketFor} going={going} busyEvent={goingBusy} onGoing={onGoing} moodLine={MOOD_LINE[shownMood]} fading={shownMood !== mood} />
+                  <div className={SECTION_GAP}>
+                    <BrowseByChips />
+                  </div>
+                  <StartHere ref={startRef} cards={startCards} ticketFor={ticketFor} going={going} busyEvent={goingBusy} onGoing={onGoing} moodLine={MOOD_LINE[shownMood]} seeAllTo={shownMood === "quick" ? null : `/corners?mood=${shownMood}`} fading={shownMood !== mood} />
                   <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
                   <Rooms />
                 </>

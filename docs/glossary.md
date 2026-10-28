@@ -22,7 +22,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Messages / Inbox | Chats / notifications and requests |
 | Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
 | Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
-| See all | Opens the full list when a list shows only some: Discover's Spotlight, the group tiles on Discover's Corners tab (which show the first 8), and a group's row on the Corners home (opens that group's page) |
+| See all | Opens the full list when a list shows only some: Discover's Spotlight, the group tiles on Discover's Corners tab (which show the first 8), and a group's row on the Corners home (opens that group's page), and Start here on Discover (opens every Corner for the chosen mood) |
 
 ## Door list
 
@@ -110,7 +110,8 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Featured Corners | Accessible name of the billboard (a carousel); not shown on screen. New, for approval |
 | Show {Corner} | Accessible name of a billboard dot: shows that slide; not shown as text. New, for approval |
 | {n} of {total} | Accessible name of a billboard slide; not shown as text. New, for approval |
-| Row headings on the Corners home | Between the groups of Corners, rows that reuse existing labels as headings: Happening this week, the eight mood chips (Make something, Be around people, Move, Learn something, Get outside, Some time to yourself, Play a game, Start with what you have), Up to 1 hour, At home and Outdoors. A row shows only with 3 or more Corners. No new wording |
+| Browse by | Label over the row of 18 group chips on the Corners home and Discover; each chip is a group's own name and opens its page. Approved in the Oct 28 cleanup brief |
+| Row headings on the Corners home | With no filter: Happening this week, then each group's own name (a link to its page, with See all). With a filter: one count line, "N Corners" (`plural()`), and Clear. The mood, time and place rows are gone: those are the filters |
 | N events this week | The line under a Corner’s name on its card when it has events in the next 7 days. Counts only Open Spaces’ events |
 | N Spaces | The line under the name on a card with no events this week but at least one Space |
 | 1 hr · Outdoors | The line under the name on a curated Corner’s card, and on the hero, when it has no events and no Spaces: how long it takes and where. An uncurated Corner with nothing to say shows no line. A card never asks you to start a Space |
@@ -124,7 +125,9 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Clear | Link beside the chips while any is chosen: unsets all three |
 | (the eight Moods labels) | Options under "Any mood", the same labels and meanings as in Moods above, minus "15 minutes" |
 | No Corners match those choices. / Clear a choice to see more. / Clear choices | Empty state of the chip rows, and its action |
-| Back to Corners | Link above a single Corner |
+| Back to Corners | Link above a category page, to the Corners page |
+| Back to {category} | Link above a single Corner, to its category page ("Back to Food and drink"); "Back to Corners" for a Corner in no category. Approved in the Oct 28 cleanup brief |
+| See Spaces | The hero button on a Corner page that has Spaces and no upcoming event: scrolls to its Spaces. Approved in the Oct 28 cleanup brief |
 | Happening this week | Heading above the events of the next 7 days on a Corner |
 | Spaces in {Corner} | Heading above that Corner's Space cards |
 | People into {Corner} | Heading above the Shelves of people who shared a public Moment in that Corner most recently, newest first. No counts. Not shown to signed-out or not-yet-approved visitors |
@@ -138,7 +141,7 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Starts in 20m | Time to the next event inside the next hour. Inside 24 hours it is "Starts in 4h"; later it is the day and time |
 | You’ve been to one of their events. | Line on a Closed Space card when you hold a Stub from that Space |
 
-The Corners pages reuse existing wording for: Create a Space (once, at the bottom of a single Corner), Start a Pursuit, Log a Moment, Show more, See all, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
+The Corners pages reuse existing wording for: Create a Space (the hero button when a Corner has no event and no Spaces, else once at the bottom of a single Corner), Show more, See all, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
 
 ## Moments
 

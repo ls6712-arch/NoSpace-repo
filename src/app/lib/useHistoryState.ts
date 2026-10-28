@@ -46,7 +46,7 @@ export function useHistoryState<T>(name: string, initial: T) {
  * contents can arrive after it mounts, so restoring retries for a moment
  * until the row is wide enough.
  */
-export function useRowScrollMemory(name: string) {
+export function useRowScrollMemory(name: string, contentKey = "") {
   const navType = useNavigationType();
   const el = useRef<HTMLElement | null>(null);
   const frame = useRef(0);
@@ -55,8 +55,12 @@ export function useRowScrollMemory(name: string) {
     (node: HTMLElement | null) => {
       el.current = node;
       if (!node || navType !== "POP") return;
-      const target = read<number>("row:" + name);
+      // Saved as { x, key } (older entries are a bare number). Restored only for the same contents.
+      const saved = read<number | { x: number; key: string }>("row:" + name);
+      const target = typeof saved === "number" ? saved : saved?.x;
       if (!target) return;
+      if (typeof saved === "object" && saved.key !== contentKey) return;
+      if (typeof saved === "number" && contentKey !== "") return;
       const started = performance.now();
       const tryRestore = () => {
         node.scrollLeft = target;
@@ -66,14 +70,14 @@ export function useRowScrollMemory(name: string) {
       };
       tryRestore();
     },
-    [name, navType],
+    [name, navType, contentKey],
   );
 
   const onScroll = useCallback(() => {
     // The user took over: stop chasing the saved spot.
     cancelAnimationFrame(frame.current);
-    if (el.current) write("row:" + name, Math.round(el.current.scrollLeft));
-  }, [name]);
+    if (el.current) write("row:" + name, { x: Math.round(el.current.scrollLeft), key: contentKey });
+  }, [name, contentKey]);
 
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
 

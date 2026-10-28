@@ -8,9 +8,8 @@ import { createHashRouter, redirect } from "react-router";
 import { extraConceptsEnabled, marketplaceEnabled } from "./config";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
-import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
 import { CategoryPage } from "./pages/Category";
-import { cornerPath, curatedRedirectFor } from "./lib/cornerPath";
+import { cornerPath } from "./lib/cornerPath";
 import { mergedSlugTarget } from "./data/hobbies";
 import { CornersHome } from "./pages/CornersHome";
 import { CornerDetail } from "./pages/CornerDetail";
@@ -130,16 +129,13 @@ export const router = createHashRouter([
       { path: "space/:slug", Component: SpaceRoute },
       { path: "space/:slug/edit", Component: EditSpace },
       { path: "create-space", Component: CreateSpace },
-      // A curated Corner's page is /corners/:slug; the old link still works.
+      // Every Corner's page is /corners/:slug; the old link and shared URLs still work (a merged Corner goes to the kept one).
       {
         path: "corner/:slug",
         loader: ({ params }) => {
-          const merged = mergedSlugTarget(params.slug ?? "");
-          if (merged) return redirect(cornerPath(undefined, merged));
-          const to = curatedRedirectFor(params.slug ?? "");
-          return to ? redirect(to) : null;
+          const slug = params.slug ?? "";
+          return redirect(cornerPath(undefined, encodeURIComponent(mergedSlugTarget(slug) ?? slug)));
         },
-        Component: CornerPage,
       },
       { path: "corners", Component: CornersHome },
       {

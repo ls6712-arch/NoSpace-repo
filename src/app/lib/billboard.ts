@@ -1,6 +1,6 @@
 import { CURATED_CORNERS, type CuratedCorner } from "../data/curatedCorners";
 import { cornerKey } from "../data/homeCorners";
-import { cornerPhoto } from "./cornerPhoto";
+import { hasHobbyPhoto } from "../data/hobbyPhotos";
 import { thisWeek, type CornerLive } from "./cornersLive";
 
 const WEEK_MS = 7 * 24 * 3_600_000;
@@ -9,7 +9,7 @@ export const BILLBOARD_SLIDES = 5;
 /**
  * The Corners in the billboard at the top of /corners. First the curated
  * Corners with events this week (most events first), then, to fill the
- * slides, the rest of the curated Corners that have a photo, starting from a
+ * slides, the rest of the curated Corners that have a photo of their own, starting from a
  * different place each week, or, for a person with a taste profile, the best
  * fits (recommend.ts). The first slide is the "Corner of the week".
  */
@@ -25,7 +25,7 @@ export function billboardCorners(
     .sort((a, b) => b.n - a.n)
     .map((r) => r.x);
   const picked = withEvents.slice(0, n);
-  const rest = CURATED_CORNERS.filter((x) => !picked.includes(x) && cornerPhoto(x.spaceSlug, x.slug));
+  const rest = CURATED_CORNERS.filter((x) => !picked.includes(x) && hasHobbyPhoto(x.slug));
   if (score && rest.length > 0) {
     for (const x of [...rest].sort((a, b) => score(b) - score(a)).slice(0, Math.max(0, n - picked.length))) picked.push(x);
   } else if (rest.length > 0) {

@@ -1,31 +1,47 @@
-import { cornerPath } from "../lib/cornerPath";
-import { useMemo, useState } from "react";
-import { Link, Navigate, useParams } from "react-router";
-import { hobbies, isBrowsableCorner, titleCaseSlug } from "../data/hobbies";
-import { isInCorner } from "../lib/cornerAlias";
-import { postCorner, type Post } from "../data/posts";
-import { cornerGuide } from "../data/cornerGuides";
-import { CORNER_CATEGORIES, categoryOfCorner, cornersInCategory } from "../data/cornerCategories";
+import { useEffect, useMemo, useState } from "react";
+import { Link, Navigate, useParams, useSearchParams } from "react-router";
+import { type Post } from "../data/posts";
+import { CORNER_CATEGORIES, categoryOfCorner } from "../data/cornerCategories";
+import { cornerMeta } from "../data/curatedCorners";
+import { cornerKey, homeCornersIn } from "../data/homeCorners";
+import { DURATION_LIMITS } from "../data/curatedCorners";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
 import { MomentDetail } from "../components/MomentDetail";
 import { Button } from "../components/ui/button";
-import { PressLink } from "../components/afterhours/PressLink";
+import { EmptyState } from "../components/StateViews";
+import { HorizontalRow } from "../components/HorizontalRow";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 import { Reveal } from "../components/afterhours/Reveal";
 import { MomentTile } from "../components/afterhours/MomentTile";
-import { categoryStyle, categoryTransitionName, cornerStyle } from "../lib/categoryStyle";
+import { ChipGroup } from "../components/corners/ChipGroup";
+import { CornerCard } from "../components/corners/CornerCard";
+import { WeekEventCard } from "../components/corners/WeekEventCard";
+import { categoryStyle } from "../lib/categoryStyle";
+import { categoryPhotoCorner } from "../lib/categoryPhoto";
+import { isInCorner } from "../lib/cornerAlias";
+import { NO_PICK, SETTING_OPTIONS, hasPick, matches, paramsFromPicker, pickerFromParams } from "../lib/cornerFilters";
+import { cornerPhoto, cornerPhotoAlt } from "../lib/cornerPhoto";
+import { fetchCornersLive, thisWeek, type CornerLive, type LiveEvent, type LiveSpace } from "../lib/cornersLive";
+import { displayStyle } from "../lib/doorList";
 import { fillRows } from "../lib/fillRows";
-import { PAGE_X } from "../lib/pageGrid";
+import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
+import { plural } from "../lib/plural";
 import { useHistoryState } from "../lib/useHistoryState";
 
+const DURATION_OPTIONS = DURATION_LIMITS.map((m) => ({ id: m as number, label: `Up to ${plural(m / 60, "hour")}` }));
+
 /**
- * One category's page (spec v1): a full-width band in its colour with its name
- * (the tile on Discover grew into this band) and what's in it; every Corner in
- * it with a line about each; then its Moments, with a tab per Corner.
+ * One category's page, in the look of the Corners home: a full-width photo
+ * (its first curated Corner's) with the category's name and what is in it;
+ * time and place filters (in the URL, like /corners); this week's events from
+ * Open Spaces in its Corners; a grid of its Corners (curated first, then A to
+ * Z; browsable ones only); then its Moments, with a tab per Corner.
  *
- * A Moment is in a category through its Corner. A Moment with no Corner is in
- * none, so it never shows here (it still shows in feeds and on its old Space).
- * The word "category" is never shown: the category's own name is the heading.
+ * A Moment is in a category through its Corner (a Corner merged into another
+ * counts as the kept one). A Moment with no Corner is in none, so it never
+ * shows here (it still shows in feeds and on its old Space). The word
+ * "category" is never shown: the category's own name is the heading.
  */
 export function CategoryPage() {
   const { slug = "" } = useParams();
@@ -33,42 +49,63 @@ export function CategoryPage() {
   const { publicFeed } = useContent();
   const { user } = useAuth();
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  const [live, setLive] = useState<Map<string, CornerLive> | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useHistoryState(`browse.${slug}.tab`, "all");
   const [morePages, setMorePages] = useHistoryState(`browse.${slug}.morePages`, 0);
 
+  // Time and place only: this page has no mood filter. A pick adds a history entry, as on /corners.
+  const picker = { ...(pickerFromParams(searchParams) ?? NO_PICK), mood: null };
+  const picked = hasPick(picker);
+  const update = (patch: { duration?: number | null; setting?: "home" | "outdoors" | null }) =>
+    setSearchParams(paramsFromPicker({ ...picker, ...patch }));
+
+  // Every browsable Corner in the category: curated first, then A to Z.
   const corners = useMemo(
-    () =>
-      cornersInCategory(slug).filter(({ spaceSlug, cornerSlug }) => isBrowsableCorner(spaceSlug, cornerSlug)).map(({ spaceSlug, cornerSlug }) => ({
-        spaceSlug,
-        cornerSlug,
-        name:
-          hobbies.find((h) => h.slug === spaceSlug)?.subItems.find((s) => s.slug === cornerSlug)?.label ??
-          titleCaseSlug(cornerSlug),
-        about: cornerGuide(spaceSlug, cornerSlug)?.about,
-      })),
+    () => [...homeCornersIn(slug)].sort((a, b) => Number(!!b.curated) - Number(!!a.curated) || a.name.localeCompare(b.name)),
     [slug],
   );
+  const shown = useMemo(() => corners.filter((c) => matches(c, picker)), [corners, picker.duration, picker.setting]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    let cancelled = false;
+    setLive(null);
+    fetchCornersLive({ targets: corners }).then((m) => !cancelled && setLive(m));
+    return () => {
+      cancelled = true;
+    };
+  }, [corners]);
+
+  // This week's events across the category's Corners, each once, soonest first.
+  const { weekEvents, spaceById } = useMemo(() => {
+    const events = new Map<number, LiveEvent>();
+    const spaces = new Map<string, LiveSpace>();
+    for (const l of live?.values() ?? []) {
+      for (const s of l.spaces) spaces.set(s.id, s);
+      for (const e of thisWeek(l.events)) events.set(e.id, e);
+    }
+    return { weekEvents: [...events.values()].sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()), spaceById: spaces };
+  }, [live]);
 
   const inCategory = useMemo(
     () =>
       publicFeed.filter((p) => {
-        const corner = postCorner(p);
-        return !!corner && categoryOfCorner(p.hobbySlug, corner)?.slug === slug;
+        const c = p.corner ?? p.subHobby;
+        return !!c && categoryOfCorner(p.hobbySlug, c.toLowerCase())?.slug === slug;
       }),
     [publicFeed, slug],
   );
-  const tabs = useMemo(
-    () => corners.filter((c) => inCategory.some((p) => isInCorner(p, c.spaceSlug, c.cornerSlug))),
-    [corners, inCategory],
-  );
-  const activeTab = tabs.some((c) => c.cornerSlug === tab) ? tab : "all";
-  const posts = activeTab === "all" ? inCategory : inCategory.filter((p) => { const c = corners.find((x) => x.cornerSlug === activeTab); return !!c && isInCorner(p, c.spaceSlug, c.cornerSlug); });
+  const tabs = useMemo(() => corners.filter((c) => inCategory.some((p) => isInCorner(p, c.spaceSlug, c.slug))), [corners, inCategory]);
+  const activeTab = tabs.some((c) => c.slug === tab) ? tab : "all";
+  const posts = useMemo(() => {
+    if (activeTab === "all") return inCategory;
+    const c = tabs.find((x) => x.slug === activeTab);
+    return c ? inCategory.filter((p) => isInCorner(p, c.spaceSlug, c.slug)) : inCategory;
+  }, [inCategory, activeTab, tabs]);
 
   if (!category) return <Navigate to="/discover" replace />;
 
-  // Back link at 70% ink, the description at 80% (spec v1; both clear 4.5:1 on the v1.1 colours).
-  const dimLink = "text-[color-mix(in_srgb,var(--ink)_70%,transparent)]";
-  const dimText = "text-[color-mix(in_srgb,var(--ink)_80%,transparent)]";
+  const hero = categoryPhotoCorner(category.slug);
   const [lead, ...rest] = posts;
   const n = rest.length;
   const { wideCount, narrowCount } = fillRows(n, morePages);
@@ -78,99 +115,139 @@ export function CategoryPage() {
 
   return (
     <div className="ns-afterhours min-h-viewport" style={categoryStyle(category.slug)}>
-      <header
-        className="bg-[var(--cat)] text-[var(--ink)]"
-        style={{ viewTransitionName: categoryTransitionName(category.slug) }}
-      >
-        <div className={`${PAGE_X} py-8 md:py-12`}>
-          <Link to="/discover" className={`inline-flex min-h-11 items-center text-small hover:underline ${dimLink}`}>
-            ← Back to Discover
+      {/* Hero: the category's photo, with its name and what is in it bottom left. */}
+      <header className="relative flex min-h-[48svh] flex-col overflow-hidden bg-[var(--cat)] text-on-media">
+        {hero && (
+          <ImageWithFallback
+            src={cornerPhoto(hero.spaceSlug, hero.slug, 1600)}
+            alt={cornerPhotoAlt(hero.slug)}
+            priority
+            width={1200}
+            tint
+            className="absolute inset-0 size-full"
+          />
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-scrim-solid/25" aria-hidden="true" />
+        <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
+        <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
+        <div className={`${PAGE_X} relative flex flex-1 flex-col pb-10 pt-6 md:pb-14`}>
+          <Link to="/corners" className="inline-flex min-h-11 items-center text-small hover:underline">
+            ← Back to Corners
           </Link>
-          <h1 className="mt-6 text-display">{category.name}</h1>
-          <p className={`mt-3 max-w-xl text-body ${dimText}`}>{category.about}</p>
+          <div className="mt-auto flex flex-col items-start gap-3 pt-16">
+            <h1 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
+              {category.name}
+            </h1>
+            <p className="max-w-xl text-body text-on-media/90">{category.about}</p>
+          </div>
         </div>
       </header>
 
-      <section className={`${PAGE_X} pt-6`}>
-        <h2 className="sr-only">Corners</h2>
-        <ul className="grid gap-x-10 md:grid-cols-2">
-          {corners.map((c, i) => (
-            <li key={`${c.spaceSlug}-${c.cornerSlug}`} style={cornerStyle(c.spaceSlug, c.cornerSlug)}>
-              <Reveal index={Math.min(i, 11)}>
-                <PressLink
-                  to={cornerPath(c.spaceSlug, c.cornerSlug)}
-                  aria-label={`Browse the ${c.name} Corner`}
-                  className="group block min-h-14 border-t border-border py-4"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="size-2 shrink-0 rounded-full bg-[var(--cat)]" aria-hidden="true" />
-                    <span className="text-lead text-foreground">{c.name}</span>
-                  </span>
-                  {c.about && <span className="mt-1 block max-w-prose text-small text-muted-foreground">{c.about}</span>}
-                </PressLink>
-              </Reveal>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {lead && (
-        <section className={`${PAGE_X} pb-16 pt-10 md:pt-12`}>
-          <h2 className="mb-4 text-title">Moments</h2>
-          {tabs.length > 1 && (
-            <ul role="tablist" aria-label="Corners" className="-mx-4 mb-6 flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0">
-              {[{ cornerSlug: "all", name: "Everything" }, ...tabs].map((c) => {
-                const active = activeTab === c.cornerSlug;
-                return (
-                  <li key={c.cornerSlug} className="shrink-0">
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => {
-                        setTab(c.cornerSlug);
-                        setMorePages(0);
-                      }}
-                      className={`min-h-11 border-b-2 text-small font-semibold transition-colors ${
-                        active ? "border-[var(--accent)] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {c.name}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          <div className="space-y-10 md:space-y-12">
-            <Reveal>
-              <MomentTile post={lead} priority width={1200} aspect="aspect-[4/5] md:aspect-[16/9]" onOpen={() => setOpenPost(lead)} />
-            </Reveal>
-            {shownRest.length > 0 && (
-              <div>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                  {shownRest.map((post, i) => (
-                    <Reveal
-                      key={post.id}
-                      index={i % 8}
-                      className={`${i >= narrowCount ? "max-md:hidden" : ""} ${i >= wideCount ? "md:hidden" : ""}`}
-                    >
-                      <MomentTile post={post} onOpen={() => setOpenPost(post)} />
-                    </Reveal>
-                  ))}
-                </div>
-                {(hiddenWide || hiddenNarrow) && (
-                  <div className={`mt-10 border-t border-border pt-4 ${hiddenNarrow ? "" : "max-md:hidden"} ${hiddenWide ? "" : "md:hidden"}`}>
-                    <Button variant="outline" onClick={() => setMorePages((m) => m + 1)}>
-                      Show more
-                    </Button>
-                  </div>
-                )}
-              </div>
+      <div className={`${PAGE_X} pb-24 pt-6`}>
+        <section className={`${SECTION_GAP} flex flex-col gap-3`} aria-label="Choose what fits">
+          <ChipGroup label="Any time" options={DURATION_OPTIONS} value={picker.duration} onChange={(duration) => update({ duration })} />
+          <div className="flex flex-wrap items-center gap-x-2">
+            <ChipGroup label="Anywhere" options={SETTING_OPTIONS} value={picker.setting} onChange={(setting) => update({ setting })} />
+            {picked && (
+              <button
+                type="button"
+                onClick={() => setSearchParams(new URLSearchParams())}
+                className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-[var(--accent-text)] hover:underline"
+              >
+                Clear
+              </button>
             )}
           </div>
         </section>
-      )}
+
+        {weekEvents.length > 0 && (
+          <section className={SECTION_GAP} aria-labelledby="week-title">
+            <h2 id="week-title" className="mb-4" style={displayStyle(26, { lineHeight: 1.1 })}>
+              Happening this week
+            </h2>
+            <HorizontalRow name={`browse.${slug}.week`} label="Happening this week" contentKey={weekEvents.map((e) => e.id).join(",")}>
+              {weekEvents.map((e) => (
+                <WeekEventCard key={e.id} event={e} space={spaceById.get(e.spaceId)} />
+              ))}
+            </HorizontalRow>
+          </section>
+        )}
+
+        <section className={SECTION_GAP} aria-labelledby="corners-title">
+          <h2 id="corners-title" className="sr-only">
+            Corners
+          </h2>
+          {shown.length === 0 ? (
+            <EmptyState line="No Corners match those choices." hint="Clear a choice to see more." action={{ label: "Clear choices", onClick: () => setSearchParams(new URLSearchParams()) }} />
+          ) : (
+            <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+              {shown.map((c) => (
+                <CornerCard key={cornerKey(c)} corner={c} subline={c.curated ? cornerMeta(c.curated) : ""} fluid />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {lead && (
+          <section className={SECTION_GAP} aria-labelledby="moments-title">
+            <h2 id="moments-title" className="mb-4" style={displayStyle(26, { lineHeight: 1.1 })}>
+              Recent Moments
+            </h2>
+            {tabs.length > 1 && (
+              <ul role="tablist" aria-label="Corners" className="-mx-4 mb-6 flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0">
+                {[{ slug: "all", name: "Everything" }, ...tabs].map((c) => {
+                  const active = activeTab === c.slug;
+                  return (
+                    <li key={c.slug} className="shrink-0">
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => {
+                          setTab(c.slug);
+                          setMorePages(0);
+                        }}
+                        className={`min-h-11 border-b-2 text-small font-semibold transition-colors ${
+                          active ? "border-[var(--accent)] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div className="space-y-10 md:space-y-12">
+              <Reveal>
+                <MomentTile post={lead} priority width={1200} aspect="aspect-[4/5] md:aspect-[16/9]" onOpen={() => setOpenPost(lead)} />
+              </Reveal>
+              {shownRest.length > 0 && (
+                <div>
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                    {shownRest.map((post, i) => (
+                      <Reveal
+                        key={post.id}
+                        index={i % 8}
+                        className={`${i >= narrowCount ? "max-md:hidden" : ""} ${i >= wideCount ? "md:hidden" : ""}`}
+                      >
+                        <MomentTile post={post} onOpen={() => setOpenPost(post)} />
+                      </Reveal>
+                    ))}
+                  </div>
+                  {(hiddenWide || hiddenNarrow) && (
+                    <div className={`mt-10 border-t border-border pt-4 ${hiddenNarrow ? "" : "max-md:hidden"} ${hiddenWide ? "" : "md:hidden"}`}>
+                      <Button variant="outline" onClick={() => setMorePages((m) => m + 1)}>
+                        Show more
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+      </div>
 
       <MomentDetail
         post={openPost}
