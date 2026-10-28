@@ -349,6 +349,27 @@ async function main() {
         await page.locator('section[aria-labelledby="add-corner"] button[aria-pressed]').first().click(T);
         await page.getByText(/^Added to /).first().waitFor(T);
       });
+      await flow("Corner chips start with the Corner you last posted in", async () => {
+        await go("/create");
+        await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);
+        await page.getByPlaceholder(/what happened/i).first().fill("Chip order");
+        await page.getByRole("button", { name: "Post", exact: true }).first().click(T);
+        await page.getByText("Add it to a Corner").first().waitFor(T);
+        const first = (await page.locator('section[aria-labelledby="add-corner"] button[aria-pressed]').first().innerText()).trim();
+        if (first !== "Pottery") throw new Error(`Error: first chip was ${first}`);
+      });
+      await flow("Choosing a Pursuit sets its Corner, and no chips follow", async () => {
+        await go("/create");
+        await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);
+        await page.getByPlaceholder(/what happened/i).first().fill("Pursuit gives the corner");
+        await page.getByText("Counts toward").first().click(T);
+        await page.getByRole("button", { name: /Throw 24 bowls/ }).first().click(T);
+        await page.keyboard.press("Escape"); await page.waitForTimeout(500);
+        await page.getByText("Pottery", { exact: true }).first().waitFor(T);
+        await page.getByRole("button", { name: "Post", exact: true }).first().click(T);
+        await page.getByText(/^Posted to /).first().waitFor(T);
+        if (await page.getByText("Add it to a Corner").count()) throw new Error("Error: chips shown although the Pursuit carries a Corner");
+      });
       await flow("Corner can be skipped", async () => {
         await go("/create");
         await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);

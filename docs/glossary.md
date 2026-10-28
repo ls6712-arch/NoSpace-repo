@@ -372,5 +372,4 @@ Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
 | Skip | Dismisses the chips. The Moment stays without a Corner |
 | Couldn’t add it. Try again. | Shown if the save failed |
 
-A Corner is never set for a person. It comes from the Activity row, a Corner's own "I did this" link, or a tap on one of these chips. A Pursuit's Corner and tags are only offered as chips.
-
+A Corner is never guessed for a person. It comes from something they chose that carries one: the Activity row, a Pursuit (picked in Counts toward, or the one Log was opened from), a Corner's own "I did this" link, or a tap on one of these chips. The chips show only when nothing picked carries a Corner.

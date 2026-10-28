@@ -128,7 +128,9 @@ Answers from the founder before PR 1. These override the entries above where the
 
 ### Corner on a Moment (Oct 28)
 
-- Founder rule: never assign a Corner without the user tapping it. A Moment inherits the Corner from the Activity row when one was picked. Otherwise Posted offers up to three chips (the Pursuit's Corner first, then Corners named by its tags, then others in its Space), one tap to add, with Skip. Nothing else sets a Corner: choosing a Pursuit in Counts toward and opening Log from a Pursuit no longer fill it in. A Corner's own "I did this" link (`?sub=`) still does, because the person tapped that Corner.
+- Founder rule: a Corner is never assigned without the user tapping something that carries it. Choosing an Activity, choosing a Pursuit that has a Corner (in Counts toward, or by opening Log from it) and a Corner's own "I did this" link each count as that tap. A Pursuit does not override a Corner already picked on the Activity row.
+- When nothing picked carries a Corner, Posted offers up to three chips, one tap to add, with Skip. Order: Corners the person has posted in (most recent Moment first), then Corners they follow, then the most-posted Corners in their city in the last 7 days. Never alphabetical, each Corner once. With no history, follows or city data there are no chips.
+- "In their city" is read from public Moments whose place names the city (`location_name` contains it; Moments with the place hidden are left out), because Moments have no city column. It runs only when the first two sources do not fill three chips, and a failure just means fewer chips. A city column or an RPC would be more exact and is a follow-up.
 - A Moment with no Corner keeps `corner` and `sub_hobby` empty. Home shows no Corner in its line for it.
 
 ## Open
