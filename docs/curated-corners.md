@@ -173,7 +173,7 @@ Alt text for it: A group of hikers on a ridge trail in golden light.
 - Moods (derived): Make something
 
 How to start:
-1. Book a wheel-throwing taster
+1. Book a beginner wheel class at a local studio.
 2. Or try air-dry clay at home
 3. Make a small bowl
 
@@ -445,12 +445,13 @@ Alt text for it: Friends sharing a loaf of bread fresh from the oven.
 - URL: `/corners/illustration` (old Space `art-creative`)
 - Row: Art and design
 - Typical time: 90 minutes. Setting: home.
-- Moods (derived): Make something
+- Moods (derived): Make something, Some time to yourself, Start with what you have
 
 How to start:
-1. Use a tablet or free app
-2. Trace a photo to start
-3. Learn layers
+1. Draw one thing from your day as a small illustration.
+2. Use a tablet or free app
+3. Trace a photo to start
+4. Learn layers
 
 What you'll need:
 - A tablet or a computer
@@ -530,8 +531,8 @@ Alt text for it: A small group talking over coffee at a language meetup.
 - Moods (derived): Move, Be around people, Learn something
 
 How to start:
-1. Get hand wraps and gloves
-2. Learn the jab-cross
+1. Try a beginner boxing class and learn the jab and cross.
+2. Get hand wraps and gloves
 3. Try a boxing fitness class
 
 What you'll need:
@@ -557,7 +558,7 @@ Alt text for it: A coach holding pads for a boxer in a bright gym.
 - Moods (derived): Move, Get outside, Learn something
 
 How to start:
-1. Get a complete board and a helmet
+1. Get a board and a helmet and practise pushing on a flat, quiet path.
 2. Practice balance on grass first
 3. Learn to push and stop
 
@@ -584,9 +585,10 @@ Alt text for it: Friends skating together at a park in the late afternoon.
 - Moods (derived): Get outside
 
 How to start:
-1. Rent a kayak at a calm lake
-2. Wear a life jacket
-3. Learn the forward stroke
+1. Book a guided kayak tour on calm water.
+2. Rent a kayak at a calm lake
+3. Wear a life jacket
+4. Learn the forward stroke
 
 What you'll need:
 - A kayak, paddle and life jacket, all rentable
@@ -611,7 +613,7 @@ Alt text for it: Friends paddling kayaks across a calm lake.
 - Moods (derived): Get outside, Learn something
 
 How to start:
-1. Book a beginner lesson
+1. Take a beginner lesson with a surf school.
 2. Use a soft-top board
 3. Practice pop-ups on sand
 
@@ -662,10 +664,10 @@ Alt text for it: Friends wading into a lake together in soft morning light.
 - URL: `/corners/sauna-cold-plunge` (old Space `health-wellness`)
 - Row: Rest and ritual
 - Typical time: 90 minutes. Setting: anywhere.
-- Moods (derived): Be around people
+- Moods (derived): none
 
 How to start:
-1. Find a social sauna or bathhouse
+1. Try a session at a sauna or bathhouse and follow the venue's safety guidance.
 2. Go with a friend
 3. Follow the venue’s guidance on heat and cold
 
@@ -719,8 +721,8 @@ Alt text for it: Two friends making a beat on a pad controller and laptop.
 - Moods (derived): Move, Be around people
 
 How to start:
-1. Gather friends
-2. Book a room or use a YouTube playlist
+1. Book a karaoke room with a few friends.
+2. Gather friends
 3. Pick one silly song
 
 What you'll need:
@@ -746,7 +748,7 @@ Alt text for it: Friends singing into microphones together at a karaoke night.
 - Moods (derived): none
 
 How to start:
-1. Look up local gigs this week
+1. Pick one small local gig and go.
 2. Try a genre you don’t know
 3. Go even if alone
 
@@ -773,7 +775,7 @@ Alt text for it: A crowd watching a band in a small venue.
 - Moods (derived): Be around people, Start with what you have
 
 How to start:
-1. Find a community choir with no audition
+1. Find a community choir and go to one open rehearsal.
 2. Show up and listen
 3. Join a section
 
@@ -800,9 +802,9 @@ Alt text for it: A community choir singing together in a rehearsal room.
 - Moods (derived): Make something
 
 How to start:
-1. Mix 100 g flour per egg
-2. Knead 10 minutes
-3. Roll and cut by hand
+1. Make egg dough by hand, then roll and cut tagliatelle.
+2. Mix 100 g flour per egg
+3. Knead 10 minutes
 
 What you'll need:
 - Flour and eggs
@@ -827,8 +829,8 @@ Alt text for it: Friends rolling fresh pasta dough on a floured counter.
 - Moods (derived): Be around people, Play a game
 
 How to start:
-1. Find a pub quiz
-2. Build a team of 4
+1. Gather a team and join a quiz night.
+2. Find a pub quiz
 3. Come up with a team name
 
 What you'll need:
@@ -851,10 +853,10 @@ Alt text for it: A team huddled over an answer sheet at a pub quiz.
 - URL: `/corners/improv` (old Space `art-creative`)
 - Row: Dance and stage
 - Typical time: 120 minutes. Setting: anywhere.
-- Moods (derived): Move, Be around people, Learn something, Start with what you have
+- Moods (derived): Move, Be around people, Learn something
 
 How to start:
-1. Book a drop-in improv class
+1. Join a beginner improv workshop.
 2. Say “yes, and”
 3. Embrace being silly
 
@@ -881,8 +883,8 @@ Alt text for it: An improv class laughing together in a circle.
 - Moods (derived): Be around people, Start with what you have
 
 How to start:
-1. Find a food bank or shelter
-2. Sign up for one shift
+1. Pick one cause and sign up for a single shift.
+2. Find a food bank or shelter
 3. Bring a friend
 
 What you'll need:

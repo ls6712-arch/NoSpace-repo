@@ -95,7 +95,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "pottery", spaceSlug: "crafts-making", name: "Pottery", emoji: "🏺", durationMinutes: 180, setting: "anywhere",
-    steps: ["Book a wheel-throwing taster", "Or try air-dry clay at home", "Make a small bowl"],
+    steps: ["Or try air-dry clay at home", "Make a small bowl"],
     needs: ["Clay, provided at a taster class", "A studio, or a table at home for air-dry clay", "Classes and tasters cost money", "An apron or clothes that can get messy"],
     worth: ["You leave with something you made", "Tasters let you try before you buy", "Slow, hands-on time", "Every piece comes out different"],
     coverAlt: "Hands shaping clay together on a pottery wheel", photoSearch: "pottery wheel hands class",
@@ -189,7 +189,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "boxing", spaceSlug: "sports-fitness", name: "Boxing", emoji: "🥊", durationMinutes: 60, setting: "anywhere",
-    steps: ["Get hand wraps and gloves", "Learn the jab-cross", "Try a boxing fitness class"],
+    steps: ["Get hand wraps and gloves", "Try a boxing fitness class"],
     needs: ["Hand wraps and gloves, often rentable", "A gym with a bag or a class", "Gym fees apply", "A coach or class helps"],
     worth: ["Gyms offer beginner classes", "Gloves are cheap to rent", "A full session in under an hour", "Learn the basics one drill at a time"],
     coverAlt: "A coach holding pads for a boxer in a bright gym", photoSearch: "boxing gym training pads",
@@ -197,7 +197,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "skateboarding", spaceSlug: "sports-fitness", name: "Skateboarding", emoji: "🛹", durationMinutes: 60, setting: "outdoors",
-    steps: ["Get a complete board and a helmet", "Practice balance on grass first", "Learn to push and stop"],
+    steps: ["Practice balance on grass first", "Learn to push and stop"],
     needs: ["A complete board and a helmet", "Flat ground or a skatepark", "A board costs money, a park is free", "Other skaters at the park"],
     worth: ["A board and a flat spot", "Skate parks welcome beginners", "Learn one trick at a time", "Great with friends"],
     coverAlt: "Friends skating together at a park in the late afternoon", photoSearch: "skatepark friends skateboarding",
@@ -213,7 +213,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "surfing", spaceSlug: "nature-outdoors", name: "Surfing", emoji: "🏄", durationMinutes: 180, setting: "outdoors",
-    steps: ["Book a beginner lesson", "Use a soft-top board", "Practice pop-ups on sand"],
+    steps: ["Use a soft-top board", "Practice pop-ups on sand"],
     needs: ["A soft-top board, rentable", "A wetsuit in cool water", "A beach with small, gentle waves", "Lessons and rentals cost money"],
     worth: ["Lessons come with a board", "Time in the sea", "Every session is different", "A day out with friends"],
     coverAlt: "A surf group walking into the water with boards at sunrise", photoSearch: "surf lesson beginners beach",
@@ -229,7 +229,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "sauna-cold-plunge", spaceSlug: "health-wellness", name: "Sauna & cold plunge", emoji: "🧖", durationMinutes: 90, setting: "anywhere",
-    steps: ["Find a social sauna or bathhouse", "Go with a friend", "Follow the venue’s guidance on heat and cold"],
+    steps: ["Go with a friend", "Follow the venue’s guidance on heat and cold"],
     needs: ["Swimwear and a towel", "A sauna, bathhouse or spa", "Entry costs money", "Many venues are social, so friends are welcome"],
     worth: ["A slow hour away from your phone", "Sessions run in short rounds", "A good reason to go with a friend", "Most places explain it on arrival"],
     coverAlt: "Friends relaxing together in a wooden sauna", photoSearch: "friends sauna social wood",
@@ -245,7 +245,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "karaoke", spaceSlug: "music", name: "Karaoke", emoji: "🎙️", durationMinutes: 120, setting: "anywhere",
-    steps: ["Gather friends", "Book a room or use a YouTube playlist", "Pick one silly song"],
+    steps: ["Gather friends", "Pick one silly song"],
     needs: ["A microphone, or just a speaker", "A karaoke bar, a booked room or your living room", "Rooms and bars cost money", "A group of friends"],
     worth: ["No skill needed", "A room full of people cheering", "A good night out", "Pick a song you know"],
     coverAlt: "Friends singing into microphones together at a karaoke night", photoSearch: "friends karaoke night singing",
@@ -253,7 +253,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "live-music", spaceSlug: "music", name: "Live music", emoji: "🎟️", durationMinutes: 180, setting: "anywhere",
-    steps: ["Look up local gigs this week", "Try a genre you don’t know", "Go even if alone"],
+    steps: ["Try a genre you don’t know", "Go even if alone"],
     needs: ["A ticket, or free entry at some venues", "Comfortable shoes", "Earplugs if it gets loud", "Go with friends or by yourself"],
     worth: ["A night out with a plan", "Small shows are cheap", "Hear new music up close", "Go alone or with friends"],
     coverAlt: "A crowd watching a band in a small venue", photoSearch: "small venue gig crowd",
@@ -261,7 +261,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "choir", spaceSlug: "music", name: "Choir", emoji: "🎶", durationMinutes: 90, setting: "anywhere",
-    steps: ["Find a community choir with no audition", "Show up and listen", "Join a section"],
+    steps: ["Show up and listen", "Join a section"],
     needs: ["Yourself and a voice", "A rehearsal room, often a hall or church", "Some choirs are free, some charge fees", "A group that sings in parts"],
     worth: ["Sing with others", "No audition at many choirs", "Music is handed to you", "A weekly time to look forward to"],
     coverAlt: "A community choir singing together in a rehearsal room", photoSearch: "community choir rehearsal",
@@ -269,7 +269,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "pasta", spaceSlug: "food-cooking", name: "Pasta", emoji: "🍝", durationMinutes: 90, setting: "home",
-    steps: ["Mix 100 g flour per egg", "Knead 10 minutes", "Roll and cut by hand"],
+    steps: ["Mix 100 g flour per egg", "Knead 10 minutes"],
     needs: ["Flour and eggs", "A clean counter and a rolling pin", "Cheap", "Friends to roll and cut with"],
     worth: ["Flour and eggs to start", "A meal at the end", "Good with a friend", "Cheap to make"],
     coverAlt: "Friends rolling fresh pasta dough on a floured counter", photoSearch: "making fresh pasta friends kitchen",
@@ -277,7 +277,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "trivia", spaceSlug: "gaming-tabletop", name: "Trivia", emoji: "❓", durationMinutes: 120, setting: "anywhere",
-    steps: ["Find a pub quiz", "Build a team of 4", "Come up with a team name"],
+    steps: ["Find a pub quiz", "Come up with a team name"],
     needs: ["A pub or venue that hosts a quiz", "A pen and paper, often provided", "Often free to enter, drinks extra", "A team of about four"],
     worth: ["Teams welcome newcomers", "A set night each week", "Quick to join", "A good reason to go out"],
     coverAlt: "A team huddled over an answer sheet at a pub quiz", photoSearch: "pub quiz team friends",
@@ -285,7 +285,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "improv", spaceSlug: "art-creative", name: "Improv", emoji: "🎭", durationMinutes: 120, setting: "anywhere",
-    steps: ["Book a drop-in improv class", "Say “yes, and”", "Embrace being silly"],
+    steps: ["Say “yes, and”", "Embrace being silly"],
     needs: ["Comfortable clothes you can move in", "A studio or theatre that runs classes", "Classes cost money", "A class full of other beginners"],
     worth: ["Beginner classes are common", "No script to learn", "Laughing in a room of people", "Small steps in a safe group"],
     coverAlt: "An improv class laughing together in a circle", photoSearch: "improv class group laughing",
@@ -293,7 +293,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "volunteering", spaceSlug: "travel-adventure", name: "Volunteering", emoji: "🤝", durationMinutes: 180, setting: "anywhere",
-    steps: ["Find a food bank or shelter", "Sign up for one shift", "Bring a friend"],
+    steps: ["Find a food bank or shelter", "Bring a friend"],
     needs: ["Closed shoes and clothes that can get messy", "A local organization that needs help", "Free", "Other volunteers, and a friend if you like"],
     worth: ["Meet people near you", "Help with something that matters locally", "Roles for every amount of time", "Start with one afternoon"],
     coverAlt: "Volunteers packing food boxes together at a table", photoSearch: "volunteers food bank packing",

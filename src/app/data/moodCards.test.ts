@@ -29,8 +29,10 @@ describe("mood cards", () => {
   it("never puts two cards of the same category next to each other", () => {
     for (const chip of MOOD_CHIPS) {
       const cats = moodCards(chip.id).map((c) => categoryOfCorner(c.spaceSlug, c.cornerSlug)?.slug ?? c.spaceSlug);
-      // "Play a game" is all one category (Games and puzzles), so no order can separate them.
-      if (new Set(cats).size < 2) continue;
+      // No order can separate a category that has more than half the cards (Play a game is mostly Games and
+      // puzzles, with a couple of sports), so only check where separating them is possible.
+      const most = Math.max(...[...new Set(cats)].map((k) => cats.filter((c) => c === k).length));
+      if (most > Math.ceil(cats.length / 2)) continue;
       for (let i = 1; i < cats.length; i++) expect(cats[i], `${chip.id} at ${i}`).not.toBe(cats[i - 1]);
     }
   });
