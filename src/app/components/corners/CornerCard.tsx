@@ -3,7 +3,7 @@ import { ImageWithFallback } from "../ImageWithFallback";
 import { cornerPath } from "../../lib/cornerPath";
 import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
 import { cornerStyle } from "../../lib/categoryStyle";
-import { cornerGuide } from "../../data/cornerGuides";
+import { cornerAbout } from "../../data/curatedCorners";
 
 /**
  * A Corner as a landscape photo card, 16:9: its photo fills the card, a dark
@@ -21,7 +21,7 @@ export function CornerCard({
   corner: { spaceSlug: string; slug: string; name: string };
   subline: string;
 }) {
-  const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
+  const about = cornerAbout(corner.spaceSlug, corner.slug);
   return (
     <li className="w-60 shrink-0 snap-start md:w-72" style={cornerStyle(corner.spaceSlug, corner.slug)}>
       <PressLink

@@ -1,4 +1,5 @@
-import { postCorner, type Post } from "../../data/posts";
+import type { Post } from "../../data/posts";
+import { isInCorner } from "../../lib/cornerAlias";
 import type { MoodCard } from "../../data/moodCards";
 
 // Same test as hasRealMedia in MomentCard (kept here so this file stays free of React).
@@ -11,8 +12,7 @@ export function pickCoverPhoto(posts: readonly Post[], card: MoodCard, following
       (p) =>
         p.visibility === "public" &&
         hasPhoto(p) &&
-        p.hobbySlug === card.spaceSlug &&
-        postCorner(p) === card.cornerSlug,
+        isInCorner(p, card.spaceSlug, card.cornerSlug),
     )
     .sort((a, b) => b.createdAt - a.createdAt);
   return here.find((p) => p.userId && followingIds.has(p.userId)) ?? here[0] ?? null;

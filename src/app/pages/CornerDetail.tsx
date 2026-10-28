@@ -16,7 +16,8 @@ import { PressLink } from "../components/afterhours/PressLink";
 import { Reveal } from "../components/afterhours/Reveal";
 import { MomentTile } from "../components/afterhours/MomentTile";
 import { MomentDetail } from "../components/MomentDetail";
-import { type Post, postCorner } from "../data/posts";
+import { type Post } from "../data/posts";
+import { isInCorner } from "../lib/cornerAlias";
 import {
   cornerMeta,
   curatedBySlug,
@@ -103,7 +104,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   const signIn = () => navigate(`/login?redirect=${here}`);
 
   const posts = useMemo(
-    () => publicFeed.filter((p) => p.hobbySlug === corner.spaceSlug && postCorner(p)?.toLowerCase() === corner.slug),
+    () => publicFeed.filter((p) => isInCorner(p, corner.spaceSlug, corner.slug)),
     [publicFeed, corner],
   );
 
@@ -207,7 +208,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   const mine = useMemo(
     () =>
       user && !restricted
-        ? myPosts.filter((p) => p.hobbySlug === corner.spaceSlug && postCorner(p)?.toLowerCase() === corner.slug).sort((a, b) => b.createdAt - a.createdAt)
+        ? myPosts.filter((p) => isInCorner(p, corner.spaceSlug, corner.slug)).sort((a, b) => b.createdAt - a.createdAt)
         : [],
     [myPosts, corner, user, restricted],
   );

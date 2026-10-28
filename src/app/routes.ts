@@ -10,7 +10,8 @@ import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
 import { CategoryPage } from "./pages/Category";
-import { curatedRedirectFor } from "./lib/cornerPath";
+import { cornerPath, curatedRedirectFor } from "./lib/cornerPath";
+import { mergedSlugTarget } from "./data/hobbies";
 import { CornersHome } from "./pages/CornersHome";
 import { CornerDetail } from "./pages/CornerDetail";
 import { SpaceRoute } from "./pages/SpaceRoute";
@@ -133,13 +134,23 @@ export const router = createHashRouter([
       {
         path: "corner/:slug",
         loader: ({ params }) => {
+          const merged = mergedSlugTarget(params.slug ?? "");
+          if (merged) return redirect(cornerPath(undefined, merged));
           const to = curatedRedirectFor(params.slug ?? "");
           return to ? redirect(to) : null;
         },
         Component: CornerPage,
       },
       { path: "corners", Component: CornersHome },
-      { path: "corners/:slug", Component: CornerDetail },
+      {
+        path: "corners/:slug",
+        // A Corner merged into another goes to the kept one.
+        loader: ({ params }) => {
+          const merged = mergedSlugTarget(params.slug ?? "");
+          return merged ? redirect(cornerPath(undefined, merged)) : null;
+        },
+        Component: CornerDetail,
+      },
       { path: "browse/:slug", Component: CategoryPage },
       { path: "pursuits/new", Component: CreatePursuit },
       { path: "join/:token", Component: JoinPursuit },

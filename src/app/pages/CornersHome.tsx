@@ -1,3 +1,4 @@
+import { postCornerKey } from "../lib/cornerAlias";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { HorizontalRow } from "../components/HorizontalRow";
@@ -16,7 +17,6 @@ import {
 } from "../data/curatedCorners";
 import { cornerKey, homeCornersIn, type HomeCorner } from "../data/homeCorners";
 import { MOODS, type MoodId } from "../data/moods";
-import { postCorner } from "../data/posts";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
 import { billboardCorners } from "../lib/billboard";
 import { fillRow } from "../lib/cornerSimilarity";
@@ -149,7 +149,6 @@ function matches(c: HomeCorner, p: Picker): boolean {
   return true;
 }
 
-const slugOf = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 const curatedIndex = new Map(CURATED_CORNERS.map((x, i) => [x.slug, i]));
 
 /** Curated first, then the most recent Moment, then A to Z. */
@@ -220,9 +219,8 @@ export function CornersHome() {
   const latest = useMemo(() => {
     const m = new Map<string, number>();
     for (const p of publicFeed) {
-      const c = postCorner(p);
-      if (!c) continue;
-      const key = `${p.hobbySlug}/${slugOf(c)}`;
+      const key = postCornerKey(p);
+      if (!key) continue;
       if (p.createdAt > (m.get(key) ?? 0)) m.set(key, p.createdAt);
     }
     return m;

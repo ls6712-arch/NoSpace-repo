@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { PressLink } from "../afterhours/PressLink";
-import { cornerMeta, type CuratedCorner } from "../../data/curatedCorners";
-import { cornerGuide } from "../../data/cornerGuides";
+import { cornerAbout, cornerMeta, type CuratedCorner } from "../../data/curatedCorners";
 import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
 import { formatStarts } from "../../lib/dates";
 import { displayStyle } from "../../lib/doorList";
@@ -66,7 +65,7 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
     >
       <ul ref={list} onScroll={onScroll} className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {slides.map(({ corner, next, logTo }, i) => {
-          const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
+          const about = cornerAbout(corner.spaceSlug, corner.slug);
           return (
             <li
               key={corner.slug}
