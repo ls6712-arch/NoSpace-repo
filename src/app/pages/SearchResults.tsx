@@ -12,7 +12,7 @@ import { askPlans, looksLikeAsk, understoodChips } from "../lib/askSoosh";
 import { cornerGuide } from "../data/cornerGuides";
 import { curatedFor, cornerMeta } from "../data/curatedCorners";
 import { categoryOfCorner } from "../data/cornerCategories";
-import { cornerStyle } from "../lib/categoryStyle";
+import { cornerColor } from "../lib/categoryStyle";
 import { fetchOpenPursuits, type OpenPursuit } from "../lib/openPursuits";
 import { formatDateTime } from "../lib/dates";
 import { plural } from "../lib/plural";
@@ -213,7 +213,7 @@ export function SearchResults() {
                       <Link to={hit.to} className={ROW}>
                         <span
                           className="size-12 shrink-0 rounded-control"
-                          style={hit.spaceSlug && hit.cornerSlug ? cornerStyle(hit.spaceSlug, hit.cornerSlug) : undefined}
+                          style={{ background: hit.spaceSlug && hit.cornerSlug ? `var(--cat-${cornerColor(hit.spaceSlug, hit.cornerSlug)})` : "var(--card)" }}
                           aria-hidden="true"
                         />
                         <span className="min-w-0">
@@ -235,7 +235,7 @@ export function SearchResults() {
                       <Link to={`/pursuit/${p.pursuitId}`} className={`${ROW} justify-between`}>
                         <span className="min-w-0">
                           <span className="block truncate text-body font-semibold">{p.title.slice(0, 80)}</span>
-                          <span className="block truncate text-small text-muted-foreground">
+                          <span className="block line-clamp-2 text-small text-muted-foreground">
                             {[p.session?.place, p.session ? formatDateTime(p.session.startsAt) : undefined, plural(Math.max(0, p.capacity - p.taken), "spot")]
                               .filter(Boolean)
                               .join(" · ")}

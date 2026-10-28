@@ -53,8 +53,18 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
         return [...byP].map(([participation_id, ms]) => { const last = [...ms].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).at(-1)!; return { participation_id, last_message_id: last.id, last_message_body: last.body, last_message_created_at: last.created_at, last_message_from_user: last.from_user, message_count: ms.length, unread_count: ms.filter((m) => m.from_user !== ME).length ? 1 : 0 }; });
       }
       case "you_inspired_this_month": return 0;
+      // Spaces where members (not only the host) have shared a Moment: the one fixture Space has.
+      case "spaces_with_member_moments": return ((fixtures.spaces ?? []) as AnyRow[]).map((s) => s.id).filter((id) => ((args.p_space_ids as string[]) ?? []).includes(id as string));
       // An open group for the Make it a Pursuit sheet on the Pasta Corner.
       case "open_pursuits_for_corner":
+        if (args.p_sub_hobby === "pottery") {
+          const day = 86_400_000;
+          return [{
+            pursuit_id: "open-mug", title: "Throw 3 bowls in November", owner_id: "11111111-1111-4111-8111-111111111111", owner_name: "Maya", capacity: 8, taken: 5,
+            ends_at: new Date(Date.now() + 20 * day).toISOString(), session_id: 2, session_starts_at: new Date(Date.now() + 2 * day).toISOString(),
+            session_place: "Riverside studio", people: [{ name: "Maya", avatar: null }], mine: null,
+          }];
+        }
         return args.p_sub_hobby === "pasta"
           ? [{
               pursuit_id: "open-pasta", title: "5 pastas this month", owner_id: "22222222-2222-4222-8222-222222222201", owner_name: "Priya", capacity: 8, taken: 6,

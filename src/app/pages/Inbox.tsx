@@ -76,7 +76,7 @@ export function Inbox() {
   }, [user?.id]);
 
   // The next session of each Pursuit you are in that you have not said yes to.
-  const activeIds = journal.projects.filter((p) => pursuitStatus(p) === "active" && (p.members?.length ?? 0) > 1).map((p) => p.id).slice(0, 4);
+  const activeIds = journal.projects.filter((p) => pursuitStatus(p) === "active").map((p) => p.id).slice(0, 4);
   const activeKey = activeIds.join(",");
   useEffect(() => {
     if (!user || activeIds.length === 0) return;
