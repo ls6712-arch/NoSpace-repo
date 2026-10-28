@@ -110,7 +110,8 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Featured Corners | Accessible name of the billboard (a carousel); not shown on screen. New, for approval |
 | Show {Corner} | Accessible name of a billboard dot: shows that slide; not shown as text. New, for approval |
 | {n} of {total} | Accessible name of a billboard slide; not shown as text. New, for approval |
-| Row headings on the Corners home | Between the groups of Corners, rows that reuse existing labels as headings: Happening this week, the eight mood chips (Make something, Be around people, Move, Learn something, Get outside, Some time to yourself, Play a game, Start with what you have), Up to 1 hour, At home and Outdoors. A row shows only with 3 or more Corners. No new wording |
+| Browse by | Label over the row of 18 group chips on the Corners home and Discover; each chip is a group's own name and opens its page. Approved in the Oct 28 cleanup brief |
+| Row headings on the Corners home | With no filter: Happening this week, then each group's own name (a link to its page, with See all). With a filter: one count line, "N Corners" (`plural()`), and Clear. The mood, time and place rows are gone: those are the filters |
 | N events this week | The line under a Corner’s name on its card when it has events in the next 7 days. Counts only Open Spaces’ events |
 | N Spaces | The line under the name on a card with no events this week but at least one Space |
 | 1 hr · Outdoors | The line under the name on a curated Corner’s card, and on the hero, when it has no events and no Spaces: how long it takes and where. An uncurated Corner with nothing to say shows no line. A card never asks you to start a Space |
