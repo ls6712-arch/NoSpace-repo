@@ -20,6 +20,7 @@ import { postCorner } from "../data/posts";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
 import { billboardCorners } from "../lib/billboard";
 import { fillRow } from "../lib/cornerSimilarity";
+import { fetchAffinity, makeRanker, rankRows, toAffinity, type Affinity, type AffinityRow } from "../lib/recommend";
 import { LENSES, MAX_LENS_CORNERS, MIN_LENS_CORNERS, interleaveRows, type LensId } from "../lib/cornerLenses";
 import { cornerSubline } from "../lib/cornerSubline";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
@@ -34,6 +35,9 @@ import { plural } from "../lib/plural";
  */
 
 const PICKER_KEY = "soosh.corners.picker.v1";
+const AFFINITY_KEY = "soosh.corners.affinity.v1";
+/** The last scores for this person, so the page opens already in their order and only changes if they have moved on. */
+const AFFINITY_TTL_MS = 6 * 3_600_000;
 
 type Setting = Exclude<CornerSetting, "anywhere">;
 
@@ -109,6 +113,29 @@ function writePicker(p: Picker) {
   }
 }
 
+function readAffinity(userId: string | undefined): Affinity | null {
+  if (!userId) return null;
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(AFFINITY_KEY) ?? "null") as { userId: string; at: number; rows: AffinityRow[] } | null;
+    if (!raw || raw.userId !== userId || Date.now() - raw.at > AFFINITY_TTL_MS || !Array.isArray(raw.rows)) return null;
+    return toAffinity(raw.rows);
+  } catch {
+    return null;
+  }
+}
+
+function writeAffinity(userId: string, aff: Affinity) {
+  try {
+    const rows: AffinityRow[] = [
+      ...[...aff.corners].map(([k, v]) => ({ hobby_slug: k.split("/")[0], corner: k.split("/").slice(1).join("/"), ...v })),
+      ...[...aff.hobbies].map(([h, mine]) => ({ hobby_slug: h, corner: "", mine, peers: 0, trending: 0 })),
+    ];
+    window.localStorage.setItem(AFFINITY_KEY, JSON.stringify({ userId, at: Date.now(), rows }));
+  } catch {
+    // Blocked storage: the page just waits for the scores each time.
+  }
+}
+
 /** A Corner without a guide has no length, place or mood on record, so a choice on that filter leaves it out. */
 function matches(c: HomeCorner, p: Picker): boolean {
   const x = c.curated;
@@ -152,6 +179,7 @@ export function CornersHome() {
   const { publicFeed } = useContent();
   const [live, setLive] = useState<Map<string, CornerLive> | null>(null);
   const [picker, setPicker] = useState<Picker>(readPicker);
+  const [affinity, setAffinity] = useState<Affinity | null>(() => readAffinity(user?.id));
 
   const everyCorner = useMemo(() => CORNER_CATEGORIES.flatMap((c) => homeCornersIn(c.slug)), []);
 
@@ -162,6 +190,24 @@ export function CornersHome() {
       cancelled = true;
     };
   }, [everyCorner]);
+
+  // What this person's own activity says they like (my_corner_affinity). Fails soft: before the
+  // database function is applied, or with no activity, the page keeps its default order.
+  useEffect(() => {
+    if (!user) {
+      setAffinity(null);
+      return;
+    }
+    let cancelled = false;
+    fetchAffinity().then((a) => {
+      if (cancelled || !a) return;
+      setAffinity(a);
+      writeAffinity(user.id, a);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const update = (patch: Partial<Picker>) =>
     setPicker((prev) => {
@@ -182,10 +228,12 @@ export function CornersHome() {
     return m;
   }, [publicFeed]);
 
+  const ranker = useMemo(() => makeRanker(affinity, everyCorner, { userId: user?.id }), [affinity, everyCorner, user?.id]);
+
   const slides = useMemo<BillboardSlide[]>(
     () =>
       live
-        ? billboardCorners(live).map((corner) => ({
+        ? billboardCorners(live, Date.now(), undefined, ranker.personal ? (x) => ranker.score(x) : undefined).map((corner) => ({
             corner,
             next: thisWeek(live.get(cornerKey(corner))?.events ?? [])[0],
             logTo: user
@@ -193,26 +241,38 @@ export function CornersHome() {
               : `/login?redirect=${encodeURIComponent(`/create?hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`)}`,
           }))
         : [],
-    [live, user],
+    [live, user, ranker],
   );
 
-  const order = byRow(latest);
-  // A row never runs short: one with only a few Corners is filled up with the most similar Corners from
-  // elsewhere (see cornerSimilarity.ts), so every row reaches past the edge of the page.
-  const shown = everyCorner.filter((c) => matches(c, picker));
-  const groupRows = CORNER_CATEGORIES.map((cat) => {
-    const own = homeCornersIn(cat.slug).filter((c) => matches(c, picker)).sort(order);
-    return { kind: "group" as const, cat, corners: fillRow(own, shown) };
-  }).filter((r) => r.corners.length > 0);
-  // A different way into the same Corners, woven in among the groups. A lens with too few Corners is left out.
-  const lensRows = LENSES.map((lens) => ({
-    kind: "lens" as const,
-    lens,
-    corners: shown.filter((c) => inLens(lens.id, c, live)).sort(order).slice(0, MAX_LENS_CORNERS),
-  }))
-    .filter((r) => r.corners.length >= MIN_LENS_CORNERS)
-    .map((r) => ({ ...r, corners: fillRow(r.corners, shown) }));
-  const rows = interleaveRows(lensRows, groupRows);
+  const rows = useMemo(() => {
+    const order = byRow(latest);
+    // A row never runs short: one with only a few Corners is filled up with the most similar Corners from
+    // elsewhere (see cornerSimilarity.ts), so every row reaches past the edge of the page.
+    const shown = everyCorner.filter((c) => matches(c, picker));
+    // With a personal signal, cards and rows go in the order that suits this person (see recommend.ts);
+    // without one, in the default order.
+    const cards = (own: HomeCorner[]) => (ranker.personal ? ranker.order(fillRow(own, shown)) : fillRow(own, shown));
+    const groupRows = CORNER_CATEGORIES.map((cat) => {
+      const own = homeCornersIn(cat.slug).filter((c) => matches(c, picker));
+      return { kind: "group" as const, cat, own: ranker.personal ? own : own.sort(order) };
+    })
+      .filter((r) => r.own.length > 0)
+      .map((r) => ({ kind: r.kind, cat: r.cat, relevance: ranker.relevance(r.own), corners: cards(r.own) }));
+    // A different way into the same Corners, woven in among the groups. A lens with too few Corners is left out.
+    const lensRows = LENSES.map((lens) => {
+      const members = shown.filter((c) => inLens(lens.id, c, live));
+      const own = ranker.personal ? ranker.order(members).slice(0, MAX_LENS_CORNERS) : members.sort(order).slice(0, MAX_LENS_CORNERS);
+      return { kind: "lens" as const, lens, own };
+    })
+      .filter((r) => r.own.length >= MIN_LENS_CORNERS)
+      .map((r) => ({ kind: r.kind, lens: r.lens, relevance: ranker.relevance(r.own), corners: cards(r.own) }));
+    if (!ranker.personal) return interleaveRows(lensRows, groupRows);
+    // Best-fit rows first; "Happening this week" stays in front because it is about time, not taste.
+    return interleaveRows(
+      rankRows(lensRows, (r) => r.relevance, (r) => r.lens.id === "week"),
+      rankRows(groupRows, (r) => r.relevance),
+    );
+  }, [everyCorner, picker, latest, live, ranker]);
 
   const picked = picker.duration !== null || picker.mood !== null || picker.setting !== null;
   return (
