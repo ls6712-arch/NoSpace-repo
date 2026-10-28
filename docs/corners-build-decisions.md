@@ -151,5 +151,5 @@ Answers from the founder before PR 1. These override the entries above where the
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.
 - Founder to review Trivia and Improv photos.
-- Make a beat's credited photo moves to Music production when the Make a beat merge lands.
+- Make a beat's credited photo and `CREDITS` entry moved to Music production with the Make a beat merge.
 - Next briefs: event ideas as host prompts ("Ideas for your next event"); wave 2 once members ask for those Corners.
