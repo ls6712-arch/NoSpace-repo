@@ -22,9 +22,12 @@ export function BrowseTiles() {
               <Link
                 to={`/browse/${cat.slug}`}
                 style={catStyle(categoryColor(cat.slug))}
-                className="relative flex min-h-24 items-end overflow-hidden rounded-card bg-[var(--cat)] p-4 text-[var(--ink)] transition-transform duration-fast active:scale-[0.97]"
+                className="relative flex min-h-24 items-end rounded-card bg-[var(--cat)] p-4 text-[var(--ink)] transition-transform duration-fast active:scale-[0.97]"
               >
-                <TiltedIcon icon={CATEGORY_ICON[cat.slug]} />
+                {/* The icon bleeds off the corner inside its own clip, so the link itself never scrolls. */}
+                <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-card" aria-hidden="true">
+                  <TiltedIcon icon={CATEGORY_ICON[cat.slug]} />
+                </span>
                 <span className="relative font-[family-name:var(--font-display)] text-lead leading-tight font-extrabold">{cat.name}</span>
               </Link>
             </Reveal>

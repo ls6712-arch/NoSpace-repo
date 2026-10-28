@@ -1,0 +1,56 @@
+Contrast audit for the PR 2 and PR 3 screens (npm run visual -- --contrast), dark and light, 390 and 1440.
+Screens: onboarding, discover, corner-pasta, corner-pasta-sheet (Make it a Pursuit), pursuit, pursuit-recap.
+
+Result: 604 text elements checked. Every failure is text over a photo on /corners/pasta, which the audit
+judges against a worst-case #E6E6E6 photo and gives no credit for gradient scrims. No other screen has a failure.
+
+Measured instead, with a pure white photo behind the real scrims (screenshot, text hidden, brightest pixel
+behind each text box, white text):
+  Corner hero: back link 11.7:1, name 16.6:1, meta line 16.1:1
+  Discover hero card: name 12.6:1, meta line 16.6:1
+  (The photo credit used to sit over the top of the hero at 2.0:1 on a white photo; it now sits under the hero.)
+Not measured: the "More Corners like this" card titles (CornerCard, from the Corners cleanup, unchanged here).
+
+--- raw audit output ---
+
+contrast audit: 24 views, 604 text elements checked; 18 distinct pair(s) below 4.5:1 (3:1 for large text)
+  FAIL light 1.22:1 (need 4.5) #fdfdfd on #e6e6e6 16px  [over photo] p.text-body.text-on-media/90 "90 min · At home · Good with a friend"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL light 1.22:1 (need 4.5) #fdfdfd on #e6e6e6 14px  [over photo] span.truncate.text-small "1 hr · At home"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL light 1.22:1 (need 4.5) #fdfdfd on #e6e6e6 14px  [over photo] span.truncate.text-small "4 hr · At home"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL dark  1.22:1 (need 4.5) #fdfdfd on #e6e6e6 16px  [over photo] p.text-body.text-on-media/90 "90 min · At home · Good with a friend"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL dark  1.22:1 (need 4.5) #fdfdfd on #e6e6e6 14px  [over photo] span.truncate.text-small "1 hr · At home"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL dark  1.22:1 (need 4.5) #fdfdfd on #e6e6e6 14px  [over photo] span.truncate.text-small "4 hr · At home"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL light 1.25:1 (need 4.5) #ffffff on #e6e6e6 14px  [over photo] a.inline-flex.min-h-11 "← Food and drink"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL light 1.25:1 (need 3) #ffffff on #e6e6e6 48px  [over photo] h1.max-w-2xl.text-display "Pasta"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL light 1.25:1 (need 4.5) #ffffff on #e6e6e6 20px  [over photo] span.truncate.text-lead "Fermentation"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL light 1.25:1 (need 4.5) #ffffff on #e6e6e6 20px  [over photo] span.truncate.text-lead "Sourdough"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL light 1.25:1 (need 4.5) #ffffff on #e6e6e6 20px  [over photo] span.truncate.text-lead "Baking"  [1440/corner-pasta]
+  FAIL light 1.25:1 (need 4.5) #ffffff on #e6e6e6 20px  [over photo] span.truncate.text-lead "BBQ"  [1440/corner-pasta]
+  FAIL dark  1.25:1 (need 4.5) #ffffff on #e6e6e6 14px  [over photo] a.inline-flex.min-h-11 "← Food and drink"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL dark  1.25:1 (need 3) #ffffff on #e6e6e6 48px  [over photo] h1.max-w-2xl.text-display "Pasta"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL dark  1.25:1 (need 4.5) #ffffff on #e6e6e6 20px  [over photo] span.truncate.text-lead "Fermentation"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL dark  1.25:1 (need 4.5) #ffffff on #e6e6e6 20px  [over photo] span.truncate.text-lead "Sourdough"  [390/corner-pasta, 1440/corner-pasta]
+  FAIL dark  1.25:1 (need 4.5) #ffffff on #e6e6e6 20px  [over photo] span.truncate.text-lead "Baking"  [1440/corner-pasta]
+  FAIL dark  1.25:1 (need 4.5) #ffffff on #e6e6e6 20px  [over photo] span.truncate.text-lead "BBQ"  [1440/corner-pasta]
+text over photo/video, not judged by CSS (distinct): 21
+  media h2.font-[family-name:var(--font-display)].text-display "Sourdough"  (4 views)
+  media p.text-body "4 hr · At home"  (4 views)
+  media a.inline-flex.min-h-11 "← Food and drink"  (4 views)
+  media h1.max-w-2xl.text-display "Pasta"  (4 views)
+  media p.text-body.text-on-media/90 "90 min · At home · Good with a"  (4 views)
+  media span.truncate.text-lead "Fermentation"  (4 views)
+  media span.truncate.text-small "1 hr · At home"  (4 views)
+  media span.truncate.text-lead "Sourdough"  (4 views)
+  media span.truncate.text-small "4 hr · At home"  (4 views)
+  media span.absolute.inset-x-0 "#1"  (4 views)
+  media span.absolute.inset-x-0 "#2"  (4 views)
+  media span.absolute.inset-x-0 "#3"  (4 views)
+  media span.absolute.inset-x-0 "#4"  (4 views)
+  media span.absolute.inset-x-0 "#5"  (4 views)
+  media span.absolute.inset-x-0 "#6"  (4 views)
+  media span.absolute.inset-x-0 "#7"  (4 views)
+  media span.absolute.inset-x-0 "#8"  (4 views)
+  media span.absolute.inset-x-0 "#9"  (4 views)
+  media span.absolute.inset-x-0 "#10"  (4 views)
+  media span.truncate.text-lead "Baking"  (2 views)
+  media span.truncate.text-lead "BBQ"  (2 views)

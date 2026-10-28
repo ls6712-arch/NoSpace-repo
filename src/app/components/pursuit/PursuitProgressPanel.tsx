@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Check, Copy, Link2, Plus, Search, Share2, UserPlus, Users } from "lucide-react";
+import { Check, Copy, Link2, Search, Share2, UserPlus, Users } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Project, ProgressEntry, PursuitMember, addJoinedProject, setProjectMode } from "../../lib/journal";
 import { formatAmount, hasMeasure, summarize, targetText, unitFor } from "../../lib/pursuitProgress";
 import { usePursuitMembers, usePursuitProgress } from "../../lib/usePursuitProgress";
+import { GroupRows } from "./GroupRows";
+import { answerJoinRequest } from "../../lib/openPursuits";
 import {
   PursuitInvite,
   answerInvite,
@@ -56,33 +58,27 @@ export function PursuitProgressPanel({
   };
   const [inviting, setInviting] = useState(false);
   const [membersVersion, setMembersVersion] = useState(0);
+  const [requestError, setRequestError] = useState<string | null>(null);
   const members = usePursuitMembers(project, ownerFallback, membersVersion);
   if (!hasMeasure(project)) return null;
   const measure = project.measure;
   const joinedMembers = members.filter((m) => m.status === "joined");
   const pendingMembers = members.filter((m) => m.status === "invited");
+  const requestedMembers = members.filter((m) => m.status === "requested");
   const mode = project.mode ?? "solo";
 
   const entriesOf = (m: PursuitMember) =>
     entries.filter((e) => (e.userId ?? user?.id) === m.userId || (!m.userId && m.role === "owner" && !e.userId));
   const nameOf = (m: PursuitMember) => (m.userId && m.userId === user?.id ? "You" : m.displayName);
 
-  const actions = (
-    <div className="mt-4 grid grid-cols-2 gap-2">
-      {viewerIsOwner ? (
-        <Button variant="outline" className="h-11 rounded-control" onClick={() => setInviting(true)}>
-          <UserPlus className="size-4" /> Invite people
-        </Button>
-      ) : (
-        <span />
-      )}
-      <Link to={`/create?pursuit=${project.id}`} className={!viewerIsOwner ? "col-span-2" : ""}>
-        <Button variant="coral" className="h-11 w-full rounded-control">
-          <Plus className="size-4" /> Log a Moment
-        </Button>
-      </Link>
+  // Logging the next one is the fixed button at the bottom of the page; here, only inviting.
+  const actions = viewerIsOwner ? (
+    <div className="mt-4">
+      <Button variant="outline" className="h-11 rounded-control" onClick={() => setInviting(true)}>
+        <UserPlus className="size-4" /> Invite people
+      </Button>
     </div>
-  );
+  ) : null;
 
   // ── Solo ─────────────────────────────────────────────────────────────
   if (mode === "solo") {
@@ -94,7 +90,7 @@ export function PursuitProgressPanel({
         <MetaLine percent={s.percent} remaining={s.remaining} unit={measure.unit} done={s.done} targetDate={measure.targetDate} />
         {measure.kind === "milestones" && <MilestoneList names={measure.milestones ?? []} reached={Math.floor(s.current)} />}
         {measure.whatCounts && <p className="mt-3 text-caption text-muted-foreground">Counts: {measure.whatCounts}</p>}
-        {viewerIsOwner && actions}
+        {actions}
         <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} onInvited={() => setMembersVersion((v) => v + 1)} />
       </section>
     );
@@ -103,60 +99,39 @@ export function PursuitProgressPanel({
   // ── Side by side ─────────────────────────────────────────────────────
   if (mode === "together") {
     return (
-      <section className="mb-6">
-        <p className="mb-3 text-small text-muted-foreground">Everyone has their own goal and progress.</p>
-        {/* Only people who've joined get a column. Pending invites used to
-            take one too, which pushed the second person who actually joined
-            onto a new row. */}
-        <div
-          className={
-            joinedMembers.length > 2
-              ? "-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 [&>*]:w-[44%] [&>*]:shrink-0 [&>*]:snap-start"
-              : "grid grid-cols-2 gap-4"
-          }
-        >
-          {joinedMembers.map((m) => {
-            const mine = entriesOf(m);
-            const s = summarize(measure, mine, m.role === "owner");
-            const pieces = mine.filter((e) => e.image).slice(-3);
-            return (
-              <div key={m.userId ?? m.displayName} className="min-w-0">
-                <PersonAvatar name={m.displayName} src={m.avatarUrl} size="size-16" />
-                <p className="mt-2 text-lead" style={{ fontFamily: "var(--font-serif)" }}>
-                  {nameOf(m)}
-                </p>
-                {m.status === "invited" ? (
-                  <p className="text-caption text-muted-foreground">Invited</p>
-                ) : (
-                  <>
-                    <p className="text-small">
-                      {formatAmount(s.current)} / {targetText(measure)}
-                    </p>
-                    <p className="text-caption text-muted-foreground">
-                      {s.done ? "Goal reached" : `${formatAmount(s.remaining)} remaining`}
-                    </p>
-                    <ProgressBar fraction={s.fraction} thin className="mt-2" />
-                  </>
-                )}
-                {pieces.length > 0 && (
-                  <div className="mt-3 grid grid-cols-3 gap-1.5">
-                    {pieces.map((e) => (
-                      <ImageWithFallback key={e.id} src={e.image} alt={e.note ?? ""} className="aspect-[3/4] w-full rounded-card" />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      <>
+        {/* Only people who've joined get a row, in the order they joined. Pending invites don't. */}
+        <GroupRows
+          members={joinedMembers}
+          requests={viewerIsOwner ? requestedMembers : []}
+          measure={measure}
+          entriesOf={entriesOf}
+          viewerId={user?.id}
+          onAnswer={async (m, accept) => {
+            if (!m.userId) return;
+            setRequestError(await answerJoinRequest(project.id, m.userId, accept));
+            setMembersVersion((v) => v + 1);
+          }}
+        />
+        {requestError && (
+          <p role="alert" className="mb-4 text-caption text-destructive">
+            {requestError}
+          </p>
+        )}
         {pendingMembers.length > 0 && (
-          <p className="mt-3 text-caption text-muted-foreground">
+          <p className="mb-4 text-caption text-muted-foreground">
             Invited, not joined yet: {pendingMembers.map((m) => m.displayName).join(", ")}
           </p>
         )}
-        {actions}
+        {viewerIsOwner && (
+          <div className="mb-6">
+            <Button variant="outline" className="h-11 rounded-control" onClick={() => setInviting(true)}>
+              <UserPlus className="size-4" /> Invite people
+            </Button>
+          </div>
+        )}
         <InviteDialog open={inviting} onOpenChange={setInviting} project={project} existing={members} onInvited={() => setMembersVersion((v) => v + 1)} />
-      </section>
+      </>
     );
   }
 

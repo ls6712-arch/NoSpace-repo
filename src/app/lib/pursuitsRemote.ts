@@ -436,7 +436,7 @@ export async function fetchPursuitMembers(pursuitId: string): Promise<PursuitMem
   try {
     const { data, error } = await supabase
       .from("pursuit_members")
-      .select("user_id, role, status")
+      .select("user_id, role, status, created_at")
       .eq("pursuit_id", pursuitId);
     if (error || !data) return [];
     const profiles = await profilesById((data as any[]).map((r) => r.user_id));
@@ -450,9 +450,11 @@ export async function fetchPursuitMembers(pursuitId: string): Promise<PursuitMem
           avatarUrl: p?.avatarUrl,
           status: r.status,
           role: r.role,
-        } as PursuitMember;
+          joinedAt: r.created_at ? new Date(r.created_at).getTime() : undefined,
+        } as PursuitMember & { joinedAt?: number };
       })
-      .sort((a, b) => (a.role === "owner" ? -1 : b.role === "owner" ? 1 : 0));
+      // Join order: the owner first, then each person by when they joined. Never by progress.
+      .sort((a, b) => (a.role === "owner" ? -1 : b.role === "owner" ? 1 : 0) || (a.joinedAt ?? 0) - (b.joinedAt ?? 0));
   } catch {
     return [];
   }

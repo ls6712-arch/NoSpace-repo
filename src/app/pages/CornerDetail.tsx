@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { Check, Lock, Sparkle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -28,6 +28,7 @@ import { cornerPhotoTransitionName } from "../components/discover/HeroCard";
 import { SnapCarousel } from "../components/ui/SnapCarousel";
 import { AvatarStack } from "../components/ui/AvatarStack";
 import { PillButton } from "../components/ui/PillButton";
+import { MakeItAPursuitSheet } from "../components/pursuit/MakeItAPursuitSheet";
 import { builtInCornerModel, curatedModel, plainModel, type CornerModel } from "../lib/cornerModel";
 import { useCorners } from "../context/CornersContext";
 import { hobbies } from "../data/hobbies";
@@ -122,6 +123,11 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   const signIn = () => navigate(`/login?redirect=${here}`);
   // Signed out or not approved yet: sign in first, then land where the button was going.
   const cornerParams = `hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`;
+  // "Do this with people" opens the Make it a Pursuit sheet; ?host=1 (from a finished Pursuit) opens it on starting an open group.
+  const [searchParams] = useSearchParams();
+  const hostFlow = searchParams.get("host") === "1" && !restricted;
+  const [sheetOpen, setSheetOpen] = useState(hostFlow);
+  const doWithPeople = () => (restricted ? navigate(`/login?redirect=${here}`) : setSheetOpen(true));
   const goTo = (path: string) => (restricted ? navigate(`/login?redirect=${encodeURIComponent(path)}`) : navigate(path));
 
   const posts = useMemo(
@@ -304,16 +310,6 @@ function CornerBody({ corner }: { corner: CornerModel }) {
           <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
           <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
         </div>
-        {photo && (
-          <a
-            href={photo.source}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute right-4 top-3 inline-flex min-h-11 items-center text-caption text-on-media/90 hover:underline md:right-8"
-          >
-            {`Photo: ${photo.credit} on Unsplash`}
-          </a>
-        )}
         <div className={`${PAGE_X} relative flex flex-1 flex-col pb-5 pt-3`}>
           <Link to={category ? `/browse/${category.slug}` : "/corners"} className="inline-flex min-h-11 items-center self-start text-small hover:underline">
             {category ? `← ${category.name}` : "← Corners"}
@@ -328,6 +324,20 @@ function CornerBody({ corner }: { corner: CornerModel }) {
       </header>
 
       <div className={`${PAGE_X} pb-56 pt-8 lg:pb-40`}>
+        {/* The photo credit sits on the page, under the hero: on a bright photo it would not be readable over it. */}
+        {photo && (
+          <div className="-mt-6 mb-4 flex justify-end">
+            <a
+              href={photo.source}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center text-caption text-muted-foreground hover:underline"
+            >
+              {`Photo: ${photo.credit} on Unsplash`}
+            </a>
+          </div>
+        )}
+
         {error && <p role="alert" className="mb-6 text-small text-destructive">{error}</p>}
 
         {(proof.length > 0 || heroEvent) && (
@@ -561,7 +571,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
       {/* The one primary action; the other two are small links under it. Sits above the tab bar on a phone. */}
       <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background lg:bottom-0">
         <div className="mx-auto flex max-w-md flex-col items-center gap-1 px-4 pt-3 pb-2">
-          <PillButton className="w-full" onClick={() => goTo(`/pursuits/new?${cornerParams}&together=1`)}>
+          <PillButton className="w-full" onClick={doWithPeople}>
             Do this with people
           </PillButton>
           <div className="flex items-center gap-6">
@@ -574,6 +584,13 @@ function CornerBody({ corner }: { corner: CornerModel }) {
           </div>
         </div>
       </div>
+
+      <MakeItAPursuitSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        corner={{ spaceSlug: corner.spaceSlug, slug: corner.slug, name: corner.name }}
+        startOpenGroup={hostFlow}
+      />
 
       <MomentDetail
         post={openPost}

@@ -268,7 +268,7 @@ New words approved in the core loop brief (section 7). Screen copy lands with ea
 | What's next | The three rows after a Moment is posted |
 | Was there | Reserved for a person's attendance at a session; used only if a screen needs it |
 | Keep going | Heading of the choices after a Pursuit is complete |
-| Do this with people | The one primary button on a Corner page. "Set a solo goal" and "I did this" are text links under it |
+| Do this with people | The one primary button on a Corner page. It opens Make it a Pursuit. "Set a solo goal" and "I did this" are text links under it |
 
 ### Core loop v1, screens 1 to 3 (Oct 28, 2026)
 
@@ -292,3 +292,33 @@ Strings from the founder's screens (`docs/design/core-loop/01` to `03`), added w
 | Do this with people | The one primary button on a Corner page |
 | Set a solo goal | Text link under it: starts a Pursuit for yourself |
 | I did this | Text link under it: opens Log in that Corner |
+
+### Core loop v1, screens 4, 5 and 13 (Oct 28, 2026)
+
+Strings from `docs/design/core-loop/04`, `05` and `13`, added with PR 3. The brief's sentence "People who do it together finish far more often" is not used (an outcome claim, section 3 fix 2).
+
+| Term | Meaning |
+|---|---|
+| Make it a Pursuit | Title of the sheet over a Corner. Subline: "A small goal with an end date." |
+| Who with | Label over the choice: Open group, Friends, Just me |
+| Open group | A Pursuit anyone can ask to join; the host sets how many people fit. See below for who joins at once |
+| {N} of {M} spots | Badge on an open group: people in it of its capacity. The host counts as one |
+| Hosted by {Name} · First session {time}, {place} · or do your own version at home | Line on the open group card |
+| Goal | Label over the stepper: "Do {Corner} {N} times in {M} weeks". The weeks number changes when tapped, the times with − and + |
+| Join {Name}’s Pursuit / Start with friends / Start | The button, by choice. After joining a full or half-full group it reads Requested |
+| No open group for {Corner} yet. Start one and up to {N} people can join. | Shown on Open group when there is none, and the button starts one |
+| The host will let you in. | Under a request to join |
+| Pursuit · {Corner} · ends {date} | Line over a Pursuit page's title |
+| Next together | Accent card on a Pursuit page: the group's next session. Button I’m in, then You’re in |
+| Set next session | Host button on that card; the sheet asks When, Where and Note |
+| The group | Heading over the people in a Pursuit, in the order they joined, each with "{N} of {M}" and a bar. Never sorted by progress, never ranked |
+| Let in / Not now | The host's answers to a request to join |
+| Latest | Heading over the three newest Moments in a Pursuit |
+| Log {corner} #{N} | The fixed button on a Pursuit page: the next Moment to log |
+| See the recap | Link on a finished Pursuit |
+| Pursuit complete · {N} days | Kicker on the recap |
+| You finished {N} {unit} | Title of the recap |
+| Share the recap | Makes a 1080 by 1920 image of the Moments and the gold Stub |
+| Keep going | Heading of the next steps: Level up (same group, harder goal), Host it for beginners, Try something new |
+
+Joining an open group: instant while at most half the spots are taken (the host counts as one), then the host decides (Let in or Not now).

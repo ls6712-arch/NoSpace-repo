@@ -53,6 +53,15 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
         return [...byP].map(([participation_id, ms]) => { const last = [...ms].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).at(-1)!; return { participation_id, last_message_id: last.id, last_message_body: last.body, last_message_created_at: last.created_at, last_message_from_user: last.from_user, message_count: ms.length, unread_count: ms.filter((m) => m.from_user !== ME).length ? 1 : 0 }; });
       }
       case "you_inspired_this_month": return 0;
+      // An open group for the Make it a Pursuit sheet on the Pasta Corner.
+      case "open_pursuits_for_corner":
+        return args.p_sub_hobby === "pasta"
+          ? [{
+              pursuit_id: "open-pasta", title: "5 pastas this month", owner_id: "22222222-2222-4222-8222-222222222201", owner_name: "Priya", capacity: 8, taken: 6,
+              ends_at: new Date(Date.now() + 24 * 86_400_000).toISOString(), session_id: 1, session_starts_at: new Date(Date.now() + 3 * 86_400_000).toISOString(),
+              session_place: "Indiranagar", people: [{ name: "Priya", avatar: null }, { name: "Sneha", avatar: null }, { name: "Arjun", avatar: null }], mine: null,
+            }]
+          : [];
       // Only the caller's own owner-only profile columns (public.my_profile_private).
       case "my_profile_private": {
         const me = (fixtures.profiles as AnyRow[] | undefined)?.find((p) => p.id === session.user.id);

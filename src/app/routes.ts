@@ -34,6 +34,7 @@ import { HobbyArchive } from "./pages/HobbyArchive";
 import { PublicProfile } from "./pages/PublicProfile";
 import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
+import { PursuitRecap } from "./pages/PursuitRecap";
 import { CreatePursuit } from "./pages/CreatePursuit";
 import { MomentPage } from "./pages/MomentPage";
 import { JoinPursuit } from "./pages/JoinPursuit";
@@ -158,6 +159,7 @@ export const router = createHashRouter([
       { path: "join/:token", Component: JoinPursuit },
       // The old per-Pursuit form is gone: one Log a Moment form, with the Pursuit pre-filled.
       { path: "pursuit/:id/moment", loader: ({ params }) => redirect(`/create?pursuit=${params.id}`) },
+      { path: "pursuit/:id/recap", Component: PursuitRecap },
       { path: "pursuit/:id", Component: Pursuit },
       // A Moment shared into a chat (Phase 4) is the first place a Moment
       // needs a URL of its own — everywhere else it's a dialog opened from

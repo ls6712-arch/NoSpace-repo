@@ -39,6 +39,9 @@ import { GoalProgressTap } from "../components/GoalProgressTap";
 import { EndingDialog } from "../components/EndingDialog";
 import { PursuitProgressPanel } from "../components/pursuit/PursuitProgressPanel";
 import { NextSessionCard } from "../components/pursuit/NextSessionCard";
+import { NextTogetherCard } from "../components/pursuit/NextTogetherCard";
+import { PillButton } from "../components/ui/PillButton";
+import { logLabel } from "../lib/pursuitGoal";
 import { ProgressBar } from "../components/pursuit/ui";
 import { formatAmount, hasMeasure, pursuitCorner, unitFor } from "../lib/pursuitProgress";
 import { usePursuitProgress } from "../lib/usePursuitProgress";
@@ -72,6 +75,7 @@ interface PursuitView {
   id: string;
   title: string;
   hobbySlug?: string;
+  subHobby?: string;
   interest?: string;
   customSpace?: string;
   startedAt: number;
@@ -168,6 +172,7 @@ export function Pursuit() {
         id: ownProject.id,
         title: ownProject.title,
         hobbySlug: ownProject.hobbySlug,
+        subHobby: ownProject.subHobby,
         interest: ownProject.interest,
         customSpace: ownProject.customSpace,
         startedAt: ownProject.startedAt,
@@ -197,6 +202,7 @@ export function Pursuit() {
         id: remote.data.id,
         title: remote.data.title,
         hobbySlug: remote.data.hobbySlug,
+        subHobby: remote.data.subHobby,
         interest: remote.data.interest,
         customSpace: remote.data.customSpace,
         startedAt: remote.data.startedAt,
@@ -286,6 +292,10 @@ export function Pursuit() {
   // ending belong to whoever created it.
   const isCreator = owner && ownProject?.role !== "member";
   const cornerLabel = pursuitCorner(view);
+  // When it ends: the measure's date, else the goal's.
+  const endsAtMs = ownProject?.measure?.targetDate ?? view.goal?.targetDate;
+  const sharedGroup = !!ownProject && (ownProject.mode ?? "solo") !== "solo" && !!user;
+  const myDone = progressEntries.filter((e) => (e.userId ?? user?.id) === user?.id).length;
   const goal = view.goal;
   const status = pursuitStatus(view);
   const photos = firstAndLatestPhoto(moments);
@@ -345,7 +355,7 @@ export function Pursuit() {
     : undefined;
 
   return (
-    <div className="min-h-viewport bg-surface pb-24">
+    <div className="min-h-viewport bg-surface pb-44 lg:pb-24">
       <div className="container mx-auto max-w-2xl px-4 pt-8">
         <Link
           to={owner ? "/my-space" : "/discover"}
@@ -363,7 +373,10 @@ export function Pursuit() {
           <span className="text-small text-muted-foreground">{view.ownerName}</span>
         </div>
 
-        <h1 className="mb-2 break-words text-display" style={{ fontFamily: "var(--font-serif)" }}>
+        <p className="mb-1 text-small text-muted-foreground">
+          {["Pursuit", cornerLabel, endsAtMs ? `ends ${formatDate(endsAtMs)}` : ""].filter(Boolean).join(" · ")}
+        </p>
+        <h1 className="mb-2 break-words text-display" style={{ fontFamily: "var(--font-serif)", viewTransitionName: "pursuit-title" }}>
           {view.title}
         </h1>
 
@@ -426,13 +439,29 @@ export function Pursuit() {
         )}
 
         {/* Step 5a: an active Pursuit you're part of opens with your next step. */}
-        {owner && ownProject && status === "active" && (
+        {sharedGroup && ownProject && status === "active" && (
+          <NextTogetherCard pursuitId={ownProject.id} userId={user?.id} isOwner={ownProject.role !== "member"} />
+        )}
+        {owner && ownProject && status === "active" && !sharedGroup && (
           <NextSessionCard project={ownProject} myMomentTimes={myMomentTimes} />
+        )}
+
+        {status === "complete" && ownProject && (
+          <Link
+            to={`/pursuit/${ownProject.id}/recap`}
+            className="mb-6 flex min-h-11 items-center justify-between gap-3 rounded-card bg-card p-4 text-body font-semibold"
+          >
+            See the recap
+            <ArrowRight className="size-5 text-accent-text" strokeWidth={1.75} aria-hidden="true" />
+          </Link>
         )}
 
         {/* ── Progress header ─────────────────────────────────────────── */}
         {ownProject && hasMeasure(ownProject) && (
           <PursuitProgressPanel project={ownProject} viewerIsOwner={ownProject.role !== "member"} />
+        )}
+        {sharedGroup && moments.length > 0 && (
+          <LatestMoments moments={moments} corner={cornerLabel} onOpen={setOpenPost} />
         )}
         {goal && !(ownProject && hasMeasure(ownProject)) && (
           <div className="mb-4 rounded-card border border-border bg-card p-4">
@@ -637,6 +666,19 @@ export function Pursuit() {
         </>
       )}
 
+      {/* The one action on a Pursuit you take part in: log the next one. Above the tab bar on a phone. */}
+      {ownProject && status === "active" && (
+        <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background lg:bottom-0">
+          <div className="mx-auto max-w-md px-4 py-3">
+            <Link to={`/create?pursuit=${ownProject.id}`} className="block">
+              <PillButton variant="light" className="w-full">
+                {logLabel(cornerLabel, myDone)}
+              </PillButton>
+            </Link>
+          </div>
+        </div>
+      )}
+
       <MomentDetail
         post={openPost}
         owned={!!user && openPost?.userId === user.id}
@@ -750,5 +792,54 @@ function PrivateMomentCard({ moment }: { moment: PursuitMoment }) {
       {moment.image && <ImageWithFallback src={moment.image} alt="" className="mb-2 aspect-square w-full rounded-card" />}
       <p className="whitespace-pre-wrap text-small">{moment.text}</p>
     </div>
+  );
+}
+
+/**
+ * "Latest": the three newest Moments in a group Pursuit, each as a row with its
+ * photo, who made it and which one it is (their own count: "Sneha · Pasta #2"),
+ * and the caption. Tapping a row opens the Moment.
+ */
+function LatestMoments({ moments, corner, onOpen }: { moments: PursuitMoment[]; corner?: string; onOpen: (post: Post) => void }) {
+  const rows = useMemo(() => {
+    const seen = new Map<string, number>();
+    const numbered = [...moments]
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .map((m) => {
+        const who = m.post?.creator ?? "You";
+        const n = (seen.get(who) ?? 0) + 1;
+        seen.set(who, n);
+        return { m, who, n };
+      });
+    return numbered.sort((a, b) => b.m.createdAt - a.m.createdAt).slice(0, 3);
+  }, [moments]);
+  return (
+    <section aria-labelledby="latest-title" className="mb-6">
+      <h2 id="latest-title" className="mb-3 font-[family-name:var(--font-display)] text-title font-bold">
+        Latest
+      </h2>
+      <ul className="flex flex-col gap-3">
+        {rows.map(({ m, who, n }) => (
+          <li key={m.key}>
+            <button
+              type="button"
+              disabled={!m.post}
+              onClick={() => m.post && onOpen(m.post)}
+              className="flex w-full items-center gap-4 rounded-card bg-card p-3 text-left"
+            >
+              <ImageWithFallback src={m.image} alt="" width={160} className="size-16 shrink-0 rounded-control bg-surface-muted" />
+              <span className="min-w-0">
+                <span className="block truncate text-body font-semibold">{`${who.slice(0, 60)} · ${corner ?? "Moment"} #${n}`}</span>
+                {m.text.trim() && (
+                  <span className="line-clamp-2 text-small text-muted-foreground" title={m.text.trim()}>
+                    {m.text.trim()}
+                  </span>
+                )}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

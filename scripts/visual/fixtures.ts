@@ -12,6 +12,8 @@ const SAM = "22222222-2222-4222-8222-222222222203";
 const INES = "22222222-2222-4222-8222-222222222204";
 export const PURSUIT_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1";
 export const PURSUIT2_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2";
+/** A finished group Pursuit, for the recap. */
+export const PURSUIT3_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3";
 export const SPACE_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1";
 export const SPACE_SLUG = "clay-hands";
 export const MEDIA_ORIGIN = "https://fixture.supabase.co/storage/v1/object/public/moments";
@@ -72,21 +74,37 @@ export function buildFixtures(now = new Date()): Fixtures {
     interest: "Drawing", custom_space: null, inspired_by_post_id: null, started_at: ago(12), finished_at: null, paused_at: null, let_go_at: null,
     ending_note: null, cover_image_path: null, cover_image_preference: "first", check_in_days: 7, goal_shape: null, goal_label: null, goal_target_number: null, goal_unit: null,
     goal_verb: null, goal_target_date: null, goal_reached_at: null, goal_current: null, updated_at: ago(2), measure: null,
+  }, {
+    // Finished with two friends: the recap's grid, gold stub and Keep going.
+    id: PURSUIT3_ID, user_id: ME, title: "Sourdough 10 times in 4 weeks", mode: "together", shared: true, hobby_slug: "food-cooking", sub_hobby: "sourdough",
+    interest: null, custom_space: null, inspired_by_post_id: null, started_at: ago(30), finished_at: ago(4), paused_at: null, let_go_at: null,
+    ending_note: null, cover_image_path: null, cover_image_preference: "first", check_in_days: 7, goal_shape: null, goal_label: null, goal_target_number: null, goal_unit: null,
+    goal_verb: null, goal_target_date: null, goal_reached_at: null, goal_current: null, updated_at: ago(4),
+    measure: { kind: "count", target: 10, unit: "times", allowPartial: false, allowDecimals: false, defaultAmount: 1, startingAmount: 0 },
   }];
   const pursuit_members: Row<"pursuit_members">[] = [
     { pursuit_id: PURSUIT2_ID, user_id: ME, role: "owner", status: "joined", invited_by: null, created_at: ago(12) },
     { pursuit_id: PURSUIT_ID, user_id: ME, role: "owner", status: "joined", invited_by: null, created_at: ago(30) },
     { pursuit_id: PURSUIT_ID, user_id: INES, role: "member", status: "joined", invited_by: ME, created_at: ago(28) },
     { pursuit_id: PURSUIT_ID, user_id: THEO, role: "member", status: "invited", invited_by: ME, created_at: ago(2) },
+    { pursuit_id: PURSUIT3_ID, user_id: ME, role: "owner", status: "joined", invited_by: null, created_at: ago(30) },
+    { pursuit_id: PURSUIT3_ID, user_id: PRIYA, role: "member", status: "joined", invited_by: ME, created_at: ago(29) },
+    { pursuit_id: PURSUIT3_ID, user_id: SAM, role: "member", status: "joined", invited_by: ME, created_at: ago(28) },
   ];
   const pursuit_plans: Row<"pursuit_plans">[] = [
     { pursuit_id: PURSUIT_ID, user_id: ME, next_session_at: ahead(26), next_session_note: "Trim the three leather-hard bowls, then wedge the next batch", times_per_week: 3, updated_at: ago(1) },
   ];
-  const pursuit_progress: Row<"pursuit_progress">[] = [2, 3, 1, 5, 6].map((n, i) => ({
-    id: `cccccccc-cccc-4ccc-8ccc-cccccccccc0${i}`, pursuit_id: PURSUIT_ID, user_id: ME, amount: i === 3 ? 2 : 1,
-    note: ["Bowl number nine. The rim finally sits right.", "Glaze tiles", null, "Two bowls before dinner", "Trimmed and waiting"][i],
-    image_url: i % 2 === 0 ? media(n) : null, post_id: n, created_at: ago(14 - i * 3),
-  }));
+  const pursuit_progress: Row<"pursuit_progress">[] = [
+    ...[2, 3, 1, 5, 6].map((n, i) => ({
+      id: `cccccccc-cccc-4ccc-8ccc-cccccccccc0${i}`, pursuit_id: PURSUIT_ID, user_id: ME, amount: i === 3 ? 2 : 1,
+      note: ["Bowl number nine. The rim finally sits right.", "Glaze tiles", null, "Two bowls before dinner", "Trimmed and waiting"][i],
+      image_url: i % 2 === 0 ? media(n) : null, post_id: n, created_at: ago(14 - i * 3),
+    })),
+    ...Array.from({ length: 10 }, (_, i) => ({
+      id: `cccccccc-cccc-4ccc-8ccc-cccccccccd${i}`, pursuit_id: PURSUIT3_ID, user_id: ME, amount: 1,
+      note: null, image_url: media(1 + (i % 6)), post_id: null, created_at: ago(29 - i * 2.5),
+    })),
+  ];
 
   const spaces: Row<"spaces">[] = [{
     id: SPACE_ID, slug: SPACE_SLUG, name: "Clay Hands", description: "Wheel-throwers, hand-builders and glaze nerds. Share the kiln results, the cracked ones too.",
