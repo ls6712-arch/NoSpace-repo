@@ -1001,6 +1001,20 @@
   background-image: var(--scrim-top);
 }
 
+/* The billboard fade: the page colour comes in from the left and from the
+   bottom, so a title sits on dark and the photo shows at the right. Pair with
+   bg-scrim and text-on-media. */
+@utility bg-hero-fade {
+  background-image:
+    linear-gradient(90deg, var(--background) 0%, color-mix(in srgb, var(--background) 70%, transparent) 40%, transparent 75%),
+    linear-gradient(0deg, var(--background) 0%, transparent 35%);
+}
+
+/* The glow under a card or button the pointer is on. */
+@utility shadow-glow {
+  box-shadow: 0 10px 40px -10px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
 /* Full-height layouts: 100dvh tracks the mobile browser's collapsing
    toolbars; the 100vh line is the fallback for browsers without dvh.
    (Tailwind's own min-h-screen is a bare 100vh and can't be overridden.) */

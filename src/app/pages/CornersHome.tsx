@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { FilterChip } from "../components/FilterChip";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
 import { Billboard, type BillboardSlide } from "../components/corners/Billboard";
@@ -16,12 +15,11 @@ import {
   type CornerSetting,
 } from "../data/curatedCorners";
 import { cornerKey, homeCornersIn, type HomeCorner } from "../data/homeCorners";
-import { categoryStyle } from "../lib/categoryStyle";
 import { MOODS, type MoodId } from "../data/moods";
 import { postCorner } from "../data/posts";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
 import { billboardCorners } from "../lib/billboard";
-import { LENSES, MAX_LENS_CORNERS, MIN_LENS_CORNERS, interleaveRows, isWideLens, type LensId } from "../lib/cornerLenses";
+import { LENSES, MAX_LENS_CORNERS, MIN_LENS_CORNERS, interleaveRows, type LensId } from "../lib/cornerLenses";
 import { cornerSubline } from "../lib/cornerSubline";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
@@ -52,6 +50,40 @@ const SETTING_OPTIONS: { id: Setting; label: string }[] = [
   { id: "home", label: "At home" },
   { id: "outdoors", label: "Outdoors" },
 ];
+
+/** One group of filter chips, every option showing. Tap a chosen one again to unset it. */
+function ChipGroup<T extends string | number>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly { id: T; label: string }[];
+  value: T | null;
+  onChange: (next: T | null) => void;
+}) {
+  return (
+    <div role="group" aria-label={label} className="-mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {options.map((o) => {
+        const on = value === o.id;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(on ? null : o.id)}
+            className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-small font-semibold transition-colors duration-fast ${
+              on ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]" : "border-border bg-surface text-foreground hover:border-[var(--accent)]"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /** The last choices on this device, or none. Storage can be blocked or hold junk. */
 function readPicker(): Picker {
@@ -176,33 +208,35 @@ export function CornersHome() {
     corners: everyCorner.filter((c) => matches(c, picker) && inLens(lens.id, c, live)).sort(order).slice(0, MAX_LENS_CORNERS),
   })).filter((r) => r.corners.length >= MIN_LENS_CORNERS);
   const rows = interleaveRows(lensRows, groupRows);
-  let lensIndex = -1;
 
   const picked = picker.duration !== null || picker.mood !== null || picker.setting !== null;
   return (
-    <div className={`ns-afterhours min-h-viewport ${PAGE_X} pb-24 pt-4 md:pt-8`}>
-      {/* The billboard. The space is held while the week's events load, so nothing jumps. */}
+    <div className="ns-afterhours min-h-viewport pb-24">
+      {/* The billboard runs edge to edge. The space is held while the week's events load, so nothing jumps. */}
       {slides.length > 0 ? (
         <Billboard slides={slides} />
       ) : (
-        <div className="mb-5 aspect-[4/5] rounded-card bg-surface-muted md:aspect-[21/9]" aria-hidden="true" />
+        <div className="h-[72vh] min-h-[480px] max-h-[820px] w-full bg-surface-muted" aria-hidden="true" />
       )}
       <h1 className="sr-only">Corners</h1>
 
-      {/* One compact row of three filters. */}
-      <section className={`${SECTION_GAP} -mx-4 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`} aria-label="Choose what fits">
-        <FilterChip anyLabel="Any time" options={DURATION_OPTIONS} value={picker.duration} onChange={(duration) => update({ duration })} />
-        <FilterChip anyLabel="Any mood" options={MOOD_OPTIONS} value={picker.mood} onChange={(mood) => update({ mood })} />
-        <FilterChip anyLabel="Anywhere" options={SETTING_OPTIONS} value={picker.setting} onChange={(setting) => update({ setting })} />
-        {picked && (
-          <button
-            type="button"
-            onClick={() => update(NO_PICK)}
-            className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-[var(--accent-text)] hover:underline"
-          >
-            Clear
-          </button>
-        )}
+      <div className={PAGE_X}>
+      {/* The three filters, every choice showing, lifted over the billboard's foot. */}
+      <section className={`${SECTION_GAP} relative z-10 -mt-6 flex flex-col gap-3`} aria-label="Choose what fits">
+        <ChipGroup label="Any time" options={DURATION_OPTIONS} value={picker.duration} onChange={(duration) => update({ duration })} />
+        <ChipGroup label="Any mood" options={MOOD_OPTIONS} value={picker.mood} onChange={(mood) => update({ mood })} />
+        <div className="flex flex-wrap items-center gap-x-2">
+          <ChipGroup label="Anywhere" options={SETTING_OPTIONS} value={picker.setting} onChange={(setting) => update({ setting })} />
+          {picked && (
+            <button
+              type="button"
+              onClick={() => update(NO_PICK)}
+              className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-[var(--accent-text)] hover:underline"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </section>
 
       {rows.length === 0 ? (
@@ -214,16 +248,14 @@ export function CornersHome() {
       ) : (
         rows.map((row) => {
           if (row.kind === "lens") {
-            lensIndex += 1;
-            const wide = isWideLens(lensIndex);
             return (
               <section key={row.lens.id} className={SECTION_GAP} aria-labelledby={`row-${row.lens.id}`}>
-                <h2 id={`row-${row.lens.id}`} className="mb-3 text-title font-semibold">
+                <h2 id={`row-${row.lens.id}`} className="mb-3 text-lead font-semibold md:text-title">
                   {row.lens.title}
                 </h2>
                 <HorizontalRow name={`corners.row.${row.lens.id}`} label={row.lens.title}>
                   {row.corners.map((c) => (
-                    <CornerCard key={cornerKey(c)} corner={c} wide={wide} subline={cornerSubline(c, live?.get(cornerKey(c)))} />
+                    <CornerCard key={cornerKey(c)} corner={c} subline={cornerSubline(c, live?.get(cornerKey(c)))} />
                   ))}
                 </HorizontalRow>
               </section>
@@ -233,8 +265,7 @@ export function CornersHome() {
           return (
             <section key={cat.slug} className={SECTION_GAP} aria-labelledby={`row-${cat.slug}`}>
               <div className="mb-3 flex items-baseline justify-between gap-4">
-                <h2 id={`row-${cat.slug}`} className="flex items-center gap-2.5 text-title font-semibold" style={categoryStyle(cat.slug)}>
-                  <span className="size-2.5 shrink-0 rounded-full bg-[var(--cat)]" aria-hidden="true" />
+                <h2 id={`row-${cat.slug}`} className="text-lead font-semibold md:text-title">
                   {cat.name}
                 </h2>
                 <Link to={`/browse/${cat.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
@@ -250,6 +281,7 @@ export function CornersHome() {
           );
         })
       )}
+      </div>
     </div>
   );
 }
