@@ -45,12 +45,9 @@ describe("home Corners", () => {
     expect(all.filter((c) => c.curated).map((c) => c.slug).sort()).toEqual(CURATED_CORNERS.map((c) => c.slug).sort());
   });
 
-  // Wave 1 (Oct 28, 2026): added before their photos were chosen, so for now they show their
-  // Space's cover. Add a photo to hobbyPhotos.ts (PHOTO and CREDITS) and delete the slug here.
-  const AWAITING_PHOTO = [
-    "life-drawing", "city-walks", "film-clubs", "food-tours", "mahjong", "rafting",
-    "letter-writing", "hyrox", "walking-clubs", "badminton", "skating", "ultimate-frisbee",
-  ];
+  // A Corner added before its photo is chosen goes here and shows its Space cover. Add a photo
+  // to hobbyPhotos.ts (PHOTO and CREDITS) and delete the slug here.
+  const AWAITING_PHOTO: string[] = [];
 
   it("give every Corner a photo of its own, never its Space's cover", () => {
     const missing = all.filter((c) => !AWAITING_PHOTO.includes(c.slug) && (!hasHobbyPhoto(c.slug) || !cornerPhoto(c.spaceSlug, c.slug)));

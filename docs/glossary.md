@@ -37,9 +37,9 @@ Discover's Corners tab (approved Oct 23, 2026). A ticket is a ticket to a real e
 | Admit one | The stamp on an event ticket and on the cover story's sticker when it is an event ticket. Not on a "How to start" card |
 | Start here | Heading above the row of cards (event tickets and "How to start" cards) |
 | Seen tonight | Heading above the collage of recent public Moments |
-| Rooms | Heading above the 18 groups of Corners, shown as rows |
-| Who's in where | Muted note on the right of the Rooms heading |
-| See all rooms | Opens the rest of the Rooms rows |
+| Rooms | Retired (UI removed Oct 28, 2026). Was the heading above the 18 groups of Corners. The groups are now shown by their own names under Browse by |
+| Who's in where | Retired (UI removed Oct 28, 2026) with the Rooms heading |
+| See all rooms | Retired (UI removed Oct 28, 2026). Use See all |
 | You're caught up | End of All Moments, after 30 Moments |
 | Welcome in. Pick a door. | Greeting for a member with no Moments yet |
 | Got a minute? Pick a door. | Greeting Monday to Friday before 17:00 |
@@ -406,3 +406,11 @@ Strings from `docs/design/core-loop/09` to `12`, added with PR 5. The brief's "f
 
 A Space is listed on Discover, Corner pages, Search and Home only once members (people who are not its hosts) have shared an approved Moment in it. On its own page, members' Moments come first and the hosts' own after.
 
+## Retired terms
+
+Never use these in UI copy.
+
+| Term | Retired | Use instead |
+|---|---|---|
+| Rooms | Oct 28, 2026 (UI removed) | The group's own name, under Browse by |
+| See all rooms | Oct 28, 2026 (UI removed) | See all |
