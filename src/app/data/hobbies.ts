@@ -129,7 +129,7 @@ export const hobbies: Hobby[] = [
       sub("Dance"), sub("Pickleball"), sub("Padel"), sub("Tennis"),
       sub("Swimming"), sub("Martial arts"), sub("Strength training"), sub("Basketball"),
       sub("Soccer"), sub("Volleyball"), sub("Boxing"), sub("Skateboarding"),
-      sub("Hyrox"), sub("Walking clubs"), sub("Badminton"), sub("Skating"), sub("Ultimate frisbee"),
+      sub("Hyrox"), sub("Walking clubs"), sub("Badminton"), sub("Roller and ice skating", "skating"), sub("Ultimate frisbee"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
@@ -179,7 +179,7 @@ export const hobbies: Hobby[] = [
       sub("Pottery"), sub("Knitting"), sub("Crochet"), sub("Embroidery"),
       sub("Sewing"), sub("Woodworking"), sub("Jewelry-making"), sub("Candle-making"),
       sub("Soap-making"), sub("Upcycling"), sub("Paper crafts"), sub("Zines"),
-      sub("Scrapbooking"), sub("Model-making"), sub("Miniatures"), sub("Makerspaces"),
+      sub("Scrapbooking"), sub("Models and miniatures", "model-making"), sub("Miniatures"), sub("Makerspaces"),
     ],
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
@@ -301,7 +301,7 @@ export const hobbies: Hobby[] = [
     description: "Instruments, singing, songwriting, DJing, music production.",
     subItems: [
       sub("Music production"), sub("Singing"), sub("Guitar"), sub("Songwriting"),
-      sub("DJing"), sub("Make a beat"), sub("Karaoke"), sub("Live music"), sub("Choir"),
+      sub("DJing"), sub("Make a beat"), sub("Karaoke"), sub("Live music"), sub("Choir and singing", "choir"),
     ],
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
@@ -662,7 +662,19 @@ export const MERGED_CORNERS: Readonly<Record<string, string>> = {
   "nature-outdoors/outdoor-photography": "photography-film/photography",
   "photography-film/outdoor-photography": "photography-film/photography",
   "health-wellness/mindfulness": "health-wellness/meditation",
-  "home-garden/restoration": "home-garden/furniture-flipping",
+  "home-garden/restoration": "crafts-making/upcycling",
+  "home-garden/furniture-flipping": "crafts-making/upcycling",
+  "food-cooking/kombucha": "food-cooking/fermentation",
+  "art-creative/illustration": "art-creative/drawing",
+  "art-creative/watercolor": "art-creative/painting",
+  "music/singing": "music/choir",
+  "music/make-a-beat": "music/music-production",
+  "collecting-fandom/toys": "collecting-fandom/lego",
+  "crafts-making/miniatures": "crafts-making/model-making",
+  "travel-adventure/backpacking": "nature-outdoors/hiking",
+  "tech-building/web-design": "tech-building/coding",
+  "travel-adventure/road-trips": "travel-adventure/travel",
+  "travel-adventure/exploration": "travel-adventure/travel",
   "home-garden/native-plants": "home-garden/gardening",
   "home-garden/indoor-growing": "home-garden/houseplants",
 };

@@ -18,6 +18,22 @@ describe("merged and hidden Corners", () => {
     for (const slug of HIDDEN_CORNERS) expect(hobbies.some((h) => h.subItems.some((s) => s.slug === slug)), slug).toBe(true);
   });
 
+  it("point every merge at a Corner that is kept and browsable, never at another merged Corner", () => {
+    for (const [from, to] of Object.entries(MERGED_CORNERS)) {
+      expect(to in MERGED_CORNERS, `${from} points at ${to}, which is itself merged away`).toBe(false);
+      const [space, slug] = to.split("/");
+      expect(isBrowsableCorner(space, slug), `${from} points at ${to}, which is not browsable`).toBe(true);
+    }
+  });
+
+  it("relabels keep their slugs, so stored Moments and Pursuits still join", () => {
+    const label = (space: string, slug: string) => hobbies.find((h) => h.slug === space)?.subItems.find((s) => s.slug === slug)?.label;
+    expect(label("music", "choir")).toBe("Choir and singing");
+    expect(label("crafts-making", "model-making")).toBe("Models and miniatures");
+    expect(label("sports-fitness", "skating")).toBe("Roller and ice skating");
+    expect(label("sports-fitness", "skateboarding")).toBe("Skateboarding");
+  });
+
   it("never hide a Corner that others are merged into", () => {
     for (const to of Object.values(MERGED_CORNERS)) expect(HIDDEN_CORNERS.has(to.split("/")[1]), to).toBe(false);
   });

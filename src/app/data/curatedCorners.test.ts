@@ -92,7 +92,7 @@ describe("curated Corners", () => {
     expect(cornerMoods(curatedBySlug("run-clubs")!)).toContain("people");
     expect(cornerMoods(curatedBySlug("running")!)).toContain("move");
     expect(cornerMoods(curatedBySlug("hiking")!)).toContain("outside");
-    expect(cornerMoods(curatedBySlug("make-a-beat")!)).toContain("make");
+    expect(cornerMoods(curatedBySlug("music-production")!)).toContain("alone");
   });
 
   it("look a Corner up by Space and slug", () => {

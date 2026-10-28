@@ -35,7 +35,7 @@ describe("matches", () => {
     }
     expect(matches(find("Pottery"), out)).toBe(false);
     expect(matches(find("Improv"), out)).toBe(false);
-    expect(matches(find("Skating"), home)).toBe(false);
+    expect(matches(find("Roller and ice skating"), home)).toBe(false);
   });
 
   it("keeps a home Corner for At home and an outdoors Corner for Outdoors", () => {
