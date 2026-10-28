@@ -6,7 +6,7 @@
   --lp-nav-h: 64px;
   --lp-phone-w: clamp(240px, min(34vw, 33svh), 380px);
   --lp-lap: 0.34;
-  --lp-font-heading: 'Bricolage Grotesque', 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --lp-font-heading: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   position: relative;
   color: var(--lp-ink);
   font-family: var(--font-body);

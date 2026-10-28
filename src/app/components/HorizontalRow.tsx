@@ -47,6 +47,18 @@ export function HorizontalRow({
     return () => ro.disconnect();
   }, [measure]);
 
+  // Stable, so a re-render (the arrows' state changing on every scroll) does
+  // not run the saved-position restore again and cancel a smooth scroll.
+  const setRefs = useCallback(
+    (node: HTMLUListElement | null) => {
+      el.current = node;
+      row.ref(node);
+      if (typeof listRef === "function") listRef(node);
+      else if (listRef) listRef.current = node;
+    },
+    [row.ref, listRef],
+  );
+
   const page = (dir: -1 | 1) => {
     const node = el.current;
     if (node) node.scrollBy({ left: dir * node.clientWidth * 0.8, behavior: reduced ? "auto" : "smooth" });
@@ -58,12 +70,7 @@ export function HorizontalRow({
   return (
     <div className="group/row relative -mx-4 md:-mx-8">
       <ul
-        ref={(node) => {
-          el.current = node;
-          row.ref(node);
-          if (typeof listRef === "function") listRef(node);
-          else if (listRef) listRef.current = node;
-        }}
+        ref={setRefs}
         onScroll={() => {
           row.onScroll();
           measure();

@@ -75,6 +75,12 @@ const landingPreviewRoutes =
       ]
     : [];
 
+// The component kit (/dev/kit): every foundation component and motion on one
+// page. Development only; compiled out of production builds.
+const devRoutes = import.meta.env.DEV
+  ? [{ path: "dev/kit", lazy: () => import("./pages/dev/DevKit").then((m) => ({ Component: m.DevKit })) }]
+  : [];
+
 export const router = createHashRouter([
   {
     path: "/",
@@ -183,6 +189,7 @@ export const router = createHashRouter([
       // is gone; nothing else pointed at it.
 
       ...landingPreviewRoutes,
+      ...devRoutes,
       { path: "*", Component: NotFound },
     ],
   },

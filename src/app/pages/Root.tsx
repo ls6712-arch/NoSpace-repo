@@ -57,7 +57,9 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   pathname.startsWith("/join/") ||
   // Step 2's own arrival link — same reasoning as /join/ above: this is
   // exactly how someone not on Sushii yet is meant to get here.
-  pathname.startsWith("/i/");
+  pathname.startsWith("/i/") ||
+  // The component kit has no data and no account; the route exists in dev only.
+  (import.meta.env.DEV && pathname === "/dev/kit");
 
 export function Root() {
   const { user, profile, loading, isConfigured } = useAuth();

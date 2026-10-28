@@ -161,7 +161,7 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 
 | Term | Meaning |
 |---|---|
-| Stub | A keepsake on your Shelf, shown in the Shelf's Stubs tab. Types: **silver** (your first Moment in that Corner, by `hobby_slug` and `corner`), **ticket** (a Moment with `from_ticket` set, logged from a ticket), **with someone** (a Moment with a `pursuit_id` whose Pursuit has more than 1 active member), **event** (a host-confirmed row in `public.stubs`: proof you attended a Space event, never self-awarded) and **plain** (everything else). The serial is the Moment's position among your own Moments by `created_at`. No totals or counts of Stubs anywhere. A product noun, always capitalized |
+| Stub | A keepsake on your Shelf, shown in the Shelf's Stubs tab. Types: **silver** (your first Moment in that Corner, by `hobby_slug` and `corner`), **ticket** (a Moment with `from_ticket` set, logged from a ticket), **with someone** (a Moment with a `pursuit_id` whose Pursuit has more than 1 active member), **event** (a host-confirmed row in `public.stubs`: proof you attended a Space event, never self-awarded), **session** (core loop v1: one per posted Moment that counts toward a Pursuit, issued by a server function) and **gold** (a completed Pursuit) and **plain** (everything else). The serial is the Moment's position among your own Moments by `created_at`. Updated Oct 28 (core loop v1): your own Stub count may show on You, and Search may show a friend signal such as "Sneha has 4 pottery Stubs". Stubs are never ranked and there are no leaderboards. A product noun, always capitalized |
 | Past events | Heading of a host's list of ended events, on the Space's Events tab |
 | Confirm who came | Host button on a past event: opens "Who came?" |
 | Who came? | Title of the dialog where a host ticks who showed up from the people who said "I’m going" |
@@ -255,3 +255,17 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 | See who's on Soosh. | Real Shelves heading |
 | Soosh is invite-only. | Invite section heading |
 | Privacy Policy / Terms | Footer links. Contact, Instagram and TikTok appear once set in `src/app/config.ts` |
+
+## Core loop v1 (Oct 28, 2026)
+
+New words approved in the core loop brief (section 7). Screen copy lands with each screen's PR; the terms are listed here so they are not reworded.
+
+| Term | Meaning |
+|---|---|
+| Make it a Pursuit | Title of the sheet on a Corner that starts a Pursuit |
+| Open group | A Pursuit anyone nearby can join, run by a host. The other choices are Friends and Just me |
+| Next together | Card at the top of a Pursuit page with the next shared session and the I'm in button |
+| What's next | The three rows after a Moment is posted |
+| Was there | Reserved for a person's attendance at a session; used only if a screen needs it |
+| Keep going | Heading of the choices after a Pursuit is complete |
+| Do this with people | The one primary button on a Corner page. "Set a solo goal" and "I did this" are text links under it |
