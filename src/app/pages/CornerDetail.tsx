@@ -21,7 +21,9 @@ import { curatedBySlug } from "../data/curatedCorners";
 import { CORNER_CATEGORIES } from "../data/cornerCategories";
 import { hasHobbyPhoto } from "../data/hobbyPhotos";
 import { cornerKey, homeCornersIn } from "../data/homeCorners";
-import { curatedModel, type CornerModel } from "../lib/cornerModel";
+import { builtInCornerModel, curatedModel, plainModel, type CornerModel } from "../lib/cornerModel";
+import { useCorners } from "../context/CornersContext";
+import { hobbies } from "../data/hobbies";
 import { WeekEventCard } from "../components/corners/WeekEventCard";
 import { cornerPhoto, cornerPhotoAlt, cornerPhotoCredit } from "../lib/cornerPhoto";
 import { cornerSubline } from "../lib/cornerSubline";
@@ -65,8 +67,18 @@ function SectionTitle({ id, children }: { id: string; children: string }) {
 
 export function CornerDetail() {
   const { slug = "" } = useParams();
-  const curated = curatedBySlug(slug);
-  const corner = curated && curatedModel(curated);
+  const { cornersFor } = useCorners();
+  // The curated Corner, else the first Space's Corner with this slug (built-in or database-only,
+  // as the old page resolved it), else a built-in Corner of a Space that is not listed.
+  const corner = useMemo<CornerModel | undefined>(() => {
+    const curated = curatedBySlug(slug);
+    if (curated) return curatedModel(curated);
+    for (const h of hobbies) {
+      const found = cornersFor(h.slug).find((c) => c.slug === slug);
+      if (found) return plainModel(found.spaceSlug, found.slug, found.name, found.description);
+    }
+    return builtInCornerModel(slug);
+  }, [slug, cornersFor]);
   if (!corner) {
     return (
       <div className="min-h-viewport flex items-center justify-center">

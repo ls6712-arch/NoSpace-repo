@@ -8,9 +8,7 @@ import { createHashRouter, redirect } from "react-router";
 import { extraConceptsEnabled, marketplaceEnabled } from "./config";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
-import { CornerPage } from "./pages/Corner"; // name it CornerPage to avoid clashing with the Corner type import elsewhere
 import { CategoryPage } from "./pages/Category";
-import { curatedRedirectFor } from "./lib/cornerPath";
 import { CornersHome } from "./pages/CornersHome";
 import { CornerDetail } from "./pages/CornerDetail";
 import { SpaceRoute } from "./pages/SpaceRoute";
@@ -129,15 +127,8 @@ export const router = createHashRouter([
       { path: "space/:slug", Component: SpaceRoute },
       { path: "space/:slug/edit", Component: EditSpace },
       { path: "create-space", Component: CreateSpace },
-      // A curated Corner's page is /corners/:slug; the old link still works.
-      {
-        path: "corner/:slug",
-        loader: ({ params }) => {
-          const to = curatedRedirectFor(params.slug ?? "");
-          return to ? redirect(to) : null;
-        },
-        Component: CornerPage,
-      },
+      // Every Corner's page is /corners/:slug; the old link and shared URLs still work.
+      { path: "corner/:slug", loader: ({ params }) => redirect(`/corners/${encodeURIComponent(params.slug ?? "")}`) },
       { path: "corners", Component: CornersHome },
       { path: "corners/:slug", Component: CornerDetail },
       { path: "browse/:slug", Component: CategoryPage },
