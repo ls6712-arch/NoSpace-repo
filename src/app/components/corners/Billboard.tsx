@@ -56,7 +56,7 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
   if (slides.length === 0) return null;
   return (
     <section
-      className="relative h-[72vh] min-h-[480px] max-h-[820px] w-full overflow-hidden bg-surface-muted text-on-media"
+      className="relative h-[72svh] min-h-[22.5rem] max-h-[820px] w-full overflow-hidden bg-surface-muted text-on-media"
       aria-roledescription="carousel"
       aria-label="Featured Corners"
       onMouseEnter={() => setPaused(true)}

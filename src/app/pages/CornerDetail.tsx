@@ -236,7 +236,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   return (
     <div className="ns-afterhours min-h-viewport">
       {/* Hero: the Corner's photo, with the next event over it when there is one. */}
-      <header className="relative flex min-h-[60vh] flex-col overflow-hidden bg-surface-muted text-on-media">
+      <header className="relative flex min-h-[60svh] flex-col overflow-hidden bg-surface-muted text-on-media">
         <ImageWithFallback
           src={cornerPhoto(corner.spaceSlug, corner.slug, 1600)}
           alt={cornerPhotoAlt(corner.slug)}
