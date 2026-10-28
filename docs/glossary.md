@@ -22,7 +22,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | Messages / Inbox | Chats / notifications and requests |
 | Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
 | Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
-| See all | Opens the full list when a list shows only some: Discover's Spotlight, the group tiles on Discover's Corners tab (which show the first 8), and a group's row on the Corners home (opens that group's page) |
+| See all | Opens the full list when a list shows only some: Discover's Spotlight, the group tiles on Discover's Corners tab (which show the first 8), and a group's row on the Corners home (opens that group's page), and Start here on Discover (opens every Corner for the chosen mood) |
 
 ## Door list
 
