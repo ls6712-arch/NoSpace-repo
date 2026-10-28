@@ -42,7 +42,7 @@ describe("makeRanker with a signal", () => {
   });
 
   it("generalises to similar Corners they have not touched", () => {
-    expect(potter.score(find("Ceramics"))).toBeGreaterThan(potter.score(find("Boxing")));
+    expect(potter.score(find("Candle-making"))).toBeGreaterThan(potter.score(find("Boxing")));
   });
 
   it("puts rows they care about above rows they never touch", () => {

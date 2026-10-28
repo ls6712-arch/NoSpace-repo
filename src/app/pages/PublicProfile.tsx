@@ -1,3 +1,4 @@
+import { isInCorner } from "../lib/cornerAlias";
 import { extraConceptsEnabled } from "../config";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
@@ -350,7 +351,7 @@ export function PublicProfile() {
     ? cornersFor(cornerKey.spaceSlug).find((c) => c.slug === cornerKey.slug)
     : undefined;
   const cornerMoments = primaryCorner
-    ? posts.filter((p) => p.hobbySlug === primaryCorner.spaceSlug && postCorner(p) === primaryCorner.slug)
+    ? posts.filter((p) => isInCorner(p, primaryCorner.spaceSlug, primaryCorner.slug))
     : [];
 
   const earliestPostAt = posts.length ? Math.min(...posts.map((p) => p.createdAt)) : null;

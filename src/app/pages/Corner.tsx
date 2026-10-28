@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useHistoryState } from "../lib/useHistoryState";
 import { Link, useParams } from "react-router";
 import { hobbies } from "../data/hobbies";
-import { Post, postCorner } from "../data/posts";
+import { Post } from "../data/posts";
+import { isInCorner } from "../lib/cornerAlias";
 import { useCorners } from "../context/CornersContext";
 import { useContent } from "../context/ContentContext";
 import { PressLink } from "../components/afterhours/PressLink";
@@ -71,7 +72,7 @@ export function CornerPage() {
   const guide = cornerGuide(spaceSlug, corner.slug);
   const about = corner.description?.trim() || guide?.about;
   const prefill = `hobby=${encodeURIComponent(spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`;
-  const posts = publicFeed.filter((p) => p.hobbySlug === spaceSlug && postCorner(p) === corner.slug);
+  const posts = publicFeed.filter((p) => isInCorner(p, spaceSlug, corner.slug));
 
   // Back goes to the Corner's category page ("Back to Yarn and fabric"). Only a
   // Corner not in any category yet falls back to its old Space.

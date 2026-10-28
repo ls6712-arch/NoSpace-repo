@@ -1,7 +1,8 @@
 import { cornerPath } from "../lib/cornerPath";
 import { useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router";
-import { hobbies, titleCaseSlug } from "../data/hobbies";
+import { hobbies, isBrowsableCorner, titleCaseSlug } from "../data/hobbies";
+import { isInCorner } from "../lib/cornerAlias";
 import { postCorner, type Post } from "../data/posts";
 import { cornerGuide } from "../data/cornerGuides";
 import { CORNER_CATEGORIES, categoryOfCorner, cornersInCategory } from "../data/cornerCategories";
@@ -37,7 +38,7 @@ export function CategoryPage() {
 
   const corners = useMemo(
     () =>
-      cornersInCategory(slug).map(({ spaceSlug, cornerSlug }) => ({
+      cornersInCategory(slug).filter(({ spaceSlug, cornerSlug }) => isBrowsableCorner(spaceSlug, cornerSlug)).map(({ spaceSlug, cornerSlug }) => ({
         spaceSlug,
         cornerSlug,
         name:
@@ -57,11 +58,11 @@ export function CategoryPage() {
     [publicFeed, slug],
   );
   const tabs = useMemo(
-    () => corners.filter((c) => inCategory.some((p) => postCorner(p) === c.cornerSlug)),
+    () => corners.filter((c) => inCategory.some((p) => isInCorner(p, c.spaceSlug, c.cornerSlug))),
     [corners, inCategory],
   );
   const activeTab = tabs.some((c) => c.cornerSlug === tab) ? tab : "all";
-  const posts = activeTab === "all" ? inCategory : inCategory.filter((p) => postCorner(p) === activeTab);
+  const posts = activeTab === "all" ? inCategory : inCategory.filter((p) => { const c = corners.find((x) => x.cornerSlug === activeTab); return !!c && isInCorner(p, c.spaceSlug, c.cornerSlug); });
 
   if (!category) return <Navigate to="/discover" replace />;
 

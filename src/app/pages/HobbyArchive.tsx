@@ -1,3 +1,4 @@
+import { isInCorner } from "../lib/cornerAlias";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { ArrowLeft, PenLine } from "lucide-react";
@@ -58,7 +59,7 @@ export function HobbyArchive() {
     return myPosts
       .filter((p) =>
         target.subSlug
-          ? postCorner(p) === target.subSlug
+          ? isInCorner(p, target.hobbySlug, target.subSlug)
           : p.hobbySlug === target.hobbySlug && !postCorner(p),
       )
       .sort((a, b) => b.createdAt - a.createdAt);

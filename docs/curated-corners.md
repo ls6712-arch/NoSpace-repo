@@ -59,6 +59,7 @@ Alt text for it: A run club stretching together before a morning run.
 ## 🧗 Climbing
 
 - URL: `/corners/climbing` (old Space `sports-fitness`)
+- About: Climbing walls and boulders, mostly indoors to start.
 - Row: Sports and martial arts
 - Typical time: 120 minutes. Setting: anywhere.
 - Moods (derived): Move, Be around people, Learn something
@@ -471,6 +472,7 @@ Alt text for it: An artist drawing on a tablet at a shared desk.
 ## 🕺 Dance
 
 - URL: `/corners/dance` (old Space `sports-fitness`)
+- About: Dancing with other people, from salsa and swing to Bollywood and hip-hop.
 - Row: Dance and stage
 - Typical time: 90 minutes. Setting: anywhere.
 - Moods (derived): Move, Be around people, Learn something
@@ -635,6 +637,7 @@ Alt text for it: A surf group walking into the water with boards at sunrise.
 ## 🌊 Wild swimming
 
 - URL: `/corners/wild-swimming` (old Space `nature-outdoors`)
+- About: Swimming in lakes, rivers and the sea instead of a pool.
 - Row: Outdoors and adventure
 - Typical time: 60 minutes. Setting: outdoors.
 - Moods (derived): Get outside
@@ -689,6 +692,7 @@ Alt text for it: Friends relaxing together in a wooden sauna.
 ## 🎧 Make a beat
 
 - URL: `/corners/make-a-beat` (old Space `music`)
+- About: Building a beat from drums, samples and loops on a laptop or phone.
 - Row: Music and sound
 - Typical time: 60 minutes. Setting: home.
 - Moods (derived): Make something, Some time to yourself
@@ -905,6 +909,7 @@ Alt text for it: Volunteers packing food boxes together at a table.
 ## ✏️ Life drawing
 
 - URL: `/corners/life-drawing` (old Space `art-creative`)
+- About: Drawing a live model in a group session.
 - Row: Art and design
 - Typical time: 120 minutes. Setting: anywhere.
 - Moods (derived): Be around people, Learn something
@@ -932,6 +937,7 @@ Alt text for it: Artists sketching at easels in a life drawing class.
 ## 🏛️ City walks
 
 - URL: `/corners/city-walks` (old Space `travel-adventure`)
+- About: Exploring neighbourhoods on foot, alone or on a guided walk.
 - Row: Culture and community
 - Typical time: 120 minutes. Setting: outdoors.
 - Moods (derived): Get outside, Learn something, Start with what you have
@@ -959,6 +965,7 @@ Alt text for it: A small group on a guided walk through old city lanes.
 ## 🍿 Film clubs
 
 - URL: `/corners/film-clubs` (old Space `photography-film`)
+- About: Watching films together and talking about them after.
 - Row: Culture and community
 - Typical time: 180 minutes. Setting: anywhere.
 - Moods (derived): Be around people, Learn something, Start with what you have
@@ -986,6 +993,7 @@ Alt text for it: Friends watching a film projected on a living room wall.
 ## 🥟 Food tours
 
 - URL: `/corners/food-tours` (old Space `food-cooking`)
+- About: Eating your way through a street, market or neighbourhood.
 - Row: Culture and community
 - Typical time: 180 minutes. Setting: outdoors.
 - Moods (derived): Get outside, Learn something
@@ -1013,6 +1021,7 @@ Alt text for it: Friends sharing street food at a busy evening market stall.
 ## 🀄 Mahjong
 
 - URL: `/corners/mahjong` (old Space `gaming-tabletop`)
+- About: A tile game for four players, with many regional styles.
 - Row: Games and puzzles
 - Typical time: 120 minutes. Setting: home.
 - Moods (derived): Be around people, Play a game
@@ -1040,6 +1049,7 @@ Alt text for it: Four friends around a table mid-game of mahjong.
 ## 🚣 Rafting
 
 - URL: `/corners/rafting` (old Space `travel-adventure`)
+- About: Paddling a raft down a river with a guide and a crew.
 - Row: Outdoors and adventure
 - Typical time: 240 minutes. Setting: outdoors.
 - Moods (derived): Be around people, Get outside
@@ -1067,6 +1077,7 @@ Alt text for it: A group in helmets paddling a raft through white water.
 ## ✉️ Letter writing
 
 - URL: `/corners/letter-writing` (old Space `books-writing`)
+- About: Handwritten letters, stationery and pen pals.
 - Row: Reading and writing
 - Typical time: 30 minutes. Setting: home.
 - Moods (derived): Make something, Start with what you have
@@ -1094,6 +1105,7 @@ Alt text for it: Hands writing a letter beside stamps and envelopes on a cafe ta
 ## 🛷 Hyrox
 
 - URL: `/corners/hyrox` (old Space `sports-fitness`)
+- About: A fitness race of running and gym stations, done alone, in pairs or in relays.
 - Row: Running and fitness
 - Typical time: 90 minutes. Setting: anywhere.
 - Moods (derived): Move, Be around people
@@ -1121,6 +1133,7 @@ Alt text for it: Two athletes pushing sleds side by side in a busy gym.
 ## 🚶 Walking clubs
 
 - URL: `/corners/walking-clubs` (old Space `sports-fitness`)
+- About: Group walks at a talking pace, in parks, on promenades and on trails.
 - Row: Running and fitness
 - Typical time: 60 minutes. Setting: outdoors.
 - Moods (derived): Move, Be around people, Get outside, Start with what you have
@@ -1148,6 +1161,7 @@ Alt text for it: A walking group chatting on a park path at sunrise.
 ## 🏸 Badminton
 
 - URL: `/corners/badminton` (old Space `sports-fitness`)
+- About: Fast racket games on an indoor court, usually played as doubles.
 - Row: Sports and martial arts
 - Typical time: 60 minutes. Setting: anywhere.
 - Moods (derived): Move, Be around people, Learn something
@@ -1175,6 +1189,7 @@ Alt text for it: Friends playing doubles badminton on an indoor court.
 ## 🛼 Skating
 
 - URL: `/corners/skating` (old Space `sports-fitness`)
+- About: Roller and ice skating, from rink laps to group skates.
 - Row: Sports and martial arts
 - Typical time: 60 minutes. Setting: anywhere.
 - Moods (derived): Move, Learn something
@@ -1202,6 +1217,7 @@ Alt text for it: Friends roller skating together under rink lights.
 ## 🥏 Ultimate frisbee
 
 - URL: `/corners/ultimate-frisbee` (old Space `sports-fitness`)
+- About: A team game with a disc where players call their own fouls.
 - Row: Sports and martial arts
 - Typical time: 90 minutes. Setting: outdoors.
 - Moods (derived): Move, Be around people, Get outside, Play a game

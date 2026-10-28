@@ -1,5 +1,6 @@
 import { CORNER_GUIDES, type CornerGuide } from "./cornerGuides";
 import { categoryOfCorner } from "./cornerCategories";
+import { isBrowsableCorner } from "./hobbies";
 
 /**
  * "What are you in the mood for?" on Discover. Each mood is a filter over
@@ -45,5 +46,5 @@ export function cornersForMood(id: MoodId): { spaceSlug: string; cornerSlug: str
       const [spaceSlug, cornerSlug] = key.split("/");
       return { spaceSlug, cornerSlug, guide };
     })
-    .filter((c) => !c.guide.adultsOnly && mood.matches(c.guide, c.spaceSlug, c.cornerSlug));
+    .filter((c) => !c.guide.adultsOnly && isBrowsableCorner(c.spaceSlug, c.cornerSlug) && mood.matches(c.guide, c.spaceSlug, c.cornerSlug));
 }

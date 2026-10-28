@@ -12,6 +12,8 @@
  * Corners without an entry simply show no guide. Generated once from the
  * library; edit here directly from now on.
  */
+import { isBrowsableCorner } from "./hobbies";
+
 /** What kind of pursuit it is (the library's "Kind of pursuit", Stebbins). */
 export type GuideKind =
   | "making" | "skill" | "regular" | "games" | "exploring"
@@ -147,6 +149,20 @@ export const CORNER_GUIDES: Record<string, CornerGuide> = {
   "tech-building/web-design": { about: "Designing and building websites.", step: "Build a one-page personal site with a free tool.", kind: "making", together: "solo", where: "indoors", haveIt: true },
   "home-garden/furniture-flipping": { about: "Finding old furniture and giving it new life.", step: "Find a secondhand chair, then sand and repaint it.", kind: "project", together: "solo", where: "indoors", haveIt: false },
   "crafts-making/makerspaces": { about: "Shared workshops with tools and people to learn from.", step: "Visit a makerspace on its open night.", kind: "exploring", together: "together", where: "indoors", haveIt: false },
+  "food-cooking/bbq": { about: "Cooking over fire or coals, from grilling to slow smoking.", step: "Grill one thing over charcoal with friends.", kind: "making", together: "either", where: "outdoors", haveIt: false },
+  "art-creative/painting": { about: "Painting with acrylics, oils or gouache on canvas or paper.", step: "Paint one small scene from a photo you took.", kind: "making", together: "solo", where: "indoors", haveIt: false },
+  "art-creative/sculpture": { about: "Shaping clay, wood, stone or found objects into 3D forms.", step: "Shape one small figure from air-dry clay.", kind: "making", together: "solo", where: "indoors", haveIt: false },
+  "crafts-making/paper-crafts": { about: "Making things from paper: cards, origami, collage and bound books.", step: "Fold or cut one card for someone.", kind: "making", together: "either", where: "indoors", haveIt: true },
+  "gaming-tabletop/trading-cards": { about: "Collecting and playing trading card games.", step: "Learn a starter deck and play one game at a local card night.", kind: "games", together: "together", where: "indoors", haveIt: false },
+  // Trading cards sits in two old Spaces and is one Corner; the guide is keyed under both.
+  "collecting-fandom/trading-cards": { about: "Collecting and playing trading card games.", step: "Learn a starter deck and play one game at a local card night.", kind: "games", together: "together", where: "indoors", haveIt: false },
+  "fashion-beauty/fashion": { about: "Putting outfits together and finding your own style.", step: "Build three outfits from clothes you already own.", kind: "making", together: "either", where: "indoors", haveIt: true },
+  "tech-building/robotics": { about: "Building robots that sense and move.", step: "Build a starter robot kit with a friend.", kind: "project", together: "either", where: "indoors", haveIt: false },
+  "tech-building/game-development": { about: "Making your own video games.", step: "Make a one-screen game with a free engine.", kind: "making", together: "solo", where: "indoors", haveIt: true },
+  "collecting-fandom/antiques": { about: "Hunting for and learning about old objects.", step: "Visit a flea market or antique fair and pick one piece to learn about.", kind: "collecting", together: "either", where: "either", haveIt: false },
+  "collecting-fandom/anime": { about: "Watching and talking about anime, and the fandom around it.", step: "Watch the first episode of a series with a friend.", kind: "exploring", together: "either", where: "indoors", haveIt: true },
+  "travel-adventure/travel": { about: "Planning trips and exploring new places.", step: "Plan a day trip to a town you have never visited.", kind: "experience", together: "either", where: "outdoors", haveIt: false },
+  "travel-adventure/road-trips": { about: "Trips by car or bike where the drive is part of it.", step: "Plan a one-day loop with three stops and a crew.", kind: "experience", together: "together", where: "outdoors", haveIt: false },
 };
 
 export function cornerGuide(spaceSlug: string, cornerSlug: string): CornerGuide | undefined {
@@ -156,7 +172,7 @@ export function cornerGuide(spaceSlug: string, cornerSlug: string): CornerGuide 
 /** Corners whose first step fits in about 15 minutes, in the library's order. */
 export function quickGuides(): { spaceSlug: string; cornerSlug: string; guide: CornerGuide }[] {
   return Object.entries(CORNER_GUIDES)
-    .filter(([, g]) => g.quick)
+    .filter(([key, g]) => g.quick && isBrowsableCorner(key.split("/")[0], key.split("/")[1]))
     .sort(([, a], [, b]) => (a.order ?? 999) - (b.order ?? 999))
     // Two Corners can share one library entry (Writing, Creative writing);
     // the row shows each step once.

@@ -1,11 +1,13 @@
 import { supabase } from "../../lib/supabase";
+import { MERGED_CORNERS } from "../data/hobbies";
 import type { SpaceRow } from "./spaces";
 
 /**
  * What is happening in the curated Corners right now: their Spaces and
  * events, joined on by (spaceSlug, slug). Corner rows are created the first
  * time anyone tags or links one, so a Corner with no row has nothing live
- * and simply comes back empty.
+ * and simply comes back empty. Spaces and events linked to a Corner merged
+ * into another (hobbies.ts) count under the kept Corner.
  *
  * Reads only, and only what a signed-out visitor may see: Spaces are public,
  * and events follow the Space's access (an Open Space's events are readable,
@@ -67,14 +69,20 @@ export async function fetchCornersLive(opts: Options): Promise<Map<string, Corne
   for (const x of wanted) result.set(keyOf(x), emptyLive());
   if (!supabase || wanted.length === 0) return result;
 
+  // Each wanted Corner, and every Corner merged into it, looked up under the kept Corner's key.
+  const lookup = new Map<string, string>();
+  for (const x of wanted) {
+    lookup.set(keyOf(x), keyOf(x));
+    for (const [from, to] of Object.entries(MERGED_CORNERS)) if (to === keyOf(x)) lookup.set(from, keyOf(x));
+  }
   const { data: cornerRows } = await supabase
     .from("corners")
     .select("id, space_slug, slug")
-    .in("slug", [...new Set(wanted.map((x) => x.slug))]);
+    .in("slug", [...new Set([...lookup.keys()].map((k) => k.split("/")[1]))]);
   const cornerSlugById = new Map<number, string>();
   for (const r of cornerRows ?? []) {
-    const key = `${r.space_slug as string}/${r.slug as string}`;
-    if (!result.has(key)) continue;
+    const key = lookup.get(`${r.space_slug as string}/${r.slug as string}`);
+    if (!key) continue;
     cornerSlugById.set(r.id as number, key);
   }
   if (cornerSlugById.size === 0) return result;
@@ -95,13 +103,16 @@ export async function fetchCornersLive(opts: Options): Promise<Map<string, Corne
     ((spaceRows as LiveSpace[] | null) ?? []).filter((s) => !opts.openOnly || s.access === "open").map((s) => [s.id, s]),
   );
 
-  const slugsBySpace = new Map<string, string[]>();
+  const slugsBySpace = new Map<string, Set<string>>();
   for (const l of links ?? []) {
     const slug = cornerSlugById.get(l.corner_id as number);
     const space = spaceById.get(l.space_id as string);
     if (!slug || !space) continue;
-    result.get(slug)!.spaces.push(space);
-    slugsBySpace.set(space.id, [...(slugsBySpace.get(space.id) ?? []), slug]);
+    const seen = slugsBySpace.get(space.id) ?? new Set<string>();
+    // A Space linked to both a Corner and one merged into it is listed once.
+    if (!seen.has(slug)) result.get(slug)!.spaces.push(space);
+    seen.add(slug);
+    slugsBySpace.set(space.id, seen);
   }
 
   const openIds = [...spaceById.values()].filter((s) => s.access === "open").map((s) => s.id);

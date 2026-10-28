@@ -1,24 +1,86 @@
-# Corners build: founder decisions
+# Corners build: decisions log (Oct 26, 2026; updated Oct 28)
 
-Newest first. Briefs are checked against this log; where they differ, this log wins.
+Decisions made while Claude Code built Corners from claude-code-brief-corners.md. These override that brief, and where noted the Door list brief, where they differ. Briefs are checked against this log.
 
-## Oct 26, 2026
+## Data and structure
 
-Not in this file yet. The text of the Oct 26 log was not attached when this file was added, so nothing is recorded here for that date rather than guessing it. Paste it in below this heading.
+- Curated Corners live in code (`src/app/data/curatedCorners.ts`), like built-in Corners in `hobbies.ts`. No seed rows, no change to `corners.space_slug`. Slug uniqueness and name drift are checked by vitest.
+- Rows on the Corners home are the 18 approved categories. No new `group` taxonomy.
+- 14 new built-in Corners added to `hobbies.ts`: Boxing, Skateboarding, Kayaking, Surfing, Wild swimming, Sauna & cold plunge, Make a beat, Karaoke, Live music, Choir, Pasta, Trivia, Improv, Volunteering. Social Dance folds into Dance; Language Exchange folds into Language learning.
+- Guide copy is sourced from the Sidequest app (life-on-your-terms.lovable.app) and Sidequest_Activities.xlsx, edited for the trust rule. "Why it's worth it" is dropped (outcome claims); replaced by "What you'll need" (plain facts). No training plans, daily routines or health protocols in steps. (Oct 28 note: the code still renders "Why it's worth it" from `worth`, 4 lines each, test-enforced. It now holds plain reasons, never outcomes, alongside "What you'll need".)
+- Moods derive from `moods.ts`. The Corners picker is a chip row (duration, mood, setting) using moods.ts values.
+- No "spots left": events have no capacity column. Future ticket: event capacity.
 
-## Oct 28, 2026: Corners wave 1 (PR #203)
+## Corners home (revised after first screenshots)
 
-1. Soccer and Basketball are `kind: "skill"` in `cornerGuides.ts`, like the other ball sports (Tennis, Pickleball, Padel, Volleyball). The brief's `"games"` was wrong. Ultimate frisbee's `traits.kind` is `"skill"` too.
-2. Sauna & cold plunge is `together: "together"`, so it stays under "Be around people".
-3. Improv leaving "Start with what you have" is correct (`haveIt: false`).
-4. Live music `worth` reads "Small rooms, close to the band", not "Small shows are cheap" (no price words).
-5. City walks keeps "Stories behind places you pass daily" (not a target).
-6. The 12 new Corners ship without their own photos; the photo IDs come later, and each Corner is removed from `AWAITING_PHOTO` in `homeCorners.test.ts` as its photo lands.
+- Show all built-in Corners in their category rows, curated first. Real photos everywhere via `hobbyPhoto()`; no colour blocks with emoji.
+- Never "Be the first to start a Space" on a card. Subline: events this week, else Spaces, else duration and setting.
+- Hero ("Corner of the week"), compact picker row, horizontally scrolling rows.
+- 15 Corners without a photo get the Unsplash photos in corner-photos.json (free Unsplash License, credited). Choir, Trivia and Improv flagged for founder review.
 
-## Oct 27, 2026: tickets (overrides the Door list brief)
+## Words
 
-1. "Take the ticket" is cut everywhere. Tapping the cover card or the "Admit one" sticker opens the ticket.
-2. Tickets are only for real events. When a Corner has an upcoming event in an Open Space, the cover story and Start here cards show a ticket to that event: event title, Space, time, place, "I’m going" (the existing event RSVP). Cards keep the order they are ranked in now.
-3. When no event fits, the card is a plain "How to start" card showing the Corner's first step, linking to the Corner. No "Admit one", serial or stub edge.
-4. Not built: `ticket_saves`, `posts.from_ticket`, the "From a ticket" Stub type. Stub types are silver, with someone, event, plain.
-5. `docs/glossary.md` updated: "Take the ticket" removed, "ticket" now means a ticket to an event, "How to start" covers the Discover card.
+- "Moments", not "Drop". "Stub" approved as a product noun (CLAUDE.md now lists six).
+- "Members see who's going." approved.
+
+## Stubs: one concept
+
+- The Door list brief (Oct 23) owns Stubs: derived types in one Shelf > Stubs tab.
+- The `stubs` table and `confirm_event_attendance` RPC exist only to issue the event type, replacing the "posted within 24h after an RSVP" rule. A host confirms who came; nobody can give themselves a Stub.
+- No separate Stubs section on the Shelf. No ranking people by Stubs (no leaderboards).
+
+## Tickets: changed Oct 26 (overrides the Door list brief)
+
+- Tickets are only for real events. A ticket must admit you to something with a time, a place and a host. When a Corner has an upcoming Open Space event, the cover story and Start here cards are tickets to it, with "I'm going" as the action.
+- First steps are not tickets. With no event, Discover shows the step as a plain "How to start" card linking to the Corner: no "Admit one", no serial, no 7-day save.
+- "Take the ticket" is cut. Tapping the card or the "Admit one" sticker opens the ticket.
+- Cut: `ticket_saves` (private 7-day saves of self-chosen steps), `posts.from_ticket`, and the "From a ticket" Stub type. They were a to-do list in a ticket costume and self-awarded. Stub types are now silver, with someone, event, plain.
+
+## Access and navigation
+
+- `/corners` and `/corners/:slug` are open to signed-out and not-yet-approved visitors: Corners, guides, Open Spaces, event titles and times. People, Moments, hosts and RSVPs are hidden behind "Members see who's going."
+- No new nav item. Discover's Corners tab links to `/corners`. Curated Corner links point to `/corners/:slug`; `/corner/:slug` redirects for curated slugs. (Oct 28: every Corner now uses `/corners/:slug`; see Corner page layout.)
+- Work ships as separate PRs: Stubs migration; built-ins and curated data; Corners pages and access; link changes; Discover polish.
+
+## Discover polish (design audit, Oct 26)
+
+- Keep the masthead but shrink it so the cover story and mood picker fit the first screen. One logo font (Bricolage). Contrast 4.5:1, alt text, 6-size type scale with 16px body. No auto-generated Moment titles. No member counts on Spaces, ever. Remove all remaining "Rooms".
+
+## Wave 1 (Oct 28, PR #203; brief: claude-code-brief-corners-wave1.md)
+
+- Source: the 408-row activity catalog, mapped to Corners: 100 existing, 133 fold into existing, 34 new (12 in wave 1, 22 in wave 2), 44 event ideas, 36 backlog, 61 cut. Trend and cost columns stay internal; the catalog's Benefits column is dropped.
+- 12 new curated built-in Corners: Life drawing, City walks, Film clubs, Food tours, Mahjong, Rafting, Letter writing, Hyrox, Walking clubs, Badminton, Skating, Ultimate frisbee. 23 existing Corners got `cornerGuides.ts` entries; duplicate curated steps were trimmed in 12 of them.
+- Sports are `kind: "skill"`, not `"games"`. "Play a game" means board games, cards and puzzles. Soccer, Basketball and Ultimate frisbee follow Tennis, Pickleball, Padel and Volleyball. The moodCards "no two same-category cards side by side" test stays strict; don't loosen it to fit data.
+- Sauna & cold plunge is `together: "together"` and stays under "Be around people". Improv correctly leaves "Start with what you have" (it needs a workshop).
+- Live music `worth`: "Small shows are cheap" becomes "Small rooms, close to the band" (no price claims, trust rule 5). City walks "pass daily" stays (it describes places, not a target).
+- Wave-1 photos: merged with Space covers as placeholders. The photo test lists the 12 explicitly and fails once one gets a photo, so the list can't go stale. Founder to supply Unsplash IDs.
+- This log lives in the repo as `docs/corners-build-decisions.md` so briefs can be checked against it.
+
+## Corner page layout (Oct 28; brief: claude-code-brief-corner-page-layout.md, replaced by the cleanup brief below)
+
+- The Corner page follows Sidequest's structure (hero, How to start beside Why it's worth it, More like this) in Soosh's look. No dark theme, no condensed caps.
+- No self-logging on the Corner page: "Log a Moment" leaves the hero, and "Start a Pursuit" and "Log a Moment" leave the guide. The hero button is I'm going (next event), else See Spaces, else Create a Space.
+- The guide now sits directly under the hero, above the live rows. This reverses the original Corners brief, which put people and events first. The hero still carries the next event, so the social signal stays above the fold.
+- The category name shows as the hero kicker and links to its category page (extends the CLAUDE.md rule that limited category names to Discover). Replaced by the meta-line link in the Oct 28 cleanup.
+- Every built-in Corner uses the same page at `/corners/:slug`; sections without data hide. `/corner/:slug` redirects there. The old `Corner.tsx` page (one step, Start a Pursuit, Log a Moment, "Be the first") retires.
+- Categories are browsable: an 18-tile "Browse by" row on /corners and Discover, linked row headings, and `/browse/:slug` rebuilt as a photo hero plus a grid of Corner cards instead of a text list.
+
+## Corners cleanup (Oct 28, from the founder's audit of trynospace.com; brief: claude-code-brief-corners-cleanup.md, replaces claude-code-brief-corner-page-layout.md)
+
+- Rows never borrow Corners. `fillRow()` padded short rows with Corners from other categories, which is why Pasta showed under Yarn and fabric. It is removed; a short row stays short.
+- Place is exact: "At home" means home, "Outdoors" means outdoors; "Anywhere" Corners are in neither.
+- Merged duplicates (alias map, no migration): Coffee (from Espresso, Home coffee), Writing (from Creative writing), Reading (from Books), Electronics (from Arduino, Raspberry Pi), Filmmaking (from Video), Pottery (from Ceramics), D&D (from Tabletop RPGs), Photography (from Outdoor photography), Meditation (from Mindfulness), Furniture flipping (from Restoration), Gardening (from Native plants), Houseplants (from Indoor growing).
+- Hidden from browsing (still resolvable): Nature journaling, CAD, Laser cutting, CNC, Product prototyping, No-code building, Creative coding, Data visualization, AR/VR projects, Smart-home projects, Cybersecurity learning, Toys.
+- Every browsable Corner has a description; no photo repeats across Corners.
+- Home = one kind of row: category rows only (plus Happening this week). Mood, time and place rows are removed; those are filters, and any filter turns the page into one grid of results. Filters live in the URL.
+- Categories are findable: a "Browse by" chip row on /corners and Discover, clickable row headings, and "See all" on More Corners like this.
+- Names: Discover is the nav section; Corners is its browse tab; a category is shown by its own name. Path: Discover > Corners > Food and drink > Pasta. Back links say "Back to Corners" (category page) and "Back to {category}" (Corner page).
+- The Corner page meta line leads with the category as a link: "Food and drink · 90 min · At home". This replaces the hero kicker from the earlier layout brief.
+- Test Moments are listed for the founder to remove, never deleted by a session.
+
+## Open
+
+- Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.
+- Founder to review Choir, Trivia and Improv photos.
+- Unsplash photos for the 12 wave-1 Corners.
+- Next briefs: event ideas as host prompts ("Ideas for your next event"); wave 2 once members ask for those Corners.

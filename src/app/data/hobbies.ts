@@ -640,3 +640,68 @@ export function findSpaceForInterest(interest: string) {
   if (!q) return undefined;
   return allSubHobbies.find((s) => s.label.toLowerCase() === q);
 }
+
+/**
+ * Corners folded into another (the Oct 28, 2026 cleanup): `"space/slug"` of the
+ * Corner that is merged away, to `"space/slug"` of the one that is kept. The
+ * old Corner stays in `hobbies.ts` and `cornerCategories.ts` so stored Moments,
+ * Pursuits and links keep resolving, but it never appears in a browse list, and
+ * everything tagged with it counts and shows under the kept Corner (see
+ * lib/cornerAlias.ts). Nothing stored is rewritten.
+ */
+export const MERGED_CORNERS: Readonly<Record<string, string>> = {
+  "food-cooking/espresso": "food-cooking/coffee",
+  "food-cooking/home-coffee": "food-cooking/coffee",
+  "books-writing/creative-writing": "books-writing/writing",
+  "books-writing/books": "books-writing/reading",
+  "tech-building/arduino": "tech-building/electronics",
+  "tech-building/raspberry-pi": "tech-building/electronics",
+  "photography-film/video": "photography-film/filmmaking",
+  "art-creative/ceramics": "crafts-making/pottery",
+  "gaming-tabletop/tabletop-rpgs": "gaming-tabletop/d-d",
+  "nature-outdoors/outdoor-photography": "photography-film/photography",
+  "photography-film/outdoor-photography": "photography-film/photography",
+  "health-wellness/mindfulness": "health-wellness/meditation",
+  "home-garden/restoration": "home-garden/furniture-flipping",
+  "home-garden/native-plants": "home-garden/gardening",
+  "home-garden/indoor-growing": "home-garden/houseplants",
+};
+
+/**
+ * Corners too thin to browse (by slug, in whichever Space): they stay
+ * resolvable, so old Moments and links work, but never appear in rows, grids,
+ * filters or "More Corners like this".
+ */
+export const HIDDEN_CORNERS: ReadonlySet<string> = new Set([
+  "nature-journaling",
+  "cad",
+  "laser-cutting",
+  "cnc",
+  "product-prototyping",
+  "no-code-building",
+  "creative-coding",
+  "data-visualization",
+  "ar-vr-projects",
+  "smart-home-projects",
+  "cybersecurity-learning",
+  "toys",
+]);
+
+/** The Corner kept in place of this one: itself unless it was merged away. Slugs compare in lower case. */
+export function canonicalCorner(spaceSlug: string, slug: string): { spaceSlug: string; slug: string } {
+  const to = MERGED_CORNERS[`${spaceSlug}/${slug.toLowerCase()}`];
+  if (!to) return { spaceSlug, slug: slug.toLowerCase() };
+  const [s, c] = to.split("/");
+  return { spaceSlug: s, slug: c };
+}
+
+/** Where a bare slug goes when it was merged away (the Corner pages take a bare slug), else undefined. */
+export function mergedSlugTarget(slug: string): string | undefined {
+  const hit = Object.entries(MERGED_CORNERS).find(([from]) => from.split("/")[1] === slug);
+  return hit?.[1].split("/")[1];
+}
+
+/** True for a Corner that appears in browse lists: not merged away and not hidden. */
+export function isBrowsableCorner(spaceSlug: string, slug: string): boolean {
+  return !(`${spaceSlug}/${slug}` in MERGED_CORNERS) && !HIDDEN_CORNERS.has(slug);
+}
