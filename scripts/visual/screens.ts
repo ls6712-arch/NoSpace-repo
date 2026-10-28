@@ -1,7 +1,7 @@
 // The screens the harness visits, against the fixture backend. Add a screen
 // here and it gets screenshots + detection at every width and theme.
 import type { Page } from "playwright-core";
-import { PURSUIT_ID, SPACE_SLUG } from "./fixtures.ts";
+import { PURSUIT_ID, PURSUIT3_ID, SPACE_SLUG } from "./fixtures.ts";
 
 export interface Screen { name: string; route: string; setup?: (page: Page) => Promise<void>; widths?: number[] }
 
@@ -17,6 +17,10 @@ export const SCREENS: Screen[] = [
   { name: "corners", route: "/corners" },
   { name: "corner-pasta", route: "/corners/pasta" },
   { name: "corner-bbq", route: "/corners/bbq" },
+  // Core loop v1: onboarding, the Make it a Pursuit sheet over a Corner, and the recap.
+  { name: "onboarding", route: "/onboarding" },
+  { name: "corner-pasta-sheet", route: "/corners/pasta", setup: click("Do this with people") },
+  { name: "pursuit-recap", route: `/pursuit/${PURSUIT3_ID}/recap` },
   { name: "category-food", route: "/browse/food-drink" },
   { name: "log", route: "/create" },
   { name: "create-pursuit", route: "/pursuits/new" },

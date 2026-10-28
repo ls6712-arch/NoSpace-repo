@@ -100,6 +100,16 @@ Answers from the founder before PR 1. These override the entries above where the
 - Corner page: 280px hero, back link reads "← {group}" (the screen; was "Back to {group}"), name, then "90 min · At home · Good with a friend". The hero button, emoji and group link in the meta line are gone. One primary button, Do this with people, with Set a solo goal and I did this under it, fixed above the tab bar. Until the Make it a Pursuit sheet ships (PR 3), Do this with people opens the existing Start a Pursuit flow on inviting people.
 - Guide lists still hold price words ("Free to start", "Cheap"); the trust rule says guides carry none. A data pass is a separate change.
 
+### PR 3: Make it a Pursuit, the Pursuit page, the recap (screens 4, 5, 13)
+
+- Open groups, sessions and join requests are migration 20261031000000: `pursuits.visibility`, `space_id`, `capacity`, `ends_at`; `pursuit_members.status` gains `requested`; `pursuit_sessions` and `pursuit_session_rsvps` ("Next together" and I'm in); `open_pursuits_for_corner()`, `join_open_pursuit()` and `answer_join_request()`. Join approval is the default: instant while at most half the spots are taken (the host counts as one), then the host decides. Join request notifications wait for the Notifications screen (PR 5).
+- The goal reads "Do {Corner} 5 times in 4 weeks": Corners carry no unit noun ("pastas"), so the unit is "times". A `unit` on curated Corners would let it read "Make 5 pastas".
+- Joining an existing open group does not show the goal stepper: the group's own goal is the card. Starting your own open group holds up to 8 people.
+- The group on a Pursuit page is listed in join order (the owner first, then by when each person joined), never by progress. The 4px bars are each person's own colour and carry no ranks or comparisons.
+- The recap's story image is drawn with the canvas API (no dependency). The gold stub sits on a static gradient: the animated shader is not used (no mid-range Android was available to check 60fps).
+- The recap is a full screen (no top bar or tab bar). Reaching it from the last Moment posted is PR 4; for now a finished Pursuit shows "See the recap".
+- Moment rows under Latest carry no cheer or reply counts: the glossary calls reactions Love this, Count me in and Thoughts, and the brief's "cheers" is decided with Home (PR 4).
+
 ## Open
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.

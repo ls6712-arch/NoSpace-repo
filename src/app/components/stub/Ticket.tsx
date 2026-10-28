@@ -8,6 +8,7 @@ import { haptic, pop, shared } from "../../lib/motionTokens";
 export type TicketVariant = "session" | "event" | "gold";
 
 const STUB_WIDTH = 88; // px, the right-hand count
+const WIDE_STUB_WIDTH = 124; // px, when the total has two digits ("10/10")
 const NOTCH = 9; // px, radius of the perforation cut-outs
 
 const GOLD = "#D7A03D"; // design-token-ignore: gold stub colour from the visual spec (the amber category colour, fixed in both themes)
@@ -61,7 +62,8 @@ export function Ticket({
     return () => window.clearTimeout(t);
   }, [count, reveal]);
 
-  const x = `calc(100% - ${STUB_WIDTH}px)`;
+  const stubWidth = count && String(count.total).length >= 2 ? WIDE_STUB_WIDTH : STUB_WIDTH;
+  const x = `calc(100% - ${stubWidth}px)`;
   // design-token-ignore: mask colours only set alpha; they are never painted
   const notch = (y: string) => `radial-gradient(circle ${NOTCH}px at ${x} ${y}, #0000 98%, #000)`;
   const style = {
@@ -90,7 +92,11 @@ export function Ticket({
             <span className="truncate">{title}</span>
             {variant === "event" && <BadgeCheck className="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />}
           </p>
-          {meta && <p className="mt-1 truncate text-small opacity-80">{meta}</p>}
+          {meta && (
+            <p className="mt-1 line-clamp-2 text-small opacity-80" title={meta}>
+              {meta}
+            </p>
+          )}
         </div>
       </div>
 
@@ -99,12 +105,12 @@ export function Ticket({
         initial={reveal ? { scaleY: 0 } : false}
         animate={{ scaleY: 1 }}
         transition={{ duration: 0.12, delay: reveal ? 0.3 : 0, ease: "linear" }}
-        style={{ right: STUB_WIDTH, transformOrigin: "top" }}
+        style={{ right: stubWidth, transformOrigin: "top" }}
         className="absolute inset-y-3 border-l-2 border-dashed border-[var(--ink)]/35"
       />
 
       {count && (
-        <div style={{ width: STUB_WIDTH }} className="flex shrink-0 items-center justify-center font-[family-name:var(--font-display)] text-display leading-none font-extrabold">
+        <div style={{ width: stubWidth }} className="flex shrink-0 items-center justify-center font-[family-name:var(--font-display)] text-display leading-none font-extrabold">
           <span className="sr-only">
             {count.done} of {count.total}
           </span>

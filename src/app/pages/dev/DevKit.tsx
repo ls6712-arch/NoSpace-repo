@@ -10,6 +10,11 @@ import { RollNumber } from "../../components/ui/RollNumber";
 import { Segmented } from "../../components/ui/Segmented";
 import { SnapCarousel } from "../../components/ui/SnapCarousel";
 import { Reveal } from "../../components/afterhours/Reveal";
+import { GroupRows } from "../../components/pursuit/GroupRows";
+import { NextTogetherCard } from "../../components/pursuit/NextTogetherCard";
+import { MakeItAPursuitSheet } from "../../components/pursuit/MakeItAPursuitSheet";
+import { Confetti } from "../../components/pursuit/Confetti";
+import type { Measure, PursuitMember, ProgressEntry } from "../../lib/journal";
 import { haptic, pop, shared } from "../../lib/motionTokens";
 
 /**
@@ -34,6 +39,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+const GROUP: PursuitMember[] = [
+  { userId: "u1", displayName: "Priya Nair", status: "joined", role: "owner" },
+  { userId: "u2", displayName: "Sneha Rao", status: "joined", role: "member" },
+  { userId: "u3", displayName: "Arjun Mehta", status: "joined", role: "member" },
+  { userId: "u4", displayName: "Dev Patel", status: "joined", role: "member" },
+];
+const GROUP_MEASURE = { kind: "count", target: 5, unit: "times", allowPartial: false, allowDecimals: false, defaultAmount: 1, startingAmount: 0 } as Measure;
+const GROUP_DONE: Record<string, number> = { u1: 3, u2: 2, u3: 0, u4: 1 };
+const entriesFor = (m: PursuitMember): ProgressEntry[] =>
+  Array.from({ length: GROUP_DONE[m.userId ?? ""] ?? 0 }, (_, i) => ({ id: `${m.userId}-${i}`, projectId: "kit", userId: m.userId, amount: 1, createdAt: i }));
+
 export function DevKit() {
   const [moods, setMoods] = useState<string[]>(["Move"]);
   const [who, setWho] = useState<"open" | "friends" | "solo">("open");
@@ -43,6 +59,8 @@ export function DevKit() {
   const [fullOpen, setFullOpen] = useState(false);
   const [revealKey, setRevealKey] = useState(0);
   const [big, setBig] = useState(false);
+  const [pursuitSheet, setPursuitSheet] = useState(false);
+  const [confetti, setConfetti] = useState(0);
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-10 px-4 py-8 pb-24">
@@ -164,6 +182,26 @@ export function DevKit() {
             </div>
           )}
         />
+      </Section>
+
+      <Section title="Pursuit page pieces">
+        <NextTogetherCard pursuitId="kit" userId="kit-user" isOwner />
+        <GroupRows
+          members={GROUP}
+          requests={[{ userId: "u5", displayName: "Kavya Iyer", status: "requested", role: "member" }]}
+          measure={GROUP_MEASURE}
+          entriesOf={entriesFor}
+          viewerId="u2"
+          onAnswer={() => undefined}
+        />
+        <div className="flex flex-wrap gap-3">
+          <PillButton onClick={() => setPursuitSheet(true)}>Make it a Pursuit</PillButton>
+          <PillButton variant="outline" onClick={() => setConfetti((c) => c + 1)}>
+            Confetti
+          </PillButton>
+        </div>
+        {confetti > 0 && <Confetti key={confetti} />}
+        <MakeItAPursuitSheet open={pursuitSheet} onOpenChange={setPursuitSheet} corner={{ spaceSlug: "food-cooking", slug: "pasta", name: "Pasta" }} />
       </Section>
 
       <Section title="Sheets">

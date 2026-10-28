@@ -107,7 +107,8 @@ export interface PursuitMember {
   username?: string | null;
   displayName: string;
   avatarUrl?: string;
-  status: "invited" | "joined" | "declined";
+  /** "requested" is a join request on an open group, waiting for the host. */
+  status: "invited" | "joined" | "declined" | "requested";
   /** Owner is also listed, so every view can iterate one list. */
   role: "owner" | "member";
 }

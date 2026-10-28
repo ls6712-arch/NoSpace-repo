@@ -12,7 +12,8 @@ export function RollNumber({ value, className }: { value: number; className?: st
   const dir = value >= previous.current ? 1 : -1;
   previous.current = value;
   return (
-    <span className={`relative inline-flex overflow-hidden align-bottom tabular-nums ${className ?? ""}`} aria-label={String(value)}>
+    <span style={{ clipPath: "inset(0)" }}
+      className={`relative inline-flex tabular-nums ${className ?? ""}`} aria-label={String(value)}>
       <AnimatePresence mode="popLayout" initial={false} custom={dir}>
         <motion.span
           key={value}
