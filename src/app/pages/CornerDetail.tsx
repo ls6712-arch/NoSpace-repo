@@ -4,6 +4,9 @@ import { Check, Lock, Sparkle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
+import { PaperStamp, tilt } from "../components/corners/MomentStamp";
+import { formatDate } from "../lib/dates";
+import { momentAlt } from "../lib/momentCaption";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { ImageWithFallback } from "../components/ImageWithFallback";
@@ -81,7 +84,7 @@ export function CornerDetail() {
 function CornerBody({ corner }: { corner: CuratedCorner }) {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const { publicFeed } = useContent();
+  const { publicFeed, myPosts } = useContent();
   const [live, setLive] = useState<CornerLive | null>(null);
   const [hosts, setHosts] = useState<Map<string, Person>>(new Map());
   const [memberships, setMemberships] = useState<Map<string, Membership>>(new Map());
@@ -100,7 +103,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   const signIn = () => navigate(`/login?redirect=${here}`);
 
   const posts = useMemo(
-    () => publicFeed.filter((p) => p.hobbySlug === corner.spaceSlug && postCorner(p) === corner.slug),
+    () => publicFeed.filter((p) => p.hobbySlug === corner.spaceSlug && postCorner(p)?.toLowerCase() === corner.slug),
     [publicFeed, corner],
   );
 
@@ -200,6 +203,14 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
       .slice(0, 12);
   })();
 
+  // Your own Moments in this Corner (private ones too), newest first.
+  const mine = useMemo(
+    () =>
+      user && !restricted
+        ? myPosts.filter((p) => p.hobbySlug === corner.spaceSlug && postCorner(p)?.toLowerCase() === corner.slug).sort((a, b) => b.createdAt - a.createdAt)
+        : [],
+    [myPosts, corner, user, restricted],
+  );
   const showMoments = !restricted && posts.length > 0;
   const isMember = (s: LiveSpace) => memberships.get(s.id)?.status === "active";
   const isPending = (s: LiveSpace) => memberships.get(s.id)?.status === "pending";
@@ -376,6 +387,28 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           <p className={`${SECTION_GAP} text-body text-muted-foreground`}>Members see who’s going.</p>
         )}
 
+        {mine.length > 0 && (
+          <section className={SECTION_GAP} aria-labelledby="mine-title">
+            <SectionTitle id="mine-title">Your Moments</SectionTitle>
+            <HorizontalRow name={`corner.${corner.slug}.mine`} label="Your Moments">
+              {mine.map((p) => (
+                <li key={p.id} className="w-44 shrink-0 snap-start py-2">
+                  <button type="button" onClick={() => setOpenPost(p)} className="block w-full text-left">
+                    <PaperStamp title={corner.name} date={formatDate(p.createdAt)} rotate={tilt(p.id)}>
+                      <ImageWithFallback
+                        src={p.type === "photo" && p.media ? (p.mediaUrls?.[0] ?? p.media) : cornerPhoto(corner.spaceSlug, corner.slug, 400)}
+                        alt={momentAlt(p, corner.name)}
+                        width={176}
+                        className="aspect-square w-full overflow-hidden"
+                      />
+                    </PaperStamp>
+                  </button>
+                </li>
+              ))}
+            </HorizontalRow>
+          </section>
+        )}
+
         {showMoments && (
           <section className={SECTION_GAP} aria-labelledby="moments-title">
             <SectionTitle id="moments-title">Recent Moments</SectionTitle>
@@ -425,18 +458,30 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
               </div>
             )}
           </section>
-          <section aria-labelledby="need-title">
-            <SectionTitle id="need-title">What you’ll need</SectionTitle>
+          <section aria-labelledby="worth-title">
+            <SectionTitle id="worth-title">Why it’s worth it</SectionTitle>
             <ul className="grid gap-3 sm:grid-cols-2">
-              {corner.needs.map((need) => (
-                <li key={need} className="flex gap-2 rounded-card border border-border p-4 text-body">
+              {corner.worth.map((w) => (
+                <li key={w} className="flex gap-2 rounded-card border border-border p-4 text-body">
                   <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
-                  {need}
+                  {w}
                 </li>
               ))}
             </ul>
           </section>
         </div>
+
+        <section className={SECTION_GAP} aria-labelledby="need-title">
+          <SectionTitle id="need-title">What you’ll need</SectionTitle>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {corner.needs.map((need) => (
+              <li key={need} className="flex gap-2 rounded-card border border-border p-4 text-body">
+                <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
+                {need}
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {more.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="more-title">

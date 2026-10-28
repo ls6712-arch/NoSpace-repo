@@ -130,6 +130,8 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | People into {Corner} | Heading above the Shelves of people who shared a public Moment in that Corner most recently, newest first. No counts. Not shown to signed-out or not-yet-approved visitors |
 | Members see who’s going. | The one line a signed-out or not-yet-approved visitor sees on a Corner in place of People into, Recent Moments, hosts and who is going |
 | Recent Moments | Heading above a Corner's latest public Moments |
+| Why it’s worth it | Heading above four short, plain reasons to try a Corner, on its page (copy in `docs/curated-corners.md`, never a health claim or a promise). New, for approval |
+| Your Moments | Heading on a Corner page over your own Moments in that Corner (private ones too), shown as paper cards. Only you see it. New, for approval |
 | How to start | Heading above a Corner's numbered steps. Also the label on a Discover card with no event, which shows the Corner's first step and links to the Corner |
 | What you’ll need | Heading above 3 to 5 plain facts: gear, place, cost, people. Never a claim about results |
 | More Corners like this | Heading above Corners in the same group of 18 |
