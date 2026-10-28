@@ -37,6 +37,9 @@ export interface SearchHit {
   sub: string;
   to: string;
   avatarUrl?: string;
+  /** Corner hits: which Corner, so a page can look up its guide. */
+  spaceSlug?: string;
+  cornerSlug?: string;
 }
 
 /** Display order everywhere a grouped list is shown — products always last,
@@ -120,6 +123,8 @@ export function useUnifiedSearchIndex(query: string) {
             label: corner.name,
             sub: "",
             to: cornerPath(hobbySlug, corner.slug),
+            spaceSlug: hobbySlug,
+            cornerSlug: corner.slug,
           });
         }
       }

@@ -55,3 +55,10 @@ export const onboardingUsesMainForm = import.meta.env.VITE_ONBOARDING_MAIN_FORM 
 export const CONTACT_EMAIL = "sushmithalekkala@gmail.com";
 export const INSTAGRAM_URL = "";
 export const TIKTOK_URL = "";
+
+/**
+ * Ask Soosh: when a search reads like a sentence, a card at the top shows what was
+ * understood and three plans. Off by default; the plans come from fixtures until the
+ * real recommendation service exists (PRD section 8.3).
+ */
+export const askSooshEnabled = import.meta.env.VITE_ASK_SOOSH === "true";
