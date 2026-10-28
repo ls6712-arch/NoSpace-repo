@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { Check, Lock } from "lucide-react";
+import { Check, Lock, Sparkle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
+import { PaperStamp, tilt } from "../components/corners/MomentStamp";
+import { formatDate } from "../lib/dates";
+import { momentAlt } from "../lib/momentCaption";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { ImageWithFallback } from "../components/ImageWithFallback";
@@ -15,6 +18,7 @@ import { MomentTile } from "../components/afterhours/MomentTile";
 import { MomentDetail } from "../components/MomentDetail";
 import { type Post, postCorner } from "../data/posts";
 import {
+  cornerMeta,
   curatedBySlug,
   curatedCategory,
   howToStart,
@@ -80,7 +84,7 @@ export function CornerDetail() {
 function CornerBody({ corner }: { corner: CuratedCorner }) {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const { publicFeed } = useContent();
+  const { publicFeed, myPosts } = useContent();
   const [live, setLive] = useState<CornerLive | null>(null);
   const [hosts, setHosts] = useState<Map<string, Person>>(new Map());
   const [memberships, setMemberships] = useState<Map<string, Membership>>(new Map());
@@ -99,7 +103,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   const signIn = () => navigate(`/login?redirect=${here}`);
 
   const posts = useMemo(
-    () => publicFeed.filter((p) => p.hobbySlug === corner.spaceSlug && postCorner(p) === corner.slug),
+    () => publicFeed.filter((p) => p.hobbySlug === corner.spaceSlug && postCorner(p)?.toLowerCase() === corner.slug),
     [publicFeed, corner],
   );
 
@@ -199,6 +203,14 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
       .slice(0, 12);
   })();
 
+  // Your own Moments in this Corner (private ones too), newest first.
+  const mine = useMemo(
+    () =>
+      user && !restricted
+        ? myPosts.filter((p) => p.hobbySlug === corner.spaceSlug && postCorner(p)?.toLowerCase() === corner.slug).sort((a, b) => b.createdAt - a.createdAt)
+        : [],
+    [myPosts, corner, user, restricted],
+  );
   const showMoments = !restricted && posts.length > 0;
   const isMember = (s: LiveSpace) => memberships.get(s.id)?.status === "active";
   const isPending = (s: LiveSpace) => memberships.get(s.id)?.status === "pending";
@@ -235,7 +247,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   return (
     <div className="ns-afterhours min-h-viewport">
       {/* Hero: the Corner's photo, with the next event over it when there is one. */}
-      <header className="relative overflow-hidden bg-surface-muted text-on-media">
+      <header className="relative flex min-h-[60svh] flex-col overflow-hidden bg-surface-muted text-on-media">
         <ImageWithFallback
           src={cornerPhoto(corner.spaceSlug, corner.slug, 1600)}
           alt={cornerPhotoAlt(corner.slug)}
@@ -243,8 +255,9 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           width={1200}
           className="absolute inset-0 size-full"
         />
-        <div className="pointer-events-none absolute inset-0 bg-scrim-solid/45" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 bg-scrim-solid/25" aria-hidden="true" />
         <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
+        <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
         {photo && (
           <a
             href={photo.source}
@@ -255,7 +268,7 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
             {`Photo: ${photo.credit} on Unsplash`}
           </a>
         )}
-        <div className={`${PAGE_X} relative pb-10 pt-6 md:pb-14`}>
+        <div className={`${PAGE_X} relative flex flex-1 flex-col pb-10 pt-6 md:pb-14`}>
           <Link to="/corners" className="inline-flex min-h-11 items-center text-small hover:underline">
             ← Back to Corners
           </Link>
@@ -273,8 +286,19 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
               buttonClass={buttonClass}
             />
           ) : (
-            <div className="mt-6">
-              <h1 className="text-display">{corner.name}</h1>
+            <div className="mt-auto flex flex-col items-start gap-3 pt-16">
+              <h1 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
+                {corner.name}
+              </h1>
+              <p className="text-body text-on-media/90">{cornerMeta(corner)}</p>
+              {!restricted && (
+                <PressLink
+                  to={user ? `/create?${prefill}` : `/login?redirect=${encodeURIComponent(`/create?${prefill}`)}`}
+                  className="mt-2 inline-flex min-h-12 items-center justify-center rounded-control bg-on-media px-6 text-body font-semibold text-[var(--ink)]"
+                >
+                  Log a Moment
+                </PressLink>
+              )}
             </div>
           )}
         </div>
@@ -363,6 +387,28 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           <p className={`${SECTION_GAP} text-body text-muted-foreground`}>Members see who’s going.</p>
         )}
 
+        {mine.length > 0 && (
+          <section className={SECTION_GAP} aria-labelledby="mine-title">
+            <SectionTitle id="mine-title">Your Moments</SectionTitle>
+            <HorizontalRow name={`corner.${corner.slug}.mine`} label="Your Moments">
+              {mine.map((p) => (
+                <li key={p.id} className="w-44 shrink-0 snap-start py-2">
+                  <button type="button" onClick={() => setOpenPost(p)} className="block w-full text-left">
+                    <PaperStamp title={corner.name} date={formatDate(p.createdAt)} rotate={tilt(p.id)}>
+                      <ImageWithFallback
+                        src={p.type === "photo" && p.media ? (p.mediaUrls?.[0] ?? p.media) : cornerPhoto(corner.spaceSlug, corner.slug, 400)}
+                        alt={momentAlt(p, corner.name)}
+                        width={176}
+                        className="aspect-square w-full overflow-hidden"
+                      />
+                    </PaperStamp>
+                  </button>
+                </li>
+              ))}
+            </HorizontalRow>
+          </section>
+        )}
+
         {showMoments && (
           <section className={SECTION_GAP} aria-labelledby="moments-title">
             <SectionTitle id="moments-title">Recent Moments</SectionTitle>
@@ -389,8 +435,8 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
             {about && <p className="mb-4 text-body text-muted-foreground">{about}</p>}
             <ol className="space-y-3">
               {steps.map((step, i) => (
-                <li key={step} className="flex gap-4 rounded-card border border-border bg-card p-4">
-                  <span className="text-lead font-semibold text-[var(--accent-text)]" aria-hidden="true">{i + 1}</span>
+                <li key={step} className="flex items-center gap-4 rounded-card bg-card p-4">
+                  <span className="text-title font-semibold text-[var(--accent-text)]" aria-hidden="true">{i + 1}</span>
                   <span className="text-body">{tieNumbers(step)}</span>
                 </li>
               ))}
@@ -412,17 +458,30 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
               </div>
             )}
           </section>
-          <section aria-labelledby="need-title">
-            <SectionTitle id="need-title">What you’ll need</SectionTitle>
-            <ul className="space-y-3">
-              {corner.needs.map((need) => (
-                <li key={need} className="rounded-card border border-border bg-card p-4 text-body">
-                  {need}
+          <section aria-labelledby="worth-title">
+            <SectionTitle id="worth-title">Why it’s worth it</SectionTitle>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {corner.worth.map((w) => (
+                <li key={w} className="flex gap-2 rounded-card border border-border p-4 text-body">
+                  <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
+                  {w}
                 </li>
               ))}
             </ul>
           </section>
         </div>
+
+        <section className={SECTION_GAP} aria-labelledby="need-title">
+          <SectionTitle id="need-title">What you’ll need</SectionTitle>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {corner.needs.map((need) => (
+              <li key={need} className="flex gap-2 rounded-card border border-border p-4 text-body">
+                <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
+                {need}
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {more.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="more-title">
@@ -486,7 +545,7 @@ function HeroEvent({
 }) {
   const closedToYou = space?.access === "closed" && !member;
   return (
-    <div className="mt-6">
+    <div className="mt-auto pt-16">
       <p className="text-small font-semibold">{corner.name}</p>
       <h1 className="mt-2 line-clamp-3 break-words text-display">{event.title}</h1>
       {space && (

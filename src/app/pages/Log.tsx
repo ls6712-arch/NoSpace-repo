@@ -1,3 +1,5 @@
+import { PaperStamp } from "../components/corners/MomentStamp";
+import { formatDate } from "../lib/dates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Link, useBlocker, useNavigate, useSearchParams } from "react-router";
@@ -1285,6 +1287,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             </p>
           )}
 
+          <PaperStamp title={cornerLabel} date={formatDate(Date.now())} rotate={-3} className="mx-auto my-6 w-fit max-w-[16rem]">
           <motion.div
             layout={!reduceMotion}
             // Same layoutId WorkGrid.tsx gives the real tile — when both are
@@ -1295,12 +1298,13 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             transition={ENTER}
             className={
               savedTileSettled
-                ? "mx-auto my-6 w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
-                : "mx-auto my-6 w-40 overflow-hidden rounded-card border border-border"
+                ? "w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
+                : "w-40 overflow-hidden rounded-card border border-border"
             }
           >
             <MediaPreview className="aspect-square w-full" />
           </motion.div>
+          </PaperStamp>
           {savedProgressLine && !anySaveError && (
             <p className="-mt-3 mb-3 text-small tabular-nums">{savedProgressLine}</p>
           )}

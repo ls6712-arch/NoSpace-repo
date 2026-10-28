@@ -21,6 +21,16 @@ const EXCLUDED = [
 ];
 
 describe("curated Corners", () => {
+  it("each have 4 short reasons to try it, with no dashes", () => {
+    for (const x of CURATED_CORNERS) {
+      expect(x.worth, x.slug).toHaveLength(4);
+      for (const w of x.worth) {
+        expect(w.length, `${x.slug}: ${w}`).toBeLessThanOrEqual(50);
+        expect(w, `${x.slug}: ${w}`).not.toMatch(/[\u2013\u2014]/);
+      }
+    }
+  });
+
   it("each match a built-in Corner in hobbies.ts by Space, slug and name", () => {
     for (const x of CURATED_CORNERS) {
       const sub = hobbies.find((h) => h.slug === x.spaceSlug)?.subItems.find((s) => s.slug === x.slug);

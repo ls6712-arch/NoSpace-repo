@@ -100,6 +100,8 @@
      it (white on coral fails contrast). --accent-text is the accent as TEXT. */
   --accent-foreground: #0E0D0C;
   --accent-text: #C2391B;
+  /* The paper of a Moment card (PaperStamp): the same warm white in both themes. */
+  --moment-paper: #F4EFE8;
   --ink: #0E0D0C;
   --surface-raised: #FFFFFF;
   --gold: #B08D4A;
@@ -999,6 +1001,26 @@
 
 @utility bg-scrim-top {
   background-image: var(--scrim-top);
+}
+
+/* The billboard fade: the page colour comes in from the left and from the
+   bottom, so a title sits on dark and the photo shows at the right. Pair with
+   bg-scrim and text-on-media. */
+@utility bg-hero-fade {
+  background-image:
+    linear-gradient(90deg, var(--background) 0%, color-mix(in srgb, var(--background) 70%, transparent) 40%, transparent 75%),
+    linear-gradient(0deg, var(--background) 0%, transparent 35%);
+}
+
+/* A paper card on the page: a soft drop shadow in both themes. Not shadow-overlay,
+   which dark mode turns into a filled surface (see "Dark elevation"). */
+@utility shadow-paper {
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.45);
+}
+
+/* The glow under a card or button the pointer is on. */
+@utility shadow-glow {
+  box-shadow: 0 10px 40px -10px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
 /* Full-height layouts: 100dvh tracks the mobile browser's collapsing

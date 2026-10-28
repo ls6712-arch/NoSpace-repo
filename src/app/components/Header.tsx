@@ -404,7 +404,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="hidden w-56 md:block lg:w-72 xl:w-80">
+          <div className="hidden w-80 md:block lg:w-72 xl:w-80">
           <div className="relative w-full" ref={searchRef}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
