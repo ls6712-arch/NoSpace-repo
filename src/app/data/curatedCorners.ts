@@ -255,7 +255,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
     slug: "live-music", spaceSlug: "music", name: "Live music", emoji: "🎟️", durationMinutes: 180, setting: "anywhere",
     steps: ["Try a genre you don’t know", "Go even if alone"],
     needs: ["A ticket, or free entry at some venues", "Comfortable shoes", "Earplugs if it gets loud", "Go with friends or by yourself"],
-    worth: ["A night out with a plan", "Small shows are cheap", "Hear new music up close", "Go alone or with friends"],
+    worth: ["A night out with a plan", "Small rooms, close to the band", "Hear new music up close", "Go alone or with friends"],
     coverAlt: "A crowd watching a band in a small venue", photoSearch: "small venue gig crowd",
     traits: { kind: "experience", together: "either", haveIt: false },
   }),
@@ -393,7 +393,7 @@ c({
   needs: ["A disc and running shoes", "A field or open park", "Pickup games are usually free", "Teams of seven a side"],
   worth: ["Players call their own fouls", "Mixed teams are common", "One disc is all the kit", "Team sport with no referee"],
   coverAlt: "A mixed team diving for a disc on a grass field", photoSearch: "ultimate frisbee game field",
-  traits: { kind: "games", together: "together", haveIt: false },
+  traits: { kind: "skill", together: "together", haveIt: false },
 }),
 ];
 

@@ -760,7 +760,7 @@ What you'll need:
 
 Why it’s worth it:
 - A night out with a plan
-- Small shows are cheap
+- Small rooms, close to the band
 - Hear new music up close
 - Go alone or with friends
 
