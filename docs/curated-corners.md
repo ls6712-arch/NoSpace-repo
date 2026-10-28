@@ -173,7 +173,7 @@ Alt text for it: A group of hikers on a ridge trail in golden light.
 - Moods (derived): Make something
 
 How to start:
-1. Book a wheel-throwing taster
+1. Book a beginner wheel class at a local studio.
 2. Or try air-dry clay at home
 3. Make a small bowl
 
@@ -445,12 +445,13 @@ Alt text for it: Friends sharing a loaf of bread fresh from the oven.
 - URL: `/corners/illustration` (old Space `art-creative`)
 - Row: Art and design
 - Typical time: 90 minutes. Setting: home.
-- Moods (derived): Make something
+- Moods (derived): Make something, Some time to yourself, Start with what you have
 
 How to start:
-1. Use a tablet or free app
-2. Trace a photo to start
-3. Learn layers
+1. Draw one thing from your day as a small illustration.
+2. Use a tablet or free app
+3. Trace a photo to start
+4. Learn layers
 
 What you'll need:
 - A tablet or a computer
@@ -530,8 +531,8 @@ Alt text for it: A small group talking over coffee at a language meetup.
 - Moods (derived): Move, Be around people, Learn something
 
 How to start:
-1. Get hand wraps and gloves
-2. Learn the jab-cross
+1. Try a beginner boxing class and learn the jab and cross.
+2. Get hand wraps and gloves
 3. Try a boxing fitness class
 
 What you'll need:
@@ -557,7 +558,7 @@ Alt text for it: A coach holding pads for a boxer in a bright gym.
 - Moods (derived): Move, Get outside, Learn something
 
 How to start:
-1. Get a complete board and a helmet
+1. Get a board and a helmet and practise pushing on a flat, quiet path.
 2. Practice balance on grass first
 3. Learn to push and stop
 
@@ -584,9 +585,10 @@ Alt text for it: Friends skating together at a park in the late afternoon.
 - Moods (derived): Get outside
 
 How to start:
-1. Rent a kayak at a calm lake
-2. Wear a life jacket
-3. Learn the forward stroke
+1. Book a guided kayak tour on calm water.
+2. Rent a kayak at a calm lake
+3. Wear a life jacket
+4. Learn the forward stroke
 
 What you'll need:
 - A kayak, paddle and life jacket, all rentable
@@ -611,7 +613,7 @@ Alt text for it: Friends paddling kayaks across a calm lake.
 - Moods (derived): Get outside, Learn something
 
 How to start:
-1. Book a beginner lesson
+1. Take a beginner lesson with a surf school.
 2. Use a soft-top board
 3. Practice pop-ups on sand
 
@@ -662,10 +664,10 @@ Alt text for it: Friends wading into a lake together in soft morning light.
 - URL: `/corners/sauna-cold-plunge` (old Space `health-wellness`)
 - Row: Rest and ritual
 - Typical time: 90 minutes. Setting: anywhere.
-- Moods (derived): Be around people
+- Moods (derived): none
 
 How to start:
-1. Find a social sauna or bathhouse
+1. Try a session at a sauna or bathhouse and follow the venue's safety guidance.
 2. Go with a friend
 3. Follow the venue’s guidance on heat and cold
 
@@ -719,8 +721,8 @@ Alt text for it: Two friends making a beat on a pad controller and laptop.
 - Moods (derived): Move, Be around people
 
 How to start:
-1. Gather friends
-2. Book a room or use a YouTube playlist
+1. Book a karaoke room with a few friends.
+2. Gather friends
 3. Pick one silly song
 
 What you'll need:
@@ -746,7 +748,7 @@ Alt text for it: Friends singing into microphones together at a karaoke night.
 - Moods (derived): none
 
 How to start:
-1. Look up local gigs this week
+1. Pick one small local gig and go.
 2. Try a genre you don’t know
 3. Go even if alone
 
@@ -758,7 +760,7 @@ What you'll need:
 
 Why it’s worth it:
 - A night out with a plan
-- Small shows are cheap
+- Small rooms, close to the band
 - Hear new music up close
 - Go alone or with friends
 
@@ -773,7 +775,7 @@ Alt text for it: A crowd watching a band in a small venue.
 - Moods (derived): Be around people, Start with what you have
 
 How to start:
-1. Find a community choir with no audition
+1. Find a community choir and go to one open rehearsal.
 2. Show up and listen
 3. Join a section
 
@@ -800,9 +802,9 @@ Alt text for it: A community choir singing together in a rehearsal room.
 - Moods (derived): Make something
 
 How to start:
-1. Mix 100 g flour per egg
-2. Knead 10 minutes
-3. Roll and cut by hand
+1. Make egg dough by hand, then roll and cut tagliatelle.
+2. Mix 100 g flour per egg
+3. Knead 10 minutes
 
 What you'll need:
 - Flour and eggs
@@ -827,8 +829,8 @@ Alt text for it: Friends rolling fresh pasta dough on a floured counter.
 - Moods (derived): Be around people, Play a game
 
 How to start:
-1. Find a pub quiz
-2. Build a team of 4
+1. Gather a team and join a quiz night.
+2. Find a pub quiz
 3. Come up with a team name
 
 What you'll need:
@@ -851,10 +853,10 @@ Alt text for it: A team huddled over an answer sheet at a pub quiz.
 - URL: `/corners/improv` (old Space `art-creative`)
 - Row: Dance and stage
 - Typical time: 120 minutes. Setting: anywhere.
-- Moods (derived): Move, Be around people, Learn something, Start with what you have
+- Moods (derived): Move, Be around people, Learn something
 
 How to start:
-1. Book a drop-in improv class
+1. Join a beginner improv workshop.
 2. Say “yes, and”
 3. Embrace being silly
 
@@ -881,8 +883,8 @@ Alt text for it: An improv class laughing together in a circle.
 - Moods (derived): Be around people, Start with what you have
 
 How to start:
-1. Find a food bank or shelter
-2. Sign up for one shift
+1. Pick one cause and sign up for a single shift.
+2. Find a food bank or shelter
 3. Bring a friend
 
 What you'll need:
@@ -900,3 +902,326 @@ Why it’s worth it:
 Cover photo (not added yet, placeholder shows the emoji): search "volunteers food bank packing" on [Unsplash](https://unsplash.com/s/photos/volunteers-food-bank-packing) or [Pexels](https://www.pexels.com/search/volunteers%20food%20bank%20packing/).
 Alt text for it: Volunteers packing food boxes together at a table.
 
+## ✏️ Life drawing
+
+- URL: `/corners/life-drawing` (old Space `art-creative`)
+- Row: Art and design
+- Typical time: 120 minutes. Setting: anywhere.
+- Moods (derived): Be around people, Learn something
+
+How to start:
+1. Find a drop-in life drawing session near you
+2. Bring a pad and pencils or charcoal
+3. Start with the quick poses
+
+What you'll need:
+- A sketch pad and pencils or charcoal
+- A drop-in session at a studio or art school
+- Sessions usually charge an entry fee
+- A room of people drawing together
+
+Why it’s worth it:
+- A real person to draw, not a photo
+- Drop in, no course to sign up for
+- Quick poses leave no time to overthink
+- Every level draws in the same room
+
+Cover photo (not added yet, placeholder shows the emoji): search "life drawing class easels" on [Unsplash](https://unsplash.com/s/photos/life-drawing-class-easels) or [Pexels](https://www.pexels.com/search/life%20drawing%20class%20easels/).
+Alt text for it: Artists sketching at easels in a life drawing class.
+
+## 🏛️ City walks
+
+- URL: `/corners/city-walks` (old Space `travel-adventure`)
+- Row: Culture and community
+- Typical time: 120 minutes. Setting: outdoors.
+- Moods (derived): Get outside, Learn something, Start with what you have
+
+How to start:
+1. Pick a neighbourhood you have never walked
+2. Join a local heritage walk
+3. Save the spots you want to go back to
+
+What you'll need:
+- Comfortable shoes
+- A neighbourhood or old quarter to explore
+- Free on your own; guided walks may charge
+- Go alone, with a friend or with a group
+
+Why it’s worth it:
+- See your own city like a visitor
+- Stories behind places you pass daily
+- Easy to do with a friend
+- Ends wherever the good cafe is
+
+Cover photo (not added yet, placeholder shows the emoji): search "heritage walk group old city" on [Unsplash](https://unsplash.com/s/photos/heritage-walk-group-old-city) or [Pexels](https://www.pexels.com/search/heritage%20walk%20group%20old%20city/).
+Alt text for it: A small group on a guided walk through old city lanes.
+
+## 🍿 Film clubs
+
+- URL: `/corners/film-clubs` (old Space `photography-film`)
+- Row: Culture and community
+- Typical time: 180 minutes. Setting: anywhere.
+- Moods (derived): Be around people, Learn something, Start with what you have
+
+How to start:
+1. Pick a film and a place to watch it together
+2. Invite a few people who will stay to talk
+3. Take turns choosing the next film
+
+What you'll need:
+- A screen and a room, or a local screening
+- A film everyone can watch
+- Free at home; screenings may charge
+- Works best with a small group
+
+Why it’s worth it:
+- Talking after is half the film
+- Films you would not pick alone
+- Easy to host at home
+- A standing reason to see the same people
+
+Cover photo (not added yet, placeholder shows the emoji): search "friends watching movie projector" on [Unsplash](https://unsplash.com/s/photos/friends-watching-movie-projector) or [Pexels](https://www.pexels.com/search/friends%20watching%20movie%20projector/).
+Alt text for it: Friends watching a film projected on a living room wall.
+
+## 🥟 Food tours
+
+- URL: `/corners/food-tours` (old Space `food-cooking`)
+- Row: Culture and community
+- Typical time: 180 minutes. Setting: outdoors.
+- Moods (derived): Get outside, Learn something
+
+How to start:
+1. Pick one street or market known for food
+2. Try one thing from each of three stalls
+3. Join a guided food walk for the stories
+
+What you'll need:
+- An appetite and a little cash for stalls
+- A food street, market or old quarter
+- Self-guided costs only the food
+- Better with friends to share plates
+
+Why it’s worth it:
+- Taste a neighbourhood in an afternoon
+- Sharing plates is half the fun
+- Small spends, lots to try
+- Meet the people who cook it
+
+Cover photo (not added yet, placeholder shows the emoji): search "friends street food market night" on [Unsplash](https://unsplash.com/s/photos/friends-street-food-market-night) or [Pexels](https://www.pexels.com/search/friends%20street%20food%20market%20night/).
+Alt text for it: Friends sharing street food at a busy evening market stall.
+
+## 🀄 Mahjong
+
+- URL: `/corners/mahjong` (old Space `gaming-tabletop`)
+- Row: Games and puzzles
+- Typical time: 120 minutes. Setting: home.
+- Moods (derived): Be around people, Play a game
+
+How to start:
+1. Learn the tiles with a free rules guide
+2. Play a teaching game with three others
+3. Join a mahjong social or club night
+
+What you'll need:
+- A mahjong set, or a club that has one
+- Four players at one table
+- Played for fun, no money
+- Rules vary by style, so agree first
+
+Why it’s worth it:
+- Four people, one table, hours of talk
+- Many styles to try once you know one
+- The tiles are a joy to play with
+- A reason for a regular night in
+
+Cover photo (not added yet, placeholder shows the emoji): search "friends playing mahjong table" on [Unsplash](https://unsplash.com/s/photos/friends-playing-mahjong-table) or [Pexels](https://www.pexels.com/search/friends%20playing%20mahjong%20table/).
+Alt text for it: Four friends around a table mid-game of mahjong.
+
+## 🚣 Rafting
+
+- URL: `/corners/rafting` (old Space `travel-adventure`)
+- Row: Outdoors and adventure
+- Typical time: 240 minutes. Setting: outdoors.
+- Moods (derived): Be around people, Get outside
+
+How to start:
+1. Pick a beginner-graded stretch of river
+2. Book with a licensed rafting operator
+3. Go with friends to fill a raft
+
+What you'll need:
+- A licensed operator who provides the raft
+- A helmet and life jacket, worn the whole trip
+- Trips are paid; prices vary by stretch
+- Usually done as a group in one raft
+
+Why it’s worth it:
+- A whole raft working as one team
+- Rivers you cannot see from a road
+- Beginner stretches exist
+- A day out you will talk about after
+
+Cover photo (not added yet, placeholder shows the emoji): search "white water rafting group" on [Unsplash](https://unsplash.com/s/photos/white-water-rafting-group) or [Pexels](https://www.pexels.com/search/white%20water%20rafting%20group/).
+Alt text for it: A group in helmets paddling a raft through white water.
+
+## ✉️ Letter writing
+
+- URL: `/corners/letter-writing` (old Space `books-writing`)
+- Row: Reading and writing
+- Typical time: 30 minutes. Setting: home.
+- Moods (derived): Make something, Start with what you have
+
+How to start:
+1. Write one letter by hand to someone who would love it
+2. Pick stationery or stamps that feel like you
+3. Find a pen pal through a letter club
+
+What you'll need:
+- Paper, a pen and an envelope
+- A stamp and an address
+- Costs the price of a stamp
+- Better with a pen pal writing back
+
+Why it’s worth it:
+- Post that is not a bill
+- Something they can keep
+- Stationery is half the fun
+- A slow friendship across distance
+
+Cover photo (not added yet, placeholder shows the emoji): search "writing letter stamps envelopes" on [Unsplash](https://unsplash.com/s/photos/writing-letter-stamps-envelopes) or [Pexels](https://www.pexels.com/search/writing%20letter%20stamps%20envelopes/).
+Alt text for it: Hands writing a letter beside stamps and envelopes on a cafe table.
+
+## 🛷 Hyrox
+
+- URL: `/corners/hyrox` (old Space `sports-fitness`)
+- Row: Running and fitness
+- Typical time: 90 minutes. Setting: anywhere.
+- Moods (derived): Move, Be around people
+
+How to start:
+1. Learn the eight stations and the run between each
+2. Try a class at a gym that runs Hyrox sessions
+3. Enter a race as a doubles pair
+
+What you'll need:
+- Running shoes and gym kit
+- A gym or club that runs Hyrox sessions
+- Races charge an entry fee
+- Doubles and relays let you race with friends
+
+Why it’s worth it:
+- The same race format worldwide
+- Train together, race with a partner
+- Running and gym work in one
+- A race day to aim at together
+
+Cover photo (not added yet, placeholder shows the emoji): search "sled push gym group" on [Unsplash](https://unsplash.com/s/photos/sled-push-gym-group) or [Pexels](https://www.pexels.com/search/sled%20push%20gym%20group/).
+Alt text for it: Two athletes pushing sleds side by side in a busy gym.
+
+## 🚶 Walking clubs
+
+- URL: `/corners/walking-clubs` (old Space `sports-fitness`)
+- Row: Running and fitness
+- Typical time: 60 minutes. Setting: outdoors.
+- Moods (derived): Move, Be around people, Get outside, Start with what you have
+
+How to start:
+1. Find a walking group that meets near you
+2. Show up once, at your own pace
+3. Try their sunrise or sunset walk
+
+What you'll need:
+- Comfortable shoes
+- A park, promenade or trail
+- Most groups are free
+- A group that sets off together
+
+Why it’s worth it:
+- Talking pace, the whole way
+- No kit beyond shoes
+- A reason to see the same faces
+- Easy for anyone to join
+
+Cover photo (not added yet, placeholder shows the emoji): search "walking group park sunrise" on [Unsplash](https://unsplash.com/s/photos/walking-group-park-sunrise) or [Pexels](https://www.pexels.com/search/walking%20group%20park%20sunrise/).
+Alt text for it: A walking group chatting on a park path at sunrise.
+
+## 🏸 Badminton
+
+- URL: `/corners/badminton` (old Space `sports-fitness`)
+- Row: Sports and martial arts
+- Typical time: 60 minutes. Setting: anywhere.
+- Moods (derived): Move, Be around people, Learn something
+
+How to start:
+1. Borrow or buy a racket and shuttles
+2. Book a court with three friends for doubles
+3. Join a social or club session
+
+What you'll need:
+- A racket and shuttlecocks
+- An indoor court, usually booked by the hour
+- Court hire applies
+- Doubles needs four players
+
+Why it’s worth it:
+- Rallies from the very first game
+- Easy to fill a court with friends
+- Games are short and quick
+- Works for mixed groups
+
+Cover photo (not added yet, placeholder shows the emoji): search "badminton doubles indoor court" on [Unsplash](https://unsplash.com/s/photos/badminton-doubles-indoor-court) or [Pexels](https://www.pexels.com/search/badminton%20doubles%20indoor%20court/).
+Alt text for it: Friends playing doubles badminton on an indoor court.
+
+## 🛼 Skating
+
+- URL: `/corners/skating` (old Space `sports-fitness`)
+- Row: Sports and martial arts
+- Typical time: 60 minutes. Setting: anywhere.
+- Moods (derived): Move, Learn something
+
+How to start:
+1. Rent skates at a rink for your first go
+2. Learn to stop before you learn speed
+3. Join a group skate or roller disco night
+
+What you'll need:
+- Skates, rentable at most rinks
+- A helmet and wrist guards for roller skating
+- A rink or a smooth, quiet path
+- Rink entry applies
+
+Why it’s worth it:
+- Music, lights and laps at a rink
+- Roller and ice share one scene
+- Group skates welcome beginners
+- Rentals mean no big buy-in
+
+Cover photo (not added yet, placeholder shows the emoji): search "roller skating friends rink" on [Unsplash](https://unsplash.com/s/photos/roller-skating-friends-rink) or [Pexels](https://www.pexels.com/search/roller%20skating%20friends%20rink/).
+Alt text for it: Friends roller skating together under rink lights.
+
+## 🥏 Ultimate frisbee
+
+- URL: `/corners/ultimate-frisbee` (old Space `sports-fitness`)
+- Row: Sports and martial arts
+- Typical time: 90 minutes. Setting: outdoors.
+- Moods (derived): Move, Be around people, Get outside, Play a game
+
+How to start:
+1. Learn the backhand throw with a friend
+2. Go to a pickup game and ask to join a side
+3. Find a mixed social league
+
+What you'll need:
+- A disc and running shoes
+- A field or open park
+- Pickup games are usually free
+- Teams of seven a side
+
+Why it’s worth it:
+- Players call their own fouls
+- Mixed teams are common
+- One disc is all the kit
+- Team sport with no referee
+
+Cover photo (not added yet, placeholder shows the emoji): search "ultimate frisbee game field" on [Unsplash](https://unsplash.com/s/photos/ultimate-frisbee-game-field) or [Pexels](https://www.pexels.com/search/ultimate%20frisbee%20game%20field/).
+Alt text for it: A mixed team diving for a disc on a grass field.

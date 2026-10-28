@@ -26,7 +26,7 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 
 ## Door list
 
-Discover's Corners tab (approved Oct 23, 2026). A ticket is a ticket to a real event (decision logged in `claude/corners-build-decisions.md`, Oct 27, 2026). A Corner with no upcoming event shows a plain "How to start" card instead.
+Discover's Corners tab (approved Oct 23, 2026). A ticket is a ticket to a real event (decision logged in `docs/corners-build-decisions.md`, Oct 27, 2026). A Corner with no upcoming event shows a plain "How to start" card instead.
 
 | Term | Meaning |
 |---|---|

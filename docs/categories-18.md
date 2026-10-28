@@ -29,7 +29,7 @@ Source of truth for Step 4 of `claude-code-brief-discover-v2.md`. Approved by th
 
 `home-garden` is already a slug today and keeps its meaning, so it is reused as is. The other 17 are new slugs; the 14 old slugs stay resolvable (see below).
 
-## Every built-in Corner (149 rows in `hobbies.ts`)
+## Every built-in Corner (161 rows in `hobbies.ts`)
 
 "Source" says where the category came from: the activity library entry it matched, or a judgement call where the library had no match. Judgement calls are the ones to double-check.
 
@@ -192,6 +192,18 @@ Source of truth for Step 4 of `claude-code-brief-discover-v2.md`. Approved by th
 | `books-writing` | `reading` | Reading and writing |
 | `food-cooking` | `cooking` | Food and drink |
 | `food-cooking` | `storytelling` | Reading and writing (judgement: it was filed under food, but it is a writing Corner) |
+| Art & Creative (`art-creative`) | Life drawing | `life-drawing` | Art and design (`art-design`) | catalog review Oct 28, 2026 (wave 1) |
+| Travel & Adventure (`travel-adventure`) | City walks | `city-walks` | Culture and community (`culture-community`) | catalog review Oct 28, 2026 (wave 1) |
+| Photography & Film (`photography-film`) | Film clubs | `film-clubs` | Culture and community (`culture-community`) | catalog review Oct 28, 2026 (wave 1) |
+| Food & Cooking (`food-cooking`) | Food tours | `food-tours` | Culture and community (`culture-community`) | catalog review Oct 28, 2026 (wave 1) |
+| Gaming & Tabletop (`gaming-tabletop`) | Mahjong | `mahjong` | Games and puzzles (`games-puzzles`) | catalog review Oct 28, 2026 (wave 1) |
+| Travel & Adventure (`travel-adventure`) | Rafting | `rafting` | Outdoors and adventure (`outdoors-adventure`) | catalog review Oct 28, 2026 (wave 1) |
+| Books & Writing (`books-writing`) | Letter writing | `letter-writing` | Reading and writing (`reading-writing`) | catalog review Oct 28, 2026 (wave 1) |
+| Sports & Fitness (`sports-fitness`) | Hyrox | `hyrox` | Running and fitness (`running-fitness`) | catalog review Oct 28, 2026 (wave 1) |
+| Sports & Fitness (`sports-fitness`) | Walking clubs | `walking-clubs` | Running and fitness (`running-fitness`) | catalog review Oct 28, 2026 (wave 1) |
+| Sports & Fitness (`sports-fitness`) | Badminton | `badminton` | Sports and martial arts (`sports-martial-arts`) | catalog review Oct 28, 2026 (wave 1) |
+| Sports & Fitness (`sports-fitness`) | Skating | `skating` | Sports and martial arts (`sports-martial-arts`) | catalog review Oct 28, 2026 (wave 1) |
+| Sports & Fitness (`sports-fitness`) | Ultimate frisbee | `ultimate-frisbee` | Sports and martial arts (`sports-martial-arts`) | catalog review Oct 28, 2026 (wave 1) |
 | `photography-film` | `photography` | Photo and film |
 | `tech-building` | `web-design` | Skills and side projects |
 | `travel-adventure` | `travel` | Outdoors and adventure |
