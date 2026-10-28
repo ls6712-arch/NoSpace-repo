@@ -136,6 +136,16 @@ Answers from the founder before PR 1. These override the entries above where the
 - "In their city" is read from public Moments whose place names the city (`location_name` contains it; Moments with the place hidden are left out), because Moments have no city column. It runs only when the first two sources do not fill three chips, and a failure just means fewer chips. A city column or an RPC would be more exact and is a follow-up.
 - A Moment with no Corner keeps `corner` and `sub_hobby` empty. Home shows no Corner in its line for it.
 
+### PR 5: You, Search, Notifications, host Space (screens 9 to 12)
+
+- **You** is three tabs (Stubs, Pursuits, Moments). The old page (links, badges, followers, the Shelf) moved to `/you/all` and is linked from the bottom, so nothing was removed. "N Stubs" is your own count, shown only to you; Stubs are never ranked or compared. A Stub opens full screen on the `shared` spring with Share (the phone's share sheet or a copied link; no image).
+- **Search** keeps one result list but in the screen's sections. Open Pursuits near you are looked up for the first two matching Corners. Not built: the friend signal on Spaces and the stub and mutual friend lines on People (no data for them yet), and the Free chip (only events carry a price and Search does not list events). Ask Soosh is built with fixtures behind `askSooshEnabled` (env `VITE_ASK_SOOSH=true` turns it on).
+- **Notifications** puts what needs an answer first. Event cards come from the next session of your Pursuits; join requests from open groups you run; follow requests as before. Answered cards collapse with the `sheet` spring and stay gone on this device. Everything that used to be in the Activity list is in Earlier. A quiet-for-5-weeks nudge is worked out on the device.
+- **Spaces with no member Moments are hidden** from Discover, Corner pages, Search and Home empty. A member Moment is an approved, not removed Moment in the Space whose poster is not one of its hosts and is not just-me. A new Space therefore stays out of lists until a member posts; it is still reachable by its link, from You and from its hosts' pages. The check is `spaces_with_member_moments()` in the space_events migration; before that is live every Space shows.
+- **Host Space page:** members' Moments first, the hosts' own after (the Table's three pinned Moments stay pinned). A Share button on every Space copies `https://www.trynospace.com/#/space/{slug}` or opens the share sheet. Open Pursuits are the open groups owned by the Space's hosts for the Space's main Corner. "Verified host" is not shown: there is nothing in the data that says it. The Follow pill is not built: Spaces are joined, not followed.
+- **Events** get price, spots and a booking link (migration 20261102000000, `set_event_listing`). Payment is the host's own page.
+- **Attendee-only sessions** are left for later, as asked.
+
 ## Open
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.

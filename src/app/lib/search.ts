@@ -11,6 +11,7 @@ import { usePeopleSearch, profilePath } from "./people";
 import { marketplaceEnabled } from "../config";
 import { postCorner } from "../data/posts";
 import type { SpaceRow } from "./spaces";
+import { onlySpacesWithMemberMoments } from "./spaceMoments";
 
 /**
  * One search, everywhere. Before this, Discover's search only matched Space
@@ -36,6 +37,9 @@ export interface SearchHit {
   sub: string;
   to: string;
   avatarUrl?: string;
+  /** Corner hits: which Corner, so a page can look up its guide. */
+  spaceSlug?: string;
+  cornerSlug?: string;
 }
 
 /** Display order everywhere a grouped list is shown — products always last,
@@ -119,6 +123,8 @@ export function useUnifiedSearchIndex(query: string) {
             label: corner.name,
             sub: "",
             to: cornerPath(hobbySlug, corner.slug),
+            spaceSlug: hobbySlug,
+            cornerSlug: corner.slug,
           });
         }
       }
@@ -193,8 +199,12 @@ function useSpacesSearch(query: string): SearchHit[] {
       .limit(100)
       .then(({ data }) => {
         if (cancelled || !data) return;
-        spacesCache = data as SpaceRow[];
-        setSpaces(spacesCache);
+        // Search lists a Space only once members have shared a Moment in it.
+        void onlySpacesWithMemberMoments(data as SpaceRow[]).then((shown) => {
+          if (cancelled) return;
+          spacesCache = shown;
+          setSpaces(shown);
+        });
       });
     return () => {
       cancelled = true;

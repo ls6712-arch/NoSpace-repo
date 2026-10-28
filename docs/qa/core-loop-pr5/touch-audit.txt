@@ -1,0 +1,8 @@
+touch audit @375 (hasTouch): interactive elements 660; no 44x44 hit area: 0 distinct; corners shared with a neighbour: 5 distinct; overlapping 44px areas: 2 distinct pair(s)
+  SHARED  44x44          a.-my-1.5.-mr-3 "IM"  (hit lands on a.-my-3.block)  [8 screen-runs]
+  SHARED  26x26          button "Change photo"  (hit lands on button)  [2 screen-runs]
+  SHARED  85x24          button.transition-colors.hover:text-foreground "0 followers"  (hit lands on button.transition-colors.hover:text-foreground)  [2 screen-runs]
+  SHARED 138x32          button.inline-flex.items-center "Start a Pursuit"  (hit lands on button.flex.min-h-11)  [2 screen-runs]
+  SHARED  75x106         button.flex.flex-col "First Session"  (hit lands on button.absolute.right-1)  [2 screen-runs]
+  OVERLAP 14px  button "Change photo"  ⟷  button "Take photo"
+  OVERLAP 18px  button.transition-colors.hover:text-foreground "0 followers"  ⟷  button.transition-colors.hover:text-foreground "Following"

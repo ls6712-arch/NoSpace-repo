@@ -8,6 +8,7 @@ import { Loadable } from "./ui/skeleton";
 import { SpaceGridSkeleton } from "./Skeletons";
 import { EmptyState, ErrorNotice } from "./StateViews";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { onlySpacesWithMemberMoments } from "../lib/spaceMoments";
 
 /** Discover's "Spaces" tab — host-created communities, Phase 5 of the
  * Spaces Rework. No member counts anywhere in this app's Spaces UI, same
@@ -34,7 +35,10 @@ export function SpacesBrowser({ query }: { query: string }) {
         setSpaces("error");
         return;
       }
-      setSpaces((data as SpaceRow[]) ?? []);
+      // A Space with no Moments from members is not listed here.
+      const shown = await onlySpacesWithMemberMoments((data as SpaceRow[]) ?? []);
+      if (cancelled) return;
+      setSpaces(shown);
     }
     load();
     return () => {

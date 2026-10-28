@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { onlySpacesWithMemberMoments } from "./spaceMoments";
 
 export interface NearbyEvent {
   id: number;
@@ -39,7 +40,8 @@ export async function fetchEventsThisWeek(limit = 3): Promise<NearbyEvent[]> {
       .in("id", ids)
       .eq("access", "open")
       .eq("status", "active");
-    const byId = new Map((spaces ?? []).map((s) => [s.id as string, s]));
+    const shownSpaces = await onlySpacesWithMemberMoments((spaces ?? []).map((s) => ({ ...s, id: s.id as string })));
+    const byId = new Map(shownSpaces.map((s) => [s.id, s]));
     const out: NearbyEvent[] = [];
     for (const e of events) {
       const s = byId.get(e.space_id as string);
@@ -71,9 +73,10 @@ export async function fetchSuggestedSpaces(limit = 3): Promise<SuggestedSpace[]>
       .eq("access", "open")
       .eq("status", "active")
       .order("created_at", { ascending: false })
-      .limit(limit);
+      .limit(limit * 4);
     if (error || !data) return [];
-    return data.map((s) => ({ id: s.id as string, slug: s.slug as string, name: s.name as string, coverImage: (s.cover_image as string) || undefined }));
+    const shown = await onlySpacesWithMemberMoments(data.map((s) => ({ ...s, id: s.id as string })));
+    return shown.slice(0, limit).map((s) => ({ id: s.id, slug: s.slug as string, name: s.name as string, coverImage: (s.cover_image as string) || undefined }));
   } catch {
     return [];
   }

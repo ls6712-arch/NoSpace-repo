@@ -383,6 +383,32 @@ async function main() {
         await go("/my-space"); const love = page.getByRole("button", { name: "Love this" }).first(); await love.waitFor(T); await love.click(T);
         await page.getByRole("button", { name: /Loved/ }).first().waitFor(T);
       });
+      await flow("You: tabs switch and a Stub opens full screen with Share", async () => {
+        await go("/you");
+        await page.getByRole("button", { name: /Open$/ }).first().waitFor(T);
+        await page.getByRole("radio", { name: "Pursuits" }).click(T);
+        await page.getByText("Throw 24 bowls by spring").first().waitFor(T);
+        await page.getByRole("radio", { name: "Stubs" }).click(T);
+        await page.getByRole("button", { name: /Open$/ }).first().click(T);
+        await page.getByRole("dialog").getByRole("button", { name: "Share" }).waitFor(T);
+        await page.keyboard.press("Escape");
+        await page.getByRole("dialog").waitFor({ state: "hidden", timeout: 4000 });
+      });
+      await flow("Search: Activity result, chips toggle", async () => {
+        await go("/search?q=pottery");
+        await page.getByText("Activity", { exact: true }).first().waitFor(T);
+        await page.getByRole("button", { name: "Up to 2 hr" }).click(T);
+        await page.getByRole("button", { name: "Up to 2 hr", pressed: true }).waitFor(T);
+      });
+      await flow("Notifications: Let in collapses the request card", async () => {
+        await go("/inbox");
+        await page.getByText("Needs you").first().waitFor(T);
+        await page.getByRole("button", { name: "Let in" }).click(T);
+        await page.getByText(/wants to join “Hand-build a mug/).waitFor({ state: "hidden", timeout: 4000 });
+      });
+      await flow("Space: Share button is there", async () => {
+        await go("/space/clay-hands"); await page.getByRole("button", { name: /^Share / }).first().waitFor(T);
+      });
       await flow("open a Moment, Send to… opens and Escape closes it", async () => {
         await go("/moment/91"); await page.getByText("Three shots from the kiln opening").first().waitFor(T);
         await page.getByRole("button", { name: /Send to/ }).first().click(T); await page.getByRole("dialog").last().waitFor(T); await page.keyboard.press("Escape"); await page.waitForTimeout(400);
