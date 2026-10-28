@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { forwardRef } from "react";
 import { HorizontalRow } from "../HorizontalRow";
 import { PressLink } from "../afterhours/PressLink";
@@ -90,10 +91,12 @@ export const StartHere = forwardRef<
     busyEvent: number | null;
     onGoing: (eventId: number) => void;
     moodLine: string;
+    /** Where "See all" goes: every Corner for the chosen mood. Null when the mood has no full list. */
+    seeAllTo?: string | null;
     fading: boolean;
   }
 >(
-  function StartHere({ cards, ticketFor, going, busyEvent, onGoing, moodLine, fading }, ref) {
+  function StartHere({ cards, ticketFor, going, busyEvent, onGoing, moodLine, seeAllTo, fading }, ref) {
     if (cards.length === 0) return null;
     return (
       <section className={SECTION_GAP} aria-labelledby="start-here-title">
@@ -101,9 +104,16 @@ export const StartHere = forwardRef<
           <span>Start here</span>
           <Arrow />
         </div>
-        <h2 id="start-here-title" className={`mb-3 text-title transition-opacity duration-fast ${fading ? "opacity-0" : "opacity-100"}`}>
-          {moodLine}
-        </h2>
+        <div className="mb-3 flex items-baseline justify-between gap-4">
+          <h2 id="start-here-title" className={`text-title transition-opacity duration-fast ${fading ? "opacity-0" : "opacity-100"}`}>
+            {moodLine}
+          </h2>
+          {seeAllTo && (
+            <Link to={seeAllTo} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+              See all
+            </Link>
+          )}
+        </div>
         <div className={`transition-opacity duration-fast ${fading ? "opacity-0" : "opacity-100"}`}>
           <HorizontalRow name="discover.startHere" label={moodLine} listRef={ref}>
             {cards.map(({ card, serial }, i) => (

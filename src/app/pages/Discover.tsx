@@ -551,7 +551,7 @@ export function Discover() {
                   <div className={SECTION_GAP}>
                     <BrowseByChips />
                   </div>
-                  <StartHere ref={startRef} cards={startCards} ticketFor={ticketFor} going={going} busyEvent={goingBusy} onGoing={onGoing} moodLine={MOOD_LINE[shownMood]} fading={shownMood !== mood} />
+                  <StartHere ref={startRef} cards={startCards} ticketFor={ticketFor} going={going} busyEvent={goingBusy} onGoing={onGoing} moodLine={MOOD_LINE[shownMood]} seeAllTo={shownMood === "quick" ? null : `/corners?mood=${shownMood}`} fading={shownMood !== mood} />
                   <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
                   <Rooms />
                 </>
