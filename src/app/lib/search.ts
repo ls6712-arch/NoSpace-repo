@@ -11,6 +11,7 @@ import { usePeopleSearch, profilePath } from "./people";
 import { marketplaceEnabled } from "../config";
 import { postCorner } from "../data/posts";
 import type { SpaceRow } from "./spaces";
+import { onlySpacesWithMemberMoments } from "./spaceMoments";
 
 /**
  * One search, everywhere. Before this, Discover's search only matched Space
@@ -193,8 +194,12 @@ function useSpacesSearch(query: string): SearchHit[] {
       .limit(100)
       .then(({ data }) => {
         if (cancelled || !data) return;
-        spacesCache = data as SpaceRow[];
-        setSpaces(spacesCache);
+        // Search lists a Space only once members have shared a Moment in it.
+        void onlySpacesWithMemberMoments(data as SpaceRow[]).then((shown) => {
+          if (cancelled) return;
+          spacesCache = shown;
+          setSpaces(shown);
+        });
       });
     return () => {
       cancelled = true;

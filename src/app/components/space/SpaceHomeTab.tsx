@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { orderSpaceMoments } from "../../lib/spaceMoments";
 import { Link } from "react-router";
 import { MapPin, Star, ArrowRight, X, Pin, PinOff, Check } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
@@ -238,7 +239,7 @@ export function SpaceHomeTab({
         .eq("space_id", space.id)
         .order("featured", { ascending: false })
         .order("added_at", { ascending: false })
-        .limit(15);
+        .limit(60);
       if (cancelled) return;
       if (error) {
         console.warn("[SpaceHomeTab] Table load failed:", error);
@@ -381,7 +382,11 @@ export function SpaceHomeTab({
   const myPendingMoments = user ? momentsLoaded.filter((m) => m.status === "pending" && m.userId === user.id) : [];
   const pinnedMoments = approvedMoments.filter((m) => m.featured).slice(0, 3);
   const pinnedIds = new Set(pinnedMoments.map((m) => m.id));
-  const restMoments = approvedMoments.filter((m) => !pinnedIds.has(m.id)).slice(0, 12);
+  // Members' Moments first, the hosts' own after, so a busy host never crowds a member out.
+  const restMoments = orderSpaceMoments(
+    approvedMoments.filter((m) => !pinnedIds.has(m.id)),
+    new Set(hosts.map((h) => h.id)),
+  ).slice(0, 12);
   const tableEmpty = pinnedMoments.length === 0 && restMoments.length === 0;
 
   const togglePin = async (post: SpaceMoment) => {
