@@ -28,11 +28,11 @@ export const MOMENT_VISIBILITY_OPTIONS: {
 }[] = [
   { value: "just_me", label: "Only you", icon: Lock },
   { value: "followers", label: "Followers", icon: UserRound },
-  { value: "public", label: "Public", icon: Globe2 },
+  { value: "public", label: "Everyone", icon: Globe2 },
 ];
 
 /**
- * "Your Moments" meta-row word (MomentCard §2.1.2): `Public`, `Only you`,
+ * "Your Moments" meta-row word (MomentCard §2.1.2): `Everyone`, `Only you`,
  * `Followers`, in sentence case. `spaceName` is
  * unused until a post can actually carry `visibility: "space"`.
  */
@@ -40,5 +40,5 @@ export function visibilityWord(post: VisibilityPost, spaceName?: string): string
   if (isOnlyYou(post)) return "Only you";
   if (post.visibility === "space") return spaceName ?? "A Space";
   if (post.visibility === "followers") return "Followers";
-  return "Public";
+  return "Everyone";
 }

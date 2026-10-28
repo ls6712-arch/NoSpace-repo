@@ -90,7 +90,7 @@ import { Camera as CameraGlyph, ChevronRight } from "lucide-react";
  * nothing yet opens the camera straight away (or a plain "pick a file" screen
  * where a camera cannot work). The caption screen is the form: photo, caption,
  * the Corner it is about, the Pursuit it counts toward, who it is with, and who
- * sees it (Group, Friends, Everyone, Only you). One button posts it. A shared
+ * sees it (Group, Followers, Everyone, Only you). One button posts it. A shared
  * Moment lands on the Posted screen, where a Moment that counts toward a
  * Pursuit shows the Stub it earned; Only you saves a private log and lands on
  * the old Saved screen, as does a post that did not reach the database.
@@ -106,7 +106,7 @@ const AUDIENCE: {
 }[] = [
   { value: "private", label: "Only you", copy: "Only you can see it", icon: Lock },
   { value: "followers", label: "Followers", copy: "People who follow you, once you’ve accepted them", icon: UserRound },
-  { value: "public", label: "Public", copy: "Anyone can find it", icon: Globe2 },
+  { value: "public", label: "Everyone", copy: "Anyone can find it", icon: Globe2 },
 ];
 
 const THOUGHT_LIMIT = 300;
@@ -359,7 +359,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // visibility for new Moments"), "Only you" unless changed there. Falls
   // back to private for the instant before that setting has loaded.
   // Core loop v1: the default is Group when the Moment counts toward a group
-  // Pursuit, else Friends (visibility "followers"). A saved default of Public
+  // Pursuit, else Followers (visibility "followers"). A saved default of Everyone
   // is kept; an "Only you" default is not, so a Moment is shared unless the
   // person picks Only you here.
   const initialAudience = (): Visibility | "private" => (defaultVisibilityLoaded && defaultVisibility === "public" ? "public" : "followers");
@@ -899,11 +899,6 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       await saveAsPrivateLog();
       return;
     }
-    if (!corner) {
-      setError("Pick a Corner for this Moment.");
-      setRowSheet("activity");
-      return;
-    }
     setSaving(true);
     setError(null);
     try {
@@ -1388,7 +1383,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       .map((m) => m.displayName.split(" ")[0]);
     const circleOptions = [
       ...(groupPursuit ? [{ value: "group" as const, label: "Group" }] : []),
-      { value: "friends" as const, label: "Friends" },
+      { value: "friends" as const, label: "Followers" },
       { value: "everyone" as const, label: "Everyone" },
       { value: "private" as const, label: "Only you" },
     ];

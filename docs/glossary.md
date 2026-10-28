@@ -149,7 +149,7 @@ The Corners pages reuse existing wording for: Create a Space (the hero button wh
 |---|---|
 | Moment | Anything you log |
 | Log a Moment / Add from my Moments | Create a new one / add an existing one to a Space |
-| Only you / Followers / Public | Who sees a Moment |
+| Group / Followers / Everyone / Only you | Who sees a Moment. One set everywhere (Log, Moment page, Settings). Group appears only in Log, for a Moment that counts toward a Pursuit with people. "Public" and "Friends" are never audience labels |
 | Pinned | You choose, on your own profile. Buttons: "Pin" / "Unpin" |
 | Host picks | Hosts choose, in a Space. Buttons: "Add to host picks" / "Remove from host picks" (max 3) |
 | Spotlight | The Soosh team chooses, on Discover |
@@ -251,7 +251,7 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 | Your friends can come along. | Friends section heading. The button it names is "Count me in" |
 | On Soosh, the best feeling isn't a like. It's someone wanting to do what you did. | Reward section statement (website only) |
 | You choose who sees each post. | Privacy section heading |
-| Pick Only you, Followers or Public for each post. Nothing about your account has to be public. | Privacy section line. Names the real picker options (website only) |
+| Pick Only you, Followers or Everyone for each post. Nothing about your account has to be public. | Privacy section line. Names the real picker options (website only) |
 | See who's on Soosh. | Real Shelves heading |
 | Soosh is invite-only. | Invite section heading |
 | Privacy Policy / Terms | Footer links. Contact, Instagram and TikTok appear once set in `src/app/config.ts` |
@@ -338,16 +338,16 @@ Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
 | Counts toward / Nothing | Row that sets the Pursuit the Moment adds to. "Nothing" when there is none. The sheet is titled Counts toward |
 | With | Row listing the other people in the chosen Pursuit. Read only. Hidden when it is a Pursuit for one |
 | Details / Add | Row for tags, "This is something happening" and Where |
-| Who sees this | Label of the picker: Group (only when the Moment counts toward a Pursuit with people), Friends, Everyone, Only you. Friends means people who follow you and Everyone means Public; Followers and Public stay on the older settings screens until one set is chosen |
+| Who sees this | Label of the picker: Group (only when the Moment counts toward a Pursuit with people), Followers, Everyone, Only you. The same four words are used on every screen |
 | People in your Pursuit can see this. / People who follow you can see this. / Anyone can find this in {Corner}. / Only you can see this. | The line under the picker |
-| Post / Keep it private | The one fixed button. It reads Keep it private when Only you is picked |
+| Post / Keep it private | The one fixed button. Every row above it is optional with a default, so a photo posts in one tap. It reads Keep it private when Only you is picked |
 | Pick a Corner for this Moment. | Shown, with the Activity sheet open, when Post is tapped without a Corner |
-| Posted to your group / Posted to your friends / Posted to everyone | First line of the Posted screen |
+| Posted to your group / Posted to your followers / Posted to everyone | First line of the Posted screen |
 | {Name} loved your Moment | Card that appears on the Posted screen when someone reacts while you are there |
 | People who do {Corner} also try {Corner} | A What's next row |
 | Group session {time} / Plan your next one | A What's next row for the Pursuit's next session |
 | Invite a friend to the next one / They join your Pursuit | A What's next row |
-| See what friends are up to | Button at the bottom of Posted. Goes Home |
+| Go to Home | Button at the bottom of Posted |
 | Undo | Text button under What's next. Takes the Moment back |
 | Home | Title of the feed |
 | {Pursuit} · {N} of {M} / Open | The Pursuit bar at the top of Home. "{N} of {M}" is the person's own count and never a rank |

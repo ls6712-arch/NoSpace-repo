@@ -53,9 +53,7 @@ export const SCREENS: Screen[] = [
   { name: "log-caption-sheet", route: "/create", setup: async (page) => { await pickPhotos(1)(page); await page.getByText("Counts toward").first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
   { name: "log-posted", route: "/create", setup: async (page) => {
       await pickPhotos(1)(page);
-      await page.getByText("Activity", { exact: true }).first().click({ timeout: 8000 }); await page.getByPlaceholder(/Type a Corner/).first().fill("Pottery");
-      await page.getByRole("button", { name: /^Pottery/ }).first().click({ timeout: 8000 }); await page.keyboard.press("Escape"); await page.waitForTimeout(500);
-      await page.getByRole("button", { name: "Post", exact: true }).first().click({ timeout: 8000 }); await page.getByText("Posted to your friends").first().waitFor({ timeout: 8000 }); await page.waitForTimeout(1600);
+      await page.getByRole("button", { name: "Post", exact: true }).first().click({ timeout: 8000 }); await page.getByText("Posted to your followers").first().waitFor({ timeout: 8000 }); await page.waitForTimeout(1600);
     } },
   { name: "create-pursuit", route: "/pursuits/new" },
   { name: "messages", route: "/messages" },

@@ -23,7 +23,7 @@ export type PostedAudience = "group" | "friends" | "everyone";
 
 const AUDIENCE_LINE: Record<PostedAudience, string> = {
   group: "Posted to your group",
-  friends: "Posted to your friends",
+  friends: "Posted to your followers",
   everyone: "Posted to everyone",
 };
 
@@ -233,7 +233,7 @@ export function PostedScreen({
         <div className="mx-auto max-w-md px-4 pt-3 pb-[max(1rem,var(--safe-bottom,0px))]">
           <Link to="/my-space" onClick={onDone} className="block">
             <PillButton variant="outline" className="w-full">
-              See what friends are up to
+              Go to Home
             </PillButton>
           </Link>
         </div>

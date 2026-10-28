@@ -330,16 +330,12 @@ async function main() {
         await page.getByRole("button", { name: "Keep it private" }).first().click(T);
         await page.getByText(/^Saved$|Posted to/).first().waitFor(T);
       });
-      await flow("log a Moment to friends: Post lands on the Posted screen", async () => {
+      await flow("log a Moment to followers: Post lands on the Posted screen", async () => {
         await go("/create");
         await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);
         await page.getByPlaceholder(/what happened/i).first().fill("Smoke test to friends");
         await page.getByRole("button", { name: "Post", exact: true }).first().click(T);
-        // No Corner yet: Post opens the Activity sheet. Pick Pottery, close it, post again.
-        await page.getByPlaceholder(/Type a Corner/).first().fill("Pottery"); await page.getByRole("button", { name: /^Pottery/ }).first().click(T);
-        await page.keyboard.press("Escape"); await page.waitForTimeout(500);
-        await page.getByRole("button", { name: "Post", exact: true }).first().click(T);
-        await page.getByText("Posted to your friends").first().waitFor(T).catch(async (e) => { console.log("DEBUG", (await page.locator("body").innerText()).slice(0, 300)); throw e; });
+        await page.getByText("Posted to your followers").first().waitFor(T).catch(async (e) => { console.log("DEBUG", (await page.locator("body").innerText()).slice(0, 300)); throw e; });
       });
       await flow("Home: feed shows friends, Love this toggles", async () => {
         await go("/my-space"); const love = page.getByRole("button", { name: "Love this" }).first(); await love.waitFor(T); await love.click(T);

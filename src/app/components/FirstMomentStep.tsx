@@ -20,7 +20,7 @@ type Audience = "private" | "followers" | "public";
 const AUDIENCE_LABEL: Record<Audience, string> = {
   private: "Only you",
   followers: "Followers",
-  public: "Public",
+  public: "Everyone",
 };
 
 /**
