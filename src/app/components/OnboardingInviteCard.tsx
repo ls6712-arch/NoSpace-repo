@@ -77,7 +77,7 @@ export function OnboardingInviteCard({
       >
         Invite someone?
       </Heading>
-      <p className="mb-6 text-small text-[var(--ink-soft)]">
+      <p className="mb-6 text-small text-[var(--muted-foreground)]">
         {APP_NAME} is invite-only for now.{" "}
         {invitesLeft === null
           ? "Send an invite link to someone you’d like here."
@@ -92,7 +92,7 @@ export function OnboardingInviteCard({
             placeholder="A note for them (optional). They’ll see it when they open the link."
             className="mb-2"
           />
-          <div className="mb-3 text-right text-caption text-[var(--ink-soft)]">{note.length}/280</div>
+          <div className="mb-3 text-right text-caption text-[var(--muted-foreground)]">{note.length}/280</div>
           {error && (
             <p role="alert" className="mb-3 text-caption text-destructive">
               {error}
@@ -109,7 +109,7 @@ export function OnboardingInviteCard({
         </>
       ) : (
         <>
-          <div className="mb-6 flex items-center gap-2 rounded-card border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-2.5">
+          <div className="mb-6 flex items-center gap-2 rounded-card border border-[var(--border)] bg-[var(--card)] px-3 py-2.5">
             <code className="min-w-0 flex-1 truncate text-caption" title={link}>{link}</code>
             <Button variant="outline" size="sm" onClick={copy}>
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}

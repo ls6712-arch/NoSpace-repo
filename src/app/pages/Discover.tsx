@@ -36,17 +36,17 @@ import { MomentGridSkeleton } from "../components/Skeletons";
 import { EmptyState, ErrorNotice } from "../components/StateViews";
 import { Button } from "../components/ui/button";
 import { PeopleBrowser } from "./People";
-import { Masthead } from "../components/door/Masthead";
-import { CoverStory } from "../components/door/CoverStory";
-import { pickCover } from "../components/door/pickCover";
-import { MoodGrid } from "../components/door/MoodGrid";
-import { StartHere } from "../components/door/StartHere";
-import { BrowseByChips } from "../components/corners/BrowseByChips";
 import { useEventTickets } from "../components/door/useEventTickets";
-import { SeenTonight } from "../components/door/SeenTonight";
-import { Rooms } from "../components/door/Rooms";
-import { moodCards, MOOD_LINE, type MoodChipId } from "../data/moodCards";
-import { doorFor, readLastMood, writeLastMood } from "../lib/doorList";
+import { doorFor } from "../lib/doorList";
+import { DiscoverHeader } from "../components/discover/DiscoverHeader";
+import { HeroCard } from "../components/discover/HeroCard";
+import { FriendsDoing } from "../components/discover/FriendsDoing";
+import { BrowseTiles } from "../components/discover/BrowseTiles";
+import { InterestsSheet } from "../components/discover/InterestsSheet";
+import { useInterests } from "../lib/interests";
+import { heroCandidates } from "../lib/discoverHero";
+import { fetchFriendPursuits, type FriendPursuit } from "../lib/friendPursuits";
+import { Skeleton } from "../components/ui/skeleton";
 import { plural } from "../lib/plural";
 
 /**
@@ -358,39 +358,35 @@ export function Discover() {
 
   const q = query.trim().toLowerCase();
 
-  // The Door list: the greeting and default door by local time (a viewer with
-  // no Moments is welcomed in), then the chosen door's tickets. The cover is the
-  // top ticket; "Start here" is the rest. The tickets and the cover fade out and
-  // back in over 150ms when the door changes.
+  // The front door: a hero Corner from what the person wants more of (their
+  // moods; with none chosen, the Corners that suit this time of day), preferring
+  // one with an event coming up, then friends' Pursuits and the Browse tiles.
+  const interests = useInterests();
+  const [interestsOpen, setInterestsOpen] = useState(false);
   const door = useMemo(
     () => doorFor(new Date(), user && postsStatus !== "loading" ? myPosts.length : null),
     [user, postsStatus, myPosts.length],
   );
-  const [mood, setMood] = useHistoryState<MoodChipId>("discover.mood", readLastMood() ?? door.mood);
-  const [shownMood, setShownMood] = useState(mood);
-  const startRef = useRef<HTMLUListElement | null>(null);
-  useEffect(() => {
-    if (shownMood === mood) return;
-    const t = window.setTimeout(() => {
-      setShownMood(mood);
-      startRef.current?.scrollTo({ left: 0 });
-    }, 150);
-    return () => window.clearTimeout(t);
-  }, [mood, shownMood]);
-  const tickets = useMemo(() => moodCards(shownMood), [shownMood]);
-  // The cover is the highest-ranked ticket whose Corner has a public photo; "Start here" holds the rest.
-  const cover = useMemo(() => pickCover(tickets, publicFeed, new Set(followingIds)), [tickets, publicFeed, followingIds]);
-  const startCards = useMemo(
-    () => tickets.map((card, i) => ({ card, serial: i + 1 })).filter((t) => t.card !== cover?.card),
-    [tickets, cover],
-  );
+  const candidates = useMemo(() => heroCandidates(interests.moods, door.mood), [interests.moods, door.mood]);
+  const { ticketFor } = useEventTickets(candidates, user?.id);
+  const hero = useMemo(() => candidates.find((c) => ticketFor(c)) ?? candidates[0] ?? null, [candidates, ticketFor]);
 
-  // A ticket to the Corner's next event in an Open Space when it has one; else a "How to start" card.
-  const navigate = useNavigate();
-  const { ticketFor, going, busy: goingBusy, error: goingError, toggleGoing } = useEventTickets(tickets, user?.id);
-  const onGoing = (eventId: number) =>
-    user ? toggleGoing(eventId) : navigate(`/login?redirect=${encodeURIComponent("/discover")}`);
-  const coverTicket = cover ? ticketFor(cover.card) : null;
+  const [friendPursuits, setFriendPursuits] = useState<FriendPursuit[] | null>(null);
+  useEffect(() => {
+    if (!user) {
+      setFriendPursuits([]);
+      return;
+    }
+    if (followingIds.length === 0) {
+      setFriendPursuits([]);
+      return;
+    }
+    let live = true;
+    void fetchFriendPursuits(followingIds).then((list) => live && setFriendPursuits(list));
+    return () => {
+      live = false;
+    };
+  }, [user?.id, followingIds]);
 
   // Category is internal-only now (never shown), but its name/keywords
   // still feed search matching — see spaceScoped's own text match below.
@@ -452,9 +448,23 @@ export function Discover() {
 
   return (
     <div className="ns-afterhours min-h-viewport">
+      {tab === "corners" && !query.trim() && (
+        <div className={`${PAGE_X} flex flex-col gap-10 pt-6`}>
+          <DiscoverHeader city={interests.city} onEdit={() => setInterestsOpen(true)} />
+          {hero ? (
+            <HeroCard card={hero} ticket={ticketFor(hero)} />
+          ) : (
+            <Skeleton className="aspect-[4/5] w-full rounded-card sm:aspect-[16/9] lg:aspect-[21/9]" />
+          )}
+          <FriendsDoing pursuits={friendPursuits ?? []} />
+          <BrowseTiles />
+        </div>
+      )}
+      <InterestsSheet open={interestsOpen} onOpenChange={setInterestsOpen} />
+
       {/* One search only: the top bar's, on a wide screen. Where there is no
           top-bar search (a phone), this one field stands in for it. */}
-      <div className={`${PAGE_X} pt-4 lg:hidden`}>
+      <div className={`${PAGE_X} ${tab === "corners" && !query.trim() ? "pt-10" : "pt-4"} lg:hidden`}>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -522,40 +532,7 @@ export function Discover() {
           {tab === "corners" && (
             <>
               {/* Ideas, not search results: hidden while a search is open. */}
-              {!query.trim() && (
-                <>
-                  <Masthead />
-                  {/* From 1024px the top is a spread: the cover on 7 of 12 columns, the doors on 5. */}
-                  <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-10">
-                  {cover && (
-                    <CoverStory
-                      card={cover.card}
-                      photo={cover.photo}
-                      ticket={coverTicket}
-                      going={!!coverTicket && going.has(coverTicket.event.id)}
-                      busy={!!coverTicket && goingBusy === coverTicket.event.id}
-                      onGoing={() => coverTicket && onGoing(coverTicket.event.id)}
-                      fading={shownMood !== mood}
-                    />
-                  )}
-                  <MoodGrid
-                    value={mood}
-                    greeting={door.greeting}
-                    onPick={(id) => {
-                      setMood(id);
-                      writeLastMood(id);
-                    }}
-                  />
-                  </div>
-                  {goingError && <p role="alert" className="mt-4 text-small text-destructive">{goingError}</p>}
-                  <div className={SECTION_GAP}>
-                    <BrowseByChips />
-                  </div>
-                  <StartHere ref={startRef} cards={startCards} ticketFor={ticketFor} going={going} busyEvent={goingBusy} onGoing={onGoing} moodLine={MOOD_LINE[shownMood]} seeAllTo={shownMood === "quick" ? null : `/corners?mood=${shownMood}`} fading={shownMood !== mood} />
-                  <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
-                  <Rooms />
-                </>
-              )}
+              {/* The front door sits above the page: see below. */}
               {/* While searching, the matching Corners come first. */}
               {query.trim() && <AllCornersBrowser query={query} />}
 

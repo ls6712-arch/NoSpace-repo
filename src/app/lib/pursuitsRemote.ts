@@ -416,7 +416,7 @@ export async function fetchPursuitProgress(pursuitId: string): Promise<ProgressE
  * auth.users, not profiles, so PostgREST can't embed profiles through
  * them — the embedded version errored and silently returned nothing, which
  * is why invites sent from a Pursuit's page never showed up. */
-async function profilesById(ids: string[]) {
+export async function profilesById(ids: string[]) {
   const map = new Map<string, { username: string | null; displayName: string; avatarUrl?: string }>();
   if (!supabase || ids.length === 0) return map;
   const { data } = await supabase.from("profiles").select("id, username, display_name, avatar_url").in("id", ids);

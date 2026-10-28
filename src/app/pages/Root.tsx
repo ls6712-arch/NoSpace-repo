@@ -131,7 +131,8 @@ export function Root() {
 
   // The signed-out landing page has its own nav (Home.tsx renders it), and a
   // visitor never sees the member nav, tab bar or prompts.
-  if (!user && location.pathname === "/") {
+  // Onboarding is one focused screen: no top bar or tab bar around it.
+  if ((!user && location.pathname === "/") || location.pathname === "/onboarding") {
     return (
       <div className="min-h-viewport">
         <PreviewBanner />

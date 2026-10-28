@@ -223,7 +223,7 @@ function CornerTile({
             className="flex h-full w-full items-center justify-center p-[9%] [container-type:inline-size]"
             style={{ background: tile.bg, color: tile.fg }}
           >
-            <p className={TILE_CAPTION} style={{ fontFamily: "var(--font-serif)" }}>
+            <p className={TILE_CAPTION} style={{ fontFamily: "var(--font-body)" }}>
               {item.label}
             </p>
           </div>
@@ -237,7 +237,7 @@ function CornerTile({
       </div>
       <p
         className="mt-3 truncate text-lead leading-snug transition-colors group-hover:text-[var(--coral-text)]"
-        style={{ fontFamily: "var(--font-serif)" }}
+        style={{ fontFamily: "var(--font-body)" }}
         title={item.label}
       >
         {item.label}

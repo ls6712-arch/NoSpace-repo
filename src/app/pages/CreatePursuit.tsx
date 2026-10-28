@@ -67,7 +67,8 @@ export function CreatePursuit() {
   const [measure, setMeasure] = useState<Measure>(defaultMeasure("count"));
   const [hasDeadline, setHasDeadline] = useState(false);
   const [deadline, setDeadline] = useState("");
-  const [participation, setParticipation] = useState<"solo" | "invite">("solo");
+  // ?together=1 (the Corner page's "Do this with people") opens on inviting people.
+  const [participation, setParticipation] = useState<"solo" | "invite">(searchParams.get("together") === "1" ? "invite" : "solo");
   const [mode, setMode] = useState<Exclude<PursuitMode, "solo">>("together");
   const [invitees, setInvitees] = useState<Person[]>([]);
   // Step 4c: "Start a Pursuit with {name}" from a Count me in tap arrives

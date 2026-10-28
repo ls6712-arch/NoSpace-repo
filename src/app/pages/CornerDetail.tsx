@@ -22,6 +22,12 @@ import { curatedBySlug } from "../data/curatedCorners";
 import { CORNER_CATEGORIES } from "../data/cornerCategories";
 import { hasHobbyPhoto } from "../data/hobbyPhotos";
 import { cornerKey, homeCornersIn } from "../data/homeCorners";
+import { cornerGuide } from "../data/cornerGuides";
+import { cornerStyle } from "../lib/categoryStyle";
+import { cornerPhotoTransitionName } from "../components/discover/HeroCard";
+import { SnapCarousel } from "../components/ui/SnapCarousel";
+import { AvatarStack } from "../components/ui/AvatarStack";
+import { PillButton } from "../components/ui/PillButton";
 import { builtInCornerModel, curatedModel, plainModel, type CornerModel } from "../lib/cornerModel";
 import { useCorners } from "../context/CornersContext";
 import { hobbies } from "../data/hobbies";
@@ -35,7 +41,6 @@ import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
 import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
 import { tieNumbers } from "../lib/typography";
-import { usePrefersReducedMotion } from "../lib/useReducedMotion";
 
 /**
  * A single Corner (/corners/:slug), open to signed-out and not-yet-approved
@@ -115,6 +120,9 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   const restricted = !user || profile?.access === "pending";
   const here = encodeURIComponent(`/corners/${corner.slug}`);
   const signIn = () => navigate(`/login?redirect=${here}`);
+  // Signed out or not approved yet: sign in first, then land where the button was going.
+  const cornerParams = `hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`;
+  const goTo = (path: string) => (restricted ? navigate(`/login?redirect=${encodeURIComponent(path)}`) : navigate(path));
 
   const posts = useMemo(
     () => publicFeed.filter((p) => isInCorner(p, corner.spaceSlug, corner.slug)),
@@ -206,6 +214,9 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   const week = live ? thisWeek(events) : [];
   const photo = cornerPhotoCredit(corner.slug);
   const category = CORNER_CATEGORIES.find((c) => c.slug === corner.categorySlug);
+  // "90 min · At home · Good with a friend": the length and place, and a note when it suits company.
+  const together = cornerGuide(corner.spaceSlug, corner.slug)?.together;
+  const metaLine = [corner.meta, together && together !== "solo" ? "Good with a friend" : ""].filter(Boolean).join(" · ");
   // Other Corners in the same group: curated first, then A to Z. Each has a photo of its own, and no two
   // cards share an image, so a row never shows the same picture twice.
   const more = (() => {
@@ -230,7 +241,20 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         : [],
     [myPosts, corner, user, restricted],
   );
+  // Who is into this Corner, from the people who shared a Moment here: a few faces and their names, never a count.
+  const proof = ranked.flatMap((r) => (people.get(r.id) ? [people.get(r.id)!] : [])).slice(0, 3);
+  const proofLine =
+    proof.length === 0
+      ? ""
+      : proof.length === 1
+        ? `${proof[0].name.slice(0, 60)} is into this`
+        : proof.length === 2 && ranked.length === 2
+          ? `${proof[0].name.slice(0, 60)} and ${proof[1].name.slice(0, 60)} are into this`
+          : `${proof[0].name.slice(0, 60)}, ${proof[1].name.slice(0, 60)} and others are into this`;
   const showMoments = !restricted && posts.length > 0;
+  // Moments strip: square thumbnails of the Corner's public photo Moments. Hidden under 5 Moments.
+  const stripPosts = posts.filter((p) => p.type === "photo" && !!p.media).slice(0, 12);
+  const showStrip = !restricted && posts.length >= 5 && stripPosts.length >= 5;
   const isMember = (s: LiveSpace) => memberships.get(s.id)?.status === "active";
   const isPending = (s: LiveSpace) => memberships.get(s.id)?.status === "pending";
 
@@ -262,62 +286,59 @@ function CornerBody({ corner }: { corner: CornerModel }) {
 
   const buttonClass =
     "inline-flex min-h-12 items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)] disabled:opacity-60";
-  const heroSpaces = live?.spaces.length ?? 0;
-  // The hero's one button: the next event, else the Corner's Spaces, else a new Space. Held back until the live data is in.
-  const heroButton: "event" | "spaces" | "create" | null = !live ? null : heroEvent ? "event" : heroSpaces > 0 ? "spaces" : "create";
   const createHref = user ? "/create-space" : `/login?redirect=${encodeURIComponent("/create-space")}`;
-  const reduced = usePrefersReducedMotion();
-  const seeSpaces = () => document.getElementById("spaces-section")?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
 
   return (
     <div className="ns-afterhours min-h-viewport">
-      {/* Hero: the Corner's photo; emoji, category, name and length stacked bottom left, then one button. */}
-      <header className="relative flex min-h-[60svh] flex-col overflow-hidden bg-surface-muted text-on-media">
-        <ImageWithFallback
-          src={cornerPhoto(corner.spaceSlug, corner.slug, 1600)}
-          alt={cornerPhotoAlt(corner.slug)}
-          priority
-          width={1200}
-          className="absolute inset-0 size-full"
-        />
-        <div className="pointer-events-none absolute inset-0 bg-scrim-solid/25" aria-hidden="true" />
-        <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
-        <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
+      {/* Hero: 280px of the Corner's photo, the way back to its group, the name and one meta line. The photo grows in from Discover's hero card. */}
+      <header className="relative flex h-[280px] flex-col overflow-hidden bg-[var(--cat)] text-on-media" style={cornerStyle(corner.spaceSlug, corner.slug)}>
+        <div className="absolute inset-0" style={{ viewTransitionName: cornerPhotoTransitionName(corner.slug) }}>
+          <ImageWithFallback
+            src={cornerPhoto(corner.spaceSlug, corner.slug, 1600)}
+            alt={cornerPhotoAlt(corner.slug)}
+            priority
+            width={1200}
+            className="absolute inset-0 size-full"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-scrim-solid/25" aria-hidden="true" />
+          <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
+          <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
+        </div>
         {photo && (
           <a
             href={photo.source}
             target="_blank"
             rel="noopener noreferrer"
-            className="absolute bottom-0 right-4 inline-flex min-h-11 items-center text-caption text-on-media/90 hover:underline md:right-8"
+            className="absolute right-4 top-3 inline-flex min-h-11 items-center text-caption text-on-media/90 hover:underline md:right-8"
           >
             {`Photo: ${photo.credit} on Unsplash`}
           </a>
         )}
-        <div className={`${PAGE_X} relative flex flex-1 flex-col pb-10 pt-6 md:pb-14`}>
-          <Link to={category ? `/browse/${category.slug}` : "/corners"} className="inline-flex min-h-11 items-center text-small hover:underline">
-            {category ? `← Back to ${category.name}` : "← Back to Corners"}
+        <div className={`${PAGE_X} relative flex flex-1 flex-col pb-5 pt-3`}>
+          <Link to={category ? `/browse/${category.slug}` : "/corners"} className="inline-flex min-h-11 items-center self-start text-small hover:underline">
+            {category ? `← ${category.name}` : "← Corners"}
           </Link>
-          <div className="mt-auto flex flex-col items-start gap-2 pt-16">
-            {corner.emoji && (
-              <span className="text-display leading-none" aria-hidden="true">
-                {corner.emoji}
-              </span>
-            )}
-            <h1 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
+          <div className="mt-auto flex flex-col items-start gap-1">
+            <h1 className="max-w-2xl text-display font-extrabold" style={displayStyle(48, { lineHeight: 1 })}>
               {corner.name}
             </h1>
-            {(category || corner.meta) && (
-              <p className="flex flex-wrap items-center gap-x-1 text-body text-on-media/90">
-                {category && (
-                  <Link to={`/browse/${category.slug}`} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
-                    {category.name}
-                  </Link>
-                )}
-                {category && corner.meta && <span aria-hidden="true">·</span>}
-                {corner.meta && <span>{corner.meta}</span>}
-              </p>
+            {metaLine && <p className="text-body text-on-media/90">{metaLine}</p>}
+          </div>
+        </div>
+      </header>
+
+      <div className={`${PAGE_X} pb-56 pt-8 lg:pb-40`}>
+        {error && <p role="alert" className="mb-6 text-small text-destructive">{error}</p>}
+
+        {(proof.length > 0 || heroEvent) && (
+          <section aria-label="Who is into this" className="mb-10 flex flex-col gap-4 rounded-card bg-card p-4">
+            {proof.length > 0 && (
+              <div className="flex items-center gap-4">
+                <AvatarStack people={proof} size="size-10" />
+                <p className="text-body font-semibold">{proofLine}</p>
+              </div>
             )}
-            {heroButton === "event" && heroEvent && (
+            {heroEvent && (
               <HeroEvent
                 event={heroEvent}
                 space={spaceById.get(heroEvent.spaceId)}
@@ -330,28 +351,14 @@ function CornerBody({ corner }: { corner: CornerModel }) {
                 buttonClass={buttonClass}
               />
             )}
-            {heroButton === "spaces" && (
-              <button type="button" onClick={seeSpaces} className={`mt-3 ${buttonClass}`}>
-                See Spaces
-              </button>
-            )}
-            {heroButton === "create" && (
-              <PressLink to={createHref} className={`mt-3 ${buttonClass}`}>
-                Create a Space
-              </PressLink>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <div className={`${PAGE_X} pb-24 pt-8`}>
-        {error && <p role="alert" className="mb-6 text-small text-destructive">{error}</p>}
+          </section>
+        )}
 
         {(corner.steps.length > 0 || corner.about || corner.worth.length > 0) && (
           <div className={`${SECTION_GAP} grid gap-10 md:gap-8 ${corner.worth.length > 0 ? "md:grid-cols-2" : ""}`}>
             {(corner.steps.length > 0 || corner.about) && (
               <section aria-labelledby="start-title">
-                <SectionTitle id="start-title">How to start</SectionTitle>
+                <SectionTitle id="start-title">Your first time</SectionTitle>
                 {corner.about && <p className="mb-4 text-body text-muted-foreground">{corner.about}</p>}
                 {corner.steps.length > 0 && (
                   <ol className="space-y-3">
@@ -379,6 +386,27 @@ function CornerBody({ corner }: { corner: CornerModel }) {
               </section>
             )}
           </div>
+        )}
+
+        {showStrip && (
+          <section className={SECTION_GAP} aria-labelledby="strip-title">
+            <h2 id="strip-title" className="sr-only">
+              Moments
+            </h2>
+            <SnapCarousel
+              name={`corner.${corner.slug}.moments`}
+              label={`Moments in ${corner.name}`}
+              items={stripPosts}
+              getKey={(post) => String(post.id)}
+              itemClassName="w-36 sm:w-44"
+              renderItem={(post) => (
+                <button type="button" onClick={() => setOpenPost(post)} className="block aspect-square w-full overflow-hidden rounded-card bg-card">
+                  <ImageWithFallback src={post.mediaUrls?.[0] ?? post.media} alt={momentAlt(post, corner.name)} width={360} className="size-full" />
+                </button>
+              )}
+            />
+            <p className="mt-3 text-small text-muted-foreground">{`${plural(posts.length, "Moment")} in ${corner.name}`}</p>
+          </section>
         )}
 
         {corner.needs.length > 0 && (
@@ -483,7 +511,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
           </section>
         )}
 
-        {showMoments && (
+        {showMoments && !showStrip && (
           <section className={SECTION_GAP} aria-labelledby="moments-title">
             <SectionTitle id="moments-title">Recent Moments</SectionTitle>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -523,14 +551,28 @@ function CornerBody({ corner }: { corner: CornerModel }) {
           </section>
         )}
 
-        {/* A new Space is asked for here only when the hero is not already asking. */}
-        {heroButton !== "create" && (
-          <section className={SECTION_GAP}>
-            <PressLink to={createHref} className={buttonClass}>
-              Create a Space
-            </PressLink>
-          </section>
-        )}
+        <section className={SECTION_GAP}>
+          <PressLink to={createHref} className={buttonClass}>
+            Create a Space
+          </PressLink>
+        </section>
+      </div>
+
+      {/* The one primary action; the other two are small links under it. Sits above the tab bar on a phone. */}
+      <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background lg:bottom-0">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-1 px-4 pt-3 pb-2">
+          <PillButton className="w-full" onClick={() => goTo(`/pursuits/new?${cornerParams}&together=1`)}>
+            Do this with people
+          </PillButton>
+          <div className="flex items-center gap-6">
+            <button type="button" onClick={() => goTo(`/pursuits/new?${cornerParams}`)} className="min-h-11 text-small font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+              Set a solo goal
+            </button>
+            <button type="button" onClick={() => goTo(`/create?${cornerParams}`)} className="min-h-11 text-small font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+              I did this
+            </button>
+          </div>
+        </div>
       </div>
 
       <MomentDetail

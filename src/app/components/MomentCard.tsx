@@ -383,7 +383,7 @@ export function MomentMedia({ post, className = "", full = false }: { post: Post
       className={`${MOMENT_MEDIA} flex items-center justify-center overflow-hidden p-[9%] [container-type:inline-size] ${className}`}
       style={{ background: tile.bg, color: tile.fg }}
     >
-      <p className={TILE_CAPTION} style={{ fontFamily: "var(--font-serif)" }}>
+      <p className={TILE_CAPTION} style={{ fontFamily: "var(--font-body)" }}>
         {post.caption}
       </p>
     </div>
@@ -686,7 +686,7 @@ export function MomentCard({
           </div>
         )}
 
-        <p className={`mt-2 ${CARD_CAPTION}`} style={{ fontFamily: "var(--font-serif)" }} title={post.caption}>
+        <p className={`mt-2 ${CARD_CAPTION}`} style={{ fontFamily: "var(--font-body)" }} title={post.caption}>
           {post.caption}
         </p>
 

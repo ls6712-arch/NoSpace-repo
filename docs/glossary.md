@@ -269,3 +269,26 @@ New words approved in the core loop brief (section 7). Screen copy lands with ea
 | Was there | Reserved for a person's attendance at a session; used only if a screen needs it |
 | Keep going | Heading of the choices after a Pursuit is complete |
 | Do this with people | The one primary button on a Corner page. "Set a solo goal" and "I did this" are text links under it |
+
+### Core loop v1, screens 1 to 3 (Oct 28, 2026)
+
+Strings from the founder's screens (`docs/design/core-loop/01` to `03`), added with PR 2.
+
+| Term | Meaning |
+|---|---|
+| What do you want more of? | Title of onboarding and of the sheet that changes the choice. The chips are the 8 mood labels under Moods above |
+| Pick a few. We’ll show you things to do this week, and who’s doing them. | Onboarding subline |
+| Your city | Label of the city field |
+| Show me what to do | Onboarding button. With a Pursuit invite it reads "Join {Name}’s Pursuit" |
+| Pick at least one | Helper text while no mood is picked, instead of a dead button |
+| Takes 10 seconds. Change it any time. | Onboarding footnote. The change happens from the city name on Discover |
+| {Name} invited you to {Pursuit} | Card on top of onboarding when you arrive from an invite link |
+| This week in | Muted line over the city name on Discover. With no city it reads "This week" over "Discover" |
+| Your friends are doing | Discover carousel of Pursuits that people you follow share |
+| Browse | Discover grid of the 18 groups of Corners. Each tile shows the group's own name |
+| Your first time | Corner page heading over the numbered steps. Replaces "How to start" on that page only |
+| Good with a friend | Last part of a Corner's meta line when the Corner suits company |
+| {Name} is into this | Corner page line beside the avatars: people who shared a Moment in that Corner. Never a count |
+| Do this with people | The one primary button on a Corner page |
+| Set a solo goal | Text link under it: starts a Pursuit for yourself |
+| I did this | Text link under it: opens Log in that Corner |
