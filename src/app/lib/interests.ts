@@ -5,9 +5,10 @@ import { MOODS, type MoodId } from "../data/moods";
 
 /**
  * What a person wants more of (the moods in data/moods.ts) and the city
- * Discover is "this week in". Stored on profiles.city and profiles.moods
- * (migration 20261030000000) and mirrored in localStorage, so Discover works
- * before that migration is live, for a signed-out visitor, and offline.
+ * Discover is "this week in". Moods are stored on profiles.moods (public), the
+ * city in profile_private.city (readable only by its owner), migration
+ * 20261030000000. Both are mirrored in localStorage, so Discover works before
+ * that migration is live, for a signed-out visitor, and offline.
  *
  * Read and written apart from the main profile load on purpose: asking for a
  * column the database does not have yet fails the whole select, and nobody
@@ -63,38 +64,52 @@ function writeLocalInterests(next: Interests) {
   }
 }
 
-// 42703 is Postgres's "no such column": the migration has not run yet.
-let columnsMissing = false;
+// Moods are public (profiles.moods); the city is private (profile_private.city,
+// readable and writable only by its owner). Each is read and written on its own,
+// so one missing (its migration has not run) leaves the other working.
+// 42703 is Postgres's "no such column"; 42P01 and PGRST205 are "no such table".
+let moodsMissing = false;
+let cityMissing = false;
+const noTable = (code?: string) => code === "42P01" || code === "PGRST205";
 
 export async function fetchMyInterests(userId: string): Promise<Interests | null> {
-  if (!supabase || columnsMissing) return null;
-  const { data, error } = await supabase.from("profiles").select("city, moods").eq("id", userId).maybeSingle();
-  if (error) {
-    if (error.code === "42703") columnsMissing = true;
-    return null;
-  }
-  if (!data) return null;
-  const row = data as { city: string | null; moods: string[] | null };
-  return { city: cleanCity(row.city ?? ""), moods: cleanMoods(row.moods) };
+  if (!supabase) return null;
+  const client = supabase;
+  const [moodsRes, cityRes] = await Promise.all([
+    moodsMissing ? null : client.from("profiles").select("moods").eq("id", userId).maybeSingle(),
+    cityMissing ? null : client.from("profile_private").select("city").eq("user_id", userId).maybeSingle(),
+  ]);
+  if (moodsRes?.error?.code === "42703") moodsMissing = true;
+  if (cityRes?.error && noTable(cityRes.error.code)) cityMissing = true;
+  const moods = moodsRes && !moodsRes.error ? cleanMoods((moodsRes.data as { moods: string[] | null } | null)?.moods) : null;
+  const city = cityRes && !cityRes.error ? cleanCity((cityRes.data as { city: string | null } | null)?.city ?? "") : null;
+  if (moods === null && city === null) return null;
+  return { city: city ?? "", moods: moods ?? [] };
 }
 
 export async function saveMyInterests(userId: string, next: Interests): Promise<{ error: string | null }> {
-  if (!supabase || columnsMissing) return { error: null };
-  const { error } = await supabase
-    .from("profiles")
-    .update({ city: next.city || null, moods: next.moods })
-    .eq("id", userId);
-  if (!error) return { error: null };
-  if (error.code === "42703") {
-    columnsMissing = true;
-    return { error: null };
+  if (!supabase) return { error: null };
+  const client = supabase;
+  let error: string | null = null;
+  if (!moodsMissing) {
+    const { error: e } = await client.from("profiles").update({ moods: next.moods }).eq("id", userId);
+    if (e?.code === "42703") moodsMissing = true;
+    else if (e) error = e.message;
   }
-  return { error: error.message };
+  if (!cityMissing) {
+    const { error: e } = await client
+      .from("profile_private")
+      .upsert({ user_id: userId, city: next.city || null, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    if (e && noTable(e.code)) cityMissing = true;
+    else if (e) error = error ?? e.message;
+  }
+  return { error };
 }
 
-/** Test hook: forget what was learned about the columns. */
+/** Test hook: forget what was learned about the columns and table. */
 export function resetInterestsCache() {
-  columnsMissing = false;
+  moodsMissing = false;
+  cityMissing = false;
 }
 
 export function useInterests() {
