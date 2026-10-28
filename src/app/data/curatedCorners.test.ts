@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hobbies } from "./hobbies";
+import { CORNER_GUIDES } from "./cornerGuides";
 import { CORNER_CATEGORIES } from "./cornerCategories";
 import { MOODS } from "./moods";
 import {
@@ -92,5 +93,14 @@ describe("curated Corners", () => {
   it("look a Corner up by Space and slug", () => {
     expect(curatedFor("sports-fitness", "running")?.name).toBe("Running");
     expect(curatedFor("crafts-making", "running")).toBeUndefined();
+  });
+
+  // Trust rule: a guide says what an activity is and what it takes, never what it costs.
+  it("uses no price words in any guide", () => {
+    const price = /\b(cheap|free|afford\w*|inexpensive|expensive|costs?|fees?|pric\w*|paid|budget|cash|\$\d+)\b/i;
+    const text: string[] = [];
+    for (const x of CURATED_CORNERS) text.push(...x.steps, ...x.needs, ...x.worth);
+    for (const g of Object.values(CORNER_GUIDES)) text.push(g.about, g.step);
+    expect(text.filter((t) => price.test(t))).toEqual([]);
   });
 });
