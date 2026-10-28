@@ -139,7 +139,7 @@ export const CORNER_GUIDES: Record<string, CornerGuide> = {
   "nature-outdoors/kayaking": { about: "Paddling a kayak on calm water, rivers or the sea.", step: "Book a guided kayak tour on calm water.", kind: "experience", together: "either", where: "outdoors", haveIt: false },
   "music/choir": { about: "Singing in a group, from pop to classical.", step: "Find a community choir and go to one open rehearsal.", kind: "regular", together: "together", where: "indoors", haveIt: true },
   "music/karaoke": { about: "Singing along with friends in a private room or at a bar.", step: "Book a karaoke room with a few friends.", kind: "experience", together: "together", where: "indoors", haveIt: false },
-  "music/live-music": { about: "Going to gigs, from small local sets to big shows.", step: "Pick one small local gig and go.", kind: "experience", together: "either", where: "indoors", haveIt: false },
+  "music/live-music": { about: "Going to gigs, from small local sets to big shows.", step: "Pick one small local gig and go.", kind: "experience", together: "together", where: "indoors", haveIt: false },
   "art-creative/improv": { about: "Making up scenes on the spot with other people.", step: "Join a beginner improv workshop.", kind: "skill", together: "together", where: "indoors", haveIt: false },
   "food-cooking/pasta": { about: "Making fresh pasta by hand from flour and eggs.", step: "Make egg dough by hand, then roll and cut tagliatelle.", kind: "making", together: "either", where: "indoors", haveIt: false },
   "health-wellness/sauna-cold-plunge": { about: "Taking turns in heat and cold, often with friends.", step: "Try a session at a sauna or bathhouse and follow the venue’s safety guidance.", kind: "experience", together: "together", where: "indoors", haveIt: false },
@@ -163,6 +163,23 @@ export const CORNER_GUIDES: Record<string, CornerGuide> = {
   "collecting-fandom/anime": { about: "Watching and talking about anime, and the fandom around it.", step: "Watch the first episode of a series with a friend.", kind: "exploring", together: "either", where: "indoors", haveIt: true },
   "travel-adventure/travel": { about: "Planning trips and exploring new places.", step: "Plan a day trip to a town you have never visited.", kind: "experience", together: "either", where: "outdoors", haveIt: false },
   "travel-adventure/road-trips": { about: "Trips by car or bike where the drive is part of it.", step: "Plan a one-day loop with three stops and a crew.", kind: "experience", together: "together", where: "outdoors", haveIt: false },
+  // Corners added with the curated layer: the guide holds the description, step 1 and the traits moods.ts reads.
+  "sports-fitness/climbing": { about: "Climbing walls and boulders, mostly indoors to start.", step: "Book an intro session at a bouldering gym", kind: "skill", together: "together", where: "either", haveIt: false },
+  "sports-fitness/dance": { about: "Dancing with other people, from salsa and swing to Bollywood and hip-hop.", step: "Try salsa, swing or bachata", kind: "skill", together: "together", where: "either", haveIt: false },
+  "nature-outdoors/wild-swimming": { about: "Swimming in lakes, rivers and the sea instead of a pool.", step: "Find a safe, known swim spot", kind: "experience", together: "either", where: "outdoors", haveIt: false },
+  "music/make-a-beat": { about: "Building a beat from drums, samples and loops on a laptop or phone.", step: "Open a beat-making app", kind: "making", together: "solo", where: "indoors", haveIt: false },
+  "art-creative/life-drawing": { about: "Drawing a live model in a group session.", step: "Find a drop-in life drawing session near you", kind: "skill", together: "together", where: "either", haveIt: false },
+  "travel-adventure/city-walks": { about: "Exploring neighbourhoods on foot, alone or on a guided walk.", step: "Pick a neighbourhood you have never walked", kind: "exploring", together: "either", where: "outdoors", haveIt: true },
+  "photography-film/film-clubs": { about: "Watching films together and talking about them after.", step: "Pick a film and a place to watch it together", kind: "exploring", together: "together", where: "either", haveIt: true },
+  "food-cooking/food-tours": { about: "Eating your way through a street, market or neighbourhood.", step: "Pick one street or market known for food", kind: "exploring", together: "either", where: "outdoors", haveIt: false },
+  "gaming-tabletop/mahjong": { about: "A tile game for four players, with many regional styles.", step: "Learn the tiles with a rules guide", kind: "games", together: "together", where: "indoors", haveIt: false },
+  "travel-adventure/rafting": { about: "Paddling a raft down a river with a guide and a crew.", step: "Pick a beginner-graded stretch of river", kind: "experience", together: "together", where: "outdoors", haveIt: false },
+  "books-writing/letter-writing": { about: "Handwritten letters, stationery and pen pals.", step: "Write one letter by hand to someone who would love it", kind: "making", together: "either", where: "indoors", haveIt: true },
+  "sports-fitness/hyrox": { about: "A fitness race of running and gym stations, done alone, in pairs or in relays.", step: "Learn the eight stations and the run between each", kind: "regular", together: "together", where: "either", haveIt: false },
+  "sports-fitness/walking-clubs": { about: "Group walks at a talking pace, in parks, on promenades and on trails.", step: "Find a walking group that meets near you", kind: "regular", together: "together", where: "outdoors", haveIt: true },
+  "sports-fitness/badminton": { about: "Fast racket games on an indoor court, usually played as doubles.", step: "Borrow or buy a racket and shuttles", kind: "skill", together: "together", where: "either", haveIt: false },
+  "sports-fitness/skating": { about: "Roller and ice skating, from rink laps to group skates.", step: "Rent skates at a rink for your first go", kind: "skill", together: "either", where: "either", haveIt: false },
+  "sports-fitness/ultimate-frisbee": { about: "A team game with a disc where players call their own fouls.", step: "Learn the backhand throw with a friend", kind: "skill", together: "together", where: "outdoors", haveIt: false },
 };
 
 export function cornerGuide(spaceSlug: string, cornerSlug: string): CornerGuide | undefined {
