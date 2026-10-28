@@ -270,7 +270,7 @@ const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
  */
 const PRIMARY_NAV = [
   { to: "/discover", label: "Discover", hint: "Spaces, people and Pursuits",
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/space") || p.startsWith("/people") },
+    match: (p: string) => p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/browse") || p.startsWith("/space") || p.startsWith("/people") },
   { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you’re part of",
     match: (p: string) => p.startsWith("/my-space") },
   { to: "/create", label: "Log a Moment", hint: "Share a Moment or start a Pursuit.", accent: true,

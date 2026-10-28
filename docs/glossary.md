@@ -125,7 +125,9 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Clear | Link beside the chips while any is chosen: unsets all three |
 | (the eight Moods labels) | Options under "Any mood", the same labels and meanings as in Moods above, minus "15 minutes" |
 | No Corners match those choices. / Clear a choice to see more. / Clear choices | Empty state of the chip rows, and its action |
-| Back to Corners | Link above a single Corner |
+| Back to Corners | Link above a category page, to the Corners page |
+| Back to {category} | Link above a single Corner, to its category page ("Back to Food and drink"); "Back to Corners" for a Corner in no category. Approved in the Oct 28 cleanup brief |
+| See Spaces | The hero button on a Corner page that has Spaces and no upcoming event: scrolls to its Spaces. Approved in the Oct 28 cleanup brief |
 | Happening this week | Heading above the events of the next 7 days on a Corner |
 | Spaces in {Corner} | Heading above that Corner's Space cards |
 | People into {Corner} | Heading above the Shelves of people who shared a public Moment in that Corner most recently, newest first. No counts. Not shown to signed-out or not-yet-approved visitors |
@@ -139,7 +141,7 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Starts in 20m | Time to the next event inside the next hour. Inside 24 hours it is "Starts in 4h"; later it is the day and time |
 | You’ve been to one of their events. | Line on a Closed Space card when you hold a Stub from that Space |
 
-The Corners pages reuse existing wording for: Create a Space (once, at the bottom of a single Corner), Start a Pursuit, Log a Moment, Show more, See all, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
+The Corners pages reuse existing wording for: Create a Space (the hero button when a Corner has no event and no Spaces, else once at the bottom of a single Corner), Show more, See all, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
 
 ## Moments
 

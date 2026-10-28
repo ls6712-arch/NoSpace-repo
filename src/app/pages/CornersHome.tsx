@@ -2,6 +2,8 @@ import { postCornerKey } from "../lib/cornerAlias";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { HorizontalRow } from "../components/HorizontalRow";
+import { DiscoverTabsBar } from "../components/corners/DiscoverTabsBar";
+import { ChipGroup } from "../components/corners/ChipGroup";
 import { BrowseByChips } from "../components/corners/BrowseByChips";
 import { CornerCard } from "../components/corners/CornerCard";
 import { Billboard, type BillboardSlide } from "../components/corners/Billboard";
@@ -47,40 +49,6 @@ const AFFINITY_TTL_MS = 6 * 3_600_000;
 
 const DURATION_OPTIONS = DURATION_LIMITS.map((m) => ({ id: m as number, label: `Up to ${plural(m / 60, "hour")}` }));
 const MOOD_OPTIONS = MOODS.map((m) => ({ id: m.id, label: m.label }));
-/** One group of filter chips, every option showing. Tap a chosen one again to unset it. */
-function ChipGroup<T extends string | number>({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: readonly { id: T; label: string }[];
-  value: T | null;
-  onChange: (next: T | null) => void;
-}) {
-  return (
-    <div role="group" aria-label={label} className="-mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {options.map((o) => {
-        const on = value === o.id;
-        return (
-          <button
-            key={o.id}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onChange(on ? null : o.id)}
-            className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-small font-semibold transition-colors duration-fast ${
-              on ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]" : "border-border bg-surface text-foreground hover:border-[var(--accent)]"
-            }`}
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /** The last choices on this device, or none. Storage can be blocked or hold junk. */
 function readPicker(): Picker {
   try {
@@ -246,6 +214,10 @@ export function CornersHome() {
 
   return (
     <div className="ns-afterhours min-h-viewport pb-24">
+      {/* Discover's tabs, with Corners selected: /corners is the Corners tab of Discover. */}
+      <div className={`${PAGE_X} pt-2 lg:pt-6`}>
+        <DiscoverTabsBar />
+      </div>
       {/* The billboard runs edge to edge. The space is held while the week's events load, so nothing jumps. */}
       {slides.length > 0 ? (
         <Billboard slides={slides} />

@@ -32,6 +32,7 @@ export const TABS = [
     match: (p: string) =>
       p.startsWith("/discover") ||
       p.startsWith("/corners") ||
+      p.startsWith("/browse") ||
       p.startsWith("/space") ||
       p.startsWith("/people"),
   },
