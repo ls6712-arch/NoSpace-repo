@@ -19,6 +19,7 @@ These apply to every session working in this repo, not just Spaces-related work.
   - read-only queries (e.g. against `information_schema`, `pg_catalog`, `pg_get_functiondef`);
   - verification scripts from `supabase/verification/`, which always end in `raise exception` + `rollback` — afterwards, confirm with a read-only query that no fixture rows were left behind.
   Anything that changes the live database (migrations, data fixes) still goes through a merged PR, never run directly. Without the connector, give the query to the user to run and wait for the result.
+- **After a PR is merged, the agent may apply its migration from main to live only with the founder's written approval naming that file.** Apply it exactly as it is on main, then run its verification script and confirm no fixture rows were left behind.
 - **Verification scripts must not use `SELECT ... INTO` or `RETURNING ... INTO`.** The Supabase SQL editor's auto-RLS helper misreads them as `CREATE TABLE` and mangles the script. Assign with `:=` instead (e.g. `v_n := (select count(*) from ...)`).
 - **Verification scripts should not use `DELETE`.** The Supabase connector holds any DELETE for approval and the run gets cancelled. Check the same thing read-only instead (e.g. a cascade via `pg_constraint.confdeltype = 'c'`); the transaction rolls back anyway.
 

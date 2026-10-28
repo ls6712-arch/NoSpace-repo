@@ -78,6 +78,7 @@ import { Segmented } from "../components/ui/Segmented";
 import { PostedScreen, LOG_PHOTO_LAYOUT_ID, type PostedAudience } from "../components/log/PostedScreen";
 import { haptic, shared as sharedSpring, sheet as sheetSpring } from "../lib/motionTokens";
 import { withLine } from "../lib/withLine";
+import { suggestCorners } from "../lib/cornerSuggestions";
 import { Camera as CameraGlyph, ChevronRight } from "lucide-react";
 
 /**
@@ -239,7 +240,7 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
 
 export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}) {
   const [searchParams] = useSearchParams();
-  const { addPost, deletePost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
+  const { addPost, updatePost, deletePost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const { defaultVisibility, defaultVisibilityLoaded } = useSettings();
   const rewards = useRewards();
@@ -295,19 +296,15 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     if (spaceSet) return;
     if (hobbies.find((h) => h.slug === hobbySlug)?.hidden) setHobbySlug(defaultSpaceSlug());
   }, [spaceRows, spaceSet, hobbySlug]);
-  const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
+  const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? "");
   // Independent of subHobby — a Moment can be tagged Woodwork (subHobby,
   // still set above via TagsField's Corner-name matching) and filed under
   // the Gift-making Corner (this) at once.
   //
-  // Required now (spec change: "Corners carry discovery" — a Moment always
-  // needs one). Only pre-filled from context the person chose: inside a
-  // Pursuit, its own Corner; arriving from a Corner's own "create" link
-  // (?sub=). Otherwise empty, never guessed from their last Moment.
-  const [corner, setCorner] = useState<string>(() => {
-    if (initialPursuit?.subHobby) return initialPursuit.subHobby;
-    return searchParams.get("sub") ?? "";
-  });
+  // Optional. Only ever set by a tap: the Activity row here, a Corner's own
+  // "create" link (?sub=), or a suggestion chip on Posted. Never filled from a
+  // Pursuit or guessed from tags or the last Moment.
+  const [corner, setCorner] = useState<string>(() => searchParams.get("sub") ?? "");
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
   // A Pursuit with a measure (10 loaves, 5 paintings) can take an amount from
@@ -493,7 +490,6 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     if (!pursuitScoped) return;
     setScreen((s) => (s === "camera" ? "caption" : s));
     setProjectId(initialPursuitId);
-    if (initialPursuit?.subHobby) setCorner((c) => c || initialPursuit.subHobby!);
     if (initialPursuit?.interest) setTags((t) => (t.length ? t : [initialPursuit.interest!]));
   }, [initialPursuitId, pursuitReady]);
 
@@ -1346,6 +1342,13 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       ? (journal.progress ?? []).filter((e) => e.projectId === selectedProject.id && (e.userId ?? user?.id) === user?.id).length
       : 0;
     const cornerInfo = corner ? { spaceSlug: hobbySlug, slug: corner, name: cornerLabel } : undefined;
+    const choices = corner
+      ? []
+      : suggestCorners({
+          pursuitCorner: selectedProject ? { spaceSlug: selectedProject.hobbySlug, slug: selectedProject.subHobby } : undefined,
+          tags,
+          spaceSlug: hobbySlug,
+        });
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
         <PostedScreen
@@ -1358,6 +1361,17 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               : undefined
           }
           place={locationName.trim() || undefined}
+          cornerChoices={choices}
+          onAddCorner={async (c) => {
+            if (savedPostId == null) return false;
+            const ok = await updatePost(savedPostId, { corner: c.slug, subHobby: c.slug, hobbySlug: c.spaceSlug });
+            if (ok) {
+              setCorner(c.slug);
+              setHobbySlug(c.spaceSlug);
+              setSpaceSet(true);
+            }
+            return ok;
+          }}
           undo={undoTarget ? { onUndo: () => void undoSave(), busy: undoing, error: undoError } : undefined}
         />
       </div>
@@ -1582,13 +1596,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
                 setProjectId(id);
                 setProjectTitle("");
                 const picked = journal.projects.find((p) => p.id === id);
-                if (picked?.subHobby && !corner) {
-                  setCorner(picked.subHobby);
-                  if (picked.hobbySlug) {
-                    setHobbySlug(picked.hobbySlug);
-                    setSpaceSet(true);
-                  }
-                }
+                // Its Corner is offered as a chip on Posted, not set here.
               }}
               onCreateNew={(title) => {
                 setProjectTitle(title);

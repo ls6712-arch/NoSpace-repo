@@ -335,7 +335,28 @@ async function main() {
         await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);
         await page.getByPlaceholder(/what happened/i).first().fill("Smoke test to friends");
         await page.getByRole("button", { name: "Post", exact: true }).first().click(T);
-        await page.getByText("Posted to your followers").first().waitFor(T).catch(async (e) => { console.log("DEBUG", (await page.locator("body").innerText()).slice(0, 300)); throw e; });
+        await page.getByText("Posted to your followers").first().waitFor(T);
+      });
+      await flow("Corner is never assigned for you: Posted offers chips, a tap adds one", async () => {
+        await go("/create");
+        await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);
+        await page.getByPlaceholder(/what happened/i).first().fill("No corner chosen");
+        await page.getByText("Pick one").first().waitFor(T);
+        await page.getByRole("button", { name: "Post", exact: true }).first().click(T);
+        await page.getByText("Add it to a Corner").first().waitFor(T);
+        const chips = await page.locator('section[aria-labelledby="add-corner"] button[aria-pressed]').count();
+        if (chips < 1 || chips > 3) throw new Error(`Error: expected 1 to 3 chips, saw ${chips}`);
+        await page.locator('section[aria-labelledby="add-corner"] button[aria-pressed]').first().click(T);
+        await page.getByText(/^Added to /).first().waitFor(T);
+      });
+      await flow("Corner can be skipped", async () => {
+        await go("/create");
+        await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);
+        await page.getByPlaceholder(/what happened/i).first().fill("Skip the corner");
+        await page.getByRole("button", { name: "Post", exact: true }).first().click(T);
+        await page.getByText("Add it to a Corner").first().waitFor(T);
+        await page.getByRole("button", { name: "Skip", exact: true }).first().click(T);
+        await page.getByText("Add it to a Corner").first().waitFor({ state: "hidden", timeout: 3000 });
       });
       await flow("Home: feed shows friends, Love this toggles", async () => {
         await go("/my-space"); const love = page.getByRole("button", { name: "Love this" }).first(); await love.waitFor(T); await love.click(T);
