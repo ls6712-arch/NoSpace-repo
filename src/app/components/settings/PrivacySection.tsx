@@ -79,7 +79,7 @@ function DefaultVisibilityRow() {
         {(
           [
             { value: "private", label: "Only you" },
-            { value: "public", label: "Public" },
+            { value: "public", label: "Everyone" },
           ] as const
         ).map((opt) => (
           <Label

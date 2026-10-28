@@ -14,7 +14,7 @@ export const press = { type: "spring", stiffness: 500, damping: 30 } satisfies T
 export const PRESS_SCALE = 0.97;
 export const HOVER_SCALE = 1.02;
 
-/** Chips selecting, the "I'm in" morph, a cheer. */
+/** Chips selecting, the "I’m in" morph, a reaction. */
 export const pop = { type: "spring", stiffness: 420, damping: 22 } satisfies Transition;
 
 /** Bottom sheets, Log, Make it a Pursuit. */

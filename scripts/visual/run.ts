@@ -263,7 +263,7 @@ async function main() {
   const base: RunOpts = { dist, fontsDir, screens, widths: list("widths", "375,768,1440").map(Number), themes: list("themes", "light,dark"), outDir: opt("out") ? path.resolve(opt("out")!) : undefined };
 
   if (flag("selftest")) {
-    const probe: RunOpts = { ...base, screens: SCREENS.filter((s) => ["my-space", "discover", "space-table"].includes(s.name)), widths: [375], themes: ["light"], outDir: undefined };
+    const probe: RunOpts = { ...base, screens: SCREENS.filter((s) => ["my-space", "home-feed", "discover", "space-table"].includes(s.name)), widths: [375], themes: ["light"], outDir: undefined };
     const normal = await runPass(browser, probe); const inflated = await runPass(browser, { ...probe, inflate: true });
     const hs = (r: Results) => Math.max(0, ...[...r.values()].map((d) => d.hscroll));
     const ok = total(inflated.results) >= total(normal.results) + 5 && hs(inflated.results) > hs(normal.results);
@@ -291,9 +291,9 @@ async function main() {
         lines.push(`  ${ok ? "ok  " : "FAIL"} [${label}] ${name}${err ? ` — ${err}` : ""}${newErrs.length ? ` — ${newErrs.join(" | ")}` : ""}`);
       };
       const T = { timeout: 7000 };
-      await flow("My Space renders with Pursuit cards", async () => { await go("/my-space"); await page.getByText("Pursuits in progress").first().waitFor(T); });
+      await flow("My Space renders with Pursuit cards", async () => { await go("/my-space/all"); await page.getByText("Pursuits in progress").first().waitFor(T); });
       await flow(`Pursuit card buttons: ${touch ? "visible on touch, 44px areas apart, white icon legible on the brightest photo" : "hidden until hover with a mouse"}`, async () => {
-        await go("/my-space"); await page.getByText("Pursuits in progress").first().waitFor(T);
+        await go("/my-space/all"); await page.getByText("Pursuits in progress").first().waitFor(T);
         const r = await page.evaluate(() => {
           const rgba = (c: string): number[] => { const m = c.match(/[\d.]+/g)!.map(Number); return [m[0], m[1], m[2], m.length > 3 ? m[3] : 1]; };
           const lin = (v: number) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
@@ -322,23 +322,35 @@ async function main() {
         } else if (r.minOpacity !== 0) throw new Error(`mouse: buttons should stay hidden until hover, opacity ${r.minOpacity}`);
       });
       await flow("log a Moment: open the form, write a line, keep it private", async () => {
-        await go("/my-space");
+        await go("/my-space/all");
         if (touch) await page.locator('nav[aria-label="Main"] a:has-text("Log")').first().click(T); else await page.getByRole("link", { name: /Log a Moment/ }).first().click(T);
-        await page.getByText("Write it down").first().click(T);
+        await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);
         await page.getByPlaceholder(/what happened/i).first().fill("Smoke test Moment");
-        await page.getByRole("button", { name: /Keep it private|Share/ }).first().click(T);
-        await page.getByText(/^Saved$/).first().waitFor(T);
+        await page.getByRole("radio", { name: "Only you" }).or(page.getByRole("button", { name: "Only you" })).first().click(T);
+        await page.getByRole("button", { name: "Keep it private" }).first().click(T);
+        await page.getByText(/^Saved$|Posted to/).first().waitFor(T);
+      });
+      await flow("log a Moment to followers: Post lands on the Posted screen", async () => {
+        await go("/create");
+        await page.getByRole("button", { name: "Text only, no photo or video" }).first().click(T);
+        await page.getByPlaceholder(/what happened/i).first().fill("Smoke test to friends");
+        await page.getByRole("button", { name: "Post", exact: true }).first().click(T);
+        await page.getByText("Posted to your followers").first().waitFor(T).catch(async (e) => { console.log("DEBUG", (await page.locator("body").innerText()).slice(0, 300)); throw e; });
+      });
+      await flow("Home: feed shows friends, Love this toggles", async () => {
+        await go("/my-space"); const love = page.getByRole("button", { name: "Love this" }).first(); await love.waitFor(T); await love.click(T);
+        await page.getByRole("button", { name: /Loved/ }).first().waitFor(T);
       });
       await flow("open a Moment, Send to… opens and Escape closes it", async () => {
         await go("/moment/91"); await page.getByText("Three shots from the kiln opening").first().waitFor(T);
         await page.getByRole("button", { name: /Send to/ }).first().click(T); await page.getByRole("dialog").last().waitFor(T); await page.keyboard.press("Escape"); await page.waitForTimeout(400);
       });
       await flow("Pursuit cover dialog: choose First Moment, Save", async () => {
-        await go("/my-space"); const cover = page.getByRole("button", { name: /Change the cover photo for Throw 24 bowls/ }).first(); await cover.evaluate((el) => el.scrollIntoView({ block: "center" })); await page.waitForTimeout(300); await cover.click({ ...T, force: true });
+        await go("/my-space/all"); const cover = page.getByRole("button", { name: /Change the cover photo for Throw 24 bowls/ }).first(); await cover.evaluate((el) => el.scrollIntoView({ block: "center" })); await page.waitForTimeout(300); await cover.click({ ...T, force: true });
         await page.getByRole("button", { name: /First Moment/ }).first().click(T); await page.getByRole("button", { name: /^Save$/ }).first().click(T); await page.waitForTimeout(700);
       });
       await flow("Pursuit goal dialog opens and closes", async () => {
-        await go("/my-space"); const goal = page.getByRole("button", { name: /Edit the goal for Throw 24 bowls/ }).first(); await goal.evaluate((el) => el.scrollIntoView({ block: "center" })); await page.waitForTimeout(300); await goal.click({ ...T, force: true }); await page.getByRole("dialog").first().waitFor(T); await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+        await go("/my-space/all"); const goal = page.getByRole("button", { name: /Edit the goal for Throw 24 bowls/ }).first(); await goal.evaluate((el) => el.scrollIntoView({ block: "center" })); await page.waitForTimeout(300); await goal.click({ ...T, force: true }); await page.getByRole("dialog").first().waitFor(T); await page.keyboard.press("Escape"); await page.waitForTimeout(300);
       });
       await flow("Pursuit page loads and its actions respond", async () => { await go(`/pursuit/${PURSUIT_ID}`); await page.getByText("Throw 24 bowls by spring").first().waitFor(T); });
       await flow("Space: every tab opens", async () => {

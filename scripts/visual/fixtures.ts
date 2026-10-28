@@ -137,8 +137,10 @@ export function buildFixtures(now = new Date()): Fixtures {
     { id: 1, user_id: ME, kind: "participation_request", actor_id: PRIYA, actor_name: "Priya Nair", body: "Priya Nair wants to join in on Embroidery.", href: "/inbox", read: false, created_at: ago(1) },
   ];
 
-  const emptyTables = ["blocks", "bookmarks", "connections", "conversation_reads", "hobby_follows", "post_likes", "post_reflections", "private_logs", "profile_follows", "profile_links", "reactions", "reports", "thoughts", "moment_drafts", "pursuit_invite_links", "space_join_requests", "space_host_invites", "space_deletion_requests", "space_deletion_approvals", "event_private_details", "space_private_details", "space_corners", "corners", "category_suggestions", "invites", "waitlist"] as const;
+  const emptyTables = ["blocks", "bookmarks", "connections", "conversation_reads", "hobby_follows", "post_likes", "post_reflections", "private_logs", "profile_links", "reactions", "reports", "thoughts", "moment_drafts", "pursuit_invite_links", "space_join_requests", "space_host_invites", "space_deletion_requests", "space_deletion_approvals", "event_private_details", "space_private_details", "space_corners", "corners", "category_suggestions", "invites", "waitlist"] as const;
   const empties = Object.fromEntries(emptyTables.map((t) => [t, []])) as Fixtures;
+  // Maya follows four people, so Home shows a feed. (The empty Home screen blanks this out in its setup.)
+  const profile_follows = [THEO, PRIYA, SAM, INES].map((followed_id) => ({ follower_id: ME, followed_id, status: "accepted", created_at: ago(30) }));
   const profile_settings: Row<"profile_settings">[] = [];
   const app_config: Row<"app_config">[] = [{ key: "corner_min_moments_30d", value: 3, updated_at: ago(30) }, { key: "trademark_blocklist", value: [], updated_at: ago(30) }];
   const categories: Row<"categories">[] = [{ slug: "crafts-making", name: "Crafts & Making", description: null, examples: null, keywords: null, prompt: null, active: true, sort_order: 1, created_at: ago(200), updated_at: ago(200) }];
@@ -147,5 +149,5 @@ export function buildFixtures(now = new Date()): Fixtures {
   // config.ts (which can't be imported here: it reads import.meta.env).
   const termsVersion = fs.readFileSync(new URL("../../src/app/config.ts", import.meta.url), "utf8").match(/TERMS_VERSION = "([^"]+)"/)?.[1] ?? "";
   const terms_acceptances = profiles.map((p) => ({ user_id: p.id, terms_version: termsVersion, accepted_at: ago(119) }));
-  return { ...empties, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
+  return { ...empties, profile_follows, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
 }

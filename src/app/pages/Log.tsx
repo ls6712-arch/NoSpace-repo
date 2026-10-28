@@ -67,41 +67,35 @@ import { TagsField } from "../components/TagsField";
 import { CornerTagField } from "../components/CornerTagField";
 import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
-import { PursuitDialog } from "../components/PursuitDialog";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
 import { ENTER } from "../lib/motion";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
+import { BottomSheet } from "../components/ui/BottomSheet";
+import { PillButton } from "../components/ui/PillButton";
+import { Segmented } from "../components/ui/Segmented";
+import { PostedScreen, LOG_PHOTO_LAYOUT_ID, type PostedAudience } from "../components/log/PostedScreen";
+import { haptic, shared as sharedSpring, sheet as sheetSpring } from "../lib/motionTokens";
+import { withLine } from "../lib/withLine";
+import { Camera as CameraGlyph, ChevronRight } from "lucide-react";
 
 /**
- * Logging, choose-first:
+ * Logging (core loop v1, screens 6 and 7):
  *
- *   choose → camera → caption → saved
- *              └──────────────┘ ("Write a moment" skips camera entirely)
+ *   camera → caption → posted
+ *       └──────┘ ("text only" skips the camera)
  *
- * This used to be camera-first — a live viewfinder as the front door,
- * matching Instagram/TikTok/Snapchat — which meant the very first thing a
- * new visit did was request camera (and microphone) access, before anyone
- * had chosen to make anything at all. The fallback for a denied or
- * unavailable camera was always fine (a plain "pick a photo or video
- * instead" screen), but the default was backwards for a product whose own
- * thesis is documenting an interest — as often a typed sentence after the
- * fact as a photo taken in the moment. "Choose" now asks the one real
- * question first (photo/video, write, or start a Pursuit) and only reaches
- * for the camera once "Photo or video" is actually tapped.
- *
- * Starting a Pursuit or adding an update remain their own one-tap entry
- * points rather than hiding behind a "more ways to create" menu — Start a
- * Pursuit opens the existing PursuitDialog, and Add an update routes into
- * the existing Pursuit-scoped menu below (?pursuit=<id>); both moved from
- * the old camera screen onto "choose" but are otherwise untouched.
- *
- * "Save this moment" and "Share this moment" used to be two competing paths
- * to the same private outcome — the caption screen is one screen, with one
- * submit button whose label follows the audience picked on it.
+ * A full-screen sheet that springs up from the + tab. A first visit with
+ * nothing yet opens the camera straight away (or a plain "pick a file" screen
+ * where a camera cannot work). The caption screen is the form: photo, caption,
+ * the Corner it is about, the Pursuit it counts toward, who it is with, and who
+ * sees it (Group, Followers, Everyone, Only you). One button posts it. A shared
+ * Moment lands on the Posted screen, where a Moment that counts toward a
+ * Pursuit shows the Stub it earned; Only you saves a private log and lands on
+ * the old Saved screen, as does a post that did not reach the database.
  */
-type Screen = "choose" | "camera" | "caption" | "saved";
+type Screen = "camera" | "caption" | "posted" | "saved";
 
 /** The four audiences, widest privacy first, in the words the app uses everywhere. */
 const AUDIENCE: {
@@ -112,7 +106,7 @@ const AUDIENCE: {
 }[] = [
   { value: "private", label: "Only you", copy: "Only you can see it", icon: Lock },
   { value: "followers", label: "Followers", copy: "People who follow you, once you’ve accepted them", icon: UserRound },
-  { value: "public", label: "Public", copy: "Anyone can find it", icon: Globe2 },
+  { value: "public", label: "Everyone", copy: "Anyone can find it", icon: Globe2 },
 ];
 
 const THOUGHT_LIMIT = 300;
@@ -152,6 +146,25 @@ function Shell({ children, bare }: { children: React.ReactNode; bare?: boolean }
     <div className="min-h-viewport bg-surface py-10 sm:py-14">
       <div className="container mx-auto max-w-lg px-4">{children}</div>
     </div>
+  );
+}
+
+/**
+ * The Log sheet: it covers the screen and springs up from the bottom (the
+ * `sheet` token; instant under reduced motion). Inside onboarding it stays
+ * plain, because that page already provides the frame.
+ */
+function SheetShell({ children, bare }: { children: React.ReactNode; bare?: boolean }) {
+  if (bare) return <>{children}</>;
+  return (
+    <motion.div
+      initial={{ y: "100%" }}
+      animate={{ y: 0 }}
+      transition={sheetSpring}
+      className="ns-afterhours fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
+    >
+      <div className="mx-auto min-h-full max-w-md px-4 pb-32">{children}</div>
+    </motion.div>
   );
 }
 
@@ -256,14 +269,13 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // be a chooser first ("Add an update" vs "Reflect privately"), but the
   // form already has a private reflection section and an "Only you"
   // audience, so that screen was a step that decided nothing.
-  const [screen, setScreen] = useState<Screen>(pursuitScoped || onboarding ? "caption" : "choose");
-  const [pursuitDialogOpen, setPursuitDialogOpen] = useState(false);
+  const [screen, setScreen] = useState<Screen>(pursuitScoped || onboarding ? "caption" : "camera");
   // Where the caption screen's Back link returns to — "camera" when a photo
   // or video was actually captured/picked there, "choose" when "Write a
   // moment" skipped the camera entirely. Getting this wrong would mean
   // Back, from a text-only moment, silently re-requesting camera access —
   // exactly the thing this redesign exists to stop doing by default.
-  const [captionBackTo, setCaptionBackTo] = useState<"camera" | "choose">("camera");
+  const [captionBackTo, setCaptionBackTo] = useState<"camera">("camera");
   const navigate = useNavigate();
 
   const hobbyParam = searchParams.get("hobby");
@@ -302,6 +314,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // the same form: how much this Moment moved it forward.
   const selectedProject = journal.projects.find((p) => p.id === projectId);
   const selectedMeasure = selectedProject && hasMeasure(selectedProject) ? selectedProject.measure : undefined;
+  const groupPursuit = !!selectedProject && (selectedProject.mode ?? "solo") !== "solo" && !!user;
   const [amount, setAmount] = useState<number>(1);
   const [counts, setCounts] = useState(true);
   useEffect(() => {
@@ -345,9 +358,14 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // Starts at the account's own default (Settings → Privacy → "Default
   // visibility for new Moments"), "Only you" unless changed there. Falls
   // back to private for the instant before that setting has loaded.
-  const [audience, setAudience] = useState<Visibility | "private">(() =>
-    defaultVisibilityLoaded ? defaultVisibility : "private",
-  );
+  // Core loop v1: the default is Group when the Moment counts toward a group
+  // Pursuit, else Followers (visibility "followers"). A saved default of Everyone
+  // is kept; an "Only you" default is not, so a Moment is shared unless the
+  // person picks Only you here.
+  const initialAudience = (): Visibility | "private" => (defaultVisibilityLoaded && defaultVisibility === "public" ? "public" : "followers");
+  const [audience, setAudience] = useState<Visibility | "private">(initialAudience);
+  /** Posting to the Pursuit's group instead of to followers. Stored as visibility "just_me" with audience "group". */
+  const [toGroup, setToGroup] = useState(false);
   // Sticks once the person (or a resumed draft, or "Reflect privately")
   // has actually decided an audience, so the default-visibility setting
   // loading in afterward never overwrites a real choice.
@@ -358,8 +376,21 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   };
   useEffect(() => {
     if (audienceDecidedRef.current || !defaultVisibilityLoaded) return;
-    setAudience(defaultVisibility);
+    setAudience(defaultVisibility === "public" ? "public" : "followers");
   }, [defaultVisibilityLoaded, defaultVisibility]);
+  // Group is the default while a group Pursuit is picked, and only offered then.
+  useEffect(() => {
+    if (!groupPursuit) setToGroup(false);
+    else if (!audienceDecidedRef.current) setToGroup(true);
+  }, [groupPursuit, projectId]);
+  const [rowSheet, setRowSheet] = useState<null | "activity" | "counts" | "details">(null);
+  type Circle = "group" | "friends" | "everyone" | "private";
+  const circle: Circle = audience === "private" ? "private" : toGroup ? "group" : audience === "public" ? "everyone" : "friends";
+  const chooseCircle = (c: Circle) => {
+    audienceDecidedRef.current = true;
+    setToGroup(c === "group");
+    setAudience(c === "private" ? "private" : c === "everyone" ? "public" : "followers");
+  };
   const [forSale, setForSale] = useState(false);
   const [saleTitle, setSaleTitle] = useState("");
   const [salePrice, setSalePrice] = useState("25");
@@ -460,7 +491,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   const pursuitReady = !!initialPursuit;
   useEffect(() => {
     if (!pursuitScoped) return;
-    setScreen((s) => (s === "choose" ? "caption" : s));
+    setScreen((s) => (s === "camera" ? "caption" : s));
     setProjectId(initialPursuitId);
     if (initialPursuit?.subHobby) setCorner((c) => c || initialPursuit.subHobby!);
     if (initialPursuit?.interest) setTags((t) => (t.length ? t : [initialPursuit.interest!]));
@@ -619,7 +650,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     screen === "caption" &&
     (thought.trim().length > 0 ||
       files.length > 0 ||
-      audience !== "private" ||
+      audienceDecidedRef.current ||
       interest.trim().length > 0 ||
       isActivity ||
       !!projectId ||
@@ -868,10 +899,6 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       await saveAsPrivateLog();
       return;
     }
-    if (!corner) {
-      setError("Pick a Corner for this Moment.");
-      return;
-    }
     setSaving(true);
     setError(null);
     try {
@@ -905,7 +932,10 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         files: files.length ? files : undefined,
         creator: profile?.display_name?.trim() || "You",
         caption,
-        visibility: audience,
+        visibility: toGroup ? "just_me" : audience,
+        audience: toGroup ? "group" : audience === "public" ? "everyone" : "friends",
+        // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
+        pursuitId: projectId || undefined,
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
         locationName: locationName.trim() ? locationName.trim() : undefined,
         locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
@@ -960,7 +990,9 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
       setSavedPostId(entry.id);
-      setScreen("saved");
+      haptic();
+      // A post that did not reach the database keeps the honest "Not saved" screen.
+      setScreen(entry.unsaved ? "saved" : "posted");
     } catch {
       setError(ERROR_LINE);
     } finally {
@@ -1021,16 +1053,17 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     setStartsAt("");
     setLocationName("");
     setLocationPrivacy("neighborhood");
-    setScreen(pursuitScoped ? "caption" : "choose");
+    setScreen(pursuitScoped ? "caption" : "camera");
     audienceDecidedRef.current = false;
-    setAudience(defaultVisibilityLoaded ? defaultVisibility : "private");
+    setToGroup(false);
+    setAudience(initialAudience());
   };
 
   const requiresLogin =
     isConfigured &&
     !user &&
     screen !== "camera" &&
-    screen !== "choose" &&
+    screen !== "posted" &&
     audience !== "private";
 
   // Both of these are declared inside Log(), so they get a new component
@@ -1056,101 +1089,10 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     [filePreviewUrls, type, hobbySlug, seed],
   );
 
-  // ── 0 · Choose ──────────────────────────────────────────────────────────
-  // The actual first screen now — see the module doc comment above for why
-  // this moved ahead of the camera. Photo/video, write, and start-a-pursuit
-  // are the same three entry points that already existed (T · photo · video
-  // on the old camera screen, plus its own "Start a Pursuit" row); nothing
-  // new is being built here, just asked before reaching for the camera.
-  if (screen === "choose") {
-    return (
-      <Shell bare={!!onboarding}>
-        <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-          Log a Moment
-        </h1>
-        <p className="mb-8 text-muted-foreground">Share a Moment or start a Pursuit.</p>
-
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => setScreen("camera")}
-            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
-              <Camera className="size-5" />
-            </span>
-            <span>
-              <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
-                Photo or video
-              </span>
-              <span className="block text-caption text-muted-foreground">
-                Opens the camera, or pick one from your library.
-              </span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setCaptionBackTo("choose");
-              setFiles([]);
-              setScreen("caption");
-            }}
-            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
-              <PenLine className="size-5" />
-            </span>
-            <span>
-              <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
-                Write it down
-              </span>
-              <span className="block text-caption text-muted-foreground">A sentence is enough.</span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPursuitDialogOpen(true)}
-            className="flex w-full items-center gap-4 rounded-card border border-border bg-card p-4 text-left transition-colors hover:border-[var(--coral-deep)]"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted">
-              <Sparkle className="size-5" />
-            </span>
-            <span>
-              <span className="block text-small" style={{ fontFamily: "var(--font-serif)" }}>
-                Start a Pursuit
-              </span>
-              <span className="block text-caption text-muted-foreground">
-                Set a goal and log Moments toward it.
-              </span>
-            </span>
-          </button>
-        </div>
-
-        {openProjects.length > 0 && (
-          <div className="mt-3">
-            <Select onValueChange={(id) => navigate(`/create?pursuit=${id}`)}>
-              <SelectTrigger className="w-full" aria-label="Log a Moment for a Pursuit">
-                <PenLine className="size-3.5" />
-                <SelectValue placeholder="Or log a Moment for a Pursuit" />
-              </SelectTrigger>
-              <SelectContent>
-                {openProjects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <PursuitDialog open={pursuitDialogOpen} onOpenChange={setPursuitDialogOpen} />
-
-        {/* Never dismissed by clicking outside — resuming or discarding has
-            to be an actual choice, not a stray tap. Escape resumes, the
-            answer that loses nothing. */}
+  // The resume-a-draft prompt. Shown on whichever screen is up when a saved draft turns out to exist.
+  // Never dismissed by clicking outside: resuming or discarding has to be an
+  // actual choice, not a stray tap. Escape resumes, the answer that loses nothing.
+  const draftDialog = (
         <Dialog open={!!draftPrompt}>
           <DialogContent
             showCloseButton={false}
@@ -1190,24 +1132,33 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </Shell>
-    );
-  }
+  );
 
   // ── 1 · Camera — reached only once "Photo or video" is actually tapped ──
   if (screen === "camera") {
     return (
-      <Shell bare={!!onboarding}>
-        <CameraCapture
-          onCaptured={handleCaptured}
-          onPickedLibrary={handlePickedLibrary}
-          onTextOnly={() => {
-            setCaptionBackTo("camera");
-            setFiles([]);
-            setScreen("caption");
-          }}
-        />
-      </Shell>
+      <SheetShell bare={!!onboarding}>
+        <div className="pt-4">
+          <button
+            type="button"
+            onClick={() => void navigate(-1)}
+            className="mb-4 inline-flex min-h-11 items-center text-body text-muted-foreground hover:text-foreground"
+          >
+            Cancel
+          </button>
+          <CameraCapture
+            onCaptured={handleCaptured}
+            onPickedLibrary={handlePickedLibrary}
+            onTextOnly={() => {
+              setCaptionBackTo("camera");
+              setFiles([]);
+              setScreen("caption");
+            }}
+          />
+        </div>
+        {draftDialog}
+        {discardDialog}
+      </SheetShell>
     );
   }
 
@@ -1385,74 +1336,119 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     );
   }
 
+  // ── 4 · Posted — a shared Moment, with the Stub it earned ──────────────
+  if (screen === "posted") {
+    const toWhom: PostedAudience = toGroup ? "group" : audience === "public" ? "everyone" : "friends";
+    const others = (selectedProject?.members ?? [])
+      .filter((m) => m.status === "joined" && m.userId !== user?.id)
+      .map((m) => m.displayName);
+    const done = selectedProject
+      ? (journal.progress ?? []).filter((e) => e.projectId === selectedProject.id && (e.userId ?? user?.id) === user?.id).length
+      : 0;
+    const cornerInfo = corner ? { spaceSlug: hobbySlug, slug: corner, name: cornerLabel } : undefined;
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
+        <PostedScreen
+          postId={savedPostId}
+          audience={toWhom}
+          corner={cornerInfo}
+          pursuit={
+            selectedProject
+              ? { id: selectedProject.id, done: Math.max(1, done), total: selectedMeasure?.target ?? 0, otherNames: others }
+              : undefined
+          }
+          place={locationName.trim() || undefined}
+          undo={undoTarget ? { onUndo: () => void undoSave(), busy: undoing, error: undoError } : undefined}
+        />
+      </div>
+    );
+  }
+
   // ── 2 · Caption + audience — one screen, whatever the capture was ────────
   if (screen === "caption") {
     const hasSomething = files.length > 0 || thought.trim().length > 0 || loggedAmount > 0;
     const detectedUrl = extractFirstUrl(thought);
+    const doneSoFar = selectedProject
+      ? (journal.progress ?? []).filter((e) => e.projectId === selectedProject.id && (e.userId ?? user?.id) === user?.id).length
+      : 0;
+    const countsValue = selectedProject
+      ? selectedMeasure
+        ? `${selectedProject.title.slice(0, 40)} · #${doneSoFar + 1}`
+        : selectedProject.title.slice(0, 50)
+      : projectTitle.trim()
+        ? projectTitle.trim().slice(0, 50)
+        : "Nothing";
+    const withNames = (selectedProject?.members ?? [])
+      .filter((m) => m.status === "joined" && m.userId !== user?.id)
+      .map((m) => m.displayName.split(" ")[0]);
+    const circleOptions = [
+      ...(groupPursuit ? [{ value: "group" as const, label: "Group" }] : []),
+      { value: "friends" as const, label: "Followers" },
+      { value: "everyone" as const, label: "Everyone" },
+      { value: "private" as const, label: "Only you" },
+    ];
+    const rowClass = "flex min-h-14 w-full items-center justify-between gap-3 rounded-card bg-card px-4 py-3 text-left";
     return (
-      <Shell bare={!!onboarding}>
-        {onboarding ? null : pursuitScoped ? (
-          <Link
-            to={`/pursuit/${initialPursuitId}`}
-            className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            Back
-          </Link>
-        ) : (
-          <Back to={captionBackTo} />
-        )}
-        <h1 className="mb-6 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-          Log a Moment
-        </h1>
-
-        {/* A video is always exactly one file — same single preview as
-            before. Photos get a thumbnail strip instead, since there can be
-            up to 8 of them: one square per photo, its own remove button,
-            and a dashed "+" tile to add more. */}
-        {type === "video" && files.length > 0 && (
-          <div className="relative mb-4 overflow-hidden rounded-card border border-border">
-            <MediaPreview className="aspect-[4/3] w-full" />
+      <SheetShell bare={!!onboarding}>
+        <header className="grid grid-cols-[1fr_auto_1fr] items-center py-3">
+          {onboarding ? (
+            <span />
+          ) : (
             <button
               type="button"
-              onClick={() => setFiles([])}
-              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-control bg-scrim-solid/65 text-on-media"
-              aria-label="Remove this video"
+              onClick={() => void navigate(pursuitScoped ? `/pursuit/${initialPursuitId}` : -1 as never)}
+              className="inline-flex min-h-11 items-center justify-self-start text-body text-muted-foreground hover:text-foreground"
             >
-              <X className="size-3.5" />
+              Cancel
             </button>
-          </div>
-        )}
+          )}
+          <h1 className="text-body font-semibold">Log a Moment</h1>
+          <span />
+        </header>
 
-        {type === "photo" && files.length > 0 && (
-          <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-            {filePreviewUrls.map((url, i) => (
-              <div
-                key={i}
-                className="relative size-20 shrink-0 overflow-hidden rounded-control border border-border"
-              >
-                <ImageWithFallback src={url} alt="" className="h-full w-full" />
-                <button
-                  type="button"
-                  onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                  className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/65 text-on-media"
-                  aria-label={`Remove photo ${i + 1}`}
-                >
-                  <X className="size-3" />
-                </button>
-              </div>
-            ))}
-            {files.length < MAX_PHOTOS && (
+        {/* The photo: it grows into the stub on the next screen. A video is always exactly one file. */}
+        {files.length > 0 ? (
+          <motion.div
+            layoutId={LOG_PHOTO_LAYOUT_ID}
+            transition={sharedSpring}
+            className="relative mb-4 aspect-[4/5] overflow-hidden rounded-card bg-card"
+          >
+            <MediaPreview className="absolute inset-0 size-full" />
+            <button
+              type="button"
+              onClick={() => setFiles((prev) => (type === "video" ? [] : prev.slice(1)))}
+              className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-full bg-scrim-solid/80 text-on-media"
+              aria-label={type === "video" ? "Remove this video" : "Remove this photo"}
+            >
+              <X className="size-4" />
+            </button>
+            {type === "photo" && files.length < MAX_PHOTOS && (
               <button
                 type="button"
                 onClick={() => addMoreInputRef.current?.click()}
-                aria-label="Add another photo"
-                className="flex size-20 shrink-0 items-center justify-center rounded-control border border-dashed border-border text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+                className="absolute bottom-3 left-3 inline-flex min-h-11 items-center rounded-full bg-scrim-solid/80 px-4 text-small font-semibold text-on-media"
               >
-                <Plus className="size-5" />
+                Add photo
               </button>
             )}
-          </div>
+            {type === "photo" && files.length > 1 && (
+              <span className="absolute bottom-3 right-3 inline-flex min-h-11 items-center rounded-full bg-scrim-solid/80 px-4 text-small font-semibold text-on-media">
+                {`+ ${files.length - 1} more`}
+              </span>
+            )}
+          </motion.div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setCaptionBackTo("camera");
+              setScreen("camera");
+            }}
+            className="mb-4 flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-card bg-card text-muted-foreground"
+          >
+            <CameraGlyph className="size-6" strokeWidth={1.75} aria-hidden="true" />
+            <span className="text-small font-semibold">Add a photo</span>
+          </button>
         )}
         <input
           ref={addMoreInputRef}
@@ -1465,22 +1461,13 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             e.target.value = "";
             if (rawPicked.length === 0) return;
             setHeicWarning(null);
-            // Same HEIC normalization as the camera screen's own library
-            // pick (CameraCapture.tsx) — this tile is the other place a
-            // fresh file enters the multi-photo picker.
+            // Same HEIC normalization as the camera screen's own library pick.
             const converted = await convertHeicFiles(rawPicked);
             const picked = converted.filter((f) => !isHeicFile(f));
             const failedCount = converted.length - picked.length;
-            if (failedCount > 0) {
-              setHeicWarning(
-                failedCount === 1
-                  ? UPLOAD_COPY.heicMany(1)
-                  : UPLOAD_COPY.heicMany(failedCount),
-              );
-            }
+            if (failedCount > 0) setHeicWarning(UPLOAD_COPY.heicMany(failedCount));
             if (picked.length === 0) return;
-            const result = pickFiles(files, picked);
-            setFiles(result.files);
+            setFiles(pickFiles(files, picked).files);
           }}
         />
 
@@ -1490,7 +1477,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
           </p>
         )}
 
-        <div className="mb-6">
+        <div className="mb-4">
           <Label htmlFor="thought" className="sr-only">
             Add a thought
           </Label>
@@ -1500,12 +1487,11 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             maxLength={THOUGHT_LIMIT}
             onChange={(e) => setThought(e.target.value)}
             placeholder={files.length > 0 ? "Add a thought" : "What happened? Even a sentence counts."}
+            className="min-h-24 rounded-card bg-card"
           />
           <div className="mt-1 text-right text-caption text-muted-foreground">
             {thought.length}/{THOUGHT_LIMIT}
           </div>
-          {/* Passive detection: no "add a link" field to fill out on
-              purpose. Typing or pasting a URL is enough. */}
           {detectedUrl && (
             <div className="mt-2">
               <LinkPreviewCard url={detectedUrl} />
@@ -1513,62 +1499,64 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
           )}
         </div>
 
-        {/* Everything below used to live inside a collapsed "Share this
-            moment" accordion behind its own "Save this moment" alternative
-            — one screen now, always expanded, one outcome decided by the
-            audience picked below rather than by which button was tapped. */}
-        <div className="mb-6 space-y-6">
-          {/* Open tags, not a Space picked from a fixed list: a Moment can
-              be "food photography" — two tags, not a contradiction between
-              a Space and its interest field underneath it. The first tag
-              that matches a known Corner still quietly sets hobby_slug/
-              sub_hobby for everything that still reads those (Corners,
-              badges, Pursuits) — see the onChange below — but nothing here
-              shows or requires that choice; typing tags that match nothing
-              just leaves those legacy fields on their default. */}
-          <div>
-            <h2 className="mb-2 text-small">
-              <label htmlFor="tags">What is it about?</label>
-            </h2>
-            <TagsField
-              value={tags}
-              onChange={(next) => {
-                setTags(next);
-                for (const t of next) {
-                  const match = findSpaceForInterest(t);
-                  if (match) {
-                    setHobbySlug(match.hobbySlug);
-                    setSubHobby(match.slug);
-                    setSpaceSet(true);
-                    break;
-                  }
-                }
-              }}
-            />
-          </div>
+        <div className="mb-4 flex flex-col gap-2">
+          <button type="button" className={rowClass} onClick={() => setRowSheet("activity")}>
+            <span className="text-small text-muted-foreground">Activity</span>
+            <span className="flex min-w-0 items-center gap-1 text-body font-semibold">
+              <span className="truncate">{corner ? cornerLabel : "Pick one"}</span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </span>
+          </button>
+          <button type="button" className={rowClass} onClick={() => setRowSheet("counts")}>
+            <span className="text-small text-muted-foreground">Counts toward</span>
+            <span className="flex min-w-0 items-center gap-1 text-body font-semibold">
+              <span className="truncate">{countsValue}</span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </span>
+          </button>
+          {withNames.length > 0 && (
+            <div className={rowClass}>
+              <span className="text-small text-muted-foreground">With</span>
+              <span className="truncate text-body font-semibold">{withLine(withNames).replace(/^With /, "")}</span>
+            </div>
+          )}
+          <button type="button" className={rowClass} onClick={() => setRowSheet("details")}>
+            <span className="text-small text-muted-foreground">Details</span>
+            <span className="flex min-w-0 items-center gap-1 text-body font-semibold">
+              <span className="truncate">{[tags[0], locationName.trim(), isActivity ? "Something happening" : ""].filter(Boolean).join(" · ") || "Add"}</span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </span>
+          </button>
+        </div>
 
-          {/* Its own field, independent of the tag match above: a Moment
-              can be tagged Woodwork (whichever tag above matched a Corner
-              name, setting subHobby) and filed under the Gift-making Corner
-              here at the same time — one is what it’s made of, this is
-              which Corner it’s filed under for Discover browsing.
-              Required now (spec change: "Corners carry discovery"), but
-              pre-filled above (Pursuit's Corner, or your last one) so
-              picking one is usually zero taps — see the corner state’s own
-              comment. Category never appears in this copy: it’s internal
-              plumbing now, derived from whichever Corner is picked.
-              Global (no spaceSlug) until spaceSet is true — hobbySlug is
-              still just sitting at its silent technical default at that
-              point (see spaceSet's own comment above), not a Category
-              anyone actually chose, so there’s nothing real to scope to
-              yet. Picking a Corner (or the tag match above resolving one)
-              sets both hobbySlug and spaceSet, which then scopes this
-              field the same way it always used to. */}
-          <div>
-            <h2 className="mb-1 text-small">
-              <label htmlFor="corner">Which Corner?</label>
-            </h2>
-            <p className="mb-2 text-caption text-muted-foreground">Where this shows up when someone browses by Corner.</p>
+        <Segmented label="Who sees this" value={circle} onChange={chooseCircle} options={circleOptions} className="mb-2" />
+        <p className="mb-4 text-center text-caption text-muted-foreground">
+          {circle === "private"
+            ? "Only you can see this."
+            : circle === "group"
+              ? "People in your Pursuit can see this."
+              : circle === "everyone"
+                ? `Anyone can find this in ${cornerLabel || "Discover"}.`
+                : "People who follow you can see this."}
+        </p>
+
+        {error && (
+          <p role="alert" className="mb-3 text-center text-caption text-accent-text">
+            {error}
+          </p>
+        )}
+
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background">
+          <div className="mx-auto max-w-md px-4 pt-3 pb-[max(1rem,var(--safe-bottom,0px))]">
+            <PillButton className="w-full" disabled={!hasSomething || saving} onClick={() => void publish()}>
+              {saving ? "One sec…" : circle === "private" ? "Keep it private" : "Post"}
+            </PillButton>
+          </div>
+        </div>
+
+        {/* Activity: the Corner this Moment is filed under. */}
+        <BottomSheet open={rowSheet === "activity"} onOpenChange={(o) => !o && setRowSheet(null)} title="Activity" description="Where this shows up when someone browses by Corner.">
+          <div className="pt-2">
             <CornerTagField
               spaceSlug={spaceSet ? hobbySlug : undefined}
               value={corner}
@@ -1581,216 +1569,138 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               }}
             />
           </div>
+        </BottomSheet>
 
-          {/* Only a thing that happens at a time needs a time. */}
-          <div className="rounded-card border border-border bg-surface px-4 py-3.5">
-            <button
-              type="button"
-              onClick={() => setIsActivity((v) => !v)}
-              aria-pressed={isActivity}
-              className="flex w-full items-center justify-between gap-3"
-            >
-              <span className="text-left">
-                <span className="block text-small">This is something happening</span>
-                <span className="block text-caption text-muted-foreground">
-                  A walk, a workshop, a meetup, a challenge: people can join in
-                </span>
-              </span>
-              <span
-                className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
-                  isActivity
-                    ? "justify-end [background-color:var(--violet-electric)]"
-                    : "justify-start bg-surface-muted"
-                }`}
-              >
-                <span className="size-5 rounded-full bg-background" />
-              </span>
-            </button>
-
-            {isActivity && (
-              <div className="mt-4">
-                <Label htmlFor="startsAt" className="mb-1.5 block text-caption">
-                  When
-                </Label>
-                <Input
-                  id="startsAt"
-                  type="datetime-local"
-                  value={startsAt}
-                  onChange={(e) => setStartsAt(e.target.value)}
-                />
-              </div>
+        {/* Counts toward: the Pursuit, and how much it moves it forward. */}
+        <BottomSheet open={rowSheet === "counts"} onOpenChange={(o) => !o && setRowSheet(null)} title="Counts toward" description="Keep an ongoing thing together.">
+          <div className="flex flex-col gap-4 pt-2">
+            <PursuitField
+              projects={openProjects}
+              projectId={projectId}
+              projectTitle={projectTitle}
+              onSelectExisting={(id) => {
+                setProjectId(id);
+                setProjectTitle("");
+                const picked = journal.projects.find((p) => p.id === id);
+                if (picked?.subHobby && !corner) {
+                  setCorner(picked.subHobby);
+                  if (picked.hobbySlug) {
+                    setHobbySlug(picked.hobbySlug);
+                    setSpaceSet(true);
+                  }
+                }
+              }}
+              onCreateNew={(title) => {
+                setProjectTitle(title);
+                setProjectId("");
+              }}
+              onClear={() => {
+                setProjectId("");
+                setProjectTitle("");
+              }}
+            />
+            {selectedMeasure && selectedProject && (
+              <SoftPanel>
+                <p className="text-small">How much did this move it forward?</p>
+                <div className="mt-3">
+                  <AmountStepper
+                    value={amount}
+                    onChange={setAmount}
+                    step={stepFor(selectedMeasure)}
+                    unit={unitFor(selectedMeasure, amount)}
+                    allowDecimals={selectedMeasure.allowDecimals || selectedMeasure.allowPartial}
+                  />
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <span className="text-caption text-muted-foreground">Count toward Pursuit progress</span>
+                  <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
+                </div>
+              </SoftPanel>
             )}
           </div>
+        </BottomSheet>
 
-          {/* Where a Moment happened isn't only meaningful for a scheduled
-              activity — a photo from a trip or a walk deserves the same
-              option. Kept as its own section rather than nested under "This
-              is something happening" so it's never gated behind that toggle. */}
-          <div className="rounded-card border border-border bg-surface px-4 py-3.5">
+        {/* Details: tags, something happening, and where. */}
+        <BottomSheet open={rowSheet === "details"} onOpenChange={(o) => !o && setRowSheet(null)} title="Details">
+          <div className="flex flex-col gap-6 pt-2">
             <div>
-              <Label htmlFor="place" className="mb-1.5 block text-caption">
-                Where (optional)
-              </Label>
-              <Input
-                id="place"
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                placeholder="e.g. Prospect Park, Brooklyn"
-              />
-            </div>
-            {locationName.trim() && (
-              <div className="mt-3">
-                <Label className="mb-1.5 block text-caption">How precisely to show it</Label>
-                <Select
-                  value={locationPrivacy}
-                  onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOCATION_PRIVACY.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}: {o.copy}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-1.5 text-caption text-muted-foreground">
-                  Neighborhood by default.
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h2 className="mb-2 text-small">Choose who sees this</h2>
-            <ul className="space-y-2">
-              {AUDIENCE.map((opt) => {
-                const active = audience === opt.value;
-                return (
-                  <li key={opt.value}>
-                    <button
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => chooseAudience(opt.value)}
-                      className={`flex w-full items-center gap-3 rounded-card border px-4 py-3 text-left transition-colors ${
-                        active
-                          ? "border-[var(--coral-deep)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface-elevated))]"
-                          : "border-border bg-surface hover:border-[var(--foreground)]/30"
-                      }`}
-                    >
-                      <opt.icon className="size-4 shrink-0 text-foreground" />
-                      <span className="min-w-0 flex-1 text-small">{opt.label}</span>
-                      {active && <Check className="size-4 shrink-0 text-[var(--coral-deep)]" />}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-
-            {/* Only a public Moment could become a listing — Connections
-                couldn’t be sold to anyway, same rule the Pursuit-scoped
-                flow's own version of this control uses. */}
-            {audience === "public" && <ForSaleComingSoon className="mt-3" />}
-
-            <p className="mt-4 text-center text-caption leading-relaxed text-muted-foreground">
-              {audience === "private"
-                ? "Only you can see this."
-                : `This will appear in ${
-                    audience === "public"
-                      ? `${cornerLabel}`
-                      : "Home for people you’ve connected with"
-                  }${interest.trim() ? ` and be tagged ${tagLabel}.` : "."}`}
-            </p>
-          </div>
-
-          <div className="rounded-card border border-border bg-card px-4 py-3.5">
-            <div className="flex items-center gap-3">
-              <FolderPlus className="size-4 shrink-0 text-foreground" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-small">Add to a Pursuit</span>
-                <span className="block text-caption text-muted-foreground">
-                  Keep an ongoing thing together.
-                </span>
-              </span>
-            </div>
-            <div className="mt-3">
-              <PursuitField
-                projects={openProjects}
-                projectId={projectId}
-                projectTitle={projectTitle}
-                onSelectExisting={(id) => {
-                  setProjectId(id);
-                  setProjectTitle("");
-                  const picked = journal.projects.find((p) => p.id === id);
-                  if (picked?.subHobby && !corner) {
-                    setCorner(picked.subHobby);
-                    if (picked.hobbySlug) {
-                      setHobbySlug(picked.hobbySlug);
+              <h2 className="mb-2 text-small">
+                <label htmlFor="tags">What is it about?</label>
+              </h2>
+              <TagsField
+                value={tags}
+                onChange={(next) => {
+                  setTags(next);
+                  for (const t of next) {
+                    const match = findSpaceForInterest(t);
+                    if (match) {
+                      setHobbySlug(match.hobbySlug);
+                      setSubHobby(match.slug);
                       setSpaceSet(true);
+                      break;
                     }
                   }
                 }}
-                onCreateNew={(title) => {
-                  setProjectTitle(title);
-                  setProjectId("");
-                }}
-                onClear={() => {
-                  setProjectId("");
-                  setProjectTitle("");
-                }}
               />
             </div>
+
+            <div className="rounded-card bg-card px-4 py-3.5">
+              <button
+                type="button"
+                onClick={() => setIsActivity((v) => !v)}
+                aria-pressed={isActivity}
+                className="flex w-full min-h-11 items-center justify-between gap-3"
+              >
+                <span className="text-left">
+                  <span className="block text-small">This is something happening</span>
+                  <span className="block text-caption text-muted-foreground">A walk, a workshop, a meetup, a challenge: people can join in</span>
+                </span>
+                <span className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${isActivity ? "justify-end [background-color:var(--violet-electric)]" : "justify-start bg-surface-muted"}`}>
+                  <span className="size-5 rounded-full bg-background" />
+                </span>
+              </button>
+              {isActivity && (
+                <div className="mt-4">
+                  <Label htmlFor="startsAt" className="mb-1.5 block text-caption">
+                    When
+                  </Label>
+                  <Input id="startsAt" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-card bg-card px-4 py-3.5">
+              <Label htmlFor="place" className="mb-1.5 block text-caption">
+                Where (optional)
+              </Label>
+              <Input id="place" value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="e.g. Prospect Park, Brooklyn" />
+              {locationName.trim() && (
+                <div className="mt-3">
+                  <Label className="mb-1.5 block text-caption">How precisely to show it</Label>
+                  <Select value={locationPrivacy} onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LOCATION_PRIVACY.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}: {o.copy}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="mt-1.5 text-caption text-muted-foreground">Neighborhood by default.</p>
+                </div>
+              )}
+            </div>
           </div>
+        </BottomSheet>
 
-          {selectedMeasure && selectedProject && (
-            <SoftPanel>
-              <p className="text-small">How much did this move it forward?</p>
-              <div className="mt-3">
-                <AmountStepper
-                  value={amount}
-                  onChange={setAmount}
-                  step={stepFor(selectedMeasure)}
-                  unit={unitFor(selectedMeasure, amount)}
-                  allowDecimals={selectedMeasure.allowDecimals || selectedMeasure.allowPartial}
-                />
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <span className="text-caption text-muted-foreground">Count toward Pursuit progress</span>
-                <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
-              </div>
-            </SoftPanel>
-          )}
-        </div>
-
-        {error && <p className="mb-3 text-center text-caption text-[var(--coral-text)]">{error}</p>}
-
-        {/* One button, one outcome, decided by the audience above — not a
-            separate "Save this moment" that produced the same private
-            result as "Share this moment → Only you". */}
-        <Button
-          busy={saving}
-          variant="coral"
-          size="lg"
-          className="w-full"
-          disabled={!hasSomething || saving}
-          onClick={publish}
-        >
-          {audience === "private" ? "Keep it private" : "Share"}
-        </Button>
-
-        {!hasSomething && (
-          <p className="mt-3 text-center text-caption text-muted-foreground">
-            Add a photo, video, or a line of text to continue.
-          </p>
-        )}
-
+        {draftDialog}
         {discardDialog}
-      </Shell>
+      </SheetShell>
     );
   }
-
 
   return null;
 }

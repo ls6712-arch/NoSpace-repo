@@ -253,7 +253,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
     slug: "karaoke", spaceSlug: "music", name: "Karaoke", emoji: "🎙️", durationMinutes: 120, setting: "anywhere",
     steps: ["Gather friends", "Pick one silly song"],
     needs: ["A microphone, or just a speaker", "A karaoke bar, a booked room or your living room", "A group of friends"],
-    worth: ["No skill needed", "A room full of people cheering", "A good night out", "Pick a song you know"],
+    worth: ["No skill needed", "A room full of people having fun", "A good night out", "Pick a song you know"],
     coverAlt: "Friends singing into microphones together at a karaoke night", photoSearch: "friends karaoke night singing",
     traits: { kind: "experience", together: "together", haveIt: false },
   }),

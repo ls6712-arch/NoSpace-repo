@@ -19,6 +19,7 @@ import { EditSpace } from "./pages/EditSpace";
 import { Discover } from "./pages/Discover";
 import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
+import { HomeFeed } from "./pages/HomeFeed";
 import { Log } from "./pages/Log";
 import { You } from "./pages/You";
 import { Onboarding } from "./pages/Onboarding";
@@ -94,7 +95,9 @@ export const router = createHashRouter([
       // pending account to, and the arrival page an invite link points at.
       { path: "welcome", Component: Welcome },
       { path: "i/:code", Component: InviteArrival },
-      { path: "my-space", Component: MySpace },
+      { path: "my-space", Component: HomeFeed },
+      // The sheet-of-six grid Home used to be, until the feed replaced it.
+      { path: "my-space/all", Component: MySpace },
       { path: "discover", Component: Discover },
       { path: "search", Component: SearchResults },
 

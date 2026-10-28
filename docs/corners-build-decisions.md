@@ -114,6 +114,18 @@ Answers from the founder before PR 1. These override the entries above where the
 
 - Removed every price word from the guides in `curatedCorners.ts` (steps, needs and why it's worth it) and three steps in `cornerGuides.ts` ("free", "cheap", "cost", "fee", "paid", "budget", "cash"). Price-only lines ("Free to start", "Cheap", "Entry and rental fees apply") were dropped; a Corner keeps 3 to 5 needs and exactly 4 reasons, as the tests require. A vitest check fails on any price word in a guide.
 
+### PR 4: Log, Posted, Home (screens 6, 7, 8, 14)
+
+- **Reaction wording.** The UI says "Love this" everywhere and the notification says "{Name} loved your Moment". The word "cheer" is in no user-facing string; in code the thing is a reaction. The glossary now says so. A curated Corner guide line that said "cheering" now says "having fun".
+- **Moment audience.** New `posts.audience` (group, friends, everyone). A group Moment is stored with `visibility = just_me` plus a read policy for people in its Pursuit, so every older reader that looks at `visibility` can never leak it. A trigger refuses a group Moment unless the writer is in that Pursuit. Log offers four choices (Group, Followers, Everyone, Only you) so private logs still work; the default is Group when the Moment counts toward a Pursuit with people, else Followers, overriding a saved "Only you" default as the brief says.
+- **Stubs.** Issued only by the database: a session Stub when a Moment is saved (or later attached) to a Pursuit you are in, and a gold Stub to everyone in a Pursuit when it is finished. `stubs` gets its own `id`, a `kind`, a `serial` per person, and keeps `unique(user_id, event_id)` so the existing event Stubs still work. Nobody can insert a Stub from the app.
+- **One audience label set (founder, Oct 28).** Group / Followers / Everyone / Only you everywhere. "Friends" became "Followers" in Log and "Public" became "Everyone" on the Moment page, the first-Moment step, Settings and the shared visibility options. Wording only: the stored values (`public`, `followers`, `just_me`) and who can see a post are unchanged. `audienceLabels.test.ts` fails if "Public" is used as an audience label or Log says "Friends". The Pursuit choice Open group / Friends / Just me is a different idea and is unchanged.
+- **Every Log row is optional with a default.** Activity (none), Counts toward (nothing), With (hidden unless the Pursuit has people) and Details (empty) can all stay as they are, so a photo posts in one tap with the default audience. Post no longer asks for a Corner.
+- **Posted.** The ticket grows out of the Log photo and is shown only when a Pursuit is involved (a Moment with none earns no Stub). The "With" row is read from the Pursuit's members; there is no separate tagging.
+- **Home.** At most about one card in four is a Space promotion: one after every third friend card, spare ones dropped, none when there are fewer than three friend cards. A friend's Moment at a Space counts as a friend card. Only strangers' Moments from a Space you are in or a Corner you follow are promotions. The old grid stays at `/my-space/all` (linked as "See all Moments") until PR 5.
+- **Multi-photo cards** use SnapCarousel inside the Home card. The shared `PostMediaCarousel` is unchanged, so the Moment page and grids behave as before.
+- **Contrast.** Photo chips on Log sit on a 80% solid black scrim (12.6:1 over a white photo). The Home cards have no text over photos.
+
 ## Open
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.
