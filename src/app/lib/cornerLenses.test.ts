@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LENSES, interleaveRows, isWideLens } from "./cornerLenses";
+import { LENSES, interleaveRows } from "./cornerLenses";
 import { billboardCorners } from "./billboard";
 import { CURATED_CORNERS } from "../data/curatedCorners";
 import { cornerKey } from "../data/homeCorners";
@@ -14,9 +14,6 @@ describe("LENSES", () => {
     const fs = await import("node:fs");
     const glossary = fs.readFileSync("docs/glossary.md", "utf8");
     for (const l of LENSES) expect(glossary, l.title).toContain(l.title);
-  });
-  it("alternates wide and normal rows", () => {
-    expect([0, 1, 2, 3].map(isWideLens)).toEqual([true, false, true, false]);
   });
 });
 

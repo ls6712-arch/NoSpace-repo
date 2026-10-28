@@ -18,8 +18,9 @@ export interface BillboardSlide {
 const ADVANCE_MS = 7000;
 
 /**
- * The billboard at the top of /corners: a few Corners, one photo each, that you
- * swipe or step through with the dots. Scroll-snap does the sliding. It
+ * The billboard at the top of /corners: a few Corners, one full-width photo
+ * each (the page colour fades in from the left and bottom, so the title sits on
+ * dark), that you swipe or step through with the dots. Scroll-snap does the sliding. It
  * advances itself every 7 seconds, but never while a pointer is over it, focus
  * is inside it, the tab is hidden, or the person asked for reduced motion.
  */
@@ -55,7 +56,7 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
   if (slides.length === 0) return null;
   return (
     <section
-      className="relative mb-5 overflow-hidden rounded-card bg-surface-muted text-on-media"
+      className="relative h-[72vh] min-h-[480px] max-h-[820px] w-full overflow-hidden bg-surface-muted text-on-media"
       aria-roledescription="carousel"
       aria-label="Featured Corners"
       onMouseEnter={() => setPaused(true)}
@@ -63,13 +64,13 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <ul ref={list} onScroll={onScroll} className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul ref={list} onScroll={onScroll} className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {slides.map(({ corner, next, logTo }, i) => {
           const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
           return (
             <li
               key={corner.slug}
-              className="relative aspect-[4/5] w-full shrink-0 snap-start md:aspect-[21/9]"
+              className="relative h-full w-full shrink-0 snap-start"
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${slides.length}`}
               aria-hidden={i !== index || undefined}
@@ -85,13 +86,14 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
                 className="absolute inset-0 size-full"
               />
               <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
-              <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-2 p-5 pb-14 md:p-8 md:pb-12">
+              <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
+              <div className="absolute inset-0 mx-auto flex w-full max-w-[1264px] flex-col items-start justify-end gap-3 px-4 pb-28 md:px-8 md:pb-24">
                 {i === 0 && <p className="text-small font-semibold text-on-media/90">Corner of the week</p>}
-                <h2 className="text-display" style={displayStyle(40, { lineHeight: 1.05 })}>
+                <h2 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
                   {corner.name}
                 </h2>
                 <p className="text-body text-on-media/90">{cornerMeta(corner)}</p>
-                {about && <p className="max-w-xl text-body text-on-media/90 max-md:hidden">{about}</p>}
+                {about && <p className="max-w-lg text-lead text-on-media/90 max-md:hidden">{about}</p>}
                 {next && (
                   <p className="text-small font-semibold text-on-media">
                     {next.title}
@@ -101,13 +103,13 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
                 <div className="mt-2 flex flex-wrap gap-3">
                   <PressLink
                     to={`/corners/${corner.slug}`}
-                    className="inline-flex min-h-12 items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)]"
+                    className="inline-flex min-h-12 items-center justify-center rounded-control bg-on-media px-6 text-body font-semibold text-[var(--ink)]"
                   >
                     {`Explore ${corner.name}`}
                   </PressLink>
                   <PressLink
                     to={logTo}
-                    className="inline-flex min-h-12 items-center justify-center rounded-control border border-on-media/70 px-6 text-body font-semibold text-on-media"
+                    className="inline-flex min-h-12 items-center justify-center rounded-control bg-scrim-solid/50 px-6 text-body font-semibold text-on-media"
                   >
                     Log a Moment
                   </PressLink>
@@ -118,7 +120,7 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
         })}
       </ul>
       {slides.length > 1 && (
-        <div className="absolute inset-x-0 bottom-0 flex justify-center md:inset-x-auto md:right-6">
+        <div className="absolute inset-x-0 bottom-10 flex justify-center md:inset-x-auto md:bottom-12 md:right-8">
           {slides.map((s, i) => (
             <button
               key={s.corner.slug}

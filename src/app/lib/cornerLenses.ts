@@ -36,9 +36,6 @@ export const LENSES: readonly Lens[] = [
 export const MIN_LENS_CORNERS = 3;
 export const MAX_LENS_CORNERS = 20;
 
-/** Every other lens row (the first, the third...) uses wide cards, so the page does not read as one repeated shape. */
-export const isWideLens = (index: number) => index % 2 === 0;
-
 /**
  * Weaves the lens rows in among the group rows: the first lens row leads, then
  * one more after every `every` group rows. Any left over once the groups run
