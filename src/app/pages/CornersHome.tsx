@@ -216,7 +216,7 @@ export function CornersHome() {
       {slides.length > 0 ? (
         <Billboard slides={slides} />
       ) : (
-        <div className="h-[72vh] min-h-[480px] max-h-[820px] w-full bg-surface-muted" aria-hidden="true" />
+        <div className="h-[72svh] min-h-[22.5rem] max-h-[820px] w-full bg-surface-muted" aria-hidden="true" />
       )}
       <h1 className="sr-only">Corners</h1>
 
