@@ -32,7 +32,8 @@ jobs:
 
   # Android and desktop sizes in Chromium: layout, contrast, touch targets.
   visual-chromium:
-    runs-on: ubuntu-latest
+    # Playwright 1.56 has no browser build for ubuntu-latest (26.04), so pin 24.04.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -64,7 +65,8 @@ jobs:
   # safe-area padding on the bottom tab bar. Non-blocking until it has been green
   # on a few runs; then remove continue-on-error and make it required.
   visual-webkit:
-    runs-on: ubuntu-latest
+    # Playwright 1.56 has no browser build for ubuntu-latest (26.04), so pin 24.04.
+    runs-on: ubuntu-24.04
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
