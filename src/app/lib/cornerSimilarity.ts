@@ -1,4 +1,5 @@
 import { cornerGuide } from "../data/cornerGuides";
+import { categoryOfCorner } from "../data/cornerCategories";
 import { cornerMoods, guideMoods } from "../data/curatedCorners";
 import type { HomeCorner } from "../data/homeCorners";
 import type { MoodId } from "../data/moods";
@@ -6,15 +7,16 @@ import type { MoodId } from "../data/moods";
 /**
  * How alike two Corners are, from facts about the activity itself (the guide
  * library's kind, whether it is solo or together, indoors or out, whether you
- * can start with what you have, and its moods), never from what people did.
+ * can start with what you have, its moods, and which of the 18 groups it is in), never from what people did.
  * 0 to 1. Used to fill a short row with Corners from elsewhere that someone
  * who likes the row would plausibly like too, so every row is full.
  */
-const WEIGHTS = { moods: 0.45, kind: 0.2, together: 0.1, where: 0.1, haveIt: 0.05, setting: 0.05, time: 0.05 };
+const WEIGHTS = { moods: 0.35, kind: 0.15, category: 0.25, together: 0.08, where: 0.07, haveIt: 0.03, setting: 0.03, time: 0.04 };
 
 export interface CornerTraits {
   moods: ReadonlySet<MoodId>;
   kind?: string;
+  category?: string;
   together?: string;
   where?: string;
   haveIt?: boolean;
@@ -29,6 +31,7 @@ export function traitsOf(c: HomeCorner): CornerTraits {
   return {
     moods: new Set(moods),
     kind: g?.kind,
+    category: categoryOfCorner(c.spaceSlug, c.slug)?.slug,
     together: g?.together,
     where: g?.where,
     haveIt: g?.haveIt,
@@ -52,6 +55,7 @@ export function similarity(a: CornerTraits, b: CornerTraits): number {
   return (
     WEIGHTS.moods * jaccard(a.moods, b.moods) +
     WEIGHTS.kind * same(a.kind, b.kind) +
+    WEIGHTS.category * same(a.category, b.category) +
     WEIGHTS.together * same(a.together, b.together) +
     WEIGHTS.where * same(a.where, b.where) +
     WEIGHTS.haveIt * same(a.haveIt, b.haveIt) +
