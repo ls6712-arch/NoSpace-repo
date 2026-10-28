@@ -1,99 +1,70 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { TagsField } from "../components/TagsField";
-import { AvatarPicker } from "../components/AvatarPicker";
-import { Log } from "./Log";
+import { motion } from "motion/react";
 import { TermsCheckbox } from "../components/TermsCheckbox";
 import { needsTermsAcceptance, recordTermsAcceptance } from "../lib/termsAcceptance";
-import { onboardingUsesMainForm } from "../config";
-import { FirstMomentStep } from "../components/FirstMomentStep";
 import { OnboardingInviteCard } from "../components/OnboardingInviteCard";
+import { MoodsCityForm } from "../components/interests/MoodsCityForm";
+import { PersonAvatar } from "./CreatePursuit";
 import { useAuth } from "../context/AuthContext";
-import { useSocial } from "../context/SocialContext";
-import { useContent } from "../context/ContentContext";
-import { useCorners, cornerFollowKey } from "../context/CornersContext";
 import { useCategories } from "../context/CategoriesContext";
 import { fetchInvitesLeft } from "../lib/invites";
+import { cleanCity, useInterests } from "../lib/interests";
+import { fetchInvitePreview, fetchPursuitAsProject, joinViaLink, type InvitePreview } from "../lib/pursuitsRemote";
+import { addJoinedProject } from "../lib/journal";
+import type { MoodId } from "../data/moods";
 import { Button } from "../components/ui/button";
-import { ENTER } from "../lib/motion";
+import { PillButton } from "../components/ui/PillButton";
+import { PAGE_FROM, PAGE_TO, page } from "../lib/motionTokens";
 import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 import { DISPLAY_NAME_MAX, isEmailPrefixName, validateDisplayName } from "../lib/displayName";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
-/** Every chip carried across the wizard shares this layoutId prefix, so
- * Motion can visibly travel a tag from step 1's field into step 2's quiet
- * summary row and step 3's pre-tagged Moment cards, rather than popping in
- * fresh at each stop. */
-const TAG_LAYOUT_PREFIX = "onboarding-tag-";
-
-/** Curated, neutral cover backgrounds for step 2 — built from the app's own
- * paper/ink tokens (theme.css's .ns-paper-theme block), not arbitrary color
- * or a stock-photo library, so a brand-new account's cover always looks
- * intentional and on-palette before a single real photo exists to use
- * instead (see Studio.tsx, which prefers a real pinned Moment once one
- * exists). Index 0 is the default a skip or an unmade choice falls back to. */
-const COVER_TEXTURES = [
-  {
-    id: "warm-paper",
-    css: "radial-gradient(120% 120% at 20% 15%, var(--paper-raised) 0%, var(--line) 45%, var(--ink-soft) 100%)",
-  },
-  {
-    id: "moss-fade",
-    css: "linear-gradient(155deg, var(--ink) 0%, var(--moss) 55%, var(--ink-faint) 100%)",
-  },
-  {
-    id: "coral-dusk",
-    css: "radial-gradient(140% 140% at 80% 10%, var(--coral-deep) 0%, var(--ink-soft) 55%, var(--ink) 100%)",
-  },
-];
-
-/** Spring, not linear-ease, everywhere motion appears on this page — the
- * step transition, the tag chips traveling forward, and the cover's own
- * pieces settling into place in step 2. Nowhere else gets motion. */
-// design-token-ignore: spring, not a fixed duration; every use below is switched off by reduceMotion
-const SPRING = ENTER;
+/** A Pursuit invite link, as the sign-up flow carries it in `?redirect=`. */
+export function joinTokenFrom(redirectTo: string): string | null {
+  return /^\/join\/([^/?#]+)/.exec(redirectTo)?.[1] ?? null;
+}
 
 /**
- * Shown once, right after signup — see sql/onboarding-v2.sql and Root.tsx's
- * own guard for exactly when (both untouched by this rewrite; both correct
- * as-is). Three steps: Step 3's own "Add your first moment" (no questions
- * asked first), open tags (replacing the old fixed Space grid), and the
- * Studio-style cover itself (replacing the old bio-less flow entirely) —
- * finishing right from the cover step now. The old third step, a per-tag
- * "write a first page" gauntlet, is gone: it asked for up to five more
- * Moments right after the real first one, which is exactly the friction
- * Step 3 exists to remove from onboarding.
+ * Shown once, right after signup (Root.tsx's guard decides when). Two steps:
+ * a name (and the Terms, when they have not been accepted yet), then "What do
+ * you want more of?": the moods and the city, which is all Discover needs to
+ * show what is on this week. One optional invite card follows for someone who
+ * still has an invite to give.
  *
- * After the cover saves, one optional invite card follows — only for someone
- * who still has an invite to give (see OnboardingInviteCard). Everyone else
- * goes straight on, exactly as before.
+ * Arriving from a Pursuit invite link (`?redirect=/join/:token`), the inviter's
+ * card sits on top of the second step and the button joins their Pursuit.
  */
 export function Onboarding() {
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/you";
+  const redirectTo = searchParams.get("redirect") || "/discover";
   const navigate = useNavigate();
   const { user, profile, updateProfile } = useAuth();
   const { isAdmin } = useCategories();
-  const social = useSocial();
-  const { refetchActiveHobbies } = useContent();
-  const { resolveInterest } = useCorners();
-  const reduceMotion = !!useReducedMotion();
+  const interests = useInterests();
 
-  // 4 = the optional invite card, reached only after the cover has saved.
-  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
+  // 0 = name, 1 = moods and city, 2 = the optional invite card (after onboarding is saved).
+  const [step, setStep] = useState<0 | 1 | 2>(0);
   const [invitesLeft, setInvitesLeft] = useState<number | null>(0);
-  const [tags, setTags] = useState<string[]>([]);
+  const [moods, setMoods] = useState<MoodId[]>([]);
+  const [city, setCity] = useState("");
+  const [cityTouched, setCityTouched] = useState(false);
+  useEffect(() => {
+    if (!cityTouched && interests.city) setCity(interests.city);
+  }, [interests.city, cityTouched]);
 
-  // Avatar: AvatarPicker persists to profiles.avatar_url the moment a photo
-  // is picked — its own established contract, unchanged here. This is just
-  // the local mirror every other AvatarPicker call site already keeps.
-  const [avatar, setAvatar] = useState<string | undefined>(profile?.avatar_url);
+  const joinToken = joinTokenFrom(redirectTo);
+  const [invite, setInvite] = useState<InvitePreview | null>(null);
+  useEffect(() => {
+    if (!joinToken) return;
+    let live = true;
+    void fetchInvitePreview(joinToken).then((p) => live && setInvite(p));
+    return () => {
+      live = false;
+    };
+  }, [joinToken]);
 
-  // Title/tagline/photo: all deferred to finish() below, same as the tags
-  // themselves — nothing here writes to profiles until Finish or Skip.
-  // Never prefilled from the email: the name step below asks for it fresh.
   const [nameInput, setNameInput] = useState("");
   // A name typed at sign-up carries over for a quick confirm; one the
   // database made up from the email address never does.
@@ -116,11 +87,6 @@ export function Onboarding() {
   }, [user?.id]);
   const [nameError, setNameError] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
-  const [title, setTitle] = useState("");
-  const [titleTouched, setTitleTouched] = useState(false);
-  useEffect(() => {
-    if (!titleTouched && profile?.display_name) setTitle(profile.display_name);
-  }, [profile?.display_name, titleTouched]);
 
   const saveName = async () => {
     if (savingName) return;
@@ -146,9 +112,7 @@ export function Onboarding() {
         setNameError(ERROR_LINE);
         return;
       }
-      setTitle(checked.name);
-      setTitleTouched(true);
-      goToStep(1);
+      setStep(1);
     } catch {
       setNameError(OFFLINE_LINE);
     } finally {
@@ -156,91 +120,45 @@ export function Onboarding() {
     }
   };
 
-  const [tagline, setTagline] = useState("");
-  const [textureIndex, setTextureIndex] = useState(0);
-
+  const [landing, setLanding] = useState(redirectTo);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
 
-  const goToStep = (next: 1 | 2 | 3) => setStep(next);
-
-  /** A "blank page" cover is still a complete, on-brand one — never a hole
-   * where a title or texture should be. Finishes onboarding directly now —
-   * the cover step is the last one, so "skip the cover" and "skip the rest
-   * of onboarding" are the same button. Passes the blank-page title/tagline
-   * straight to finish() rather than through setTitle/setTagline first —
-   * those are async state updates, and finish() reading its own still-stale
-   * closure a moment later would send whatever title/tagline predated this
-   * click instead of the blank-page values just chosen. */
-  const skipCover = () => {
-    const blankTitle = profile?.display_name?.trim() ?? "You";
-    setTitle(blankTitle);
-    setTagline("");
-    setTextureIndex(0);
-    void finish({ title: blankTitle, tagline: "" });
-  };
-
-  const finish = async (overrides?: { title: string; tagline: string }) => {
-    if (finishing) return;
+  const finish = async () => {
+    if (finishing || moods.length === 0) return;
     setFinishing(true);
     setFinishError(null);
-    const finishTitle = overrides?.title ?? title;
-    const finishTagline = overrides?.tagline ?? tagline;
     try {
-      // Follows are derived from the open tags now, not written as each one
-      // is picked — private Interests, Corner by Corner (spec change:
-      // "Corners carry discovery" — nobody follows a whole Category
-      // anymore). resolveInterest matches an existing Corner or creates
-      // one (see CornersContext), so every real tag ends up followed, not
-      // just the ones that happened to already be in the curated baseline.
-      // Only the ones not already followed do any writing.
-      for (const tag of tags) {
-        const match = await resolveInterest(tag);
-        // A blocked tag (trademarked name) already got its own friendly
-        // message on the MomentCard step, if it went through one — here,
-        // finishing onboarding shouldn't stall or error over it, just
-        // silently skip the follow. The tag itself still exists as
-        // freeform text on whatever Moment it was attached to.
-        if (!match || "blocked" in match) continue;
-        const key = cornerFollowKey(match.spaceSlug, match.slug);
-        if (!social.isFollowingHobby(key)) {
-          void social.toggleHobbyFollow(key, match.name);
-        }
-      }
-      // Picked up by Root.tsx's guard and everywhere else that reads
-      // activeHobbySlugs (feed relevance): without this, the follows just
-      // written above wouldn't show up here until the next full sign-in.
-      await refetchActiveHobbies();
-      // This has to actually succeed before leaving — see the identical
-      // reasoning this pattern already had before this rewrite. A failed
-      // write here left onboarding_completed still false in the database,
-      // and navigating away anyway just sent you straight into Root's own
-      // guard, which bounces you right back to step one.
-      const { error } = await updateProfile({
-        onboarding_completed: true,
-        cover_title: finishTitle.trim() || null,
-        // One shared field at onboarding time — bio and cover_tagline can
-        // diverge later from Settings or the cover editor, but they start
-        // as the same input here rather than asking for both.
-        bio: finishTagline.trim() || null,
-        cover_tagline: finishTagline.trim() || null,
-      });
+      // Saved on this device and, once the profile columns exist, on the profile.
+      // A failed profile write does not hold anyone back: the device copy drives Discover.
+      await interests.save({ city: cleanCity(city), moods });
+      // This has to actually succeed before leaving: a failed write left
+      // onboarding_completed false, and Root's guard sent people straight back here.
+      const title = profile?.display_name?.trim() || null;
+      const { error } = await updateProfile({ onboarding_completed: true, cover_title: title });
       if (error) {
         setFinishError(ERROR_LINE);
         return;
       }
-      // onboarding_completed is saved now, so the invite card below is
-      // purely optional: leaving from it (or a failed read here) can't
-      // bounce anyone back through Root's guard.
-      const left = user
-        ? await fetchInvitesLeft(user.id, profile?.invite_allowance ?? 0, isAdmin)
-        : 0;
+      // The button said "Join {name}'s Pursuit", so join it now; if that fails
+      // the invite page is the fallback and shows the reason.
+      let target = redirectTo;
+      if (joinToken && invite) {
+        const joined = await joinViaLink(joinToken);
+        if (joined.pursuitId) {
+          target = `/pursuit/${joined.pursuitId}`;
+          const project = await fetchPursuitAsProject(joined.pursuitId);
+          if (project) addJoinedProject({ ...project, role: project.ownerId === user?.id ? "owner" : "member" });
+        }
+      }
+      setLanding(target);
+      const left = user ? await fetchInvitesLeft(user.id, profile?.invite_allowance ?? 0, isAdmin) : 0;
       if (left === null || left > 0) {
         setInvitesLeft(left);
-        setStep(4);
+        setStep(2);
         return;
       }
-      navigate(redirectTo, { replace: true });
+      navigate(target, { replace: true });
     } catch {
       setFinishError(OFFLINE_LINE);
     } finally {
@@ -248,115 +166,74 @@ export function Onboarding() {
     }
   };
 
-  const stepDirection = { 0: -1, 1: -1, 2: 0, 3: 1, 4: 1 } as const;
-  const slideVariants = {
-    enter: (dir: number) => (reduceMotion ? {} : { x: dir >= 0 ? 32 : -32, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => (reduceMotion ? {} : { x: dir >= 0 ? -32 : 32, opacity: 0 }),
-  };
+  const joinLabel = invite ? `Join ${invite.ownerName.slice(0, 40)}’s Pursuit` : null;
 
   return (
-    <div className="ns-paper-theme min-h-viewport bg-[var(--paper)] py-10 sm:py-14">
-      <div className="container mx-auto max-w-3xl px-4">
-        <div className="mb-8 flex items-center gap-1.5" aria-hidden="true">
-          {[0, 1, 2, 3].map((n) => (
-            <span
-              key={n}
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                n <= step ? "bg-[var(--coral-deep)]" : "bg-[var(--line)]"
-              }`}
-            />
-          ))}
-        </div>
+    <div className="ns-afterhours min-h-viewport bg-background">
+      <div className="mx-auto flex min-h-viewport max-w-md flex-col px-4 pt-10 pb-6">
+        {step === 0 && (
+          <NameStep
+            value={nameInput}
+            onChange={(v) => {
+              setNameTouched(true);
+              setNameInput(v);
+              setNameError(null);
+            }}
+            error={nameError}
+            saving={savingName}
+            termsNeeded={termsNeeded}
+            termsAgreed={termsAgreed}
+            onTermsChange={setTermsAgreed}
+            onContinue={() => void saveName()}
+          />
+        )}
 
-        <AnimatePresence mode="wait" custom={stepDirection[step]} initial={false}>
-          <motion.div
-            key={step}
-            custom={stepDirection[step]}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={reduceMotion ? { duration: 0 } : SPRING}
-          >
-            {step === 0 && (
-              <NameStep
-                value={nameInput}
-                onChange={(v) => {
-                  setNameTouched(true);
-                  setNameInput(v);
-                  setNameError(null);
-                }}
-                error={nameError}
-                saving={savingName}
-                termsNeeded={termsNeeded}
-                termsAgreed={termsAgreed}
-                onTermsChange={setTermsAgreed}
-                onContinue={() => void saveName()}
-              />
+        {step === 1 && (
+          <>
+            <motion.p initial={PAGE_FROM} animate={PAGE_TO} transition={page} className="font-[family-name:var(--font-display)] text-lead font-extrabold text-accent-text">
+              Soosh
+            </motion.p>
+
+            {invite && (
+              <motion.div
+                initial={PAGE_FROM}
+                animate={PAGE_TO}
+                transition={page}
+                className="mt-6 flex items-center gap-3 rounded-card border border-accent bg-card p-4"
+              >
+                <PersonAvatar name={invite.ownerName} src={invite.ownerAvatar} size="size-12" />
+                <p className="text-body font-semibold">{`${invite.ownerName.slice(0, 60)} invited you to ${invite.title.slice(0, 150)}`}</p>
+              </motion.div>
             )}
 
-            {step === 1 &&
-              (onboardingUsesMainForm ? (
-                <Log onboarding={{ onDone: () => goToStep(2) }} />
-              ) : (
-                <FirstMomentStep onContinue={() => goToStep(2)} />
-              ))}
+            <motion.h1
+              initial={PAGE_FROM}
+              animate={PAGE_TO}
+              transition={page}
+              className="mt-8 font-[family-name:var(--font-display)] text-display font-extrabold"
+            >
+              What do you want more of?
+            </motion.h1>
+            <p className="mt-3 mb-6 text-body text-muted-foreground">Pick a few. We’ll show you things to do this week, and who’s doing them.</p>
 
-            {step === 2 && (
-              <>
-                <h1 className="mb-1 text-title sm:text-display" style={{ fontFamily: "var(--font-serif)" }}>
-                  What are you into?
-                </h1>
-                <p className="mb-6 text-small text-[var(--ink-soft)]">
-                  Add a few tags, as specific as you like.
+            <MoodsCityForm moods={moods} city={city} onMoods={setMoods} onCity={(c) => { setCityTouched(true); setCity(c); }} />
+
+            <div className="sticky bottom-0 mt-auto flex flex-col items-center gap-3 bg-background pt-8 pb-[max(0.5rem,var(--safe-bottom,0px))]">
+              {finishError && (
+                <p role="alert" className="text-caption text-accent-text">
+                  {finishError}
                 </p>
+              )}
+              {moods.length === 0 && <p className="text-caption text-muted-foreground">Pick at least one</p>}
+              <PillButton className="w-full" disabled={moods.length === 0 || finishing} onClick={() => void finish()}>
+                {joinLabel ?? "Show me what to do"}
+              </PillButton>
+              <p className="text-caption text-muted-foreground">Takes 10 seconds. Change it any time.</p>
+            </div>
+          </>
+        )}
 
-                <TagsField
-                  value={tags}
-                  onChange={setTags}
-                  placeholder="Pottery, sourdough, bouldering"
-                  chipLayoutIdPrefix={TAG_LAYOUT_PREFIX}
-                />
-
-                <div className="mt-8 flex justify-end">
-                  <Button variant="coral" onClick={() => goToStep(3)}>
-                    Continue
-                  </Button>
-                </div>
-              </>
-            )}
-
-            {step === 3 && (
-              <CoverStep
-                avatar={avatar}
-                onAvatarChange={setAvatar}
-                title={title}
-                onTitleChange={(v) => {
-                  setTitleTouched(true);
-                  setTitle(v);
-                }}
-                tagline={tagline}
-                onTaglineChange={setTagline}
-                textureIndex={textureIndex}
-                onTextureChange={setTextureIndex}
-                tags={tags}
-                reduceMotion={reduceMotion}
-                onContinue={() => void finish()}
-                onSkip={skipCover}
-                finishing={finishing}
-                finishError={finishError}
-              />
-            )}
-
-            {step === 4 && (
-              <OnboardingInviteCard
-                invitesLeft={invitesLeft}
-                onDone={() => navigate(redirectTo, { replace: true })}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {step === 2 && <OnboardingInviteCard invitesLeft={invitesLeft} onDone={() => navigate(landing, { replace: true })} />}
       </div>
     </div>
   );
@@ -393,7 +270,7 @@ function NameStep({
       <h1 className="mb-1 text-title sm:text-display" style={{ fontFamily: "var(--font-serif)" }}>
         What should people call you?
       </h1>
-      <p className="mb-6 text-small text-[var(--ink-soft)]">This is how your name shows on your Shelf.</p>
+      <p className="mb-6 text-small text-[var(--muted-foreground)]">This is how your name shows on your Shelf.</p>
 
       <Label htmlFor="onboarding-name" className="mb-2 block">
         Name
@@ -407,10 +284,10 @@ function NameStep({
         autoFocus
         aria-invalid={!!error}
       />
-      {error && <p className="mt-2 text-caption text-[var(--coral-text)]">{error}</p>}
+      {error && <p className="mt-2 text-caption text-[var(--accent-text)]">{error}</p>}
 
-      <div className="mt-6 rounded-card border border-[var(--line)] bg-[var(--paper-raised)] p-5" aria-live="polite">
-        <p className="mb-1 text-caption text-[var(--ink-soft)]">Your Shelf</p>
+      <div className="mt-6 rounded-card border border-[var(--border)] bg-[var(--card)] p-5" aria-live="polite">
+        <p className="mb-1 text-caption text-[var(--muted-foreground)]">Your Shelf</p>
         <p className="break-words text-title leading-tight" style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>
           {shown || "Your name"}
         </p>
@@ -423,165 +300,10 @@ function NameStep({
       )}
 
       <div className="mt-8 flex justify-end">
-        <Button busy={saving} type="submit" variant="coral" disabled={saving || (termsNeeded && !termsAgreed)}>
+        <Button busy={saving} type="submit" variant="default" disabled={saving || (termsNeeded && !termsAgreed)}>
           Continue
         </Button>
       </div>
     </form>
-  );
-}
-
-/**
- * Step 2, rendered as the actual cover layout — full-bleed background, name
- * and tagline overlaid at the bottom, exactly like Studio.tsx's own cover
- * state — rather than a form with labeled boxes. The one screen in
- * onboarding meant to feel considered: each piece (avatar, background,
- * title, tagline) settles into place with a small spring as it's filled in,
- * instead of the page just snapping into its final state.
- */
-function CoverStep({
-  avatar,
-  onAvatarChange,
-  title,
-  onTitleChange,
-  tagline,
-  onTaglineChange,
-  textureIndex,
-  onTextureChange,
-  tags,
-  reduceMotion,
-  onContinue,
-  onSkip,
-  finishing,
-  finishError,
-}: {
-  avatar: string | undefined;
-  onAvatarChange: (next: string | undefined) => void;
-  title: string;
-  onTitleChange: (next: string) => void;
-  tagline: string;
-  onTaglineChange: (next: string) => void;
-  textureIndex: number;
-  onTextureChange: (next: number) => void;
-  tags: string[];
-  reduceMotion: boolean;
-  onContinue: () => void;
-  onSkip: () => void;
-  finishing: boolean;
-  finishError: string | null;
-}) {
-  const displayName = title.trim() || "You";
-  const Chip = reduceMotion ? "span" : motion.span;
-  const chipProps = (tag: string) =>
-    reduceMotion ? {} : { layout: true, layoutId: `${TAG_LAYOUT_PREFIX}${tag}` };
-
-  // Assembling entrance: avatar, then title, then tagline, then the texture
-  // picker — a short stagger so the cover visibly comes together rather
-  // than appearing all at once. Skipped entirely under reduced motion.
-  const settle = (delay: number) =>
-    reduceMotion
-      ? {}
-      : {
-          initial: { opacity: 0, y: 10 },
-          animate: { opacity: 1, y: 0 },
-          transition: { ...SPRING, delay },
-        };
-
-  return (
-    <div className="relative overflow-hidden rounded-card border border-[var(--line)]">
-      <div className="relative aspect-[4/5] w-full sm:aspect-[16/10]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={textureIndex}
-            className="absolute inset-0"
-            style={{ background: COVER_TEXTURES[textureIndex].css }}
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={reduceMotion ? undefined : { opacity: 0 }}
-            transition={reduceMotion ? { duration: 0 } : SPRING}
-          />
-        </AnimatePresence>
-        <div className="absolute inset-0 bg-scrim" />
-
-        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
-          <motion.div {...settle(0)} className="mb-4 inline-block rounded-card bg-[var(--paper-raised)]/90 p-2.5 backdrop-blur-sm">
-            <AvatarPicker compact name={displayName} url={avatar} onChange={onAvatarChange} />
-          </motion.div>
-
-          <motion.p {...settle(0.05)} className="mb-1 text-caption tracking-[0.16em] text-on-media/90">
-            Let’s set the scene
-          </motion.p>
-
-          <motion.div {...settle(0.1)}>
-            <input
-              value={title}
-              onChange={(e) => onTitleChange(e.target.value)}
-              placeholder="Your name"
-              maxLength={60}
-              className="w-full max-w-lg border-none bg-transparent text-display leading-tight text-on-media outline-none placeholder:text-on-media/50"
-              style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
-            />
-          </motion.div>
-
-          <motion.div {...settle(0.15)}>
-            <input
-              value={tagline}
-              onChange={(e) => onTaglineChange(e.target.value)}
-              placeholder="What’s this about? (optional)"
-              maxLength={160}
-              className={`mt-2 w-full max-w-md border-b border-dashed bg-transparent text-body italic text-on-media outline-none placeholder:text-on-media/60 focus:border-on-media/70 sm:text-lead ${
-                tagline ? "border-transparent" : "border-on-media/40"
-              }`}
-              style={{ fontFamily: "var(--font-serif)" }}
-            />
-          </motion.div>
-
-          {tags.length > 0 && (
-            <motion.div {...settle(0.2)} className="mt-3 flex flex-wrap gap-1.5">
-              {tags.map((tag) => (
-                <Chip
-                  key={tag}
-                  {...chipProps(tag)}
-                  className="rounded-control border border-on-media/30 bg-scrim-solid/20 px-2.5 py-1 text-caption text-on-media/90"
-                >
-                  {tag}
-                </Chip>
-              ))}
-            </motion.div>
-          )}
-
-          <motion.div {...settle(0.25)} className="mt-5">
-            <p className="mb-1.5 text-caption text-on-media/90">Background</p>
-            <div className="flex gap-2">
-              {COVER_TEXTURES.map((texture, i) => (
-                <button
-                  key={texture.id}
-                  type="button"
-                  onClick={() => onTextureChange(i)}
-                  className={`h-12 w-[72px] shrink-0 overflow-hidden rounded-control ${
-                    textureIndex === i ? "border-2 border-coral-deep" : "border border-on-media/40"
-                  }`}
-                  style={{ background: texture.css }}
-                  aria-label={`Use this background`}
-                  aria-pressed={textureIndex === i}
-                />
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      <div className="flex flex-col items-end gap-2 border-t border-[var(--line)] bg-[var(--paper-raised)] p-4">
-        {finishError && <p className="text-caption text-[var(--coral-text)]">{finishError}</p>}
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" size="lg" disabled={finishing} onClick={onSkip}>
-            Start with a blank page
-          </Button>
-          <Button busy={finishing} variant="coral" size="lg" disabled={finishing} onClick={onContinue}>
-            Continue
-          </Button>
-        </div>
-      </div>
-    </div>
   );
 }

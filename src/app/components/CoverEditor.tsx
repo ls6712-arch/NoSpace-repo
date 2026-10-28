@@ -128,7 +128,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               rows={2}
               maxLength={160}
               className="mb-4 w-full resize-none rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-body italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
-              style={{ fontFamily: "var(--font-serif)" }}
+              style={{ fontFamily: "var(--font-body)" }}
             />
 
             <p className="mb-1.5 text-caption text-[var(--ink-soft)]">Cover photo</p>

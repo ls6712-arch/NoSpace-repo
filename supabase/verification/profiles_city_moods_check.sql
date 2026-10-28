@@ -1,0 +1,113 @@
+-- Soosh core loop v1, PR 2: profiles.city and profiles.moods.
+--
+-- Not a migration, nothing here alters the schema. Run this AFTER
+-- 20261030000000_profiles_city_moods.sql. Run before it, the script stops at
+-- the first check and says so ("NOT APPLIED").
+--
+-- One transaction, one do $$ ... $$ block, ends unconditionally in RAISE
+-- EXCEPTION 'RESULTS: ...' so a rollback is guaranteed. Each expected failure
+-- is its own begin...exception...end sub-block with strict sqlstate handling
+-- (23514 for a check violation, 42501 for a privilege error); anything else
+-- is recorded as 'N ERROR <sqlstate>: <message>', never as a pass. No
+-- select-into, no returning-into, no delete (per CLAUDE.md).
+--
+-- Fixed ids (a block no earlier script uses):
+--   PERSON …5001, OTHER …5002
+-- Every count and lookup is scoped to those ids.
+
+begin;
+
+do $$
+declare
+  v_i int := 0;
+  v_n int;
+  results text[] := '{}';
+  v_owner_role text;
+  v_person uuid := '00000000-0000-4000-8000-000000005001';
+  v_other uuid := '00000000-0000-4000-8000-000000005002';
+begin
+  v_owner_role := current_user;
+
+  if not exists (
+    select 1 from information_schema.columns c
+    where c.table_schema = 'public' and c.table_name = 'profiles' and c.column_name in ('city', 'moods')
+    having count(*) = 2
+  ) then
+    raise exception 'RESULTS: NOT APPLIED (run 20261030000000_profiles_city_moods.sql first, nothing was created)';
+  end if;
+
+  insert into auth.users
+    (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, is_super_admin)
+  values
+    (v_person, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'moods-person@moods-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    (v_other, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'moods-other@moods-test.invalid', '', now(), now(), now(), '{}', '{}', false);
+
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.profiles p where p.id in (v_person, v_other) and p.city is null and p.moods = '{}');
+  results := array_append(results, case when v_n = 2 then format('%s PASS (new profiles start with no city and no moods)', v_i)
+                                        else format('%s FAIL (expected 2 empty profiles, got %s)', v_i, v_n) end);
+
+  v_i := v_i + 1;
+  results := array_append(results, case when has_column_privilege('authenticated', 'public.profiles', 'city', 'UPDATE')
+                                          and has_column_privilege('authenticated', 'public.profiles', 'moods', 'UPDATE')
+                                          and not has_column_privilege('anon', 'public.profiles', 'city', 'UPDATE')
+                                          and not has_column_privilege('anon', 'public.profiles', 'moods', 'UPDATE')
+                                        then format('%s PASS (authenticated may update both columns, anon may not)', v_i)
+                                        else format('%s FAIL (column grants are wrong)', v_i) end);
+
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_person), true);
+
+  -- A person saves their own city and moods.
+  v_i := v_i + 1;
+  begin
+    update public.profiles p set city = 'Bangalore', moods = array['make', 'people'] where p.id = v_person;
+    v_n := (select count(*) from public.profiles p where p.id = v_person and p.city = 'Bangalore' and p.moods = array['make', 'people']);
+    results := array_append(results, case when v_n = 1 then format('%s PASS (own city and moods saved)', v_i)
+                                          else format('%s FAIL (not saved)', v_i) end);
+  exception when others then
+    results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- Not someone else's.
+  v_i := v_i + 1;
+  update public.profiles p set city = 'Elsewhere' where p.id = v_other;
+  v_n := (select count(*) from public.profiles p where p.id = v_other and p.city is not null);
+  results := array_append(results, case when v_n = 0 then format('%s PASS (cannot write another person''s city)', v_i)
+                                        else format('%s FAIL (wrote another person''s city)', v_i) end);
+
+  -- An unknown mood is refused.
+  v_i := v_i + 1;
+  begin
+    update public.profiles p set moods = array['make', 'nonsense'] where p.id = v_person;
+    results := array_append(results, format('%s FAIL (unknown mood accepted)', v_i));
+  exception
+    when check_violation then results := array_append(results, format('%s PASS (unknown mood refused)', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- A city over 80 characters is refused, and so is an empty one.
+  v_i := v_i + 1;
+  begin
+    update public.profiles p set city = repeat('x', 81) where p.id = v_person;
+    results := array_append(results, format('%s FAIL (81-character city accepted)', v_i));
+  exception
+    when check_violation then results := array_append(results, format('%s PASS (81-character city refused)', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  v_i := v_i + 1;
+  begin
+    update public.profiles p set city = '' where p.id = v_person;
+    results := array_append(results, format('%s FAIL (empty city accepted)', v_i));
+  exception
+    when check_violation then results := array_append(results, format('%s PASS (empty city refused)', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  perform set_config('role', v_owner_role, true);
+  raise exception 'RESULTS: %', array_to_string(results, ', ');
+end
+$$;
+
+rollback;

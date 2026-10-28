@@ -385,7 +385,7 @@ export function PublicProfile() {
               {tagline && (
                 <p
                   className="mt-1 max-w-md text-body italic text-muted-foreground sm:text-lead"
-                  style={{ fontFamily: "var(--font-serif)" }}
+                  style={{ fontFamily: "var(--font-body)" }}
                 >
                   {tagline}
                 </p>

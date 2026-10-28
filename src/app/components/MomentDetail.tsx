@@ -280,7 +280,7 @@ export function MomentDetail({
         </div>
 
         {!editing && !isNote && post.caption && (
-          <p className={`${CARD_CAPTION} line-clamp-none min-h-0`} style={{ fontFamily: "var(--font-serif)" }}>
+          <p className={`${CARD_CAPTION} line-clamp-none min-h-0`} style={{ fontFamily: "var(--font-body)" }}>
             {post.caption}
           </p>
         )}

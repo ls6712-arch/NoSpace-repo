@@ -387,7 +387,7 @@ export function Pursuit() {
           <div className="mb-6 rounded-card border border-border bg-card p-5">
             <p className="ns-section-kicker mb-2 text-gold-text">To day one</p>
             {view.endingNote ? (
-              <p className="whitespace-pre-wrap text-lead leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
+              <p className="whitespace-pre-wrap text-lead leading-snug" style={{ fontFamily: "var(--font-body)" }}>
                 {view.endingNote}
               </p>
             ) : (

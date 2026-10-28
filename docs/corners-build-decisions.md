@@ -91,6 +91,15 @@ Answers from the founder before PR 1. These override the entries above where the
 - The ticket serial reads "Soosh · Stub 014" in sentence case with tracking, not all caps, because style guide rule 10 bans all caps.
 - Motion values live in `src/app/lib/motionTokens.ts`; `springs.ts` re-exports them for older call sites.
 
+### PR 2: onboarding, Discover, Corner page (screens 1 to 3)
+
+- Onboarding is two steps: a name (and the Terms when needed), then "What do you want more of?" with the 8 moods and a city. The first Moment, tags, avatar and cover steps are gone from onboarding (the 10-second screen replaces them); the components are untouched. Follows are no longer derived from tags at sign-up. The default landing is `/discover` (was `/you`). Onboarding shows no top bar or tab bar.
+- `profiles.city` and `profiles.moods` (migration 20261030000000). The app also keeps both in localStorage (`soosh.interests.v1`) and reads and writes them apart from the main profile load, so nothing breaks before the migration is live.
+- Discover's front door is the header (city, search), one hero Corner (from the person's moods, preferring a Corner with an event coming up), "Your friends are doing" and Browse. Search, the People, Spaces and Marketplace tabs and All Moments stay below it until PR 5 moves search. The mood picker, Start here, Seen tonight, Rooms and the cover story are no longer on Discover.
+- Friends' Pursuits are Pursuits that people you follow share and are still working on. "Open to join" waits for the open Pursuits in PR 3.
+- Corner page: 280px hero, back link reads "← {group}" (the screen; was "Back to {group}"), name, then "90 min · At home · Good with a friend". The hero button, emoji and group link in the meta line are gone. One primary button, Do this with people, with Set a solo goal and I did this under it, fixed above the tab bar. Until the Make it a Pursuit sheet ships (PR 3), Do this with people opens the existing Start a Pursuit flow on inviting people.
+- Guide lists still hold price words ("Free to start", "Cheap"); the trust rule says guides carry none. A data pass is a separate change.
+
 ## Open
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.

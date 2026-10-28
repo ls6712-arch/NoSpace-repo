@@ -263,7 +263,7 @@ export function Studio() {
 
         <span
           className="absolute right-8 top-7 text-small italic text-on-media/90"
-          style={{ fontFamily: "var(--font-serif)" }}
+          style={{ fontFamily: "var(--font-body)" }}
         >
           {APP_NAME}
         </span>
@@ -288,7 +288,7 @@ export function Studio() {
           {coverTagline && (
             <p
               className="mt-3 max-w-md text-lead italic text-on-media/90 sm:text-title"
-              style={{ fontFamily: "var(--font-serif)" }}
+              style={{ fontFamily: "var(--font-body)" }}
             >
               {coverTagline}
             </p>
@@ -349,7 +349,7 @@ export function Studio() {
 
           <span
             className="text-small italic text-[var(--ink-soft)]"
-            style={{ fontFamily: "var(--font-serif)" }}
+            style={{ fontFamily: "var(--font-body)" }}
           >
             {spreads.length === 0 ? "0 / 0" : `${clampedIndex + 1} / ${spreads.length}`}
           </span>
@@ -393,7 +393,7 @@ export function Studio() {
                   <div className="pointer-events-none absolute inset-0 bg-scrim" />
                   <p
                     className="absolute inset-x-0 bottom-0 p-5 text-lead italic text-on-media sm:text-title"
-                    style={{ fontFamily: "var(--font-serif)" }}
+                    style={{ fontFamily: "var(--font-body)" }}
                   >
                     {hero.caption}
                   </p>

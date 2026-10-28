@@ -58,7 +58,7 @@ export function IsThisPartOfSomething({ post, onDone }: { post: Post; onDone: ()
 
   return (
     <div className="rounded-card border border-border bg-card p-4">
-      <p className="text-body" style={{ fontFamily: "var(--font-serif)" }}>
+      <p className="text-body" style={{ fontFamily: "var(--font-body)" }}>
         Is this part of something?
       </p>
       <Input
