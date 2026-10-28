@@ -18,14 +18,14 @@ describe("the 18 categories", () => {
       }
     }
     const total = hobbies.reduce((n, h) => n + h.subItems.length, 0);
-    expect(total).toBe(149);
+    expect(total).toBe(161);
   });
 
   it("list each distinct Corner once, so the three duplicates are merged", () => {
     const listed = CORNER_CATEGORIES.flatMap((c) => cornersInCategory(c.slug).map((x) => x.cornerSlug));
     const builtIn = new Set(hobbies.flatMap((h) => h.subItems.map((s) => s.slug)));
-    // 146 distinct built-in slugs, plus the one database-only Corner (storytelling).
-    expect(builtIn.size).toBe(146);
+    // 158 distinct built-in slugs, plus the one database-only Corner (storytelling).
+    expect(builtIn.size).toBe(158);
     expect(listed).toHaveLength(builtIn.size + 1);
     expect(new Set(listed).size).toBe(listed.length);
     for (const dup of ["trading-cards", "nature-journaling", "outdoor-photography"]) {

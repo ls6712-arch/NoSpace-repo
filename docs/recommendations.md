@@ -27,7 +27,7 @@ changes the order of rows and cards, for the person looking.
 | Step | Here |
 |---|---|
 | Signals | `my_corner_affinity()` (migration `20261029000000`): your own Moments (private ones too, only for you), Pursuits, likes and saves of public Moments, followed Corners, joined Spaces, "I’m going" RSVPs. Each is weighted (Pursuit 4, Moment 3, "I’m going" 2.5, save and follow and Space 2, like 1.5) and fades with a 45 day half-life. |
-| Candidates | Every one of the 146 Corners gets a score. |
+| Candidates | Every one of the 158 Corners gets a score. |
 | Similar to what you do | The taste profile is your 6 strongest Corners. A Corner's content score is its similarity to them (`cornerSimilarity.ts`: moods, kind of pursuit, solo or together, indoors or out, start with what you have, group of the 18, setting, time). This is how "you do Pottery" lifts Ceramics, which you never touched. |
 | People like you | `peers`: for each other person with public Moments in the last 90 days, how many Corners they share with yours (cosine), summed over the people who post in a Corner. Only counted when 2 or more different people contribute. |
 | Trending | `trending`: how many different people posted publicly in a Corner in 30 days. Only counted at 2 or more people. |
