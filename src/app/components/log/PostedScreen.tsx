@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { Ticket } from "../stub/Ticket";
 import { PillButton } from "../ui/PillButton";
+import { Chip } from "../ui/Chip";
+import type { CornerSuggestion } from "../../lib/cornerSuggestions";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { fetchLovers, fetchStubForPost, type StubRow } from "../../lib/stubs";
 import { fetchNextSession, fetchOpenPursuits } from "../../lib/openPursuits";
@@ -44,6 +46,8 @@ export function PostedScreen({
   pursuit,
   place,
   undo,
+  cornerChoices,
+  onAddCorner,
   onDone,
 }: {
   postId: number | null;
@@ -52,8 +56,12 @@ export function PostedScreen({
   pursuit?: { id: string; done: number; total: number; otherNames: string[] };
   place?: string;
   undo?: { onUndo: () => void; busy: boolean; error: string | null };
+  /** Up to three Corners to offer when the Moment has none. Nothing is added until one is tapped. */
+  cornerChoices?: CornerSuggestion[];
+  onAddCorner?: (c: CornerSuggestion) => Promise<boolean>;
   onDone?: () => void;
 }) {
+  const [cornerState, setCornerState] = useState<"offer" | "skipped" | { added: string } | "failed">("offer");
   const [stub, setStub] = useState<StubRow | null>(null);
   const [stubSettled, setStubSettled] = useState(!pursuit);
   const [lover, setLover] = useState<{ name: string; avatarUrl?: string } | null>(null);
@@ -189,6 +197,41 @@ export function PostedScreen({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {(typeof cornerState === "object" || (!corner && cornerChoices && cornerChoices.length > 0)) && onAddCorner && cornerState !== "skipped" && (
+          <section aria-labelledby="add-corner" className="flex flex-col gap-3">
+            {typeof cornerState === "object" ? (
+              <p role="status" className="text-body text-muted-foreground">{`Added to ${cornerState.added}`}</p>
+            ) : (
+              <>
+                <h2 id="add-corner" className="text-lead font-semibold">
+                  Add it to a Corner
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {(cornerChoices ?? []).map((c) => (
+                    <Chip
+                      key={`${c.spaceSlug}/${c.slug}`}
+                      onClick={async () => {
+                        const ok = await onAddCorner(c);
+                        setCornerState(ok ? { added: c.name } : "failed");
+                      }}
+                    >
+                      {c.name}
+                    </Chip>
+                  ))}
+                  <button type="button" onClick={() => setCornerState("skipped")} className="min-h-11 px-3 text-small font-semibold text-muted-foreground underline underline-offset-4">
+                    Skip
+                  </button>
+                </div>
+                {cornerState === "failed" && (
+                  <p role="alert" className="text-caption text-accent-text">
+                    Couldn’t add it. Try again.
+                  </p>
+                )}
+              </>
+            )}
+          </section>
+        )}
 
         {rows.length > 0 && (
           <section aria-labelledby="whats-next" className="flex flex-col gap-3">

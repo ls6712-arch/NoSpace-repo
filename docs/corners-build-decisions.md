@@ -126,6 +126,13 @@ Answers from the founder before PR 1. These override the entries above where the
 - **Multi-photo cards** use SnapCarousel inside the Home card. The shared `PostMediaCarousel` is unchanged, so the Moment page and grids behave as before.
 - **Contrast.** Photo chips on Log sit on a 80% solid black scrim (12.6:1 over a white photo). The Home cards have no text over photos.
 
+### Corner on a Moment (Oct 28)
+
+- Founder rule: a Corner is never assigned without the user tapping something that carries it. Choosing an Activity, choosing a Pursuit that has a Corner (in Counts toward, or by opening Log from it) and a Corner's own "I did this" link each count as that tap. A Pursuit does not override a Corner already picked on the Activity row.
+- When nothing picked carries a Corner, Posted offers up to three chips, one tap to add, with Skip. Order: Corners the person has posted in (most recent Moment first), then Corners they follow, then the most-posted Corners in their city in the last 7 days. Never alphabetical, each Corner once. With no history, follows or city data there are no chips.
+- "In their city" is read from public Moments whose place names the city (`location_name` contains it; Moments with the place hidden are left out), because Moments have no city column. It runs only when the first two sources do not fill three chips, and a failure just means fewer chips. A city column or an RPC would be more exact and is a follow-up.
+- A Moment with no Corner keeps `corner` and `sub_hobby` empty. Home shows no Corner in its line for it.
+
 ## Open
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.

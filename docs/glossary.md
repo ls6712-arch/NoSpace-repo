@@ -362,3 +362,14 @@ Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
 | Invite on WhatsApp / Find contacts | The two buttons on that card |
 | Happening near you this week | Events in open Spaces in the next 7 days |
 | Follow a few Spaces | Three open Spaces to look at |
+
+### Corner on a Moment (Oct 28, 2026)
+
+| Term | Meaning |
+|---|---|
+| Add it to a Corner | Heading on Posted, shown only when the Moment has no Corner. Up to three chips follow, then Skip |
+| Added to {Corner} | Replaces the chips after one is tapped |
+| Skip | Dismisses the chips. The Moment stays without a Corner |
+| Couldn’t add it. Try again. | Shown if the save failed |
+
+A Corner is never guessed for a person. It comes from something they chose that carries one: the Activity row, a Pursuit (picked in Counts toward, or the one Log was opened from), a Corner's own "I did this" link, or a tap on one of these chips. The chips show only when nothing picked carries a Corner.

@@ -29,6 +29,7 @@ import { classifyMomentType } from "../lib/momentType";
 import { convertHeicFiles, convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
+import { useSocial } from "../context/SocialContext";
 import { useSettings } from "../context/SettingsContext";
 import { useRewards } from "../context/RewardsContext";
 import { addProgress, removeProgress, startProject, useJournal } from "../lib/journal";
@@ -78,6 +79,8 @@ import { Segmented } from "../components/ui/Segmented";
 import { PostedScreen, LOG_PHOTO_LAYOUT_ID, type PostedAudience } from "../components/log/PostedScreen";
 import { haptic, shared as sharedSpring, sheet as sheetSpring } from "../lib/motionTokens";
 import { withLine } from "../lib/withLine";
+import { MAX_CORNER_SUGGESTIONS, type CornerSuggestion, cornersPostedIn, fetchCityCornerCounts, followedCornerKeys, rankCornerSuggestions, topCityCorners } from "../lib/cornerSuggestions";
+import { useInterests } from "../lib/interests";
 import { Camera as CameraGlyph, ChevronRight } from "lucide-react";
 
 /**
@@ -239,7 +242,7 @@ function ForSaleComingSoon({ className = "" }: { className?: string }) {
 
 export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}) {
   const [searchParams] = useSearchParams();
-  const { addPost, deletePost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
+  const { addPost, updatePost, myPosts, deletePost, mediaError, clearMediaError, saveError, clearSaveError } = useContent();
   const { user, profile, isConfigured } = useAuth();
   const { defaultVisibility, defaultVisibilityLoaded } = useSettings();
   const rewards = useRewards();
@@ -300,10 +303,10 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // still set above via TagsField's Corner-name matching) and filed under
   // the Gift-making Corner (this) at once.
   //
-  // Required now (spec change: "Corners carry discovery" — a Moment always
-  // needs one). Only pre-filled from context the person chose: inside a
-  // Pursuit, its own Corner; arriving from a Corner's own "create" link
-  // (?sub=). Otherwise empty, never guessed from their last Moment.
+  // Optional. Set by something the person chose that carries a Corner: the
+  // Activity row, a Pursuit (picked in Counts toward, or the one Log was opened
+  // from), a Corner's own "create" link (?sub=), or a chip on Posted. Never
+  // guessed from tags or the last Moment.
   const [corner, setCorner] = useState<string>(() => {
     if (initialPursuit?.subHobby) return initialPursuit.subHobby;
     return searchParams.get("sub") ?? "";
@@ -893,6 +896,29 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     return `+${formatAmount(loggedAmount)} ${unitFor(selectedMeasure, loggedAmount)} · ${formatAmount(sum.current)} of ${targetText(selectedMeasure)}`;
   };
 
+  // Chips for Posted when the Moment has no Corner: Corners you have posted in,
+  // then ones you follow, then your city's most-posted this week.
+  const social = useSocial();
+  const { city: myCity } = useInterests();
+  const [cornerChoices, setCornerChoices] = useState<CornerSuggestion[]>([]);
+  useEffect(() => {
+    if (screen !== "posted" || corner) return;
+    let live = true;
+    const postedIn = cornersPostedIn(myPosts);
+    const followed = followedCornerKeys(social.followedHobbies);
+    const rank = (inCity: string[]) => rankCornerSuggestions({ postedIn, followed, inCity });
+    setCornerChoices(rank([]));
+    // The city list only matters when the first two do not fill three chips.
+    if (postedIn.length + followed.length < MAX_CORNER_SUGGESTIONS && myCity) {
+      void fetchCityCornerCounts(myCity).then((counts) => live && setCornerChoices(rank(topCityCorners(counts))));
+    }
+    return () => {
+      live = false;
+    };
+    // Chips are decided once, when Posted appears.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
+
   const publish = async () => {
     if (saving) return;
     if (audience === "private") {
@@ -1358,6 +1384,17 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               : undefined
           }
           place={locationName.trim() || undefined}
+          cornerChoices={corner ? [] : cornerChoices}
+          onAddCorner={async (c) => {
+            if (savedPostId == null) return false;
+            const ok = await updatePost(savedPostId, { corner: c.slug, subHobby: c.slug, hobbySlug: c.spaceSlug });
+            if (ok) {
+              setCorner(c.slug);
+              setHobbySlug(c.spaceSlug);
+              setSpaceSet(true);
+            }
+            return ok;
+          }}
           undo={undoTarget ? { onUndo: () => void undoSave(), busy: undoing, error: undoError } : undefined}
         />
       </div>
@@ -1582,6 +1619,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
                 setProjectId(id);
                 setProjectTitle("");
                 const picked = journal.projects.find((p) => p.id === id);
+                // Choosing a Pursuit that has a Corner counts as picking that
+                // Corner, unless one was already picked on the Activity row.
                 if (picked?.subHobby && !corner) {
                   setCorner(picked.subHobby);
                   if (picked.hobbySlug) {

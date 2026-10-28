@@ -129,6 +129,8 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
       }
       // Writes are acknowledged, never stored: each screenshot starts from the same state.
       let echo: unknown = []; try { const b = JSON.parse(req.postData() || "null"); echo = Array.isArray(b) ? b : b ? [b] : []; } catch { /* no body */ }
+      // A new Moment gets the id and time the database would give it, so the app can act on it afterwards.
+      if (method === "POST" && table === "posts" && Array.isArray(echo)) echo = echo.map((r) => ({ id: 9000 + (report.requests++ % 900), created_at: new Date().toISOString(), ...(r as AnyRow) }));
       const wantsBody = (req.headers()["prefer"] ?? "").includes("return=representation");
       if (!wantsBody) return reply(empty(method === "POST" ? 201 : 204));
       return reply((req.headers()["accept"] ?? "").includes("vnd.pgrst.object") ? json(200, (echo as unknown[])[0] ?? {}) : json(method === "POST" ? 201 : 200, echo));
