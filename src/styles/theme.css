@@ -7,22 +7,17 @@
      and then the platform UI fonts, so the swap from fallback to webfont
      doesn't reflow the page and Android, iOS and desktop all land on the
      same family once it loads. */
-  --font-heading: 'Space Grotesk', 'Space Grotesk Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Bricolage Grotesque', 'Inter Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  /* Warm high-contrast serif — used for the wordmark, people's names, and
-     hobby titles, where the app should feel like a well-made object rather
-     than a dashboard. Everything else stays on the sans stack. */
-  --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-  /* A single casual script, used only for the small marginal notes on
-     profile pages (the "someone actually wrote this" touch) — never for
-     anything that has to be read quickly or at length. */
-  --font-hand: 'Caveat', cursive;
-  /* Falls back to the app's own serif everywhere except .ns-space-theme
-     (the Space page), which repoints this to Instrument Serif — declared
-     here, not only inside that scope, so a stray var(--font-display)
-     reference elsewhere in the app still resolves to something real
-     instead of nothing. */
+  /* Core loop v1 type: two families only. Bricolage Grotesque (700-800) for
+     titles, Corner names, stub titles and big numbers; Inter for everything
+     else. The names below predate that: --font-serif is the display face the
+     wordmark, people's names and titles already use, and --font-hand the
+     marginal notes. Both now resolve to the two families, so those call
+     sites did not need to change. */
+  --font-serif: 'Bricolage Grotesque', 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-body);
   --font-display: var(--font-serif);
 
   /* Soft pastels for the quiet milestones cards. Deliberately
@@ -461,7 +456,7 @@
 
   color: var(--ink);
   background: var(--paper);
-  font-family: 'Work Sans', sans-serif;
+  font-family: var(--font-body);
 }
 
 /* Live-test fix (Sep 27): .ns-paper-theme's own raw palette above had no
@@ -564,10 +559,6 @@
   --destructive-foreground: var(--on-clay);
   --ring: var(--clay);
 
-  /* Display font for this page only — the app's own sans stays for body
-     text (--font-body untouched); this only changes what --font-display
-     resolves to, used explicitly on the name and section headings. */
-  --font-display: 'Instrument Serif', 'Fraunces', Georgia, serif;
 
   color: var(--ink);
   background: var(--cream);

@@ -78,6 +78,19 @@ Decisions made while Claude Code built Corners from claude-code-brief-corners.md
 - The Corner page meta line leads with the category as a link: "Food and drink · 90 min · At home". This replaces the hero kicker from the earlier layout brief.
 - Test Moments are listed for the founder to remove, never deleted by a session.
 
+## Core loop v1 (Oct 28; brief: Soosh core loop v1, 14 screens)
+
+Answers from the founder before PR 1. These override the entries above where they differ.
+
+- Paid Pursuits from a host link out to the host's own payment page (`space_events.booking_url`). No in-app payments.
+- Stubs: a server-issued `session` Stub per posted Moment that counts toward a Pursuit, and a `gold` Stub on completion, join the host-confirmed `event` Stub. Your own Stub count may show on You, and friend signals such as "Sneha has 4 pottery Stubs" may show in Search. Never ranked, no leaderboards. This replaces "No totals or counts of Stubs anywhere" and "never self-awarded" for these two types only.
+- Corner page: one primary button, Do this with people. "Set a solo goal" and "I did this" return as text links, replacing the Oct 28 "no self-logging" rule. "I did this" with no Pursuit gives no Stub. No price words in guides.
+- The app is dark by default; light stays a Settings option. This replaces "No dark theme" on the Corner page.
+- The brief's own text is the visual spec; `soosh-visual-spec-v1.md` and the PDF are not in the repo.
+- Fonts are Bricolage Grotesque and Inter only. `--font-serif`, `--font-heading`, `--font-hand` and `--font-display` now resolve to those two, so no call site changed. Space Grotesk, Fraunces, Work Sans, Caveat and Instrument Serif are removed.
+- The ticket serial reads "Soosh · Stub 014" in sentence case with tracking, not all caps, because style guide rule 10 bans all caps.
+- Motion values live in `src/app/lib/motionTokens.ts`; `springs.ts` re-exports them for older call sites.
+
 ## Open
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.

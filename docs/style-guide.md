@@ -13,7 +13,7 @@ and by `npm test`. Terms live in `docs/glossary.md`.
 | **Pursuit** | Something you are working toward, with countable progress. Shown on the Shelf. |
 | **Corner** | A category for discovery (Pottery, Coding, Running). |
 | **Space** | A host-created community. |
-| **Stub** | Proof you attended a Space event, issued by the host. Never self-awarded. |
+| **Stub** | A keepsake for something you did: an event a host confirmed, a Moment that counted toward a Pursuit, or a finished Pursuit. Issued by a host or by the server, never by the client. Never ranked. |
 
 Nothing else in the UI gets a capitalized name (Stub was added with the Corners home, approved Oct 26, 2026). Corners and Spaces are different
 things and are never labeled as each other. The 18 groups a Corner sits in

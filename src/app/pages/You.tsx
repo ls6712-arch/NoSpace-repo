@@ -141,7 +141,7 @@ export function You() {
                   profile?.bio?.trim() ? (
                     <p
                       className="mt-1 text-body leading-relaxed text-muted-foreground sm:text-lead"
-                      style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+                      style={{ fontFamily: "var(--font-body)", fontStyle: "italic" }}
                     >
                       {profile.bio}
                     </p>

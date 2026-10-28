@@ -377,7 +377,7 @@ export function PublicProfile() {
               {bio && (
                 <p
                   className="mt-1.5 max-w-md text-body leading-relaxed text-muted-foreground sm:text-lead"
-                  style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+                  style={{ fontFamily: "var(--font-body)", fontStyle: "italic" }}
                 >
                   {bio}
                 </p>

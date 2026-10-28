@@ -1,11 +1,12 @@
 import { useRef, type ReactNode } from "react";
 import { motion, useInView } from "motion/react";
+import { PAGE_FROM, PAGE_TO, page, staggerDelay } from "../../lib/motionTokens";
 
 /**
- * Entry reveal (spec v1): fade from 0 to 1 and rise 12px over 280ms, ease-out,
- * once only. Stagger a list by passing each item's `index` (40ms apart).
- * Under reduced motion `<MotionConfig reducedMotion="user">` removes the rise
- * and leaves the fade.
+ * Entry reveal (`page` token): fade from 0 to 1 and rise 12px over 280ms,
+ * ease-out, once only. Stagger a list by passing each item's `index` (40ms
+ * apart). Under reduced motion `<MotionConfig reducedMotion="user">` removes
+ * the rise and leaves the fade.
  */
 export function Reveal({
   children,
@@ -21,9 +22,9 @@ export function Reveal({
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 12 }}
-      animate={seen ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 0.28, ease: "easeOut", delay: index * 0.04 }}
+      initial={PAGE_FROM}
+      animate={seen ? PAGE_TO : undefined}
+      transition={{ ...page, delay: staggerDelay(index) }}
       className={className}
     >
       {children}
