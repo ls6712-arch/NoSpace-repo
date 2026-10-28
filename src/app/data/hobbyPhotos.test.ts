@@ -30,7 +30,7 @@ describe("Corner photos", () => {
   });
 
   it("credit the Corners added with the Corners home and every Corner in the Oct 28 photo pass", () => {
-    const added = ["boxing", "skateboarding", "kayaking", "surfing", "wild-swimming", "sauna-cold-plunge", "make-a-beat", "karaoke", "live-music", "pasta", "trivia", "improv", "volunteering"];
+    const added = ["boxing", "skateboarding", "kayaking", "surfing", "wild-swimming", "sauna-cold-plunge", "music-production", "karaoke", "live-music", "pasta", "trivia", "improv", "volunteering"];
     const pass = [
       "life-drawing", "walking-clubs", "badminton", "skating", "ultimate-frisbee", "rafting", "mahjong", "letter-writing", "city-walks", "film-clubs", "food-tours", "hyrox",
       "crochet", "3d-printing", "sourdough", "bbq", "composting", "djing",
@@ -39,5 +39,12 @@ describe("Corner photos", () => {
     ];
     expect([...added, ...pass].filter((s) => !(s in CREDITS))).toEqual([]);
     expect(Object.keys(CREDITS).sort()).toEqual([...added, ...pass].sort());
+  });
+
+  it("keeps the make-a-beat photo and credit on music-production, the Corner it was merged into", () => {
+    expect(photoCredit("music-production")?.credit).toBe("Veikko Venemies");
+    expect(photoCredit("music-production")?.source).toBe("https://unsplash.com/photos/obU1Dubo3vM");
+    expect(hasHobbyPhoto("make-a-beat")).toBe(false);
+    expect(photoCredit("make-a-beat")).toBeUndefined();
   });
 });

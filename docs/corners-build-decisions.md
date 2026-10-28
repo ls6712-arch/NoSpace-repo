@@ -80,6 +80,7 @@ Decisions made while Claude Code built Corners from claude-code-brief-corners.md
 - Corner photo pass (Oct 28): photos for the 12 Corners that had none, and replacements for 6 broken and 16 off-topic or logo photos (crochet, 3D printing, sourdough, BBQ, composting, DJing; embroidery, woodworking, paper crafts, model-making, drawing, songwriting, calligraphy, sculpture, pickleball, antiques, dance, trading cards, D&D, choir, fragrance). Every one has a `CREDITS` entry under the Unsplash License. Rule: show the activity itself, no brand logos, no known characters. Hyrox's photo shows the Hyrox sign, which is the activity's own name and was approved. Badminton took the photo pickleball had (it was a badminton shot).
 - Rooms is retired (UI removed Oct 28, 2026): the glossary marks Rooms, Who's in where and See all rooms as retired, and the unused `components/door/Rooms.tsx` is deleted.
 - `npm run check:photos` (`scripts/check-corner-photos.ts`) requests every browsable Corner's photo and lists non-200 responses and Corners with no photo. It needs network access to images.unsplash.com.
+- Merges, round 2 (Oct 28, founder's picks, alias map only): Kombucha into Fermentation, Illustration into Drawing, Watercolor into Painting, Singing into Choir, Make a beat into Music production, Toys into Brick building, Miniatures into Model-making, Furniture flipping into Upcycling (Restoration now points at Upcycling, not Furniture flipping), Backpacking into Hiking, Web design into Coding, Road trips and Exploration into Travel. Kept apart: City walks and Walking clubs, Camping, Skating and Skateboarding. Drawing and Music production take the guides of Illustration and Make a beat, reworded to cover the whole Corner. Relabels (slugs unchanged): Choir and singing, Models and miniatures, Roller and ice skating.
 
 ## Core loop v1 (Oct 28; brief: Soosh core loop v1, 14 screens)
 
@@ -150,5 +151,5 @@ Answers from the founder before PR 1. These override the entries above where the
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.
 - Founder to review Trivia and Improv photos.
-- Make a beat's credited photo moves to Music production when the Make a beat merge lands.
+- Make a beat's credited photo and `CREDITS` entry moved to Music production with the Make a beat merge.
 - Next briefs: event ideas as host prompts ("Ideas for your next event"); wave 2 once members ask for those Corners.

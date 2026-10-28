@@ -166,12 +166,11 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
     coverAlt: "Friends sharing a loaf of bread fresh from the oven", photoSearch: "baking bread kitchen friends",
   }),
   c({
-    slug: "illustration", spaceSlug: "art-creative", name: "Illustration", emoji: "🖌️", durationMinutes: 90, setting: "home",
-    steps: ["Use a tablet or an app", "Trace a photo to start", "Learn layers"],
-    needs: ["A tablet or a computer", "A drawing app", "A stylus helps"],
+    slug: "drawing", spaceSlug: "art-creative", name: "Drawing", emoji: "🖍️", durationMinutes: 60, setting: "anywhere",
+    steps: ["Sketch what is on your desk or out the window", "Try one new tool, such as ink, charcoal or a tablet"],
+    needs: ["Paper and a pencil or pen", "A tablet and a drawing app, if you like to draw on screen", "A table, a park bench or any spot with light"],
     worth: ["A pen and paper are enough", "A sketch takes minutes", "Your style shows up with practice", "Easy to share one drawing"],
-    coverAlt: "An artist drawing on a tablet at a shared desk", photoSearch: "digital illustration tablet artist",
-    traits: { kind: "making", together: "either", haveIt: false },
+    coverAlt: "Hands sketching in a notebook beside pencils and a tablet", photoSearch: "sketching notebook pencils",
   }),
   c({
     slug: "dance", spaceSlug: "sports-fitness", name: "Dance", emoji: "🕺", durationMinutes: 90, setting: "anywhere",
@@ -235,13 +234,6 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
     traits: { kind: "experience", together: "together", haveIt: false },
   }),
   c({
-    slug: "make-a-beat", spaceSlug: "music", name: "Make a beat", emoji: "🎧", durationMinutes: 60, setting: "home",
-    steps: ["Lay down drums first", "Add a bassline and melody"],
-    needs: ["A phone or computer", "A beat-making app", "Headphones"],
-    worth: ["A phone app is enough to start", "A loop takes minutes", "No instrument needed", "Share it with one friend"],
-    coverAlt: "Two friends making a beat on a pad controller and laptop", photoSearch: "making beats studio friends",
-  }),
-  c({
     slug: "karaoke", spaceSlug: "music", name: "Karaoke", emoji: "🎙️", durationMinutes: 120, setting: "anywhere",
     steps: ["Gather friends", "Pick one silly song"],
     needs: ["A microphone, or just a speaker", "A karaoke bar, a booked room or your living room", "A group of friends"],
@@ -258,7 +250,14 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
     traits: { kind: "experience", together: "together", haveIt: false },
   }),
   c({
-    slug: "choir", spaceSlug: "music", name: "Choir", emoji: "🎶", durationMinutes: 90, setting: "anywhere",
+    slug: "music-production", spaceSlug: "music", name: "Music production", emoji: "🎧", durationMinutes: 90, setting: "home",
+    steps: ["Lay down drums first", "Add a bassline and melody"],
+    needs: ["A phone or computer", "A beat-making app or music software", "Headphones"],
+    worth: ["A phone app is enough to start", "A loop takes minutes", "No instrument needed", "A loop can grow into a full track"],
+    coverAlt: "Two friends producing a track on a pad controller and laptop", photoSearch: "music production studio friends",
+  }),
+  c({
+    slug: "choir", spaceSlug: "music", name: "Choir and singing", emoji: "🎶", durationMinutes: 90, setting: "anywhere",
     steps: ["Show up and listen", "Join a section"],
     needs: ["Yourself and a voice", "A rehearsal room, often a hall or church", "A group that sings in parts"],
     worth: ["Sing with others", "No audition at many choirs", "Music is handed to you", "A weekly time to look forward to"],
@@ -368,7 +367,7 @@ c({
   coverAlt: "Friends playing doubles badminton on an indoor court", photoSearch: "badminton doubles indoor court",
 }),
 c({
-  slug: "skating", spaceSlug: "sports-fitness", name: "Skating", emoji: "🛼", durationMinutes: 60, setting: "anywhere",
+  slug: "skating", spaceSlug: "sports-fitness", name: "Roller and ice skating", emoji: "🛼", durationMinutes: 60, setting: "anywhere",
   steps: ["Learn to stop before you learn speed", "Join a group skate or roller disco night"],
   needs: ["Skates, rentable at most rinks", "A helmet and wrist guards for roller skating", "A rink or a smooth, quiet path", "Rink entry applies"],
   worth: ["Music, lights and laps at a rink", "Roller and ice share one scene", "Group skates welcome beginners", "Rentals mean no big buy-in"],

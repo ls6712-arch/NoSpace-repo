@@ -129,7 +129,7 @@ export const hobbies: Hobby[] = [
       sub("Dance"), sub("Pickleball"), sub("Padel"), sub("Tennis"),
       sub("Swimming"), sub("Martial arts"), sub("Strength training"), sub("Basketball"),
       sub("Soccer"), sub("Volleyball"), sub("Boxing"), sub("Skateboarding"),
-      sub("Hyrox"), sub("Walking clubs"), sub("Badminton"), sub("Skating"), sub("Ultimate frisbee"),
+      sub("Hyrox"), sub("Walking clubs"), sub("Badminton"), sub("Roller and ice skating", "skating"), sub("Ultimate frisbee"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
@@ -179,7 +179,7 @@ export const hobbies: Hobby[] = [
       sub("Pottery"), sub("Knitting"), sub("Crochet"), sub("Embroidery"),
       sub("Sewing"), sub("Woodworking"), sub("Jewelry-making"), sub("Candle-making"),
       sub("Soap-making"), sub("Upcycling"), sub("Paper crafts"), sub("Zines"),
-      sub("Scrapbooking"), sub("Model-making"), sub("Miniatures"), sub("Makerspaces"),
+      sub("Scrapbooking"), sub("Models and miniatures", "model-making"), sub("Miniatures"), sub("Makerspaces"),
     ],
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
@@ -301,7 +301,7 @@ export const hobbies: Hobby[] = [
     description: "Instruments, singing, songwriting, DJing, music production.",
     subItems: [
       sub("Music production"), sub("Singing"), sub("Guitar"), sub("Songwriting"),
-      sub("DJing"), sub("Make a beat"), sub("Karaoke"), sub("Live music"), sub("Choir"),
+      sub("DJing"), sub("Make a beat"), sub("Karaoke"), sub("Live music"), sub("Choir and singing", "choir"),
     ],
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
@@ -638,7 +638,7 @@ export function titleCaseSlug(slug: string) {
 export function findSpaceForInterest(interest: string) {
   const q = interest.trim().toLowerCase();
   if (!q) return undefined;
-  return allSubHobbies.find((s) => s.label.toLowerCase() === q);
+  return formerLabelTarget(q) ?? allSubHobbies.find((s) => s.label.toLowerCase() === q);
 }
 
 /**
@@ -662,7 +662,19 @@ export const MERGED_CORNERS: Readonly<Record<string, string>> = {
   "nature-outdoors/outdoor-photography": "photography-film/photography",
   "photography-film/outdoor-photography": "photography-film/photography",
   "health-wellness/mindfulness": "health-wellness/meditation",
-  "home-garden/restoration": "home-garden/furniture-flipping",
+  "home-garden/restoration": "crafts-making/upcycling",
+  "home-garden/furniture-flipping": "crafts-making/upcycling",
+  "food-cooking/kombucha": "food-cooking/fermentation",
+  "art-creative/illustration": "art-creative/drawing",
+  "art-creative/watercolor": "art-creative/painting",
+  "music/singing": "music/choir",
+  "music/make-a-beat": "music/music-production",
+  "collecting-fandom/toys": "collecting-fandom/lego",
+  "crafts-making/miniatures": "crafts-making/model-making",
+  "travel-adventure/backpacking": "nature-outdoors/hiking",
+  "tech-building/web-design": "tech-building/coding",
+  "travel-adventure/road-trips": "travel-adventure/travel",
+  "travel-adventure/exploration": "travel-adventure/travel",
   "home-garden/native-plants": "home-garden/gardening",
   "home-garden/indoor-growing": "home-garden/houseplants",
 };
@@ -686,6 +698,41 @@ export const HIDDEN_CORNERS: ReadonlySet<string> = new Set([
   "cybersecurity-learning",
   "toys",
 ]);
+
+/**
+ * Labels a kept Corner no longer carries: "Skating", "Model-making" and
+ * "Choir" before the Oct 28, 2026 relabels (lower case, to `"space/slug"` of
+ * the same Corner, whose slug did not change). The labels of merged-away
+ * Corners need no entry here; they come from MERGED_CORNERS.
+ */
+const RELABELLED_FROM: Readonly<Record<string, string>> = {
+  skating: "sports-fitness/skating",
+  "model-making": "crafts-making/model-making",
+  choir: "music/choir",
+};
+
+let formerLabels: Map<string, string> | undefined;
+
+/**
+ * The Corner that now answers to a label it used to have: a typed or saved
+ * "Singing" or "Skating" finds Choir and singing or Roller and ice skating.
+ * Covers every relabelled Corner and the label of every merged-away Corner.
+ * Exact match on the whole label, ignoring case; undefined for any other text.
+ */
+export function formerLabelTarget(text: string): (SubHobby & { hobbySlug: string }) | undefined {
+  if (!formerLabels) {
+    formerLabels = new Map(Object.entries(RELABELLED_FROM));
+    for (const [from, to] of Object.entries(MERGED_CORNERS)) {
+      const [space, slug] = from.split("/");
+      const label = allSubHobbies.find((s) => s.hobbySlug === space && s.slug === slug)?.label;
+      if (label) formerLabels.set(label.toLowerCase(), to);
+    }
+  }
+  const key = formerLabels.get(text.trim().toLowerCase());
+  if (!key) return undefined;
+  const [space, slug] = key.split("/");
+  return allSubHobbies.find((s) => s.hobbySlug === space && s.slug === slug);
+}
 
 /** The Corner kept in place of this one: itself unless it was merged away. Slugs compare in lower case. */
 export function canonicalCorner(spaceSlug: string, slug: string): { spaceSlug: string; slug: string } {
