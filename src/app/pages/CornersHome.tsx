@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
 import { Billboard, type BillboardSlide } from "../components/corners/Billboard";
+import { BrowseBy } from "../components/corners/BrowseBy";
 import { EmptyState } from "../components/StateViews";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
@@ -304,6 +305,8 @@ export function CornersHome() {
         </div>
       </section>
 
+      <BrowseBy />
+
       {rows.length === 0 ? (
         <EmptyState
           line="No Corners match those choices."
@@ -331,7 +334,9 @@ export function CornersHome() {
             <section key={cat.slug} className={SECTION_GAP} aria-labelledby={`row-${cat.slug}`}>
               <div className="mb-3 flex items-baseline justify-between gap-4">
                 <h2 id={`row-${cat.slug}`} className="text-lead font-semibold md:text-title">
-                  {cat.name}
+                  <Link to={`/browse/${cat.slug}`} className="hover:underline">
+                    {cat.name}
+                  </Link>
                 </h2>
                 <Link to={`/browse/${cat.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
                   See all

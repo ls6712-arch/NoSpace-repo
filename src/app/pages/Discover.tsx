@@ -41,6 +41,7 @@ import { CoverStory } from "../components/door/CoverStory";
 import { pickCover } from "../components/door/pickCover";
 import { MoodGrid } from "../components/door/MoodGrid";
 import { StartHere } from "../components/door/StartHere";
+import { BrowseBy } from "../components/corners/BrowseBy";
 import { useEventTickets } from "../components/door/useEventTickets";
 import { SeenTonight } from "../components/door/SeenTonight";
 import { Rooms } from "../components/door/Rooms";
@@ -548,6 +549,7 @@ export function Discover() {
                   </div>
                   {goingError && <p role="alert" className="mt-4 text-small text-destructive">{goingError}</p>}
                   <StartHere ref={startRef} cards={startCards} ticketFor={ticketFor} going={going} busyEvent={goingBusy} onGoing={onGoing} moodLine={MOOD_LINE[shownMood]} fading={shownMood !== mood} />
+                  <BrowseBy />
                   <SeenTonight posts={publicFeed} onOpen={setOpenPost} />
                   <Rooms />
                 </>

@@ -17,13 +17,16 @@ import { cornerGuide } from "../../data/cornerGuides";
 export function CornerCard({
   corner,
   subline,
+  fluid = false,
 }: {
   corner: { spaceSlug: string; slug: string; name: string };
   subline: string;
+  /** Fill the width it is given (a grid cell) instead of the fixed width a row uses. */
+  fluid?: boolean;
 }) {
   const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
   return (
-    <li className="w-60 shrink-0 snap-start md:w-72" style={cornerStyle(corner.spaceSlug, corner.slug)}>
+    <li className={fluid ? "w-full" : "w-60 shrink-0 snap-start md:w-72"} style={cornerStyle(corner.spaceSlug, corner.slug)}>
       <PressLink
         to={cornerPath(corner.spaceSlug, corner.slug)}
         className="group relative block aspect-video overflow-hidden rounded-card bg-[var(--cat)] text-on-media shadow-card transition-shadow duration-base hover:z-10 hover:shadow-glow focus-visible:shadow-glow"
