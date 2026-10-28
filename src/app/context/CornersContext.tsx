@@ -10,7 +10,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { useContent } from "./ContentContext";
-import { hobbies, titleCaseSlug } from "../data/hobbies";
+import { formerLabelTarget, hobbies, titleCaseSlug } from "../data/hobbies";
 import { postCorner } from "../data/posts";
 import { bestMatch } from "../lib/tagMatching";
 import { guessSpace } from "../lib/pursuitProgress";
@@ -499,6 +499,10 @@ export function CornersProvider({ children }: { children: ReactNode }) {
     const qNorm = q.toLowerCase();
 
     const all = hobbies.filter((h) => !h.hidden).flatMap((h) => cornersFor(h.slug));
+
+    // An old label ("Singing", "Skating") finds the Corner that took it over, never a new Corner.
+    const former = formerLabelTarget(q);
+    if (former) return { spaceSlug: former.hobbySlug, slug: former.slug, name: former.label };
 
     const exact = all.find((c) => c.name.toLowerCase() === qNorm);
     if (exact) return { spaceSlug: exact.spaceSlug, slug: exact.slug, name: exact.name };

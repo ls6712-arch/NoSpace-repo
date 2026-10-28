@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hobbies, HIDDEN_CORNERS, MERGED_CORNERS, canonicalCorner, isBrowsableCorner, mergedSlugTarget } from "../data/hobbies";
+import { hobbies, HIDDEN_CORNERS, MERGED_CORNERS, canonicalCorner, findSpaceForInterest, formerLabelTarget, isBrowsableCorner, mergedSlugTarget } from "../data/hobbies";
 import { isInCorner, postCornerKey } from "./cornerAlias";
 
 const post = (hobbySlug: string, corner?: string, subHobby?: string) => ({ hobbySlug, corner, subHobby });
@@ -64,5 +64,57 @@ describe("Moments of a merged Corner", () => {
     expect(isInCorner(post("food-cooking", "coffee"), "food-cooking", "espresso")).toBe(true);
     expect(isInCorner(post("food-cooking", "tea"), "food-cooking", "coffee")).toBe(false);
     expect(isInCorner(post("art-creative", "Ceramics"), "crafts-making", "pottery")).toBe(true);
+  });
+});
+
+describe("former labels", () => {
+  // Typed text and saved labels from before the Oct 28, 2026 merges and relabels.
+  const cases: [string, string][] = [
+    ["Skating", "sports-fitness/skating"],
+    ["Model-making", "crafts-making/model-making"],
+    ["Choir", "music/choir"],
+    ["Singing", "music/choir"],
+    ["Miniatures", "crafts-making/model-making"],
+    ["Kombucha", "food-cooking/fermentation"],
+    ["Illustration", "art-creative/drawing"],
+    ["Watercolor", "art-creative/painting"],
+    ["Make a beat", "music/music-production"],
+    ["Toys", "collecting-fandom/lego"],
+    ["Furniture flipping", "crafts-making/upcycling"],
+    ["Restoration", "crafts-making/upcycling"],
+    ["Backpacking", "nature-outdoors/hiking"],
+    ["Web design", "tech-building/coding"],
+    ["Road trips", "travel-adventure/travel"],
+    ["Exploration", "travel-adventure/travel"],
+  ];
+
+  it.each(cases)("finds the kept Corner for %s", (label, kept) => {
+    const hit = findSpaceForInterest(label);
+    expect(hit && `${hit.hobbySlug}/${hit.slug}`).toBe(kept);
+    expect(isBrowsableCorner(hit!.hobbySlug, hit!.slug)).toBe(true);
+  });
+
+  it("ignores case and spaces around the label", () => {
+    expect(findSpaceForInterest("  singing ")?.slug).toBe("choir");
+    expect(findSpaceForInterest("MODEL-MAKING")?.slug).toBe("model-making");
+  });
+
+  it("covers the label of every merged-away Corner that has one", () => {
+    for (const [from, to] of Object.entries(MERGED_CORNERS)) {
+      const [space, slug] = from.split("/");
+      const label = hobbies.find((h) => h.slug === space)?.subItems.find((s) => s.slug === slug)?.label;
+      if (!label) continue;
+      const hit = formerLabelTarget(label);
+      expect(hit && `${hit.hobbySlug}/${hit.slug}`, label).toBe(to);
+    }
+  });
+
+  it("leaves current labels and other text alone", () => {
+    expect(findSpaceForInterest("Roller and ice skating")?.slug).toBe("skating");
+    expect(findSpaceForInterest("Choir and singing")?.slug).toBe("choir");
+    expect(findSpaceForInterest("Pottery")?.slug).toBe("pottery");
+    expect(formerLabelTarget("Roller and ice skating")).toBeUndefined();
+    expect(formerLabelTarget("Pottery")).toBeUndefined();
+    expect(findSpaceForInterest("gift making")).toBeUndefined();
   });
 });
