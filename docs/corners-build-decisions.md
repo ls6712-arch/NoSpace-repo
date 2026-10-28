@@ -77,6 +77,8 @@ Decisions made while Claude Code built Corners from claude-code-brief-corners.md
 - Names: Discover is the nav section; Corners is its browse tab; a category is shown by its own name. Path: Discover > Corners > Food and drink > Pasta. Back links say "Back to Corners" (category page) and "Back to {category}" (Corner page).
 - The Corner page meta line leads with the category as a link: "Food and drink · 90 min · At home". This replaces the hero kicker from the earlier layout brief.
 - Test Moments are listed for the founder to remove, never deleted by a session.
+- Rooms is retired (UI removed Oct 28, 2026): the glossary marks Rooms, Who's in where and See all rooms as retired, and the unused `components/door/Rooms.tsx` is deleted.
+- `npm run check:photos` (`scripts/check-corner-photos.ts`) requests every browsable Corner's photo and lists non-200 responses and Corners with no photo. It needs network access to images.unsplash.com.
 
 ## Core loop v1 (Oct 28; brief: Soosh core loop v1, 14 screens)
 
