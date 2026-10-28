@@ -19,6 +19,7 @@ import { MOODS, type MoodId } from "../data/moods";
 import { postCorner } from "../data/posts";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
 import { billboardCorners } from "../lib/billboard";
+import { fillRow } from "../lib/cornerSimilarity";
 import { LENSES, MAX_LENS_CORNERS, MIN_LENS_CORNERS, interleaveRows, type LensId } from "../lib/cornerLenses";
 import { cornerSubline } from "../lib/cornerSubline";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
@@ -196,17 +197,21 @@ export function CornersHome() {
   );
 
   const order = byRow(latest);
-  const groupRows = CORNER_CATEGORIES.map((cat) => ({
-    kind: "group" as const,
-    cat,
-    corners: homeCornersIn(cat.slug).filter((c) => matches(c, picker)).sort(order),
-  })).filter((r) => r.corners.length > 0);
+  // A row never runs short: one with only a few Corners is filled up with the most similar Corners from
+  // elsewhere (see cornerSimilarity.ts), so every row reaches past the edge of the page.
+  const shown = everyCorner.filter((c) => matches(c, picker));
+  const groupRows = CORNER_CATEGORIES.map((cat) => {
+    const own = homeCornersIn(cat.slug).filter((c) => matches(c, picker)).sort(order);
+    return { kind: "group" as const, cat, corners: fillRow(own, shown) };
+  }).filter((r) => r.corners.length > 0);
   // A different way into the same Corners, woven in among the groups. A lens with too few Corners is left out.
   const lensRows = LENSES.map((lens) => ({
     kind: "lens" as const,
     lens,
-    corners: everyCorner.filter((c) => matches(c, picker) && inLens(lens.id, c, live)).sort(order).slice(0, MAX_LENS_CORNERS),
-  })).filter((r) => r.corners.length >= MIN_LENS_CORNERS);
+    corners: shown.filter((c) => inLens(lens.id, c, live)).sort(order).slice(0, MAX_LENS_CORNERS),
+  }))
+    .filter((r) => r.corners.length >= MIN_LENS_CORNERS)
+    .map((r) => ({ ...r, corners: fillRow(r.corners, shown) }));
   const rows = interleaveRows(lensRows, groupRows);
 
   const picked = picker.duration !== null || picker.mood !== null || picker.setting !== null;
