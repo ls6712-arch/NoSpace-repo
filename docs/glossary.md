@@ -130,6 +130,8 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | People into {Corner} | Heading above the Shelves of people who shared a public Moment in that Corner most recently, newest first. No counts. Not shown to signed-out or not-yet-approved visitors |
 | Members see who’s going. | The one line a signed-out or not-yet-approved visitor sees on a Corner in place of People into, Recent Moments, hosts and who is going |
 | Recent Moments | Heading above a Corner's latest public Moments |
+| Browse by | Heading over the row of 18 group tiles on the Corners home and Discover; each tile is a group's own name and opens its page. Approved in the Oct 28 brief |
+| See Spaces | The hero button on a Corner page that has Spaces and no upcoming event: scrolls to its Spaces. Approved in the Oct 28 brief |
 | Why it’s worth it | Heading above four short, plain reasons to try a Corner, on its page (copy in `docs/curated-corners.md`, never a health claim or a promise). New, for approval |
 | Your Moments | Heading on a Corner page over your own Moments in that Corner (private ones too), shown as paper cards. Only you see it. New, for approval |
 | How to start | Heading above a Corner's numbered steps. Also the label on a Discover card with no event, which shows the Corner's first step and links to the Corner |
@@ -138,7 +140,7 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | Starts in 20m | Time to the next event inside the next hour. Inside 24 hours it is "Starts in 4h"; later it is the day and time |
 | You’ve been to one of their events. | Line on a Closed Space card when you hold a Stub from that Space |
 
-The Corners pages reuse existing wording for: Create a Space (once, at the bottom of a single Corner), Start a Pursuit, Log a Moment, Show more, See all, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
+The Corners pages reuse existing wording for: Create a Space (the hero button when a Corner has no event and no Spaces, else once at the bottom of a single Corner), Show more, See all, Join Space, Request to join and Requested, I’m going, Create a Space, N Moments this month, Open / Closed, and the Moods labels.
 
 ## Moments
 

@@ -17,15 +17,12 @@ import { Reveal } from "../components/afterhours/Reveal";
 import { MomentTile } from "../components/afterhours/MomentTile";
 import { MomentDetail } from "../components/MomentDetail";
 import { type Post, postCorner } from "../data/posts";
-import {
-  cornerMeta,
-  curatedBySlug,
-  curatedCategory,
-  howToStart,
-  type CuratedCorner,
-} from "../data/curatedCorners";
-import { cornerGuide } from "../data/cornerGuides";
+import { curatedBySlug } from "../data/curatedCorners";
+import { CORNER_CATEGORIES } from "../data/cornerCategories";
+import { hasHobbyPhoto } from "../data/hobbyPhotos";
 import { cornerKey, homeCornersIn } from "../data/homeCorners";
+import { curatedModel, type CornerModel } from "../lib/cornerModel";
+import { WeekEventCard } from "../components/corners/WeekEventCard";
 import { cornerPhoto, cornerPhotoAlt, cornerPhotoCredit } from "../lib/cornerPhoto";
 import { cornerSubline } from "../lib/cornerSubline";
 import { fetchCornersLive, thisWeek, type CornerLive, type LiveEvent, type LiveSpace } from "../lib/cornersLive";
@@ -35,18 +32,21 @@ import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
 import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
 import { tieNumbers } from "../lib/typography";
+import { usePrefersReducedMotion } from "../lib/useReducedMotion";
 
 /**
- * A single curated Corner (/corners/:slug), open to signed-out and
- * not-yet-approved visitors, who see Corners, guides, Open Spaces and event
- * titles and times only (no people, Moments, hosts or Closed Spaces) and one
- * line saying members see who's going.
- * Top to bottom: the next event, this week's events, the Corner's Spaces,
- * the people into it, recent Moments, how to start and what you'll need,
- * then more Corners like it. A section with nothing in it is not shown, and
- * the two guide sections always come after the people and event sections.
- * Nothing from a Closed Space reaches a non-member beyond an event's title
- * and time.
+ * A single Corner (/corners/:slug), open to signed-out and not-yet-approved
+ * visitors, who see Corners, guides, Open Spaces and event titles and times
+ * only (no people, Moments, hosts or Closed Spaces) and one line saying
+ * members see who's going.
+ * Top to bottom: the hero (the Corner's photo, its category as a link, its
+ * name and length, and one button: I'm going to the next event, else See
+ * Spaces, else Create a Space), How to start beside Why it's worth it,
+ * What you'll need, then the live rows (this week's events, Spaces, people,
+ * your Moments, recent Moments), more Corners like it, and Create a Space.
+ * A section with nothing in it is not shown. Nothing from a Closed Space
+ * reaches a non-member beyond an event's title and time. There is no
+ * logging or Pursuit button here: the page is for finding out and joining in.
  */
 
 const MOMENTS_PAGE = 8;
@@ -65,7 +65,8 @@ function SectionTitle({ id, children }: { id: string; children: string }) {
 
 export function CornerDetail() {
   const { slug = "" } = useParams();
-  const corner = curatedBySlug(slug);
+  const curated = curatedBySlug(slug);
+  const corner = curated && curatedModel(curated);
   if (!corner) {
     return (
       <div className="min-h-viewport flex items-center justify-center">
@@ -81,7 +82,7 @@ export function CornerDetail() {
   return <CornerBody key={corner.slug} corner={corner} />;
 }
 
-function CornerBody({ corner }: { corner: CuratedCorner }) {
+function CornerBody({ corner }: { corner: CornerModel }) {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { publicFeed, myPosts } = useContent();
@@ -190,16 +191,21 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
   const events = live?.events ?? [];
   const heroEvent = events[0];
   const week = live ? thisWeek(events) : [];
-  const steps = howToStart(corner);
-  const about = cornerGuide(corner.spaceSlug, corner.slug)?.about;
   const photo = cornerPhotoCredit(corner.slug);
-  const prefill = `hobby=${encodeURIComponent(corner.spaceSlug)}&sub=${encodeURIComponent(corner.slug)}`;
-  // Other Corners in the same group: curated first, then A to Z.
+  const category = CORNER_CATEGORIES.find((c) => c.slug === corner.categorySlug);
+  // Other Corners in the same group: curated first, then A to Z. Each has a photo of its own, and no two
+  // cards share an image, so a row never shows the same picture twice.
   const more = (() => {
-    const cat = curatedCategory(corner);
-    return (cat ? homeCornersIn(cat) : [])
-      .filter((x) => x.slug !== corner.slug)
+    const seen = new Set<string>();
+    return (category ? homeCornersIn(category.slug) : [])
+      .filter((x) => x.slug !== corner.slug && hasHobbyPhoto(x.slug))
       .sort((a, b) => Number(!!b.curated) - Number(!!a.curated) || a.name.localeCompare(b.name))
+      .filter((x) => {
+        const img = cornerPhoto(x.spaceSlug, x.slug) ?? "";
+        if (seen.has(img)) return false;
+        seen.add(img);
+        return true;
+      })
       .slice(0, 12);
   })();
 
@@ -243,10 +249,16 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
 
   const buttonClass =
     "inline-flex min-h-12 items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)] disabled:opacity-60";
+  const heroSpaces = live?.spaces.length ?? 0;
+  // The hero's one button: the next event, else the Corner's Spaces, else a new Space. Held back until the live data is in.
+  const heroButton: "event" | "spaces" | "create" | null = !live ? null : heroEvent ? "event" : heroSpaces > 0 ? "spaces" : "create";
+  const createHref = user ? "/create-space" : `/login?redirect=${encodeURIComponent("/create-space")}`;
+  const reduced = usePrefersReducedMotion();
+  const seeSpaces = () => document.getElementById("spaces-section")?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
 
   return (
     <div className="ns-afterhours min-h-viewport">
-      {/* Hero: the Corner's photo, with the next event over it when there is one. */}
+      {/* Hero: the Corner's photo; emoji, category, name and length stacked bottom left, then one button. */}
       <header className="relative flex min-h-[60svh] flex-col overflow-hidden bg-surface-muted text-on-media">
         <ImageWithFallback
           src={cornerPhoto(corner.spaceSlug, corner.slug, 1600)}
@@ -272,68 +284,112 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           <Link to="/corners" className="inline-flex min-h-11 items-center text-small hover:underline">
             ← Back to Corners
           </Link>
-          {live && heroEvent ? (
-            <HeroEvent
-              corner={corner}
-              event={heroEvent}
-              space={spaceById.get(heroEvent.spaceId)}
-              host={restricted ? undefined : hosts.get(spaceById.get(heroEvent.spaceId)?.created_by ?? "")}
-              going={going.has(heroEvent.id)}
-              member={!!spaceById.get(heroEvent.spaceId) && isMember(spaceById.get(heroEvent.spaceId)!)}
-              pending={!!spaceById.get(heroEvent.spaceId) && isPending(spaceById.get(heroEvent.spaceId)!)}
-              busy={busy === `event-${heroEvent.id}`}
-              onGoing={() => toggleGoing(heroEvent)}
-              buttonClass={buttonClass}
-            />
-          ) : (
-            <div className="mt-auto flex flex-col items-start gap-3 pt-16">
-              <h1 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
-                {corner.name}
-              </h1>
-              <p className="text-body text-on-media/90">{cornerMeta(corner)}</p>
-              {!restricted && (
-                <PressLink
-                  to={user ? `/create?${prefill}` : `/login?redirect=${encodeURIComponent(`/create?${prefill}`)}`}
-                  className="mt-2 inline-flex min-h-12 items-center justify-center rounded-control bg-on-media px-6 text-body font-semibold text-[var(--ink)]"
-                >
-                  Log a Moment
-                </PressLink>
-              )}
-            </div>
-          )}
+          <div className="mt-auto flex flex-col items-start gap-2 pt-16">
+            {corner.emoji && (
+              <span className="text-display leading-none" aria-hidden="true">
+                {corner.emoji}
+              </span>
+            )}
+            {category && (
+              <Link to={`/browse/${category.slug}`} className="inline-flex min-h-11 items-center text-small font-semibold tracking-wide text-[var(--accent)] hover:underline">
+                {category.name}
+              </Link>
+            )}
+            <h1 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
+              {corner.name}
+            </h1>
+            {corner.meta && <p className="text-body text-on-media/90">{corner.meta}</p>}
+            {heroButton === "event" && heroEvent && (
+              <HeroEvent
+                event={heroEvent}
+                space={spaceById.get(heroEvent.spaceId)}
+                host={restricted ? undefined : hosts.get(spaceById.get(heroEvent.spaceId)?.created_by ?? "")}
+                going={going.has(heroEvent.id)}
+                member={!!spaceById.get(heroEvent.spaceId) && isMember(spaceById.get(heroEvent.spaceId)!)}
+                pending={!!spaceById.get(heroEvent.spaceId) && isPending(spaceById.get(heroEvent.spaceId)!)}
+                busy={busy === `event-${heroEvent.id}`}
+                onGoing={() => toggleGoing(heroEvent)}
+                buttonClass={buttonClass}
+              />
+            )}
+            {heroButton === "spaces" && (
+              <button type="button" onClick={seeSpaces} className={`mt-3 ${buttonClass}`}>
+                See Spaces
+              </button>
+            )}
+            {heroButton === "create" && (
+              <PressLink to={createHref} className={`mt-3 ${buttonClass}`}>
+                Create a Space
+              </PressLink>
+            )}
+          </div>
         </div>
       </header>
 
       <div className={`${PAGE_X} pb-24 pt-8`}>
         {error && <p role="alert" className="mb-6 text-small text-destructive">{error}</p>}
 
+        {(corner.steps.length > 0 || corner.about || corner.worth.length > 0) && (
+          <div className={`${SECTION_GAP} grid gap-10 md:gap-8 ${corner.worth.length > 0 ? "md:grid-cols-2" : ""}`}>
+            {(corner.steps.length > 0 || corner.about) && (
+              <section aria-labelledby="start-title">
+                <SectionTitle id="start-title">How to start</SectionTitle>
+                {corner.about && <p className="mb-4 text-body text-muted-foreground">{corner.about}</p>}
+                {corner.steps.length > 0 && (
+                  <ol className="space-y-3">
+                    {corner.steps.map((step, i) => (
+                      <li key={step} className="flex items-center gap-4 rounded-card bg-card p-4">
+                        <span className="text-title font-semibold text-[var(--accent-text)]" aria-hidden="true">{i + 1}</span>
+                        <span className="text-body">{tieNumbers(step)}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </section>
+            )}
+            {corner.worth.length > 0 && (
+              <section aria-labelledby="worth-title">
+                <SectionTitle id="worth-title">Why it’s worth it</SectionTitle>
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {corner.worth.map((w) => (
+                    <li key={w} className="flex gap-2 rounded-card border border-border p-4 text-body">
+                      <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
+                      {w}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        )}
+
+        {corner.needs.length > 0 && (
+          <section className={SECTION_GAP} aria-labelledby="need-title">
+            <SectionTitle id="need-title">What you’ll need</SectionTitle>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {corner.needs.map((need) => (
+                <li key={need} className="flex gap-2 rounded-card border border-border p-4 text-body">
+                  <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
+                  {need}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {week.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="week-title">
             <SectionTitle id="week-title">Happening this week</SectionTitle>
             <HorizontalRow name={`corner.${corner.slug}.week`} label="Happening this week">
-              {week.map((e) => {
-                const space = spaceById.get(e.spaceId);
-                return (
-                  <li key={`${e.spaceId}-${e.id}`} className="w-[260px] shrink-0 snap-start sm:w-[300px]">
-                    <PressLink
-                      to={`/space/${space?.slug ?? ""}?tab=events`}
-                      className="block h-full rounded-card border border-border bg-card p-4"
-                    >
-                      <span className="block text-caption text-muted-foreground">
-                        {formatStarts(e.startsAt, { timeZone: e.timezone })}
-                      </span>
-                      <span className="mt-1 line-clamp-2 block break-words text-small font-semibold">{e.title}</span>
-                      {space && <span className="mt-1 block truncate text-caption text-muted-foreground">{space.name}</span>}
-                    </PressLink>
-                  </li>
-                );
-              })}
+              {week.map((e) => (
+                <WeekEventCard key={`${e.spaceId}-${e.id}`} event={e} space={spaceById.get(e.spaceId)} />
+              ))}
             </HorizontalRow>
           </section>
         )}
 
         {live && live.spaces.length > 0 && (
-          <section className={SECTION_GAP} aria-labelledby="spaces-title">
+          <section id="spaces-section" className={`${SECTION_GAP} scroll-mt-24`} aria-labelledby="spaces-title">
             <SectionTitle id="spaces-title">{`Spaces in ${corner.name}`}</SectionTitle>
             <HorizontalRow name={`corner.${corner.slug}.spaces`} label={`Spaces in ${corner.name}`}>
               {live.spaces.map((s) => (
@@ -429,60 +485,6 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           </section>
         )}
 
-        <div className={`${SECTION_GAP} grid gap-10 md:grid-cols-2 md:gap-8`}>
-          <section aria-labelledby="start-title">
-            <SectionTitle id="start-title">How to start</SectionTitle>
-            {about && <p className="mb-4 text-body text-muted-foreground">{about}</p>}
-            <ol className="space-y-3">
-              {steps.map((step, i) => (
-                <li key={step} className="flex items-center gap-4 rounded-card bg-card p-4">
-                  <span className="text-title font-semibold text-[var(--accent-text)]" aria-hidden="true">{i + 1}</span>
-                  <span className="text-body">{tieNumbers(step)}</span>
-                </li>
-              ))}
-            </ol>
-            {!restricted && (
-              <div className="mt-5 flex flex-col gap-3 md:flex-row">
-                <PressLink
-                  to={`/pursuits/new?${prefill}`}
-                  className="flex min-h-12 w-full items-center justify-center rounded-control bg-[var(--accent)] px-6 text-body font-semibold text-[var(--accent-foreground)] md:w-auto"
-                >
-                  Start a Pursuit
-                </PressLink>
-                <PressLink
-                  to={`/create?${prefill}`}
-                  className="flex min-h-12 w-full items-center justify-center rounded-control border border-border px-6 text-body font-semibold text-foreground md:w-auto"
-                >
-                  Log a Moment
-                </PressLink>
-              </div>
-            )}
-          </section>
-          <section aria-labelledby="worth-title">
-            <SectionTitle id="worth-title">Why it’s worth it</SectionTitle>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {corner.worth.map((w) => (
-                <li key={w} className="flex gap-2 rounded-card border border-border p-4 text-body">
-                  <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
-                  {w}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
-
-        <section className={SECTION_GAP} aria-labelledby="need-title">
-          <SectionTitle id="need-title">What you’ll need</SectionTitle>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {corner.needs.map((need) => (
-              <li key={need} className="flex gap-2 rounded-card border border-border p-4 text-body">
-                <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
-                {need}
-              </li>
-            ))}
-          </ul>
-        </section>
-
         {more.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="more-title">
             <SectionTitle id="more-title">More Corners like this</SectionTitle>
@@ -494,12 +496,14 @@ function CornerBody({ corner }: { corner: CuratedCorner }) {
           </section>
         )}
 
-        {/* The one place on the Corners pages that asks for a new Space. */}
-        <section className={SECTION_GAP}>
-          <PressLink to={user ? "/create-space" : `/login?redirect=${encodeURIComponent("/create-space")}`} className={buttonClass}>
-            Create a Space
-          </PressLink>
-        </section>
+        {/* A new Space is asked for here only when the hero is not already asking. */}
+        {heroButton !== "create" && (
+          <section className={SECTION_GAP}>
+            <PressLink to={createHref} className={buttonClass}>
+              Create a Space
+            </PressLink>
+          </section>
+        )}
       </div>
 
       <MomentDetail
@@ -521,7 +525,6 @@ function toPerson(r: Record<string, unknown>): Person {
 }
 
 function HeroEvent({
-  corner,
   event,
   space,
   host,
@@ -532,7 +535,6 @@ function HeroEvent({
   onGoing,
   buttonClass,
 }: {
-  corner: CuratedCorner;
   event: LiveEvent;
   space?: LiveSpace;
   host?: Person;
@@ -545,16 +547,19 @@ function HeroEvent({
 }) {
   const closedToYou = space?.access === "closed" && !member;
   return (
-    <div className="mt-auto pt-16">
-      <p className="text-small font-semibold">{corner.name}</p>
-      <h1 className="mt-2 line-clamp-3 break-words text-display">{event.title}</h1>
-      {space && (
-        <p className="mt-2 text-body">
-          <Link to={`/space/${space.slug}`} className="inline-flex min-h-11 items-center hover:underline">{space.name}</Link>
-        </p>
-      )}
+    <div className="mt-3 flex flex-col items-start gap-1">
+      <p className="line-clamp-2 break-words text-lead font-semibold">{event.title}</p>
+      <p className="text-body tabular-nums">
+        <time dateTime={event.startsAt}>{formatStarts(event.startsAt, { timeZone: event.timezone })}</time>
+        {space && (
+          <>
+            {" · "}
+            <Link to={`/space/${space.slug}`} className="hover:underline">{space.name}</Link>
+          </>
+        )}
+      </p>
       {host && (
-        <p className="mt-3 flex items-center gap-2 text-small">
+        <p className="flex items-center gap-2 text-small">
           <Avatar className="size-7">
             {host.avatarUrl && <AvatarImage src={host.avatarUrl} alt="" />}
             <AvatarFallback className="text-caption">{initials(host.name)}</AvatarFallback>
@@ -562,15 +567,9 @@ function HeroEvent({
           <span>{host.name}</span>
         </p>
       )}
-      <p className="mt-3 text-body tabular-nums">
-        <time dateTime={event.startsAt}>{formatStarts(event.startsAt, { timeZone: event.timezone })}</time>
-      </p>
-      <div className="mt-5">
+      <div className="mt-3">
         {closedToYou && space ? (
-          <PressLink
-            to={`/space/${space.slug}`}
-            className={buttonClass}
-          >
+          <PressLink to={`/space/${space.slug}`} className={buttonClass}>
             {pending ? "Requested" : "Request to join"}
           </PressLink>
         ) : (

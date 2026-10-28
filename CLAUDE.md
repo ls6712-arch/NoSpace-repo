@@ -41,6 +41,6 @@ These apply to every session working in this repo, not just Spaces-related work.
 
 - **All UI copy must follow `docs/glossary.md`: one word per idea, one idea per word; never use a retired term.**
 - **Never introduce a wording that isn't in `docs/glossary.md`; if one is needed, ask first.**
-- **The word "category" is never shown to users.** The 18 groups of Corners (`src/app/data/cornerCategories.ts`) appear only by their own name, as a heading or tile on Discover (approved Oct 22, 2026); the 15 old groups behind Spaces stay internal. Corners are still the only tags anyone picks.
+- **The word "category" is never shown to users.** The 18 groups of Corners (`src/app/data/cornerCategories.ts`) appear only by their own name, on Discover, on /corners and as the kicker on a Corner page (approved Oct 22 and Oct 28, 2026); the 15 old groups behind Spaces stay internal. Corners are still the only tags anyone picks.
 - **Say "Moments" in UI copy** — never "work" or "posts". A person's Moments are their Moments, not their "work" or their "posts", in any label, button, empty state, or message.
 - **Spaces have no member counts anywhere in the UI.** Not on a Space card, not on the Space page header, not in a list — nowhere. If a number is needed, it's the Moments count (`space_moment_count_30d`), never a count of members.
