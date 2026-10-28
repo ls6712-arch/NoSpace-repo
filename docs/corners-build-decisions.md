@@ -77,6 +77,7 @@ Decisions made while Claude Code built Corners from claude-code-brief-corners.md
 - Names: Discover is the nav section; Corners is its browse tab; a category is shown by its own name. Path: Discover > Corners > Food and drink > Pasta. Back links say "Back to Corners" (category page) and "Back to {category}" (Corner page).
 - The Corner page meta line leads with the category as a link: "Food and drink · 90 min · At home". This replaces the hero kicker from the earlier layout brief.
 - Test Moments are listed for the founder to remove, never deleted by a session.
+- Corner photo pass (Oct 28): photos for 11 Corners that had none, and replacements for 6 broken and 16 off-topic or logo photos (crochet, 3D printing, sourdough, BBQ, composting, DJing; embroidery, woodworking, paper crafts, model-making, drawing, songwriting, calligraphy, sculpture, pickleball, antiques, dance, trading cards, D&D, choir, fragrance). Every one has a `CREDITS` entry under the Unsplash License. Rule: show the activity itself, no brand logos, no known characters. Badminton took the photo pickleball had (it was a badminton shot).
 - Rooms is retired (UI removed Oct 28, 2026): the glossary marks Rooms, Who's in where and See all rooms as retired, and the unused `components/door/Rooms.tsx` is deleted.
 - `npm run check:photos` (`scripts/check-corner-photos.ts`) requests every browsable Corner's photo and lists non-200 responses and Corners with no photo. It needs network access to images.unsplash.com.
 
@@ -138,6 +139,7 @@ Answers from the founder before PR 1. These override the entries above where the
 ## Open
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.
-- Founder to review Choir, Trivia and Improv photos.
-- Unsplash photos for the 12 wave-1 Corners.
+- Founder to review Trivia and Improv photos.
+- Hyrox photo: every candidate shows a brand logo, so it keeps its Space's cover (`AWAITING_PHOTO` in `homeCorners.test.ts`) until a clean one is chosen.
+- Make a beat's credited photo moves to Music production when the Make a beat merge lands.
 - Next briefs: event ideas as host prompts ("Ideas for your next event"); wave 2 once members ask for those Corners.
