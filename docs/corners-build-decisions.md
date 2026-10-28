@@ -98,7 +98,7 @@ Answers from the founder before PR 1. These override the entries above where the
 - Discover's front door is the header (city, search), one hero Corner (from the person's moods, preferring a Corner with an event coming up), "Your friends are doing" and Browse. Search, the People, Spaces and Marketplace tabs and All Moments stay below it until PR 5 moves search. The mood picker, Start here, Seen tonight, Rooms and the cover story are no longer on Discover.
 - Friends' Pursuits are Pursuits that people you follow share and are still working on. "Open to join" waits for the open Pursuits in PR 3.
 - Corner page: 280px hero, back link reads "← {group}" (the screen; was "Back to {group}"), name, then "90 min · At home · Good with a friend". The hero button, emoji and group link in the meta line are gone. One primary button, Do this with people, with Set a solo goal and I did this under it, fixed above the tab bar. Until the Make it a Pursuit sheet ships (PR 3), Do this with people opens the existing Start a Pursuit flow on inviting people.
-- Guide lists still hold price words ("Free to start", "Cheap"); the trust rule says guides carry none. A data pass is a separate change.
+- Guide lists held price words ("Free to start", "Cheap"); removed in the price words change below.
 
 ### PR 3: Make it a Pursuit, the Pursuit page, the recap (screens 4, 5, 13)
 
@@ -109,6 +109,10 @@ Answers from the founder before PR 1. These override the entries above where the
 - The recap's story image is drawn with the canvas API (no dependency). The gold stub sits on a static gradient: the animated shader is not used (no mid-range Android was available to check 60fps).
 - The recap is a full screen (no top bar or tab bar). Reaching it from the last Moment posted is PR 4; for now a finished Pursuit shows "See the recap".
 - Moment rows under Latest carry no cheer or reply counts: the glossary calls reactions Love this, Count me in and Thoughts, and the brief's "cheers" is decided with Home (PR 4).
+
+### Price words out of guides (Oct 28)
+
+- Removed every price word from the guides in `curatedCorners.ts` (steps, needs and why it's worth it) and three steps in `cornerGuides.ts` ("free", "cheap", "cost", "fee", "paid", "budget", "cash"). Price-only lines ("Free to start", "Cheap", "Entry and rental fees apply") were dropped; a Corner keeps 3 to 5 needs and exactly 4 reasons, as the tests require. A vitest check fails on any price word in a guide.
 
 ## Open
 
