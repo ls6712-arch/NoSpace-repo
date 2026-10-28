@@ -68,12 +68,10 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "climbing", spaceSlug: "sports-fitness", name: "Climbing", emoji: "🧗", durationMinutes: 120, setting: "anywhere",
-    about: "Climbing walls and boulders, mostly indoors to start.",
-    steps: ["Book an intro session at a bouldering gym", "Rent shoes and chalk", "Start on the easiest color routes"],
+    steps: ["Rent shoes and chalk", "Start on the easiest color routes"],
     needs: ["Climbing shoes and chalk, both rentable at a gym", "A bouldering gym or climbing wall", "Easy with a friend, and gyms are full of people"],
     worth: ["Every route is a small puzzle", "Gyms rent the gear you need", "Beginners climb the same walls", "Easy to share with a friend"],
     coverAlt: "A climber chalking up at a bouldering wall", photoSearch: "bouldering gym climbers",
-    traits: { kind: "skill", together: "together", haveIt: false },
   }),
   c({
     slug: "pickleball", spaceSlug: "sports-fitness", name: "Pickleball", emoji: "🏓", durationMinutes: 60, setting: "outdoors",
@@ -177,12 +175,10 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "dance", spaceSlug: "sports-fitness", name: "Dance", emoji: "🕺", durationMinutes: 90, setting: "anywhere",
-    about: "Dancing with other people, from salsa and swing to Bollywood and hip-hop.",
-    steps: ["Try salsa, swing or bachata", "No partner needed", "Go to 3 classes before judging"],
+    steps: ["No partner needed", "Go to 3 classes before judging"],
     needs: ["Comfortable shoes you can move in", "A studio or hall that runs classes", "Drop-in classes are common", "No partner needed, you rotate"],
     worth: ["Start in your living room", "Classes welcome beginners", "Music does half the work", "Fun alone or with a partner"],
     coverAlt: "Dancers in a social dance class laughing as they rotate partners", photoSearch: "social dance class salsa",
-    traits: { kind: "skill", together: "together", haveIt: false },
   }),
   c({
     slug: "language-learning", spaceSlug: "books-writing", name: "Language learning", emoji: "🌍", durationMinutes: 60, setting: "anywhere",
@@ -225,12 +221,10 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "wild-swimming", spaceSlug: "nature-outdoors", name: "Wild swimming", emoji: "🌊", durationMinutes: 60, setting: "outdoors",
-    about: "Swimming in lakes, rivers and the sea instead of a pool.",
-    steps: ["Find a safe, known swim spot", "Never swim alone", "Enter slowly"],
+    steps: ["Never swim alone", "Enter slowly"],
     needs: ["Swimwear and a towel", "A safe, known spot", "At least one other person"],
     worth: ["A swim somewhere new", "Little kit needed", "Go with a friend", "Spots can be found on local maps"],
     coverAlt: "Friends wading into a lake together in soft morning light", photoSearch: "friends wild swimming lake",
-    traits: { kind: "experience", together: "either", haveIt: false },
   }),
   c({
     slug: "sauna-cold-plunge", spaceSlug: "health-wellness", name: "Sauna & cold plunge", emoji: "🧖", durationMinutes: 90, setting: "anywhere",
@@ -242,12 +236,10 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
   c({
     slug: "make-a-beat", spaceSlug: "music", name: "Make a beat", emoji: "🎧", durationMinutes: 60, setting: "home",
-    about: "Building a beat from drums, samples and loops on a laptop or phone.",
-    steps: ["Open a beat-making app", "Lay down drums first", "Add a bassline and melody"],
+    steps: ["Lay down drums first", "Add a bassline and melody"],
     needs: ["A phone or computer", "A beat-making app", "Headphones"],
     worth: ["A phone app is enough to start", "A loop takes minutes", "No instrument needed", "Share it with one friend"],
     coverAlt: "Two friends making a beat on a pad controller and laptop", photoSearch: "making beats studio friends",
-    traits: { kind: "making", together: "solo", haveIt: false },
   }),
   c({
     slug: "karaoke", spaceSlug: "music", name: "Karaoke", emoji: "🎙️", durationMinutes: 120, setting: "anywhere",
@@ -263,7 +255,7 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
     needs: ["A ticket for the show", "Comfortable shoes", "Earplugs if it gets loud", "Go with friends or by yourself"],
     worth: ["A night out with a plan", "Small rooms, close to the band", "Hear new music up close", "Go alone or with friends"],
     coverAlt: "A crowd watching a band in a small venue", photoSearch: "small venue gig crowd",
-    traits: { kind: "experience", together: "either", haveIt: false },
+    traits: { kind: "experience", together: "together", haveIt: false },
   }),
   c({
     slug: "choir", spaceSlug: "music", name: "Choir", emoji: "🎶", durationMinutes: 90, setting: "anywhere",
@@ -307,111 +299,87 @@ export const CURATED_CORNERS: readonly CuratedCorner[] = [
   }),
 c({
   slug: "life-drawing", spaceSlug: "art-creative", name: "Life drawing", emoji: "✏️", durationMinutes: 120, setting: "anywhere",
-  about: "Drawing a live model in a group session.",
-  steps: ["Find a drop-in life drawing session near you", "Bring a pad and pencils or charcoal", "Start with the quick poses"],
+  steps: ["Bring a pad and pencils or charcoal", "Start with the quick poses"],
   needs: ["A sketch pad and pencils or charcoal", "A drop-in session at a studio or art school", "A room of people drawing together"],
   worth: ["A real person to draw, not a photo", "Drop in, no course to sign up for", "Quick poses leave no time to overthink", "Every level draws in the same room"],
   coverAlt: "Artists sketching at easels in a life drawing class", photoSearch: "life drawing class easels",
-  traits: { kind: "skill", together: "together", haveIt: false },
 }),
 c({
   slug: "city-walks", spaceSlug: "travel-adventure", name: "City walks", emoji: "🏛️", durationMinutes: 120, setting: "outdoors",
-  about: "Exploring neighbourhoods on foot, alone or on a guided walk.",
-  steps: ["Pick a neighbourhood you have never walked", "Join a local heritage walk", "Save the spots you want to go back to"],
+  steps: ["Join a local heritage walk", "Save the spots you want to go back to"],
   needs: ["Comfortable shoes", "A neighbourhood or old quarter to explore", "Walk on your own or join a guided walk", "Go alone, with a friend or with a group"],
   worth: ["See your own city like a visitor", "Stories behind places you pass daily", "Easy to do with a friend", "Ends wherever the good cafe is"],
   coverAlt: "A small group on a guided walk through old city lanes", photoSearch: "heritage walk group old city",
-  traits: { kind: "exploring", together: "either", haveIt: true },
 }),
 c({
   slug: "film-clubs", spaceSlug: "photography-film", name: "Film clubs", emoji: "🍿", durationMinutes: 180, setting: "anywhere",
-  about: "Watching films together and talking about them after.",
-  steps: ["Pick a film and a place to watch it together", "Invite a few people who will stay to talk", "Take turns choosing the next film"],
+  steps: ["Invite a few people who will stay to talk", "Take turns choosing the next film"],
   needs: ["A screen and a room, or a local screening", "A film everyone can watch", "Watch at home or at a local screening", "Works best with a small group"],
   worth: ["Talking after is half the film", "Films you would not pick alone", "Easy to host at home", "A standing reason to see the same people"],
   coverAlt: "Friends watching a film projected on a living room wall", photoSearch: "friends watching movie projector",
-  traits: { kind: "exploring", together: "together", haveIt: true },
 }),
 c({
   slug: "food-tours", spaceSlug: "food-cooking", name: "Food tours", emoji: "🥟", durationMinutes: 180, setting: "outdoors",
-  about: "Eating your way through a street, market or neighbourhood.",
-  steps: ["Pick one street or market known for food", "Try one thing from each of three stalls", "Join a guided food walk for the stories"],
+  steps: ["Try one thing from each of three stalls", "Join a guided food walk for the stories"],
   needs: ["An appetite and room to try a few things", "A food street, market or old quarter", "Go self-guided or join a tour", "Better with friends to share plates"],
   worth: ["Taste a neighbourhood in an afternoon", "Sharing plates is half the fun", "Small spends, lots to try", "Meet the people who cook it"],
   coverAlt: "Friends sharing street food at a busy evening market stall", photoSearch: "friends street food market night",
-  traits: { kind: "exploring", together: "either", haveIt: false },
 }),
 c({
   slug: "mahjong", spaceSlug: "gaming-tabletop", name: "Mahjong", emoji: "🀄", durationMinutes: 120, setting: "home",
-  about: "A tile game for four players, with many regional styles.",
-  steps: ["Learn the tiles with a rules guide", "Play a teaching game with three others", "Join a mahjong social or club night"],
+  steps: ["Play a teaching game with three others", "Join a mahjong social or club night"],
   needs: ["A mahjong set, or a club that has one", "Four players at one table", "Played for fun", "Rules vary by style, so agree first"],
   worth: ["Four people, one table, hours of talk", "Many styles to try once you know one", "The tiles are a joy to play with", "A reason for a regular night in"],
   coverAlt: "Four friends around a table mid-game of mahjong", photoSearch: "friends playing mahjong table",
-  traits: { kind: "games", together: "together", haveIt: false },
 }),
 c({
   slug: "rafting", spaceSlug: "travel-adventure", name: "Rafting", emoji: "🚣", durationMinutes: 240, setting: "outdoors",
-  about: "Paddling a raft down a river with a guide and a crew.",
-  steps: ["Pick a beginner-graded stretch of river", "Book with a licensed rafting operator", "Go with friends to fill a raft"],
+  steps: ["Book with a licensed rafting operator", "Go with friends to fill a raft"],
   needs: ["A licensed operator who provides the raft", "A helmet and life jacket, worn the whole trip", "Trips run by stretch of river, so pick one that fits you", "Usually done as a group in one raft"],
   worth: ["A whole raft working as one team", "Rivers you cannot see from a road", "Beginner stretches exist", "A day out you will talk about after"],
   coverAlt: "A group in helmets paddling a raft through white water", photoSearch: "white water rafting group",
-  traits: { kind: "experience", together: "together", haveIt: false },
 }),
 c({
   slug: "letter-writing", spaceSlug: "books-writing", name: "Letter writing", emoji: "✉️", durationMinutes: 30, setting: "home",
-  about: "Handwritten letters, stationery and pen pals.",
-  steps: ["Write one letter by hand to someone who would love it", "Pick stationery or stamps that feel like you", "Find a pen pal through a letter club"],
+  steps: ["Pick stationery or stamps that feel like you", "Find a pen pal through a letter club"],
   needs: ["Paper, a pen and an envelope", "A stamp and an address", "Letters go by post, so allow a few days", "Better with a pen pal writing back"],
   worth: ["Post that is not a bill", "Something they can keep", "Stationery is half the fun", "A slow friendship across distance"],
   coverAlt: "Hands writing a letter beside stamps and envelopes on a cafe table", photoSearch: "writing letter stamps envelopes",
-  traits: { kind: "making", together: "either", haveIt: true },
 }),
 c({
   slug: "hyrox", spaceSlug: "sports-fitness", name: "Hyrox", emoji: "🛷", durationMinutes: 90, setting: "anywhere",
-  about: "A fitness race of running and gym stations, done alone, in pairs or in relays.",
-  steps: ["Learn the eight stations and the run between each", "Try a class at a gym that runs Hyrox sessions", "Enter a race as a doubles pair"],
+  steps: ["Try a class at a gym that runs Hyrox sessions", "Enter a race as a doubles pair"],
   needs: ["Running shoes and gym kit", "A gym or club that runs Hyrox sessions", "Races are held on set dates, so check the calendar", "Doubles and relays let you race with friends"],
   worth: ["The same race format worldwide", "Train together, race with a partner", "Running and gym work in one", "A race day to aim at together"],
   coverAlt: "Two athletes pushing sleds side by side in a busy gym", photoSearch: "sled push gym group",
-  traits: { kind: "regular", together: "together", haveIt: false },
 }),
 c({
   slug: "walking-clubs", spaceSlug: "sports-fitness", name: "Walking clubs", emoji: "🚶", durationMinutes: 60, setting: "outdoors",
-  about: "Group walks at a talking pace, in parks, on promenades and on trails.",
-  steps: ["Find a walking group that meets near you", "Show up once, at your own pace", "Try their sunrise or sunset walk"],
+  steps: ["Show up once, at your own pace", "Try their sunrise or sunset walk"],
   needs: ["Comfortable shoes", "A park, promenade or trail", "A group that sets off together"],
   worth: ["Talking pace, the whole way", "No kit beyond shoes", "A reason to see the same faces", "Easy for anyone to join"],
   coverAlt: "A walking group chatting on a park path at sunrise", photoSearch: "walking group park sunrise",
-  traits: { kind: "regular", together: "together", haveIt: true },
 }),
 c({
   slug: "badminton", spaceSlug: "sports-fitness", name: "Badminton", emoji: "🏸", durationMinutes: 60, setting: "anywhere",
-  about: "Fast racket games on an indoor court, usually played as doubles.",
-  steps: ["Borrow or buy a racket and shuttles", "Book a court with three friends for doubles", "Join a social or club session"],
+  steps: ["Book a court with three friends for doubles", "Join a social or club session"],
   needs: ["A racket and shuttlecocks", "An indoor court, usually booked by the hour", "Court hire applies", "Doubles needs four players"],
   worth: ["Rallies from the very first game", "Easy to fill a court with friends", "Games are short and quick", "Works for mixed groups"],
   coverAlt: "Friends playing doubles badminton on an indoor court", photoSearch: "badminton doubles indoor court",
-  traits: { kind: "skill", together: "together", haveIt: false },
 }),
 c({
   slug: "skating", spaceSlug: "sports-fitness", name: "Skating", emoji: "🛼", durationMinutes: 60, setting: "anywhere",
-  about: "Roller and ice skating, from rink laps to group skates.",
-  steps: ["Rent skates at a rink for your first go", "Learn to stop before you learn speed", "Join a group skate or roller disco night"],
+  steps: ["Learn to stop before you learn speed", "Join a group skate or roller disco night"],
   needs: ["Skates, rentable at most rinks", "A helmet and wrist guards for roller skating", "A rink or a smooth, quiet path", "Rink entry applies"],
   worth: ["Music, lights and laps at a rink", "Roller and ice share one scene", "Group skates welcome beginners", "Rentals mean no big buy-in"],
   coverAlt: "Friends roller skating together under rink lights", photoSearch: "roller skating friends rink",
-  traits: { kind: "skill", together: "either", haveIt: false },
 }),
 c({
   slug: "ultimate-frisbee", spaceSlug: "sports-fitness", name: "Ultimate frisbee", emoji: "🥏", durationMinutes: 90, setting: "outdoors",
-  about: "A team game with a disc where players call their own fouls.",
-  steps: ["Learn the backhand throw with a friend", "Go to a pickup game and ask to join a side", "Find a mixed social league"],
+  steps: ["Go to a pickup game and ask to join a side", "Find a mixed social league"],
   needs: ["A disc and running shoes", "A field or open park", "Pickup games run at many parks", "Teams of seven a side"],
   worth: ["Players call their own fouls", "Mixed teams are common", "One disc is all the kit", "Team sport with no referee"],
   coverAlt: "A mixed team diving for a disc on a grass field", photoSearch: "ultimate frisbee game field",
-  traits: { kind: "skill", together: "together", haveIt: false },
 }),
 ];
 
@@ -444,7 +412,8 @@ export function cornerAbout(spaceSlug: string, cornerSlug: string): string | und
 /** "How to start": step 1 from cornerGuides.ts when the Corner has one. */
 export function howToStart(x: CuratedCorner): string[] {
   const step = cornerGuide(x.spaceSlug, x.slug)?.step;
-  return step ? [step, ...x.steps] : x.steps;
+  // `steps` holds the steps after step 1; if one repeats the guide's step it is shown once.
+  return step ? [step, ...x.steps.filter((s) => s !== step)] : x.steps;
 }
 
 /** The guide traits moods.ts reads, from cornerGuides.ts or the entry's own. */

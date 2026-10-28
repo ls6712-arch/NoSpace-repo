@@ -81,6 +81,11 @@ describe("curated Corners", () => {
     expect(howToStart(curatedBySlug("climbing")!)[0]).toBe("Book an intro session at a bouldering gym");
   });
 
+  it("shows step 1 once when a Corner's own steps repeat it", () => {
+    const x = { ...curatedBySlug("climbing")!, steps: ["Book an intro session at a bouldering gym", "Rent shoes and chalk"] };
+    expect(howToStart(x)).toEqual(["Book an intro session at a bouldering gym", "Rent shoes and chalk"]);
+  });
+
   it("use only moods from moods.ts, derived rather than stored", () => {
     const valid = new Set(MOODS.map((m) => m.id));
     for (const x of CURATED_CORNERS) for (const m of cornerMoods(x)) expect(valid.has(m), x.slug).toBe(true);

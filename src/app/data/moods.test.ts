@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { MOODS, cornersForMood } from "./moods";
 import { CORNER_GUIDES } from "./cornerGuides";
+import { CURATED_CORNERS } from "./curatedCorners";
+import { isBrowsableCorner } from "./hobbies";
 
 describe("moods", () => {
   it("gives every mood at least 4 Corners, so no row is ever thin", () => {
@@ -14,6 +16,14 @@ describe("moods", () => {
     for (const m of MOODS) {
       expect(cornersForMood(m.id).some((c) => adult.includes(c.cornerSlug))).toBe(false);
     }
+  });
+
+  it("shows every browsable curated Corner under at least one mood (adults-only aside)", () => {
+    const inAMood = new Set(MOODS.flatMap((m) => cornersForMood(m.id).map((c) => `${c.spaceSlug}/${c.cornerSlug}`)));
+    const missing = CURATED_CORNERS.filter(
+      (x) => isBrowsableCorner(x.spaceSlug, x.slug) && !CORNER_GUIDES[`${x.spaceSlug}/${x.slug}`]?.adultsOnly && !inAMood.has(`${x.spaceSlug}/${x.slug}`),
+    ).map((x) => `${x.spaceSlug}/${x.slug}`);
+    expect(missing).toEqual([]);
   });
 
   it("has labels with no dashes and sentence case", () => {
