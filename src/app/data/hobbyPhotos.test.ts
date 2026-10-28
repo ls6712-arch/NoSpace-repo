@@ -32,7 +32,7 @@ describe("Corner photos", () => {
   it("credit the Corners added with the Corners home and every Corner in the Oct 28 photo pass", () => {
     const added = ["boxing", "skateboarding", "kayaking", "surfing", "wild-swimming", "sauna-cold-plunge", "make-a-beat", "karaoke", "live-music", "pasta", "trivia", "improv", "volunteering"];
     const pass = [
-      "life-drawing", "walking-clubs", "badminton", "skating", "ultimate-frisbee", "rafting", "mahjong", "letter-writing", "city-walks", "film-clubs", "food-tours",
+      "life-drawing", "walking-clubs", "badminton", "skating", "ultimate-frisbee", "rafting", "mahjong", "letter-writing", "city-walks", "film-clubs", "food-tours", "hyrox",
       "crochet", "3d-printing", "sourdough", "bbq", "composting", "djing",
       "embroidery", "woodworking", "paper-crafts", "model-making", "drawing", "songwriting", "calligraphy", "sculpture", "pickleball", "antiques", "dance",
       "trading-cards", "d-d", "choir", "fragrance"

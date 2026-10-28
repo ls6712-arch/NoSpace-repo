@@ -194,6 +194,7 @@ const PHOTO: Record<string, string> = {
   "city-walks": "photo-1646608220382-4f20ec40b01d",
   "film-clubs": "photo-1485095329183-d0797cdc5676",
   "food-tours": "photo-1760263051323-fcd7da7040b0",
+  hyrox: "photo-1779126751404-54acffdb307d",
 };
 
 /**
@@ -228,6 +229,7 @@ export const CREDITS: Record<string, { credit: string; source: string; alt: stri
   "city-walks": { credit: "Etienne Girardet", source: "https://unsplash.com/photos/i7cMcSQXFMw", alt: "A group of people walking together down a city street" },
   "film-clubs": { credit: "Jake Hills", source: "https://unsplash.com/photos/23LET4Hxj_U", alt: "An audience in a dark cinema facing a bright screen" },
   "food-tours": { credit: "Zoshua Colah", source: "https://unsplash.com/photos/KPC-IA1-ZaA", alt: "A street vendor serving pani puri from his stall" },
+  hyrox: { credit: "Daan Sonneveld", source: "https://unsplash.com/photos/zrtTvAAANTM", alt: "Two athletes running during a fitness race" },
   crochet: { credit: "Karina L", source: "https://unsplash.com/photos/d1yqso_6tns", alt: "A crochet hook resting on a crocheted piece" },
   "3d-printing": { credit: "Osman Talha Dikyar", source: "https://unsplash.com/photos/NMCABEhN0RE", alt: "A 3D printer making a yellow part with a blue light below" },
   sourdough: { credit: "Vicky Ng", source: "https://unsplash.com/photos/yL9qjDDmmMU", alt: "A homemade sourdough loaf on a wooden table" },

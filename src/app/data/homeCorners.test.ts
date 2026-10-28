@@ -45,9 +45,9 @@ describe("home Corners", () => {
     expect(all.filter((c) => c.curated).map((c) => c.slug).sort()).toEqual(CURATED_CORNERS.map((c) => c.slug).sort());
   });
 
-  // Hyrox: every candidate photo shows a brand logo, so it keeps its Space's cover for now.
-  // Add a photo to hobbyPhotos.ts (PHOTO and CREDITS) and delete the slug here.
-  const AWAITING_PHOTO = ["hyrox"];
+  // A Corner added before its photo is chosen goes here and shows its Space cover. Add a photo
+  // to hobbyPhotos.ts (PHOTO and CREDITS) and delete the slug here.
+  const AWAITING_PHOTO: string[] = [];
 
   it("give every Corner a photo of its own, never its Space's cover", () => {
     const missing = all.filter((c) => !AWAITING_PHOTO.includes(c.slug) && (!hasHobbyPhoto(c.slug) || !cornerPhoto(c.spaceSlug, c.slug)));
