@@ -96,6 +96,8 @@ export interface NewPostInput {
   creator: string;
   caption: string;
   visibility: Visibility;
+  /** Who the Moment is for ("group" needs pursuitId). Written only when set. */
+  audience?: "group" | "friends" | "everyone";
   forSale?: ForSaleInput;
   /** Set when this moment is a thing happening at a time. */
   startsAt?: number;
@@ -145,7 +147,11 @@ export const POST_COLUMNS_WITH_MEDIA_PATHS = `${BASE_POST_COLUMNS}, media_paths`
  * same explicit list rather than `select("*")`, which would put a
  * Reflection's private column on the wire regardless of what the caller's
  * own mapper does with it (see the comment above this constant). */
-export let POST_COLUMNS = `${POST_COLUMNS_WITH_MEDIA_PATHS}, love_count, in_count`;
+export const POST_COLUMNS_WITH_COUNTS = `${POST_COLUMNS_WITH_MEDIA_PATHS}, love_count, in_count`;
+/** The top tier: also who the Moment is for (posts.audience, migration
+ * 20261101000000). Dropped first when that column is missing, so the counts
+ * and media paths keep working. */
+export let POST_COLUMNS = `${POST_COLUMNS_WITH_COUNTS}, audience`;
 /** True for any "column doesn't exist" error, not only a count column's —
  * the message-based OR clause exists for anything that logs this error
  * message manually; the `code` check alone already catches every real
@@ -185,6 +191,7 @@ export function rowToPost(row: any, creatorName: string): Post {
     likes: row.likes ?? 0,
     createdAt: new Date(row.created_at).getTime(),
     visibility: row.visibility,
+    audience: row.audience ?? undefined,
     userId: row.user_id,
     startsAt: row.starts_at ? new Date(row.starts_at).getTime() : undefined,
     locationName: row.location_name ?? undefined,
@@ -370,6 +377,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       .from("posts")
       .select(POST_COLUMNS)
       .order("created_at", { ascending: false });
+    // posts.audience isn't in this database yet: drop only it first.
+    if (isMissingCountColumn(error) && POST_COLUMNS !== POST_COLUMNS_WITH_COUNTS && POST_COLUMNS !== POST_COLUMNS_WITH_MEDIA_PATHS && POST_COLUMNS !== BASE_POST_COLUMNS) {
+      POST_COLUMNS = POST_COLUMNS_WITH_COUNTS;
+      ({ data, error } = await supabase
+        .from("posts")
+        .select(POST_COLUMNS)
+        .order("created_at", { ascending: false }));
+    }
     // The reaction-count columns aren't in this database yet — drop them
     // for this and every later posts select, and try once more.
     if (isMissingCountColumn(error) && POST_COLUMNS !== POST_COLUMNS_WITH_MEDIA_PATHS) {
@@ -689,9 +704,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         mediaUrls = [];
       }
 
-      const { data, error } = await supabase
-        .from("posts")
-        .insert({
+      const row = {
           user_id: user.id,
           hobby_slug: input.hobbySlug,
           sub_hobby: input.subHobby ?? null,
@@ -714,9 +727,17 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           location_privacy: input.locationPrivacy ?? "neighborhood",
           pursuit_id: input.pursuitId ?? null,
           tags: input.tags ?? [],
-        })
+      };
+      // posts.audience only exists once its migration has run; without it the
+      // Moment is saved with its visibility alone, as before.
+      let { data, error } = await supabase
+        .from("posts")
+        .insert((input.audience ? { ...row, audience: input.audience } : row) as typeof row)
         .select(POST_COLUMNS)
         .single();
+      if (input.audience && error && isMissingCountColumn(error) && input.audience !== "group") {
+        ({ data, error } = await supabase.from("posts").insert(row).select(POST_COLUMNS).single());
+      }
 
       if (!error && data) {
         let newPost = rowToPost(data, profile?.display_name ?? (input.creator || "You"));

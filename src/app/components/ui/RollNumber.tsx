@@ -4,7 +4,7 @@ import { pop } from "../../lib/motionTokens";
 
 /**
  * A number that rolls vertically when it changes: up when it grows, down when
- * it shrinks (goal stepper, cheer count, stub count). Reserves the width of
+ * it shrinks (goal stepper, reaction count, stub count). Reserves the width of
  * the widest digit string so neighbours do not shift.
  */
 export function RollNumber({ value, className }: { value: number; className?: string }) {

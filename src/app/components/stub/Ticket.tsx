@@ -37,8 +37,8 @@ export function Ticket({
   className,
 }: {
   variant?: TicketVariant;
-  /** Position among this person's Stubs; shown as "Stub 014". */
-  serial: number;
+  /** Position among this person's Stubs; shown as "Stub 014". Unknown while the database is still issuing it: the line reads "Stub". */
+  serial?: number;
   title: string;
   meta?: string;
   /** "2/5": `done` of `total`. */
@@ -78,14 +78,15 @@ export function Ticket({
     <motion.div
       layoutId={layoutId}
       transition={layoutId ? shared : pop}
-      initial={reveal ? { opacity: 0, y: -40 } : false}
+      // A ticket that grows out of a photo (layoutId) moves with the shared spring instead of dropping in.
+      initial={reveal && !layoutId ? { opacity: 0, y: -40 } : false}
       animate={{ opacity: 1, y: 0 }}
       style={style}
       className={cn("relative flex min-h-28 w-full overflow-hidden rounded-card text-[var(--ink)]", className)}
     >
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-4">
         <span className="text-caption font-semibold tracking-[0.08em] opacity-80">
-          Soosh · Stub {String(serial).padStart(3, "0")}
+          {serial ? `Soosh · Stub ${String(serial).padStart(3, "0")}` : "Soosh · Stub"}
         </span>
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 font-[family-name:var(--font-display)] text-lead leading-tight font-extrabold">

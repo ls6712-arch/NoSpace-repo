@@ -41,12 +41,11 @@ export interface MomentDraftFields {
 
 /** Whether a draft actually has anything in it worth offering to resume —
  * the same bar the caption screen itself uses to decide whether there's
- * something to lose. */
+ * something to lose. Who it is for is not content: it always has a default. */
 export function draftHasContent(draft: MomentDraftFields): boolean {
   return (
     draft.thought.trim().length > 0 ||
     !!draft.mediaType ||
-    draft.audience !== "private" ||
     draft.interest.trim().length > 0 ||
     draft.isActivity ||
     !!draft.projectId ||

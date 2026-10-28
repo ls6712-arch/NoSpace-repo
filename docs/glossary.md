@@ -322,3 +322,43 @@ Strings from `docs/design/core-loop/04`, `05` and `13`, added with PR 3. The bri
 | Keep going | Heading of the next steps: Level up (same group, harder goal), Host it for beginners, Try something new |
 
 Joining an open group: instant while at most half the spots are taken (the host counts as one), then the host decides (Let in or Not now).
+
+### Core loop v1, screens 6, 7, 8 and 14 (Oct 28, 2026)
+
+Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
+
+**Reaction.** In code the thing is a *reaction* (`reactions` table, `toggleReaction`, `loveCount`). In the UI it is only ever **Love this** (and Count me in). The brief's word "cheer" is not used anywhere a member can read it, and the notification says "{Name} loved your Moment".
+
+| Term | Meaning |
+|---|---|
+| Cancel / Log a Moment | Top of the Log sheet: Cancel on the left, the title in the middle |
+| Add photo / + {N} more | On the photo: add another (up to 8); how many more photos follow the first |
+| Add a thought | Placeholder of the caption box under the photo |
+| Activity / Pick one | Row that sets the Moment's Corner. The sheet that opens is titled Activity |
+| Counts toward / Nothing | Row that sets the Pursuit the Moment adds to. "Nothing" when there is none. The sheet is titled Counts toward |
+| With | Row listing the other people in the chosen Pursuit. Read only. Hidden when it is a Pursuit for one |
+| Details / Add | Row for tags, "This is something happening" and Where |
+| Who sees this | Label of the picker: Group (only when the Moment counts toward a Pursuit with people), Friends, Everyone, Only you. Friends means people who follow you and Everyone means Public; Followers and Public stay on the older settings screens until one set is chosen |
+| People in your Pursuit can see this. / People who follow you can see this. / Anyone can find this in {Corner}. / Only you can see this. | The line under the picker |
+| Post / Keep it private | The one fixed button. It reads Keep it private when Only you is picked |
+| Pick a Corner for this Moment. | Shown, with the Activity sheet open, when Post is tapped without a Corner |
+| Posted to your group / Posted to your friends / Posted to everyone | First line of the Posted screen |
+| {Name} loved your Moment | Card that appears on the Posted screen when someone reacts while you are there |
+| People who do {Corner} also try {Corner} | A What's next row |
+| Group session {time} / Plan your next one | A What's next row for the Pursuit's next session |
+| Invite a friend to the next one / They join your Pursuit | A What's next row |
+| See what friends are up to | Button at the bottom of Posted. Goes Home |
+| Undo | Text button under What's next. Takes the Moment back |
+| Home | Title of the feed |
+| {Pursuit} · {N} of {M} / Open | The Pursuit bar at the top of Home. "{N} of {M}" is the person's own count and never a rank |
+| Love this / Loved | The reaction button on a Moment. Loved when you have reacted |
+| Count me in / You’re in | The action on a Moment that is an upcoming event |
+| See {Corner} | The action on a Moment from a Space or Corner you follow and not from a person you follow |
+| Pull to refresh / Let go to refresh / Refreshing… | Home pull-down states |
+| You’re caught up | End of the Home feed |
+| See all Moments | Link under the end of Home. Opens the older grid at /my-space/all |
+| Soosh is better with your people | Title of the first card on Home when nothing from your people has arrived yet |
+| Bring a friend and start your first Pursuit together. | Line under it. The brief's gold Stub promise is not made here |
+| Invite on WhatsApp / Find contacts | The two buttons on that card |
+| Happening near you this week | Events in open Spaces in the next 7 days |
+| Follow a few Spaces | Three open Spaces to look at |

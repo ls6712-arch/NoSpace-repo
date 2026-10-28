@@ -47,6 +47,11 @@ export interface Post {
    * anything that was never a real Supabase-backed post at all. */
   mediaPaths?: string[];
   creator: string;
+  /** Who a Moment is for, set on Moments posted from the core loop's Log:
+   * "group" (the people in its Pursuit), "friends" (people who follow the
+   * maker) or "everyone". Older Moments have none; read `visibility` for
+   * those. A group Moment is stored with visibility "just_me". */
+  audience?: "group" | "friends" | "everyone";
   caption: string;
   likes: number;
   /** Public reaction totals (posts.love_count / posts.in_count, kept in step

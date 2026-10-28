@@ -737,7 +737,7 @@ What you'll need:
 
 Why it’s worth it:
 - No skill needed
-- A room full of people cheering
+- A room full of people having fun
 - A good night out
 - Pick a song you know
 
