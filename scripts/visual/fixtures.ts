@@ -91,6 +91,21 @@ export function buildFixtures(now = new Date()): Fixtures {
     { pursuit_id: PURSUIT3_ID, user_id: PRIYA, role: "member", status: "joined", invited_by: ME, created_at: ago(29) },
     { pursuit_id: PURSUIT3_ID, user_id: SAM, role: "member", status: "joined", invited_by: ME, created_at: ago(28) },
   ];
+  // Core loop v1, PR 5: a request to join a group you run, the group's next session you have not answered, and your Stubs.
+  const PURSUIT4_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4";
+  const open_pursuit = { id: PURSUIT4_ID, user_id: ME, title: "Hand-build a mug at home", mode: "group", shared: true, visibility: "open", capacity: 6, ends_at: ahead(24 * 20), hobby_slug: "crafts-making", sub_hobby: "pottery", interest: "Pottery", started_at: ago(3), finished_at: null, paused_at: null, let_go_at: null, cover_image_preference: "first", check_in_days: 7, measure: { kind: "count", target: 3, unit: "times", allowPartial: false, allowDecimals: false, defaultAmount: 1, startingAmount: 0 }, updated_at: ago(1) } as unknown as Row<"pursuits">;
+  pursuits.push(open_pursuit);
+  pursuit_members.push(
+    { pursuit_id: PURSUIT4_ID, user_id: ME, role: "owner", status: "joined", invited_by: null, created_at: ago(3) },
+    { pursuit_id: PURSUIT4_ID, user_id: PRIYA, role: "member", status: "requested", invited_by: null, created_at: ago(1) } as Row<"pursuit_members">,
+  );
+  const pursuit_sessions = [{ id: 1, pursuit_id: PURSUIT_ID, starts_at: ahead(50), place: "Riverside studio", note: null, created_by: ME, created_at: ago(1) }];
+  const stubs = [
+    { id: 1, user_id: ME, kind: "session", serial: 1, post_id: 2, pursuit_id: PURSUIT_ID, event_id: null, space_id: null, corner_id: null, issued_by: null, issued_at: ago(9) },
+    { id: 2, user_id: ME, kind: "event", serial: 2, post_id: null, pursuit_id: null, event_id: 1, space_id: SPACE_ID, corner_id: null, issued_by: THEO, issued_at: ago(6) },
+    { id: 3, user_id: ME, kind: "session", serial: 3, post_id: 3, pursuit_id: PURSUIT_ID, event_id: null, space_id: null, corner_id: null, issued_by: null, issued_at: ago(3) },
+    { id: 4, user_id: ME, kind: "gold", serial: 4, post_id: null, pursuit_id: PURSUIT3_ID, event_id: null, space_id: null, corner_id: null, issued_by: null, issued_at: ago(4) },
+  ];
   const pursuit_plans: Row<"pursuit_plans">[] = [
     { pursuit_id: PURSUIT_ID, user_id: ME, next_session_at: ahead(26), next_session_note: "Trim the three leather-hard bowls, then wedge the next batch", times_per_week: 3, updated_at: ago(1) },
   ];
@@ -116,7 +131,7 @@ export function buildFixtures(now = new Date()): Fixtures {
   const space_members: Row<"space_members">[] = [sm(ME, "host"), sm(THEO, "host"), sm(PRIYA, "member"), sm(SAM, "member"), sm(INES, "member"), sm("22222222-2222-4222-8222-222222222205", "member", "pending")];
   const space_moments: Row<"space_moments">[] = [1, 2, 3, 10, 11].map((post_id) => ({ space_id: SPACE_ID, post_id, status: "approved", featured: post_id === 10, removed_by_host: false, added_at: ago(post_id / 2) }));
   const space_events: Row<"space_events">[] = [
-    { id: 1, space_id: SPACE_ID, title: "Open studio night", description: "Bring a bisque piece to glaze. Tea provided.", starts_at: ahead(3), ends_at: ahead(5), timezone: "America/Los_Angeles", meets: "in_person", neighborhood: "Riverside", city: "Portland", featured: true, status: "scheduled", created_by: ME, created_at: ago(5) },
+    { id: 1, space_id: SPACE_ID, title: "Open studio night", description: "Bring a bisque piece to glaze. Tea provided.", starts_at: ahead(3), ends_at: ahead(5), timezone: "America/Los_Angeles", meets: "in_person", neighborhood: "Riverside", city: "Portland", featured: true, status: "scheduled", created_by: ME, created_at: ago(5), price: "Rs 1,200", capacity: 8, booking_url: "https://example.com/open-studio" } as Row<"space_events">,
     { id: 2, space_id: SPACE_ID, title: "Glaze swap", description: null, starts_at: ahead(48), ends_at: null, timezone: "America/Los_Angeles", meets: "both", neighborhood: null, city: null, featured: false, status: "scheduled", created_by: ME, created_at: ago(4) },
     { id: 3, space_id: SPACE_ID, title: "Kiln unloading and show-and-tell", description: null, starts_at: ahead(120), ends_at: null, timezone: "America/Los_Angeles", meets: "in_person", neighborhood: "Riverside", city: "Portland", featured: false, status: "scheduled", created_by: THEO, created_at: ago(3) },
   ];
@@ -140,7 +155,7 @@ export function buildFixtures(now = new Date()): Fixtures {
   const emptyTables = ["blocks", "bookmarks", "connections", "conversation_reads", "hobby_follows", "post_likes", "post_reflections", "private_logs", "profile_links", "reactions", "reports", "thoughts", "moment_drafts", "pursuit_invite_links", "space_join_requests", "space_host_invites", "space_deletion_requests", "space_deletion_approvals", "event_private_details", "space_private_details", "space_corners", "corners", "category_suggestions", "invites", "waitlist"] as const;
   const empties = Object.fromEntries(emptyTables.map((t) => [t, []])) as Fixtures;
   // Maya follows four people, so Home shows a feed. (The empty Home screen blanks this out in its setup.)
-  const profile_follows = [THEO, PRIYA, SAM, INES].map((followed_id) => ({ follower_id: ME, followed_id, status: "accepted", created_at: ago(30) }));
+  const profile_follows = [THEO, PRIYA, SAM, INES].map((followed_id) => ({ follower_id: ME, followed_id, status: "accepted", created_at: ago(30), responded_at: ago(30) }));
   const profile_settings: Row<"profile_settings">[] = [];
   const app_config: Row<"app_config">[] = [{ key: "corner_min_moments_30d", value: 3, updated_at: ago(30) }, { key: "trademark_blocklist", value: [], updated_at: ago(30) }];
   const categories: Row<"categories">[] = [{ slug: "crafts-making", name: "Crafts & Making", description: null, examples: null, keywords: null, prompt: null, active: true, sort_order: 1, created_at: ago(200), updated_at: ago(200) }];
@@ -149,5 +164,5 @@ export function buildFixtures(now = new Date()): Fixtures {
   // config.ts (which can't be imported here: it reads import.meta.env).
   const termsVersion = fs.readFileSync(new URL("../../src/app/config.ts", import.meta.url), "utf8").match(/TERMS_VERSION = "([^"]+)"/)?.[1] ?? "";
   const terms_acceptances = profiles.map((p) => ({ user_id: p.id, terms_version: termsVersion, accepted_at: ago(119) }));
-  return { ...empties, profile_follows, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
+  return { ...empties, ...({ pursuit_sessions, pursuit_session_rsvps: [], stubs } as unknown as Fixtures), profile_follows, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
 }

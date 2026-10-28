@@ -9,6 +9,7 @@ export type TicketVariant = "session" | "event" | "gold";
 
 const STUB_WIDTH = 88; // px, the right-hand count
 const WIDE_STUB_WIDTH = 124; // px, when the total has two digits ("10/10")
+const COMPACT_STUB_WIDTH = 14; // px, the narrow tear-off edge on a grid tile
 const NOTCH = 9; // px, radius of the perforation cut-outs
 
 const GOLD = "#D7A03D"; // design-token-ignore: gold stub colour from the visual spec (the amber category colour, fixed in both themes)
@@ -34,6 +35,7 @@ export function Ticket({
   color = "var(--cat-orange)",
   reveal = false,
   layoutId,
+  compact = false,
   className,
 }: {
   variant?: TicketVariant;
@@ -48,6 +50,8 @@ export function Ticket({
   reveal?: boolean;
   /** Shared-element id so a tile in a grid can become the full-screen stub. */
   layoutId?: string;
+  /** A small tile for a grid: the perforation sits near the right edge and there is no count. */
+  compact?: boolean;
   className?: string;
 }) {
   const [shown, setShown] = useState(count ? (reveal ? Math.max(0, count.done - 1) : count.done) : 0);
@@ -62,7 +66,7 @@ export function Ticket({
     return () => window.clearTimeout(t);
   }, [count, reveal]);
 
-  const stubWidth = count && String(count.total).length >= 2 ? WIDE_STUB_WIDTH : STUB_WIDTH;
+  const stubWidth = compact ? COMPACT_STUB_WIDTH : count && String(count.total).length >= 2 ? WIDE_STUB_WIDTH : STUB_WIDTH;
   const x = `calc(100% - ${stubWidth}px)`;
   // design-token-ignore: mask colours only set alpha; they are never painted
   const notch = (y: string) => `radial-gradient(circle ${NOTCH}px at ${x} ${y}, #0000 98%, #000)`;
@@ -84,7 +88,7 @@ export function Ticket({
       style={style}
       className={cn("relative flex min-h-28 w-full overflow-hidden rounded-card text-[var(--ink)]", className)}
     >
-      <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-4">
+      <div className={cn("flex min-w-0 flex-1 flex-col justify-between gap-2", compact ? "p-3" : "p-4")}>
         <span className="text-caption font-semibold tracking-[0.08em] opacity-80">
           {serial ? `Soosh · Stub ${String(serial).padStart(3, "0")}` : "Soosh · Stub"}
         </span>
@@ -110,7 +114,7 @@ export function Ticket({
         className="absolute inset-y-3 border-l-2 border-dashed border-[var(--ink)]/35"
       />
 
-      {count && (
+      {count && !compact && (
         <div style={{ width: stubWidth }} className="flex shrink-0 items-center justify-center font-[family-name:var(--font-display)] text-display leading-none font-extrabold">
           <span className="sr-only">
             {count.done} of {count.total}

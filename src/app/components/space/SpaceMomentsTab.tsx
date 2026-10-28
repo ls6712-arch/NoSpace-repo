@@ -9,8 +9,9 @@ import type { Post } from "../../data/posts";
 import { Loadable } from "../ui/skeleton";
 import { MomentGridSkeleton } from "../Skeletons";
 import { EmptyState } from "../StateViews";
+import { orderSpaceMoments } from "../../lib/spaceMoments";
 
-export function SpaceMomentsTab({ space, isActiveMember }: { space: SpaceRow; isActiveMember: boolean }) {
+export function SpaceMomentsTab({ space, isActiveMember, hostIds = [] }: { space: SpaceRow; isActiveMember: boolean; hostIds?: readonly string[] }) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[] | "loading">("loading");
   const [openPost, setOpenPost] = useState<Post | null>(null);
@@ -72,7 +73,8 @@ export function SpaceMomentsTab({ space, isActiveMember }: { space: SpaceRow; is
   return (
     <div className="py-6">
       <div className={MOMENT_GRID}>
-        {posts.map((post) => (
+        {/* Moments from members first, the hosts' own after. */}
+        {orderSpaceMoments(posts, new Set(hostIds)).map((post) => (
           <MomentCard key={post.id} post={post} surface="feed" onOpen={() => setOpenPost(post)} />
         ))}
       </div>

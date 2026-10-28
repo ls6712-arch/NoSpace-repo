@@ -373,3 +373,36 @@ Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
 | Couldn’t add it. Try again. | Shown if the save failed |
 
 A Corner is never guessed for a person. It comes from something they chose that carries one: the Activity row, a Pursuit (picked in Counts toward, or the one Log was opened from), a Corner's own "I did this" link, or a tap on one of these chips. The chips show only when nothing picked carries a Corner.
+
+### Core loop v1, screens 9 to 12 (Oct 28, 2026)
+
+Strings from `docs/design/core-loop/09` to `12`, added with PR 5. The brief's "follower" and "people doing it" counts, "You're one behind" and "cheered" are not used (counts on Spaces and people, comparison wording, the word cheer).
+
+| Term | Meaning |
+|---|---|
+| {City} · {N} Stubs · {N} Corners | Line under your name on You. City only if you gave one. Corners is how many you have logged in |
+| Stubs / Pursuits / Moments | The three tabs on You. Stubs newest first; Pursuits active first, then finished with their gold Stub; Moments grouped by Corner |
+| Shelf, links and badges | Link at the bottom of You to the fuller page (/you/all) |
+| No Stubs yet. / Log a Moment toward a Pursuit and you get one. | Empty Stubs tab |
+| No Pursuits yet. / Start one from any Corner. | Empty Pursuits tab |
+| No Moments yet. / Anything you log shows up here. | Empty Moments tab |
+| Finished / complete | Meta on a gold Stub |
+| Share / Link copied | Button on a full-screen Stub and on a Space; what it says once the link is on the clipboard |
+| Search Moments, people, Spaces | Search field. Cancel leaves it |
+| This week / Up to 2 hr / With people | Search filter chips. "Free" is not offered yet: only events carry a price and Search does not list events |
+| Activity / Open Pursuits near you / Spaces / People | Search sections, in that order. Activity rows show the group and how long it takes, never a count of people |
+| Type something to search. | Search with no query |
+| Ask Soosh | Card shown first when a search reads like a sentence. Behind `askSooshEnabled`, off by default; plans are fixtures |
+| Notifications | Title of the screen. "← Home" goes back |
+| Needs you / Earlier | The two sections. Needs you holds cards with two buttons that collapse away when answered |
+| {Pursuit} is {time} · {N} going | Accent card for the next session of a Pursuit you are in and have not answered. Buttons I’m going and Can’t make it |
+| {Name} wants to join “{Pursuit}” | Card for someone asking to join an open group you run. Buttons Let in, Not now, and a View profile link |
+| {Name} wants to follow your Shelf | Follow request card. Buttons Accept and Decline |
+| {Pursuit} has been quiet for {N} weeks. Pause it? | A nudge in Earlier after 5 weeks with nothing logged. Button Pause. Never a score |
+| Nothing here yet. | Empty Earlier |
+| Open Pursuits | Heading on a Space page over the open groups its hosts run. Badge "{N} spots" is the spots left |
+| Price (optional) / Spots (optional) / Booking link (optional) | Event fields. Under the link: "People pay and book on your page." |
+| Book on the host’s page | Link out from an event with a booking link. Nothing is paid inside Soosh |
+
+A Space is listed on Discover, Corner pages, Search and Home only once members (people who are not its hosts) have shared an approved Moment in it. On its own page, members' Moments come first and the hosts' own after.
+

@@ -1,6 +1,7 @@
 import { supabase } from "../../lib/supabase";
 import { MERGED_CORNERS } from "../data/hobbies";
 import type { SpaceRow } from "./spaces";
+import { onlySpacesWithMemberMoments } from "./spaceMoments";
 
 /**
  * What is happening in the curated Corners right now: their Spaces and
@@ -99,9 +100,9 @@ export async function fetchCornersLive(opts: Options): Promise<Map<string, Corne
     .select("id, slug, name, cover_image, access, created_by, city, neighborhood")
     .in("id", spaceIds)
     .eq("status", "active");
-  const spaceById = new Map(
-    ((spaceRows as LiveSpace[] | null) ?? []).filter((s) => !opts.openOnly || s.access === "open").map((s) => [s.id, s]),
-  );
+  // Corner pages, Discover and the rest list a Space only once members have shared a Moment in it.
+  const shown = await onlySpacesWithMemberMoments((spaceRows as LiveSpace[] | null) ?? []);
+  const spaceById = new Map(shown.filter((s) => !opts.openOnly || s.access === "open").map((s) => [s.id, s]));
 
   const slugsBySpace = new Map<string, Set<string>>();
   for (const l of links ?? []) {

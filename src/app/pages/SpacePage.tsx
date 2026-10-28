@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { AddMomentToSpaceDialog } from "../components/AddMomentToSpaceDialog";
 import { SpaceHomeTab } from "../components/space/SpaceHomeTab";
+import { ShareSpaceButton } from "../components/space/ShareSpaceButton";
+import { SpaceOpenPursuits } from "../components/space/SpaceOpenPursuits";
 import { SpaceMomentsTab } from "../components/space/SpaceMomentsTab";
 import { SpaceEventsTab } from "../components/space/SpaceEventsTab";
 import { SpacePeopleTab } from "../components/space/SpacePeopleTab";
@@ -22,7 +24,7 @@ import { notify } from "../components/ui/toaster";
 import { TOAST } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 
-type CornerLite = { slug: string; name: string; isPrimary: boolean };
+type CornerLite = { slug: string; spaceSlug?: string; name: string; isPrimary: boolean };
 type HostLite = { id: string; name: string; avatarUrl?: string };
 
 function initials(name: string) {
@@ -93,7 +95,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       const [{ data: cornerRows }, { data: hostRows }, momentCountResult, { data: addressRow }, { data: featuredRows }, pendingMomentsResult] = await Promise.all([
         supabase
           .from("space_corners")
-          .select("is_primary, added_at, corners(slug, name)")
+          .select("is_primary, added_at, corners(slug, space_slug, name)")
           .eq("space_id", space.id)
           .order("is_primary", { ascending: false })
           .order("added_at", { ascending: true }),
@@ -132,7 +134,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
       setPendingMomentsCount(pendingMomentsResult.count ?? 0);
       setCorners(
         (cornerRows ?? [])
-          .map((r: any) => r.corners && { slug: r.corners.slug, name: capitalizeCornerName(r.corners.name), isPrimary: r.is_primary })
+          .map((r: any) => r.corners && { slug: r.corners.slug, spaceSlug: r.corners.space_slug as string | undefined, name: capitalizeCornerName(r.corners.name), isPrimary: r.is_primary })
           .filter(Boolean),
       );
       setSpaceAddress(addressRow?.exact_address ?? null);
@@ -349,6 +351,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           ) : (
             <RequestToJoinButton spaceId={space.id} disabled={actionBusy || !user || space.status !== "active"} onDone={refetchMembership} setError={setActionError} />
           )}
+          <ShareSpaceButton slug={space.slug} name={space.name} />
           {isHost && (
             <Link to={`/space/${space.slug}/edit`} className="text-caption text-muted-foreground underline hover:text-foreground">
               Edit Space
@@ -374,6 +377,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
           </TabsList>
           </div>
           <TabsContent value="home">
+            <SpaceOpenPursuits spaceSlug={primaryCorner?.spaceSlug} cornerSlug={primaryCorner?.slug} hostIds={hosts.map((h) => h.id)} />
             <SpaceHomeTab
               space={space}
               isActiveMember={!!isActiveMember}
@@ -384,7 +388,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             />
           </TabsContent>
           <TabsContent value="moments">
-            <SpaceMomentsTab space={space} isActiveMember={!!isActiveMember} />
+            <SpaceMomentsTab space={space} isActiveMember={!!isActiveMember} hostIds={hosts.map((h) => h.id)} />
           </TabsContent>
           <TabsContent value="people">
             <SpacePeopleTab space={space} isHost={!!isHost} />

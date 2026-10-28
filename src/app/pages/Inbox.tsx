@@ -1,212 +1,258 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Check, Inbox as InboxIcon, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
+import { useContent } from "../context/ContentContext";
+import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 import { respondToFollow } from "../lib/profileFollows";
-import { Button } from "../components/ui/button";
+import { collectPursuitMoments } from "../lib/pursuitTrail";
+import { fetchJoinRequestsForMe, quietPursuits, answeredIds, markAnswered, type JoinRequest } from "../lib/needsYou";
+import { answerJoinRequest, fetchNextSession, setImIn, type PursuitSession } from "../lib/openPursuits";
+import { pursuitStatus, pauseProject, useJournal } from "../lib/journal";
+import { profilesById } from "../lib/pursuitsRemote";
+import { PillButton } from "../components/ui/PillButton";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Loadable } from "../components/ui/skeleton";
 import { ListSkeleton } from "../components/Skeletons";
 import { EmptyState } from "../components/StateViews";
 import { notifyError } from "../components/ui/toaster";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { notificationText } from "../lib/text";
-import { formatWhen } from "../lib/dates";
+import { formatDateTime } from "../lib/dates";
+import { plural } from "../lib/plural";
+import { sheet } from "../lib/motionTokens";
 
-/**
- * Inbox: everything addressed to you, in one place.
- *
- *   Requests   follow requests waiting on you
- *   Activity   everything else that happened — thoughts, accepts, invites
- *
- * Direct messaging is very much alive (SocialContext.tsx's
- * startDirectMessage/Messages.tsx) — only the old person-to-person
- * connections system (PersonActions' Connect/Invite) was retired. Messages,
- * including a stranger's first message waiting to be accepted or ignored,
- * live only in Messages, never here —
- * see docs/communication-strategy.md's Phase 1 decisions on why message
- * requests and follow requests stay in separate places. Follow
- * (sql/profile-follows.sql) is a separate, accept-based relationship: it
- * doesn't unlock messaging, just decides whether a request counts toward
- * someone's follower count.
- */
 function initials(name: string) {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 }
 
+/** A card that collapses out with a spring once it has been answered. */
+function Collapsing({ id, className, children }: { id: string; className: string; children: React.ReactNode }) {
+  return (
+    <motion.li key={id} layout initial={false} exit={{ opacity: 0, height: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0 }} transition={sheet} className={`overflow-hidden ${className}`}>
+      {children}
+    </motion.li>
+  );
+}
+
+/**
+ * Notifications (screen 11): "Needs you" first (an event you have not answered,
+ * a request to join your open group, a request to follow you), each card with
+ * two buttons that collapses away once answered, then "Earlier". No comparison
+ * wording anywhere.
+ */
 export function Inbox() {
   const { user, isConfigured } = useAuth();
   const social = useSocial();
+  const { posts } = useContent();
+  const { logs } = usePrivateLogs();
+  const journal = useJournal();
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
   const followRequestsOrNull = useIncomingFollowRequests(user?.id, followRefreshKey);
   const followRequests = followRequestsOrNull ?? [];
-  const [respondingTo, setRespondingTo] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [answered, setAnswered] = useState<Set<string>>(() => answeredIds());
+  const [joins, setJoins] = useState<(JoinRequest & { name: string; username: string | null })[]>([]);
+  const [events, setEvents] = useState<{ pursuitId: string; title: string; session: PursuitSession }[]>([]);
+  const [paused, setPaused] = useState<Set<string>>(new Set());
 
-  const requestCount = followRequests.length;
-  const unreadActivity = social.notifications.filter((n) => !n.read).length;
+  const done = (id: string) => {
+    markAnswered(id);
+    setAnswered((prev) => new Set(prev).add(id));
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    let live = true;
+    void fetchJoinRequestsForMe(user.id).then(async (list) => {
+      const names = await profilesById(list.map((j) => j.userId));
+      if (live) setJoins(list.map((j) => ({ ...j, name: names.get(j.userId)?.displayName ?? "Someone", username: names.get(j.userId)?.username ?? null })));
+    });
+    return () => {
+      live = false;
+    };
+  }, [user?.id]);
+
+  // The next session of each Pursuit you are in that you have not said yes to.
+  const activeIds = journal.projects.filter((p) => pursuitStatus(p) === "active").map((p) => p.id).slice(0, 4);
+  const activeKey = activeIds.join(",");
+  useEffect(() => {
+    if (!user || activeIds.length === 0) return;
+    let live = true;
+    void Promise.all(activeIds.map((id) => fetchNextSession(id))).then((sessions) => {
+      if (!live) return;
+      setEvents(
+        sessions.flatMap((s, i) => {
+          if (!s || s.going.some((g) => g.userId === user.id)) return [];
+          const title = journal.projects.find((p) => p.id === activeIds[i])?.title ?? "";
+          return [{ pursuitId: activeIds[i], title, session: s }];
+        }),
+      );
+    });
+    return () => {
+      live = false;
+    };
+    // activeIds is derived from activeKey.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, activeKey]);
+
+  const quiet = useMemo(
+    () => quietPursuits(journal.projects, (p) => collectPursuitMoments(p.id, posts, journal.entryProject, logs)).filter((q) => !paused.has(q.id)),
+    [journal.projects, journal.entryProject, posts, logs, paused],
+  );
 
   const answerFollow = async (followerId: string, accept: boolean) => {
-    if (!user || respondingTo) return;
-    setRespondingTo(followerId);
+    if (!user || busy) return;
+    setBusy(followerId);
     const ok = await respondToFollow(followerId, user.id, accept);
     if (!ok) notifyError(ERROR_LINE, () => void answerFollow(followerId, accept));
     setFollowRefreshKey((k) => k + 1);
-    setRespondingTo(null);
+    setBusy(null);
+  };
+  const answerJoin = async (j: JoinRequest, accept: boolean) => {
+    if (busy) return;
+    setBusy(j.userId + j.pursuitId);
+    const err = await answerJoinRequest(j.pursuitId, j.userId, accept);
+    setBusy(null);
+    if (err) return notifyError(err, () => void answerJoin(j, accept));
+    done(`join:${j.pursuitId}:${j.userId}`);
+  };
+  const answerEvent = async (e: { pursuitId: string; session: PursuitSession }, going: boolean) => {
+    if (!user || busy) return;
+    setBusy(`event:${e.session.id}`);
+    const err = going ? await setImIn(e.session.id, user.id, true) : null;
+    setBusy(null);
+    if (err) return notifyError(err, () => void answerEvent(e, going));
+    done(`event:${e.session.id}`);
   };
 
   if (isConfigured && !user) {
     return (
-      <div className="min-h-viewport bg-surface py-10">
-        <div className="container mx-auto max-w-2xl px-4">
-          <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
-            Inbox
-          </h1>
-          <p className="mb-6 text-small text-muted-foreground">
-            Requests and activity live here once you have an account.
-          </p>
-          <Link to="/login?next=/inbox">
-            <Button variant="coral">Log in</Button>
-          </Link>
-        </div>
+      <div className="mx-auto w-full max-w-md px-4 py-10">
+        <h1 className="mb-2 text-title font-semibold">Notifications</h1>
+        <p className="mb-6 text-small text-muted-foreground">Requests and activity live here once you have an account.</p>
+        <Link to="/login?next=/inbox" className="inline-flex min-h-11 items-center rounded-full bg-accent px-6 text-body font-semibold text-accent-foreground">
+          Log in
+        </Link>
       </div>
     );
   }
 
+  const shownEvents = events.filter((e) => !answered.has(`event:${e.session.id}`));
+  const shownJoins = joins.filter((j) => !answered.has(`join:${j.pursuitId}:${j.userId}`));
+  const needsCount = shownEvents.length + shownJoins.length + followRequests.length;
+  const earlier = social.notifications;
+
   return (
-    <div className="min-h-viewport bg-surface py-8 sm:py-12">
-      <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
-          Inbox
-        </h1>
-        <p className="mb-8 mt-2 text-small text-muted-foreground">
-          Requests and notifications for you.
-        </p>
+    <div className="mx-auto w-full max-w-md px-4 pb-10 pt-4">
+      <Link to="/my-space" className="inline-flex min-h-11 items-center text-body text-muted-foreground hover:text-foreground">
+        ← Home
+      </Link>
+      <h1 className="mb-5 text-title font-semibold">Notifications</h1>
 
-        <Tabs defaultValue={requestCount > 0 ? "requests" : "activity"}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="requests">
-              Requests{requestCount > 0 ? ` (${requestCount})` : ""}
-            </TabsTrigger>
-            <TabsTrigger value="activity">
-              Activity{unreadActivity > 0 ? ` (${unreadActivity})` : ""}
-            </TabsTrigger>
-          </TabsList>
-
-          {/* ── Requests ─────────────────────────────────────────────── */}
-          <TabsContent value="requests">
-            <Loadable loading={followRequestsOrNull === null} skeleton={<ListSkeleton count={3} />}>
-            {requestCount === 0 ? (
-              <EmptyState
-                line="Nothing waiting on you."
-                hint="Follow requests arrive here, and none of them take effect until you answer."
-                action={{ label: "Browse Spaces", to: "/discover?tab=spaces" }}
-              />
-            ) : (
-              <div className="space-y-6">
-                {followRequests.length > 0 && (
-                  <section>
-                    <h2 className="mb-3 text-small text-muted-foreground">Follow requests</h2>
-                    <ul className="space-y-2">
-                      {followRequests.map((r) => (
-                        <li
-                          key={r.followerId}
-                          className="rounded-card border border-border bg-card px-4 py-3.5"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="size-9 shrink-0">
-                              {r.avatarUrl && <AvatarImage src={r.avatarUrl} alt="" />}
-                              <AvatarFallback className="text-caption">
-                                {initials(r.displayName)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-small">
-                                <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
-                                  {r.displayName}
-                                </strong>{" "}
-                                wants to follow your Shelf.
-                              </p>
-                            </div>
-                          </div>
-                          <div className="mt-3 flex gap-2">
-                            <Button
-                              size="sm"
-                              disabled={respondingTo === r.followerId}
-                              className="flex-1 text-on-brand [background-image:var(--gradient-brand)]"
-                              onClick={() => answerFollow(r.followerId, true)}
-                            >
-                              <Check className="size-3.5" />
-                              Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={respondingTo === r.followerId}
-                              className="flex-1"
-                              onClick={() => answerFollow(r.followerId, false)}
-                            >
-                              <X className="size-3.5" />
-                              Decline
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-              </div>
-            )}
-            </Loadable>
-          </TabsContent>
-
-          {/* ── Activity ─────────────────────────────────────────────── */}
-          <TabsContent value="activity">
-            <Loadable loading={!social.loaded} skeleton={<ListSkeleton count={5} />}>
-            {social.notifications.length === 0 ? (
-              <EmptyState
-                size={requestCount === 0 ? "page" : "section"}
-                icon={<InboxIcon />}
-                line="No notifications yet."
-                hint="Thoughts on your Moments and accepted follows all show up here."
-                action={{ label: "Log a Moment", to: "/create" }}
-              />
-            ) : (
-              <ul className="space-y-2">
-                {social.notifications.map((n) => (
-                  <li
-                    key={n.id}
-                    className={`rounded-card border px-4 py-3.5 text-small ${
-                      n.read
-                        ? "border-border bg-card"
-                        : "border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--yellow)_10%,var(--card))]"
-                    }`}
-                  >
-                    {!n.read && <span className="sr-only">Unread. </span>}
-                    {!(n.actorName && n.body.startsWith(n.actorName)) && (
-                      <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
-                        {n.actorName ?? "Someone"}{" "}
-                      </strong>
-                    )}
-                    {notificationText(n.body)}
-                    <span className="ml-2 text-caption text-muted-foreground">
-                      {formatWhen(n.createdAt, { ago: true })}
-                    </span>
-                  </li>
+      <Loadable loading={followRequestsOrNull === null && !social.loaded} skeleton={<ListSkeleton count={4} />}>
+        {needsCount > 0 && (
+          <section aria-labelledby="needs-you" className="mb-6">
+            <h2 id="needs-you" className="mb-2 text-small font-semibold text-muted-foreground">
+              Needs you
+            </h2>
+            <ul className="flex flex-col">
+              <AnimatePresence initial={false}>
+                {shownEvents.map((e) => (
+                  <Collapsing key={`event:${e.session.id}`} id={`event:${e.session.id}`} className="mb-3 rounded-card bg-accent p-4 text-accent-foreground">
+                    <p className="text-body font-semibold">{`${e.title.slice(0, 80)} is ${formatDateTime(e.session.startsAt)}`}</p>
+                    <p className="mt-1 text-small">{[e.session.place, e.session.going.length > 0 ? `${e.session.going.length} going` : undefined].filter(Boolean).join(" · ")}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <PillButton variant="ink" disabled={busy === `event:${e.session.id}`} onClick={() => void answerEvent(e, true)}>
+                        I’m going
+                      </PillButton>
+                      <PillButton variant="outline" className="border-[var(--ink)] text-[var(--ink)]" onClick={() => void answerEvent(e, false)}>
+                        Can’t make it
+                      </PillButton>
+                    </div>
+                  </Collapsing>
                 ))}
-              </ul>
-            )}
-            </Loadable>
-          </TabsContent>
-        </Tabs>
-      </div>
+                {shownJoins.map((j) => (
+                  <Collapsing key={`join:${j.pursuitId}:${j.userId}`} id={`join:${j.pursuitId}:${j.userId}`} className="mb-3 rounded-card bg-card p-4">
+                    <p className="text-body font-semibold">{`${j.name.slice(0, 60)} wants to join “${j.pursuitTitle.slice(0, 80)}”`}</p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <PillButton disabled={busy === j.userId + j.pursuitId} onClick={() => void answerJoin(j, true)}>
+                        Let in
+                      </PillButton>
+                      <PillButton variant="outline" onClick={() => void answerJoin(j, false)}>
+                        Not now
+                      </PillButton>
+                      {j.username && (
+                        <Link to={`/u/${j.username}`} className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-accent-text underline underline-offset-4">
+                          View profile
+                        </Link>
+                      )}
+                    </div>
+                  </Collapsing>
+                ))}
+                {followRequests.map((r) => (
+                  <Collapsing key={`follow:${r.followerId}`} id={`follow:${r.followerId}`} className="mb-3 rounded-card bg-card p-4">
+                    <p className="text-body font-semibold">{`${r.displayName.slice(0, 60)} wants to follow your Shelf`}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <PillButton disabled={busy === r.followerId} onClick={() => void answerFollow(r.followerId, true)}>
+                        Accept
+                      </PillButton>
+                      <PillButton variant="outline" disabled={busy === r.followerId} onClick={() => void answerFollow(r.followerId, false)}>
+                        Decline
+                      </PillButton>
+                    </div>
+                  </Collapsing>
+                ))}
+              </AnimatePresence>
+            </ul>
+          </section>
+        )}
+
+        <section aria-labelledby="earlier">
+          <h2 id="earlier" className="mb-3 text-small font-semibold text-muted-foreground">
+            Earlier
+          </h2>
+          {earlier.length === 0 && quiet.length === 0 ? (
+            <EmptyState size="inline" line="Nothing here yet." hint="Reactions on your Moments and updates from your Pursuits show up here." action={{ label: "Log a Moment", to: "/create" }} />
+          ) : (
+            <ul className="flex flex-col gap-4">
+              {quiet.map((q) => (
+                <li key={`quiet:${q.id}`} className="flex items-center gap-3">
+                  <Avatar className="size-10 shrink-0">
+                    <AvatarFallback className="text-small">{initials(q.title)}</AvatarFallback>
+                  </Avatar>
+                  <p className="min-w-0 flex-1 text-body">
+                    {`${q.title.slice(0, 60)} has been quiet for ${plural(q.weeks, "week")}. Pause it?`}
+                  </p>
+                  <PillButton
+                    variant="outline"
+                    onClick={() => {
+                      pauseProject(q.id);
+                      setPaused((prev) => new Set(prev).add(q.id));
+                    }}
+                  >
+                    Pause
+                  </PillButton>
+                </li>
+              ))}
+              {earlier.map((n) => (
+                <li key={n.id} className="flex items-center gap-3">
+                  <Avatar className="size-10 shrink-0">
+                    <AvatarFallback className="text-small">{initials(n.actorName ?? "Someone")}</AvatarFallback>
+                  </Avatar>
+                  <p className={`min-w-0 text-body ${n.read ? "text-muted-foreground" : ""}`}>
+                    {!n.read && <span className="sr-only">Unread. </span>}
+                    {!(n.actorName && n.body.startsWith(n.actorName)) && <strong className="font-semibold">{n.actorName ?? "Someone"} </strong>}
+                    {notificationText(n.body)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </Loadable>
     </div>
   );
 }

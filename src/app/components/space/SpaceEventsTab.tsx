@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { plural } from "../../lib/plural";
 import { MapPin, Star } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
@@ -252,7 +253,22 @@ export function SpaceEventsTab({
                         {address}
                       </p>
                     )}
+                    {(e.price || e.capacity) && (
+                      <p className="mt-1 text-caption text-muted-foreground">
+                        {[e.price, e.capacity ? plural(e.capacity, "spot") : undefined].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
                     {e.description && <p className="mt-1.5 text-small">{e.description}</p>}
+                    {e.booking_url && (
+                      <a
+                        href={e.booking_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline underline-offset-4"
+                      >
+                        Book on the host’s page
+                      </a>
+                    )}
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-2 gap-y-3">

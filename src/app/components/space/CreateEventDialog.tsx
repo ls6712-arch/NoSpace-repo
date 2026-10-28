@@ -5,7 +5,7 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { createEvent, updateEvent, type SpaceRow, type SpaceEventRow } from "../../lib/spaces";
+import { createEvent, updateEvent, setEventListing, isBookingUrl, type SpaceRow, type SpaceEventRow } from "../../lib/spaces";
 import { notify } from "../ui/toaster";
 import { TOAST } from "../../lib/stateCopy";
 
@@ -15,7 +15,7 @@ function toLocalInput(iso: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-type FieldErrors = { title?: string; startsAt?: string; location?: string };
+type FieldErrors = { title?: string; startsAt?: string; location?: string; price?: string; capacity?: string; bookingUrl?: string };
 
 /** Create or edit an event. In edit mode, `event`'s own values are the
  * starting point; in create mode, defaults come from the Space itself
@@ -46,6 +46,9 @@ export function CreateEventDialog({
   const [neighborhood, setNeighborhood] = useState("");
   const [city, setCity] = useState("");
   const [exactAddress, setExactAddress] = useState("");
+  const [price, setPrice] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [bookingUrl, setBookingUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +69,9 @@ export function CreateEventDialog({
       setNeighborhood(event.neighborhood ?? "");
       setCity(event.city ?? "");
       setExactAddress(eventAddress ?? "");
+      setPrice(event.price ?? "");
+      setCapacity(event.capacity ? String(event.capacity) : "");
+      setBookingUrl(event.booking_url ?? "");
     } else {
       setTitle("");
       setDescription("");
@@ -75,6 +81,9 @@ export function CreateEventDialog({
       setNeighborhood(space.neighborhood ?? "");
       setCity(space.city ?? "");
       setExactAddress("");
+      setPrice("");
+      setCapacity("");
+      setBookingUrl("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, event?.id]);
@@ -88,6 +97,10 @@ export function CreateEventDialog({
     if (needsLocation && (!neighborhood.trim() || !city.trim())) {
       errors.location = "Needed for an in-person event.";
     }
+    const spots = capacity.trim() ? Number(capacity) : undefined;
+    if (price.trim().length > 40) errors.price = "Keep it to 40 characters.";
+    if (spots !== undefined && (!Number.isInteger(spots) || spots < 1 || spots > 1000)) errors.capacity = "A whole number from 1 to 1000.";
+    if (bookingUrl.trim() && !isBookingUrl(bookingUrl)) errors.bookingUrl = "Use a link that starts with https://.";
     setFieldErrors(errors);
     setError(null);
     if (Object.keys(errors).length > 0) return;
@@ -104,9 +117,15 @@ export function CreateEventDialog({
       city: needsLocation ? city.trim() : undefined,
       exactAddress: exactAddress.trim() || undefined,
     };
-    const { error: err } = isEdit
-      ? await updateEvent({ eventId: event.id, ...payload, clearAddress: !exactAddress.trim() && !!eventAddress })
+    const { data: createdId, error: err0 } = isEdit
+      ? { ...(await updateEvent({ eventId: event.id, ...payload, clearAddress: !exactAddress.trim() && !!eventAddress })), data: event.id as number | null }
       : await createEvent({ spaceId: space.id, ...payload });
+    let err = err0;
+    // Only when something is filled in (or was before), so an event still saves before the listing migration is live.
+    const hadListing = !!(event?.price || event?.capacity || event?.booking_url);
+    if (!err && createdId != null && (price.trim() || capacity.trim() || bookingUrl.trim() || hadListing)) {
+      err = (await setEventListing({ eventId: createdId, price: price.trim(), capacity: capacity.trim() ? Number(capacity) : undefined, bookingUrl: bookingUrl.trim() })).error;
+    }
     setSaving(false);
     if (err) return setError(err);
     if (isEdit) notify(TOAST.changesSaved);
@@ -172,6 +191,24 @@ export function CreateEventDialog({
               </div>
             </>
           )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="event-price">Price (optional)</Label>
+              <Input id="event-price" value={price} maxLength={40} onChange={(e) => setPrice(e.target.value)} />
+              {fieldErrors.price && <p className="mt-1 text-caption text-destructive">{fieldErrors.price}</p>}
+            </div>
+            <div>
+              <Label htmlFor="event-capacity">Spots (optional)</Label>
+              <Input id="event-capacity" inputMode="numeric" value={capacity} onChange={(e) => setCapacity(e.target.value.replace(/\D/g, ""))} />
+              {fieldErrors.capacity && <p className="mt-1 text-caption text-destructive">{fieldErrors.capacity}</p>}
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="event-booking">Booking link (optional)</Label>
+            <Input id="event-booking" value={bookingUrl} onChange={(e) => setBookingUrl(e.target.value)} placeholder="https://" />
+            <p className="mt-1 text-caption text-muted-foreground">People pay and book on your page.</p>
+            {fieldErrors.bookingUrl && <p className="mt-1 text-caption text-destructive">{fieldErrors.bookingUrl}</p>}
+          </div>
           {error && <p className="text-caption text-destructive">{error}</p>}
         </div>
         <div className="flex justify-end gap-2">

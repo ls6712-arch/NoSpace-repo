@@ -22,6 +22,7 @@ import { MySpace } from "./pages/MySpace";
 import { HomeFeed } from "./pages/HomeFeed";
 import { Log } from "./pages/Log";
 import { You } from "./pages/You";
+import { YouHome } from "./pages/YouHome";
 import { Onboarding } from "./pages/Onboarding";
 import { Messages } from "./pages/Messages";
 import { Inbox } from "./pages/Inbox";
@@ -114,7 +115,9 @@ export const router = createHashRouter([
       { path: "admin/invites", Component: AdminInvites },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
-      { path: "you", Component: You },
+      { path: "you", Component: YouHome },
+      // The page /you used to be: links, badges, followers, the Shelf.
+      { path: "you/all", Component: You },
       // The old personal page. Anyone who saved or shared /me landed on a
       // 404 after the rename; send them to My Space instead.
       { path: "me", loader: () => redirect("/my-space") },
