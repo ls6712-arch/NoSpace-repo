@@ -142,7 +142,7 @@ export function HomeFeed() {
             </div>
             <p className="mt-6 text-center text-small text-muted-foreground">You’re caught up</p>
             <p className="mt-2 text-center">
-              <Link to="/my-space/all" className="text-small text-accent-text underline-offset-4 hover:underline">
+              <Link to="/my-space/all" className="inline-flex min-h-11 items-center text-small text-accent-text underline-offset-4 hover:underline">
                 See all Moments
               </Link>
             </p>

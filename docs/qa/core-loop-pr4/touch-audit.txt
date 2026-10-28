@@ -1,0 +1,20 @@
+note: touch light/log-posted: TimeoutError: locator.click: Timeout 8000ms exceeded.
+note: touch dark/log-posted: TimeoutError: locator.click: Timeout 8000ms exceeded.
+touch audit @375 (hasTouch): interactive elements 2254; no 44x44 hit area: 3 distinct; corners shared with a neighbour: 10 distinct; overlapping 44px areas: 4 distinct pair(s)
+  SHARED  44x44          a.-my-1.5.-mr-3 "IM"  (hit lands on a.-my-3.block)  [20 screen-runs]
+  SMALL   16x16          button.ring-offset-background.focus:ring-ring "Close"  (hit lands on div.bg-card.text-card-foreground)  [8 screen-runs, 2066px above page bottom]
+  SHARED 164x123         a.absolute.inset-0 "Open Throw 24 bowls by spring"  (hit lands on button.absolute.right-[4.875rem])  [6 screen-runs]
+  SHARED 164x123         a.absolute.inset-0 "Open Sketch something every morn"  (hit lands on button.absolute.right-[4.875rem])  [6 screen-runs]
+  SMALL   28x28          button.absolute.right-2.5 "Change the cover photo for Sketc"  (hit lands on div.group.relative)  [6 screen-runs, 2339px above page bottom]
+  SHARED 343x32          a.flex.items-center "Pottery 7 Moments"  (hit lands on a.flex.items-center)  [6 screen-runs]
+  SHARED  75x106         button.flex.flex-col "First Session"  (hit lands on button.absolute.right-1)  [4 screen-runs]
+  SMALL  109x17  inline  a.text-small.text-accent-text "See all Moments"  (hit lands on div.mx-auto.w-full)  [2 screen-runs, 107px above page bottom]
+  SHARED  26x26          button "Change photo"  (hit lands on button)  [2 screen-runs]
+  SHARED  85x24          button.transition-colors.hover:text-foreground "0 followers"  (hit lands on button.transition-colors.hover:text-foreground)  [2 screen-runs]
+  SHARED 138x32          button.inline-flex.items-center "Start a Pursuit"  (hit lands on button.flex.min-h-11)  [2 screen-runs]
+  SHARED 343x56          button.flex.min-h-14 "Counts toward Nothing"  (hit lands on button.inline-flex.min-h-11)  [2 screen-runs]
+  SHARED  85x48          a.-my-3.5.block "Maya Okafor"  (hit lands on a.-my-3.5.block)  [2 screen-runs]
+  OVERLAP 8px  a.flex.items-center "Pottery 7 Moments"  ⟷  a.flex.items-center "Drawing 1 Moment"
+  OVERLAP 14px  button "Change photo"  ⟷  button "Take photo"
+  OVERLAP 18px  button.transition-colors.hover:text-foreground "0 followers"  ⟷  button.transition-colors.hover:text-foreground "Following"
+  OVERLAP 8px  button.w-full.px-4 "Sketch something every morning"  ⟷  button.w-full.px-4 "Throw 24 bowls by spring"
