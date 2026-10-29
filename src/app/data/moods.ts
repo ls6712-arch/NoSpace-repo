@@ -22,12 +22,16 @@ export interface Mood {
 
 const MOVING = new Set(["running-fitness", "sports-martial-arts", "dance-stage"]);
 
+/** Corners in a Move category whose activity is not moving: stand-up, spoken word and music on one stage. */
+const NOT_MOVING = new Set(["art-creative/open-mics"]);
+
 export const MOODS: readonly Mood[] = [
   { id: "make", label: "Make something", matches: (g) => g.kind === "making" || g.kind === "project" },
   {
     id: "move",
     label: "Move",
-    matches: (_g, space, corner) => MOVING.has(categoryOfCorner(space, corner)?.slug ?? ""),
+    matches: (_g, space, corner) =>
+      !NOT_MOVING.has(`${space}/${corner}`) && MOVING.has(categoryOfCorner(space, corner)?.slug ?? ""),
   },
   { id: "people", label: "Be around people", matches: (g) => g.together === "together" },
   { id: "alone", label: "Some time to yourself", matches: (g) => g.together === "solo" },

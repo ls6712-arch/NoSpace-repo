@@ -147,6 +147,15 @@ Answers from the founder before PR 1. These override the entries above where the
 - **Events** get price, spots and a booking link (migration 20261102000000, `set_event_listing`). Payment is the host's own page.
 - **Attendee-only sessions** are left for later, as asked.
 
+## No Corner ships thin (Oct 29, 2026)
+
+- **The rule.** Every browsable Corner has a `CORNER_GUIDES` entry, a photo, a `CURATED_CORNERS` entry and a `CREDITS` entry. `cornerCompleteness.test.ts` checks it. The 90 Corners that predate the rule are listed in `legacyThin.ts` by missing part (76 lack a curated entry, 75 lack a credit). A listed part that is no longer missing fails the test, the total can only go down (`LEGACY_THIN_CEILING`), and the new Corners can never be listed. Fill a gap and remove its entry in the same change.
+- **10 new built-in Corners:** Cricket, Table tennis (Sports and martial arts); Carrom (Games and puzzles); Open mics, Indian classical dance (Dance and stage); Indian classical music, Piano and keys (Music and sound); Sound baths (Rest and ritual); Stargazing (Outdoors and adventure); Block printing (Crafts and DIY). Piano and keys keeps the slug `piano`. Escape rooms and Resin art are held for a later batch because no suitable photo was found; they are not in any list.
+- **Open mics** covers stand-up, spoken word and music in one Corner. **Indian classical dance** names Bharatanatyam and Kathak as styles; **Indian classical music** names Carnatic and Hindustani vocals, tabla and flute.
+- **Sound baths** copy describes only what happens (lie or sit, gongs and singing bowls). No health or calm claims anywhere, per the trust rules. Its guide says `together` (a booked group session, like Sauna & cold plunge), which is what puts it under a mood.
+- **Move mood.** Mood comes from the category, so Dance and stage Corners show under Move. Indian classical dance stays there. Open mics is excluded with `NOT_MOVING` in `moods.ts` (a test covers both); it still shows under Be around people.
+- **Photos** are Unsplash, each with a `CREDITS` entry and a registered download. Carrom's photo shows men playing; sound baths shows one man at a gong among singing bowls. Both were approved by the founder.
+
 ## Open
 
 - Naming: too many nouns (Corners, Spaces, Moments, Pursuits, Stubs, tickets) and Discover vs Home. Pursuit is the first candidate to cut.

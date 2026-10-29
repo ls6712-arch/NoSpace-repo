@@ -12,7 +12,7 @@ const all = CORNER_CATEGORIES.flatMap((c) => homeCornersIn(c.slug));
 describe("home Corners", () => {
   it("list every browsable built-in Corner once: not merged away, not hidden", () => {
     const entries = hobbies.reduce((n, h) => n + h.subItems.length, 0);
-    expect(entries).toBe(161);
+    expect(entries).toBe(171);
     expect(new Set(all.map((c) => c.slug)).size).toBe(all.length);
     const mergedSlugs = new Set(Object.keys(MERGED_CORNERS).map((k) => k.split("/")[1]));
     const builtIn = new Set(hobbies.flatMap((h) => h.subItems.map((s) => s.slug)));

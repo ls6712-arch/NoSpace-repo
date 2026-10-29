@@ -130,6 +130,7 @@ export const hobbies: Hobby[] = [
       sub("Swimming"), sub("Martial arts"), sub("Strength training"), sub("Basketball"),
       sub("Soccer"), sub("Volleyball"), sub("Boxing"), sub("Skateboarding"),
       sub("Hyrox"), sub("Walking clubs"), sub("Badminton"), sub("Roller and ice skating", "skating"), sub("Ultimate frisbee"),
+      sub("Cricket"), sub("Table tennis"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
@@ -155,6 +156,7 @@ export const hobbies: Hobby[] = [
     subItems: [
       sub("Ceramics"), sub("Painting"), sub("Drawing"), sub("Watercolor"),
       sub("Calligraphy"), sub("Theater"), sub("Illustration"), sub("Sculpture"), sub("Improv"), sub("Life drawing"),
+      sub("Open mics"), sub("Indian classical dance"),
     ],
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:
@@ -179,7 +181,7 @@ export const hobbies: Hobby[] = [
       sub("Pottery"), sub("Knitting"), sub("Crochet"), sub("Embroidery"),
       sub("Sewing"), sub("Woodworking"), sub("Jewelry-making"), sub("Candle-making"),
       sub("Soap-making"), sub("Upcycling"), sub("Paper crafts"), sub("Zines"),
-      sub("Scrapbooking"), sub("Models and miniatures", "model-making"), sub("Miniatures"), sub("Makerspaces"),
+      sub("Scrapbooking"), sub("Block printing"), sub("Models and miniatures", "model-making"), sub("Miniatures"), sub("Makerspaces"),
     ],
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
@@ -229,7 +231,7 @@ export const hobbies: Hobby[] = [
     subItems: [
       sub("Hiking"), sub("Birdwatching"), sub("Foraging"), sub("Camping"),
       sub("Fishing"), sub("Outdoor photography"), sub("Nature journaling"),
-      sub("Kayaking"), sub("Surfing"), sub("Wild swimming"),
+      sub("Kayaking"), sub("Surfing"), sub("Wild swimming"), sub("Stargazing"),
     ],
     gradient: "from-[var(--sky-deep)] to-[var(--forest)]",
     coverImage:
@@ -278,7 +280,7 @@ export const hobbies: Hobby[] = [
     description: "Video games, board games, D&D, cards, puzzles, RPGs.",
     subItems: [
       sub("Board games"), sub("Chess"), sub("Tabletop RPGs"), sub("Trading cards"),
-      sub("Puzzles"), sub("D&D"), sub("Video games"), sub("Trivia"), sub("Mahjong"),
+      sub("Puzzles"), sub("D&D"), sub("Video games"), sub("Trivia"), sub("Mahjong"), sub("Carrom"),
     ],
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
@@ -302,6 +304,7 @@ export const hobbies: Hobby[] = [
     subItems: [
       sub("Music production"), sub("Singing"), sub("Guitar"), sub("Songwriting"),
       sub("DJing"), sub("Make a beat"), sub("Karaoke"), sub("Live music"), sub("Choir and singing", "choir"),
+      sub("Indian classical music"), sub("Piano and keys", "piano"),
     ],
     gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
     coverImage:
@@ -347,7 +350,7 @@ export const hobbies: Hobby[] = [
     description: "Yoga, Pilates, meditation, mindfulness, breathwork.",
     subItems: [
       sub("Yoga"), sub("Pilates"), sub("Meditation"), sub("Mindfulness"),
-      sub("Breathwork"), sub("Sauna & cold plunge"),
+      sub("Breathwork"), sub("Sauna & cold plunge"), sub("Sound baths"),
     ],
     gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
     coverImage:

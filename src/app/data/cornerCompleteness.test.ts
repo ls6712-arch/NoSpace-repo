@@ -6,12 +6,11 @@ import { curatedFor } from "./curatedCorners";
 import { hasHobbyPhoto, photoCredit } from "./hobbyPhotos";
 import { LEGACY_THIN, LEGACY_THIN_CEILING, type ThinPart } from "./legacyThin";
 
-// The 12 Corners added with the rule. They ship complete and can never be
+// The 10 Corners added with the rule. They ship complete and can never be
 // listed in LEGACY_THIN.
 const NEW_COMPLETE = [
-  "cricket", "carrom", "table-tennis", "escape-rooms", "open-mics",
-  "indian-classical-dance", "indian-classical-music", "piano", "sound-baths",
-  "stargazing", "resin-art", "block-printing",
+  "cricket", "carrom", "table-tennis", "open-mics", "indian-classical-dance",
+  "indian-classical-music", "piano", "sound-baths", "stargazing", "block-printing",
 ];
 
 const all = [...new Map(

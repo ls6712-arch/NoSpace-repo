@@ -1241,3 +1241,274 @@ Why it’s worth it:
 
 Cover photo (not added yet, placeholder shows the emoji): search "ultimate frisbee game field" on [Unsplash](https://unsplash.com/s/photos/ultimate-frisbee-game-field) or [Pexels](https://www.pexels.com/search/ultimate%20frisbee%20game%20field/).
 Alt text for it: A mixed team diving for a disc on a grass field.
+
+## 🏏 Cricket
+
+- URL: `/corners/cricket` (old Space `sports-fitness`)
+- Row: Sports and martial arts
+- Typical time: 120 minutes. Setting: outdoors.
+- Moods (derived): Move, Be around people, Get outside, Learn something
+
+How to start:
+1. Go to a local ground or park game and ask for a turn to bat or bowl.
+2. Learn the basic rules before you go
+3. Borrow a bat and ball if you don’t have them
+
+What you'll need:
+- A bat and a ball, borrowed is fine
+- A ground, gully or park with space
+- Other players, since it takes two sides
+- Loose clothes you can run in
+
+Why it’s worth it:
+- A game almost anyone can join
+- Plays out over an afternoon
+- Fun to play and fun to watch
+- Parks and grounds in most cities have games
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: People playing cricket on an open ground.
+
+## 🎯 Carrom
+
+- URL: `/corners/carrom` (old Space `gaming-tabletop`)
+- Row: Games and puzzles
+- Typical time: 45 minutes. Setting: home.
+- Moods (derived): Be around people, Play a game
+
+How to start:
+1. Play one game with a friend, taking turns to flick the striker.
+2. Learn how the scoring works
+3. Dust the board with carrom powder so coins slide
+
+What you'll need:
+- A carrom board, striker and coins
+- A steady table or a clear floor
+- Carrom powder for the board
+- One to three other players
+
+Why it’s worth it:
+- Rules you can pick up in one game
+- Works for two players or four
+- A quick game or a long evening
+- Easy to play at any gathering
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: Friends playing carrom around a wooden board.
+
+## 🏓 Table tennis
+
+- URL: `/corners/table-tennis` (old Space `sports-fitness`)
+- Row: Sports and martial arts
+- Typical time: 60 minutes. Setting: anywhere.
+- Moods (derived): Move, Be around people, Learn something
+
+How to start:
+1. Find a table and rally gently with a friend for ten minutes.
+2. Learn how to serve and keep score
+3. Borrow paddles if the venue lends them
+
+What you'll need:
+- A table with a net
+- Two paddles and a ball
+- A partner, or a club night to find one
+- Clear space around the table
+
+Why it’s worth it:
+- Quick to set up and start
+- Plays well in twos or doubles
+- Easy to play in short bursts
+- Works indoors in any weather
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: Two people rallying across a table tennis table.
+
+## 🎤 Open mics
+
+- URL: `/corners/open-mics` (old Space `art-creative`)
+- Row: Dance and stage
+- Typical time: 120 minutes. Setting: anywhere.
+- Moods (derived): Be around people
+
+How to start:
+1. Go to one open mic as an audience member and see how people sign up.
+2. Pick a short piece, such as a poem, a joke set or a song
+3. Sign up for a slot of a few minutes
+
+What you'll need:
+- A short piece you can do in a few minutes
+- A venue that hosts an open night
+- An instrument, if you’re playing music
+- A friend in the audience, if you like
+
+Why it’s worth it:
+- Slots are short, often a few minutes
+- Stand-up, poetry and songs share one stage
+- Everyone on the bill takes a turn
+- Cafes and bars in many cities host nights
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: A performer holding a microphone in front of a red curtain.
+
+## 💃 Indian classical dance
+
+- URL: `/corners/indian-classical-dance` (old Space `art-creative`)
+- Row: Dance and stage
+- Typical time: 90 minutes. Setting: anywhere.
+- Moods (derived): Move, Learn something
+
+How to start:
+1. Watch a recital of Bharatanatyam and one of Kathak, then pick a style to try.
+2. Find a teacher or a beginners’ class
+3. Practise a basic stance and hand gesture at home
+
+What you'll need:
+- A teacher or class for the style you pick
+- Comfortable clothes you can move in
+- A clear floor and bare feet
+- Recorded music or a live accompanist
+
+Why it’s worth it:
+- Bharatanatyam and Kathak look very different
+- Footwork, gesture and expression together
+- Classes and recitals in Bangalore and beyond
+- Group classes are common
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: A dancer in classical Indian costume on a stage.
+
+## 🪘 Indian classical music
+
+- URL: `/corners/indian-classical-music` (old Space `music`)
+- Row: Music and sound
+- Typical time: 60 minutes. Setting: anywhere.
+- Moods (derived): Learn something
+
+How to start:
+1. Listen to one Carnatic and one Hindustani piece and note what stands out in each.
+2. Find a teacher or a beginners’ class
+3. Pick one voice or instrument to begin with
+
+What you'll need:
+- A teacher, since the music is passed down in person
+- Your voice, or a tabla or flute
+- A quiet place to practise
+- A notebook for what each lesson covers
+
+Why it’s worth it:
+- Two traditions: Carnatic and Hindustani
+- Vocals, tabla and flute are common starts
+- Concerts happen in cities across India
+- Practise a little at a time
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: Hands playing a tabla.
+
+## 🎹 Piano and keys
+
+- URL: `/corners/piano` (old Space `music`)
+- Row: Music and sound
+- Typical time: 30 minutes. Setting: home.
+- Moods (derived): Some time to yourself, Learn something
+
+How to start:
+1. Find a piano or keyboard and pick out a simple tune with one hand.
+2. Find middle C and learn the notes around it
+3. Practise a short piece a few minutes at a time
+
+What you'll need:
+- A piano or a keyboard
+- A seat at the right height
+- A teacher, app or book if you want a guide
+- Headphones, if your keyboard has a jack
+
+Why it’s worth it:
+- Start with one note at a time
+- Plays alone or alongside others
+- Keyboards come in many sizes
+- Pieces range from simple to advanced
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: Hands on the keys of an upright piano.
+
+## 🔔 Sound baths
+
+- URL: `/corners/sound-baths` (old Space `health-wellness`)
+- Row: Rest and ritual
+- Typical time: 75 minutes. Setting: anywhere.
+- Moods (derived): Be around people
+
+How to start:
+1. Book a group session at a studio or hall and read what the venue says to bring.
+2. Arrive a little early to pick a spot
+3. Bring a mat, blanket or pillow if the venue asks
+
+What you'll need:
+- A booked session at a studio or hall
+- A mat, blanket or pillow
+- Comfortable clothes
+- A friend, if you’d like company
+
+Why it’s worth it:
+- Sessions often run around an hour
+- You lie or sit and listen
+- Each player sets up differently
+- Often held in the evening
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: A man playing a large gong among singing bowls.
+
+## 🔭 Stargazing
+
+- URL: `/corners/stargazing` (old Space `nature-outdoors`)
+- Row: Outdoors and adventure
+- Typical time: 90 minutes. Setting: outdoors.
+- Moods (derived): Get outside, Learn something, Start with what you have
+
+How to start:
+1. Go outside after dark, away from bright lights, and look up for ten minutes.
+2. Use a sky map app to name what you see
+3. Let your eyes adjust for a few minutes
+
+What you'll need:
+- A dark spot away from streetlights
+- A clear night
+- A blanket or a folding chair
+- Binoculars or a telescope, if you have them
+
+Why it’s worth it:
+- Planets and the Moon show up by eye
+- Binoculars show more but aren’t required
+- Darker spots away from city lights work best
+- Easy to do with friends
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: A man standing beside a telescope on a tripod.
+
+## 🖨️ Block printing
+
+- URL: `/corners/block-printing` (old Space `crafts-making`)
+- Row: Crafts and DIY
+- Typical time: 120 minutes. Setting: home.
+- Moods (derived): Make something
+
+How to start:
+1. Press a cut potato or an eraser into ink to print one simple shape on paper.
+2. Carve a simple shape into a soft printing block
+3. Print it in a repeating row on cloth or paper
+
+What you'll need:
+- A soft block of rubber or wood
+- A carving tool
+- Printing ink and a roller or pad
+- Fabric or paper to print on
+
+Why it’s worth it:
+- Print the same shape again and again
+- Works on cloth, paper and bags
+- A small shape makes a good first block
+- A craft with a long history in India
+
+Cover photo: see `CREDITS` in `hobbyPhotos.ts`.
+Alt text for it: A person stamping a pattern onto fabric.
+
