@@ -7,6 +7,12 @@
 // position), with the media assumed as bright as a very bright photo (#E6E6E6) or as dark as black:
 // no scrim, or too thin a one, fails. Those elements are also listed under
 // `overMedia`.
+//
+// Scrims are usually `pointer-events: none`, and elementsFromPoint skips such
+// elements, so the audit turns pointer events on for every element while it
+// runs (and restores them after). It also switches CSS transitions off, so a
+// colour still fading in (a tab turning active) is read at its settled value. Each fill is weighted by its element's
+// effective opacity, so a hover-only overlay at opacity 0 doesn't count.
 export interface ContrastFailure { sel: string; text: string; fg: string; bg: string; ratio: number; need: number; size: number }
 export interface ContrastResult { checked: number; failures: ContrastFailure[]; overMedia: string[]; skipped: number }
 
@@ -30,6 +36,14 @@ export function contrastInPage(): ContrastResult {
   const hex = (c: RGBA) => "#" + c.slice(0, 3).map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
   const name = (el: Element) => { const cls = (typeof (el as HTMLElement).className === "string" ? (el as HTMLElement).className : "").trim().split(/\s+/).slice(0, 2).join("."); return el.tagName.toLowerCase() + (cls ? "." + cls : ""); };
 
+  const opacityOf = (el: Element) => { let o = 1; for (let e: Element | null = el; e; e = e.parentElement) o *= parseFloat(getComputedStyle(e).opacity); return o; };
+  const fade = (c: RGBA, o: number): RGBA => [c[0], c[1], c[2], c[3] * o];
+  // Let elementsFromPoint see pointer-events:none layers (scrims, overlays), and settle transitions.
+  const hitAll = document.createElement("style"); hitAll.textContent = "*, *::before, *::after { pointer-events: auto !important; transition: none !important; }";
+  document.head.appendChild(hitAll);
+  try { return audit(); } finally { hitAll.remove(); }
+
+  function audit(): ContrastResult {
   const out: ContrastResult = { checked: 0, failures: [], overMedia: [], skipped: 0 };
   const seen = new Set<string>();
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -51,10 +65,10 @@ export function contrastInPage(): ContrastResult {
     if (py >= 0 && py < innerHeight) stack = document.elementsFromPoint(px, py); else { window.scrollTo(0, window.scrollY + py - innerHeight / 2); const r2 = range.getBoundingClientRect(); stack = document.elementsFromPoint(px, Math.min(Math.max(r2.top + r2.height / 2, 0), innerHeight - 1)); }
     // Hidden behind something that isn't its own ancestor/descendant (an open dialog's overlay, a covering panel): not what the user sees.
     let i = stack.indexOf(el); if (i < 0) i = stack.findIndex((e) => el.contains(e));
-    if (i < 0 && cs.pointerEvents === "none") i = stack.findIndex((e) => e.contains(el));
+    // Pointer events are on everywhere, so text that isn't in the stack is covered or scrolled out of its box.
     if (i < 0) { out.skipped++; continue; }
     // Something unrelated sits above it with a fill (a dialog's dimming overlay): the user isn't reading this text right now.
-    if (stack.slice(0, i).some((e) => !e.contains(el) && !el.contains(e) && straight(getComputedStyle(e).backgroundColor)[3] > 0.2)) { out.skipped++; continue; }
+    if (stack.slice(0, i).some((e) => !e.contains(el) && !el.contains(e) && straight(getComputedStyle(e).backgroundColor)[3] * opacityOf(e) > 0.2)) { out.skipped++; continue; }
     // Walk down from the text's own element collecting fills until one is opaque,
     // or until the photo/video/illustration underneath: text over media is judged
     // against the scrim layers above it, with the media assumed to be as bright
@@ -83,12 +97,17 @@ export function contrastInPage(): ContrastResult {
     void num;
     for (let k = i; k < stack.length && !opaque; k++) {
       const e = stack[k]; const s = getComputedStyle(e);
-      if (e instanceof HTMLImageElement || e instanceof HTMLVideoElement || e instanceof HTMLCanvasElement || (e instanceof SVGSVGElement && e.getBoundingClientRect().width >= 110 && e.getBoundingClientRect().height >= 70)) { media = true; break; }
-      const bi = s.backgroundImage; const bc = straight(s.backgroundColor); let stops: RGBA[] = []; let sampled: RGBA | null = null;
+      const eo = opacityOf(e); if (eo < 0.01) continue; // invisible right now (a hover-only overlay)
+      const bigArt = e instanceof SVGSVGElement && e.getBoundingClientRect().width >= 110 && e.getBoundingClientRect().height >= 70;
+      // Faint decorative art (a tile's tilted icon at 22%) tints what's under it rather than replacing it:
+      // judge against both the bare fill and the fill under the art's ink.
+      if (bigArt && eo < 0.5) { layers.push({ color: [0, 0, 0, 0], stops: [[0, 0, 0, 0], fade(straight(s.color), eo)], sampled: null }); continue; }
+      if (e instanceof HTMLImageElement || e instanceof HTMLVideoElement || e instanceof HTMLCanvasElement || bigArt) { media = true; break; }
+      const bi = s.backgroundImage; const bc = fade(straight(s.backgroundColor), eo); let stops: RGBA[] = []; let sampled: RGBA | null = null;
       if (bi && bi !== "none") {
         if (/url\(/.test(bi)) { media = true; break; }
-        sampled = sample(bi, e.getBoundingClientRect());
-        stops = (bi.match(/(?:rgba?|color|oklab|oklch|lab|lch|hsla?)\([^)]*\)/g) ?? []).map(straight).filter((c) => c[3] > 0);
+        sampled = sample(bi, e.getBoundingClientRect()); if (sampled) sampled = fade(sampled, eo);
+        stops = (bi.match(/(?:rgba?|color|oklab|oklch|lab|lch|hsla?)\([^)]*\)/g) ?? []).map(straight).filter((c) => c[3] > 0).map((c) => fade(c, eo));
       }
       layers.push({ color: bc, stops, sampled });
       if (!sampled && ((stops.length === 0 && bc[3] >= 0.999) || (stops.length > 0 && stops.every((c) => c[3] >= 0.999)))) opaque = true;
@@ -120,4 +139,5 @@ export function contrastInPage(): ContrastResult {
   }
   window.scrollTo(0, 0);
   return out;
+  }
 }

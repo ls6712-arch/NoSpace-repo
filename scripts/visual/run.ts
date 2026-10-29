@@ -79,6 +79,15 @@ interface RunOpts { dist: string; fontsDir?: string; screens: Screen[]; widths: 
 type Results = Map<string, Detection>;
 const keyFor = (theme: string, w: number, name: string) => `${theme}/${w}/${name}`;
 
+/**
+ * Each screen starts with no saved Log draft. The screen passes share one browser
+ * context across screens, so a draft left by an earlier Log screen would open
+ * "Resume your last draft?" on the next one and block its setup clicks (#218).
+ * Runs on every page load; screens don't reload mid-setup, so a draft made during
+ * a screen's own setup is kept.
+ */
+const clearLogDrafts = () => { try { localStorage.removeItem("sushii.draft.v1"); indexedDB.deleteDatabase("sushii-drafts"); } catch { /* storage blocked */ } };
+
 async function runPass(browser: Browser, o: RunOpts): Promise<{ results: Results; unserved: string[]; unhandledRpc: string[]; notes: string[] }> {
   const srv = await serve(o.dist, o.fontsDir);
   const fontsCss = o.fontsDir && fs.existsSync(path.join(o.fontsDir, "fonts.css")) ? fs.readFileSync(path.join(o.fontsDir, "fonts.css"), "utf8").replaceAll("/__fonts/", `http://localhost:${srv.port}/__fonts/`) : undefined;
@@ -88,6 +97,7 @@ async function runPass(browser: Browser, o: RunOpts): Promise<{ results: Results
     const report = await installSupabaseMock(ctx, buildFixtures(), TYPES);
     if (fontsCss) await ctx.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ status: 200, contentType: "text/css", body: fontsCss }));
     await ctx.addInitScript(([session, t]) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", t as string); } catch { /* storage blocked */ } }, [seededSession(), theme] as const);
+    await ctx.addInitScript(clearLogDrafts);
     const page: Page = await ctx.newPage(); const errs: string[] = []; page.on("pageerror", (e) => errs.push(String(e).slice(0, 100)));
     for (const s of o.screens) {
       if (s.widths && !s.widths.includes(w)) continue;
@@ -116,6 +126,7 @@ async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, Touc
     const ctx = await browser.newContext({ viewport: { width: W, height: H0 }, hasTouch: true, isMobile: true, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
     await installSupabaseMock(ctx, buildFixtures(), TYPES);
     await ctx.addInitScript(([session, t]) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", t as string); } catch { /* storage blocked */ } }, [seededSession(), theme] as const);
+    await ctx.addInitScript(clearLogDrafts);
     const page = await ctx.newPage();
     for (const s of o.screens) {
       try {
@@ -136,6 +147,7 @@ async function contrastPass(browser: Browser, o: RunOpts): Promise<Map<string, C
     const ctx = await browser.newContext({ viewport: { width: w, height: HEIGHTS[w] ?? 900 }, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
     await installSupabaseMock(ctx, buildFixtures(), TYPES);
     await ctx.addInitScript(([session, t]) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", t as string); } catch { /* storage blocked */ } }, [seededSession(), theme] as const);
+    await ctx.addInitScript(clearLogDrafts);
     const page = await ctx.newPage();
     for (const s of o.screens) {
       if (s.widths && !s.widths.includes(w)) continue;
@@ -229,6 +241,7 @@ async function artPass(browser: Browser, o: RunOpts, outDir: string): Promise<st
     const ctx = await browser.newContext({ viewport: { width: W, height: HEIGHTS[W] ?? 900 }, colorScheme: theme as "light" | "dark", reducedMotion: "reduce", deviceScaleFactor: 1 });
     await installSupabaseMock(ctx, buildFixtures(), TYPES, { brokenImages: true });
     await ctx.addInitScript(([session, th]) => { try { localStorage.setItem("sb-fixture-auth-token", JSON.stringify(session)); localStorage.setItem("soosh-theme-preference", th as string); } catch { /* storage blocked */ } }, [seededSession(), theme] as const);
+    await ctx.addInitScript(clearLogDrafts);
     const page = await ctx.newPage();
     for (const s of o.screens) {
       try {

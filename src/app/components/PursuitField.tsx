@@ -125,7 +125,7 @@ export function PursuitField({
                 setQuery("");
                 setFocused(false);
               }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-left text-small text-[var(--coral-deep)] transition-colors hover:bg-surface-muted"
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-small text-accent-text transition-colors hover:bg-surface-muted"
             >
               <FolderPlus className="size-3.5 shrink-0" />
               {query.trim() ? `Start a Pursuit: “${query.trim()}”` : "Start a Pursuit"}

@@ -31,7 +31,7 @@ Each is a flag on the same runner (`node scripts/visual/run.ts --<flag>`); all b
 
 | flag | asks |
 |---|---|
-| `--contrast` | every text element's colour against the fills actually under it, light and dark: 4.5:1 (3:1 large). Text over a photo, video or illustration is judged against its scrim, assuming a very bright (#E6E6E6) or a black photo |
+| `--contrast` | every text element's colour against the fills actually under it, light and dark: 4.5:1 (3:1 large). Text over a photo, video or illustration is judged against its scrim, assuming a very bright (#E6E6E6) or a black photo. Pointer events and transitions are switched off for the run, so `pointer-events-none` scrims count and colours are read settled |
 | `--touch` | every tappable element has a 44×44 hit area; lists neighbouring pairs whose areas overlap. `VISUAL_HEIGHT=667` re-runs it at another viewport height |
 | `--images` | image boxes keep their size when photos arrive (held back, then released), nothing below the fold is eager, no broken-image glyph when every photo 404s |
 | `--art` | crops every illustration in dark and light and measures how much of it is near-white (a glow); needs ImageMagick's `convert` |
