@@ -29,13 +29,14 @@ describe("Corner photos", () => {
     expect(photoCredit("pottery")).toBeUndefined();
   });
 
-  it("credit the Corners added with the Corners home and every Corner in the Oct 28 photo pass", () => {
+  it("credit the Corners added with the Corners home and every Corner in the Oct 28 photo pass and the 10 new Corners", () => {
     const added = ["boxing", "skateboarding", "kayaking", "surfing", "wild-swimming", "sauna-cold-plunge", "music-production", "karaoke", "live-music", "pasta", "trivia", "improv", "volunteering"];
     const pass = [
       "life-drawing", "walking-clubs", "badminton", "skating", "ultimate-frisbee", "rafting", "mahjong", "letter-writing", "city-walks", "film-clubs", "food-tours", "hyrox",
       "crochet", "3d-printing", "sourdough", "bbq", "composting", "djing",
       "embroidery", "woodworking", "paper-crafts", "model-making", "drawing", "songwriting", "calligraphy", "sculpture", "pickleball", "antiques", "dance",
-      "trading-cards", "d-d", "choir", "fragrance"
+      "trading-cards", "d-d", "choir", "fragrance",
+      "cricket", "carrom", "table-tennis", "open-mics", "indian-classical-dance", "indian-classical-music", "piano", "sound-baths", "stargazing", "block-printing",
     ];
     expect([...added, ...pass].filter((s) => !(s in CREDITS))).toEqual([]);
     expect(Object.keys(CREDITS).sort()).toEqual([...added, ...pass].sort());

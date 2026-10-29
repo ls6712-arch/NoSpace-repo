@@ -29,7 +29,7 @@ Source of truth for Step 4 of `claude-code-brief-discover-v2.md`. Approved by th
 
 `home-garden` is already a slug today and keeps its meaning, so it is reused as is. The other 17 are new slugs; the 14 old slugs stay resolvable (see below).
 
-## Every built-in Corner (161 rows in `hobbies.ts`)
+## Every built-in Corner (171 rows in `hobbies.ts`)
 
 "Source" says where the category came from: the activity library entry it matched, or a judgement call where the library had no match. Judgement calls are the ones to double-check.
 
@@ -184,6 +184,16 @@ Source of truth for Step 4 of `claude-code-brief-discover-v2.md`. Approved by th
 | Crafts & Making (`crafts-making`) | Embroidery | `embroidery` | Yarn and fabric (`yarn-fabric`) | library: Embroidery |
 | Crafts & Making (`crafts-making`) | Knitting | `knitting` | Yarn and fabric (`yarn-fabric`) | library: Knitting |
 | Crafts & Making (`crafts-making`) | Sewing | `sewing` | Yarn and fabric (`yarn-fabric`) | library: Sewing |
+| Sports & Fitness (`sports-fitness`) | Cricket | `cricket` | Sports and martial arts (`sports-martial-arts`) | judgement (added with the no-thin-Corner rule) |
+| Sports & Fitness (`sports-fitness`) | Table tennis | `table-tennis` | Sports and martial arts (`sports-martial-arts`) | judgement (added with the no-thin-Corner rule) |
+| Gaming & Tabletop (`gaming-tabletop`) | Carrom | `carrom` | Games and puzzles (`games-puzzles`) | judgement (added with the no-thin-Corner rule) |
+| Art & Creative (`art-creative`) | Open mics | `open-mics` | Dance and stage (`dance-stage`) | judgement (added with the no-thin-Corner rule) |
+| Art & Creative (`art-creative`) | Indian classical dance | `indian-classical-dance` | Dance and stage (`dance-stage`) | judgement (added with the no-thin-Corner rule) |
+| Music (`music`) | Indian classical music | `indian-classical-music` | Music and sound (`music-sound`) | judgement (added with the no-thin-Corner rule) |
+| Music (`music`) | Piano and keys | `piano` | Music and sound (`music-sound`) | judgement (added with the no-thin-Corner rule) |
+| Health & Wellness (`health-wellness`) | Sound baths | `sound-baths` | Rest and ritual (`rest-ritual`) | judgement (added with the no-thin-Corner rule) |
+| Nature & Outdoors (`nature-outdoors`) | Stargazing | `stargazing` | Outdoors and adventure (`outdoors-adventure`) | judgement (added with the no-thin-Corner rule) |
+| Crafts & Making (`crafts-making`) | Block printing | `block-printing` | Crafts and DIY (`crafts-diy`) | judgement (added with the no-thin-Corner rule) |
 
 ## The 6 Corners that are database rows
 

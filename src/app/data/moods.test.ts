@@ -26,6 +26,16 @@ describe("moods", () => {
     expect(missing).toEqual([]);
   });
 
+  it("keeps Indian classical dance under Move but not open mics", () => {
+    const move = cornersForMood("move").map((c) => `${c.spaceSlug}/${c.cornerSlug}`);
+    expect(move).toContain("art-creative/indian-classical-dance");
+    expect(move).toContain("sports-fitness/dance");
+    expect(move).not.toContain("art-creative/open-mics");
+    // open mics still show under the moods its guide says: people.
+    const people = cornersForMood("people").map((c) => `${c.spaceSlug}/${c.cornerSlug}`);
+    expect(people).toContain("art-creative/open-mics");
+  });
+
   it("has labels with no dashes and sentence case", () => {
     for (const m of MOODS) {
       expect(m.label).not.toMatch(/[—–]/);
