@@ -104,9 +104,10 @@ What is shown and done is logged in `suggestion_events` through
 `log_suggestion_event()` (owner-only read, no direct insert), so the weights can
 be tuned against what people open and join. Rows are kept 90 days:
 `purge_suggestion_events()` runs nightly at 03:45 UTC from pg_cron (job
-`purge-suggestion-events`). The app does not call the logger until
-`suggestionLoggingEnabled` in `src/app/config.ts` is turned on, which waits for
-the Privacy Policy line about this log. The app has no data export yet; when it
+`purge-suggestion-events`). The app calls the logger only while
+`suggestionLoggingEnabled` in `src/app/config.ts` is on, which it is because the
+Privacy Policy now says: "We keep a short record of the suggestions we show you
+on Home and which ones you open or join, for 90 days." The app has no data export yet; when it
 gets one, it must include `suggestion_events` (the owner can already read their
 own rows). Verification:
 `supabase/verification/home_suggestions_check.sql`.
