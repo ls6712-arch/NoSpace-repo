@@ -1708,3 +1708,113 @@ summary:focus-visible,
     transform: rotate(-5deg);
   }
 }
+
+/* ── Stubby (the ticket with a face) ─────────────────────────────────────────
+   Stubby reads only these, so a palette change never touches Stubby.tsx. The
+   values are the same in light and dark: Stubby is yellow on every screen. */
+:root,
+.dark {
+  --stubby-body: #FFD23F;
+  --stubby-tab: #FFFFFF;
+  --stubby-ink: #0E1A4F;
+  --stubby-stamp: #1F3FD1;
+  --stubby-slot: #B7BED6;
+  --stubby-hole: #EEF0F6;
+  --stubby-line-on-dark: #FFFFFF;
+  --stubby-tongue: #F2708A;
+}
+
+/* ── Soosh onboarding: the Transfer palette (Oct 29, 2026) ───────────────────
+   Applied on the onboarding route root only. The palette is not final: the
+   values live here and nowhere else, so changing them is a one-place edit.
+   The app-wide re-skin is a separate brief. */
+.soosh-transfer {
+  --transfer-cobalt: #1F3FD1;
+  --transfer-signal: #FFD23F;
+  --transfer-navy: #0E1A4F;
+  --transfer-platform: #EEF0F6;
+  --transfer-line: #C9CFE3;
+  --transfer-muted: #3A4470;
+  --transfer-white: #FFFFFF;
+  --transfer-display: 'Archivo Black', 'Archivo', var(--font-body);
+  --transfer-label: 'Archivo', var(--font-body);
+  font-family: var(--font-body);
+  color: var(--transfer-navy);
+}
+
+/* The page behind the 430px column: each step picks cobalt, platform or navy. */
+.soosh-transfer[data-tone="cobalt"] { background: var(--transfer-cobalt); color: var(--transfer-white); }
+.soosh-transfer[data-tone="platform"] { background: var(--transfer-platform); }
+.soosh-transfer[data-tone="navy"] { background: var(--transfer-navy); color: var(--transfer-white); }
+
+.soosh-transfer .transfer-column {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 430px;
+}
+
+.soosh-transfer .transfer-headline {
+  font-family: var(--transfer-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+.soosh-transfer .transfer-label {
+  font-family: var(--transfer-label);
+  font-weight: 700;
+}
+.soosh-transfer .transfer-muted { color: var(--transfer-muted); }
+.soosh-transfer[data-tone="cobalt"] .transfer-muted,
+.soosh-transfer[data-tone="navy"] .transfer-muted { color: var(--transfer-line); }
+
+/* Primary button: 56px, signal fill, navy 3px border, 4px navy drop. The press
+   drops the shadow to 1px (the 3px travel itself is the motion library's). */
+.soosh-transfer .transfer-button {
+  display: inline-flex;
+  min-height: 56px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--transfer-navy);
+  border-radius: 14px;
+  background: var(--transfer-signal);
+  box-shadow: 0 4px 0 var(--transfer-navy);
+  color: var(--transfer-navy);
+  font-family: var(--transfer-display);
+  font-size: 18px;
+  line-height: 1.1;
+  padding-inline: 20px;
+  cursor: pointer;
+}
+.soosh-transfer .transfer-button:active:not(:disabled) { box-shadow: 0 1px 0 var(--transfer-navy); }
+.soosh-transfer .transfer-button:disabled { cursor: default; opacity: 0.6; }
+.soosh-transfer .transfer-button:focus-visible,
+.soosh-transfer .transfer-icon-button:focus-visible {
+  outline: 3px solid var(--transfer-cobalt);
+  outline-offset: 3px;
+}
+.soosh-transfer[data-tone="cobalt"] .transfer-button:focus-visible,
+.soosh-transfer[data-tone="navy"] .transfer-button:focus-visible,
+.soosh-transfer[data-tone="navy"] .transfer-icon-button:focus-visible {
+  outline-color: var(--transfer-white);
+}
+
+.soosh-transfer .transfer-icon-button {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Step header bars: 34 by 6, filled up to the current step. */
+.soosh-transfer .transfer-bar {
+  width: 34px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--transfer-line);
+}
+.soosh-transfer .transfer-bar[data-filled="true"] { background: var(--transfer-cobalt); }

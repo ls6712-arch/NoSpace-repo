@@ -62,3 +62,8 @@ export const TIKTOK_URL = "";
  * real recommendation service exists (PRD section 8.3).
  */
 export const askSooshEnabled = import.meta.env.VITE_ASK_SOOSH === "true";
+
+// The Soosh onboarding (Stubby, 12 screens) replaces the two-step one in four
+// PRs. Until the last one lands, the new flow is on in development and behind
+// VITE_SOOSH_ONBOARDING=1 on a preview; production keeps the old one.
+export const sooshOnboardingEnabled = import.meta.env.DEV || import.meta.env.VITE_SOOSH_ONBOARDING === "1";
