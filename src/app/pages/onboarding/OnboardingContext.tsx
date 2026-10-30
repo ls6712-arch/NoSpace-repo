@@ -13,10 +13,11 @@ export type OnboardingApi = {
   inviteCode: string | null;
   /**
    * The current screen is done: save the step and open the next one (or
-   * finish). With `stamp`, Stubby stamps first and the next screen opens after
-   * that beat (straight away under reduced motion).
+   * finish). With `stamp`, Stubby stamps first; with `reaction`, it plays that
+   * one (a shrug for a skip). The next screen opens after that beat (straight
+   * away under reduced motion).
    */
-  next: (opts?: { stamp?: boolean }) => void;
+  next: (opts?: { stamp?: boolean; reaction?: StubbyState }) => void;
   /** Back one screen; null when this screen has no Back. */
   back: (() => void) | null;
   /** Stubby's state. Screens read it through <StepStubby /> and change it with the two below. */

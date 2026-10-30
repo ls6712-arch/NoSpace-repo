@@ -29,6 +29,10 @@ export interface PrivateFields {
   city?: string | null;
   area?: string | null;
   onboarding_step?: OnboardingStep;
+  /** Taste (migration 20261105000000): Corner keys, free windows, and the monthly budget (null when skipped). */
+  picks?: string[] | null;
+  free_windows?: string[] | null;
+  monthly_budget?: number | null;
 }
 
 /** The message the database raises when a birthdate is younger than the minimum age. */

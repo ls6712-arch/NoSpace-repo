@@ -85,11 +85,11 @@ begin
     set local role authenticated;
     perform public.purge_deleted_accounts();
     reset role;
-    results := results || '4 FAIL authenticated could run purge';
+    results := results || '4 FAIL authenticated could run purge'::text;
   exception
     when insufficient_privilege then
       reset role;
-      results := results || '4 PASS purge not callable by clients';
+      results := results || '4 PASS purge not callable by clients'::text;
     when others then
       reset role;
       results := results || ('4 ERROR ' || sqlstate || ': ' || sqlerrm);

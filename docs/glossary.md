@@ -455,6 +455,30 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 | Location is off. Type your neighborhood instead. | Location denied. Shown once, no repeat |
 | That’s outside New York. Type your city instead. | Location read, but not in New York |
 
+### Onboarding, taste screens (PR 3)
+
+The four questions (What would you say yes to? / When are you usually free? / What’s already yours? / A month for doing things) are approved above. **Proposed Oct 30, 2026, awaiting approval:** the rest of these screens. Nothing here says what a pass saves, ranks a Corner, or scores a person.
+
+| Term | Meaning |
+|---|---|
+| Pick {n} more | Disabled Next on the picks question while fewer than 3 are picked. No maximum |
+| (Corners as chips) | Text only, no emoji, in two columns. One chip per activity: where two Corners are the same activity (Running and Run clubs), only one is offered |
+| + Something else | Link under the Corners: opens a search of Corners that already exist. It never makes a Corner |
+| Find a Corner | Label of that search field |
+| No Corner by that name. | Empty state of that search |
+| {FirstName}’s going | Line under a Corner picked from a friend’s invite: the friend whose Pursuit is in it, first name only. It starts picked and can be unpicked |
+| Pick a time | Disabled Next on the free-time question while no window is on |
+| {n} windows a week | Live count under the grid, through `plural()`. Daytime and Evening, by day |
+| Daytime · Evening | Row headings of the grid. A cell reads "Saturday daytime, on" |
+| Connect a calendar · Coming soon | A row that does nothing yet |
+| Skip for now | Second button on the free-time question, same size as Next (already approved above) |
+| Passes and gear | Heading of the kinds a person already has |
+| Climbing · Museum · Library · Bike · Fitness · Gear · Other | The kinds of pass. One each, with an optional place |
+| {Kind} place (optional) | Label of the place field under a pass |
+| Only you see this. | Line under A month for doing things: the budget is private, never on a profile, a Stub or any shared view |
+| Free only · $50 · $100 · $200 · Skip | The monthly budget choices. Skip sits beside the amounts at the same size and saves no budget |
+| Your first plan will use free things and what your passes cover. | Line shown after Skip on the budget |
+
 ### Log in (Soosh log in brief, Oct 29, 2026)
 
 **Proposed Oct 30, 2026, awaiting approval.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, the wrong code line, New code sent. and Log out from above. Existing line kept: Forgot your password?. Replaced by the log in brief, revision 2: Use my password instead and the separate password screen (the password is on the log in screen now) and the old reset confirmation ("If there’s an account for that address, a reset link is on its way…").
