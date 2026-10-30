@@ -12,20 +12,31 @@ export function orderSpaceMoments<T extends { userId?: string; createdAt: number
 
 /**
  * Which of these Spaces have at least one approved Moment from someone who is not
- * a host (spaces_with_member_moments, 20261102000000). Null when it cannot be
- * answered (the function is not live yet, or the request failed): callers then
- * show every Space rather than none.
+ * a host (spaces_with_member_moments). That function is not in the database
+ * (the hiding is deferred, see docs/backlog.md), so today this answers null:
+ * callers then show every Space rather than none. Null also covers a failed
+ * request. Once the function is known to be missing it is not asked again this
+ * page session.
  */
+let functionMissing = false;
+
 export async function fetchSpacesWithMemberMoments(spaceIds: readonly string[]): Promise<Set<string> | null> {
   if (spaceIds.length === 0) return new Set();
-  if (!supabase) return null;
+  if (!supabase || functionMissing) return null;
   try {
     const { data, error } = await supabase.rpc("spaces_with_member_moments", { p_space_ids: [...spaceIds] });
+    // PGRST202 is PostgREST's "no such function"; 42883 is Postgres's own.
+    if (error?.code === "PGRST202" || error?.code === "42883") functionMissing = true;
     if (error || !Array.isArray(data)) return null;
     return new Set(data as string[]);
   } catch {
     return null;
   }
+}
+
+/** Test hook: forget what was learned about the function. */
+export function resetSpacesWithMemberMomentsCache() {
+  functionMissing = false;
 }
 
 /** Keeps the Spaces that have member Moments. With no answer (null) every Space stays. */
