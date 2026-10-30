@@ -254,7 +254,7 @@ describe("tear off half (screen 12)", () => {
     await screen.findByRole("heading", { name: "Sent. Now it’s a plan." });
     expect(share).toHaveBeenCalledWith({ title: "Bouldering night", text: shareMessage("Bouldering night", "Thursday, 7:00 PM"), url: half.url });
     expect(shareMessage("Bouldering night", "Thursday, 7:00 PM")).toBe("I’m doing Bouldering night on Thursday, 7:00 PM. Take the other half:");
-    expect(flow.setStubby.mock.calls.map((c) => c[0])).toEqual(["torn", "done"]);
+    expect(flow.setStubby.mock.calls.map((c) => c[0])).toEqual(["torn", "stamped"]);
     // Send and Skip are gone.
     expect(screen.queryByRole("button", { name: "Send" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Skip for now" })).toBeNull();
