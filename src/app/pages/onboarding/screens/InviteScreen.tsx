@@ -49,7 +49,7 @@ export function InviteScreen() {
   const afterSend = () => {
     setSent(true);
     setStubby("torn");
-    settle.current = setTimeout(() => setStubby("done"), reduce ? 0 : TORN_BEAT_MS);
+    settle.current = setTimeout(() => setStubby("stamped"), reduce ? 0 : TORN_BEAT_MS);
   };
 
   const send = async () => {
