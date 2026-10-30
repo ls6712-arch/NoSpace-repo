@@ -457,7 +457,7 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 
 ### Onboarding, taste screens (PR 3)
 
-The four questions (What would you say yes to? / When are you usually free? / What’s already yours? / A month for doing things) are approved above. **Proposed Oct 30, 2026, awaiting approval:** the rest of these screens. Nothing here says what a pass saves, ranks a Corner, or scores a person.
+The four questions (What would you say yes to? / When are you usually free? / What’s already yours? / A month for doing things) are approved above. **Approved by the founder, Oct 30, 2026:** the rest of these screens. Nothing here says what a pass saves, ranks a Corner, or scores a person.
 
 | Term | Meaning |
 |---|---|
@@ -479,9 +479,36 @@ The four questions (What would you say yes to? / When are you usually free? / Wh
 | Free only · $50 · $100 · $200 · Skip | The monthly budget choices. Skip sits beside the amounts at the same size and saves no budget |
 | Your first plan will use free things and what your passes cover. | Line shown after Skip on the budget |
 
+### Onboarding, first win screens (PR 4)
+
+Put a face on your card, Tonight’s yours., Tomorrow’s yours., This weekend’s yours., Here’s one for this week., Tear off half for a friend, Who gets the other half? and Admit one are approved above. **Approved by the founder, Oct 30, 2026:** the rest of these screens. A reason line only repeats an answer that matched. Nothing here says what a pass saves: a pass is named ("You have a climbing pass."), never turned into "$0".
+
+| Term | Meaning |
+|---|---|
+| No. {n} · Joined {month year} | The member card: the number, then when they joined (through `formatMonthYear`) |
+| Add a photo · Later | Buttons on the card screen, same size. Add a photo (and the photo circle on the card) opens the photo picker, and reads Next once there is a photo |
+| Finding your plan… | While the first plan is looked for (Stubby thinks) |
+| Today’s yours. | First plan headline when the plan is today before 5pm (Tonight’s yours. is today from 5pm) |
+| I’m going solo | Button on the first plan: do it without tearing off half. The action is the same as I’m going: an event’s own I’m going, joining an open Pursuit, or a small Pursuit of their own for a plan at home |
+| Show me something else · Show me Discover | The link under the first plan. After the third plan it reads Show me Discover and opens Discover |
+| {Corner} at home | Title of a plan to do at home, from the Corner’s guide |
+| With {FirstName} | Line on a plan that is someone’s open Pursuit |
+| {FirstName} is already in. | Reason line on a friend’s plan |
+| You said {Day} {daytimes or evenings} work, and you picked {Corner}. | Reason line when a free window matched. With no free windows given: You picked {Corner}. |
+| You have a {kind} pass. | Added to a reason line when one of their passes is for that Corner (climbing, bike). Never "$0 with your pass" |
+| Free · ${n} | The cost line, only when the listing gives a price. No price known means no cost line |
+| Soosh plans in your city are coming. For now, here’s one you can do anywhere. | Under the headline when someone outside New York gets a plan at home |
+| Nothing for this week yet. · Have a look at Discover. · Go to Discover | When no plan fits |
+| {FirstName} saved you a spot | On the half-ticket preview on the invite screen: what the friend receives (Stubby’s stamp, this line, the plan, the day and time). The friend’s own arrival screen says the same with the sender’s name |
+| Send · Nothing to send | Buttons on the invite screen. Send opens the phone’s share sheet, or copies the link where there is none (Link copied, already approved). Nothing to send shows when the link is gone |
+| Sent. Now it’s a plan. | Headline once the half is sent. Send and Skip are gone and one button is left |
+| See my week | The one button after going or sending: ends onboarding and opens Home |
+| Add to calendar | A link under the plan once they are going, and on the sent screen: downloads an .ics with an alarm an hour before. No notification permission is asked for |
+| I’m doing {title} on {when}. Take the other half: {link} | The message that goes with the link |
+
 ### Log in (Soosh log in brief, Oct 29, 2026)
 
-**Proposed Oct 30, 2026, awaiting approval.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, the wrong code line, New code sent. and Log out from above. Existing line kept: Forgot your password?. Replaced by the log in brief, revision 2: Use my password instead and the separate password screen (the password is on the log in screen now) and the old reset confirmation ("If there’s an account for that address, a reset link is on its way…").
+**Approved by the founder, Oct 30, 2026.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, the wrong code line, New code sent. and Log out from above. Existing line kept: Forgot your password?. Replaced by the log in brief, revision 2: Use my password instead and the separate password screen (the password is on the log in screen now) and the old reset confirmation ("If there’s an account for that address, a reset link is on its way…").
 
 | Term | Meaning |
 |---|---|
@@ -498,7 +525,7 @@ The four questions (What would you say yes to? / When are you usually free? / Wh
 
 ### The code screen, in stages (log in brief revision 3, Oct 30, 2026)
 
-**Proposed Oct 30, 2026, awaiting approval.** Used by log in and by sign-up. Nothing on it depends on whether the address has an account: a late code must never suggest the person is new, and an address with no account sees the same words at the same times as one with an account.
+**Approved by the founder, Oct 30, 2026.** Used by log in and by sign-up. Nothing on it depends on whether the address has an account: a late code must never suggest the person is new, and an address with no account sees the same words at the same times as one with an account.
 
 | Term | Meaning |
 |---|---|
@@ -513,7 +540,7 @@ The four questions (What would you say yes to? / When are you usually free? / Wh
 
 ### Passwords (log in brief, revisions 1 and 2)
 
-**Proposed Oct 30, 2026, awaiting approval.** A password is a real option, never a hidden link, and never required.
+**Approved by the founder, Oct 30, 2026.** A password is a real option, never a hidden link, and never required.
 
 | Term | Meaning |
 |---|---|

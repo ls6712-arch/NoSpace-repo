@@ -33,6 +33,13 @@ import {
   type OnboardingStep,
 } from "./steps";
 
+/**
+ * Where a finished person lands. Home, unless they came for a particular page.
+ * A friend's invite link or an account invite is not a page: whatever they did
+ * with the friend's plan is already done, so they never land back on it.
+ */
+export const landingFor = (redirectTo: string) => (/^\/(join|i|onboarding|login)(\/|$|\?)/.test(redirectTo) ? "/" : redirectTo);
+
 /** How long a one-shot reaction is held before Stubby goes back to idle, so the same reaction can play again. */
 const REACTION_HOLD_MS = 150;
 /** How long the next screen waits for Stubby's stamp to land. */
@@ -60,10 +67,10 @@ export function OnboardingFlow() {
   // An address typed on the log in screen, carried to sign up so it is not typed twice.
   const emailParam = params.get("email");
 
-  // The destination: the URL's, else the one kept across a sign-in round trip, else Discover.
+  // The destination: the URL's, else the one kept across a sign-in round trip, else Home.
   const urlRedirect = params.get("redirect");
   const [kept] = useState(() => (isRealRedirect(urlRedirect) ? null : peekRedirect()));
-  const redirectTo = isRealRedirect(urlRedirect) ? urlRedirect : (kept ?? "/discover");
+  const redirectTo = isRealRedirect(urlRedirect) ? urlRedirect : (kept ?? "/");
 
   // The account's own saved step, read once per person.
   const [remote, setRemote] = useState<{ userId: string; step: OnboardingStep | null } | null>(null);
@@ -133,7 +140,7 @@ export function OnboardingFlow() {
 
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
-  const finish = useCallback(async () => {
+  const finish = useCallback(async (to?: string) => {
     if (finishing) return;
     setFinishing(true);
     setFinishError(null);
@@ -148,13 +155,14 @@ export function OnboardingFlow() {
       }
       clearLastFinished(userId);
       takeRedirect();
-      navigate(signedIn ? redirectTo : "/", { replace: true });
+      navigate(signedIn ? (to ?? landingFor(redirectTo)) : "/", { replace: true });
     } catch {
       setFinishError(OFFLINE_LINE);
     } finally {
       setFinishing(false);
     }
   }, [finishing, signedIn, updateProfile, userId, navigate, redirectTo]);
+  const finishTo = useCallback((to?: string) => void finish(to), [finish]);
 
   const advancing = useRef(false);
   const next = useCallback(
@@ -202,6 +210,7 @@ export function OnboardingFlow() {
     stubby,
     react,
     setStubby,
+    finish: finishTo,
     finishing,
     finishError,
   };
