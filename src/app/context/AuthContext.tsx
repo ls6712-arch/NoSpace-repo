@@ -78,11 +78,6 @@ interface AuthContextType {
   profile: Profile | null;
   /** False when Supabase env vars aren't set — accounts are unavailable, not broken. */
   isConfigured: boolean;
-  signUp: (
-    email: string,
-    password: string,
-    displayName: string,
-  ) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null; status?: number; code?: string }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   /** Sign in with Apple. Only offered while `appleSignInEnabled` (config.ts) is on. */
@@ -291,64 +286,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const signUp: AuthContextType["signUp"] = async (email, password, displayName) => {
-    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        // No #/you hash here: Supabase appends its own auth code/token
-        // fragment onto this URL after the redirect, and a URL can't carry
-        // two independent hash sections layered on top of each other — a
-        // HashRouter path here broke the client's ability to parse the
-        // returned code/tokens at all. Landing on the bare origin (the
-        // app's default route, signed in) is the correct trade-off.
-        emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
-      },
-    });
-    if (error) return { error: error.message };
-    // Supabase's "Confirm email" setting is on: the account exists but there's
-    // no session yet, and won't be one until they click the link it just
-    // mailed. Nothing to sign them into or upsert a profile name for yet.
-    if (data.user && !data.session) {
-      return { error: null, needsConfirmation: true };
-    }
-    // The profile row is created automatically by a database trigger with a
-    // default name derived from the email; overwrite it with what they typed.
-    if (data.user && displayName.trim()) {
-      const trimmedName = displayName.trim();
-      try {
-        // The trigger may not have created the row yet, so a plain update
-        // can land first and silently affect zero rows -- which is how
-        // people ended up named after their email address. An upsert isn't
-        // the fix: its proposed insert row gets validated against every
-        // NOT NULL column (username included) even when the row already
-        // exists and it never actually inserts, so it fails outright
-        // rather than falling through to the update. Retrying the update
-        // with the same backoff loadProfile already uses below for this
-        // exact race closes the gap without that failure mode.
-        for (let attempt = 0; attempt < 4; attempt++) {
-          const { data: updated } = await supabase
-            .from("profiles")
-            .update({ display_name: trimmedName })
-            .eq("id", data.user.id)
-            .select("id");
-          if (updated && updated.length > 0) break;
-          await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
-        }
-        // Read it back before returning, so the first screen after signup
-        // already has the right name rather than correcting itself later —
-        // and, via bootstrapProfile, claims a saved invite code right away
-        // if this account is pending (see the arrival page's "Use email").
-        await bootstrapProfile(data.user.id, trimmedName);
-      } catch {
-        // The account exists either way; they can rename themselves in
-        // Settings. Failing the whole sign-up over a name would be worse.
-      }
-    }
-    return { error: null };
-  };
-
   const signIn: AuthContextType["signIn"] = async (email, password) => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -538,7 +475,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         profile,
         isConfigured: isSupabaseConfigured,
-        signUp,
         signIn,
         signInWithGoogle,
         signInWithApple,

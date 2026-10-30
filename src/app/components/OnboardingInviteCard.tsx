@@ -78,7 +78,6 @@ export function OnboardingInviteCard({
         Invite someone?
       </Heading>
       <p className="mb-6 text-small text-[var(--muted-foreground)]">
-        {APP_NAME} is invite-only for now.{" "}
         {invitesLeft === null
           ? "Send an invite link to someone you’d like here."
           : `You have ${plural(invitesLeft, "invite")} to give.`}

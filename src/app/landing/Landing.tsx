@@ -1,9 +1,7 @@
-import { useRef, useState, type MouseEvent } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { APP_NAME, CONTACT_EMAIL, INSTAGRAM_URL, TIKTOK_URL } from "../config";
-import { WaitlistForm } from "../components/WaitlistForm";
 import { useScrollReveal } from "../lib/useScrollReveal";
-import { scrollBehavior } from "../lib/scrollToElement";
 import { LANDING_ALT, LANDING_COPY as COPY } from "./copy";
 import { hasLandingImage } from "./images";
 import { PhoneFrame } from "./PhoneFrame";
@@ -27,17 +25,11 @@ function Reveal({ as: Tag = "div", className = "", children }: { as?: "div" | "s
   );
 }
 
-function RequestInviteButton({ large = false }: { large?: boolean }) {
-  // A plain href="#invite" would set location.hash, which the HashRouter reads
-  // as a route. Scroll to the waitlist form instead.
-  const go = (e: MouseEvent) => {
-    e.preventDefault();
-    document.getElementById("invite")?.scrollIntoView({ behavior: scrollBehavior() });
-  };
+function SignUpButton({ large = false }: { large?: boolean }) {
   return (
-    <a href="#invite" onClick={go} className={`lp-btn ${large ? "lp-btn-lg" : ""}`}>
-      {COPY.requestInvite}
-    </a>
+    <Link to="/onboarding" className={`lp-btn ${large ? "lp-btn-lg" : ""}`}>
+      {COPY.signUp}
+    </Link>
   );
 }
 
@@ -52,7 +44,7 @@ function Nav() {
           <Link to="/login" className="lp-login">
             {COPY.logIn}
           </Link>
-          <RequestInviteButton />
+          <SignUpButton />
         </div>
       </div>
     </header>
@@ -196,7 +188,7 @@ export function Landing() {
             <div className="lp-hero-text">
               <h1>{COPY.heroHeadline}</h1>
               <p className="lp-hero-sub">{COPY.heroSub}</p>
-              <RequestInviteButton large />
+              <SignUpButton large />
             </div>
             {heroShot && (
               <div className="lp-hero-phone">
@@ -235,11 +227,11 @@ export function Landing() {
           <section id="invite" ref={inviteRef} className="lp-section lp-invite lp-center">
             <Reveal>
               <div className="lp-copy">
-                <h2 className="lp-h2">{COPY.inviteHeading}</h2>
-                <p style={{ margin: 0 }}>{COPY.inviteLine}</p>
+                <h2 className="lp-h2">{COPY.joinHeading}</h2>
+                <p style={{ margin: 0 }}>{COPY.joinLine}</p>
               </div>
               <div className="lp-invite-card lp-light">
-                <WaitlistForm buttonVariant="coral" />
+                <SignUpButton large />
               </div>
             </Reveal>
           </section>

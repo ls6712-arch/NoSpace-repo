@@ -5,7 +5,7 @@ import { APP_NAME } from "../config";
 // before launch. The operator, contact email, governing law and last-updated
 // date are filled in; the production build refuses to ship any placeholder.
 // Written only from what the code
-// actually does (AuthContext, WaitlistForm, DataSection.tsx,
+// actually does (AuthContext, DataSection.tsx,
 // PauseOrLeaveSection.tsx) — nothing here is aspirational.
 
 export function PrivacyPolicy() {

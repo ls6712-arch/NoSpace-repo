@@ -66,15 +66,14 @@ files still carry the button, so the older password sign-up keeps working.
    user**) to `30` seconds. The code screen counts down 30 seconds before it
    offers another code; with Supabase's default of 60 seconds a person who asks at
    the 30 second mark would be told to wait again.
-6. Test on a preview build with `VITE_SOOSH_ONBOARDING=1`, not on production:
+6. Test on a preview build before it goes to production (the Soosh onboarding is always on now, so no environment variable is needed):
    - Sign up with an address that has no account. The email must show a 6-digit
      code and a button. Type the code in; you land on the name screen.
    - Ask for a code with an address that already has an account (use
      **I already have an account**, then the log in page): that email must show a
      code too.
    - Log in with an existing password account on `/login`: unchanged.
-7. Only then add `VITE_SOOSH_ONBOARDING=1` to the production environment in
-   Vercel (**Settings**, **Environment Variables**) and redeploy.
+7. Only then merge, so production gets the same build.
 
 If the email arrives with a link and no code, the template was not saved or the
 wrong tab was edited: check **Confirm sign up** and **Magic link** both show

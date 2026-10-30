@@ -1,10 +1,6 @@
-import { sooshOnboardingEnabled } from "../config";
 import { OnboardingFlow } from "./onboarding/OnboardingFlow";
-import { OnboardingLegacy } from "./OnboardingLegacy";
 
-export { joinTokenFrom } from "./OnboardingLegacy";
-
-/** /onboarding: the Soosh flow with Stubby, or the old two steps until it is switched on. */
+/** /onboarding: the Soosh flow with Stubby. It is the only way to make an account, and it asks for a birthday. */
 export function Onboarding() {
-  return sooshOnboardingEnabled ? <OnboardingFlow /> : <OnboardingLegacy />;
+  return <OnboardingFlow />;
 }

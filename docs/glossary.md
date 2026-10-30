@@ -228,8 +228,8 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 
 | Term | Meaning |
 |---|---|
-| Invite / Invite link | How someone gets in while Soosh is invite-only |
-| Waitlist / You're on the list | Asking to join without an invite |
+| Invite / Invite link | A link a member sends a friend. Sign-up is open to anyone, so an invite is no longer needed to get in |
+| Waitlist / You're on the list | Retired (Oct 30, 2026). Sign-up is open. The waitlist table and its data stay, unused |
 | Welcome to Soosh | The inviter's button on "[Name] added their first moment": opens it with the reply box ready |
 
 ## Landing page copy (website only)
@@ -237,14 +237,14 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 These lines are for the signed-out landing page (`src/app/landing`). They are
 marketing wording, not app terms: never use them in the app UI. The page follows
 the locked narrative: hero, the line, Save it / Try it / Share it, friends can
-come along, privacy, real Shelves (hidden until 6 exist), invite, footer.
+come along, privacy, real Shelves (hidden until 6 exist), sign up, footer.
 In-app labels on the page still follow the glossary above: "Count me in", "Finished", "In progress", "Privacy Policy".
 
 | Term | Meaning |
 |---|---|
 | Welcome to the rest of you. | Hero headline |
 | Log in | Text link in the landing nav, to /login |
-| Request an invite | Every landing button and the waitlist form button, all going to the waitlist form |
+| Sign up | Every landing button, all going to /onboarding. ("Request an invite" is retired.) |
 | Save it. Try it. Share it. | Section heading and the three step labels (website only) |
 | Example Shelf | Small caption under the hero and step screens (website only). Those people are examples, never real members |
 | Example | Small caption under the reward, friends and privacy screens (website only) |
@@ -253,7 +253,8 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 | You choose who sees each post. | Privacy section heading |
 | Pick Only you, Followers or Everyone for each post. Nothing about your account has to be public. | Privacy section line. Names the real picker options (website only) |
 | See who's on Soosh. | Real Shelves heading |
-| Soosh is invite-only. | Invite section heading |
+| Join Soosh. | Sign-up section heading, a neutral placeholder to be rewritten ("Soosh is invite-only." is retired) |
+| Create an account to get started. | Sign-up section line, a neutral placeholder to be rewritten |
 | Privacy Policy / Terms | Footer links. Contact, Instagram and TikTok appear once set in `src/app/config.ts` |
 
 ## Core loop v1 (Oct 28, 2026)

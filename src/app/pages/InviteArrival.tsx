@@ -5,7 +5,6 @@ import { fetchInvitePreview, type InvitePreview } from "../lib/invites";
 import { saveInviteCode } from "../lib/inviteCode";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { WaitlistForm } from "../components/WaitlistForm";
 import { APP_NAME, sooshOnboardingEnabled } from "../config";
 
 /**
@@ -76,8 +75,12 @@ export function InviteArrival() {
           <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             This invite has expired or was already used
           </h1>
-          <div className="mt-8 text-left">
-            <WaitlistForm />
+          <div className="mt-8">
+            <Link to="/onboarding">
+              <Button variant="coral" className="h-11 w-full rounded-control">
+                Sign up
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

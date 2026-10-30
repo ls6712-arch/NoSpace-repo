@@ -1599,7 +1599,7 @@ summary:focus-visible,
   --lp-shadow-lg: rgba(60, 20, 10, 0.28);
 }
 
-/* The waitlist form reads the app's theme tokens; pin them to the light set. */
+/* The sign-up card on the landing page reads the app's theme tokens; pin them to the light set. */
 .lp-light {
   color-scheme: light;
   --foreground: #2B2622;
