@@ -55,3 +55,9 @@ Run on phone and desktop, light and dark, with two real accounts.
 - Day-2 **Invite someone?** card on My Space for a day-old account whose
   first moment has a thought.
 - Admin → Invites → **First moments** tab.
+
+## Hide Spaces with no member Moments
+Hide Spaces with no member Moments, later, once there is enough content. Partner Spaces (`spaces.is_partner`) must always be exempt.
+
+Deferred, not applied: `supabase/deferred/20261102000000_space_events_listing.sql` section 2 (`spaces_with_member_moments()`). On Oct 30, 2026 live had one active Space and it had no member Moments, so hiding would have emptied Discover, Corner pages and Search. The app already shows every Space when the function does not exist (`src/app/lib/spaceMoments.ts`). When this comes back, make it a new migration, add the partner exemption to the function, and re-check how many live Spaces it would hide first.
+

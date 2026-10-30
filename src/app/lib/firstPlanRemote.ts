@@ -53,7 +53,7 @@ async function privatePlace(userId: string): Promise<{ city: string; area: strin
   }
 }
 
-/** Listed prices, by event id. The column only exists after migration 20261102000000; before it this is empty. */
+/** Listed prices, by event id. The column only exists after migration 20261106000000; before it this is empty. */
 async function eventPrices(ids: number[]): Promise<Map<number, string>> {
   const out = new Map<number, string>();
   if (!supabase || ids.length === 0) return out;

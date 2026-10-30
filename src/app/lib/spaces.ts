@@ -57,7 +57,7 @@ export type SpaceEventRow = {
   city: string | null;
   created_by: string | null;
   featured: boolean;
-  /** The host's own words about their event (20261102000000). Missing before that migration is live. */
+  /** The host's own words about their event (20261106000000). Missing before that migration is live. */
   price?: string | null;
   capacity?: number | null;
   /** Where to book: payment happens on the host's page. */
@@ -289,7 +289,7 @@ export function updateEvent(input: {
     p_clear_address: input.clearAddress ?? false,
   });
 }
-/** Price, spots and booking link for an event (20261102000000). Blank clears a field. */
+/** Price, spots and booking link for an event (20261106000000). Blank clears a field. */
 export function setEventListing(input: { eventId: number; price?: string; capacity?: number; bookingUrl?: string }) {
   return call("set_event_listing", {
     p_event_id: input.eventId,
