@@ -24,10 +24,16 @@ describe("the why line", () => {
     expect(reasonLine({ reasons: ["fits_window"], startsAt: null, friendName: null, passKind: null })).toBeNull();
   });
 
-  it("leaves out the reasons whose wording is not approved yet, and keeps the others", () => {
-    expect(reasonLine({ reasons: ["nearby", "trending"], startsAt: THU_EVE, friendName: null, passKind: null })).toBeNull();
-    expect(reasonLine({ reasons: ["nearby", "picked"], startsAt: THU_EVE, friendName: null, passKind: null })).toBe("One of your picks");
-    expect(reasonLine({ reasons: ["soon"], startsAt: THU_EVE, friendName: null, passKind: null })).toBeNull();
+  it("says the three nearby, trending and soon reasons in the approved wording", () => {
+    const one = (reasons: ("nearby" | "trending" | "soon")[]) => reasonLine({ reasons, startsAt: THU_EVE, friendName: null, passKind: null });
+    expect(one(["nearby"])).toBe("Close to you");
+    expect(one(["trending"])).toBe("People are joining");
+    expect(one(["soon"])).toBe("Starting soon");
+    expect(one(["nearby", "trending"])).toBe("Close to you · People are joining");
+  });
+
+  it("joins a pick with a nearby reason", () => {
+    expect(reasonLine({ reasons: ["picked", "nearby"], startsAt: THU_EVE, friendName: null, passKind: null })).toBe("One of your picks · Close to you");
   });
 
   it("never shows a price or a number of people", () => {

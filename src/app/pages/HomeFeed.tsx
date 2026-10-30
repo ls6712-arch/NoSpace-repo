@@ -25,6 +25,7 @@ import { notifyError } from "../components/ui/toaster";
 import { useHomeData } from "../lib/useHomeData";
 import { commitToItem, inviteToItem, recordSuggestion, startPathFor } from "../lib/homeActions";
 import { formatDate } from "../lib/dates";
+import { GREETING_NO_NAME } from "../lib/homeCopy";
 import { HOME_TZ } from "../lib/homeWeek";
 import { firstName } from "../lib/tasteModel";
 import type { HomeItem } from "../lib/homeItems";
@@ -181,7 +182,7 @@ export function HomeFeed() {
 
       <div className="flex flex-col gap-1 pb-5 pt-3">
         <h1 className="text-display font-extrabold leading-tight" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
-          {greetingName ? `Hi ${greetingName}` : "Hi"}
+          {greetingName ? `Hi ${greetingName}` : GREETING_NO_NAME}
         </h1>
         <p className="text-small text-muted-foreground">{subline}</p>
       </div>

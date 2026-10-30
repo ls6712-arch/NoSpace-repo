@@ -574,6 +574,13 @@ Approved by the founder on Oct 30, 2026. Counts use `plural()`, dates use `dates
 | Why: `friend_going` | {FirstName}’s going (only where you could already see who is going) |
 | Why: `pass` | Your {pass kind} pass (for example "Your museum pass") |
 | Why: `affinity`, no pick | You might like this |
+| Why: `nearby` | Close to you |
+| Why: `trending` | People are joining |
+| Why: `soon` | Starting soon |
+| Your week card, no free time saved | Add when you’re usually free (opens the free time screen) |
+| Week page (placeholder) | Week / Your week is coming soon. / Back to Home |
+| Week page, signed out | Your week lives here / Make an account to see your free time and your plans in one place. / Create an account |
+| Greeting, no name on record | Welcome back |
 
 Two reasons join with " · " ("Fits your Thursday evening · Priya’s going"). The free time screen reuses "When are you usually free?" and the "{N} windows a week" line from onboarding, with Save.
 

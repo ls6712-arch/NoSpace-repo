@@ -8,21 +8,8 @@ import type { ReasonCode } from "./homeSuggestions";
  * named only when the start time is in it, a friend only when the server sent
  * a name, a pass is named, never turned into a price.
  *
- * Only the wording the founder approved on Oct 30, 2026 is shown. The three
- * codes below it have proposed wording that is NOT approved; it stays off until
- * HOME_SHOW_PROPOSED_REASONS is set, so a row whose reasons are only those shows
- * no why line rather than invented copy.
+ * All of the wording is approved (founder, Oct 30, 2026; docs/glossary.md, Home v2).
  */
-
-/** Set to true when the proposed wording below is approved (docs/glossary.md, Home v2). */
-export const HOME_SHOW_PROPOSED_REASONS = false;
-
-/** Proposed, not approved. */
-export const PROPOSED_REASON_COPY: Partial<Record<ReasonCode, string>> = {
-  nearby: "Close to you",
-  trending: "People are joining",
-  soon: "Starting soon",
-};
 
 export interface ReasonInput {
   reasons: readonly ReasonCode[];
@@ -47,8 +34,12 @@ function oneReason(code: ReasonCode, input: ReasonInput): string | null {
     }
     case "affinity":
       return "You might like this";
-    default:
-      return HOME_SHOW_PROPOSED_REASONS ? (PROPOSED_REASON_COPY[code] ?? null) : null;
+    case "nearby":
+      return "Close to you";
+    case "trending":
+      return "People are joining";
+    case "soon":
+      return "Starting soon";
   }
 }
 

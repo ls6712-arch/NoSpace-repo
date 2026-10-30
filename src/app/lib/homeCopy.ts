@@ -1,15 +1,12 @@
 /**
- * Home v2 wording that the founder has NOT approved yet. These are proposals
- * (see the table in the Home v2 PR and docs/glossary.md); they are shown as
- * placeholders so the screens are complete, and every one is a single constant
- * here to be replaced in one place. Approved wording lives next to the code that
- * uses it and in docs/glossary.md, Home v2.
+ * Home v2 wording that is not a one-liner in a component. Approved by the
+ * founder on Oct 30, 2026 and listed in docs/glossary.md, Home v2.
  */
 
 /** The Your week card when no free time is saved. */
 export const ADD_FREE_TIME_COPY = "Add when you’re usually free";
 
-/** The Week page, until it has data. */
+/** The Week page, until it has data. The title is the tab's own label. */
 export const WEEK_PLACEHOLDER = {
   title: "Week",
   line: "Your week is coming soon.",
@@ -22,3 +19,6 @@ export const WEEK_SIGNED_OUT = {
   body: "Make an account to see your free time and your plans in one place.",
   cta: "Create an account",
 };
+
+/** Home's greeting when the person has no name on record. */
+export const GREETING_NO_NAME = "Welcome back";
