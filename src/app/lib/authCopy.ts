@@ -12,3 +12,10 @@ export const WRONG_LOGIN_LINE = "That email and password don’t match.";
 
 /** The forgot-password confirmation. It reads the same whether or not the address has an account. */
 export const resetSentLine = (email: string) => `If there’s an account for ${email}, we’ve sent a link.`;
+
+/**
+ * The hourly cap on codes, which has no time to give. On log in the way out is the password;
+ * sign-up has no password to offer, so it leaves that clause off.
+ */
+export const TOO_MANY_CODES_LINE = "Too many codes for now. Try again in a little while, or log in with your password.";
+export const TOO_MANY_CODES_SIGNUP_LINE = "Too many codes for now. Try again in a little while.";

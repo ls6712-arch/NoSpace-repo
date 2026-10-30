@@ -9,7 +9,7 @@ import { Stubby, type StubbyState } from "../../components/stubby/Stubby";
 import { APP_NAME, appleSignInEnabled } from "../../config";
 import { useAuth } from "../../context/AuthContext";
 import { page } from "../../lib/motionTokens";
-import { codeWaitLine, resetSentLine, WRONG_LOGIN_LINE } from "../../lib/authCopy";
+import { codeWaitLine, resetSentLine, TOO_MANY_CODES_LINE, WRONG_LOGIN_LINE } from "../../lib/authCopy";
 import { readLoginMethod, rememberLoginMethod, type LoginMethod } from "../../lib/loginMethod";
 import { clearPasswordOffer, readEmail, rememberEmail, rememberRedirect } from "../../lib/onboardingProgress";
 import { signedInTarget } from "../../lib/signInTarget";
@@ -90,6 +90,14 @@ export function LoginV2() {
     },
     [view],
   );
+  // A state held until the next one (thinking while a code is awaited or checked), unlike react's brief one.
+  const hold = useCallback(
+    (state: StubbyState) => {
+      clearTimeout(holdTimer.current);
+      setReaction({ view, state });
+    },
+    [view],
+  );
   const stubby: StubbyState =
     view === "signingin" ? "thinking" : reaction?.view === view ? reaction.state : view === "welcome" && !awake ? "sleep" : "idle";
 
@@ -131,6 +139,16 @@ export function LoginV2() {
   const [method] = useState<LoginMethod>(() => readLoginMethod());
   // "Log in with password" on the code screen comes back here with the password field in focus.
   const [focusPassword, setFocusPassword] = useState(false);
+  // "Use a different email" comes back with the address filled in and its text selected.
+  const [selectEmail, setSelectEmail] = useState(false);
+  const emailInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (view === "email" && selectEmail) {
+      emailInput.current?.focus();
+      emailInput.current?.select();
+      setSelectEmail(false);
+    }
+  }, [view, selectEmail]);
 
   const viaProvider = async (start: () => Promise<{ error: string | null }>) => {
     if (busy) return;
@@ -162,6 +180,10 @@ export function LoginV2() {
     setBusy(false);
     if (result.retryAfterSeconds) {
       setNotice(codeWaitLine(result.retryAfterSeconds));
+      return;
+    }
+    if (result.tooMany) {
+      setNotice(TOO_MANY_CODES_LINE);
       return;
     }
     if (result.error) {
@@ -231,6 +253,7 @@ export function LoginV2() {
       inputMode="email"
       autoComplete="email"
       autoFocus={autoFocus}
+      inputRef={emailInput}
       value={email}
       onChange={(e) => {
         setEmail(e.target.value);
@@ -326,7 +349,10 @@ export function LoginV2() {
             email={email}
             hero={null}
             resend={sendSignInCode}
-            onDifferentEmail={() => go("email")}
+            onDifferentEmail={() => {
+              setSelectEmail(true);
+              go("email");
+            }}
             onPassword={() => {
               setFocusPassword(true);
               go("email");
@@ -336,6 +362,7 @@ export function LoginV2() {
                 New to Soosh? Get started
               </button>
             }
+            onThinking={(thinking) => hold(thinking ? "thinking" : "idle")}
             onChecking={(checking) => {
               if (checking) signingInHere.current = true;
             }}

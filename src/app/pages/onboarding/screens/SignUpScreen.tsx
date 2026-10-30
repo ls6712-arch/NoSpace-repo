@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { TermsCheckbox } from "../../../components/TermsCheckbox";
 import { TransferButton } from "../../../components/onboarding/TransferButton";
 import { TransferField } from "../../../components/onboarding/TransferField";
 import { appleSignInEnabled } from "../../../config";
-import { codeWaitLine } from "../../../lib/authCopy";
+import { codeWaitLine, TOO_MANY_CODES_SIGNUP_LINE } from "../../../lib/authCopy";
 import { useAuth } from "../../../context/AuthContext";
 import { clearPasswordOffer, markPasswordOffer, rememberEmail, rememberRedirect } from "../../../lib/onboardingProgress";
 import { rememberTermsAcceptance } from "../../../lib/termsAcceptance";
@@ -21,9 +21,14 @@ export function SignUpScreen() {
   const [agreed, setAgreed] = useState(false);
   // From the log in screen's "New to Soosh? Get started": the address is already typed.
   const [params] = useSearchParams();
+  // Or back from the code screen's "Use a different email": the address just typed, selected.
   const carried = params.get("email") ?? "";
   const [emailOpen, setEmailOpen] = useState(!!carried);
   const [email, setEmail] = useState(carried);
+  const emailInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (carried) emailInput.current?.select();
+  }, [carried, emailOpen]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -62,6 +67,10 @@ export function SignUpScreen() {
       setNotice(codeWaitLine(result.retryAfterSeconds));
       return;
     }
+    if (result.tooMany) {
+      setNotice(TOO_MANY_CODES_SIGNUP_LINE);
+      return;
+    }
     if (result.error) {
       setError(result.error);
       return;
@@ -92,6 +101,7 @@ export function SignUpScreen() {
               inputMode="email"
               autoComplete="email"
               autoFocus
+              inputRef={emailInput}
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);

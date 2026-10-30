@@ -1,4 +1,4 @@
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { useId, type InputHTMLAttributes, type ReactNode, type Ref } from "react";
 
 /** A labelled text field in the Transfer look, with an optional hint and error under it. */
 export function TransferField({
@@ -6,6 +6,7 @@ export function TransferField({
   hint,
   error,
   prefix,
+  inputRef,
   ...input
 }: {
   label: string;
@@ -13,6 +14,8 @@ export function TransferField({
   error?: string | null;
   /** A fixed character in front of the value ("@"). */
   prefix?: string;
+  /** For the rare screen that has to focus or select the text itself. */
+  inputRef?: Ref<HTMLInputElement>;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "id" | "prefix">) {
   const id = useId();
   const noteId = `${id}-note`;
@@ -30,6 +33,7 @@ export function TransferField({
         )}
         <input
           id={id}
+          ref={inputRef}
           className="transfer-field"
           style={prefix ? { paddingLeft: "2.25rem" } : undefined}
           aria-invalid={!!error}

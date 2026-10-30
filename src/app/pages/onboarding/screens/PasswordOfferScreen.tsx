@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useReducedMotion } from "motion/react";
 import { TransferButton } from "../../../components/onboarding/TransferButton";
 import { TransferField } from "../../../components/onboarding/TransferField";
 import { useAuth } from "../../../context/AuthContext";
@@ -7,6 +8,8 @@ import { StepStubby } from "../StepStubby";
 import { ScreenFrame } from "./ScreenFrame";
 
 export const PASSWORD_MIN = 10;
+/** How long the punch has to land before the name screen takes over. */
+const YOURS_BEAT_MS = 900;
 
 /**
  * Optional, one time, right after an email code is accepted: "Want a
@@ -16,6 +19,7 @@ export const PASSWORD_MIN = 10;
 export function PasswordOfferScreen({ onDone }: { onDone: () => void }) {
   const { updatePassword } = useAuth();
   const { react } = useOnboarding();
+  const reduce = useReducedMotion() ?? false;
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -34,8 +38,10 @@ export function PasswordOfferScreen({ onDone }: { onDone: () => void }) {
       setError(result.error);
       return;
     }
-    react("stamped");
-    onDone();
+    // Stubby punches its tab ("yours"); the next screen waits for that to land.
+    react("yours");
+    if (reduce) onDone();
+    else setTimeout(onDone, YOURS_BEAT_MS);
   };
 
   return (

@@ -16,9 +16,9 @@ vi.mock("../StepStubby", () => ({ StepStubby: () => <div /> }));
 import { markPasswordOffer, readPasswordOffer } from "../../../lib/onboardingProgress";
 import { SignUpScreen } from "./SignUpScreen";
 
-const renderScreen = () =>
+const renderScreen = (url = "/") =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[url]}>
       <SignUpScreen />
     </MemoryRouter>,
   );
@@ -64,5 +64,28 @@ describe("sign-up and the password offer", () => {
     await waitFor(() => expect(screen.getByText("You can ask for another code in 45 seconds.")).toBeTruthy());
     expect(next).not.toHaveBeenCalled();
     expect(readPasswordOffer()).toBe(false);
+  });
+});
+
+describe("sign-up email step", () => {
+  it("says it is too many, with no time, when the hourly cap is hit", async () => {
+    auth.sendEmailCode.mockResolvedValue({ error: null, tooMany: true });
+    renderScreen();
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Continue with email" }));
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(screen.getByText("Too many codes for now. Try again in a little while.")).toBeTruthy());
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("comes back from 'Use a different email' with the address filled in and its text selected", async () => {
+    // (selectionStart is null on an email input by spec, so the call to select() is what is checked.)
+    const select = vi.spyOn(HTMLInputElement.prototype, "select");
+    renderScreen("/?email=mia%40example.com");
+    const input = screen.getByLabelText("Email") as HTMLInputElement;
+    expect(input.value).toBe("mia@example.com");
+    await waitFor(() => expect(select.mock.contexts).toContain(input));
+    select.mockRestore();
   });
 });
