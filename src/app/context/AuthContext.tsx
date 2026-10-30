@@ -6,6 +6,7 @@ import {
   ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { ACCOUNT_STATUS_COLUMNS } from "../lib/accountStatus";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { clearLocalData } from "../lib/localData";
 import { restoreOwnPursuits } from "../lib/pursuitsRemote";
@@ -58,6 +59,12 @@ export interface Profile {
   invite_allowance?: number;
   /** Own-only (see lib/ownProfile.ts): nobody else can read these any more. */
   is_admin?: boolean;
+  /** Set while the account is paused (Settings > Pause or leave). Others
+   * can't see a paused account; its own writes are blocked by the database. */
+  paused_at?: string | null;
+  /** Set when the person asked to delete their account. Hidden at once, and
+   * removed for good by a nightly job once the grace period passes. */
+  deletion_requested_at?: string | null;
   discoverable?: boolean;
   show_this_corner?: boolean;
 }
@@ -165,12 +172,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
         continue;
       }
-      const columns =
+      const baseColumns =
         own.status === "ok"
           ? PUBLIC_PROFILE_COLUMNS
           : themeColumnKnownMissing
             ? "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, access, invited_by, invite_allowance"
             : "id, username, display_name, avatar_url, tagline, onboarding_completed_at, onboarding_completed, bio, cover_title, cover_tagline, cover_post_id, theme_preference, access, invited_by, invite_allowance";
+      // Pause and deletion state, so the app can tell the owner their
+      // account is paused or leaving and offer the way back.
+      const columns = `${baseColumns}, ${ACCOUNT_STATUS_COLUMNS}`;
       const { data, error } = await supabase
         .from("profiles")
         .select(columns)

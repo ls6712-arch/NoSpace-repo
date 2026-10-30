@@ -8,6 +8,7 @@ import { AccountPrompts } from "../components/AccountPrompts";
 import { BottomTabBar } from "../components/BottomTabBar";
 import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
+import { AccountStatusBanner } from "../components/AccountStatusBanner";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 import { reconcileSaves } from "../lib/bookmarksRemote";
@@ -137,6 +138,7 @@ export function Root() {
       <div className="min-h-viewport">
         <PreviewBanner />
         <NetworkBanner />
+        <AccountStatusBanner />
         <main>
           <Outlet />
         </main>
@@ -148,6 +150,7 @@ export function Root() {
     <div className="min-h-viewport">
       <PreviewBanner />
       <NetworkBanner />
+      <AccountStatusBanner />
       <Header />
       <main>
         <Outlet />
