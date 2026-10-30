@@ -22,7 +22,7 @@ export const LEVELS: readonly Level[] = [
   { index: 8, name: "Local Legend", stubs: 50 },
 ];
 
-export interface LevelProgress {
+interface LevelProgress {
   index: number;
   name: string;
   current: Level;

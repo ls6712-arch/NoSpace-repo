@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabase";
  */
 export type FollowState = "none" | "pending" | "accepted" | "declined";
 
-export interface MutualFriend {
+interface MutualFriend {
   id: string;
   name: string;
   avatarUrl: string | null;
@@ -46,7 +46,7 @@ export interface FriendProfile extends Open {
   mutualFriendCount: number;
   sharedCategories: string[];
 }
-export interface FollowerProfile extends Open {
+interface FollowerProfile extends Open {
   role: "follower";
   followsYou: boolean;
   mutualFriendCount: number;
@@ -55,7 +55,7 @@ export interface PublicProfile extends Open {
   role: "public";
   followsYou: boolean;
 }
-export interface ClosedProfile extends Identity {
+interface ClosedProfile extends Identity {
   role: "public";
   private: true;
   levelName: string;
@@ -95,7 +95,7 @@ export interface MomentPage<T> {
   items: T[];
 }
 
-export interface StubItem {
+interface StubItem {
   id: number;
   /** Owner only. */
   date: string | null;
@@ -162,11 +162,13 @@ async function rpc<T>(fn: string, args: Record<string, unknown> = {}): Promise<P
 export async function fetchProfile(username: string): Promise<ProfileResult<ProfileDto | null>> {
   return rpc<ProfileDto | null>("get_profile", { p_username: username });
 }
-export function fetchMoments(profileId: string, limit: number, offset: number, owner: true): Promise<ProfileResult<MomentPage<OwnerMoment>>>;
-export function fetchMoments(profileId: string, limit: number, offset: number, owner: false): Promise<ProfileResult<MomentPage<SharedMoment>>>;
-export function fetchMoments(profileId: string, limit: number, offset: number): Promise<ProfileResult<MomentPage<OwnerMoment | SharedMoment>>>;
-export function fetchMoments(profileId: string, limit: number, offset: number): Promise<ProfileResult<MomentPage<OwnerMoment | SharedMoment>>> {
-  return rpc("get_profile_moments", { p_profile: profileId, p_limit: limit, p_offset: offset });
+export function fetchMoments(
+  profileId: string,
+  limit: number,
+  offset: number,
+  pursuitId: string | null = null,
+): Promise<ProfileResult<MomentPage<OwnerMoment | SharedMoment>>> {
+  return rpc("get_profile_moments", { p_profile: profileId, p_limit: limit, p_offset: offset, p_pursuit: pursuitId });
 }
 export const fetchStubs = (profileId: string) => rpc<StubItem[]>("get_profile_stubs", { p_profile: profileId });
 export const fetchPursuits = (profileId: string) => rpc<PursuitItem[]>("get_profile_pursuits", { p_profile: profileId });

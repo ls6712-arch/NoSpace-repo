@@ -11,7 +11,7 @@ import { useContent } from "../app/context/ContentContext";
 import { seedJournal, type Project } from "../app/lib/journal";
 import { Log } from "../app/pages/Log";
 import { Pursuit } from "../app/pages/Pursuit";
-import { You } from "../app/pages/You";
+import { Profile } from "../app/pages/Profile";
 import { MAYA } from "./fixtures";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -89,7 +89,7 @@ export function PreviewScreen() {
   useSeed(stateFromHash());
   switch (screen) {
     case "shelf":
-      return <You />;
+      return <Profile />;
     case "create":
       return <Log />;
     case "save":
@@ -98,7 +98,7 @@ export function PreviewScreen() {
       return <PreviewMoment id={9201} />;
     case "notifications":
       // The bell lives in the real header; the page behind it is Maya's Shelf.
-      return <You />;
+      return <Profile />;
     default:
       return <div className="p-8">No such screen.</div>;
   }

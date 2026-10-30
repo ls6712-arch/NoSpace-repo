@@ -114,8 +114,51 @@ class Query implements PromiseLike<{ data: any; error: null; count?: number }> {
   }
 }
 
+const mayaPosts = () => posts.filter((p) => p.user_id === ME);
 const rpcResults: Record<string, (args: any) => any> = {
   my_profile_private: () => [ownPrivate(ME)],
+  get_profile: () => ({
+    role: "owner",
+    id: ME,
+    username: "maya",
+    displayName: "Maya",
+    avatarUrl: null,
+    followState: "none",
+    private: false,
+    neighborhood: "Greenpoint, Brooklyn",
+    bio: "Half marathon in the spring. Sourdough on Sundays.",
+    stubCount: 8,
+    pursuitCount: 3,
+    friendCount: 2,
+    level: { index: 4, name: "Weekend Regular" },
+    stubsToNext: 2,
+    planningPaused: false,
+    isPrivate: false,
+  }),
+  get_profile_moments: () => ({
+    total: mayaPosts().length,
+    items: mayaPosts().map((p) => ({
+      id: p.id,
+      photoUrl: p.media_url,
+      caption: p.caption,
+      category: p.corner,
+      occurredAt: p.created_at ?? new Date().toISOString(),
+      placeName: null,
+      neighborhood: null,
+      visibleAt: null,
+    })),
+  }),
+  get_profile_stubs: () => [],
+  get_profile_pursuits: () => [],
+  get_my_planning: () => ({
+    availability: [],
+    freeHoursPerWeek: null,
+    monthlyBudgetCents: null,
+    memberships: [],
+    shareMembershipsWithFriends: true,
+    calendarConnected: false,
+    planningPaused: false,
+  }),
   corner_activity_30d: () => cornerActivity,
 };
 

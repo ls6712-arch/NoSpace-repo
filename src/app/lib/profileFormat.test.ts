@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   availabilitySummary,
   budgetSummary,
-  dayToDate,
   hoursSummary,
   ownerMomentMeta,
   pursuitStatus,
@@ -69,6 +68,15 @@ describe("planning summaries", () => {
   });
   it("formats a plan slot", () => {
     expect(slotDay({ date: "2026-11-07", part: "afternoon" }, NOW)).toBe("Sat, Nov 7");
-    expect(dayToDate("2026-11-07").getDate()).toBe(7);
+  });
+});
+
+import { mutualFriendsLine } from "./profileFormat";
+describe("mutualFriendsLine", () => {
+  it("names one, two, or one plus a count", () => {
+    expect(mutualFriendsLine(["Sam R."], 1)).toBe("Friends with Sam R.");
+    expect(mutualFriendsLine(["Sam R.", "Jo K."], 2)).toBe("Friends with Sam R. and Jo K.");
+    expect(mutualFriendsLine(["Sam R.", "Jo K."], 3)).toBe("Friends with Sam R. and 2 others you know");
+    expect(mutualFriendsLine([], 0)).toBe("");
   });
 });

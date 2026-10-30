@@ -360,7 +360,7 @@ as $$
 $$;
 revoke all on function private.can_read_lists(uuid, uuid) from public, anon, authenticated;
 
-create function public.get_profile_moments(p_profile uuid, p_limit integer default 60, p_offset integer default 0)
+create function public.get_profile_moments(p_profile uuid, p_limit integer default 60, p_offset integer default 0, p_pursuit text default null)
 returns jsonb
 language plpgsql
 stable
@@ -379,6 +379,7 @@ begin
 
   v_total := (select count(*) from public.posts po
                where po.user_id = p_profile and po.visibility = 'public'
+                 and (p_pursuit is null or po.pursuit_id = p_pursuit)
                  and (v_role = 'owner' or (po.visible_at <= now()
                        and (po.audience is null or po.audience = 'everyone'
                             or (po.audience = 'friends' and v_role = 'friend')))));
@@ -396,6 +397,7 @@ begin
                ) as j
           from public.posts po
          where po.user_id = p_profile and po.visibility = 'public'
+           and (p_pursuit is null or po.pursuit_id = p_pursuit)
          order by coalesce(po.starts_at, po.created_at) desc
          limit v_limit offset greatest(coalesce(p_offset, 0), 0)
       ) x
@@ -412,6 +414,7 @@ begin
                ) as j
           from public.posts po
          where po.user_id = p_profile and po.visibility = 'public'
+           and (p_pursuit is null or po.pursuit_id = p_pursuit)
            and po.visible_at <= now()
            and (po.audience is null or po.audience = 'everyone' or (po.audience = 'friends' and v_role = 'friend'))
          order by coalesce(po.starts_at, po.created_at) desc
@@ -423,8 +426,8 @@ begin
   return jsonb_build_object('total', v_total, 'items', v_items);
 end;
 $$;
-revoke all on function public.get_profile_moments(uuid, integer, integer) from public;
-grant execute on function public.get_profile_moments(uuid, integer, integer) to anon, authenticated;
+revoke all on function public.get_profile_moments(uuid, integer, integer, text) from public;
+grant execute on function public.get_profile_moments(uuid, integer, integer, text) to anon, authenticated;
 
 create function public.get_profile_stubs(p_profile uuid)
 returns jsonb

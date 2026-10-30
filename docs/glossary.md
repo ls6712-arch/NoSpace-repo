@@ -550,6 +550,43 @@ Put a face on your card, Tonight’s yours., Tomorrow’s yours., This weekend�
 | Add a password · Skip for now | The two equal answers on that screen. Add a password is also the Settings > Account button for an account without a password |
 | Change password | Settings > Account button for an account that has one (as before) |
 
+## Profile
+
+The profile rebuild (`/you`, `/u/:username`). **Every row below is a new string, taken from the build brief, for approval.** The profile shows no "Shelf", "Corner" or "stamps".
+
+| Term | Meaning |
+|---|---|
+| Friend | Two people who follow each other. Shown as a count ("Friends") and as the button "Friends" on a friend's profile |
+| Follower | Someone who follows you, one way. A profile you follow without being followed back shows "Following"; one that follows you first shows "Follow back"; otherwise "Follow", then "Requested" while it waits for them to accept |
+| Level 4 of 8 | Eyebrow on the level card. Sentence case (the brief's all-caps eyebrow is not used: no ALL CAPS) |
+| Just Getting Started, First Step, Out & About, Weekend Regular, Plan Maker, Good Company, Neighborhood Regular, Local Legend | The eight levels, at 0, 1, 3, 7, 10, 20, 35 and 50 Stubs. Kept in `src/app/lib/levels.ts` and in the database function `private.level_for`; `levels.test.ts` pins the thresholds |
+| 7 of 10 Stubs · 3 more to Plan Maker | Progress line on your own level card. Others see "Level 4 of 8 · 7 Stubs" with no progress |
+| Log 1 Moment to earn your first Stub and reach First Step. | Level card with 0 Stubs |
+| All levels | Link on the level card that lists all 8 |
+| You both | Eyebrow on a friend's profile over the Pursuit categories you share, written as given and joined naturally ("Climbing and Pottery.") |
+| You do this too | Tag on a friend's Pursuit in a category you also have a Pursuit in |
+| Friends with Sam R. and 2 others you know | Mutual friends on a friend's profile. A follower sees a count only; others see nothing |
+| Plan something together | Primary button on a friend's profile. Replaced by "{name} isn’t taking plans right now" when they paused planning |
+| Plan with {first name} | Title of the plan sheet. Sections: Do what?, When you’re both free, Where |
+| Something new | The always-there option under Do what? |
+| Picked from both your schedules. Neither of you sees the other’s full availability. | Line under the times |
+| Suggest somewhere else · Send invite · Send an open invite | Plan sheet actions. "Send an open invite" replaces the times when none are shared (No shared times in the next 2 weeks.) |
+| {first name} sees the plan, not who suggested which time. | Caption under Send invite |
+| Invite sent to {first name} | Toast after sending |
+| You both have memberships here · {name} is a member | The note on a suggested place |
+| Your planning | Owner-only card. Rows: Availability, Free time, Budget, Memberships & gear, Calendar (Not connected), Pause planning |
+| Only you see this | Pill on the planning card |
+| Friends: shared times only, when planning · Only you · Only you, never shared · Friends: names only | Who sees each planning row |
+| Pause planning · Hide you from all suggestions and plans | Owner switch and its line |
+| Who can see my time | Link to the page that lists each time-related field and who sees it |
+| Pick your Pursuits | New-user heading over the category pills. Picking one starts an ongoing Pursuit |
+| Active · n, Finished · n | The two filter pills on the Pursuits tab |
+| Mark finished · Reopen | Owner actions on a Pursuit. "Mark finished" is the brief's wording; the style guide's action table says Finish, so this is the one place to decide |
+| Visible to others at 7:42 pm | Owner-only label on a Moment inside its 2 hour delay |
+| This profile is private. | Shown to a stranger on a private profile, with the name, the level name and Follow |
+| Add your neighborhood and a short bio | The link on your profile while both are empty |
+| Private profile | Settings > Profile switch: people who don’t follow you see only your name and level |
+
 ## Retired terms
 
 Never use these in UI copy.

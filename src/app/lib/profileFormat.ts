@@ -3,7 +3,7 @@ import { plural } from "./plural";
 import type { AvailabilityBlock, Day, DayPart, Membership, OwnerMoment, PlanSlot, PursuitItem, SharedMoment } from "./profileApi";
 
 /** "2026-10-24" as a local date at noon, so no time zone can move the day. */
-export function dayToDate(day: string): Date {
+function dayToDate(day: string): Date {
   const [y, m, d] = day.split("-").map(Number);
   return new Date(y, m - 1, d, 12);
 }
@@ -110,4 +110,12 @@ export function slotPart(slot: PlanSlot): string {
 
 export function firstName(displayName: string): string {
   return displayName.trim().split(/\s+/)[0] || displayName;
+}
+
+/** "Friends with Sam R. and 2 others you know". Names are the first two mutual friends. */
+export function mutualFriendsLine(names: string[], count: number): string {
+  if (count <= 0 || names.length === 0) return "";
+  if (count === 1) return `Friends with ${names[0]}`;
+  if (count === 2 && names.length > 1) return `Friends with ${names[0]} and ${names[1]}`;
+  return `Friends with ${names[0]} and ${plural(count - 1, "other")} you know`;
 }

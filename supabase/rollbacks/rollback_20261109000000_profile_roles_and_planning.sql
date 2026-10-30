@@ -13,7 +13,7 @@ drop function if exists public.update_profile_details(text, text, boolean);
 drop function if exists public.set_planning_paused(boolean);
 drop function if exists public.get_profile_pursuits(uuid);
 drop function if exists public.get_profile_stubs(uuid);
-drop function if exists public.get_profile_moments(uuid, integer, integer);
+drop function if exists public.get_profile_moments(uuid, integer, integer, text);
 drop function if exists public.get_profile(text);
 drop function if exists private.can_read_lists(uuid, uuid);
 drop function if exists private.viewer_role(uuid, uuid);
