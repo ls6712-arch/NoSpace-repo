@@ -16,7 +16,6 @@ const auth = vi.hoisted(() => ({
   profile: null as null | { onboarding_completed: boolean },
   loading: false,
   isConfigured: true,
-  signUp: vi.fn(),
   signIn: vi.fn(),
   signInWithGoogle: vi.fn(),
   signInWithApple: vi.fn(),
@@ -55,7 +54,7 @@ const stubby = () => screen.getByTestId("stubby").getAttribute("data-state");
 beforeEach(() => {
   flag.on = true;
   Object.assign(auth, { user: null, profile: null, loading: false, isConfigured: true });
-  for (const k of ["signUp", "signIn", "sendEmailCode", "sendSignInCode", "signInWithGoogle", "resetPassword"] as const) auth[k].mockReset();
+  for (const k of ["signIn", "sendEmailCode", "sendSignInCode", "signInWithGoogle", "resetPassword"] as const) auth[k].mockReset();
   localStorage.clear();
   auth.signInWithGoogle.mockResolvedValue({ error: null });
   sessionStorage.clear();
@@ -78,15 +77,6 @@ describe("log in routes", () => {
     expect(screen.getByRole("button", { name: "Continue with email" })).toBeTruthy();
     // Apple is behind appleSignInEnabled, which is off.
     expect(screen.queryByRole("button", { name: "Continue with Apple" })).toBeNull();
-  });
-
-  it("renders the old page when the flag is off", () => {
-    flag.on = false;
-    renderAt("/login?mode=signin");
-    expect(screen.queryByRole("heading", { name: "Welcome back." })).toBeNull();
-    expect(screen.getByRole("heading", { name: "Welcome back" })).toBeTruthy();
-    expect(screen.getByLabelText("Password")).toBeTruthy();
-    expect(screen.queryByTestId("stubby")).toBeNull();
   });
 });
 
@@ -150,7 +140,6 @@ describe("log in screens", () => {
     // Nothing says the person is new, and nothing was created.
     expect(screen.queryByText(/No Soosh account|might be new|If there’s a Soosh account/)).toBeNull();
     expect(auth.sendEmailCode).not.toHaveBeenCalled();
-    expect(auth.signUp).not.toHaveBeenCalled();
   });
 
   it("moves to the code screen when the email has an account", async () => {
