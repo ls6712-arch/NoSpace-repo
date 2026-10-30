@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { MessagesSquare, Search, Ellipsis } from "lucide-react";
+import { MessagesSquare, TextSearch, Ellipsis } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { APP_NAME } from "../../config";
 import { isDismissKey } from "../../lib/menuDismiss";
@@ -11,6 +11,9 @@ import { GlobalSearchBox } from "./GlobalSearchBox";
 import { RailItem } from "./RailItem";
 import { DISCOVER, HOME, LOG, WEEK, YOU } from "./navItems";
 import { useChatsBadge } from "./useChatsBadge";
+
+/** Placeholder pending the founder's pick: Discover keeps the plain magnifier, so the rail's Search item needs a different shape. */
+const SEARCH_ICON = TextSearch;
 
 type Panel = "search" | "notifications" | "more" | null;
 
@@ -61,7 +64,7 @@ export function SideRail() {
   const toggle = (next: Exclude<Panel, null>) => setPanel((cur) => (cur === next ? null : next));
   const dest = (d: typeof HOME) => (
     <li>
-      <RailItem to={d.to} icon={d.railIcon ?? d.icon} label={d.label} aria={d.aria} active={d.match(pathname)} accent={d.accent} />
+      <RailItem to={d.to} icon={d.icon} label={d.label} aria={d.aria} active={d.match(pathname)} accent={d.accent} />
     </li>
   );
 
@@ -86,7 +89,7 @@ export function SideRail() {
         {dest(HOME)}
         {dest(DISCOVER)}
         <li ref={searchRef} className="relative">
-          <RailItem icon={Search} label="Search" expanded={panel === "search"} active={panel === "search"} onClick={() => toggle("search")} />
+          <RailItem icon={SEARCH_ICON} label="Search" expanded={panel === "search"} active={panel === "search"} onClick={() => toggle("search")} />
           {panel === "search" && (
             <div className="fixed left-[80px] top-3 z-50 w-96 rounded-card border border-border bg-popover p-4 shadow-overlay wide:left-[248px]">
               <GlobalSearchBox autoFocus inline onDone={() => setPanel(null)} />

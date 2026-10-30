@@ -1,4 +1,4 @@
-import { CalendarDays, Compass, House, Plus, Search, UserRound, type LucideIcon } from "lucide-react";
+import { CalendarDays, House, Plus, Search, UserRound, type LucideIcon } from "lucide-react";
 
 /**
  * The destinations every signed-in screen offers, in one place: the bottom
@@ -14,8 +14,6 @@ export interface Destination {
   /** The accessible name when it is not the label. */
   aria?: string;
   icon: LucideIcon;
-  /** The rail's icon when it needs to differ: Discover is a compass there, because Search sits right under it with the magnifier. */
-  railIcon?: LucideIcon;
   match: (pathname: string) => boolean;
   /** The one solid shape: Log a Moment. */
   accent?: boolean;
@@ -26,7 +24,6 @@ export const DISCOVER: Destination = {
   to: "/discover",
   label: "Discover",
   icon: Search,
-  railIcon: Compass,
   match: (p) =>
     p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/browse") || p.startsWith("/space") || p.startsWith("/people"),
 };
