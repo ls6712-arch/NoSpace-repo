@@ -12,14 +12,13 @@ export interface PickOption {
   /** "space-slug/corner-slug", canonical. */
   key: string;
   name: string;
-  emoji?: string;
-  /** A friend who is already in this Corner: shown as "{Name}’s going" under it. */
+  /** A friend who is already in this Corner: shown as "{FirstName}’s going" under it. */
   going?: string;
 }
 
 export interface PickInput {
   /** The curated list, in its own order. */
-  curated: { key: string; name: string; emoji?: string }[];
+  curated: { key: string; name: string }[];
   /** Corners with something real near the person in the next 14 days, with how many things (events and open Pursuits). */
   activity: ReadonlyMap<string, number>;
   /** Every Corner's name by key (curated and others), to name an activity Corner or a saved pick that is not curated. */
@@ -33,6 +32,27 @@ export interface PickInput {
 }
 
 export const PICK_LIMIT = 12;
+
+/**
+ * Corners that are the same activity under two names. Only one of a group is
+ * ever offered (the first in line: the friend's, then the busiest, then the
+ * curated order), so there is one chip per activity. Slugs, not keys, so a
+ * Corner moved between Spaces still matches.
+ */
+const SAME_ACTIVITY: readonly (readonly string[])[] = [
+  ["running", "run-clubs"],
+  ["drawing", "life-drawing"],
+  ["dance", "indian-classical-dance"],
+  ["filmmaking", "film-clubs"],
+  ["walking-clubs", "city-walks"],
+];
+const activityOf = (key: string) => {
+  const slug = key.split("/")[1] ?? key;
+  return SAME_ACTIVITY.find((g) => g.includes(slug))?.[0] ?? slug;
+};
+
+/** The first word of a name: "{FirstName}’s going". */
+export const firstName = (name: string) => name.trim().split(/\s+/)[0]?.slice(0, 60) ?? "";
 export const MIN_PICKS = 3;
 
 /**
@@ -49,12 +69,16 @@ export function buildPickOptions(input: PickInput): PickOption[] {
   const nameOf = (key: string) => curatedByKey.get(key)?.name ?? input.names.get(key);
   const out: PickOption[] = [];
   const seen = new Set<string>();
-  const add = (key: string, going?: string) => {
+  const activities = new Set<string>();
+  const add = (key: string, going?: string, force = false) => {
     if (seen.has(key)) return;
     const name = nameOf(key);
     if (!name) return;
+    const activity = activityOf(key);
+    if (!force && activities.has(activity)) return;
     seen.add(key);
-    out.push({ key, name, emoji: curatedByKey.get(key)?.emoji || undefined, going });
+    activities.add(activity);
+    out.push({ key, name, going });
   };
 
   if (input.arrival) add(input.arrival.key, input.arrival.going);
@@ -67,7 +91,7 @@ export function buildPickOptions(input: PickInput): PickOption[] {
     if (out.length >= limit) break;
     add(c.key);
   }
-  for (const key of input.selected) add(key);
+  for (const key of input.selected) add(key, undefined, true);
   return out;
 }
 

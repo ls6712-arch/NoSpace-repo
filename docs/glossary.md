@@ -462,10 +462,11 @@ The four questions (What would you say yes to? / When are you usually free? / Wh
 | Term | Meaning |
 |---|---|
 | Pick {n} more | Disabled Next on the picks question while fewer than 3 are picked. No maximum |
+| (Corners as chips) | Text only, no emoji, in two columns. One chip per activity: where two Corners are the same activity (Running and Run clubs), only one is offered |
 | + Something else | Link under the Corners: opens a search of Corners that already exist. It never makes a Corner |
 | Find a Corner | Label of that search field |
 | No Corner by that name. | Empty state of that search |
-| {Name}’s going | Line under a Corner picked from a friend’s invite: the friend whose Pursuit is in it. It starts picked and can be unpicked |
+| {FirstName}’s going | Line under a Corner picked from a friend’s invite: the friend whose Pursuit is in it, first name only. It starts picked and can be unpicked |
 | Pick a time | Disabled Next on the free-time question while no window is on |
 | {n} windows a week | Live count under the grid, through `plural()`. Daytime and Evening, by day |
 | Daytime · Evening | Row headings of the grid. A cell reads "Saturday daytime, on" |
@@ -474,6 +475,7 @@ The four questions (What would you say yes to? / When are you usually free? / Wh
 | Passes and gear | Heading of the kinds a person already has |
 | Climbing · Museum · Library · Bike · Fitness · Gear · Other | The kinds of pass. One each, with an optional place |
 | {Kind} place (optional) | Label of the place field under a pass |
+| Only you see this. | Line under A month for doing things: the budget is private, never on a profile, a Stub or any shared view |
 | Free only · $50 · $100 · $200 · Skip | The monthly budget choices. Skip sits beside the amounts at the same size and saves no budget |
 | Your first plan will use free things and what your passes cover. | Line shown after Skip on the budget |
 

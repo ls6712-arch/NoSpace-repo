@@ -6,6 +6,7 @@ import {
   buildPickOptions,
   budgetLabel,
   cleanWindows,
+  firstName,
   hasEnoughPicks,
   newPass,
   picksMissingLine,
@@ -14,7 +15,7 @@ import {
   type PickInput,
 } from "./tasteModel";
 
-const curated = Array.from({ length: 20 }, (_, i) => ({ key: `s/c${i + 1}`, name: `Corner ${i + 1}`, emoji: "x" }));
+const curated = Array.from({ length: 20 }, (_, i) => ({ key: `s/c${i + 1}`, name: `Corner ${i + 1}` }));
 const base = (over: Partial<PickInput> = {}): PickInput => ({ curated, activity: new Map(), names: new Map(), selected: [], ...over });
 const keys = (o: ReturnType<typeof buildPickOptions>) => o.map((x) => x.key);
 
@@ -111,5 +112,33 @@ describe("budget and passes", () => {
   it("has the seven kinds, and a new pass is named for its kind with no place", () => {
     expect(PASS_KINDS.map((p) => p.kind)).toEqual(["climbing", "museum", "library", "bike", "fitness", "gear", "other"]);
     expect(newPass("climbing", "id1")).toEqual({ id: "id1", kind: "climbing", label: "Climbing", place: "" });
+  });
+});
+
+describe("one chip per activity", () => {
+  const names = new Map<string, string>();
+  const curated = [
+    { key: "sports-fitness/running", name: "Running" },
+    { key: "sports-fitness/run-clubs", name: "Run clubs" },
+    { key: "sports-fitness/climbing", name: "Climbing" },
+    { key: "art-creative/drawing", name: "Drawing" },
+    { key: "art-creative/life-drawing", name: "Life drawing" },
+  ];
+  it("keeps one of Running and Run clubs, the first in line", () => {
+    const out = buildPickOptions({ curated, activity: new Map(), names, selected: [] });
+    expect(out.map((o) => o.name)).toEqual(["Running", "Climbing", "Drawing"]);
+  });
+  it("lets the busier one win when it is the one with something near", () => {
+    const out = buildPickOptions({ curated, activity: new Map([["sports-fitness/run-clubs", 2]]), names, selected: [] });
+    expect(out.map((o) => o.name)).toEqual(["Run clubs", "Climbing", "Drawing"]);
+  });
+  it("still shows a pick the person already made", () => {
+    const out = buildPickOptions({ curated, activity: new Map(), names, selected: ["sports-fitness/run-clubs"] });
+    expect(out.map((o) => o.name)).toContain("Run clubs");
+  });
+  it("takes the first name only", () => {
+    expect(firstName("Priya  Nair")).toBe("Priya");
+    expect(firstName("Mia")).toBe("Mia");
+    expect(firstName("")).toBe("");
   });
 });

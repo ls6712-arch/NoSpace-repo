@@ -8,7 +8,7 @@ import { CURATED_CORNERS } from "../../../data/curatedCorners";
 import { useInterests } from "../../../lib/interests";
 import { savePrivate } from "../../../lib/onboardingRemote";
 import { ERROR_LINE } from "../../../lib/stateCopy";
-import { buildPickOptions, hasEnoughPicks, picksMissingLine } from "../../../lib/tasteModel";
+import { buildPickOptions, firstName, hasEnoughPicks, picksMissingLine } from "../../../lib/tasteModel";
 import { fetchCornerActivity, fetchTaste, pickKey } from "../../../lib/tasteRemote";
 import { useOnboarding } from "../OnboardingContext";
 import { useArrival } from "../useArrival";
@@ -17,8 +17,8 @@ import { ScreenFrame } from "./ScreenFrame";
 /**
  * Screen 7: "What would you say yes to?" Three or more Corners, no maximum.
  * The list is the friend's Corner (if they came from an invite, already
- * picked), then Corners with something real near them in the next 14 days,
- * then the curated ones. "Something else" searches the Corners that exist;
+ * picked), then Corners with something real near them in the next 14 days
+ * (an event, an open Pursuit or a partner Space), then the curated ones. "Something else" searches the Corners that exist;
  * it never makes one. Each pick stamps Stubby, each un-pick unstamps it.
  */
 export function PicksScreen() {
@@ -64,7 +64,7 @@ export function PicksScreen() {
   }, [loaded, arrival?.cornerKey]);
 
   const curated = useMemo(
-    () => CURATED_CORNERS.map((c) => ({ key: pickKey(c.spaceSlug, c.slug), name: c.name, emoji: c.emoji })),
+    () => CURATED_CORNERS.map((c) => ({ key: pickKey(c.spaceSlug, c.slug), name: c.name })),
     [],
   );
   const names = useMemo(() => new Map(allCorners.map((c) => [pickKey(c.spaceSlug, c.slug), c.name] as const)), [allCorners]);
@@ -75,7 +75,7 @@ export function PicksScreen() {
         curated,
         activity,
         names,
-        arrival: arrival?.cornerKey ? { key: arrival.cornerKey, going: arrival.name } : null,
+        arrival: arrival?.cornerKey ? { key: arrival.cornerKey, going: firstName(arrival.name) } : null,
         selected,
       }),
     [curated, activity, names, arrival, selected],
@@ -129,11 +129,11 @@ export function PicksScreen() {
         </>
       }
     >
-      <ul className="flex flex-col gap-2" aria-label="Corners">
+      <ul className="grid grid-cols-2 gap-2" aria-label="Corners">
         {options.map((o) => (
           <li key={o.key}>
             <ChoiceChip pressed={selected.includes(o.key)} onToggle={() => toggle(o.key)} sub={o.going ? `${o.going}’s going` : undefined}>
-              {o.emoji ? `${o.emoji} ${o.name}` : o.name}
+              {o.name}
             </ChoiceChip>
           </li>
         ))}

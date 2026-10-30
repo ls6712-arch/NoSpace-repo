@@ -53,18 +53,18 @@ export async function fetchTaste(userId: string): Promise<Taste> {
   }
 }
 
-/** Which Corners have something real near this city in the next 14 days, and how many things (events plus open Pursuits). */
+/** Which Corners have something real near this city in the next 14 days, and how many things (events, open Pursuits and partner Spaces). */
 export async function fetchCornerActivity(city: string, days = 14): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   if (!supabase || !city.trim()) return out;
   try {
     const { data, error } = await supabase.rpc("corners_with_activity", { p_city: city, p_days: days });
     if (error || !Array.isArray(data)) return out;
-    for (const r of data as { corner_key: string; events: number; pursuits: number }[]) {
+    for (const r of data as { corner_key: string; events: number; pursuits: number; partners?: number }[]) {
       const [space, slug] = String(r.corner_key).split("/");
       if (!space || !slug) continue;
       const key = pickKey(space, slug);
-      out.set(key, (out.get(key) ?? 0) + (Number(r.events) || 0) + (Number(r.pursuits) || 0));
+      out.set(key, (out.get(key) ?? 0) + (Number(r.events) || 0) + (Number(r.pursuits) || 0) + (Number(r.partners) || 0));
     }
   } catch {
     // Without it the list is just the curated one.

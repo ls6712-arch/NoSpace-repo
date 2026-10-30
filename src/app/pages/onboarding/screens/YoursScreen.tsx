@@ -136,7 +136,8 @@ export function YoursScreen() {
         />
       ))}
       <fieldset className="flex flex-col gap-2">
-        <legend className="transfer-label mb-2 text-body">A month for doing things</legend>
+        <legend className="transfer-label text-body">A month for doing things</legend>
+        <p className="mb-1 text-small transfer-muted">Only you see this.</p>
         <ul className="grid grid-cols-2 gap-2">
           {BUDGETS.map((b) => (
             <li key={b}>

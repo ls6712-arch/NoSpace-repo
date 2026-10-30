@@ -21,9 +21,9 @@ export function ScreenFrame({
   stickyFooter?: boolean;
 }) {
   return (
-    <section className="flex flex-1 flex-col pb-6">
+    <section className={stickyFooter ? "flex flex-1 flex-col" : "flex flex-1 flex-col pb-6"}>
       {hero && <div className="flex flex-1 items-center justify-center pt-8">{hero}</div>}
-      {!hero && <div className="h-6" />}
+      {!hero && <div className={stickyFooter ? "h-2" : "h-6"} />}
       <h1 className="transfer-headline mt-4 break-words text-display">{title}</h1>
       {intro && <p className="mt-3 text-body transfer-muted">{intro}</p>}
       {children && <div className="mt-6 flex flex-col gap-4">{children}</div>}

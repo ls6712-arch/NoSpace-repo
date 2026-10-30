@@ -19,9 +19,12 @@
 --                                    next N days (default 14): an upcoming event in an open
 --                                    Space, or an open Pursuit with room that belongs to an
 --                                    open Space there. Corner keys and counts only, never
---                                    ids or people. Orders the picks screen. A "partner
---                                    Space" has no marker in the schema, so it is not a
---                                    signal yet.
+--                                    ids or people. Orders the picks screen. A partner Space
+--                                    (spaces.is_partner) in that city counts too.
+--   spaces.is_partner                set by an admin only (a guard trigger refuses anyone
+--                                    else, on insert and on update). Default false. The
+--                                    database owner and the service role (no signed-in
+--                                    person) can set it too, which is how it is first filled.
 --   pursuit_invite_corner()          the Corner of the Pursuit an invite link is for, so
 --                                    a friend's Corner can come first, already picked.
 --
@@ -32,6 +35,35 @@
 -- Run AFTER 20261104000000_open_signup_and_account.sql.
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
 -- Rollback: rollback_20261105000000_onboarding_taste.sql.
+
+-- 0. Partner Spaces -------------------------------------------------------------
+
+alter table public.spaces add column is_partner boolean not null default false;
+
+-- Table-wide INSERT and UPDATE are granted to signed-in people on spaces, so a column
+-- revoke would do nothing: a trigger decides instead. A signed-in person who is not an
+-- admin cannot make a Space a partner or change it. No signed-in person at all (the
+-- database owner, the service role) is allowed.
+create or replace function private.guard_space_partner()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if (select auth.uid()) is not null
+     and not private.is_admin((select auth.uid()))
+     and ((tg_op = 'INSERT' and new.is_partner)
+          or (tg_op = 'UPDATE' and new.is_partner is distinct from old.is_partner)) then
+    raise exception 'Only an admin can mark a partner Space.' using errcode = 'P0001';
+  end if;
+  return new;
+end
+$$;
+revoke all on function private.guard_space_partner() from public;
+
+create trigger spaces_guard_partner
+  before insert or update of is_partner on public.spaces
+  for each row execute function private.guard_space_partner();
 
 -- 1. The private taste columns ------------------------------------------------
 
@@ -120,7 +152,7 @@ create trigger user_passes_limit
 -- 3. Corners with something real near a person ---------------------------------
 
 create or replace function public.corners_with_activity(p_city text, p_days integer default 14)
-returns table (corner_key text, events integer, pursuits integer)
+returns table (corner_key text, events integer, pursuits integer, partners integer)
 language plpgsql
 stable
 security definer
@@ -158,11 +190,25 @@ begin
       and private.pursuit_taken(p.id) < coalesce(p.capacity, 0)
       and not private.is_blocked_between((select auth.uid()), p.user_id)
     group by 1
+  ),
+  pt as (
+    select c.space_slug || '/' || c.slug as k, count(distinct s.id)::integer as n
+    from public.spaces s
+    join public.space_corners sc on sc.space_id = s.id
+    join public.corners c on c.id = sc.corner_id and not c.hidden
+    where s.is_partner and s.status = 'active' and s.access = 'open'
+      and lower(btrim(coalesce(s.city, ''))) = v_city
+    group by 1
+  ),
+  keys as (
+    select ev.k from ev union select pu.k from pu union select pt.k from pt
   )
-  select coalesce(ev.k, pu.k), coalesce(ev.n, 0), coalesce(pu.n, 0)
-  from ev
-  full join pu on pu.k = ev.k
-  order by coalesce(ev.n, 0) + coalesce(pu.n, 0) desc, 1;
+  select keys.k, coalesce(ev.n, 0), coalesce(pu.n, 0), coalesce(pt.n, 0)
+  from keys
+  left join ev on ev.k = keys.k
+  left join pu on pu.k = keys.k
+  left join pt on pt.k = keys.k
+  order by coalesce(ev.n, 0) + coalesce(pu.n, 0) + coalesce(pt.n, 0) desc, keys.k;
 end
 $$;
 revoke all on function public.corners_with_activity(text, integer) from public, anon;

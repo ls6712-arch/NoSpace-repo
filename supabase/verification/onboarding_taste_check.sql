@@ -32,8 +32,15 @@ declare
   v_open uuid := '00000000-0000-4000-8000-000000006201';
   v_closed uuid := '00000000-0000-4000-8000-000000006202';
   v_far uuid := '00000000-0000-4000-8000-000000006203';
+  v_partner uuid := '00000000-0000-4000-8000-000000006204';
+  v_plain uuid := '00000000-0000-4000-8000-000000006205';
+  v_partner_closed uuid := '00000000-0000-4000-8000-000000006206';
+  v_new uuid := '00000000-0000-4000-8000-000000006207';
   v_corner_a bigint;
   v_corner_b bigint;
+  v_corner_f bigint;
+  v_corner_g bigint;
+  v_corner_h bigint;
 begin
   v_owner_role := current_user;
 
@@ -69,6 +76,21 @@ begin
 
   insert into public.space_corners (space_id, corner_id, is_primary)
   values (v_open, v_corner_a, true), (v_closed, v_corner_a, true), (v_far, v_corner_a, true);
+
+  -- Partner Spaces. F: an open partner Space in the city (counts). G: an open Space in the city that is
+  -- not a partner (does not). H: a partner Space that is closed (does not).
+  insert into public.corners (space_slug, slug, name) values ('taste-check', 'corner-f', 'Taste check F'), ('taste-check', 'corner-g', 'Taste check G'), ('taste-check', 'corner-h', 'Taste check H');
+  v_corner_f := (select c.id from public.corners c where c.space_slug = 'taste-check' and c.slug = 'corner-f');
+  v_corner_g := (select c.id from public.corners c where c.space_slug = 'taste-check' and c.slug = 'corner-g');
+  v_corner_h := (select c.id from public.corners c where c.space_slug = 'taste-check' and c.slug = 'corner-h');
+  insert into public.spaces (id, slug, name, description, cover_image, meets, access, posting_mode, created_by, status, city)
+  values
+    (v_partner, 'taste-check-partner', 'Taste check partner', 'Test fixture, rolled back.', 'https://example.invalid/c.jpg', 'in_person', 'open', 'immediate', v_h, 'active', 'Tastecheckville'),
+    (v_plain, 'taste-check-plain', 'Taste check plain', 'Test fixture, rolled back.', 'https://example.invalid/c.jpg', 'in_person', 'open', 'immediate', v_h, 'active', 'Tastecheckville'),
+    (v_partner_closed, 'taste-check-partner-closed', 'Taste check partner closed', 'Test fixture, rolled back.', 'https://example.invalid/c.jpg', 'in_person', 'closed', 'immediate', v_h, 'active', 'Tastecheckville');
+  update public.spaces s set is_partner = true where s.id in (v_partner, v_partner_closed);
+  insert into public.space_corners (space_id, corner_id, is_primary)
+  values (v_partner, v_corner_f, true), (v_plain, v_corner_g, true), (v_partner_closed, v_corner_h, true);
 
   -- Corner A gets one real event in the next 14 days in the open Space. The rest must not count:
   -- cancelled, 20 days away, in a closed Space, in another city.
@@ -281,7 +303,7 @@ begin
 
   v_i := v_i + 1;
   v_n := (select count(*) from public.corners_with_activity('Tastecheckville', 14) r where r.corner_key like 'taste-check/%');
-  results := array_append(results, case when v_n = 2 then format('%s PASS (2 fixture Corners have something real near Tastecheckville)', v_i)
+  results := array_append(results, case when v_n = 3 then format('%s PASS (3 fixture Corners have something real near Tastecheckville: an event, a Pursuit, a partner Space)', v_i)
                                         else format('%s FAIL (%s Corners)', v_i, v_n) end);
 
   v_i := v_i + 1;
@@ -314,6 +336,92 @@ begin
        + (select count(*) from public.corners_with_activity('   ', 14) r where r.corner_key like 'taste-check/%');
   results := array_append(results, case when v_n = 0 then format('%s PASS (no city, no answer)', v_i)
                                         else format('%s FAIL (%s)', v_i, v_n) end);
+
+  -- Partner Spaces.
+  v_i := v_i + 1;
+  v_n := (select r.partners from public.corners_with_activity('Tastecheckville', 14) r where r.corner_key = 'taste-check/corner-f');
+  results := array_append(results, case when v_n = 1 then format('%s PASS (an open partner Space puts its Corner in, with no event needed)', v_i)
+                                        else format('%s FAIL (Corner F partners %s)', v_i, v_n) end);
+
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.corners_with_activity('Tastecheckville', 14) r where r.corner_key in ('taste-check/corner-g', 'taste-check/corner-h'));
+  results := array_append(results, case when v_n = 0 then format('%s PASS (a Space that is not a partner, and a closed partner Space, do not count)', v_i)
+                                        else format('%s FAIL (%s counted)', v_i, v_n) end);
+
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.corners_with_activity('Nowhere at all', 14) r where r.corner_key = 'taste-check/corner-f');
+  results := array_append(results, case when v_n = 0 then format('%s PASS (a partner Space in another city does not count here)', v_i)
+                                        else format('%s FAIL (counted)', v_i) end);
+
+  -- is_partner: default false, and only an admin can set it. The guard is a trigger, so these run as
+  -- the owner role with a signed-in person's claims (the trigger reads who is signed in, not the role).
+  perform set_config('role', v_owner_role, true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from pg_attribute a
+          where a.attrelid = 'public.spaces'::regclass and a.attname = 'is_partner' and a.attnotnull
+            and pg_get_expr((select d.adbin from pg_attrdef d where d.adrelid = a.attrelid and d.adnum = a.attnum), a.attrelid) = 'false');
+  results := array_append(results, case when v_n = 1 then format('%s PASS (is_partner is NOT NULL, default false)', v_i)
+                                        else format('%s FAIL (column shape)', v_i) end);
+
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.spaces s where s.id in (v_open, v_closed, v_far, v_plain) and s.is_partner);
+  results := array_append(results, case when v_n = 0 then format('%s PASS (a new Space is not a partner)', v_i)
+                                        else format('%s FAIL (%s partners)', v_i, v_n) end);
+
+  update public.profiles p set is_admin = true where p.id = v_b;
+
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_h), true);
+  v_i := v_i + 1;
+  begin
+    update public.spaces s set is_partner = true where s.id = v_plain;
+    results := array_append(results, format('%s FAIL (a non-admin made a Space a partner)', v_i));
+  exception
+    when raise_exception then results := array_append(results, format('%s PASS (a non-admin cannot make a Space a partner)', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  v_i := v_i + 1;
+  begin
+    insert into public.spaces (id, slug, name, description, cover_image, meets, access, posting_mode, created_by, status, city, is_partner)
+    values (v_new, 'taste-check-new', 'Taste check new', 'Test fixture, rolled back.', 'https://example.invalid/c.jpg', 'in_person', 'open', 'immediate', v_h, 'active', 'Tastecheckville', true);
+    results := array_append(results, format('%s FAIL (a non-admin created a partner Space)', v_i));
+  exception
+    when raise_exception then results := array_append(results, format('%s PASS (a non-admin cannot create a partner Space)', v_i));
+    when others then results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  v_i := v_i + 1;
+  begin
+    update public.spaces s set description = 'Edited by a host, rolled back.' where s.id = v_plain;
+    results := array_append(results, format('%s PASS (a non-admin can still edit the rest of a Space)', v_i));
+  exception when others then
+    results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_b), true);
+  v_i := v_i + 1;
+  begin
+    update public.spaces s set is_partner = true where s.id = v_plain;
+    v_n := (select count(*) from public.spaces s where s.id = v_plain and s.is_partner);
+    results := array_append(results, case when v_n = 1 then format('%s PASS (an admin can make a Space a partner)', v_i)
+                                          else format('%s FAIL (not set)', v_i) end);
+  exception when others then
+    results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  perform set_config('request.jwt.claims', '{}', true);
+  v_i := v_i + 1;
+  begin
+    update public.spaces s set is_partner = false where s.id = v_plain;
+    v_n := (select count(*) from public.spaces s where s.id = v_plain and not s.is_partner);
+    results := array_append(results, case when v_n = 1 then format('%s PASS (with no one signed in, the database owner can set it)', v_i)
+                                          else format('%s FAIL (not cleared)', v_i) end);
+  exception when others then
+    results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_a), true);
 
   -- The Corner of a friend's Pursuit invite.
   v_i := v_i + 1;

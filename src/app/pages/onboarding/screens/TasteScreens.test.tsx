@@ -78,6 +78,16 @@ describe("picks (screen 7)", () => {
     expect(Array.from(chipsIn("Corners")).every((c) => c.getAttribute("aria-pressed") === "true")).toBe(true);
   });
 
+  it("is exactly 12 text-only chips in two columns, one per activity", async () => {
+    render(<PicksScreen />);
+    await waitFor(() => expect(chipsIn("Corners").length).toBe(12));
+    expect(screen.getByRole("list", { name: "Corners" }).className).toContain("grid-cols-2");
+    const labels = Array.from(chipsIn("Corners")).map((c) => c.textContent ?? "");
+    expect(labels.some((t) => /\p{Extended_Pictographic}/u.test(t))).toBe(false);
+    expect(labels.some((t) => t.includes("Run clubs"))).toBe(false);
+    expect(labels.some((t) => t.includes("Running"))).toBe(true);
+  });
+
   it("says how many are missing as they are picked, and stamps or unstamps Stubby", async () => {
     render(<PicksScreen />);
     await waitFor(() => expect(chipsIn("Corners").length).toBe(12));
@@ -98,12 +108,13 @@ describe("picks (screen 7)", () => {
   });
 
   it("starts the friend's Corner first, picked, with who is going, and lets it be unpicked", async () => {
-    arrival.value = { name: "Mia", cornerKey: key(7) };
+    arrival.value = { name: "Mia Chen", cornerKey: key(7) };
     render(<PicksScreen />);
     await waitFor(() => expect(chipsIn("Corners")[0].getAttribute("aria-pressed")).toBe("true"));
     const first = chipsIn("Corners")[0];
     expect(first.textContent).toContain(CURATED_CORNERS[7].name);
     expect(first.textContent).toContain("Mia’s going");
+    expect(first.textContent).not.toContain("Chen");
     fireEvent.click(first);
     expect(chipsIn("Corners")[0].getAttribute("aria-pressed")).toBe("false");
   });
@@ -211,6 +222,11 @@ describe("yours (screen 9)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(flow.next).toHaveBeenCalled());
     expect(remote.savePrivate).toHaveBeenCalledWith("u1", { monthly_budget: 0 });
+  });
+
+  it("says only you see the budget", () => {
+    render(<YoursScreen />);
+    expect(screen.getByText("Only you see this.")).toBeTruthy();
   });
 
   it("can be left empty: Next is always on", async () => {
