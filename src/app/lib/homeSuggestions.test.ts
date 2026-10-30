@@ -96,9 +96,9 @@ describe("home suggestions", () => {
     expect(rpc.calls).toEqual([]);
   });
 
-  it("ships with the logging flag off", async () => {
+  it("ships with logging on, which the Privacy Policy line covers (see legalCopy.test)", async () => {
     const real = await vi.importActual<typeof import("../config")>("../config");
-    expect(real.suggestionLoggingEnabled).toBe(false);
+    expect(real.suggestionLoggingEnabled).toBe(true);
     expect(typeof suggestionLoggingEnabled).toBe("boolean");
   });
 });
