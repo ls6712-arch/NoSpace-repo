@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { MessagesSquare, TextSearch, Ellipsis } from "lucide-react";
+import { MessagesSquare, ScanSearch, Ellipsis } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { APP_NAME } from "../../config";
 import { isDismissKey } from "../../lib/menuDismiss";
@@ -12,8 +12,8 @@ import { RailItem } from "./RailItem";
 import { DISCOVER, HOME, LOG, WEEK, YOU } from "./navItems";
 import { useChatsBadge } from "./useChatsBadge";
 
-/** Placeholder pending the founder's pick: Discover keeps the plain magnifier, so the rail's Search item needs a different shape. */
-const SEARCH_ICON = TextSearch;
+/** Discover keeps the plain magnifier, so the rail's Search item has a different shape (founder's pick, Oct 30, 2026). */
+const SEARCH_ICON = ScanSearch;
 
 type Panel = "search" | "notifications" | "more" | null;
 
