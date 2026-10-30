@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type MutableRefObject } from "react";
 import { Camera, ImagePlus, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -30,6 +30,8 @@ export function AvatarPicker({
   onChange,
   compact = false,
   size = "size-20 sm:size-24",
+  headless = false,
+  openRef,
 }: {
   name: string;
   url?: string;
@@ -39,6 +41,9 @@ export function AvatarPicker({
    * caption line aren't reachable here, only from the full layout below. */
   compact?: boolean;
   size?: string;
+  /** No picture and no buttons: only the file inputs and any error. The screen draws its own trigger and opens the picker through `openRef`. */
+  headless?: boolean;
+  openRef?: MutableRefObject<(() => void) | null>;
 }) {
   const { user } = useAuth();
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -113,6 +118,19 @@ export function AvatarPicker({
     onChange(undefined);
     setBusy(false);
   };
+
+  if (openRef) openRef.current = () => libraryRef.current?.click();
+
+  if (headless) {
+    return (
+      <div>
+        <input ref={libraryRef} type="file" accept="image/*" className="hidden" onChange={upload} aria-label="Choose a photo" />
+        <p aria-live="polite" className={error ? "text-small" : "sr-only"} role={error ? "alert" : undefined}>
+          {error ?? (busy ? "Working…" : "")}
+        </p>
+      </div>
+    );
+  }
 
   if (compact) {
     return (

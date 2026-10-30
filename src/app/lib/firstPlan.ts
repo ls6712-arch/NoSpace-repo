@@ -23,7 +23,7 @@ export interface Plan {
   /** "Thursday, 7:00 PM" for a listing, "Saturday afternoon" for an at-home plan. */
   when: string | null;
   where?: string;
-  /** Only what is known: a listed price, or "Start with what you already have". */
+  /** Only a listed price. No price known means no cost line. */
   cost?: string;
   /** Required, and true. */
   reason: string;
@@ -312,7 +312,6 @@ export function atHomePlans(input: PlanInput): Plan[] {
       corner: pick,
       startsAt: w.startsAt,
       when: windowWhen(w),
-      cost: guide.haveIt ? "Start with what you already have" : undefined,
       reason: reasonLine({ windowKey: slots.length > 0 ? w.key : null, cornerName: pick.name, pass: passFor(pick.slug, passes) }),
       step: guide.step,
     });

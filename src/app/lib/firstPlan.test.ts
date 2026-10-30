@@ -97,6 +97,8 @@ describe("buildPlans", () => {
     expect(home[0].when).toBe("Thursday evening");
     expect(home[1].when).toBe("Saturday afternoon");
     expect(home[0].step).toBeTruthy();
+    // No price is known for a plan at home, so there is no cost line.
+    expect(home.every((h) => h.cost === undefined)).toBe(true);
   });
   it("with a skipped budget only offers things that need nothing bought; with no windows it is the next Saturday afternoon", () => {
     const plans = buildPlans({ ...base, budget: null, picks: [SOUR], windows: [] });

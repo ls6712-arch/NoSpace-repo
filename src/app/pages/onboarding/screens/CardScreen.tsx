@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AvatarPicker } from "../../../components/AvatarPicker";
 import { MemberCard } from "../../../components/onboarding/MemberCard";
 import { TransferButton } from "../../../components/onboarding/TransferButton";
@@ -23,14 +23,16 @@ async function fetchMemberNo(): Promise<number | null> {
 
 /**
  * Screen 10: "Put a face on your card". The member card shows their number,
- * first name and when they joined. A photo is optional: Later is the same
- * size as the button that moves on with a photo.
+ * first name and when they joined. The photo circle and "Add a photo" both
+ * open the photo picker (AvatarPicker, with no buttons of its own here). Once
+ * there is a photo the button reads Next. Later is always there, the same size.
  */
 export function CardScreen() {
   const { next, react } = useOnboarding();
   const { user, profile, refreshProfile } = useAuth();
   const [number, setNumber] = useState<number | null>(null);
   const [photo, setPhoto] = useState<string | undefined>(profile?.avatar_url);
+  const openPicker = useRef<(() => void) | null>(null);
   const name = firstName(profile?.display_name ?? "") || "You";
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export function CardScreen() {
       hero={<StepStubby size={110} />}
       footer={
         <>
-          <TransferButton onClick={() => next()} onDark disabled={!photo}>
+          <TransferButton onClick={() => (photo ? next() : openPicker.current?.())} onDark>
             {photo ? "Next" : "Add a photo"}
           </TransferButton>
           <TransferButton variant="plain" onClick={() => next()} onDark>
@@ -64,11 +66,15 @@ export function CardScreen() {
       }
     >
       <div className="px-2 pt-2">
-        <MemberCard number={number} name={name} joined={user?.created_at ? formatMonthYear(user.created_at) : ""} photoUrl={photo} />
+        <MemberCard
+          number={number}
+          name={name}
+          joined={user?.created_at ? formatMonthYear(user.created_at) : ""}
+          photoUrl={photo}
+          onPhoto={() => openPicker.current?.()}
+        />
       </div>
-      <div className="transfer-panel mt-4">
-        <AvatarPicker name={profile?.display_name ?? name} url={photo} onChange={onPhoto} />
-      </div>
+      <AvatarPicker headless openRef={openPicker} name={profile?.display_name ?? name} url={photo} onChange={onPhoto} />
     </ScreenFrame>
   );
 }

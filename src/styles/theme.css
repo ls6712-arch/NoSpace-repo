@@ -1962,7 +1962,10 @@ summary:focus-visible,
   border-radius: 9999px;
   background: var(--transfer-white);
   overflow: hidden;
+  padding: 0;
+  color: var(--transfer-navy);
 }
+.soosh-transfer button.transfer-card-photo { cursor: pointer; }
 
 /* Plan ticket (screen 11): signal body, a white 58px tab behind a dashed perforation, Stubby's eyes peeking over the top. */
 .soosh-transfer .transfer-ticket {
@@ -1991,20 +1994,30 @@ summary:focus-visible,
 }
 .soosh-transfer .transfer-ticket-eyes { position: absolute; top: -18px; right: 74px; }
 
-/* A white panel on a dark screen, for the shared photo picker. */
-.soosh-transfer .transfer-panel {
-  padding: 16px;
+/* The half a friend receives (screen 12): the white tab, torn along a dashed edge, with Stubby's star stamp. */
+.soosh-transfer .transfer-half {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 18px 18px 22px;
   border: 3px solid var(--transfer-navy);
-  border-radius: 14px;
+  border-left: 5px dashed var(--transfer-navy);
+  border-radius: 6px 16px 16px 6px;
   background: var(--transfer-white);
   color: var(--transfer-navy);
-  /* The shared photo picker is built from the app's tokens, so give it the light ones here. */
-  color-scheme: light;
-  --foreground: var(--transfer-navy);
-  --muted-foreground: var(--transfer-muted);
-  --border: var(--transfer-line);
-  --background: var(--transfer-white);
-  --surface-muted: var(--transfer-platform);
+  box-shadow: 0 6px 0 var(--transfer-cobalt);
+}
+.soosh-transfer .transfer-half-stamp {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: 3px solid var(--transfer-navy);
+  border-radius: 9999px;
+  background: var(--transfer-signal);
+  transform: rotate(-12deg);
 }
 
 /* Keyboard focus. The app-wide ring is !important, so the Transfer ring has to be

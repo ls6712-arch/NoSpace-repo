@@ -218,6 +218,9 @@ export interface SharedHalf {
   url: string;
   title: string;
   when: string | null;
+  /** For Add to calendar. Null for a plan with no time yet. */
+  startsAt: number | null;
+  where?: string;
 }
 
 /**
@@ -234,5 +237,5 @@ export async function tearOffHalf(plan: Plan, owner: Owner, ownPursuitId?: strin
   }
   const link = await getOrCreateInviteLink(pursuitId, owner.id);
   if (!link.token) return { error: link.error ?? ERROR_LINE };
-  return { half: { url: inviteUrl(link.token), title: plan.title, when: plan.when }, ownPursuitId: pursuitId };
+  return { half: { url: inviteUrl(link.token), title: plan.title, when: plan.when, startsAt: plan.startsAt, where: plan.where }, ownPursuitId: pursuitId };
 }

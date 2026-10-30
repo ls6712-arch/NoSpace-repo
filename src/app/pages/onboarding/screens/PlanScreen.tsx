@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useReducedMotion } from "motion/react";
+import { downloadIcs } from "../../../lib/calendarFile";
 import { PlanTicket } from "../../../components/onboarding/PlanTicket";
 import { TransferButton } from "../../../components/onboarding/TransferButton";
 import { useAuth } from "../../../context/AuthContext";
@@ -15,9 +15,6 @@ import { useOnboarding } from "../OnboardingContext";
 import { StepStubby } from "../StepStubby";
 import { ScreenFrame } from "./ScreenFrame";
 
-/** How long Stubby's stamp has to land before the screen moves on. */
-const STAMP_BEAT_MS = 600;
-
 /**
  * Screen 11: the first plan, as a ticket. It is found from what they answered
  * and what is live near them (lib/firstPlan.ts). "I'm going" does the real
@@ -29,13 +26,14 @@ export function PlanScreen() {
   const { next, finish, react, setStubby, redirectTo } = useOnboarding();
   const { user, profile } = useAuth();
   const { allCorners } = useCorners();
-  const reduce = useReducedMotion() ?? false;
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [city, setCity] = useState("");
   const [index, setIndex] = useState(0);
   const [now] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // "I'm going solo" has been done: the ticket stays, with Add to calendar, and the way on is See my week.
+  const [went, setWent] = useState(false);
   // What is already done for a plan, so a retry after a failure never does it twice.
   const done = useRef<{ planId: string; ownPursuitId?: string } | null>(null);
 
@@ -74,8 +72,6 @@ export function PlanScreen() {
     : null;
   const plan = plans?.[index];
 
-  const beat = (fn: () => void) => (reduce ? fn() : void setTimeout(fn, STAMP_BEAT_MS));
-
   const going = async (tear: boolean) => {
     if (!plan || !owner || busy) return;
     setBusy(true);
@@ -92,8 +88,9 @@ export function PlanScreen() {
       done.current = { planId: plan.id, ownPursuitId: own };
     }
     if (!tear) {
+      setBusy(false);
+      setWent(true);
       react("stamped");
-      beat(() => finish());
       return;
     }
     const t = await tearOffHalf(plan, owner, own);
@@ -152,25 +149,41 @@ export function PlanScreen() {
       hero={<StepStubby size={110} />}
       intro={outside ? "Soosh plans in your city are coming. For now, here’s one you can do anywhere." : undefined}
       footer={
-        <>
-          {error && (
-            <p role="alert" className="transfer-label text-small">
-              {error}
-            </p>
-          )}
-          <TransferButton onClick={() => void going(true)} disabled={busy} onDark>
-            Tear off half for a friend
+        went ? (
+          <TransferButton onClick={() => finish("/")} onDark>
+            See my week
           </TransferButton>
-          <TransferButton variant="plain" onClick={() => void going(false)} disabled={busy} onDark>
-            I’m going solo
-          </TransferButton>
-          <button type="button" className="transfer-link self-center" disabled={busy} onClick={another}>
-            {last ? "Show me Discover" : "Show me something else"}
-          </button>
-        </>
+        ) : (
+          <>
+            {error && (
+              <p role="alert" className="transfer-label text-small">
+                {error}
+              </p>
+            )}
+            <TransferButton onClick={() => void going(true)} disabled={busy} onDark>
+              Tear off half for a friend
+            </TransferButton>
+            <TransferButton variant="plain" onClick={() => void going(false)} disabled={busy} onDark>
+              I’m going solo
+            </TransferButton>
+            <button type="button" className="transfer-link self-center" disabled={busy} onClick={another}>
+              {last ? "Show me Discover" : "Show me something else"}
+            </button>
+          </>
+        )
       }
     >
-      <PlanTicket plan={plan} />
+      <PlanTicket plan={plan}>
+        {went && plan.startsAt !== null && (
+          <button
+            type="button"
+            className="transfer-link"
+            onClick={() => downloadIcs({ title: plan.title, startsAt: plan.startsAt as number, where: plan.where, note: plan.step })}
+          >
+            Add to calendar
+          </button>
+        )}
+      </PlanTicket>
     </ScreenFrame>
   );
 }

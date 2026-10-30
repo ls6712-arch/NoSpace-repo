@@ -24,13 +24,17 @@ vi.mock("../../../context/CornersContext", () => ({ useCorners: () => ({ allCorn
 const sb = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock("../../../../lib/supabase", () => ({ supabase: sb }));
 
-const picker = vi.hoisted(() => ({ onChange: null as null | ((u: string | undefined) => void) }));
+const picker = vi.hoisted(() => ({ onChange: null as null | ((u: string | undefined) => void), open: vi.fn(), headless: false }));
 vi.mock("../../../components/AvatarPicker", () => ({
-  AvatarPicker: (p: { onChange: (u: string | undefined) => void }) => {
+  AvatarPicker: (p: { onChange: (u: string | undefined) => void; headless?: boolean; openRef?: { current: (() => void) | null } }) => {
     picker.onChange = p.onChange;
+    picker.headless = !!p.headless;
+    if (p.openRef) p.openRef.current = picker.open;
     return <div data-testid="picker" />;
   },
 }));
+const cal = vi.hoisted(() => ({ downloadIcs: vi.fn() }));
+vi.mock("../../../lib/calendarFile", () => cal);
 
 const remote = vi.hoisted(() => ({ loadPlanInput: vi.fn(), goToPlan: vi.fn(), tearOffHalf: vi.fn() }));
 vi.mock("../../../lib/firstPlanRemote", () => remote);
@@ -60,9 +64,11 @@ beforeEach(() => {
   Object.values(flow).forEach((f) => typeof f === "function" && (f as ReturnType<typeof vi.fn>).mockReset());
   remote.loadPlanInput.mockReset().mockResolvedValue(input());
   remote.goToPlan.mockReset().mockResolvedValue({});
-  remote.tearOffHalf.mockReset().mockResolvedValue({ half: { url: "https://x.test/#/join/tok", title: "Bouldering night", when: "Thursday, 7:00 PM" }, ownPursuitId: "p9" });
+  remote.tearOffHalf.mockReset().mockResolvedValue({ half: { url: "https://x.test/#/join/tok", title: "Bouldering night", when: "Thursday, 7:00 PM", startsAt: at(29, 19) }, ownPursuitId: "p9" });
   sb.rpc.mockReset().mockResolvedValue({ data: 12, error: null });
   auth.refreshProfile.mockReset();
+  picker.open.mockReset();
+  cal.downloadIcs.mockReset();
   auth.profile.avatar_url = undefined;
   sessionStorage.clear();
 });
@@ -72,19 +78,30 @@ afterEach(() => {
 });
 
 describe("the member card (screen 10)", () => {
-  it("shows the number, first name and joined month, and asks for a photo with Later the same size", async () => {
+  it("shows the number, first name and joined month, with Add a photo full yellow and Later the same size", async () => {
     render(<CardScreen />);
     expect(screen.getByRole("heading", { name: "Put a face on your card" })).toBeTruthy();
     await waitFor(() => expect(screen.getByText("No. 12")).toBeTruthy());
     expect(screen.getByText("Mia")).toBeTruthy();
     expect(screen.queryByText("Chen")).toBeNull();
     expect(screen.getByText("Joined October 2026")).toBeTruthy();
-    const add = screen.getByRole("button", { name: "Add a photo" }) as HTMLButtonElement;
+    const add = screen.getAllByRole("button", { name: "Add a photo" }).find((b) => b.classList.contains("transfer-button")) as HTMLButtonElement;
+    expect(add.disabled).toBe(false);
     const later = screen.getByRole("button", { name: "Later" });
-    expect(add.disabled).toBe(true);
+    expect(add.getAttribute("data-variant")).toBe("primary");
     expect(add.getAttribute("data-on-dark")).toBe(later.getAttribute("data-on-dark"));
     fireEvent.click(later);
     expect(flow.next).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens the picker from the photo circle and from Add a photo, with no white panel of buttons", () => {
+    const { container } = render(<CardScreen />);
+    expect(picker.headless).toBe(true);
+    expect(container.textContent).not.toMatch(/Upload photo|Take photo/);
+    fireEvent.click(screen.getAllByRole("button", { name: "Add a photo" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Add a photo" })[1]);
+    expect(picker.open).toHaveBeenCalledTimes(2);
+    expect(flow.next).not.toHaveBeenCalled();
   });
 
   it("moves on with a photo, and Stubby stamps when one is added", async () => {
@@ -125,14 +142,26 @@ describe("the first plan (screen 11)", () => {
     expect(screen.getByRole("button", { name: "Show me Discover" })).toBeTruthy();
   });
 
-  it("I'm going solo does the real thing, then finishes onboarding", async () => {
+  it("I'm going solo does the real thing, then offers Add to calendar and See my week", async () => {
     render(<PlanScreen />);
     fireEvent.click(await screen.findByRole("button", { name: "I’m going solo" }));
-    await waitFor(() => expect(flow.finish).toHaveBeenCalledTimes(1));
+    await screen.findByRole("button", { name: "See my week" });
     expect(remote.goToPlan).toHaveBeenCalledTimes(1);
     expect(remote.goToPlan.mock.calls[0][0]).toMatchObject({ kind: "event", eventId: 7 });
     expect(remote.tearOffHalf).not.toHaveBeenCalled();
-    expect(flow.next).not.toHaveBeenCalled();
+    // Not before: the other answers are gone and onboarding is not over until See my week.
+    expect(screen.queryByRole("button", { name: "I’m going solo" })).toBeNull();
+    expect(flow.finish).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Add to calendar" }));
+    expect(cal.downloadIcs).toHaveBeenCalledWith(expect.objectContaining({ title: "Bouldering night", startsAt: at(29, 19) }));
+    fireEvent.click(screen.getByRole("button", { name: "See my week" }));
+    expect(flow.finish).toHaveBeenCalledWith("/");
+  });
+
+  it("does not offer Add to calendar before they are going", async () => {
+    render(<PlanScreen />);
+    await screen.findByRole("article", { name: "Bouldering night" });
+    expect(screen.queryByRole("button", { name: "Add to calendar" })).toBeNull();
   });
 
   it("Tear off half does it too, makes the link, and opens the invite screen", async () => {
@@ -201,22 +230,40 @@ describe("the first plan (screen 11)", () => {
 });
 
 describe("tear off half (screen 12)", () => {
-  const half = { url: "https://x.test/#/join/tok", title: "Bouldering night", when: "Thursday, 7:00 PM" };
+  const half = { url: "https://x.test/#/join/tok", title: "Bouldering night", when: "Thursday, 7:00 PM", startsAt: at(29, 19), where: "Williamsburg" };
   beforeEach(() => saveHalf("u1", half));
   afterEach(() => {
     // @ts-expect-error test cleanup
     delete navigator.share;
   });
 
-  it("shares the link and the message, and Stubby tears the tab off", async () => {
+  it("previews the half the friend gets before anything is sent", () => {
+    render(<InviteScreen />);
+    expect(screen.getByRole("heading", { name: "Who gets the other half?" })).toBeTruthy();
+    const preview = screen.getByRole("article", { name: "Mia saved you a spot" });
+    expect(preview.textContent).toContain("Bouldering night");
+    expect(preview.textContent).toContain("Thursday, 7:00 PM");
+    expect(preview.textContent).not.toContain("Chen");
+  });
+
+  it("sends, tears the tab off, settles, and the only way on is See my week", async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { share });
     render(<InviteScreen />);
-    expect(screen.getByRole("heading", { name: "Who gets the other half?" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    await waitFor(() => expect(flow.next).toHaveBeenCalledWith({ reaction: "torn" }));
+    await screen.findByRole("heading", { name: "Sent. Now it’s a plan." });
     expect(share).toHaveBeenCalledWith({ title: "Bouldering night", text: shareMessage("Bouldering night", "Thursday, 7:00 PM"), url: half.url });
     expect(shareMessage("Bouldering night", "Thursday, 7:00 PM")).toBe("I’m doing Bouldering night on Thursday, 7:00 PM. Take the other half:");
+    expect(flow.setStubby.mock.calls.map((c) => c[0])).toEqual(["torn", "done"]);
+    // Send and Skip are gone.
+    expect(screen.queryByRole("button", { name: "Send" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Skip for now" })).toBeNull();
+    const buttons = screen.getAllByRole("button").filter((b) => b.classList.contains("transfer-button"));
+    expect(buttons.map((b) => b.textContent)).toEqual(["See my week"]);
+    fireEvent.click(screen.getByRole("button", { name: "Add to calendar" }));
+    expect(cal.downloadIcs).toHaveBeenCalledWith(expect.objectContaining({ title: "Bouldering night", startsAt: half.startsAt }));
+    fireEvent.click(screen.getByRole("button", { name: "See my week" }));
+    expect(flow.finish).toHaveBeenCalledWith("/");
   });
 
   it("closing the share sheet sends nothing and stays", async () => {
@@ -224,22 +271,24 @@ describe("tear off half (screen 12)", () => {
     render(<InviteScreen />);
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
     await waitFor(() => expect((navigator.share as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1));
-    expect(flow.next).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Send" })).toBeTruthy();
+    expect(flow.setStubby).not.toHaveBeenCalled();
   });
 
-  it("copies the link where there is no share sheet", async () => {
+  it("copies the link where there is no share sheet and says so", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     render(<InviteScreen />);
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    await waitFor(() => expect(flow.next).toHaveBeenCalledWith({ reaction: "torn" }));
+    await screen.findByRole("heading", { name: "Sent. Now it’s a plan." });
     expect(writeText.mock.calls[0][0]).toContain(half.url);
+    expect(screen.getByText("Link copied")).toBeTruthy();
   });
 
-  it("is optional: Skip for now finishes with no reaction, and with no link there is nothing to send", async () => {
+  it("is optional: Skip for now goes Home, and with no link there is nothing to send", async () => {
     render(<InviteScreen />);
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
-    expect(flow.next).toHaveBeenCalledWith(undefined);
+    expect(flow.finish).toHaveBeenCalledWith("/");
     cleanup();
     sessionStorage.clear();
     render(<InviteScreen />);
