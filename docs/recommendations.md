@@ -75,8 +75,11 @@ refused, security definer with a pinned search_path.
 open Spaces and open Pursuits with room, for the signed-in caller, over the next
 7 days. It reads only the caller's own private answers (`profile_private`:
 picks, free windows, area and city, monthly budget; `user_passes`) and never
-returns a price, a count of people or another person's data. A followed friend
-is named by first name only, and only when they are going.
+returns a price, a count of people or another person's data. Followed friends
+who are going count toward the score, but a friend is named (first name only,
+and the `friend_going` reason) only where the caller could already see that
+person's place: an active member of the event's Space (the `event_rsvps` read
+rule), or a joined member of the Pursuit. Otherwise the next reason is used.
 
 | Signal | Weight | How |
 |---|---|---|
@@ -87,7 +90,7 @@ is named by first name only, and only when they are going.
 | nearby | 0.12 | Same area 1.0, same city 0.6, elsewhere 0, online 0.3, nothing saved 0.3 |
 | trending | 0.06 | New RSVPs and joins in the last 48 hours against that Corner's usual rate over 28 days, damped |
 | budget | 0.04 | A budget of 0 lifts listings with no price or a price that reads as free |
-| pass | 0.06 | One of the caller's passes covers the Corner (map in `home_ranking_v1`) |
+| pass | 0.06 | One of the caller's passes covers the Corner (map in `home_ranking_v1`: climbing, cycling, fitness to strength training, yoga and running, museum to drawing and life drawing, library to reading, book clubs, drawing and life drawing) |
 | soon | 0.06 | Fades from 1 to 0 over the next 48 hours |
 
 All of them, the caps and the pass-to-Corner map live in one row,
@@ -99,5 +102,11 @@ among `fits_window`, `picked`, `affinity`, `friend_going`, `nearby`,
 
 What is shown and done is logged in `suggestion_events` through
 `log_suggestion_event()` (owner-only read, no direct insert), so the weights can
-be tuned against what people open and join. Verification:
+be tuned against what people open and join. Rows are kept 90 days:
+`purge_suggestion_events()` runs nightly at 03:45 UTC from pg_cron (job
+`purge-suggestion-events`). The app does not call the logger until
+`suggestionLoggingEnabled` in `src/app/config.ts` is turned on, which waits for
+the Privacy Policy line about this log. The app has no data export yet; when it
+gets one, it must include `suggestion_events` (the owner can already read their
+own rows). Verification:
 `supabase/verification/home_suggestions_check.sql`.

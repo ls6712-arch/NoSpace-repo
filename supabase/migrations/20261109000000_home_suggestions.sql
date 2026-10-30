@@ -11,6 +11,10 @@
 --   public.suggestion_events           what was shown and what the person did with it,
 --                                      so the ranking can learn. Owner-only read; rows
 --                                      are written only by log_suggestion_event().
+--   public.purge_suggestion_events()   deletes rows older than 90 days (app_config
+--                                      home_ranking_v1 'log_retention_days'). Scheduled
+--                                      nightly at 03:45 UTC with pg_cron, the same way as
+--                                      purge-deleted-accounts (20261103000000).
 --   public.log_suggestion_event(...)   the one way in; user_id always comes from auth.uid().
 --
 -- What it returns (one row per suggestion, best first): kind ('event' or 'open_pursuit';
@@ -20,6 +24,13 @@
 -- and for the words on the card: title, space_slug, friend_name (a first name, only when
 -- reasons has friend_going) and pass_kind (only when reasons has pass). Never a price,
 -- a count of people, or another person's private data.
+--
+-- Friends going: the number of followed people who are going always counts toward the
+-- score, but a friend is NAMED (friend_name, and the friend_going reason) only where the
+-- caller could already see that person's place. For an event that means the caller is an
+-- active member of the event's Space, the rule of the event_rsvps read policy
+-- (public.is_space_member); for an open Pursuit it means the caller is a joined member.
+-- Otherwise friend_going is left out and the next strongest reason is used.
 --
 -- Windows follow onboarding: Daytime is 06:00 to 17:59 and Evening is 18:00 on, in
 -- America/New_York; the small hours are in no window.
@@ -54,14 +65,15 @@ values (
     "nearby": { "area": 1.0, "city": 0.6, "elsewhere": 0.0, "online": 0.3, "unknown": 0.3 },
     "trending": { "recent_hours": 48, "baseline_days": 28, "scale": 2.0 },
     "soon_hours": 48,
+    "log_retention_days": 90,
     "jitter": 0.03,
     "distinct_top": 4,
     "pass_corners": {
       "climbing": ["sports-fitness/climbing"],
       "bike": ["sports-fitness/cycling"],
-      "fitness": ["sports-fitness/strength-training"],
+      "fitness": ["sports-fitness/strength-training", "health-wellness/yoga", "sports-fitness/running"],
       "museum": ["art-creative/drawing", "art-creative/life-drawing"],
-      "library": ["books-writing/reading", "books-writing/book-clubs"]
+      "library": ["books-writing/reading", "books-writing/book-clubs", "art-creative/drawing", "art-creative/life-drawing"]
     }
   }$json$::jsonb
 )
@@ -133,6 +145,43 @@ end
 $$;
 revoke all on function public.log_suggestion_event(text, text, text, integer, double precision, text[], text) from public, anon;
 grant execute on function public.log_suggestion_event(text, text, text, integer, double precision, text[], text) to authenticated;
+
+-- 2b. Keeping the log 90 days -------------------------------------------------------
+
+create or replace function public.purge_suggestion_events()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_days integer := coalesce((select (c.value ->> 'log_retention_days')::integer from public.app_config c where c.key = 'home_ranking_v1'), 90);
+  v_count integer;
+begin
+  v_days := greatest(1, v_days);
+  with gone as (
+    delete from public.suggestion_events se
+    where se.created_at < now() - make_interval(days => v_days)
+    returning se.id
+  )
+  select count(*)::integer into v_count from gone;
+  return v_count;
+end
+$$;
+revoke all on function public.purge_suggestion_events() from public, anon, authenticated;
+
+create extension if not exists pg_cron with schema extensions;
+
+select cron.schedule(
+  'purge-suggestion-events',
+  '45 3 * * *',
+  $cron$select public.purge_suggestion_events();$cron$
+);
+
+-- Check it
+-- select jobname, schedule, command, active from cron.job where jobname = 'purge-suggestion-events';
+-- -- expect 1 row, active = true, schedule = '45 3 * * *'
+-- Then run supabase/verification/home_suggestions_check.sql.
 
 -- 3. The ranking ----------------------------------------------------------------------
 
@@ -259,7 +308,7 @@ begin
   ),
   evc as (
     select distinct on (ev.ref_id)
-           ev.ref_id, ev.kind, ev.title, ev.starts_at, ev.space_slug, ev.hood, ev.city, ev.online, ev.price, coalesce(ev.hood, ev.city) as place_label,
+           ev.ref_id, ev.kind, ev.title, ev.starts_at, ev.space_slug, ev.hood, ev.city, ev.online, ev.price, coalesce(ev.hood, ev.city) as place_label, ev.space_id,
            (c.space_slug || '/' || c.slug) as corner_key
     from ev
     join public.space_corners sc on sc.space_id = ev.space_id
@@ -298,9 +347,9 @@ begin
       and not coalesce((select pr.is_test from public.profiles pr where pr.id = p.user_id), false)
   ),
   cand as (
-    select evc.kind, evc.ref_id, evc.title, evc.starts_at, evc.space_slug, evc.corner_key, evc.hood, evc.city, evc.online, evc.price, evc.place_label from evc
+    select evc.kind, evc.ref_id, evc.title, evc.starts_at, evc.space_slug, evc.corner_key, evc.hood, evc.city, evc.online, evc.price, evc.place_label, evc.space_id from evc
     union all
-    select pu.kind, pu.ref_id, pu.title, pu.starts_at, pu.space_slug, pu.corner_key, pu.hood, pu.city, pu.online, pu.price, pu.place_label from pu
+    select pu.kind, pu.ref_id, pu.title, pu.starts_at, pu.space_slug, pu.corner_key, pu.hood, pu.city, pu.online, pu.price, pu.place_label, null::uuid from pu
   ),
   -- Who is going: people the caller follows, by candidate.
   going as (
@@ -352,12 +401,11 @@ begin
            (cand.corner_key = any (v_picks)) as is_pick,
            coalesce((select a.mine from aff a where a.k = cand.corner_key), 0)::double precision as s_aff,
            (select count(distinct g.uid) from going g where g.kind = cand.kind and g.ref_id = cand.ref_id)::integer as n_friends,
-           (select split_part(btrim(pr2.display_name), ' ', 1)
-              from going g2
-              join public.profiles pr2 on pr2.id = g2.uid
-             where g2.kind = cand.kind and g2.ref_id = cand.ref_id and btrim(coalesce(pr2.display_name, '')) <> ''
-             order by g2.seen_at, g2.uid
-             limit 1) as friend_first,
+           -- may the caller already see who is going? (event: member of the Space; Pursuit: joined member)
+           (case
+              when cand.kind = 'event' then coalesce(public.is_space_member(cand.space_id, v_me), false)
+              else exists (select 1 from public.pursuit_members mv where mv.pursuit_id = cand.ref_id and mv.user_id = v_me and mv.status = 'joined')
+            end) as can_see,
            coalesce((select t.recent from trend t where t.corner_key = cand.corner_key), 0)::double precision as tr_recent,
            coalesce((select t.base from trend t where t.corner_key = cand.corner_key), 0)::double precision as tr_base,
            (select pk from unnest(v_passes) as pk
@@ -373,6 +421,14 @@ begin
              else 0.0
            end as s_window,
            (case when sg.is_pick then 1.0 else 0.0 end) as s_pick,
+           (case when sg.can_see then
+              (select split_part(btrim(pr2.display_name), ' ', 1)
+                 from going g2
+                 join public.profiles pr2 on pr2.id = g2.uid
+                where g2.kind = sg.kind and g2.ref_id = sg.ref_id and btrim(coalesce(pr2.display_name, '')) <> ''
+                order by g2.seen_at, g2.uid
+                limit 1)
+            end) as friend_first,
            least(sg.n_friends, v_friends_cap) / v_friends_cap as s_friends,
            case
              when sg.online then v_n_online
@@ -407,7 +463,7 @@ begin
                   ('fits_window', case when cardinality(v_windows) > 0 and fs.wkey = any (v_windows) then w_window else 0.0 end),
                   ('picked', case when fs.is_pick then w_picked else 0.0 end),
                   ('affinity', case when not fs.is_pick then w_affinity * fs.s_aff else 0.0 end),
-                  ('friend_going', w_friends * fs.s_friends),
+                  ('friend_going', case when fs.can_see then w_friends * fs.s_friends else 0.0 end),
                   ('nearby', case when not fs.online and fs.s_near >= v_n_city and fs.s_near > v_n_unknown then w_nearby * fs.s_near else 0.0 end),
                   ('trending', w_trending * fs.s_trend),
                   ('pass', w_pass * fs.s_pass),

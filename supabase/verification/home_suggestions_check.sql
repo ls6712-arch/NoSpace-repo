@@ -21,7 +21,9 @@
 --   01 picked, in A's free window (day+4), friend B going; 01b second event, same Corner
 --   02 in the window (day+4) / 03 not in it (day+5)         window signal
 --   04 picked / 05 not picked                               picked signal
---   06 friend B going / 07 nobody going                     friends signal
+--   06 friend B going, A not a member of the Space / 07 nobody going   friends signal
+--   28 friend B going, A is an active member of the Space   friend named only here
+--   pursuit hs-pursuit-1 (Corner 19): friend B joined, A not a member   friend counts, not named
 --   08 same neighborhood / 09 same city / 10 other city     nearby signal
 --   11 priced Free / 12 priced $40                          budget signal (A's budget is 0)
 --   13 a Corner A's climbing pass covers / 14 not           pass signal
@@ -126,7 +128,14 @@ begin
   where sp.slug like 'hs-space-%';
 
   insert into public.space_members (space_id, user_id, role, status)
-  values ('00000000-0000-4000-8000-000000008227', v_a, 'host', 'active');
+  values ('00000000-0000-4000-8000-000000008227', v_a, 'host', 'active'),
+         ('00000000-0000-4000-8000-000000008228', v_a, 'member', 'active');
+
+  -- An open Pursuit in Corner 19 that friend B has joined; A is not a member of it.
+  insert into public.pursuits (id, user_id, title, hobby_slug, sub_hobby, visibility, space_id, capacity)
+  values ('hs-pursuit-1', v_e, 'HS pursuit 1', 'hs', 'hs-c19', 'open', '00000000-0000-4000-8000-000000008219', 5);
+  insert into public.pursuit_members (pursuit_id, user_id, role, status) values ('hs-pursuit-1', v_b, 'member', 'joined');
+  insert into public.pursuit_sessions (pursuit_id, starts_at, place, created_by) values ('hs-pursuit-1', v_t5, 'HS studio', v_e);
 
   -- One event per Space at day+5, 19:00, made by E; then the differences.
   insert into public.space_events (space_id, title, starts_at, timezone, meets, neighborhood, city, created_by)
@@ -149,13 +158,15 @@ begin
   update public.space_events e set created_by = v_c where e.title = 'HS event 24';
   update public.space_events e set created_by = v_d where e.title = 'HS event 25';
   update public.space_events e set starts_at = now() + interval '10 hours' where e.title = 'HS event 29';
+  -- 29 and 30 are for G; they are A's own events so A's list of 20 keeps room for the rest.
+  update public.space_events e set created_by = v_a where e.title in ('HS event 29', 'HS event 30');
 
   insert into public.event_rsvps (event_id, user_id)
   select e.id, x.uid
   from public.space_events e
   join (values
     ('HS event 01', v_b), ('HS event 06', v_b), ('HS event 22', v_a), ('HS event 23', v_f),
-    ('HS event 15', v_f), ('HS event 15', v_g)
+    ('HS event 15', v_f), ('HS event 15', v_g), ('HS event 28', v_b)
   ) as x(title, uid) on x.title = e.title;
 
   -- ───────────────────────────────────────────────────────────────────────
@@ -202,10 +213,21 @@ begin
   v_i := v_i + 1;
   results := results || (v_i || case when v_s1 > v_s2 then ' PASS a followed friend going: higher' else ' FAIL friends ' || coalesce(v_s1::text, 'null') || ' vs ' || coalesce(v_s2::text, 'null') end);
 
+  -- Naming: only where A could already see who is going.
   v_name := (select h.friend_name from public.home_suggestions(20) h where h.title = 'HS event 06');
   v_why := (select h.reasons from public.home_suggestions(20) h where h.title = 'HS event 06');
   v_i := v_i + 1;
-  results := results || (v_i || case when v_why @> array['friend_going']::text[] and v_name = 'Priya' then ' PASS the friend is named by first name only' else ' FAIL friend_name ' || coalesce(v_name, 'null') || ' reasons ' || coalesce(array_to_string(v_why, '+'), 'none') end);
+  results := results || (v_i || case when v_name is null and not (v_why @> array['friend_going']::text[]) and cardinality(v_why) >= 1 then ' PASS a non-member following someone who is going: boosted score (previous check), but no name and no friend_going; the next reason is used (' || array_to_string(v_why, '+') || ')' else ' FAIL non-member saw name ' || coalesce(v_name, 'null') || ' reasons ' || coalesce(array_to_string(v_why, '+'), 'none') end);
+
+  v_name := (select h.friend_name from public.home_suggestions(20) h where h.title = 'HS event 28');
+  v_why := (select h.reasons from public.home_suggestions(20) h where h.title = 'HS event 28');
+  v_i := v_i + 1;
+  results := results || (v_i || case when v_why @> array['friend_going']::text[] and v_name = 'Priya' then ' PASS an active member of the Space gets friend_going and the first name' else ' FAIL member saw name ' || coalesce(v_name, 'null') || ' reasons ' || coalesce(array_to_string(v_why, '+'), 'none') end);
+
+  v_name := (select h.friend_name from public.home_suggestions(20) h where h.ref_id = 'hs-pursuit-1');
+  v_why := (select h.reasons from public.home_suggestions(20) h where h.ref_id = 'hs-pursuit-1');
+  v_i := v_i + 1;
+  results := results || (v_i || case when v_name is null and not (coalesce(v_why, '{}') @> array['friend_going']::text[]) and (select count(*) from public.home_suggestions(20) h where h.ref_id = 'hs-pursuit-1') = 1 then ' PASS an open Pursuit a friend joined: offered, friend not named for a person who has not joined' else ' FAIL pursuit name ' || coalesce(v_name, 'null') end);
 
   v_s1 := (select h.score from public.home_suggestions(20) h where h.title = 'HS event 08');
   v_s2 := (select h.score from public.home_suggestions(20) h where h.title = 'HS event 09');
@@ -364,6 +386,37 @@ begin
     when others then
       results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
   end;
+
+  -- Keeping the log 90 days.
+  perform set_config('role', v_owner_role, true);
+  insert into public.suggestion_events (user_id, surface, kind, ref_id, position, action, created_at)
+  values (v_a, 'home', 'event', 'old', 0, 'shown', now() - interval '91 days'),
+         (v_a, 'home', 'event', 'recent', 0, 'shown', now() - interval '89 days');
+  perform public.purge_suggestion_events();
+  v_i := v_i + 1;
+  results := results || (v_i || case
+    when (select count(*) from public.suggestion_events se where se.user_id = v_a and se.ref_id = 'old') = 0
+     and (select count(*) from public.suggestion_events se where se.user_id = v_a and se.ref_id = 'recent') = 1
+    then ' PASS the purge removes a 91 day old row and keeps an 89 day old one' else ' FAIL purge' end);
+
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_a), true);
+  v_i := v_i + 1;
+  begin
+    perform public.purge_suggestion_events();
+    results := results || (v_i || ' FAIL a signed-in person ran the purge');
+  exception
+    when insufficient_privilege then
+      results := results || (v_i || ' PASS only the schedule can run the purge');
+    when others then
+      results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+
+  perform set_config('role', v_owner_role, true);
+  v_i := v_i + 1;
+  results := results || (v_i || case
+    when exists (select 1 from cron.job j where j.jobname = 'purge-suggestion-events' and j.schedule = '45 3 * * *' and j.active)
+    then ' PASS the nightly purge is scheduled at 03:45 UTC' else ' FAIL no active purge-suggestion-events job' end);
 
   -- Catalog facts: security definer with a pinned search_path, and the cascade.
   perform set_config('role', v_owner_role, true);

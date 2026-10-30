@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const rpc = vi.hoisted(() => ({ calls: [] as { fn: string; args: Record<string, unknown> }[], result: { data: [] as unknown, error: null as unknown } }));
+const flag = vi.hoisted(() => ({ on: true }));
+vi.mock("../config", async (orig) => ({
+  ...(await orig<typeof import("../config")>()),
+  get suggestionLoggingEnabled() {
+    return flag.on;
+  },
+}));
 vi.mock("../../lib/supabase", () => ({
   supabase: {
     rpc: (fn: string, args: Record<string, unknown>) => {
@@ -10,6 +17,7 @@ vi.mock("../../lib/supabase", () => ({
   },
 }));
 
+import { suggestionLoggingEnabled } from "../config";
 import { fetchHomeSuggestions, logSuggestionEvent, mapSuggestionRow, REASON_CODES } from "./homeSuggestions";
 
 const row = {
@@ -27,6 +35,7 @@ const row = {
 };
 
 beforeEach(() => {
+  flag.on = true;
   rpc.calls = [];
   rpc.result = { data: [], error: null };
 });
@@ -79,5 +88,17 @@ describe("home suggestions", () => {
       fn: "log_suggestion_event",
       args: { p_kind: "at_home", p_ref_id: "x/y", p_corner_key: "x/y", p_position: 99, p_score: null, p_reasons: ["picked", "soon"], p_action: "shown" },
     });
+  });
+
+  it("does not log anything while the logging flag is off", async () => {
+    flag.on = false;
+    await logSuggestionEvent({ kind: "event", refId: "1", position: 0, action: "shown" });
+    expect(rpc.calls).toEqual([]);
+  });
+
+  it("ships with the logging flag off", async () => {
+    const real = await vi.importActual<typeof import("../config")>("../config");
+    expect(real.suggestionLoggingEnabled).toBe(false);
+    expect(typeof suggestionLoggingEnabled).toBe("boolean");
   });
 });

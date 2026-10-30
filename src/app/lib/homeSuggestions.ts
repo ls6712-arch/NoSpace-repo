@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { suggestionLoggingEnabled } from "../config";
 import { isPassKind, type PassKind } from "./tasteModel";
 
 /**
@@ -106,9 +107,13 @@ export interface SuggestionLog {
   action: SuggestionAction;
 }
 
-/** Fire and forget: a lost row only costs a little learning. */
+/**
+ * Fire and forget: a lost row only costs a little learning. Does nothing while
+ * `suggestionLoggingEnabled` (config.ts) is off, which it is until the Privacy
+ * Policy line about this log is live.
+ */
 export async function logSuggestionEvent(e: SuggestionLog): Promise<void> {
-  if (!supabase) return;
+  if (!suggestionLoggingEnabled || !supabase) return;
   try {
     await supabase.rpc("log_suggestion_event", {
       p_kind: e.kind,

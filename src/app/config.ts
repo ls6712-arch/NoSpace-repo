@@ -48,6 +48,13 @@ export const TERMS_VERSION = "2026-10-30";
 // docs/qa/round-3/onboarding-test.md.
 export const onboardingUsesMainForm = import.meta.env.VITE_ONBOARDING_MAIN_FORM === "true";
 
+// Home v2 records which suggestions it showed and what the person did with them
+// (suggestion_events, migration 20261109000000). Off until the Privacy Policy line
+// about this log is approved and live: while it is false the app never calls
+// log_suggestion_event, and nothing is written. Turn it on in the same release
+// that publishes the Privacy Policy line.
+export const suggestionLoggingEnabled = false;
+
 // Footer links on the signed-out landing page. Each renders only when it has a
 // value, so adding one later is a one-line change here and no layout work.
 // CONTACT_EMAIL is a bare address; the others are full URLs. A test keeps it set.
