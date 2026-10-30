@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { ChevronRight } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { hasPassword } from "../../lib/hasPassword";
 import { useCategories } from "../../context/CategoriesContext";
 import { supabase } from "../../../lib/supabase";
 import { SectionHeader } from "../ui/section-header";
@@ -11,8 +12,10 @@ import { Label } from "../ui/label";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { SettingsPanel, SettingsRow, SavedFlash, useSavedFlash } from "./SettingsRow";
 
-function PasswordChangeRow() {
+export function PasswordChangeRow() {
   const { updatePassword, user } = useAuth();
+  // An account made with a code, Google or Apple has no password to confirm: it adds one.
+  const adding = !hasPassword(user);
   const [editing, setEditing] = useState(false);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -31,7 +34,7 @@ function PasswordChangeRow() {
 
   const save = async () => {
     if (saving) return;
-    if (!current) {
+    if (!adding && !current) {
       setError("Enter your current password.");
       return;
     }
@@ -49,14 +52,16 @@ function PasswordChangeRow() {
     // sets a new one for whoever already holds a valid session — so the
     // "current password" field is verified here first, by re-authenticating
     // with it, before actually changing anything.
-    const { error: verifyError } = await supabase!.auth.signInWithPassword({
-      email: user!.email!,
-      password: current,
-    });
-    if (verifyError) {
-      setSaving(false);
-      setError("Your current password isn’t right.");
-      return;
+    if (!adding) {
+      const { error: verifyError } = await supabase!.auth.signInWithPassword({
+        email: user!.email!,
+        password: current,
+      });
+      if (verifyError) {
+        setSaving(false);
+        setError("Your current password isn’t right.");
+        return;
+      }
     }
     const result = await updatePassword(next);
     setSaving(false);
@@ -70,11 +75,11 @@ function PasswordChangeRow() {
 
   if (!editing) {
     return (
-      <SettingsRow label="Password" description="Change your password.">
+      <SettingsRow label="Password" description={adding ? "Optional. You can always log in with a code." : "Change your password."}>
         <div className="flex items-center justify-end gap-3">
           {saved && <SavedFlash show />}
           <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            Change password
+            {adding ? "Add a password" : "Change password"}
           </Button>
         </div>
       </SettingsRow>
@@ -85,22 +90,24 @@ function PasswordChangeRow() {
     <div className="px-4 py-4 sm:px-5">
       <div className="mb-3 text-small">Password</div>
       <div className="grid gap-3 sm:max-w-sm">
-        <div>
-          <Label htmlFor="pw-current" className="mb-1.5 block text-caption">
-            Current password
-          </Label>
-          <Input
-            id="pw-current"
-            type="password"
-            autoComplete="current-password"
-            className="border-input"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-          />
-        </div>
+        {!adding && (
+          <div>
+            <Label htmlFor="pw-current" className="mb-1.5 block text-caption">
+              Current password
+            </Label>
+            <Input
+              id="pw-current"
+              type="password"
+              autoComplete="current-password"
+              className="border-input"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+            />
+          </div>
+        )}
         <div>
           <Label htmlFor="pw-next" className="mb-1.5 block text-caption">
-            New password
+            {adding ? "Password" : "New password"}
           </Label>
           <Input
             id="pw-next"
@@ -114,7 +121,7 @@ function PasswordChangeRow() {
         </div>
         <div>
           <Label htmlFor="pw-confirm" className="mb-1.5 block text-caption">
-            Confirm new password
+            {adding ? "Confirm password" : "Confirm new password"}
           </Label>
           <Input
             id="pw-confirm"
@@ -132,7 +139,7 @@ function PasswordChangeRow() {
           Cancel
         </Button>
         <Button busy={saving} size="sm" onClick={save} disabled={saving}>
-          Change password
+          {adding ? "Add a password" : "Change password"}
         </Button>
       </div>
     </div>
@@ -161,11 +168,6 @@ export function AccountSection() {
 
   if (!user) return null;
 
-  // app_metadata.provider is "email" for a password account, or the OAuth
-  // provider name ("google") for a social-login one — social accounts have
-  // no password to change here at all.
-  const isEmailAccount = user.app_metadata?.provider === "email";
-
   return (
     <section>
       <SectionHeader n={3} eyebrow="ACCOUNT" title="Account" />
@@ -176,7 +178,8 @@ export function AccountSection() {
         <SettingsRow label="Email" description="Signing in and account notices go here.">
           <span className="text-small text-muted-foreground">{user.email}</span>
         </SettingsRow>
-        {isEmailAccount && <PasswordChangeRow />}
+        {/* Every account type: "Add a password" for one without, "Change password" for one with. */}
+        <PasswordChangeRow />
         <SettingsRow
           label="Log out everywhere"
           description="Ends every session on every device, including this one."

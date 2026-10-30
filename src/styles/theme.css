@@ -1788,16 +1788,7 @@ summary:focus-visible,
 }
 .soosh-transfer .transfer-button:active:not(:disabled) { box-shadow: 0 1px 0 var(--transfer-navy); }
 .soosh-transfer .transfer-button:disabled { cursor: default; opacity: 0.6; }
-.soosh-transfer .transfer-button:focus-visible,
-.soosh-transfer .transfer-icon-button:focus-visible {
-  outline: 3px solid var(--transfer-cobalt);
-  outline-offset: 3px;
-}
-.soosh-transfer[data-tone="cobalt"] .transfer-button:focus-visible,
-.soosh-transfer[data-tone="navy"] .transfer-button:focus-visible,
-.soosh-transfer[data-tone="navy"] .transfer-icon-button:focus-visible {
-  outline-color: var(--transfer-white);
-}
+
 
 .soosh-transfer .transfer-icon-button {
   display: inline-flex;
@@ -1818,3 +1809,75 @@ summary:focus-visible,
   background: var(--transfer-line);
 }
 .soosh-transfer .transfer-bar[data-filled="true"] { background: var(--transfer-cobalt); }
+
+/* On a dark screen (navy) the button's navy border and drop vanish, so it
+   takes a white border and a cobalt drop instead (founder, Oct 30, 2026). */
+.soosh-transfer .transfer-button[data-on-dark="true"] {
+  border-color: var(--transfer-white);
+  box-shadow: 0 4px 0 var(--transfer-cobalt);
+}
+.soosh-transfer .transfer-button[data-on-dark="true"]:active:not(:disabled) { box-shadow: 0 1px 0 var(--transfer-cobalt); }
+
+/* The quieter button: white fill (Google, Apple, a second choice). */
+.soosh-transfer .transfer-button[data-variant="plain"] { background: var(--transfer-white); }
+
+/* A text field: 56px, 2px line border, cobalt when focused. */
+.soosh-transfer .transfer-field {
+  width: 100%;
+  min-height: 56px;
+  border: 2px solid var(--transfer-line);
+  border-radius: 12px;
+  background: var(--transfer-white);
+  color: var(--transfer-navy);
+  font-family: var(--transfer-label);
+  font-size: 18px;
+  font-weight: 600;
+  padding-inline: 16px;
+}
+.soosh-transfer .transfer-field::placeholder { color: var(--transfer-muted); font-weight: 400; }
+.soosh-transfer .transfer-field[aria-invalid="true"] { border-color: var(--transfer-navy); border-width: 3px; }
+.soosh-transfer .transfer-field[data-code="true"] {
+  text-align: center;
+  font-family: var(--transfer-display);
+  font-size: 32px;
+  letter-spacing: 0.4em;
+  padding-inline: 8px;
+}
+
+/* A small tappable choice (a suggestion under a field): 44px, line border. */
+.soosh-transfer .transfer-suggestion {
+  min-height: 44px;
+  border: 2px solid var(--transfer-line);
+  border-radius: 12px;
+  background: var(--transfer-white);
+  color: var(--transfer-navy);
+  font-family: var(--transfer-label);
+  font-weight: 700;
+  padding-inline: 14px;
+  cursor: pointer;
+}
+
+/* A text button: underlined, 44px tall. */
+.soosh-transfer .transfer-link {
+  min-height: 44px;
+  font-family: var(--transfer-label);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: inherit;
+  cursor: pointer;
+}
+.soosh-transfer .transfer-link:disabled { cursor: default; text-decoration: none; opacity: 0.8; }
+
+
+/* Keyboard focus. The app-wide ring is !important, so the Transfer ring has to be
+   as well: cobalt on light screens, white on cobalt and navy. */
+.soosh-transfer :is(a, button, input, select, textarea, [tabindex]):focus-visible,
+.soosh-transfer .transfer-field:focus {
+  outline: 3px solid var(--transfer-cobalt) !important;
+  outline-offset: 3px !important;
+}
+.soosh-transfer[data-tone="cobalt"] :is(a, button, input, select, textarea, [tabindex]):focus-visible,
+.soosh-transfer[data-tone="navy"] :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: var(--transfer-white) !important;
+}

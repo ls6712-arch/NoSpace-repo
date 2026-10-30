@@ -24,7 +24,7 @@ const HEADLINE: Record<OnboardingStep, string> = {
 };
 
 export function PlaceholderScreen() {
-  const { step, next, finishing, finishError } = useOnboarding();
+  const { step, tone, next, finishing, finishError } = useOnboarding();
   const hero = step === "welcome";
   return (
     <section className="flex flex-1 flex-col pb-6">
@@ -41,7 +41,7 @@ export function PlaceholderScreen() {
             {finishError}
           </p>
         )}
-        <TransferButton onClick={next} disabled={finishing}>
+        <TransferButton onClick={() => next()} disabled={finishing} onDark={tone === "navy"}>
           {step === "welcome" ? "Get started" : "Next"}
         </TransferButton>
       </div>

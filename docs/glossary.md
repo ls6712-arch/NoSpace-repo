@@ -203,7 +203,7 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 | What should people call you? / This is how your name shows on your Shelf. | Onboarding name step: required display name, with a live preview under "Your Shelf" |
 | Moments logged | Headline stat |
 | Is this how you’d like to be known? / Save name | One-time prompt for accounts named after their email; saving unchanged confirms the name |
-| I’m 16 or older and agree to the Terms and Privacy Policy | Required sign-up checkbox (email and Google). Both documents are linked. Shown once more, with a Continue button, to any account with no recorded acceptance: in onboarding for a new account, as a prompt that can't be closed for an existing one (Log out is the only other way out) |
+| I’m 18 or older and agree to the Terms and Privacy Policy | Required sign-up checkbox (email and Google). Both documents are linked. Shown once more, with a Continue button, to any account with no recorded acceptance: in onboarding for a new account, as a prompt that can't be closed for an existing one (Log out is the only other way out) |
 | Terms and Privacy Policy | Title of that one-time prompt for existing accounts |
 | Milestones | Private badges, shared one at a time |
 | Followers / Following | People connections |
@@ -408,7 +408,7 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 
 ## Onboarding (Soosh onboarding brief, Oct 29, 2026)
 
-**Proposed, awaiting the founder's approval** (brief section 10.8). Stubby is the character's name. It is not a product noun, so it is written "Stubby" and never gets a rule of its own. Stubs (the keepsakes) keep their name.
+**Approved by the founder, Oct 30, 2026** (brief section 10.8). Stubby is the character's name. It is not a product noun, so it is written "Stubby" and never gets a rule of its own. Stubs (the keepsakes) keep their name.
 
 | Term | Meaning |
 |---|---|
@@ -430,6 +430,73 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 | Next | Button on an onboarding screen that has only one thing to do |
 | {n} of 3 | Step counter on the three taste questions only. Not a progress score: no levels, no streaks |
 
+### Onboarding, account screens (PR 2)
+
+**Approved by the founder, Oct 30, 2026.** The strings the brief gives for these screens (I already have an account, Continue with Google, Continue with Apple, Continue with email, Never shown to anyone, Use my location, the wrong code line and the under-age line) are used as written. The rest are new.
+
+| Term | Meaning |
+|---|---|
+| Sign up | Heading of screen 2 (the button of that name on the log in page is unchanged) |
+| Continue | Button after the email is typed, which sends the code |
+| Add your email / Add your first name / Add your birthday / Add a neighborhood | The primary button while its field is empty: it says what is missing |
+| That doesn’t look like an email address. | Email field error |
+| Check your email | Heading of the “Check your email” confirmation after a password reset link is sent (the code screen has its own, below) |
+| Code | Label of the code field |
+| That code didn’t match. Try again or send a new one. | Wrong or expired code (Stubby shrugs) |
+| New code sent. | After a resend |
+| First name / Username | Labels on the name screen. What should people call you? is the heading |
+| @{username} is free | Under the username while it is available |
+| @{username} is taken. @{next} is free. / Use @{next} | A taken username: the next free one, never an error dialog |
+| Use 3 to 20 letters, numbers or underscores. | Username rules |
+| When’s your birthday? / Date of birth | Heading and label. Never shown to anyone. sits under the field |
+| That date doesn’t look right. | Date field error |
+| Soosh is for people 18 and over for now. | Stop screen under the minimum age (Stubby tilts). Its button is Log out |
+| Where are you? / Neighborhood or city | Heading and label on screen 6 |
+| Location is off. Type your neighborhood instead. | Location denied. Shown once, no repeat |
+| That’s outside New York. Type your city instead. | Location read, but not in New York |
+
+### Log in (Soosh log in brief, Oct 29, 2026)
+
+**Proposed Oct 30, 2026, awaiting approval.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, the wrong code line, New code sent. and Log out from above. Existing line kept: Forgot your password?. Replaced by the log in brief, revision 2: Use my password instead and the separate password screen (the password is on the log in screen now) and the old reset confirmation ("If there’s an account for that address, a reset link is on its way…").
+
+| Term | Meaning |
+|---|---|
+| Welcome back. | Headline of the returning-user screen (Stubby wakes up when you tap or type) |
+| New here? Get started | Link on it, to the onboarding |
+| Log in | Heading of the log in screen, and the Log in button after a reset link |
+| Send me a code · Log in with password | The two equal buttons on the log in screen; the one this device used last comes first. Either is off until what it needs is typed |
+| That email and password don’t match. | The one message for a wrong email, a wrong password and an account with no password (Stubby shrugs). Never says which |
+| Password (if you have one) | Label of the password field on the log in screen |
+| If there’s an account for {email}, we’ve sent a link. | After Send reset link, for any address |
+| Reset your password | Heading of the forgot-password screen |
+| Send reset link | Button on it. Check your email follows, with the line above and a Log in button |
+| Signing you in… | While the session is made (Stubby thinks) |
+
+### The code screen, in stages (log in brief revision 3, Oct 30, 2026)
+
+**Proposed Oct 30, 2026, awaiting approval.** Used by log in and by sign-up. Nothing on it depends on whether the address has an account: a late code must never suggest the person is new, and an address with no account sees the same words at the same times as one with an account.
+
+| Term | Meaning |
+|---|---|
+| Check your inbox at {email}. | Heading, from the first second |
+| Codes usually arrive in under a minute. | Line under it, for the first 30 seconds |
+| Send a new code in {m:ss} | Countdown for the first 30 seconds (0:30, 0:29, and so on) |
+| Still nothing? Check your spam folder. | Replaces the two lines above after 30 seconds |
+| Send a new code · Log in with password · Use a different email | Three equal options after 30 seconds. Sign-up has no Log in with password. Send a new code starts the 30 seconds again |
+| New to Soosh? Get started | Footer link on the log in code screen, from the first second. Opens sign-up with the email typed. Not on the sign-up code screen, where the person is already doing that |
+| You can ask for another code in {time}. | Shown under the code field, instead of an error, when too many codes were asked for. The time is worded by `formatWait` in dates.ts (45 seconds, 1 minute) |
+
+### Passwords (log in brief, revisions 1 and 2)
+
+**Proposed Oct 30, 2026, awaiting approval.** A password is a real option, never a hidden link, and never required.
+
+| Term | Meaning |
+|---|---|
+| Want a password too? | Heading of the one optional screen after an email code is accepted at sign-up (not a numbered step; never shown after Google or Apple) |
+| Optional. You can always log in with a code. | Line under it, and under Add a password in Settings |
+| Add a password · Skip for now | The two equal answers on that screen. Add a password is also the Settings > Account button for an account without a password |
+| Change password | Settings > Account button for an account that has one (as before) |
+
 ## Retired terms
 
 Never use these in UI copy.
@@ -438,3 +505,6 @@ Never use these in UI copy.
 |---|---|---|
 | Rooms | Oct 28, 2026 (UI removed) | The group's own name, under Browse by |
 | See all rooms | Oct 28, 2026 (UI removed) | See all |
+| We sent a 6-digit code to {email}. | Oct 30, 2026 | Check your inbox at {email}. |
+| Send a new code in {n} seconds | Oct 30, 2026 | Send a new code in {m:ss} |
+| That email and password didn’t match. | Oct 30, 2026 | That email and password don’t match. |

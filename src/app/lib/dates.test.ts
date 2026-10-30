@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDuration, formatStarts } from "./dates";
+import { formatDuration, formatStarts, formatWait } from "./dates";
 
 const NOW = Date.UTC(2026, 9, 26, 12, 0, 0);
 
@@ -28,5 +28,23 @@ describe("formatDuration", () => {
   it("gives nothing for a missing or zero length", () => {
     expect(formatDuration(0)).toBe("");
     expect(formatDuration(Number.NaN)).toBe("");
+  });
+});
+
+describe("formatWait", () => {
+  it("reads as seconds, minutes or hours, with the right plural", () => {
+    expect(formatWait(1)).toBe("1 second");
+    expect(formatWait(45)).toBe("45 seconds");
+    expect(formatWait(60)).toBe("1 minute");
+    expect(formatWait(300)).toBe("5 minutes");
+    expect(formatWait(3600)).toBe("1 hour");
+    expect(formatWait(7200)).toBe("2 hours");
+  });
+
+  it("rounds up and is empty for nothing to wait", () => {
+    expect(formatWait(44.2)).toBe("45 seconds");
+    expect(formatWait(61)).toBe("2 minutes");
+    expect(formatWait(0)).toBe("");
+    expect(formatWait(-3)).toBe("");
   });
 });

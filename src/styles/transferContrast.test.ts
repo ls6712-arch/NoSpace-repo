@@ -41,3 +41,11 @@ describe("Transfer palette contrast", () => {
     expect(ratio(token(`transfer-${fg}`), token(`transfer-${bg}`))).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+describe("Transfer button on dark screens", () => {
+  it("takes a white border and a cobalt drop from the tokens", () => {
+    const rule = /\.transfer-button\[data-on-dark="true"\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(rule).toContain("border-color: var(--transfer-white)");
+    expect(rule).toContain("var(--transfer-cobalt)");
+  });
+});

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, Navigate, useParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { fetchInvitePreview, type InvitePreview } from "../lib/invites";
 import { saveInviteCode } from "../lib/inviteCode";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { WaitlistForm } from "../components/WaitlistForm";
-import { APP_NAME } from "../config";
+import { APP_NAME, sooshOnboardingEnabled } from "../config";
 
 /**
  * /#/i/:code — Step 2's arrival page, where an invite link lands. Works
@@ -42,6 +42,11 @@ export function InviteArrival() {
     const result = await signInWithGoogle();
     if (result.error) setError(result.error);
   };
+
+  // Signed out, an invite link opens the Soosh onboarding on the friend's welcome.
+  if (sooshOnboardingEnabled && !loading && !user) {
+    return <Navigate to={`/onboarding?invite=${encodeURIComponent(code)}`} replace />;
+  }
 
   if (checking || loading) {
     return (

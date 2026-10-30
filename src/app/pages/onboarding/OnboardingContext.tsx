@@ -7,8 +7,16 @@ export type OnboardingApi = {
   tone: Tone;
   /** Where the flow will land when it ends (`?redirect=`). */
   redirectTo: string;
-  /** The current screen is done: save the step and open the next one (or finish). */
-  next: () => void;
+  /** Signed in with an account (false before the code is accepted). */
+  signedIn: boolean;
+  /** The friend this person is arriving with (`?invite=` or a Pursuit link), if any. */
+  inviteCode: string | null;
+  /**
+   * The current screen is done: save the step and open the next one (or
+   * finish). With `stamp`, Stubby stamps first and the next screen opens after
+   * that beat (straight away under reduced motion).
+   */
+  next: (opts?: { stamp?: boolean }) => void;
   /** Back one screen; null when this screen has no Back. */
   back: (() => void) | null;
   /** Stubby's state. Screens read it through <StepStubby /> and change it with the two below. */

@@ -39,7 +39,7 @@ export const extraConceptsEnabled = false;
 // it when the Terms or Privacy Policy change in a way people should accept
 // again, and when the real text replaces the draft. Never a future date: the
 // database refuses one more than a day ahead.
-export const TERMS_VERSION = "2026-10-08";
+export const TERMS_VERSION = "2026-10-30";
 
 // Onboarding's first step normally uses its own short "first Moment" form.
 // When this is on, it shows the one Log a Moment form instead (same fields,
@@ -67,3 +67,8 @@ export const askSooshEnabled = import.meta.env.VITE_ASK_SOOSH === "true";
 // PRs. Until the last one lands, the new flow is on in development and behind
 // VITE_SOOSH_ONBOARDING=1 on a preview; production keeps the old one.
 export const sooshOnboardingEnabled = import.meta.env.DEV || import.meta.env.VITE_SOOSH_ONBOARDING === "1";
+
+// Sign in with Apple needs an Apple Developer account and a Services ID set up
+// in Supabase (Authentication > Sign In / Providers > Apple). Until that exists
+// the button stays hidden; flip this and ship, nothing else changes.
+export const appleSignInEnabled = false;

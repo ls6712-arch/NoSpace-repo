@@ -14,6 +14,8 @@ import { takeSavedInviteCode } from "../lib/inviteCode";
 import { claimInvite } from "../lib/invites";
 import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 import { friendlyError } from "../lib/friendlyError";
+import { isNoAccountError, retryAfterSeconds } from "../lib/authErrors";
+import { recordSendMs, waitForTypicalSend } from "../lib/sendTiming";
 import { flushTermsAcceptance } from "../lib/termsAcceptance";
 import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
 
@@ -81,8 +83,22 @@ interface AuthContextType {
     password: string,
     displayName: string,
   ) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null; status?: number; code?: string }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  /** Sign in with Apple. Only offered while `appleSignInEnabled` (config.ts) is on. */
+  signInWithApple: () => Promise<{ error: string | null }>;
+  /** Emails a 6-digit code (new and existing accounts alike; no password). The
+   * Supabase email templates have to print `{{ .Token }}`: see docs/email-templates.md. */
+  sendEmailCode: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number }>;
+  /**
+   * The sign-in side of the code: emails a code to an existing account and
+   * never creates one. An address with no account answers exactly like one
+   * with an account (no error, and about as slowly), so this cannot be used,
+   * and the screen cannot show, whether someone has an account.
+   */
+  sendSignInCode: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number }>;
+  /** Checks the code from sendEmailCode and signs in. */
+  verifyEmailCode: (email: string, code: string) => Promise<{ error: string | null; wrong?: boolean }>;
   /** Re-sends the signup confirmation email — the one self-service option
    * when the first one never arrives (Supabase's shared default mailer is
    * rate-limited and unreliable against some domains; the real fix is
@@ -207,8 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Step 2's actual claim-on-sign-in: run right after every profile load
-   * that might be a brand-new or still-pending account. A pending account
-   * with a code saved from the arrival page (localStorage — the only thing
+   * that might be a brand-new account. An account with a code saved from the arrival page (localStorage — the only thing
    * that survives the Google redirect, whose redirect_to is the bare site
    * root) gets that code claimed here, before Root.tsx ever has to decide
    * where to route them. The code is taken (read + cleared) regardless of
@@ -221,11 +236,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const row = await loadProfile(userId, expectName);
     // Writes the time from the sign-up checkbox, if one is waiting.
     void flushTermsAcceptance();
-    if (row?.access !== "pending") return;
+    // Anyone with a saved code claims it, active or not: since sign-up is open
+    // nobody is pending any more, and claim_invite still records who invited
+    // them (and the two-way follow) for an active account with no inviter.
     const code = takeSavedInviteCode();
     if (!code) return;
     const result = await claimInvite(code);
-    if (result === "invalid") setInviteClaimError("That invite has expired or was already used.");
+    if (result === "invalid" && row?.access === "pending") setInviteClaimError("That invite has expired or was already used.");
     if (result === "claimed" || result === "already_active") await loadProfile(userId);
   };
 
@@ -335,7 +352,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn: AuthContextType["signIn"] = async (email, password) => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? error.message : null };
+    return { error: error ? error.message : null, status: error?.status, code: error?.code };
   };
 
   const resendConfirmation: AuthContextType["resendConfirmation"] = async (email) => {
@@ -366,6 +383,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  const signInWithApple: AuthContextType["signInWithApple"] = async () => {
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: { redirectTo: `${window.location.origin}${window.location.pathname}` },
+    });
+    return { error: error ? error.message : null };
+  };
+
+  const sendEmailCode: AuthContextType["sendEmailCode"] = async (email) => {
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+      // Asking too soon is a wait, not a failure: the screen says how long.
+      const wait = retryAfterSeconds(error);
+      if (wait !== null) return { error: null, retryAfterSeconds: wait };
+      return { error: error ? friendlyError(error) : null };
+    } catch {
+      return { error: OFFLINE_LINE };
+    }
+  };
+
+  const sendSignInCode: AuthContextType["sendSignInCode"] = async (email) => {
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    const startedAt = Date.now();
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
+      if (!error) {
+        recordSendMs(Date.now() - startedAt);
+        return { error: null };
+      }
+      if (isNoAccountError(error)) {
+        await waitForTypicalSend(startedAt);
+        return { error: null };
+      }
+      const wait = retryAfterSeconds(error);
+      if (wait !== null) return { error: null, retryAfterSeconds: wait };
+      return { error: friendlyError(error) };
+    } catch {
+      return { error: OFFLINE_LINE };
+    }
+  };
+
+  const verifyEmailCode: AuthContextType["verifyEmailCode"] = async (email, code) => {
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
+      if (error) {
+        // A bad or expired code is a 4xx from the auth server; anything else is a failure to reach it.
+        const wrong = typeof error.status === "number" && error.status >= 400 && error.status < 500;
+        return { error: wrong ? error.message : friendlyError(error), wrong };
+      }
+      // Read the profile back before returning, so the next screen already has it.
+      if (data.user) await bootstrapProfile(data.user.id);
+      return { error: null };
+    } catch {
+      return { error: OFFLINE_LINE };
+    }
+  };
+
   /**
    * Sends the reset mail. Deliberately reports success either way at the UI
    * layer, so this can't be used to find out which addresses have accounts.
@@ -387,7 +464,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     if (next.length < 10) return { error: "Your password needs at least 10 characters." };
     try {
-      const { error } = await supabase.auth.updateUser({ password: next });
+      // has_password is how Settings knows whether to say "Add a password" or
+      // "Change password" (an emailed-code account has an email identity but no password).
+      const { error } = await supabase.auth.updateUser({ password: next, data: { has_password: true } });
       return { error: error ? error.message : null };
     } catch {
       return { error: OFFLINE_LINE };
@@ -460,6 +539,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signInWithGoogle,
+        signInWithApple,
+        sendEmailCode,
+        sendSignInCode,
+        verifyEmailCode,
         resendConfirmation,
         resetPassword,
         updatePassword,

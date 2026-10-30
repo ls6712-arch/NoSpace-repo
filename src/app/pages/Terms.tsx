@@ -7,18 +7,18 @@ import { APP_NAME } from "../config";
 
 export function Terms() {
   return (
-    <LegalPage title="Terms" lastUpdated="October 9, 2026">
+    <LegalPage title="Terms" lastUpdated="October 30, 2026">
       <h2>Who can use {APP_NAME}</h2>
       <p>
-        You must be at least 16 years old to create an account. By signing up, you’re
+        You must be at least 18 years old to create an account. By signing up, you’re
         confirming you meet that age.
       </p>
 
       <h2>Invites</h2>
       <p>
-        While {APP_NAME} is invite-only, an invite is for the person it's meant for, not
-        something to sell, trade, or hand out publicly. We can revoke an invite or the
-        account it created if it’s misused.
+        Invite links are personal. Please only use one that was sent to you, and don’t sell
+        or post them publicly. We can revoke an invite or the account it created if it’s
+        misused.
       </p>
 
       <h2>What you post</h2>

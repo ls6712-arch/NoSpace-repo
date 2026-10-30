@@ -10,8 +10,11 @@ import { OFFLINE_LINE } from "../lib/stateCopy";
 import { TermsCheckbox } from "../components/TermsCheckbox";
 import { rememberTermsAcceptance } from "../lib/termsAcceptance";
 import { DISPLAY_NAME_MAX, validateDisplayName } from "../lib/displayName";
+import { sooshOnboardingEnabled } from "../config";
+import { LoginV2 } from "./login/LoginV2";
 
-export function Login() {
+/** The old log in and sign up page. Still what /login shows until `sooshOnboardingEnabled` (config.ts) is on. */
+function LoginLegacy() {
   const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
     useAuth();
   const navigate = useNavigate();
@@ -309,4 +312,9 @@ export function Login() {
       </div>
     </div>
   );
+}
+
+/** /login: the Soosh log in (Transfer frame, codes first), or the old page while the flag is off. */
+export function Login() {
+  return sooshOnboardingEnabled ? <LoginV2 /> : <LoginLegacy />;
 }
