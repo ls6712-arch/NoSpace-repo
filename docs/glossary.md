@@ -408,7 +408,7 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 
 ## Onboarding (Soosh onboarding brief, Oct 29, 2026)
 
-**Proposed, awaiting the founder's approval** (brief section 10.8). Stubby is the character's name. It is not a product noun, so it is written "Stubby" and never gets a rule of its own. Stubs (the keepsakes) keep their name.
+**Approved by the founder, Oct 30, 2026** (brief section 10.8). Stubby is the character's name. It is not a product noun, so it is written "Stubby" and never gets a rule of its own. Stubs (the keepsakes) keep their name.
 
 | Term | Meaning |
 |---|---|
@@ -429,6 +429,33 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 | Back | Button (arrow) on every onboarding screen except the welcome and the first plan |
 | Next | Button on an onboarding screen that has only one thing to do |
 | {n} of 3 | Step counter on the three taste questions only. Not a progress score: no levels, no streaks |
+
+### Onboarding, account screens (PR 2)
+
+**Proposed Oct 30, 2026, awaiting approval.** The strings the brief gives for these screens (I already have an account, Continue with Google, Continue with Apple, Continue with email, Never shown to anyone, Use my location, the wrong code line and the under-age line) are used as written. The rest are new.
+
+| Term | Meaning |
+|---|---|
+| Sign up | Heading of screen 2 (the button of that name on the log in page is unchanged) |
+| Continue | Button after the email is typed, which sends the code |
+| Add your email / Add your first name / Add your birthday / Add a neighborhood | The primary button while its field is empty: it says what is missing |
+| That doesn’t look like an email address. | Email field error |
+| Check your email | Heading of the code screen |
+| We sent a 6-digit code to {email}. | Line under it |
+| Code | Label of the code field |
+| That code didn’t match. Try again or send a new one. | Wrong or expired code (Stubby shrugs) |
+| Send a new code / Send a new code in {n} seconds | Resend, which waits 30 seconds |
+| New code sent. | After a resend |
+| First name / Username | Labels on the name screen. What should people call you? is the heading |
+| @{username} is free | Under the username while it is available |
+| @{username} is taken. @{next} is free. / Use @{next} | A taken username: the next free one, never an error dialog |
+| Use 3 to 20 letters, numbers or underscores. | Username rules |
+| When’s your birthday? / Date of birth | Heading and label. Never shown to anyone. sits under the field |
+| That date doesn’t look right. | Date field error |
+| Soosh is for people 18 and over for now. | Stop screen under the minimum age (Stubby tilts). Its button is Log out |
+| Where are you? / Neighborhood or city | Heading and label on screen 6 |
+| Location is off. Type your neighborhood instead. | Location denied. Shown once, no repeat |
+| That’s outside New York. Type your city instead. | Location read, but not in New York |
 
 ## Retired terms
 

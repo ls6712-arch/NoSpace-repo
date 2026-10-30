@@ -34,6 +34,11 @@ function pendingAcceptance(): string | null {
   }
 }
 
+/** True when a sign-up screen already recorded that the box was ticked for the current version. */
+export function hasPendingTermsAcceptance(): boolean {
+  return pendingAcceptance() === TERMS_VERSION;
+}
+
 function clearPendingAcceptance() {
   try {
     localStorage.removeItem(PENDING_KEY);

@@ -37,3 +37,62 @@ export function clearLastFinished(userId: string | undefined): void {
     // Nothing stored, nothing to clear.
   }
 }
+
+/** The later of two saved steps (this device's and the account's). */
+export function laterStep(a: OnboardingStep | null, b: OnboardingStep | null): OnboardingStep | null {
+  if (!a) return b;
+  if (!b) return a;
+  return stepIndex(a) >= stepIndex(b) ? a : b;
+}
+
+// Two small things that have to survive a page leaving and coming back:
+// the email a code was sent to (only for this tab), and where an invite or
+// link was going (across the Google or Apple round trip, which lands on the site root).
+const EMAIL_KEY = "soosh.onboarding.email";
+const REDIRECT_KEY = "soosh.onboarding.redirect";
+
+export function rememberEmail(email: string): void {
+  try {
+    sessionStorage.setItem(EMAIL_KEY, email);
+  } catch {
+    // The code screen sends people back to type it again.
+  }
+}
+export function readEmail(): string {
+  try {
+    return sessionStorage.getItem(EMAIL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/** True for a real in-app destination: a path, not the bare site root, not "//host" or a backslash trick. */
+export const isRealRedirect = (target: string | null | undefined): target is string =>
+  !!target && target !== "/" && target.startsWith("/") && !target.startsWith("//") && !target.includes("\\");
+
+export function rememberRedirect(target: string): void {
+  if (!isRealRedirect(target)) return;
+  try {
+    localStorage.setItem(REDIRECT_KEY, target);
+  } catch {
+    // Without it the person lands on Discover, which is fine.
+  }
+}
+/** Reads the kept destination without clearing it (a render can run twice). Clear it with takeRedirect when the flow ends. */
+export function peekRedirect(): string | null {
+  try {
+    const value = localStorage.getItem(REDIRECT_KEY);
+    return isRealRedirect(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+export function takeRedirect(): string | null {
+  try {
+    const value = localStorage.getItem(REDIRECT_KEY);
+    localStorage.removeItem(REDIRECT_KEY);
+    return isRealRedirect(value) ? value : null;
+  } catch {
+    return null;
+  }
+}

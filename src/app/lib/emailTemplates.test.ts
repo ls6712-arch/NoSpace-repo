@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 
 const DIR = path.resolve(__dirname, "../../../supabase/templates");
 const REAL = new Set(["ConfirmationURL", "Token", "TokenHash", "SiteURL", "Email", "NewEmail", "RedirectTo", "Data"]);
+// The two templates that carry the 6-digit sign-in code (new and existing accounts).
+const CODE_FILES = new Set(["confirmation.html", "magic_link.html"]);
 const files = fs.readdirSync(DIR).filter((f) => f.endsWith(".html"));
 
 describe("supabase auth email templates", () => {
@@ -15,6 +17,9 @@ describe("supabase auth email templates", () => {
     it(`${f}: only real Supabase variables, no placeholders`, () => {
       for (const m of html.matchAll(/\{\{\s*\.(\w+)\s*\}\}/g)) expect(REAL.has(m[1])).toBe(true);
       expect(html.replace(/\{\{\s*\.\w+\s*\}\}/g, "")).not.toMatch(/\{\{|\}\}|\[PLACEHOLDER|example\.com|TODO/);
+    });
+    it(`${f}: ${CODE_FILES.has(f) ? "prints the code" : "has no code"}`, () => {
+      expect(html.includes("{{ .Token }}")).toBe(CODE_FILES.has(f));
     });
     it(`${f}: one button, no dashes, no exclamation marks`, () => {
       expect((html.match(/display:inline-block/g) ?? []).length).toBe(1);

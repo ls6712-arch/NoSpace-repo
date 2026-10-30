@@ -8,6 +8,7 @@ import { MoodsCityForm } from "../components/interests/MoodsCityForm";
 import { PersonAvatar } from "./CreatePursuit";
 import { useAuth } from "../context/AuthContext";
 import { useCategories } from "../context/CategoriesContext";
+import { joinTokenFrom } from "../lib/joinToken";
 import { fetchInvitesLeft } from "../lib/invites";
 import { cleanCity, useInterests } from "../lib/interests";
 import { fetchInvitePreview, fetchPursuitAsProject, joinViaLink, type InvitePreview } from "../lib/pursuitsRemote";
@@ -21,10 +22,7 @@ import { DISPLAY_NAME_MAX, isEmailPrefixName, validateDisplayName } from "../lib
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
-/** A Pursuit invite link, as the sign-up flow carries it in `?redirect=`. */
-export function joinTokenFrom(redirectTo: string): string | null {
-  return /^\/join\/([^/?#]+)/.exec(redirectTo)?.[1] ?? null;
-}
+export { joinTokenFrom };
 
 /**
  * The two-step onboarding the Soosh onboarding brief replaces. Still what

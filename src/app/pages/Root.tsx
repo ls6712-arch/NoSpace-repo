@@ -12,6 +12,7 @@ import { AccountStatusBanner } from "../components/AccountStatusBanner";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 import { reconcileSaves } from "../lib/bookmarksRemote";
+import { sooshOnboardingEnabled } from "../config";
 
 // Only the landing page, the login/signup screen, and the two legal pages
 // are open to a signed-out visitor. Everything else — Discover, Spaces,
@@ -59,6 +60,9 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   // Step 2's own arrival link — same reasoning as /join/ above: this is
   // exactly how someone not on Sushii yet is meant to get here.
   pathname.startsWith("/i/") ||
+  // The Soosh onboarding starts before there is an account (welcome, sign up,
+  // code); it keeps a signed-in visitor past the pre-account screens itself.
+  (sooshOnboardingEnabled && pathname === "/onboarding") ||
   // The component kit has no data and no account; the route exists in dev only.
   (import.meta.env.DEV && pathname === "/dev/kit");
 

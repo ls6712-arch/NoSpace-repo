@@ -67,3 +67,8 @@ export const askSooshEnabled = import.meta.env.VITE_ASK_SOOSH === "true";
 // PRs. Until the last one lands, the new flow is on in development and behind
 // VITE_SOOSH_ONBOARDING=1 on a preview; production keeps the old one.
 export const sooshOnboardingEnabled = import.meta.env.DEV || import.meta.env.VITE_SOOSH_ONBOARDING === "1";
+
+// Sign in with Apple needs an Apple Developer account and a Services ID set up
+// in Supabase (Authentication > Sign In / Providers > Apple). Until that exists
+// the button stays hidden; flip this and ship, nothing else changes.
+export const appleSignInEnabled = false;

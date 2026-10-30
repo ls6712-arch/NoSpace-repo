@@ -83,6 +83,13 @@ interface AuthContextType {
   ) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  /** Sign in with Apple. Only offered while `appleSignInEnabled` (config.ts) is on. */
+  signInWithApple: () => Promise<{ error: string | null }>;
+  /** Emails a 6-digit code (new and existing accounts alike; no password). The
+   * Supabase email templates have to print `{{ .Token }}`: see docs/email-templates.md. */
+  sendEmailCode: (email: string) => Promise<{ error: string | null }>;
+  /** Checks the code from sendEmailCode and signs in. */
+  verifyEmailCode: (email: string, code: string) => Promise<{ error: string | null; wrong?: boolean }>;
   /** Re-sends the signup confirmation email — the one self-service option
    * when the first one never arrives (Supabase's shared default mailer is
    * rate-limited and unreliable against some domains; the real fix is
@@ -366,6 +373,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  const signInWithApple: AuthContextType["signInWithApple"] = async () => {
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: { redirectTo: `${window.location.origin}${window.location.pathname}` },
+    });
+    return { error: error ? error.message : null };
+  };
+
+  const sendEmailCode: AuthContextType["sendEmailCode"] = async (email) => {
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+      return { error: error ? friendlyError(error) : null };
+    } catch {
+      return { error: OFFLINE_LINE };
+    }
+  };
+
+  const verifyEmailCode: AuthContextType["verifyEmailCode"] = async (email, code) => {
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
+      if (error) {
+        // A bad or expired code is a 4xx from the auth server; anything else is a failure to reach it.
+        const wrong = typeof error.status === "number" && error.status >= 400 && error.status < 500;
+        return { error: wrong ? error.message : friendlyError(error), wrong };
+      }
+      // Read the profile back before returning, so the next screen already has it.
+      if (data.user) await bootstrapProfile(data.user.id);
+      return { error: null };
+    } catch {
+      return { error: OFFLINE_LINE };
+    }
+  };
+
   /**
    * Sends the reset mail. Deliberately reports success either way at the UI
    * layer, so this can't be used to find out which addresses have accounts.
@@ -460,6 +503,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signInWithGoogle,
+        signInWithApple,
+        sendEmailCode,
+        verifyEmailCode,
         resendConfirmation,
         resetPassword,
         updatePassword,

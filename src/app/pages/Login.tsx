@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { APP_NAME } from "../config";
+import { APP_NAME, sooshOnboardingEnabled } from "../config";
 import { OFFLINE_LINE } from "../lib/stateCopy";
 import { TermsCheckbox } from "../components/TermsCheckbox";
 import { rememberTermsAcceptance } from "../lib/termsAcceptance";
@@ -30,6 +30,13 @@ export function Login() {
   const [mode, setMode] = useState<"signin" | "signup">(
     searchParams.get("mode") === "signin" ? "signin" : "signup",
   );
+  // New accounts are made in the Soosh onboarding (Google, Apple or an email
+  // code); this page stays for people who already have a password.
+  useEffect(() => {
+    if (sooshOnboardingEnabled && mode === "signup" && !user) {
+      navigate(`/onboarding?redirect=${encodeURIComponent(redirectTo)}`, { replace: true });
+    }
+  }, [mode, user]);
   const [resetSent, setResetSent] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [displayName, setDisplayName] = useState("");
