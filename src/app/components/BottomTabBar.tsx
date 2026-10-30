@@ -1,9 +1,9 @@
 import { Link, useLocation } from "react-router";
-import { CalendarDays, House, Plus, Search, UserRound, type LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { pop, press, PRESS_SCALE } from "../lib/motionTokens";
 import { useAuth } from "../context/AuthContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
+import { TAB_DESTINATIONS, type Destination } from "./nav/navItems";
 
 /**
  * Phone and tablet navigation: Home, Discover, Log, Week and You. Each tab is a
@@ -25,43 +25,27 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
  * Visible below lg, exactly where the desktop top nav is hidden, so there is
  * never a width with no primary navigation and never two at once.
  */
-export const TABS: {
-  to: string;
-  label: string;
-  icon: LucideIcon;
-  match: (p: string) => boolean;
-  accent?: boolean;
-}[] = [
-  { to: "/my-space", label: "Home", icon: House, match: (p) => p.startsWith("/my-space") },
-  {
-    to: "/discover",
-    label: "Discover",
-    icon: Search,
-    match: (p) =>
-      p.startsWith("/discover") ||
-      p.startsWith("/corners") ||
-      p.startsWith("/browse") ||
-      p.startsWith("/space") ||
-      p.startsWith("/people"),
-  },
-  { to: "/create", label: "Log", icon: Plus, match: (p) => p.startsWith("/create") || p.startsWith("/log"), accent: true },
-  { to: "/week", label: "Week", icon: CalendarDays, match: (p) => p.startsWith("/week") },
-  { to: "/you", label: "You", icon: UserRound, match: (p) => p.startsWith("/you") },
-];
+export const TABS: readonly Destination[] = TAB_DESTINATIONS;
 
-export function BottomTabBar() {
+/**
+ * `railEligible`: this page gets the left rail from 744px (and 480px tall), so
+ * the bar steps aside there. Where it does not (signed out, or a page that
+ * keeps the top header), the bar hides at lg as it always did.
+ */
+export function BottomTabBar({ railEligible = false }: { railEligible?: boolean }) {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
   const waiting = incomingFollows.length > 0;
+  const hideClass = railEligible ? "rail:hidden" : "lg:hidden";
 
   return (
     <>
       {/* Keeps page content clear of the bar, including the iOS home indicator. */}
-      <div className="h-[calc(72px+var(--safe-bottom))] lg:hidden" aria-hidden="true" />
+      <div className={`h-[calc(72px+var(--safe-bottom))] ${hideClass}`} aria-hidden="true" />
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl lg:hidden"
+        className={`fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl ${hideClass}`}
         style={{ paddingBottom: "var(--safe-bottom)", paddingLeft: "var(--safe-left)", paddingRight: "var(--safe-right)" }}
         aria-label="Main"
       >

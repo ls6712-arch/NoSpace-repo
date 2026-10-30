@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { Flag, LogOut, MessagesSquare, Package, Plus, Search, Settings as SettingsIcon, ShoppingBag, Sparkle, UserRound, PenLine, Compass, ChevronDown, X, type LucideIcon } from "lucide-react";
+import { MessagesSquare, Plus, Search, ShoppingBag, UserRound, ChevronDown } from "lucide-react";
+import { useUnifiedSearch, type SearchHit } from "../lib/search";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { useTheme, type ThemePreference } from "../context/ThemeContext";
-import { useCategories } from "../context/CategoriesContext";
-import { supabase } from "../../lib/supabase";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { NotificationsMenu } from "./NotificationsMenu";
-import { useSocial } from "../context/SocialContext";
+import { AccountMenuPanel } from "./nav/AccountMenuPanel";
+import { GlobalSearchBox } from "./nav/GlobalSearchBox";
+import { useChatsBadge } from "./nav/useChatsBadge";
 import { formatBadgeCount } from "../lib/messageSync";
 import { APP_NAME } from "../config";
 import { isDismissKey } from "../lib/menuDismiss";
@@ -31,8 +30,7 @@ function initials(name: string) {
 }
 
 function MessagesLink() {
-  const social = useSocial();
-  const badgeCount = social.chatsUnreadCount + social.messageRequests.length;
+  const badgeCount = useChatsBadge();
 
   return (
     <Link
@@ -55,12 +53,6 @@ function MessagesLink() {
   );
 }
 
-const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-];
-
 /** The avatar itself always goes straight to /you — that's intentional, a
  * personal archive is somewhere you go on purpose. This small caret next to
  * it is the actual "avatar menu": quick access to Settings and an instant
@@ -69,11 +61,7 @@ function AccountMenuPopover() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const { preference, setPreference } = useTheme();
-  const { isAdmin } = useCategories();
-  const { signOut } = useAuth();
   const location = useLocation();
-  const [openReportCount, setOpenReportCount] = useState<number | null>(null);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -102,23 +90,6 @@ function AccountMenuPopover() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  // Cheap (a HEAD request, no rows) and only for an admin who's actually
-  // opened the menu — every other visitor never runs this at all.
-  useEffect(() => {
-    if (!open || !isAdmin || !supabase) return;
-    let cancelled = false;
-    supabase
-      .from("reports")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "open")
-      .then(({ count }) => {
-        if (!cancelled) setOpenReportCount(count ?? null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, isAdmin]);
-
   return (
     <div className="relative" ref={ref}>
       <button
@@ -133,72 +104,7 @@ function AccountMenuPopover() {
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-control border border-border bg-popover shadow-overlay">
-          <Link
-            to="/you"
-            onClick={() => setOpen(false)}
-            className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-small transition-colors hover:bg-surface-muted"
-          >
-            <UserRound className="size-4 text-muted-foreground" aria-hidden="true" />
-            You
-          </Link>
-          <Link
-            to="/settings"
-            onClick={() => setOpen(false)}
-            className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-small transition-colors hover:bg-surface-muted"
-          >
-            <SettingsIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-            Settings
-          </Link>
-          {isAdmin && (
-            <Link
-              to="/admin/reports"
-              onClick={() => setOpen(false)}
-              className="flex min-h-11 items-center gap-2.5 px-4 py-3 text-small transition-colors hover:bg-surface-muted"
-            >
-              <Flag className="size-4 text-muted-foreground" aria-hidden="true" />
-              Reports
-              {!!openReportCount && (
-                <span
-                  className="ml-auto flex size-5 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand tabular-nums"
-                  aria-label={`${openReportCount} open`}
-                >
-                  {formatBadgeCount(openReportCount)}
-                </span>
-              )}
-            </Link>
-          )}
-          <div className="border-t border-[var(--hairline)] px-4 py-3">
-            <div className="mb-2 text-caption text-muted-foreground">Theme</div>
-            <div className="flex gap-1 rounded-control border border-border p-0.5">
-              {THEME_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  aria-pressed={preference === opt.value}
-                  onClick={() => setPreference(opt.value)}
-                  className={
-                    "min-h-8 flex-1 rounded-control px-2 text-caption transition-colors " +
-                    (preference === opt.value
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground")
-                  }
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              void signOut();
-            }}
-            className="flex min-h-11 w-full items-center gap-2.5 border-t border-[var(--hairline)] px-4 py-3 text-left text-small transition-colors hover:bg-surface-muted"
-          >
-            <LogOut className="size-4 text-muted-foreground" aria-hidden="true" />
-            Log out
-          </button>
+          <AccountMenuPanel onNavigate={() => setOpen(false)} />
         </div>
       )}
     </div>
@@ -243,18 +149,6 @@ function AccountMenu() {
   );
 }
 
-/** Same grouping/order/coverage the dedicated /search results page uses
- * (lib/search.ts) — this box is a live preview onto the same index, not a
- * separate, narrower search of its own. */
-const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
-  space: Compass,
-  corner: Sparkle,
-  person: UserRound,
-  pursuit: PenLine,
-  moment: MessagesSquare,
-  product: Package,
-};
-
 /**
  * The primary destinations, identical on desktop and mobile so the app has
  * one mental model rather than two. "You" is deliberately absent: it hangs
@@ -277,45 +171,36 @@ const PRIMARY_NAV = [
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
 
-export function Header() {
+/**
+ * The top site header. `hideWithRail` is for a signed-in page that gets the left
+ * rail: from 744px (and 480px tall) the rail replaces this header; below that
+ * it is shown as before. Signed-out visitors never get the rail, so they never
+ * pass it.
+ */
+export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
   const { openCart, cartCount } = useCart();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const framed = isFramed(pathname);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
   const { all: results } = useUnifiedSearch(query);
-
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
 
   function goToResult(result: SearchHit) {
     navigate(result.to);
     setQuery("");
-    setSearchOpen(false);
   }
 
   function goToResults(q: string) {
     navigate(`/search?q=${encodeURIComponent(q)}`);
     setQuery("");
-    setSearchOpen(false);
     setMobileSearchOpen(false);
   }
 
   function onSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Escape") {
       setQuery("");
-      setSearchOpen(false);
-      (e.target as HTMLInputElement).blur();
+        (e.target as HTMLInputElement).blur();
     } else if (e.key === "Enter" && query.trim()) {
       // Submitting used to jump straight into whatever happened to be
       // first in the preview list — often an unrelated product, since the
@@ -327,7 +212,7 @@ export function Header() {
   }
 
   return (
-    <header className={`ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)] ${pathname === "/my-space" ? "max-lg:hidden" : ""}`}>
+    <header className={`ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)] ${pathname === "/my-space" ? "hidden" : hideWithRail ? "rail:hidden" : ""}`}>
       <div className={`${framed ? PAGE_X : "container mx-auto px-4"} flex h-16 items-center justify-between gap-4`}>
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries
@@ -405,61 +290,7 @@ export function Header() {
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="hidden w-80 md:block lg:w-72 xl:w-80">
-          <div className="relative w-full" ref={searchRef}>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              type="search"
-              aria-label="Search Moments, people, Spaces"
-              placeholder="Search Moments, people, Spaces"
-              className="w-full rounded-none border-x-0 border-t-0 border-b-[var(--border)] bg-transparent pl-9 focus-visible:ring-0"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setSearchOpen(true);
-              }}
-              onFocus={() => setSearchOpen(true)}
-              onKeyDown={onSearchKeyDown}
-            />
-            {searchOpen && query.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-2 rounded-card border border-border bg-popover/95 backdrop-blur-xl shadow-overlay overflow-hidden z-50">
-                {results.length === 0 ? (
-                  <p className="px-4 py-3 text-small text-muted-foreground">
-                    No matches for “{query}”
-                  </p>
-                ) : (
-                  <ul className="max-h-80 overflow-y-auto py-1">
-                    {results.map((result) => {
-                      const Icon = RESULT_ICON[result.group];
-                      return (
-                        <li key={result.key}>
-                          <button
-                            type="button"
-                            onClick={() => goToResult(result)}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-muted transition-colors"
-                          >
-                            {result.group === "person" ? (
-                              <Avatar className="size-8 shrink-0">
-                                {result.avatarUrl && <AvatarImage src={result.avatarUrl} alt="" className="object-cover" />}
-                                <AvatarFallback className="text-caption">{initials(result.label)}</AvatarFallback>
-                              </Avatar>
-                            ) : (
-                              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
-                                <Icon className="size-3.5 text-muted-foreground" />
-                              </span>
-                            )}
-                            <span className="min-w-0">
-                              <span className="block text-small truncate" title={result.label}>{result.label}</span>
-                              <span className="block text-caption text-muted-foreground truncate" title={result.sub}>{result.sub}</span>
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            )}
-          </div>
+            <GlobalSearchBox />
           </div>
           <Button
             variant="ghost"

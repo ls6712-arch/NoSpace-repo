@@ -23,6 +23,7 @@ import { useAuth } from "../context/AuthContext";
 import { respondToFollow } from "../lib/profileFollows";
 import { formatBadgeCount } from "../lib/messageSync";
 import { useNotificationBadge } from "../lib/useNotificationBadge";
+import { RailItem } from "./nav/RailItem";
 import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
@@ -64,8 +65,26 @@ const ICON: Record<string, typeof Bell> = {
 };
 
 
-export function NotificationsMenu() {
-  const [open, setOpen] = useState(false);
+/**
+ * The bell and its panel. `variant="rail"` is the same menu opened from the
+ * left rail: the trigger is a rail item and the panel opens beside the rail.
+ * The rail passes `open` and `onOpenChange` so only one of its panels is open.
+ */
+export function NotificationsMenu({
+  variant = "header",
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  variant?: "header" | "rail";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+} = {}) {
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = controlledOpen ?? ownOpen;
+  const setOpen = (next: boolean | ((cur: boolean) => boolean)) => {
+    const value = typeof next === "function" ? next(open) : next;
+    (onOpenChange ?? setOwnOpen)(value);
+  };
   const ref = useRef<HTMLDivElement>(null);
   const social = useSocial();
   const { user } = useAuth();
@@ -117,29 +136,46 @@ export function NotificationsMenu() {
 
   return (
     <div className="relative" ref={ref}>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={badgeCount > 0 ? `Notifications (${badgeCount} unread)` : "Notifications"}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="relative"
-      >
-        <Bell className="size-5" />
-        {badgeCount > 0 && (
-          <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand tabular-nums"
-            aria-hidden="true"
-          >
-            {formatBadgeCount(badgeCount)}
-          </span>
-        )}
-      </Button>
+      {variant === "rail" ? (
+        <RailItem
+          icon={Bell}
+          label="Notifications"
+          aria={badgeCount > 0 ? `Notifications (${badgeCount} unread)` : "Notifications"}
+          badge={badgeCount}
+          expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        />
+      ) : (
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={badgeCount > 0 ? `Notifications (${badgeCount} unread)` : "Notifications"}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+          className="relative"
+        >
+          <Bell className="size-5" />
+          {badgeCount > 0 && (
+            <span
+              className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand tabular-nums"
+              aria-hidden="true"
+            >
+              {formatBadgeCount(badgeCount)}
+            </span>
+          )}
+        </Button>
+      )}
 
       {/* Under 640px the panel is pinned to the screen edges. Anchored to the
           bell (right-0, w-80) it ran 40px off the left edge of a 390px phone. */}
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-popover shadow-overlay max-sm:fixed max-sm:inset-x-3 max-sm:top-[calc(var(--safe-top)+4.5rem)] max-sm:mt-0 max-sm:w-auto">
+        <div
+          className={
+            variant === "rail"
+              ? "fixed left-[80px] top-3 z-50 max-h-[calc(100dvh-1.5rem)] w-96 overflow-y-auto rounded-card border border-border bg-popover shadow-overlay wide:left-[248px]"
+              : "absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-popover shadow-overlay max-sm:fixed max-sm:inset-x-3 max-sm:top-[calc(var(--safe-top)+4.5rem)] max-sm:mt-0 max-sm:w-auto"
+          }
+        >
           <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3 text-small">
             Notifications
             {groupedUnread > 0 && (

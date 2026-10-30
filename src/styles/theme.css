@@ -595,7 +595,24 @@
    <html>), not the OS setting — Tailwind v4's default is the media query. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Responsive layout (Oct 30, 2026). The left rail replaces the bottom bar and the
+   top header from 744px wide, but only while the window is also at least 480px
+   tall, so a phone on its side keeps the bottom bar. `rail:` is that state and
+   `norail:` is everything else. */
+@custom-variant rail (@media (min-width: 744px) and (min-height: 480px));
+/* The same, from 1280px: the rail grows from 72px to 240px and shows words. It is declared after `rail`
+   so its rules win over `rail:` ones at the same width. */
+@custom-variant railwide (@media (min-width: 1280px) and (min-height: 480px));
+@custom-variant norail (@media not all and (min-width: 744px) and (min-height: 480px));
+
 @theme {
+  /* Breakpoints set by what the layouts need, not by device names (Oct 30, 2026):
+     tab = one column and the rail, desk = a side panel appears, wide = the rail
+     shows words. Used only for the layouts in the responsive brief. */
+  --breakpoint-tab: 744px;
+  --breakpoint-desk: 1128px;
+  --breakpoint-wide: 1280px;
+
   /* Lock the scale. Tailwind's own text, radius and shadow steps are removed,
      so an off-scale class (text-sm, rounded-xl, shadow-lg, ...) no longer
      compiles: it renders unstyled, which a screenshot or the audit catches,
