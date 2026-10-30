@@ -33,7 +33,7 @@ const atHome: HomeItem = {
   title: "Drawing",
   corner: { key: "art-creative/drawing", name: "Drawing", spaceSlug: "art-creative", slug: "drawing" },
   spaceSlug: null,
-  detail: "At home · 30 min",
+  detail: "At home · about 30 min",
   reasons: ["picked"],
   why: "One of your picks",
   startsAt: null,
@@ -102,7 +102,7 @@ describe("More ways list", () => {
     wrap(<MoreWaysList items={[event, atHome]} firstPosition={1} states={{}} onShown={noop} onOpen={noop} onPrimary={noop} />);
     expect(screen.getByRole("heading", { name: "More ways this week" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "See all" }).getAttribute("href")).toBe("/discover");
-    expect(screen.getByText("At home · 30 min")).toBeTruthy();
+    expect(screen.getByText("At home · about 30 min")).toBeTruthy();
     expect(screen.getByRole("button", { name: "I’m going" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Start" })).toBeTruthy();
   });

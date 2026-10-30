@@ -565,6 +565,7 @@ Approved by the founder on Oct 30, 2026. Counts use `plural()`, dates use `dates
 | Best fit buttons | I’m going (event), Ask to join (open Pursuit), Start (at home), Invite a friend |
 | At-home badge | At home |
 | At-home detail | Your first step: {the guide's first step} |
+| At-home row in More ways | At home · about {duration} (for example "At home · about 30 min"; just "At home" when the Corner has no typical time) |
 | More ways heading / link | More ways this week / See all |
 | Log card | Log a Moment / Did something today? Log it and get a Stub. |
 | Feed heading | From your people |

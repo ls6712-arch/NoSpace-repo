@@ -26,7 +26,7 @@ export interface HomeItem {
   corner: { key: string; name: string; spaceSlug: string; slug: string };
   /** Space slug for a listing, to open it. */
   spaceSlug: string | null;
-  /** "Thu, 7:00 PM · Gowanus", or "At home · 30 min". */
+  /** "Thu, 7:00 PM · Gowanus", or "At home · about 30 min". */
   detail: string;
   reasons: ReasonCode[];
   /** Null when no reason has approved wording. */
@@ -129,7 +129,7 @@ export function atHomeItems(input: AtHomeInput): HomeItem[] {
       title: corner.name,
       corner,
       spaceSlug: null,
-      detail: minutes ? `At home · ${minutes}` : "At home",
+      detail: minutes ? `At home · about ${minutes}` : "At home",
       reasons,
       why: reasonLine({ reasons, startsAt: window ? window.startMs : null, friendName: null, passKind: null }),
       startsAt: window ? window.startMs : null,

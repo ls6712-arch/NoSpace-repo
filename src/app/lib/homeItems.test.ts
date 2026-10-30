@@ -40,6 +40,7 @@ describe("Home items", () => {
     expect(items[0]).toMatchObject({ kind: "at_home", reasons: ["picked"], why: "One of your picks" });
     expect(items[0].step).toBe(CORNER_GUIDES[picks[0]].step);
     expect(items[0].detail.startsWith("At home")).toBe(true);
+    expect(items[0].detail).toMatch(/^At home( · about \d+ (min|hr))?$/);
   });
 
   it("says when a pick fits a free window", () => {
