@@ -5,6 +5,7 @@ import { nyParts, nyTimeToMs, windowsLeft, type WeekWindow } from "./homeWeek";
 import { isBudget, type Budget, type Pass } from "./tasteModel";
 import { fetchTaste } from "./tasteRemote";
 import { fetchWeekDetail } from "./weekPlans";
+import { fetchCityPicks, type CityPick } from "./cityPicks";
 import { candidateSpans, freeSpans, goodPlanHours, type WeekPlanDetail } from "./weekView";
 import type { LiveEventInput, LivePursuitInput } from "./firstPlan";
 
@@ -20,6 +21,8 @@ export interface WeekData {
   passes: Pass[];
   /** The 7 days from today and the rest of this month, soonest first. */
   plans: WeekPlanDetail[];
+  /** The hand-picked "This week in New York" cards. Empty hides the row. */
+  picks: CityPick[];
   /** Hours of the person's free time that something they could go to covers. 0 hides the line. */
   goodHours: number;
   reload: () => void;
@@ -43,6 +46,7 @@ export function useWeekData(userId: string | undefined): WeekData {
     budget: null,
     passes: [],
     plans: [],
+    picks: [],
   });
   const [candidates, setCandidates] = useState(EMPTY);
   const [attempt, setAttempt] = useState(0);
@@ -57,7 +61,7 @@ export function useWeekData(userId: string | undefined): WeekData {
       // From the 1st of this month, so the budget line can add up what is planned so far.
       const from = Math.min(nyTimeToMs(p.y, p.m, 1, 0), now);
       const to = Math.max(nyTimeToMs(p.y, p.m + 1, 1, 0), now + 7 * DAY);
-      const [taste, plans] = await Promise.all([fetchTaste(userId), fetchWeekDetail(userId, from, to)]);
+      const [taste, plans, picks] = await Promise.all([fetchTaste(userId), fetchWeekDetail(userId, from, to), fetchCityPicks(now, now + 7 * DAY)]);
       let input: Awaited<ReturnType<typeof loadPlanInput>> | null = null;
       try {
         input = await loadPlanInput({ userId, names: new Map(taste.picks.map((k) => [k, k])), redirectTo: "" }, now);
@@ -66,7 +70,7 @@ export function useWeekData(userId: string | undefined): WeekData {
       }
       if (!live) return;
       setCandidates(input ? { events: input.events, pursuits: input.pursuits } : EMPTY);
-      setState({ status: "ready", now, windows: taste.windows, budget: taste.budget, passes: input?.passes ?? [], plans });
+      setState({ status: "ready", now, windows: taste.windows, budget: taste.budget, passes: input?.passes ?? [], plans, picks });
     })().catch(() => live && setState((s) => ({ ...s, status: "error" })));
     return () => {
       live = false;

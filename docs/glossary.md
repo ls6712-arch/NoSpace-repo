@@ -671,6 +671,9 @@ The wording of `/week`, taken from the founder's Week view brief. Opens from Hom
 | Tell us when you’re usually free | Card (the whole card is the link) in place of the free windows when none are saved |
 | Sunday night, this week flips | Card. Body: "Your Stubs from this week become one card you can share, and next week fills with new ideas." Static for now |
 | Change when you’re free | Link at the bottom. Opens the free time screen, which returns to where it was opened from |
+| This week in New York | Heading of the hand-picked row on the Week view. Under it: "Picked by Soosh". The row is gone when there are no picks |
+| Sat 31 · 7 PM · free | The pill on a pick: day, time, then the editor's own price words. No price, no price part |
+| City picks | Admin page (Site admin list in Settings) for the picks. Add a pick · Edit pick · Published or Draft · Publish · Unpublish · Edit · Delete (with a confirm: "This removes the pick for good.") · Save changes · Cancel. Empty: "No picks yet." / "Add a pick, then publish it." |
 | Something went wrong. Try again. | The existing error line, as a toast, when the budget does not save |
 
 ## Retired terms

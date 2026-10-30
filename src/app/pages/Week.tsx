@@ -6,6 +6,7 @@ import { SignUpPrompt } from "../components/SignUpPrompt";
 import { ErrorNotice } from "../components/StateViews";
 import { Skeleton } from "../components/ui/skeleton";
 import { notifyError } from "../components/ui/toaster";
+import { CityPicksRow } from "../components/week/CityPicksRow";
 import { DayStrip } from "../components/week/DayStrip";
 import { DaySection } from "../components/week/DaySection";
 import { GlanceCard } from "../components/week/GlanceCard";
@@ -85,7 +86,7 @@ export function Week() {
         <>
           <DayStrip days={contents} selected={selected} onSelect={onSelect} />
           <GlanceCard goodHours={data.goodHours} windows={data.windows} budget={data.budget} spend={spend} onBudget={(b) => void onBudget(b)} />
-          {/* "This week in New York" goes here (PR 2). */}
+          <CityPicksRow picks={data.picks} />
           {noWindows && (
             <Link
               to="/week/free?from=week"

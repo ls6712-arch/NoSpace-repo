@@ -199,6 +199,7 @@ export function AccountSection() {
             <AdminLinkRow to="/admin/categories" label="Review category suggestions" badge={pendingCount} />
             <AdminLinkRow to="/admin/reports" label="Reports" />
             <AdminLinkRow to="/admin/invites" label="Invites" />
+            <AdminLinkRow to="/admin/city-picks" label="City picks" />
           </SettingsPanel>
         </>
       )}
