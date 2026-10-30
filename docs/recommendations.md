@@ -68,3 +68,45 @@ refused, security definer with a pinned search_path.
   what people actually open from the page.
 * Every request recomputes from the posts table. Fine at this size; at scale,
   compute the scores on a schedule and store them.
+
+## Home v2: what to do this week (Oct 30, 2026)
+
+`public.home_suggestions(p_limit)` (migration `20261109000000`) ranks events in
+open Spaces and open Pursuits with room, for the signed-in caller, over the next
+7 days. It reads only the caller's own private answers (`profile_private`:
+picks, free windows, area and city, monthly budget; `user_passes`) and never
+returns a price, a count of people or another person's data. Followed friends
+who are going count toward the score, but a friend is named (first name only,
+and the `friend_going` reason) only where the caller could already see that
+person's place: an active member of the event's Space (the `event_rsvps` read
+rule), or a joined member of the Pursuit. Otherwise the next reason is used.
+
+| Signal | Weight | How |
+|---|---|---|
+| window | 0.22 | Start time falls in one of the caller's free windows (Daytime 06:00 to 17:59, Evening from 18:00, New York time). No windows saved: 0.5, not 0 |
+| picked | 0.20 | The Corner is one of the caller's picks |
+| affinity | 0.08 | `my_corner_affinity()` for the Corner (0 to 1) |
+| friends | 0.16 | People the caller follows who are going or in it, 2 or more count as full |
+| nearby | 0.12 | Same area 1.0, same city 0.6, elsewhere 0, online 0.3, nothing saved 0.3 |
+| trending | 0.06 | New RSVPs and joins in the last 48 hours against that Corner's usual rate over 28 days, damped |
+| budget | 0.04 | A budget of 0 lifts listings with no price or a price that reads as free |
+| pass | 0.06 | One of the caller's passes covers the Corner (map in `home_ranking_v1`: climbing, cycling, fitness to strength training, yoga and running, museum to drawing and life drawing, library to reading, book clubs, drawing and life drawing) |
+| soon | 0.06 | Fades from 1 to 0 over the next 48 hours |
+
+All of them, the caps and the pass-to-Corner map live in one row,
+`app_config` key `home_ranking_v1`. After scoring, the top 4 are 4 different
+Corners, and a daily jitter (up to 0.03, seeded by caller and date) keeps the
+order steady within a day. The reasons returned are the 2 largest contributions
+among `fits_window`, `picked`, `affinity`, `friend_going`, `nearby`,
+`trending`, `pass`, `soon`.
+
+What is shown and done is logged in `suggestion_events` through
+`log_suggestion_event()` (owner-only read, no direct insert), so the weights can
+be tuned against what people open and join. Rows are kept 90 days:
+`purge_suggestion_events()` runs nightly at 03:45 UTC from pg_cron (job
+`purge-suggestion-events`). The app does not call the logger until
+`suggestionLoggingEnabled` in `src/app/config.ts` is turned on, which waits for
+the Privacy Policy line about this log. The app has no data export yet; when it
+gets one, it must include `suggestion_events` (the owner can already read their
+own rows). Verification:
+`supabase/verification/home_suggestions_check.sql`.
