@@ -21,9 +21,9 @@
 -- The onboarding order is name, birthday, where, picks, so nothing before the birthday
 -- writes to a table guarded by is_active().
 --
--- Run AFTER 20261106000000_profiles_is_test.sql (and 20261104000000_open_signup_and_account.sql).
+-- Run AFTER 20261107000000_profiles_is_test.sql (and 20261104000000_open_signup_and_account.sql).
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
--- Rollback: rollback_20261107000000_require_birthdate.sql.
+-- Rollback: rollback_20261108000000_require_birthdate.sql.
 
 create or replace function private.is_active(uid uuid)
 returns boolean

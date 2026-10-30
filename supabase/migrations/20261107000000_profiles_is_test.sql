@@ -10,15 +10,15 @@
 -- person's own request can neither set it nor clear it (the trigger below), so
 -- nobody can hide themselves or unhide a test account from the app.
 --
--- The five accounts flagged here were named by the founder on Oct 30, 2026:
--- Sush, ls6712, sushmithachowdary67, Alex Tester and Bailey QA. They are matched
--- by username (ls6712, sushmithachowdary67) or display name (Sush, Alex Tester,
--- Bailey QA). Run the read-only query in the PR first to see exactly which rows
--- match. Undo for one account: update public.profiles set is_test = false where id = ...
+-- Three accounts are flagged, named by the founder on Oct 30, 2026 and matched by
+-- their sign-in email, not by name: ls6712@stern.nyu.edu, sushmithachowdary67@gmail.com
+-- and ls6712@nyu.edu. sushmithalekkala@gmail.com is never flagged (the update below
+-- also excludes it by address). Undo for one account:
+-- update public.profiles set is_test = false where id = ...
 --
 -- Run AFTER 20261105000000_onboarding_taste.sql.
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
--- Rollback: rollback_20261106000000_profiles_is_test.sql.
+-- Rollback: rollback_20261107000000_profiles_is_test.sql.
 
 alter table public.profiles add column is_test boolean not null default false;
 
@@ -54,5 +54,8 @@ create trigger profiles_lock_is_test
 
 update public.profiles
 set is_test = true
-where lower(profiles.username) in ('ls6712', 'sushmithachowdary67')
-   or lower(btrim(profiles.display_name)) in ('sush', 'alex tester', 'bailey qa');
+where profiles.id in (
+  select u.id from auth.users u
+  where lower(u.email) in ('ls6712@stern.nyu.edu', 'sushmithachowdary67@gmail.com', 'ls6712@nyu.edu')
+    and lower(u.email) <> 'sushmithalekkala@gmail.com'
+);

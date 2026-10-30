@@ -1,4 +1,4 @@
--- Rollback for 20261106000000_profiles_is_test.sql.
+-- Rollback for 20261107000000_profiles_is_test.sql.
 -- Test accounts show in the public feed again. Nothing else is touched.
 
 drop trigger if exists profiles_lock_is_test on public.profiles;

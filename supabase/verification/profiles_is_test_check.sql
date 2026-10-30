@@ -1,7 +1,7 @@
 -- Open sign-up clean-up: profiles.is_test.
 --
 -- Not a migration, nothing here alters the schema. Run this AFTER
--- 20261106000000_profiles_is_test.sql. Run before it, the script stops and says
+-- 20261107000000_profiles_is_test.sql. Run before it, the script stops and says
 -- "NOT APPLIED"; it never creates anything then.
 --
 -- One transaction, one do $$ ... $$ block, ends unconditionally in RAISE EXCEPTION
@@ -28,7 +28,7 @@ begin
     select 1 from information_schema.columns c
     where c.table_schema = 'public' and c.table_name = 'profiles' and c.column_name = 'is_test'
   ) then
-    raise exception 'RESULTS: NOT APPLIED (run 20261106000000_profiles_is_test.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261107000000_profiles_is_test.sql first, nothing was created)';
   end if;
 
   insert into auth.users

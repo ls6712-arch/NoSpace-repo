@@ -1,4 +1,4 @@
--- Rollback for 20261107000000_require_birthdate.sql.
+-- Rollback for 20261108000000_require_birthdate.sql.
 -- Accounts with no birthdate can write again and finish onboarding without one.
 
 drop trigger if exists profiles_require_birthdate on public.profiles;
