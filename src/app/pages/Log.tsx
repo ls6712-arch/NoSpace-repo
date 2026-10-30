@@ -74,6 +74,7 @@ import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { BottomSheet } from "../components/ui/BottomSheet";
+import { Switch } from "../components/ui/switch";
 import { PillButton } from "../components/ui/PillButton";
 import { Segmented } from "../components/ui/Segmented";
 import { PostedScreen, LOG_PHOTO_LAYOUT_ID, type PostedAudience } from "../components/log/PostedScreen";
@@ -367,6 +368,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // person picks Only you here.
   const initialAudience = (): Visibility | "private" => (defaultVisibilityLoaded && defaultVisibility === "public" ? "public" : "followers");
   const [audience, setAudience] = useState<Visibility | "private">(initialAudience);
+  // A Moment is held back from everyone else for 2 hours; this releases it at once.
+  const [shareNow, setShareNow] = useState(false);
   /** Posting to the Pursuit's group instead of to followers. Stored as visibility "just_me" with audience "group". */
   const [toGroup, setToGroup] = useState(false);
   // Sticks once the person (or a resumed draft, or "Reflect privately")
@@ -960,6 +963,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         caption,
         visibility: toGroup ? "just_me" : audience,
         audience: toGroup ? "group" : audience === "public" ? "everyone" : "friends",
+        shareNow: circle !== "private" && shareNow,
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,
         // GUARD (docs/tickets/posts-column-privacy.md): posts.starts_at and posts.location_name
@@ -1087,6 +1091,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     audienceDecidedRef.current = false;
     setToGroup(false);
     setAudience(initialAudience());
+    setShareNow(false);
   };
 
   const requiresLogin =
@@ -1580,6 +1585,16 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
                 ? `Anyone can find this in ${cornerLabel || "Discover"}.`
                 : "People who follow you can see this."}
         </p>
+
+        {circle !== "private" && (
+          <div className="mb-4 flex items-center justify-between gap-4 rounded-card bg-card px-4 py-3">
+            <div>
+              <Label htmlFor="share-now" className="text-body font-semibold">Share now</Label>
+              <p id="share-now-help" className="text-caption text-muted-foreground">Shows this Moment to others right away.</p>
+            </div>
+            <Switch id="share-now" aria-describedby="share-now-help" checked={shareNow} onCheckedChange={setShareNow} />
+          </div>
+        )}
 
         {error && (
           <p role="alert" className="mb-3 text-center text-caption text-accent-text">

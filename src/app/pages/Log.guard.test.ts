@@ -34,3 +34,13 @@ describe("Log does not write exact place or time for Moments", () => {
     expect(code(content)).not.toMatch(/set_post_private|place_name|occurred_at/);
   });
 });
+
+describe("Share now in Log", () => {
+  it("is a switch that starts off, with its helper text, and is passed to the save", () => {
+    expect(log).toMatch(/useState\(false\);\s*\n/);
+    expect(log).toMatch(/const \[shareNow, setShareNow\] = useState\(false\)/);
+    expect(log).toContain(">Share now</Label>");
+    expect(log).toContain("Shows this Moment to others right away.");
+    expect(log).toContain('shareNow: circle !== "private" && shareNow,');
+  });
+});

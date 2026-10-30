@@ -10,10 +10,12 @@
 -- handling; anything unexpected is recorded as 'N ERROR <sqlstate>: <message>'.
 -- No select-into, no returning-into, no delete (per CLAUDE.md).
 --
--- Fixtures (all ids …7101 to …7108):
+-- Fixtures (all ids …7101 to …7111):
 --   A owner · F friend of A · W follows A, not followed back · P a stranger
 --   X blocked by A · Q a private account · M friend of both A and F
 --   Z friend of A who then blocks A (a blocked friend)
+--   INV invited N1 and N2; they post their first Moments (…7109 to …7111)
+--   INV invited N1 and N2 (…7109 to …7111); they post a first Moment each
 -- Every lookup is scoped to those ids.
 
 begin;
@@ -35,6 +37,13 @@ declare
   v_q uuid := '00000000-0000-4000-8000-000000007106';
   v_m uuid := '00000000-0000-4000-8000-000000007107';
   v_z uuid := '00000000-0000-4000-8000-000000007108';
+  v_inv uuid := '00000000-0000-4000-8000-000000007109';
+  v_n1 uuid := '00000000-0000-4000-8000-000000007110';
+  v_n2 uuid := '00000000-0000-4000-8000-000000007111';
+  v_post7 bigint;
+  v_post8 bigint;
+  v_post9 bigint;
+  v_ts timestamptz;
   v_post1 bigint;
   v_post2 bigint;
   v_post3 bigint;
@@ -51,7 +60,7 @@ begin
   end if;
 
   -- Fixtures ----------------------------------------------------------------
-  foreach v_u in array array[v_a, v_f, v_w, v_p, v_x, v_q, v_m, v_z] loop
+  foreach v_u in array array[v_a, v_f, v_w, v_p, v_x, v_q, v_m, v_z, v_inv, v_n1, v_n2] loop
     insert into auth.users
       (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, is_super_admin)
     values
@@ -569,7 +578,9 @@ begin
   results := results || (v_i || case when v_b then ' PASS profile privacy columns have no direct select or update' else ' FAIL profile column privileges' end);
 
   -- Old Moments: a null visible_at still counts as visible, and the backfill fills it.
+  perform set_config('soosh.legacy_rows', 'on', true);
   update public.posts po set visible_at = null where po.id = v_post1;
+  perform set_config('soosh.legacy_rows', 'off', true);
   perform set_config('request.jwt.claim.sub', v_f::text, true);
   v_j := public.get_profile_moments(v_a);
   v_i := v_i + 1;
@@ -697,7 +708,11 @@ begin
   results := results || (v_i || case when v_t = '1/1,1/1,1/1,1/0,1/0,' then ' PASS after visible_at the row is readable by its audience (public to all, followers-only to followers and friends)' else ' FAIL released Moments: ' || v_t end);
 
   -- Old Moments with no visible_at stay readable.
+  perform set_config('soosh.legacy_rows', 'on', true);
+  perform set_config('soosh.legacy_rows', 'on', true);
   update public.posts po set visible_at = null where po.id = v_post5;
+  perform set_config('soosh.legacy_rows', 'off', true);
+  perform set_config('soosh.legacy_rows', 'off', true);
   perform set_config('request.jwt.claim.sub', v_p::text, true);
   v_i := v_i + 1;
   begin
@@ -724,6 +739,149 @@ begin
       reset role;
       results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
   end;
+
+
+  -- The 2 hour hold, app-wide ---------------------------------------------------
+  v_i := v_i + 1;
+  v_b := (select pg_get_expr(d.adbin, d.adrelid) like '%interval%' from pg_attrdef d
+           join pg_attribute a on a.attrelid = d.adrelid and a.attnum = d.adnum
+          where d.adrelid = 'public.posts'::regclass and a.attname = 'visible_at');
+  results := results || (v_i || case when v_b then ' PASS visible_at has a column default (now plus 2 hours)' else ' FAIL visible_at default' end);
+
+  -- Z posts twice: asking for the future and for the past.
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, visible_at)
+  values (v_z, 'sports-fitness', 'photo', 'u/z/far.jpg', 'Asked for the future', 'public', now() + interval '10 days');
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, visible_at)
+  values (v_z, 'sports-fitness', 'photo', 'u/z/past.jpg', 'Asked for the past', 'public', now() - interval '3 days');
+  v_i := v_i + 1;
+  v_b := (select po.visible_at = po.created_at + interval '2 hours' from public.posts po where po.caption = 'Asked for the future' and po.user_id = v_z)
+     and (select po.visible_at = po.created_at from public.posts po where po.caption = 'Asked for the past' and po.user_id = v_z);
+  results := results || (v_i || case when v_b then ' PASS a requested visible_at is clamped between created_at and created_at + 2h' else ' FAIL visible_at clamp' end);
+
+  v_i := v_i + 1;
+  begin
+    update public.posts po set visible_at = null where po.user_id = v_z and po.caption = 'Asked for the future';
+    results := results || (v_i || ' FAIL a Moment lost its visible_at');
+  exception
+    when raise_exception then results := results || (v_i || ' PASS a Moment cannot lose its visible_at');
+    when others then results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+
+  -- Release effects wait for visible_at. INV invited N1 and N2.
+  update public.profiles p set invited_by = v_inv where p.id in (v_n1, v_n2);
+  perform set_config('request.jwt.claim.sub', v_n1::text, true);
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, corner)
+  values (v_n1, 'pcheck-space', 'photo', 'u/n1/1.jpg', 'N1 first', 'public', 'pcheckcorner');
+  v_post7 := (select po.id from public.posts po where po.user_id = v_n1 and po.caption = 'N1 first');
+  v_i := v_i + 1;
+  v_b := (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'first_moment') = 0
+     and (select count(*) from public.corners c where c.slug = 'pcheckcorner') = 0
+     and (select po.notified_at is null from public.posts po where po.id = v_post7);
+  results := results || (v_i || case when v_b then ' PASS a held first Moment sends no notification and adds no Corner count' else ' FAIL held effects fired on insert' end);
+
+  v_n := public.sweep_released_moments();
+  v_i := v_i + 1;
+  v_b := (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'first_moment') = 0
+     and (select po.notified_at is null from public.posts po where po.id = v_post7);
+  results := results || (v_i || case when v_b then ' PASS the sweep leaves a Moment that is not due yet' else ' FAIL sweep released a held Moment' end);
+
+  -- Time passes: it becomes due.
+  update public.posts po set visible_at = po.created_at where po.id = v_post7;
+  v_n := public.sweep_released_moments();
+  v_i := v_i + 1;
+  v_b := (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'first_moment' and n.href = '/moment/' || v_post7) = 1
+     and (select c.moment_count from public.corners c where c.slug = 'pcheckcorner') = 1
+     and (select po.notified_at is not null from public.posts po where po.id = v_post7);
+  results := results || (v_i || case when v_b then ' PASS at visible_at the sweep sends the first-Moment notice and counts the Corner once' else ' FAIL release at visible_at' end);
+  v_n := public.sweep_released_moments();
+  v_i := v_i + 1;
+  v_b := (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'first_moment') = 1
+     and (select c.moment_count from public.corners c where c.slug = 'pcheckcorner') = 1;
+  results := results || (v_i || case when v_b then ' PASS running the sweep again changes nothing' else ' FAIL release repeated' end);
+
+  -- Share now: released at insert, so the effects run straight away.
+  perform set_config('request.jwt.claim.sub', v_n2::text, true);
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, corner, visible_at)
+  values (v_n2, 'pcheck-space', 'photo', 'u/n2/1.jpg', 'N2 first', 'public', 'pcheckcorner', now() - interval '1 hour');
+  v_i := v_i + 1;
+  v_b := (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'first_moment') = 2
+     and (select c.moment_count from public.corners c where c.slug = 'pcheckcorner') = 2;
+  results := results || (v_i || case when v_b then ' PASS a Moment shared now notifies and counts at once' else ' FAIL share now effects' end);
+
+  -- A blocked pair gets no first-Moment notice from a sweep.
+  v_i := v_i + 1;
+  v_b := (select count(*) from public.notifications n where n.user_id = v_inv and char_length(n.body) > 300) = 0;
+  results := results || (v_i || case when v_b then ' PASS notice bodies stay under the cap' else ' FAIL notice length' end);
+
+  -- Counts others see exclude held Moments; the Corner activity count too.
+  perform set_config('request.jwt.claim.sub', v_n1::text, true);
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, corner)
+  values (v_n1, 'pcheck-space', 'photo', 'u/n1/2.jpg', 'N1 second', 'public', 'pcheckcorner');
+  v_post8 := (select po.id from public.posts po where po.user_id = v_n1 and po.caption = 'N1 second');
+  v_i := v_i + 1;
+  v_b := (select a.moments_30d from public.corner_activity_30d() a where a.slug = 'pcheckcorner') = 2
+     and (select c.moment_count from public.corners c where c.slug = 'pcheckcorner') = 2;
+  results := results || (v_i || case when v_b then ' PASS a held Moment is not in the Corner counts' else ' FAIL held Moment counted' end);
+
+  v_i := v_i + 1;
+  v_ts := public.get_moment_hold(v_post8);
+  perform set_config('request.jwt.claim.sub', v_f::text, true);
+  v_b := v_ts is not null and public.get_moment_hold(v_post8) is null;
+  results := results || (v_i || case when v_b then ' PASS only the owner can see that a Moment is held' else ' FAIL hold visibility' end);
+
+  v_i := v_i + 1;
+  begin
+    perform public.release_moment(v_post8);
+    results := results || (v_i || ' FAIL someone else released a Moment');
+  exception
+    when insufficient_privilege then results := results || (v_i || ' PASS only the owner can release a Moment');
+    when others then results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+
+  perform set_config('request.jwt.claim.sub', v_n1::text, true);
+  perform public.release_moment(v_post8);
+  v_i := v_i + 1;
+  v_b := public.get_moment_hold(v_post8) is null
+     and (select a.moments_30d from public.corner_activity_30d() a where a.slug = 'pcheckcorner') = 3
+     and (select c.moment_count from public.corners c where c.slug = 'pcheckcorner') = 3
+     and (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'first_moment') = 2;
+  results := results || (v_i || case when v_b then ' PASS releasing a held Moment counts it once and sends no second first-Moment notice' else ' FAIL release_moment' end);
+  perform public.release_moment(v_post8);
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select c.moment_count from public.corners c where c.slug = 'pcheckcorner') = 3
+    then ' PASS releasing twice counts once' else ' FAIL double release' end);
+
+  v_i := v_i + 1;
+  v_b := pg_get_functiondef('public.space_moment_count_30d(uuid)'::regprocedure) like '%visible_at%';
+  results := results || (v_i || case when v_b then ' PASS the Space Moment count joins to released Moments' else ' FAIL space count' end);
+
+  -- Stubs, level, Pursuit progress and Moment totals others see: released only.
+  perform set_config('request.jwt.claim.sub', v_f::text, true);
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, pursuit_id)
+  values (v_f, 'sports-fitness', 'photo', 'u/f/held.jpg', 'F held toward Climbing', 'public', 'pcheck-f-climb');
+  v_post9 := (select po.id from public.posts po where po.user_id = v_f and po.caption = 'F held toward Climbing');
+  insert into public.stubs (user_id, kind, post_id, pursuit_id) values (v_f, 'session', v_post9, 'pcheck-f-climb') on conflict do nothing;
+  v_j := public.get_profile('pcheck' || right(v_f::text, 4));
+  v_i := v_i + 1;
+  v_b := (v_j ->> 'stubCount')::int = 1 and (v_j -> 'level' ->> 'index')::int = 2
+     and (public.get_profile_moments(v_f) ->> 'total')::int = 1
+     and (select (e ->> 'stubCount')::int from jsonb_array_elements(public.get_profile_pursuits(v_f)) e where e ->> 'id' = 'pcheck-f-climb') = 1;
+  results := results || (v_i || case when v_b then ' PASS the owner sees a held Moment in Stubs, level, Pursuit progress and Moment total at once' else ' FAIL owner counts: ' || v_j::text end);
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  v_j := public.get_profile('pcheck' || right(v_f::text, 4));
+  v_i := v_i + 1;
+  v_b := (v_j ->> 'stubCount')::int = 0 and (v_j -> 'level' ->> 'index')::int = 1
+     and (public.get_profile_moments(v_f) ->> 'total')::int = 0
+     and (select (e ->> 'stubCount')::int from jsonb_array_elements(public.get_profile_pursuits(v_f)) e where e ->> 'id' = 'pcheck-f-climb') = 0
+     and (select (e ->> 'momentCount')::int from jsonb_array_elements(public.get_profile_pursuits(v_f)) e where e ->> 'id' = 'pcheck-f-climb') = 0
+     and jsonb_array_length(public.get_profile_stubs(v_f)) = 0;
+  results := results || (v_i || case when v_b then ' PASS others count none of it before release: Stubs 0, level 1, progress 0, Moments 0' else ' FAIL others counts: ' || v_j::text end);
+  update public.posts po set visible_at = po.created_at where po.id = v_post9;
+  v_j := public.get_profile('pcheck' || right(v_f::text, 4));
+  v_i := v_i + 1;
+  v_b := (v_j ->> 'stubCount')::int = 1 and (v_j -> 'level' ->> 'index')::int = 2
+     and (public.get_profile_moments(v_f) ->> 'total')::int = 1;
+  results := results || (v_i || case when v_b then ' PASS after release others count it: Stub 1, level 2, Moments 1' else ' FAIL others counts after release' end);
 
   -- Cascade: a deleted user takes their planning and plans with them.
   v_i := v_i + 1;

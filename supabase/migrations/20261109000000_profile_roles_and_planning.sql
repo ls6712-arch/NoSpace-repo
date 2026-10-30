@@ -46,24 +46,47 @@ alter table public.pursuits
 
 alter table public.posts
   add column neighborhood text check (char_length(neighborhood) <= 80),
-  add column visible_at timestamptz;
+  add column visible_at timestamptz,
+  -- Set once a Moment's release effects have run (first-Moment notice, Corner
+  -- count). Moments that exist now are marked below, so nothing fires for them.
+  add column notified_at timestamptz;
 
+-- The default is set after the column exists, so Moments made before this
+-- migration keep a null visible_at (readable) instead of "2 hours from now".
+alter table public.posts alter column visible_at set default now() + interval '2 hours';
+update public.posts p set notified_at = coalesce(p.created_at, now()) where p.notified_at is null;
+
+-- Every new Moment has a visible_at between its creation and 2 hours after it.
+-- A client that asks for "Share now" sends a time at or before creation, which
+-- becomes created_at; a null or later value becomes created_at + 2 hours.
 create function private.posts_set_visible_at()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  v_created timestamptz := coalesce(new.created_at, now());
 begin
-  if new.visible_at is null then
-    new.visible_at := coalesce(new.created_at, now()) + interval '2 hours';
+  if tg_op = 'INSERT' then
+    new.visible_at := least(greatest(coalesce(new.visible_at, v_created + interval '2 hours'), v_created), v_created + interval '2 hours');
+  elsif new.visible_at is distinct from old.visible_at then
+    -- A Moment that has a visible_at keeps one. (soosh.legacy_rows lets a check
+    -- put an old, null row back; nothing in the app sets it.)
+    if new.visible_at is null then
+      if old.visible_at is not null and coalesce(current_setting('soosh.legacy_rows', true), '') <> 'on' then
+        raise exception 'A Moment always has a time it becomes visible.';
+      end if;
+    else
+      new.visible_at := least(greatest(new.visible_at, v_created), v_created + interval '2 hours');
+    end if;
   end if;
   return new;
 end;
 $$;
 revoke all on function private.posts_set_visible_at() from public, anon, authenticated;
 create trigger posts_set_visible_at
-  before insert on public.posts
+  before insert or update of visible_at on public.posts
   for each row execute function private.posts_set_visible_at();
 
 -- Moments made before this migration get visible_at and occurred_at from the
@@ -133,6 +156,240 @@ end;
 $$;
 revoke all on function public.get_my_post_private(bigint[]), public.set_post_private(bigint, timestamptz, text, text) from public, anon;
 grant execute on function public.get_my_post_private(bigint[]), public.set_post_private(bigint, timestamptz, text, text) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- Release effects: what used to happen on insert now happens when a Moment is
+-- released (visible_at <= now()). That is the first-Moment notice to the
+-- inviter and the Corner's Moment count. Same pattern as the repo's other
+-- deferred work (pg_cron calling a sweep function).
+-- ─────────────────────────────────────────────────────────────────────────
+create function private.apply_release_effects(p_post_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_post record;
+  v_inviter uuid;
+  v_name text;
+begin
+  -- Claim the Moment: only one caller ever gets past this, so nothing fires twice.
+  update public.posts po set notified_at = now()
+   where po.id = p_post_id and po.notified_at is null
+     and coalesce(po.visible_at, po.created_at) <= now();
+  if not found then
+    return;
+  end if;
+
+  select po.id, po.user_id, po.visibility, po.hobby_slug, po.corner, po.sub_hobby
+    into v_post from public.posts po where po.id = p_post_id;
+
+  -- Corner count (was corners_sync on insert).
+  if coalesce(v_post.corner, v_post.sub_hobby) is not null and v_post.visibility = 'public' then
+    insert into public.corners (space_slug, slug, name, moment_count)
+    values (v_post.hobby_slug, coalesce(v_post.corner, v_post.sub_hobby), coalesce(v_post.corner, v_post.sub_hobby), 1)
+    on conflict (space_slug, slug)
+      do update set moment_count = public.corners.moment_count + 1;
+  end if;
+
+  -- First-Moment notice to whoever invited this person (was notify_first_moment on insert).
+  if v_post.visibility not in ('public', 'followers') then
+    return;
+  end if;
+  v_inviter := (select pr.invited_by from public.profiles pr where pr.id = v_post.user_id);
+  if v_inviter is null or v_inviter = v_post.user_id then
+    return;
+  end if;
+  if exists (select 1 from public.posts po
+              where po.user_id = v_post.user_id and po.id <> v_post.id
+                and po.visibility in ('public', 'followers')) then
+    return;
+  end if;
+  -- Never tell someone about a person they blocked, or who blocked them. (A sweep
+  -- has no signed-in user, so the notification trigger cannot check this itself.)
+  if private.is_blocked_between(v_inviter, v_post.user_id) then
+    return;
+  end if;
+  if exists (select 1 from public.notifications n
+              where n.user_id = v_inviter and n.kind = 'first_moment'
+                and n.href in (select '/moment/' || po.id from public.posts po where po.user_id = v_post.user_id)) then
+    return;
+  end if;
+  v_name := coalesce(public.pursuit_person_name(v_post.user_id), 'Someone');
+  begin
+    insert into public.notifications (user_id, kind, body, href, actor_name)
+    values (v_inviter, 'first_moment', left(v_name, 60) || ' added their first moment.', '/moment/' || v_post.id, v_name);
+  exception when others then
+    raise warning 'first-moment notice skipped: % %', sqlstate, sqlerrm;
+  end;
+end;
+$$;
+revoke all on function private.apply_release_effects(bigint) from public, anon, authenticated;
+
+-- A Moment made with "Share now" is released at insert, so it runs straight away.
+create function private.posts_release_on_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.visible_at <= now() then
+    perform private.apply_release_effects(new.id);
+  end if;
+  return null;
+end;
+$$;
+revoke all on function private.posts_release_on_insert() from public, anon, authenticated;
+create trigger posts_release_on_insert
+  after insert on public.posts
+  for each row execute function private.posts_release_on_insert();
+
+-- Held Moments are released by this sweep, every 5 minutes.
+create function public.sweep_released_moments()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_id bigint;
+  v_n integer := 0;
+begin
+  for v_id in
+    select po.id from public.posts po
+     where po.notified_at is null and coalesce(po.visible_at, po.created_at) <= now()
+     order by po.id
+     limit 500
+  loop
+    perform private.apply_release_effects(v_id);
+    v_n := v_n + 1;
+  end loop;
+  return v_n;
+end;
+$$;
+revoke all on function public.sweep_released_moments() from public, anon, authenticated;
+
+-- The old on-insert versions are replaced by the above.
+drop trigger posts_notify_first_moment on public.posts;
+drop function public.notify_first_moment();
+
+-- The Corner count now moves only for released Moments (notified_at is the mark).
+create or replace function public.sync_corner_moment_count()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+begin
+  if (tg_op = 'DELETE') then
+    if old.notified_at is not null and coalesce(old.corner, old.sub_hobby) is not null and old.visibility = 'public' then
+      update public.corners set moment_count = greatest(moment_count - 1, 0)
+        where space_slug = old.hobby_slug and slug = coalesce(old.corner, old.sub_hobby);
+    end if;
+    return old;
+  end if;
+
+  if (tg_op = 'UPDATE') then
+    if old.notified_at is not null
+       and (coalesce(old.corner, old.sub_hobby) is distinct from coalesce(new.corner, new.sub_hobby)
+            or old.hobby_slug is distinct from new.hobby_slug
+            or old.visibility is distinct from new.visibility) then
+      if coalesce(old.corner, old.sub_hobby) is not null and old.visibility = 'public' then
+        update public.corners set moment_count = greatest(moment_count - 1, 0)
+          where space_slug = old.hobby_slug and slug = coalesce(old.corner, old.sub_hobby);
+      end if;
+      if coalesce(new.corner, new.sub_hobby) is not null and new.visibility = 'public' then
+        insert into public.corners (space_slug, slug, name, moment_count)
+        values (new.hobby_slug, coalesce(new.corner, new.sub_hobby), coalesce(new.corner, new.sub_hobby), 1)
+        on conflict (space_slug, slug)
+          do update set moment_count = public.corners.moment_count + 1;
+      end if;
+    end if;
+    return new;
+  end if;
+
+  -- INSERT: counted when released (apply_release_effects), not here.
+  return new;
+end;
+$function$;
+
+-- Counts other people see: only released Moments.
+create or replace function public.corner_activity_30d()
+returns table(space_slug text, slug text, moments_30d bigint)
+language sql
+stable
+security definer
+set search_path to 'public'
+as $function$
+  select p.hobby_slug as space_slug, coalesce(p.corner, p.sub_hobby) as slug, count(*) as moments_30d
+  from public.posts p
+  where p.visibility = 'public'
+    and coalesce(p.corner, p.sub_hobby) is not null
+    and p.created_at > now() - interval '30 days'
+    and coalesce(p.visible_at, p.created_at) <= now()
+  group by 1, 2;
+$function$;
+
+create or replace function public.space_moment_count_30d(p_space_id uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path to 'public'
+as $function$
+  select count(*)::int
+  from public.space_moments sm
+  join public.spaces s on s.id = sm.space_id
+  join public.posts po on po.id = sm.post_id
+  where sm.space_id = p_space_id
+    and sm.status = 'approved'
+    and sm.removed_by_host = false
+    and sm.added_at > now() - interval '30 days'
+    and coalesce(po.visible_at, po.created_at) <= now()
+    and (s.status <> 'deleted' or private.is_admin(auth.uid()));
+$function$;
+
+-- The owner's two controls over a held Moment.
+create function public.get_moment_hold(p_post_id bigint)
+returns timestamptz
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case when po.visible_at > now() then po.visible_at else null end
+    from public.posts po
+   where po.id = p_post_id and po.user_id = auth.uid();
+$$;
+
+create function public.release_moment(p_post_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update public.posts po set visible_at = now()
+   where po.id = p_post_id and po.user_id = auth.uid() and po.visible_at > now();
+  if not exists (select 1 from public.posts po where po.id = p_post_id and po.user_id = auth.uid()) then
+    raise exception 'That Moment isn’t yours.' using errcode = '42501';
+  end if;
+  perform private.apply_release_effects(p_post_id);
+end;
+$$;
+revoke all on function public.get_moment_hold(bigint), public.release_moment(bigint) from public, anon;
+grant execute on function public.get_moment_hold(bigint), public.release_moment(bigint) to authenticated;
+
+do $do$
+begin
+  if exists (select 1 from pg_extension e where e.extname = 'pg_cron') or exists (select 1 from pg_available_extensions a where a.name = 'pg_cron') then
+    create extension if not exists pg_cron with schema extensions;
+    perform cron.schedule('release-held-moments', '*/5 * * * *', 'select public.sweep_released_moments();');
+  end if;
+end
+$do$;
 
 -- A Moment cannot be selected by anyone but its owner until visible_at (2 hours
 -- after it is posted; a null visible_at on an old Moment counts as visible).
@@ -359,7 +616,11 @@ begin
     into v_p from public.profiles p where p.id = v_id;
   v_closed := v_p.is_private and v_role in ('public');
 
-  v_stubs := (select count(*) from public.stubs s where s.user_id = v_id and s.kind = 'session');
+  -- Others count only released Moments' Stubs; the owner sees everything at once.
+  v_stubs := (select count(*) from public.stubs s
+               join public.posts po on po.id = s.post_id
+              where s.user_id = v_id and s.kind = 'session'
+                and (v_role = 'owner' or coalesce(po.visible_at, po.created_at) <= now()));
   select l.idx, l.name into v_lvl from private.level_for(v_stubs) l;
 
   v_follow := coalesce((select f.status from public.profile_follows f
@@ -622,8 +883,14 @@ begin
                'target', pu.target_moments,
                'momentCount', (select count(*) from public.posts po where po.pursuit_id = pu.id and po.user_id = p_profile
                                 and (v_role = 'owner' or coalesce(po.visible_at, po.created_at) <= now())),
-               'stubCount', (select count(*) from public.stubs s where s.pursuit_id = pu.id and s.kind = 'session'),
-               'finished', pu.finished_at is not null,
+               'stubCount', (select count(*) from public.stubs s
+                              join public.posts po on po.id = s.post_id
+                             where s.pursuit_id = pu.id and s.kind = 'session'
+                               and (v_role = 'owner' or coalesce(po.visible_at, po.created_at) <= now())),
+               'finished', pu.finished_at is not null
+                 and (v_role = 'owner' or pu.target_moments is null
+                      or (select count(*) from public.posts po where po.pursuit_id = pu.id and po.user_id = p_profile
+                            and coalesce(po.visible_at, po.created_at) <= now()) >= pu.target_moments),
                'archived', pu.archived_at is not null,
                'lastMomentDate', case when v_role = 'owner' then
                    (select max(coalesce(pp.occurred_at, po.created_at)) from public.posts po left join public.post_private pp on pp.post_id = po.id where po.pursuit_id = pu.id) else null end,

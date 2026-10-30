@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ERROR_LINE } from "../lib/stateCopy";
+import { getMomentHold, releaseMoment } from "../lib/profileApi";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -37,13 +39,23 @@ export function SendToChatDialog({
   const [sendingTo, setSendingTo] = useState<string | number | null>(null);
   const [sentTo, setSentTo] = useState<string | number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A thread chosen for a Moment that is still held back: waits for the owner to say Share now.
+  const [heldFor, setHeldFor] = useState<string | number | null>(null);
 
   const chats = social.participations
     .filter((p) => canAttachInto(p) && !social.blockedIds.includes(p.fromUser === user?.id ? p.toUser ?? "" : p.fromUser))
     .sort((a, b) => b.createdAt - a.createdAt);
 
-  const send = async (threadId: string | number) => {
+  const send = async (threadId: string | number, released = false) => {
     setError(null);
+    if (kind === "moment" && postId != null && !released) {
+      // Sharing a Moment that others cannot see yet would show it to them through the chat.
+      const hold = await getMomentHold(Number(postId));
+      if (hold.ok && hold.value) {
+        setHeldFor(threadId);
+        return;
+      }
+    }
     setSendingTo(threadId);
     const result =
       kind === "moment" && postId != null
@@ -59,6 +71,18 @@ export function SendToChatDialog({
     setSentTo(threadId);
   };
 
+  const shareNow = async () => {
+    const threadId = heldFor;
+    if (threadId === null || postId == null) return;
+    const r = await releaseMoment(Number(postId));
+    setHeldFor(null);
+    if (!r.ok) {
+      setError(ERROR_LINE);
+      return;
+    }
+    await send(threadId, true);
+  };
+
   const close = () => {
     onOpenChange(false);
     setSentTo(null);
@@ -66,6 +90,7 @@ export function SendToChatDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
@@ -113,5 +138,14 @@ export function SendToChatDialog({
         </div>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog
+      open={heldFor !== null}
+      onOpenChange={(o) => !o && setHeldFor(null)}
+      title="Share now?"
+      description="Anyone who can see your Moments will see this one too."
+      confirmLabel="Share now"
+      onConfirm={shareNow}
+    />
+    </>
   );
 }

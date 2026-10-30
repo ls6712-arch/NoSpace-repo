@@ -591,6 +591,17 @@ The profile rebuild (`/you`, `/u/:username`). **Every row below is a new string,
 | Add your neighborhood and a short bio | The link on your profile while both are empty |
 | Private profile | Settings > Profile switch: people who don’t follow you see only your name and level |
 
+### The 2 hour hold on new Moments
+
+New, for approval. A new Moment is visible only to its owner for 2 hours (everywhere in the app, not only on the profile), unless the owner shares it now.
+
+| Term | Meaning |
+|---|---|
+| Share now | Switch on Log a Moment, off by default, shown when anyone but you can see the Moment. Also the confirm button below |
+| Shows this Moment to others right away. | Helper text under Share now |
+| Share now? | Title of the confirm that appears when you send a still-held Moment into a chat |
+| Anyone who can see your Moments will see this one too. | Body of that confirm. Cancel leaves the Moment held and shares nothing; Share now shows it to others, then sends it |
+
 ## Retired terms
 
 Never use these in UI copy.

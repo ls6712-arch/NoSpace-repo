@@ -174,6 +174,10 @@ export function fetchMoments(
 }
 /** The username a display-name link belongs to; null when none or more than one person has that name. */
 export const resolveHandle = (handle: string) => rpc<string | null>("resolve_profile_handle", { p_handle: handle });
+/** When your own Moment becomes visible to others, or null if it already is (or is not yours). */
+export const getMomentHold = (postId: number) => rpc<string | null>("get_moment_hold", { p_post_id: postId });
+/** Shows your own held Moment to others now. */
+export const releaseMoment = (postId: number) => rpc<null>("release_moment", { p_post_id: postId });
 export const fetchStubs = (profileId: string) => rpc<StubItem[]>("get_profile_stubs", { p_profile: profileId });
 export const fetchPursuits = (profileId: string) => rpc<PursuitItem[]>("get_profile_pursuits", { p_profile: profileId });
 
