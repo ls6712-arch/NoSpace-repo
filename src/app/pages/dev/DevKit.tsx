@@ -9,12 +9,14 @@ import { PillButton } from "../../components/ui/PillButton";
 import { RollNumber } from "../../components/ui/RollNumber";
 import { Segmented } from "../../components/ui/Segmented";
 import { SnapCarousel } from "../../components/ui/SnapCarousel";
+import { Stubby, type StubbyState } from "../../components/stubby/Stubby";
 import { Reveal } from "../../components/afterhours/Reveal";
 import { GroupRows } from "../../components/pursuit/GroupRows";
 import { NextTogetherCard } from "../../components/pursuit/NextTogetherCard";
 import { MakeItAPursuitSheet } from "../../components/pursuit/MakeItAPursuitSheet";
 import { Confetti } from "../../components/pursuit/Confetti";
 import type { Measure, PursuitMember, ProgressEntry } from "../../lib/journal";
+import { plural } from "../../lib/plural";
 import { haptic, pop, shared } from "../../lib/motionTokens";
 
 /**
@@ -29,6 +31,54 @@ const SLIDES = [
   { id: "c", color: "var(--cat-violet)", title: "Life drawing" },
   { id: "d", color: "var(--cat-teal)", title: "Badminton" },
 ];
+
+const STUBBY_STATES: StubbyState[] = [
+  "idle", "stamped", "unstamped", "yours", "shrug", "torn", "rejoined", "tilt",
+  "arrived", "knock", "checkedIn", "done", "letGo", "sleep", "thinking", "cool",
+];
+type StubbyTone = "platform" | "cobalt" | "navy";
+
+/** Stubby at 360px with every reaction on a button, the mark at 44 and 28px, and a background switch. */
+function StubbyKit() {
+  const [state, setState] = useState<StubbyState>("idle");
+  const [tone, setTone] = useState<StubbyTone>("platform");
+  const [pokes, setPokes] = useState(0);
+  // Pressing the state that is already showing plays it again: step through idle first.
+  const play = (next: StubbyState) => {
+    setState("idle");
+    setTimeout(() => setState(next), 60);
+  };
+  const dark = tone !== "platform";
+  return (
+    <div className="flex flex-col gap-4">
+      <Segmented
+        label="Background"
+        value={tone}
+        onChange={setTone}
+        options={[
+          { value: "platform", label: "Platform" },
+          { value: "cobalt", label: "Cobalt" },
+          { value: "navy", label: "Navy" },
+        ]}
+      />
+      <div className="soosh-transfer flex flex-col items-center gap-6 rounded-card p-6" data-tone={tone}>
+        <Stubby state={state} size={360} onDark={dark} followPointer label="Stubby" onPoke={() => setPokes((n) => n + 1)} />
+        <div className="flex items-end gap-6">
+          <Stubby size={44} onDark={dark} />
+          <Stubby size={28} onDark={dark} />
+          <p className="text-small transfer-muted">{`Poked ${plural(pokes, "time")}`}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {STUBBY_STATES.map((s) => (
+          <PillButton key={s} variant={s === state ? "primary" : "outline"} onClick={() => play(s)}>
+            {s}
+          </PillButton>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -68,6 +118,10 @@ export function DevKit() {
         <h1 className="font-[family-name:var(--font-display)] text-display font-extrabold">Component kit</h1>
         <p className="mt-1 text-body text-muted-foreground">Every foundation component and motion token. Development only.</p>
       </Reveal>
+
+      <Section title="Stubby">
+        <StubbyKit />
+      </Section>
 
       <Section title="Pill buttons">
         <div className="flex flex-wrap gap-3">

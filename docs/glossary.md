@@ -406,6 +406,30 @@ Strings from `docs/design/core-loop/09` to `12`, added with PR 5. The brief's "f
 
 A Space is listed on Discover, Corner pages, Search and Home only once members (people who are not its hosts) have shared an approved Moment in it. On its own page, members' Moments come first and the hosts' own after.
 
+## Onboarding (Soosh onboarding brief, Oct 29, 2026)
+
+**Proposed, awaiting the founder's approval** (brief section 10.8). Stubby is the character's name. It is not a product noun, so it is written "Stubby" and never gets a rule of its own. Stubs (the keepsakes) keep their name.
+
+| Term | Meaning |
+|---|---|
+| Stubby | The character: a ticket with a face. It never talks; it reacts |
+| Admit one | Printed on Stubby's tab (also the stamp on an event ticket, above) |
+| Stop saying you’ll do it. | Welcome headline |
+| Get started | Welcome button |
+| What would you say yes to? | Heading of the picks question: pick three or more Corners |
+| When are you usually free? | Heading of the free-time question |
+| What’s already yours? | Heading of the passes and gear question |
+| A month for doing things | Label of the monthly budget choice. Private: never on a profile, a Stub or any shared view |
+| Put a face on your card | Heading of the member card photo |
+| Tonight’s yours. | First plan headline. By time: Tomorrow’s yours. / This weekend’s yours. / Here’s one for this week. |
+| Tear off half for a friend | Button on the first plan: invite one person to it |
+| Who gets the other half? | Heading of the invite screen |
+| Take my half | Button on the invite arrival screen |
+| {Name} saved you a spot | Headline on the invite arrival screen |
+| Back | Button (arrow) on every onboarding screen except the welcome and the first plan |
+| Next | Button on an onboarding screen that has only one thing to do |
+| {n} of 3 | Step counter on the three taste questions only. Not a progress score: no levels, no streaks |
+
 ## Retired terms
 
 Never use these in UI copy.
