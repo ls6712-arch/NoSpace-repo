@@ -19,7 +19,12 @@ export type AnalyticsEvent =
   | { name: "home_suggestion_opened"; kind: string; position: number }
   | { name: "home_suggestion_going"; kind: string; position: number }
   | { name: "home_suggestion_invite"; kind: string; position: number }
-  | { name: "home_suggestion_dismissed"; kind: string; position: number };
+  | { name: "home_suggestion_dismissed"; kind: string; position: number }
+  | { name: "week_opened" }
+  | { name: "week_day_tapped"; offset: number }
+  | { name: "week_find_something"; window: string }
+  | { name: "week_budget_changed" }
+  | { name: "week_view_toggled"; view: "week" | "month" };
 
 function sendToConsole(event: AnalyticsEvent) {
   if (import.meta.env.DEV) {

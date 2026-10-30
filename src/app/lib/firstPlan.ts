@@ -41,6 +41,8 @@ export interface LiveEventInput {
   eventId: number;
   title: string;
   startsAt: number;
+  /** Null when the listing has no end. */
+  endsAt?: number | null;
   place?: string;
   /** Free text from the host ("Free", "$12"), when the listing has one. */
   price?: string | null;

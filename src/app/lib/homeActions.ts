@@ -59,16 +59,20 @@ export async function inviteToItem(item: HomeItem, owner: Owner): Promise<{ ok: 
   } else {
     url = `${SITE_ORIGIN}/#/space/${item.spaceSlug ?? ""}${item.kind === "event" ? "?tab=events" : ""}`;
   }
+  return shareUrl(item.title, url);
+}
+
+/** The share sheet where there is one, a copied link where there is not. Closing the sheet is not an error. */
+export async function shareUrl(title: string, url: string): Promise<{ ok: boolean; error?: string }> {
   try {
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      await navigator.share({ title: item.title, url });
+      await navigator.share({ title, url });
     } else {
       await navigator.clipboard.writeText(url);
       notify("Link copied");
     }
     return { ok: true };
   } catch (e) {
-    // Closing the share sheet is not an error.
     if (e instanceof DOMException && e.name === "AbortError") return { ok: true };
     return { ok: false, error: ERROR_LINE };
   }
