@@ -61,6 +61,11 @@ files still carry the button, so the older password sign-up keeps working.
    emails an hour, which is far too few for sign-ups. If it is not set up, set it
    up first; also check **Authentication**, **Rate Limits**, **Rate limit for
    sending emails** is high enough for launch day.
+   Also set the minimum time between emails to the same person (**SMTP Settings**,
+   **Minimum interval between emails being sent**, or **Minimum interval per
+   user**) to `30` seconds. The code screen counts down 30 seconds before it
+   offers another code; with Supabase's default of 60 seconds a person who asks at
+   the 30 second mark would be told to wait again.
 6. Test on a preview build with `VITE_SOOSH_ONBOARDING=1`, not on production:
    - Sign up with an address that has no account. The email must show a 6-digit
      code and a button. Type the code in; you land on the name screen.

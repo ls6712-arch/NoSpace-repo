@@ -16,9 +16,9 @@ export function Terms() {
 
       <h2>Invites</h2>
       <p>
-        While {APP_NAME} is invite-only, an invite is for the person it's meant for, not
-        something to sell, trade, or hand out publicly. We can revoke an invite or the
-        account it created if it’s misused.
+        Invite links are personal. Please only use one that was sent to you, and don’t sell
+        or post them publicly. We can revoke an invite or the account it created if it’s
+        misused.
       </p>
 
       <h2>What you post</h2>

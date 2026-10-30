@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { clearLastFinished, isRealRedirect, laterStep, peekRedirect, readEmail, readLastFinished, rememberEmail, rememberRedirect, takeRedirect, writeLastFinished } from "./onboardingProgress";
+import { clearLastFinished, clearPasswordOffer, markPasswordOffer, readPasswordOffer, isRealRedirect, laterStep, peekRedirect, readEmail, readLastFinished, rememberEmail, rememberRedirect, takeRedirect, writeLastFinished } from "./onboardingProgress";
 
 describe("onboarding progress", () => {
   beforeEach(() => localStorage.clear());
@@ -74,5 +74,17 @@ describe("redirect and email memory", () => {
     expect(readEmail()).toBe("");
     rememberEmail("a@b.co");
     expect(readEmail()).toBe("a@b.co");
+  });
+});
+
+describe("password offer flag", () => {
+  beforeEach(() => sessionStorage.clear());
+
+  it("is off until a code has been accepted, and clears once answered", () => {
+    expect(readPasswordOffer()).toBe(false);
+    markPasswordOffer();
+    expect(readPasswordOffer()).toBe(true);
+    clearPasswordOffer();
+    expect(readPasswordOffer()).toBe(false);
   });
 });

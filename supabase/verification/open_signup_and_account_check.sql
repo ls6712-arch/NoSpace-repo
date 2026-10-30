@@ -85,6 +85,12 @@ begin
   results := array_append(results, case when v_n = 3 then format('%s PASS (new accounts are active)', v_i)
                                         else format('%s FAIL (only %s of 3 active)', v_i, v_n) end);
 
+  -- Accounts made after the migration with no password are not marked as having one.
+  v_i := v_i + 1;
+  v_n := (select count(*) from auth.users u where u.id in (v_a, v_b, v_c) and coalesce(u.raw_user_meta_data ->> 'has_password', '') = 'true');
+  results := array_append(results, case when v_n = 0 then format('%s PASS (new code accounts are not marked as having a password)', v_i)
+                                        else format('%s FAIL (%s fixture accounts marked)', v_i, v_n) end);
+
   -- Member numbers: assigned, distinct, in creation order.
   v_ma := (select p.member_no from public.profiles p where p.id = v_a);
   v_mb := (select p.member_no from public.profiles p where p.id = v_b);

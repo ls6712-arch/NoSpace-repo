@@ -52,3 +52,25 @@ describe("CodeEntry, sign-up stages (no password, no Get started link)", () => {
     expect(screen.queryByText("Still nothing? Check your spam folder.")).toBeNull();
   });
 });
+
+describe("CodeEntry, resend limit", () => {
+  it("shows how long to wait, not an error, and holds the button until then", async () => {
+    base.resend.mockResolvedValue({ error: null, retryAfterSeconds: 52 });
+    render(<CodeEntry {...base} />);
+    await seconds(30);
+    await act(async () => {
+      screen.getByRole("button", { name: "Send a new code" }).click();
+    });
+    expect(screen.getByText("You can ask for another code in 52 seconds.")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Send a new code" }) as HTMLButtonElement).disabled).toBe(true);
+    // Not an error: no failure wording, and nothing changes in the stage.
+    expect(screen.queryByText(/Something went wrong|went wrong/)).toBeNull();
+    expect(screen.getByText("Still nothing? Check your spam folder.")).toBeTruthy();
+    // The line stays put while it counts down (a screen reader hears it once), then the button comes back.
+    await seconds(10);
+    expect(screen.getByText("You can ask for another code in 52 seconds.")).toBeTruthy();
+    await seconds(43);
+    expect(screen.queryByText(/You can ask for another code in/)).toBeNull();
+    expect((screen.getByRole("button", { name: "Send a new code" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+});

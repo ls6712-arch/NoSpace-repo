@@ -2,7 +2,7 @@ import type { ComponentType } from "react";
 import type { OnboardingStep } from "../steps";
 import { BirthdayScreen } from "./BirthdayScreen";
 import { CodeScreen } from "./CodeScreen";
-import { NameScreen } from "./NameScreen";
+import { NameStep } from "./NameStep";
 import { SignUpScreen } from "./SignUpScreen";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { WhereScreen } from "./WhereScreen";
@@ -12,7 +12,7 @@ const SCREENS: Partial<Record<OnboardingStep, ComponentType>> = {
   welcome: WelcomeScreen,
   signup: SignUpScreen,
   code: CodeScreen,
-  name: NameScreen,
+  name: NameStep,
   birthday: BirthdayScreen,
   where: WhereScreen,
 };

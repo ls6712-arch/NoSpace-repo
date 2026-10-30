@@ -9,14 +9,16 @@ import { Stubby, type StubbyState } from "../../components/stubby/Stubby";
 import { APP_NAME, appleSignInEnabled } from "../../config";
 import { useAuth } from "../../context/AuthContext";
 import { page } from "../../lib/motionTokens";
-import { readEmail, rememberEmail, rememberRedirect } from "../../lib/onboardingProgress";
+import { codeWaitLine, resetSentLine, WRONG_LOGIN_LINE } from "../../lib/authCopy";
+import { readLoginMethod, rememberLoginMethod, type LoginMethod } from "../../lib/loginMethod";
+import { clearPasswordOffer, readEmail, rememberEmail, rememberRedirect } from "../../lib/onboardingProgress";
 import { signedInTarget } from "../../lib/signInTarget";
-import { ERROR_LINE } from "../../lib/stateCopy";
+import { ERROR_LINE, OFFLINE_LINE } from "../../lib/stateCopy";
 import { ScreenFrame } from "../onboarding/screens/ScreenFrame";
 import { slide } from "../onboarding/transitions";
 
 /** The log in screens, in the order that decides which way a screen slides. */
-const VIEWS = ["welcome", "email", "code", "password", "reset", "resetsent", "signingin"] as const;
+const VIEWS = ["welcome", "email", "code", "reset", "resetsent", "signingin"] as const;
 type View = (typeof VIEWS)[number];
 const isView = (v: string | null): v is View => !!v && (VIEWS as readonly string[]).includes(v);
 
@@ -26,12 +28,11 @@ const STAMP_BEAT_MS = 600;
 const PROFILE_WAIT_MS = 6000;
 const REACTION_HOLD_MS = 150;
 
-export const WRONG_PASSWORD_LINE = "That email and password didn’t match.";
 
 /**
  * The returning-user door, in the Soosh onboarding look (Transfer frame and
  * Stubby). Codes first: Google, Apple (when it is on) or an emailed code, with
- * the password behind "Use my password instead". Nobody is signed up from
+ * a password too (both on one screen, equal, the last one used first). Nobody is signed up from
  * here, and an email with no account looks exactly like one with an account
  * (same screen, same words, same wait), so nothing on it says who is new. A signed-in person with
  * onboarding unfinished is sent back into it; it resumes where they stopped.
@@ -121,8 +122,15 @@ export function LoginV2() {
   }, [react, navigate, hrefFor, reduce]);
 
   const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  // A wait, not a failure: too many codes were asked for.
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [password, setPassword] = useState("");
+  // The way this device last logged in is shown first; both stay equal in size.
+  const [method] = useState<LoginMethod>(() => readLoginMethod());
+  // "Log in with password" on the code screen comes back here with the password field in focus.
+  const [focusPassword, setFocusPassword] = useState(false);
 
   const viaProvider = async (start: () => Promise<{ error: string | null }>) => {
     if (busy) return;
@@ -130,6 +138,7 @@ export function LoginV2() {
     setBusy(true);
     // The round trip lands on the site root; keep where the person was going.
     rememberRedirect(redirectTo);
+    clearPasswordOffer();
     const result = await start();
     if (result.error) {
       setError(result.error);
@@ -145,16 +154,24 @@ export function LoginV2() {
       return;
     }
     setError(null);
+    setNotice(null);
     setBusy(true);
     // Never signs anyone up, and an address with no account gets the same
     // answer, the same screen and the same wait as one with an account.
     const result = await sendSignInCode(mail);
     setBusy(false);
+    if (result.retryAfterSeconds) {
+      setNotice(codeWaitLine(result.retryAfterSeconds));
+      return;
+    }
     if (result.error) {
       setError(result.error);
       return;
     }
     rememberEmail(mail);
+    rememberLoginMethod("code");
+    // A log in is not a sign-up: drop any offer left over from one that was abandoned.
+    clearPasswordOffer();
     go("code");
   };
 
@@ -166,6 +183,8 @@ export function LoginV2() {
       return;
     }
     setError(null);
+    setPasswordError(null);
+    setNotice(null);
     setBusy(true);
     signingInHere.current = true;
     const result = await signIn(mail, password);
@@ -173,9 +192,13 @@ export function LoginV2() {
     if (result.error) {
       signingInHere.current = false;
       react("shrug");
-      setError(/invalid login credentials/i.test(result.error) ? WRONG_PASSWORD_LINE : ERROR_LINE);
+      // One message for a wrong email, a wrong password and an account with no
+      // password; only a dead connection or a rate limit is worded differently.
+      setPasswordError(result.status === 0 || /failed to fetch|network/i.test(result.error) ? OFFLINE_LINE : result.status === 429 ? ERROR_LINE : WRONG_LOGIN_LINE);
       return;
     }
+    rememberLoginMethod("password");
+    clearPasswordOffer();
     signedIn();
   };
 
@@ -214,6 +237,7 @@ export function LoginV2() {
         setError(null);
       }}
       error={view === "email" || view === "reset" ? error : null}
+      hint={view === "email" ? (notice ?? undefined) : undefined}
     />
   );
   const needEmail = !email.trim() ? "Add your email" : null;
@@ -247,31 +271,55 @@ export function LoginV2() {
             }
           />
         );
-      case "email":
+      case "email": {
+        const codeButton = (
+          <TransferButton key="code" variant="plain" disabled={busy || !!needEmail} onClick={() => void sendCode()}>
+            Send me a code
+          </TransferButton>
+        );
+        const passwordButton = (
+          <TransferButton key="password" variant="plain" disabled={busy || !!needEmail || !password} onClick={() => void logInWithPassword()}>
+            Log in with password
+          </TransferButton>
+        );
         return (
           <ScreenFrame
             title="Log in"
             footer={
-              <>
-                <TransferButton disabled={busy || !!needEmail} onClick={() => void sendCode()}>
-                  {needEmail ?? "Send me a code"}
-                </TransferButton>
-                <button type="button" className="transfer-link self-center" onClick={() => go("password")}>
-                  Use my password instead
-                </button>
-              </>
+              // Two equal buttons; the one this device used last comes first.
+              <>{method === "password" ? [passwordButton, codeButton] : [codeButton, passwordButton]}</>
             }
           >
             <form
+              className="flex flex-col gap-4"
               onSubmit={(e) => {
                 e.preventDefault();
-                void sendCode();
+                if (password || method === "password") void logInWithPassword();
+                else void sendCode();
               }}
             >
-              {emailField(true)}
+              {emailField(!focusPassword)}
+              <div>
+                <TransferField
+                  label="Password (if you have one)"
+                  type="password"
+                  autoComplete="current-password"
+                  autoFocus={focusPassword}
+                  error={passwordError}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError(null);
+                  }}
+                />
+                <button type="button" className="transfer-link mt-1" onClick={() => go("reset")}>
+                  Forgot your password?
+                </button>
+              </div>
             </form>
           </ScreenFrame>
         );
+      }
       case "code":
         return (
           <CodeEntry
@@ -279,7 +327,10 @@ export function LoginV2() {
             hero={null}
             resend={sendSignInCode}
             onDifferentEmail={() => go("email")}
-            onPassword={() => go("password")}
+            onPassword={() => {
+              setFocusPassword(true);
+              go("email");
+            }}
             footer={
               <button type="button" className="transfer-link self-center" onClick={() => navigate(getStartedHref)}>
                 New to Soosh? Get started
@@ -294,44 +345,6 @@ export function LoginV2() {
             }}
             onVerified={signedIn}
           />
-        );
-      case "password":
-        return (
-          <ScreenFrame
-            title="Log in"
-            footer={
-              <>
-                <TransferButton disabled={busy || !!needEmail || !password} onClick={() => void logInWithPassword()}>
-                  {needEmail ?? (!password ? "Add your password" : "Log in")}
-                </TransferButton>
-                <button type="button" className="transfer-link self-center" onClick={() => go("reset")}>
-                  Forgot your password?
-                </button>
-              </>
-            }
-          >
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void logInWithPassword();
-              }}
-            >
-              {emailField(!email)}
-              <TransferField
-                label="Password"
-                type="password"
-                autoComplete="current-password"
-                autoFocus={!!email}
-                error={view === "password" ? error : null}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError(null);
-                }}
-              />
-            </form>
-          </ScreenFrame>
         );
       case "reset":
         return (
@@ -357,8 +370,8 @@ export function LoginV2() {
         return (
           <ScreenFrame
             title="Check your email"
-            intro="If there’s an account for that address, a reset link is on its way. Check your spam folder if it doesn’t arrive."
-            footer={<TransferButton onClick={() => go("password")}>Log in</TransferButton>}
+            intro={resetSentLine(email.trim())}
+            footer={<TransferButton onClick={() => go("email")}>Log in</TransferButton>}
           />
         );
       case "signingin":

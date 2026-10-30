@@ -14,7 +14,7 @@ import { takeSavedInviteCode } from "../lib/inviteCode";
 import { claimInvite } from "../lib/invites";
 import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 import { friendlyError } from "../lib/friendlyError";
-import { isNoAccountError } from "../lib/authErrors";
+import { isNoAccountError, retryAfterSeconds } from "../lib/authErrors";
 import { recordSendMs, waitForTypicalSend } from "../lib/sendTiming";
 import { flushTermsAcceptance } from "../lib/termsAcceptance";
 import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
@@ -83,20 +83,20 @@ interface AuthContextType {
     password: string,
     displayName: string,
   ) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null; status?: number; code?: string }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   /** Sign in with Apple. Only offered while `appleSignInEnabled` (config.ts) is on. */
   signInWithApple: () => Promise<{ error: string | null }>;
   /** Emails a 6-digit code (new and existing accounts alike; no password). The
    * Supabase email templates have to print `{{ .Token }}`: see docs/email-templates.md. */
-  sendEmailCode: (email: string) => Promise<{ error: string | null }>;
+  sendEmailCode: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number }>;
   /**
    * The sign-in side of the code: emails a code to an existing account and
    * never creates one. An address with no account answers exactly like one
    * with an account (no error, and about as slowly), so this cannot be used,
    * and the screen cannot show, whether someone has an account.
    */
-  sendSignInCode: (email: string) => Promise<{ error: string | null }>;
+  sendSignInCode: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number }>;
   /** Checks the code from sendEmailCode and signs in. */
   verifyEmailCode: (email: string, code: string) => Promise<{ error: string | null; wrong?: boolean }>;
   /** Re-sends the signup confirmation email — the one self-service option
@@ -352,7 +352,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn: AuthContextType["signIn"] = async (email, password) => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? error.message : null };
+    return { error: error ? error.message : null, status: error?.status, code: error?.code };
   };
 
   const resendConfirmation: AuthContextType["resendConfirmation"] = async (email) => {
@@ -396,6 +396,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     try {
       const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+      // Asking too soon is a wait, not a failure: the screen says how long.
+      const wait = retryAfterSeconds(error);
+      if (wait !== null) return { error: null, retryAfterSeconds: wait };
       return { error: error ? friendlyError(error) : null };
     } catch {
       return { error: OFFLINE_LINE };
@@ -415,6 +418,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await waitForTypicalSend(startedAt);
         return { error: null };
       }
+      const wait = retryAfterSeconds(error);
+      if (wait !== null) return { error: null, retryAfterSeconds: wait };
       return { error: friendlyError(error) };
     } catch {
       return { error: OFFLINE_LINE };
@@ -459,7 +464,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     if (next.length < 10) return { error: "Your password needs at least 10 characters." };
     try {
-      const { error } = await supabase.auth.updateUser({ password: next });
+      // has_password is how Settings knows whether to say "Add a password" or
+      // "Change password" (an emailed-code account has an email identity but no password).
+      const { error } = await supabase.auth.updateUser({ password: next, data: { has_password: true } });
       return { error: error ? error.message : null };
     } catch {
       return { error: OFFLINE_LINE };

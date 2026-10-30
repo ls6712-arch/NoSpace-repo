@@ -457,19 +457,19 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 
 ### Log in (Soosh log in brief, Oct 29, 2026)
 
-**Proposed Oct 30, 2026, awaiting approval.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, the wrong code line, New code sent. and Log out from above. Existing lines kept as they were: Log in, Forgot your password?, "If there’s an account for that address, a reset link is on its way. Check your spam folder if it doesn’t arrive."
+**Proposed Oct 30, 2026, awaiting approval.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, the wrong code line, New code sent. and Log out from above. Existing line kept: Forgot your password?. Replaced by the log in brief, revision 2: Use my password instead and the separate password screen (the password is on the log in screen now) and the old reset confirmation ("If there’s an account for that address, a reset link is on its way…").
 
 | Term | Meaning |
 |---|---|
 | Welcome back. | Headline of the returning-user screen (Stubby wakes up when you tap or type) |
 | New here? Get started | Link on it, to the onboarding |
-| Log in | Heading of the email screen and of the password screen, and the password button |
-| Send me a code | Button on the email screen. Says Add your email while the field is empty |
-| Use my password instead | Link on the email screen: email and password for people who prefer it |
-| Add your password | The log in button while the password is empty |
-| That email and password didn’t match. | Wrong password (Stubby shrugs) |
+| Log in | Heading of the log in screen, and the Log in button after a reset link |
+| Send me a code · Log in with password | The two equal buttons on the log in screen; the one this device used last comes first. Either is off until what it needs is typed |
+| That email and password don’t match. | The one message for a wrong email, a wrong password and an account with no password (Stubby shrugs). Never says which |
+| Password (if you have one) | Label of the password field on the log in screen |
+| If there’s an account for {email}, we’ve sent a link. | After Send reset link, for any address |
 | Reset your password | Heading of the forgot-password screen |
-| Send reset link | Button on it. Check your email follows, with the reset line above and a Log in button |
+| Send reset link | Button on it. Check your email follows, with the line above and a Log in button |
 | Signing you in… | While the session is made (Stubby thinks) |
 
 ### The code screen, in stages (log in brief revision 3, Oct 30, 2026)
@@ -484,8 +484,18 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 | Still nothing? Check your spam folder. | Replaces the two lines above after 30 seconds |
 | Send a new code · Log in with password · Use a different email | Three equal options after 30 seconds. Sign-up has no Log in with password. Send a new code starts the 30 seconds again |
 | New to Soosh? Get started | Footer link on the log in code screen, from the first second. Opens sign-up with the email typed. Not on the sign-up code screen, where the person is already doing that |
+| You can ask for another code in {time}. | Shown under the code field, instead of an error, when too many codes were asked for. The time is worded by `formatWait` in dates.ts (45 seconds, 1 minute) |
 
-Log in with password and Use my password instead (email screen) mean the same thing; the first is the wording from the brief, so check you want both.
+### Passwords (log in brief, revisions 1 and 2)
+
+**Proposed Oct 30, 2026, awaiting approval.** A password is a real option, never a hidden link, and never required.
+
+| Term | Meaning |
+|---|---|
+| Want a password too? | Heading of the one optional screen after an email code is accepted at sign-up (not a numbered step; never shown after Google or Apple) |
+| Optional. You can always log in with a code. | Line under it, and under Add a password in Settings |
+| Add a password · Skip for now | The two equal answers on that screen. Add a password is also the Settings > Account button for an account without a password |
+| Change password | Settings > Account button for an account that has one (as before) |
 
 ## Retired terms
 
@@ -497,3 +507,4 @@ Never use these in UI copy.
 | See all rooms | Oct 28, 2026 (UI removed) | See all |
 | We sent a 6-digit code to {email}. | Oct 30, 2026 | Check your inbox at {email}. |
 | Send a new code in {n} seconds | Oct 30, 2026 | Send a new code in {m:ss} |
+| That email and password didn’t match. | Oct 30, 2026 | That email and password don’t match. |

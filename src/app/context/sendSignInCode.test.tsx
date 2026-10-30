@@ -3,12 +3,14 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const otp = vi.hoisted(() => ({ fn: vi.fn() }));
+const otp = vi.hoisted(() => ({ fn: vi.fn(), password: vi.fn(), update: vi.fn() }));
 vi.mock("../../lib/supabase", () => ({
   isSupabaseConfigured: true,
   supabase: {
     auth: {
       signInWithOtp: otp.fn,
+      signInWithPassword: otp.password,
+      updateUser: otp.update,
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
     },
@@ -23,6 +25,8 @@ const wrapper = ({ children }: { children: ReactNode }) => <AuthProvider>{childr
 beforeEach(() => {
   sessionStorage.clear();
   otp.fn.mockReset();
+  otp.password.mockReset();
+  otp.update.mockReset();
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 afterEach(() => {
@@ -67,9 +71,43 @@ describe("sendSignInCode", () => {
     expect(unknown.took).toBeGreaterThanOrEqual(1500);
   });
 
-  it("still reports a real failure, such as the rate limit", async () => {
-    otp.fn.mockResolvedValue({ error: { status: 429, code: "over_email_send_rate_limit", message: "email rate limit exceeded", name: "AuthApiError" } });
-    const limited = await timed("mia@example.com");
-    expect(limited.answer?.error).toBeTruthy();
+  it("still reports a real failure, such as the mail server being down", async () => {
+    otp.fn.mockResolvedValue({ error: { status: 500, code: "unexpected_failure", message: "Error sending magic link email", name: "AuthApiError" } });
+    const failed = await timed("mia@example.com");
+    expect(failed.answer?.error).toBeTruthy();
+  });
+});
+
+describe("the rest of the sign-in calls", () => {
+  it("reports asking for too many codes as a wait, not a failure (log in and sign-up)", async () => {
+    otp.fn.mockResolvedValue({ error: { status: 429, code: "over_email_send_rate_limit", message: "For security purposes, you can only request this after 52 seconds." } });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    let login: unknown;
+    let signup: unknown;
+    await act(async () => {
+      login = await result.current.sendSignInCode("mia@example.com");
+      signup = await result.current.sendEmailCode("mia@example.com");
+    });
+    expect(login).toEqual({ error: null, retryAfterSeconds: 52 });
+    expect(signup).toEqual({ error: null, retryAfterSeconds: 52 });
+  });
+
+  it("hands the log in screen the status of a failed password log in, and nothing that says why", async () => {
+    otp.password.mockResolvedValue({ error: { message: "Invalid login credentials", status: 400, code: "invalid_credentials" } });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    let answer: unknown;
+    await act(async () => {
+      answer = await result.current.signIn("mia@example.com", "wrong-password");
+    });
+    expect(answer).toEqual({ error: "Invalid login credentials", status: 400, code: "invalid_credentials" });
+  });
+
+  it("records that the account has a password when one is added", async () => {
+    otp.update.mockResolvedValue({ error: null });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await act(async () => {
+      await result.current.updatePassword("a-long-password");
+    });
+    expect(otp.update).toHaveBeenCalledWith({ password: "a-long-password", data: { has_password: true } });
   });
 });

@@ -4,8 +4,9 @@ import { TermsCheckbox } from "../../../components/TermsCheckbox";
 import { TransferButton } from "../../../components/onboarding/TransferButton";
 import { TransferField } from "../../../components/onboarding/TransferField";
 import { appleSignInEnabled } from "../../../config";
+import { codeWaitLine } from "../../../lib/authCopy";
 import { useAuth } from "../../../context/AuthContext";
-import { rememberEmail, rememberRedirect } from "../../../lib/onboardingProgress";
+import { clearPasswordOffer, markPasswordOffer, rememberEmail, rememberRedirect } from "../../../lib/onboardingProgress";
 import { rememberTermsAcceptance } from "../../../lib/termsAcceptance";
 import { useOnboarding } from "../OnboardingContext";
 import { StepStubby } from "../StepStubby";
@@ -24,6 +25,7 @@ export function SignUpScreen() {
   const [emailOpen, setEmailOpen] = useState(!!carried);
   const [email, setEmail] = useState(carried);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   // Google and Apple leave the page and come back to the site root, so the
@@ -34,6 +36,8 @@ export function SignUpScreen() {
     setBusy(true);
     rememberTermsAcceptance();
     rememberRedirect(redirectTo);
+    // Google and Apple have no code step, so no password is offered.
+    clearPasswordOffer();
     const result = await start();
     if (result.error) {
       setError(result.error);
@@ -53,11 +57,19 @@ export function SignUpScreen() {
     rememberTermsAcceptance();
     const result = await sendEmailCode(mail);
     setBusy(false);
+    // Asked for too many: a wait, not an error.
+    if (result.retryAfterSeconds) {
+      setNotice(codeWaitLine(result.retryAfterSeconds));
+      return;
+    }
     if (result.error) {
       setError(result.error);
       return;
     }
     rememberEmail(mail);
+    // Set now, not when the code is accepted: the account exists (and the name
+    // screen mounts) the moment the code checks out, before anything could set it then.
+    markPasswordOffer();
     next();
   };
 
@@ -86,6 +98,7 @@ export function SignUpScreen() {
                 setError(null);
               }}
               error={error}
+              hint={notice ?? undefined}
             />
             <TransferButton type="submit" disabled={busy || !agreed || !email.trim()}>
               {!email.trim() ? "Add your email" : "Continue"}

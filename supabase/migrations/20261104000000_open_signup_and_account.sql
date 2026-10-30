@@ -29,6 +29,11 @@
 --                            longer be cleared, so nobody can "keep" an account
 --                            that is due for the next purge (this is what stops an
 --                            under-18 account cancelling its own removal).
+--   has_password             every account that already has a password is marked
+--                            (auth.users.raw_user_meta_data.has_password = true), so
+--                            Settings can say "Change password" for them and
+--                            "Add a password" for an account made with a code or
+--                            Google. The app sets the same flag when a password is added.
 --   handle_new_user()        now makes a usable, unique username from the email
 --                            prefix (it used to copy it as it was and could collide).
 --
@@ -403,3 +408,15 @@ revoke all on function private.guard_deletion_cancel() from public;
 create trigger profiles_guard_deletion_cancel
   before update of deletion_requested_at on public.profiles
   for each row execute function private.guard_deletion_cancel();
+
+-- 7. Which accounts already have a password ---------------------------------
+--
+-- Supabase gives no way to ask. An emailed-code account and a password account
+-- both have an email identity, so the app keeps its own flag. Accounts with a
+-- stored password hash get it now; the app sets it whenever a password is added.
+-- An account with no hash (Google, Apple, a code) gets nothing.
+
+update auth.users u
+set raw_user_meta_data = coalesce(u.raw_user_meta_data, '{}'::jsonb) || '{"has_password": true}'::jsonb
+where coalesce(u.encrypted_password, '') <> ''
+  and coalesce(u.raw_user_meta_data ->> 'has_password', '') <> 'true';

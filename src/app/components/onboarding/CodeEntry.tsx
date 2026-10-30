@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ScreenFrame } from "../../pages/onboarding/screens/ScreenFrame";
 import { useAuth } from "../../context/AuthContext";
+import { codeWaitLine } from "../../lib/authCopy";
 import { formatCountdown } from "../../lib/countdown";
 import { TransferButton } from "./TransferButton";
 import { TransferField } from "./TransferField";
@@ -36,7 +37,7 @@ export function CodeEntry({
 }: {
   email: string;
   hero: ReactNode;
-  resend: (email: string) => Promise<{ error: string | null }>;
+  resend: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number }>;
   onChecking?: (checking: boolean) => void;
   onWrong: () => void;
   onVerified: () => void;
@@ -53,6 +54,10 @@ export function CodeEntry({
   const [sentNew, setSentNew] = useState(false);
   const [wait, setWait] = useState(RESEND_AFTER_S);
   const [sending, setSending] = useState(false);
+  // Seconds left before another code can be asked for, after the limit was hit. Not an error.
+  const [limitWait, setLimitWait] = useState(0);
+  // Worded once when the limit is hit, so a screen reader hears it once, not every second.
+  const [limitLine, setLimitLine] = useState("");
   const checked = useRef("");
   const late = wait <= 0;
 
@@ -61,6 +66,12 @@ export function CodeEntry({
     const id = setTimeout(() => setWait((w) => w - 1), 1000);
     return () => clearTimeout(id);
   }, [wait]);
+
+  useEffect(() => {
+    if (limitWait <= 0) return;
+    const id = setTimeout(() => setLimitWait((w) => w - 1), 1000);
+    return () => clearTimeout(id);
+  }, [limitWait]);
 
   const check = useCallback(
     async (digits: string) => {
@@ -83,17 +94,23 @@ export function CodeEntry({
   );
 
   const sendNew = async () => {
-    if (!late || sending) return;
+    if (!late || sending || limitWait > 0) return;
     setSending(true);
     setError(null);
     const result = await resend(email);
     setSending(false);
+    if (result.retryAfterSeconds) {
+      setLimitLine(codeWaitLine(result.retryAfterSeconds));
+      setLimitWait(result.retryAfterSeconds);
+      return;
+    }
     if (result.error) {
       setError(result.error);
       return;
     }
     setCode("");
     checked.current = "";
+    setLimitWait(0);
     setSentNew(true);
     setWait(RESEND_AFTER_S);
   };
@@ -124,13 +141,13 @@ export function CodeEntry({
           else checked.current = "";
         }}
         error={error}
-        hint={sentNew ? "New code sent." : undefined}
+        hint={limitWait > 0 ? limitLine : sentNew ? "New code sent." : undefined}
       />
       {/* Announced once when the second stage starts; the ticking countdown is outside it on purpose. */}
       <div aria-live="polite">{late && <p className="text-body transfer-muted">Still nothing? Check your spam folder.</p>}</div>
       {late ? (
         <div className="flex flex-col gap-3">
-          <TransferButton variant="plain" disabled={sending} onClick={() => void sendNew()}>
+          <TransferButton variant="plain" disabled={sending || limitWait > 0} onClick={() => void sendNew()}>
             Send a new code
           </TransferButton>
           {onPassword && (

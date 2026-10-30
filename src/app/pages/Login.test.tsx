@@ -25,6 +25,7 @@ const auth = vi.hoisted(() => ({
   verifyEmailCode: vi.fn(),
   resendConfirmation: vi.fn(),
   resetPassword: vi.fn(),
+  updatePassword: vi.fn(),
 }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => auth }));
 
@@ -55,6 +56,7 @@ beforeEach(() => {
   flag.on = true;
   Object.assign(auth, { user: null, profile: null, loading: false, isConfigured: true });
   for (const k of ["signUp", "signIn", "sendEmailCode", "sendSignInCode", "signInWithGoogle", "resetPassword"] as const) auth[k].mockReset();
+  localStorage.clear();
   auth.signInWithGoogle.mockResolvedValue({ error: null });
   sessionStorage.clear();
 });
@@ -97,11 +99,43 @@ describe("log in screens", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue with email" }));
   });
 
-  it("shows the password only behind 'Use my password instead'", async () => {
+  it("puts the password on the log in screen as a real option, not behind a link", () => {
     renderAt("/login?mode=signin&view=email");
-    expect(screen.queryByLabelText("Password")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Use my password instead" }));
-    await waitFor(() => expect(screen.getByLabelText("Password")).toBeTruthy());
+    expect(screen.getByLabelText("Email")).toBeTruthy();
+    expect(screen.getByLabelText("Password (if you have one)")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Use my password instead" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Forgot your password?" })).toBeTruthy();
+  });
+
+  it("has two equal buttons, the code first until a password has been used", () => {
+    renderAt("/login?mode=signin&view=email");
+    const buttons = screen.getAllByRole("button").filter((b) => /^(Send me a code|Log in with password)$/.test(b.textContent ?? ""));
+    expect(buttons.map((b) => b.textContent)).toEqual(["Send me a code", "Log in with password"]);
+    // Equal: the same kind of button, neither the primary one.
+    expect(new Set(buttons.map((b) => b.getAttribute("data-variant")))).toEqual(new Set(["plain"]));
+  });
+
+  it("shows the method this device used last first", () => {
+    localStorage.setItem("soosh.login.method", "password");
+    renderAt("/login?mode=signin&view=email");
+    const buttons = screen.getAllByRole("button").filter((b) => /^(Send me a code|Log in with password)$/.test(b.textContent ?? ""));
+    expect(buttons.map((b) => b.textContent)).toEqual(["Log in with password", "Send me a code"]);
+  });
+
+  it("remembers a code, and a password, as the last method", async () => {
+    auth.sendSignInCode.mockResolvedValue({ error: null });
+    renderAt("/login?mode=signin&view=email");
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send me a code" }));
+    await waitFor(() => expect(screen.getByLabelText("Code")).toBeTruthy());
+    expect(localStorage.getItem("soosh.login.method")).toBe("code");
+    cleanup();
+    auth.signIn.mockResolvedValue({ error: null });
+    renderAt("/login?mode=signin&view=email");
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password (if you have one)"), { target: { value: "a-long-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Log in with password" }));
+    await waitFor(() => expect(localStorage.getItem("soosh.login.method")).toBe("password"));
   });
 
   it("treats an email nobody has exactly like one that has an account", async () => {
@@ -128,14 +162,60 @@ describe("log in screens", () => {
     expect(screen.getByRole("heading", { name: "Check your inbox at mia@example.com." })).toBeTruthy();
   });
 
-  it("shrugs at a wrong password and says so", async () => {
-    auth.signIn.mockResolvedValue({ error: "Invalid login credentials" });
-    renderAt("/login?mode=signin&view=password");
+  it("says the same thing for a wrong email, a wrong password and an account with no password", async () => {
+    const failures = [
+      { error: "Invalid login credentials", status: 400, code: "invalid_credentials" }, // wrong password, or no such email
+      { error: "Invalid login credentials", status: 400, code: "invalid_credentials" }, // an account with no password
+      { error: "Email not confirmed", status: 400, code: "email_not_confirmed" }, // would otherwise show the account exists
+      { error: "User not found", status: 400, code: "user_not_found" },
+    ];
+    const lines: (string | null)[] = [];
+    for (const failure of failures) {
+      cleanup();
+      auth.signIn.mockResolvedValue(failure);
+      renderAt("/login?mode=signin&view=email");
+      fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
+      fireEvent.change(screen.getByLabelText("Password (if you have one)"), { target: { value: "wrong-password" } });
+      fireEvent.click(screen.getByRole("button", { name: "Log in with password" }));
+      await waitFor(() => expect(screen.getByText("That email and password don’t match.")).toBeTruthy());
+      lines.push(screen.getByText("That email and password don’t match.").textContent);
+      expect(stubby()).toBe("shrug");
+    }
+    expect(new Set(lines).size).toBe(1);
+  });
+
+  it("says a dead connection is a dead connection", async () => {
+    auth.signIn.mockResolvedValue({ error: "Failed to fetch", status: 0 });
+    renderAt("/login?mode=signin&view=email");
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "wrong-password" } });
-    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
-    await waitFor(() => expect(screen.getByText("That email and password didn’t match.")).toBeTruthy());
-    expect(stubby()).toBe("shrug");
+    fireEvent.change(screen.getByLabelText("Password (if you have one)"), { target: { value: "a-long-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Log in with password" }));
+    await waitFor(() => expect(screen.getByText("You’re offline. Anything you’ve typed stays put.")).toBeTruthy());
+  });
+
+  it("confirms a password reset the same way whether or not there is an account", async () => {
+    auth.resetPassword.mockResolvedValue({ error: null });
+    const seen: string[] = [];
+    for (const mail of ["mia@example.com", "nobody@example.com"]) {
+      cleanup();
+      renderAt("/login?mode=signin&view=reset");
+      fireEvent.change(screen.getByLabelText("Email"), { target: { value: mail } });
+      fireEvent.click(screen.getByRole("button", { name: "Send reset link" }));
+      await waitFor(() => expect(screen.getByText(`If there’s an account for ${mail}, we’ve sent a link.`)).toBeTruthy());
+      seen.push((screen.getByText(`If there’s an account for ${mail}, we’ve sent a link.`).textContent ?? "").replace(mail, "{email}"));
+    }
+    expect(new Set(seen).size).toBe(1);
+  });
+
+  it("shows how long to wait, not an error, when too many codes were asked for", async () => {
+    auth.sendSignInCode.mockResolvedValue({ error: null, retryAfterSeconds: 52 });
+    renderAt("/login?mode=signin&view=email");
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send me a code" }));
+    await waitFor(() => expect(screen.getByText("You can ask for another code in 52 seconds.")).toBeTruthy());
+    // Still on the same screen, no failure wording, and no code field yet.
+    expect(screen.queryByLabelText("Code")).toBeNull();
+    expect(screen.queryByText(/Something went wrong/)).toBeNull();
   });
 
   it("waits to be signed in on 'Signing you in…' and leaves for the right place", async () => {
@@ -168,7 +248,8 @@ describe("the code screen, in stages", () => {
     expect(screen.getByText("Codes usually arrive in under a minute.")).toBeTruthy();
     expect(screen.getByText("Send a new code in 0:30")).toBeTruthy();
     expect(screen.queryByText("Still nothing? Check your spam folder.")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Log in with password" })).toBeNull();
+    // (The email screen is still sliding out for a moment; its button is not part of this screen.)
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Log in with password" })).toBeNull());
     // The code field is a one-time-code field.
     expect(screen.getByLabelText("Code").getAttribute("autocomplete")).toBe("one-time-code");
     // "New to Soosh? Get started" is there from the start.

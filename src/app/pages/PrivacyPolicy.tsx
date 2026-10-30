@@ -10,7 +10,7 @@ import { APP_NAME } from "../config";
 
 export function PrivacyPolicy() {
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 9, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="October 30, 2026">
       <h2>What we collect</h2>
       <p>
         Your email, display name, and password (or your Google account, if you log in
@@ -20,9 +20,10 @@ export function PrivacyPolicy() {
         join the waitlist before you have an invite, we keep the email and the optional
         "what do you make?" answer you give us.
       </p>
-      {/* TODO(landing page spec §4, deferred to its own PR): once the age
-          gate ships, this section needs a line for date of birth — not
-          added yet since nothing collects it today. */}
+      <p>
+        We ask for your date of birth to confirm you’re 18 or over. It’s kept private,
+        never shown on your profile or to anyone else, and never used for ads.
+      </p>
 
       <h2>Who else sees it</h2>
       <p>

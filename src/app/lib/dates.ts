@@ -13,6 +13,8 @@
  * next. Pass `timeZone` for anything tied to a place (Space events).
  */
 
+import { plural } from "./plural";
+
 export type DateInput = number | string | Date;
 
 const LOCALE = "en-US";
@@ -191,4 +193,17 @@ export function formatDuration(minutes: number): string {
   if (!Number.isFinite(minutes) || minutes <= 0) return "";
   const m = Math.round(minutes);
   return m >= 60 && m % 60 === 0 ? `${m / 60} hr` : `${m} min`;
+}
+
+/**
+ * How long until something can be asked for again, in words: "45 seconds",
+ * "1 minute", "5 minutes", "2 hours". Rounds up, so it never promises sooner
+ * than it is. Empty for zero or less.
+ */
+export function formatWait(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "";
+  const s = Math.ceil(seconds);
+  if (s < 60) return plural(s, "second");
+  if (s < 3600) return plural(Math.ceil(s / 60), "minute");
+  return plural(Math.ceil(s / 3600), "hour");
 }

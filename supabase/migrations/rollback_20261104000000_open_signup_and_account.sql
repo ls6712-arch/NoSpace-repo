@@ -5,6 +5,9 @@
 
 alter table public.profiles alter column access set default 'pending';
 
+-- Removes the has_password marker from every account (including ones set since by the app).
+update auth.users u set raw_user_meta_data = u.raw_user_meta_data - 'has_password' where u.raw_user_meta_data ? 'has_password';
+
 drop trigger if exists profiles_guard_deletion_cancel on public.profiles;
 drop function if exists private.guard_deletion_cancel();
 drop function if exists public.remove_underage_account();

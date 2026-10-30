@@ -39,7 +39,7 @@ export const extraConceptsEnabled = false;
 // it when the Terms or Privacy Policy change in a way people should accept
 // again, and when the real text replaces the draft. Never a future date: the
 // database refuses one more than a day ahead.
-export const TERMS_VERSION = "2026-10-08";
+export const TERMS_VERSION = "2026-10-30";
 
 // Onboarding's first step normally uses its own short "first Moment" form.
 // When this is on, it shows the one Log a Moment form instead (same fields,

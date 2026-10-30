@@ -96,3 +96,30 @@ export function takeRedirect(): string | null {
     return null;
   }
 }
+
+// "Want a password too?" is offered once, right after an email code is accepted
+// (never to Google or Apple, which have no code step). It is not one of the
+// numbered screens, so it is a flag that makes the name screen show the offer
+// first; for this tab only.
+const OFFER_KEY = "soosh.onboarding.passwordOffer";
+export function markPasswordOffer(): void {
+  try {
+    sessionStorage.setItem(OFFER_KEY, "1");
+  } catch {
+    // Without it the offer is simply not shown.
+  }
+}
+export function readPasswordOffer(): boolean {
+  try {
+    return sessionStorage.getItem(OFFER_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+export function clearPasswordOffer(): void {
+  try {
+    sessionStorage.removeItem(OFFER_KEY);
+  } catch {
+    // Nothing stored, nothing to clear.
+  }
+}
