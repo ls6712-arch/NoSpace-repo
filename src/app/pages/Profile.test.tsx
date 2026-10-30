@@ -285,6 +285,23 @@ describe("Pursuit actions", () => {
     await screen.findByRole("button", { name: "Finish" });
   };
 
+  it("asks only for that Pursuit's Moments, never the whole list", async () => {
+    api.fetchProfile.mockImplementation(() => ok(owner));
+    api.fetchPursuits.mockImplementation(() => ok([pursuit({ id: "a", goal: "Send my first V4" }), pursuit({ id: "b", goal: "Learn the wheel", category: "Pottery" })]));
+    api.fetchMoments.mockImplementation(() => ok({ total: 0, items: [] }));
+    show("/you?tab=pursuits");
+    fireEvent.click(await screen.findByRole("button", { name: /Send my first V4/ }));
+    await waitFor(() => expect(api.fetchMoments).toHaveBeenCalledWith("p1", 100, 0, "a"));
+    // Every Moments request while a detail is open names the Pursuit: none is unfiltered.
+    expect(api.fetchMoments.mock.calls.every((c) => c[3] === "a")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Finish" })).toBeNull());
+    api.fetchMoments.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: /Learn the wheel/ }));
+    await waitFor(() => expect(api.fetchMoments).toHaveBeenCalledWith("p1", 100, 0, "b"));
+    expect(api.fetchMoments.mock.calls.every((c) => c[3] === "b")).toBe(true);
+  });
+
   it("says Finish, not Mark finished, and finishes right away", async () => {
     api.setPursuitFinished.mockImplementation(() => ok(null));
     await open();

@@ -944,6 +944,24 @@ begin
     then ' PASS the author is never told about their own share' else ' FAIL author notified' end);
 
 
+  -- The Pursuit filter on the Moments read returns only that Pursuit's Moments.
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  v_j := public.get_profile_moments(v_a, 60, 0, 'pcheck-a-climb');
+  v_i := v_i + 1;
+  v_b := (v_j ->> 'total')::int = (select count(*) from public.posts po where po.user_id = v_a and po.pursuit_id = 'pcheck-a-climb')
+     and (v_j ->> 'total')::int >= 1
+     and (v_j ->> 'total')::int < (public.get_profile_moments(v_a) ->> 'total')::int
+     and not exists (select 1 from jsonb_array_elements(v_j -> 'items') e where (e ->> 'id')::bigint not in
+           (select po.id from public.posts po where po.pursuit_id = 'pcheck-a-climb'));
+  results := results || (v_i || case when v_b then ' PASS the Pursuit filter returns only that Pursuit''s Moments (fewer than the whole list)' else ' FAIL Pursuit filter: ' || v_j::text end);
+  perform set_config('request.jwt.claim.sub', v_f::text, true);
+  v_j := public.get_profile_moments(v_a, 60, 0, 'pcheck-a-climb');
+  v_i := v_i + 1;
+  v_b := not exists (select 1 from jsonb_array_elements(v_j -> 'items') e where (e ->> 'id')::bigint not in
+           (select po.id from public.posts po where po.pursuit_id = 'pcheck-a-climb'))
+     and (public.get_profile_moments(v_a, 60, 0, 'no-such-pursuit') ->> 'total')::int = 0;
+  results := results || (v_i || case when v_b then ' PASS the filter holds for a friend too, and an unknown Pursuit returns nothing' else ' FAIL friend Pursuit filter' end);
+
   -- Cascade: a deleted user takes their planning and plans with them.
   v_i := v_i + 1;
   v_b := (select bool_and(c.confdeltype = 'c') from pg_constraint c
