@@ -235,7 +235,8 @@ describe("New user", () => {
     expect(await screen.findByText("Add your neighborhood and a short bio")).toBeTruthy();
     expect(screen.getByText("Level 1 of 8")).toBeTruthy();
     expect(screen.getByText("Log 1 Moment to earn your first Stub and reach First Step.")).toBeTruthy();
-    expect(screen.getByText("Your Moments show up here. Friends see the day and neighborhood, never the exact time.")).toBeTruthy();
+    expect(screen.getByText("Your Moments show up here.")).toBeTruthy();
+    expect(screen.queryByText(/never the exact time/)).toBeNull();
     expect(screen.getAllByText("Add").length).toBe(5);
     expect(screen.getByText("Add when you’re usually free to get plan suggestions.")).toBeTruthy();
   });

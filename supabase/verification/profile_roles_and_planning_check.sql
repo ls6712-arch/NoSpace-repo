@@ -39,6 +39,8 @@ declare
   v_post2 bigint;
   v_post3 bigint;
   v_post4 bigint;
+  v_post5 bigint;
+  v_post6 bigint;
   v_u uuid;
 begin
   if not exists (
@@ -628,6 +630,100 @@ begin
   perform public.delete_profile_pursuit('pcheck-a-solo');
   results := results || (v_i || case when not exists (select 1 from public.pursuits pu where pu.id = 'pcheck-a-solo')
     then ' PASS the owner can delete a Pursuit' else ' FAIL delete' end);
+
+
+  -- Row policy: a Moment cannot be selected by a non-owner until visible_at -----
+  -- M's Moments, read directly as each kind of viewer: M owns them, F is M's friend,
+  -- W follows M one way, P is a stranger, and anon is signed out.
+  insert into public.profile_follows (follower_id, followed_id, status) values (v_w, v_m, 'accepted')
+    on conflict (follower_id, followed_id) do nothing;
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, sub_hobby)
+  values (v_m, 'sports-fitness', 'photo', 'u/m/1.jpg', 'Policy public', 'public', 'Climbing');
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, sub_hobby)
+  values (v_m, 'sports-fitness', 'photo', 'u/m/2.jpg', 'Policy followers', 'followers', 'Climbing');
+  v_post5 := (select po.id from public.posts po where po.user_id = v_m and po.caption = 'Policy public');
+  v_post6 := (select po.id from public.posts po where po.user_id = v_m and po.caption = 'Policy followers');
+
+  -- Held back (visible_at is 2 hours out from the trigger default).
+  v_t := '';
+  foreach v_u in array array[v_m, v_f, v_w, v_p, null::uuid] loop
+    begin
+      perform set_config('request.jwt.claim.sub', coalesce(v_u::text, ''), true);
+      if v_u is null then set local role anon; else set local role authenticated; end if;
+      v_n := (select count(*) from public.posts po where po.id in (v_post5, v_post6));
+      reset role;
+      v_t := v_t || v_n || ',';
+    exception
+      when others then
+        reset role;
+        v_t := v_t || 'ERR ' || sqlstate || ',';
+    end;
+  end loop;
+  v_i := v_i + 1;
+  results := results || (v_i || case when v_t = '2,0,0,0,0,' then ' PASS before visible_at only the owner can select a Moment (friend, follower, stranger, anon see none)' else ' FAIL held-back Moments: ' || v_t end);
+
+  -- The owner can also read its created_at; nobody else can read the row at all.
+  perform set_config('request.jwt.claim.sub', v_f::text, true);
+  v_i := v_i + 1;
+  begin
+    set local role authenticated;
+    v_n := (select count(*) from public.posts po where po.id = v_post5 and po.created_at is not null);
+    reset role;
+    results := results || (v_i || case when v_n = 0 then ' PASS a friend cannot read created_at of a held-back Moment' else ' FAIL created_at leaked' end);
+  exception
+    when others then
+      reset role;
+      results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+
+  -- Released: visible_at in the past.
+  update public.posts po set visible_at = now() - interval '1 minute' where po.id in (v_post5, v_post6);
+  v_t := '';
+  foreach v_u in array array[v_m, v_f, v_w, v_p, null::uuid] loop
+    begin
+      perform set_config('request.jwt.claim.sub', coalesce(v_u::text, ''), true);
+      if v_u is null then set local role anon; else set local role authenticated; end if;
+      v_n := (select count(*) from public.posts po where po.id = v_post5);
+      v_t := v_t || v_n || '/' || (select count(*) from public.posts po where po.id = v_post6) || ',';
+      reset role;
+    exception
+      when others then
+        reset role;
+        v_t := v_t || 'ERR ' || sqlstate || ',';
+    end;
+  end loop;
+  v_i := v_i + 1;
+  -- owner 1/1, friend 1/1, follower 1/1, stranger 1/0 (followers-only stays closed), anon 1/0
+  results := results || (v_i || case when v_t = '1/1,1/1,1/1,1/0,1/0,' then ' PASS after visible_at the row is readable by its audience (public to all, followers-only to followers and friends)' else ' FAIL released Moments: ' || v_t end);
+
+  -- Old Moments with no visible_at stay readable.
+  update public.posts po set visible_at = null where po.id = v_post5;
+  perform set_config('request.jwt.claim.sub', v_p::text, true);
+  v_i := v_i + 1;
+  begin
+    set local role authenticated;
+    v_n := (select count(*) from public.posts po where po.id = v_post5);
+    reset role;
+    results := results || (v_i || case when v_n = 1 then ' PASS a Moment with no visible_at stays readable' else ' FAIL null visible_at hid the row' end);
+  exception
+    when others then
+      reset role;
+      results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+
+  -- Delayed again: closed for the stranger once more.
+  update public.posts po set visible_at = now() + interval '1 hour' where po.id = v_post5;
+  v_i := v_i + 1;
+  begin
+    set local role authenticated;
+    v_n := (select count(*) from public.posts po where po.id = v_post5);
+    reset role;
+    results := results || (v_i || case when v_n = 0 then ' PASS a Moment held back again is closed again' else ' FAIL re-held Moment readable' end);
+  exception
+    when others then
+      reset role;
+      results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
 
   -- Cascade: a deleted user takes their planning and plans with them.
   v_i := v_i + 1;

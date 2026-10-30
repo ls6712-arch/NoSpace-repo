@@ -38,3 +38,32 @@ alter table public.posts drop column if exists visible_at, drop column if exists
 alter table public.pursuits drop column if exists target_moments, drop column if exists archived_at;
 alter table public.profiles drop constraint if exists profiles_bio_120;
 alter table public.profiles drop column if exists planning_paused, drop column if exists is_private, drop column if exists neighborhood;
+
+-- Put the two posts SELECT policies back as they were before this migration.
+drop policy if exists "posts are readable by their audience" on public.posts;
+create policy "posts are readable by their audience" on public.posts
+  for select
+  using (
+    ((select auth.uid()) = user_id)
+    or (visibility = 'public' and public.is_visible_profile(user_id))
+    or (
+      visibility = 'followers'
+      and (select auth.uid()) is not null
+      and public.is_visible_profile(user_id)
+      and exists (
+        select 1 from public.profile_follows pf
+         where pf.followed_id = posts.user_id
+           and pf.follower_id = (select auth.uid())
+           and pf.status = 'accepted'
+      )
+    )
+  );
+drop policy if exists "group posts are readable by the group" on public.posts;
+create policy "group posts are readable by the group" on public.posts
+  for select to authenticated
+  using (
+    audience = 'group'
+    and pursuit_id is not null
+    and public.is_pursuit_participant(pursuit_id, (select auth.uid()))
+    and public.is_visible_profile(user_id)
+  );

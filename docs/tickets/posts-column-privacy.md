@@ -1,6 +1,6 @@
 # Ticket: lock down posts.starts_at, posts.location_name and posts.created_at
 
-**Status:** open, deferred from the profile PR. **Size:** medium, about 6 to 9 working days (breakdown below).
+**Status:** open, deferred from the profile PR (the row-policy step already shipped there). **Size:** medium, about 6 to 9 working days in total (breakdown below).
 
 ## Problem
 
@@ -28,7 +28,7 @@ The Log flow must not write an exact place or time for an ordinary Moment until 
 
 ## Proposed design
 
-1. **Rows first (smallest, do this one even if the rest slips).** Add `coalesce(posts.visible_at, posts.created_at) <= now()`
+1. **Rows first (shipped in the profile PR, migration `20261109000000`).** Add `coalesce(posts.visible_at, posts.created_at) <= now()`
    to both non-owner read policies on `posts` ("posts are readable by their audience" and "group posts are readable by the group").
    The owner keeps full access. This alone satisfies goal 2: a Moment inside its delay cannot be selected, so its
    `created_at` cannot be read.
@@ -66,6 +66,15 @@ none is known to today, but a "select *" inside any of them would break once col
 **Not affected:** the profile functions (`get_profile_moments`, `get_profile_stubs`, `get_profile_pursuits`), which are
 `security definer` and read `post_private`, never the old columns.
 
+## Copy to restore when this ships
+
+The first-run Moments caption on the profile now reads only "Your Moments show up here." Once the
+three columns are locked down, restore the full caption: **"Your Moments show up here. Friends see
+the day and neighborhood, never the exact time."** Change it in
+`src/app/components/profile/MomentsPane.tsx` (`NewOwnerGrid`), in the first-run test in
+`src/app/pages/Profile.test.tsx`, and in the matching row in `docs/glossary.md`. The owner's
+"Visible to others at …" label stays as it is.
+
 ## Risks
 
 - **Coordinated deploy.** Once a column is revoked, any query that names it fails with "permission denied for column".
@@ -85,4 +94,6 @@ none is known to today, but a "select *" inside any of them would break once col
 | Tests (mapper, feed ordering, Log guard update, e2e of an Activity) and staging soak | 1 to 2 |
 | Two-step deploy and a watch of the logs | 0.5 |
 
-Step 1 of the design (the row policy) is about half a day by itself and closes the delay leak.
+Step 1 of the design (the row policy) shipped in the profile PR and closes the `created_at` leak during the delay, so the
+remaining work is about 5.5 to 8.5 days. Because of it, a Moment is now invisible to everyone but its owner for 2 hours: check
+Home, Spaces, Corners and chat shares on staging for anything that expects a new Moment to show at once.

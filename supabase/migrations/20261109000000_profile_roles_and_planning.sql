@@ -24,7 +24,7 @@
 --     anyone but the owner. Friends only ever see output of suggest_plan().
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
--- Rollback: rollback_20261109000000_profile_roles_and_planning.sql.
+-- Rollback: rollback_20261109000000_profile_roles_and_planning.sql (it also puts the two posts policies back).
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. Columns
@@ -133,6 +133,47 @@ end;
 $$;
 revoke all on function public.get_my_post_private(bigint[]), public.set_post_private(bigint, timestamptz, text, text) from public, anon;
 grant execute on function public.get_my_post_private(bigint[]), public.set_post_private(bigint, timestamptz, text, text) to authenticated;
+
+-- A Moment cannot be selected by anyone but its owner until visible_at (2 hours
+-- after it is posted; a null visible_at on an old Moment counts as visible).
+-- This replaces the two existing SELECT policies on posts with the same rules
+-- plus that condition, so created_at (and every other column) of a held-back
+-- Moment is unreadable by a non-owner, not just hidden by the profile functions.
+-- The owner's branch is unchanged. Policies on other commands are not touched.
+drop policy "posts are readable by their audience" on public.posts;
+create policy "posts are readable by their audience" on public.posts
+  for select
+  using (
+    ((select auth.uid()) = posts.user_id)
+    or (
+      coalesce(posts.visible_at, posts.created_at) <= now()
+      and (
+        (posts.visibility = 'public' and public.is_visible_profile(posts.user_id))
+        or (
+          posts.visibility = 'followers'
+          and (select auth.uid()) is not null
+          and public.is_visible_profile(posts.user_id)
+          and exists (
+            select 1 from public.profile_follows pf
+             where pf.followed_id = posts.user_id
+               and pf.follower_id = (select auth.uid())
+               and pf.status = 'accepted'
+          )
+        )
+      )
+    )
+  );
+
+drop policy "group posts are readable by the group" on public.posts;
+create policy "group posts are readable by the group" on public.posts
+  for select to authenticated
+  using (
+    posts.audience = 'group'
+    and posts.pursuit_id is not null
+    and coalesce(posts.visible_at, posts.created_at) <= now()
+    and public.is_pursuit_participant(posts.pursuit_id, (select auth.uid()))
+    and public.is_visible_profile(posts.user_id)
+  );
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 2. A Pursuit with a target finishes itself when its last Moment lands

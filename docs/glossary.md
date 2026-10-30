@@ -585,6 +585,7 @@ The profile rebuild (`/you`, `/u/:username`). **Every row below is a new string,
 | Archived · n | Third filter pill on your own Pursuits tab, shown only when something is archived |
 | Add when you’re usually free to get plan suggestions. · Not now | One-time prompt on Your planning while no availability is set |
 | GIFs can’t be added here. Choose a photo. | Shown when a GIF is picked for a Moment. Moments take photos only, because video and GIF files carry GPS and creation time the app can’t strip |
+| Your Moments show up here. | Caption under the first-run Moments grid. **Changed Oct 30, 2026:** it used to continue "Friends see the day and neighborhood, never the exact time." That line is held back until exact times are really private (`docs/tickets/posts-column-privacy.md`), because the old columns can still be read directly. Restore it when that ticket ships |
 | Visible to others at 7:42 pm | Owner-only label on a Moment inside its 2 hour delay |
 | This profile is private. | Shown to a stranger on a private profile, with the name, the level name and Follow |
 | Add your neighborhood and a short bio | The link on your profile while both are empty |

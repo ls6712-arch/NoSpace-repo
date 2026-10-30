@@ -47,9 +47,7 @@ function NewOwnerGrid() {
           <li key={i} aria-hidden="true" className="aspect-square w-full rounded-control border-2 border-dashed border-border" />
         ))}
       </ul>
-      <p className="mt-3 text-small text-muted-foreground">
-        Your Moments show up here. Friends see the day and neighborhood, never the exact time.
-      </p>
+      <p className="mt-3 text-small text-muted-foreground">Your Moments show up here.</p>
     </div>
   );
 }
