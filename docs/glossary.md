@@ -485,6 +485,7 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 | Send a new code · Log in with password · Use a different email | Three equal options after 30 seconds. Sign-up has no Log in with password. Send a new code starts the 30 seconds again |
 | New to Soosh? Get started | Footer link on the log in code screen, from the first second. Opens sign-up with the email typed. Not on the sign-up code screen, where the person is already doing that |
 | You can ask for another code in {time}. | Shown under the code field, instead of an error, when too many codes were asked for. The time is worded by `formatWait` in dates.ts (45 seconds, 1 minute) |
+| Too many codes for now. Try again in a little while, or log in with your password. | The hourly cap on codes, which has no time to give (so none is guessed): instead of an error, on log in. Sign-up drops "or log in with your password", since it has none |
 
 ### Passwords (log in brief, revisions 1 and 2)
 

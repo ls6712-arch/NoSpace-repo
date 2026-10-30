@@ -14,7 +14,7 @@ import { takeSavedInviteCode } from "../lib/inviteCode";
 import { claimInvite } from "../lib/invites";
 import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 import { friendlyError } from "../lib/friendlyError";
-import { isNoAccountError, retryAfterSeconds } from "../lib/authErrors";
+import { isNoAccountError, isRateLimited, retryAfterSeconds } from "../lib/authErrors";
 import { recordSendMs, waitForTypicalSend } from "../lib/sendTiming";
 import { flushTermsAcceptance } from "../lib/termsAcceptance";
 import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
@@ -89,14 +89,14 @@ interface AuthContextType {
   signInWithApple: () => Promise<{ error: string | null }>;
   /** Emails a 6-digit code (new and existing accounts alike; no password). The
    * Supabase email templates have to print `{{ .Token }}`: see docs/email-templates.md. */
-  sendEmailCode: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number }>;
+  sendEmailCode: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number; tooMany?: boolean }>;
   /**
    * The sign-in side of the code: emails a code to an existing account and
    * never creates one. An address with no account answers exactly like one
    * with an account (no error, and about as slowly), so this cannot be used,
    * and the screen cannot show, whether someone has an account.
    */
-  sendSignInCode: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number }>;
+  sendSignInCode: (email: string) => Promise<{ error: string | null; retryAfterSeconds?: number; tooMany?: boolean }>;
   /** Checks the code from sendEmailCode and signs in. */
   verifyEmailCode: (email: string, code: string) => Promise<{ error: string | null; wrong?: boolean }>;
   /** Re-sends the signup confirmation email — the one self-service option
@@ -396,9 +396,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     try {
       const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
-      // Asking too soon is a wait, not a failure: the screen says how long.
+      // Asking too soon is a wait, not a failure: the screen says how long, or that it is too many.
       const wait = retryAfterSeconds(error);
       if (wait !== null) return { error: null, retryAfterSeconds: wait };
+      if (isRateLimited(error)) return { error: null, tooMany: true };
       return { error: error ? friendlyError(error) : null };
     } catch {
       return { error: OFFLINE_LINE };
@@ -420,6 +421,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const wait = retryAfterSeconds(error);
       if (wait !== null) return { error: null, retryAfterSeconds: wait };
+      if (isRateLimited(error)) return { error: null, tooMany: true };
       return { error: friendlyError(error) };
     } catch {
       return { error: OFFLINE_LINE };

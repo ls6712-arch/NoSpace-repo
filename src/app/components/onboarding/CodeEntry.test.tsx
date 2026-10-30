@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../context/AuthContext", () => ({ useAuth: () => ({ verifyEmailCode: vi.fn() }) }));
+const verify = vi.hoisted(() => vi.fn());
+vi.mock("../../context/AuthContext", () => ({ useAuth: () => ({ verifyEmailCode: verify }) }));
 
 import { CodeEntry } from "./CodeEntry";
 
@@ -72,5 +73,73 @@ describe("CodeEntry, resend limit", () => {
     await seconds(43);
     expect(screen.queryByText(/You can ask for another code in/)).toBeNull();
     expect((screen.getByRole("button", { name: "Send a new code" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+});
+
+describe("CodeEntry, hourly cap", () => {
+  const cap = { error: null, tooMany: true };
+
+  it("says it is too many, with no time and no held button, and points at the password on log in", async () => {
+    base.resend.mockResolvedValue(cap);
+    render(<CodeEntry {...base} onPassword={() => {}} />);
+    await seconds(30);
+    await act(async () => {
+      screen.getByRole("button", { name: "Send a new code" }).click();
+    });
+    expect(screen.getByText("Too many codes for now. Try again in a little while, or log in with your password.")).toBeTruthy();
+    // No guessed time anywhere, and the button is not held for one.
+    expect(screen.queryByText(/in \d+ (second|minute)/)).toBeNull();
+    expect((screen.getByRole("button", { name: "Send a new code" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("leaves the password out of it on sign-up, where there is none", async () => {
+    base.resend.mockResolvedValue(cap);
+    render(<CodeEntry {...base} />);
+    await seconds(30);
+    await act(async () => {
+      screen.getByRole("button", { name: "Send a new code" }).click();
+    });
+    expect(screen.getByText("Too many codes for now. Try again in a little while.")).toBeTruthy();
+    expect(screen.queryByText(/password/)).toBeNull();
+  });
+});
+
+describe("CodeEntry, Stubby thinks while waiting", () => {
+  it("thinks as the screen opens, stops when the person starts typing, and again while a code is checked", async () => {
+    const onThinking = vi.fn();
+    verify.mockResolvedValue({ error: "x", wrong: true });
+    render(<CodeEntry {...base} onThinking={onThinking} />);
+    expect(onThinking.mock.calls).toEqual([[true]]);
+    fireEvent.change(screen.getByLabelText("Code"), { target: { value: "1" } });
+    expect(onThinking.mock.calls.at(-1)).toEqual([false]);
+    fireEvent.change(screen.getByLabelText("Code"), { target: { value: "123456" } });
+    await act(async () => {});
+    expect(onThinking.mock.calls.at(-1)).toEqual([true]);
+    // Then it is the caller's own reaction: a shrug for a wrong code.
+    expect(base.onWrong).toHaveBeenCalled();
+  });
+
+  it("stops thinking when the 30 seconds are up", async () => {
+    const onThinking = vi.fn();
+    render(<CodeEntry {...base} onThinking={onThinking} />);
+    await seconds(30);
+    expect(onThinking.mock.calls.at(-1)).toEqual([false]);
+  });
+});
+
+describe("CodeEntry, what a screen reader hears", () => {
+  const liveParent = (el: HTMLElement) => el.closest('[aria-live="polite"]');
+
+  it("announces the change at 30 seconds, politely, and not the countdown", async () => {
+    render(<CodeEntry {...base} />);
+    const countdown = screen.getByText("Send a new code in 0:30");
+    // The ticking countdown is in no live region, so it is not read out every second.
+    expect(liveParent(countdown)).toBeNull();
+    // The live region is there from the start (so the change is announced), empty.
+    expect(document.querySelector('[aria-live="polite"]:empty, [aria-live="polite"]')).toBeTruthy();
+    await seconds(30);
+    const stage = screen.getByText("Still nothing? Check your spam folder.");
+    expect(liveParent(stage)).not.toBeNull();
+    expect(liveParent(stage)?.getAttribute("aria-live")).toBe("polite");
   });
 });

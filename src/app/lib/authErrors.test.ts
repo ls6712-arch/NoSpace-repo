@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_RETRY_SECONDS, isNoAccountError, retryAfterSeconds } from "./authErrors";
+import { isNoAccountError, isRateLimited, retryAfterSeconds } from "./authErrors";
 
 describe("isNoAccountError", () => {
   it("recognises an unknown email by code or by message", () => {
@@ -16,18 +16,22 @@ describe("isNoAccountError", () => {
   });
 });
 
-describe("retryAfterSeconds", () => {
+describe("retryAfterSeconds and isRateLimited", () => {
   it("reads the wait out of Supabase's own message", () => {
     expect(retryAfterSeconds({ status: 429, message: "For security purposes, you can only request this after 52 seconds." })).toBe(52);
+    expect(isRateLimited({ status: 429, message: "For security purposes, you can only request this after 52 seconds." })).toBe(true);
   });
 
-  it("falls back to a minute when the limit gives no wait", () => {
-    expect(retryAfterSeconds({ status: 429, code: "over_email_send_rate_limit", message: "email rate limit exceeded" })).toBe(DEFAULT_RETRY_SECONDS);
+  it("never guesses a wait: the hourly cap is a limit with no time", () => {
+    const hourly = { status: 429, code: "over_email_send_rate_limit", message: "email rate limit exceeded" };
+    expect(isRateLimited(hourly)).toBe(true);
+    expect(retryAfterSeconds(hourly)).toBeNull();
   });
 
-  it("is null for anything that is not the limit", () => {
-    expect(retryAfterSeconds(null)).toBeNull();
-    expect(retryAfterSeconds({ status: 422, code: "otp_disabled", message: "Signups not allowed for otp" })).toBeNull();
-    expect(retryAfterSeconds({ message: "Failed to fetch" })).toBeNull();
+  it("is neither for anything that is not the limit", () => {
+    for (const e of [null, { status: 422, code: "otp_disabled", message: "Signups not allowed for otp" }, { message: "Failed to fetch" }]) {
+      expect(isRateLimited(e)).toBe(false);
+      expect(retryAfterSeconds(e)).toBeNull();
+    }
   });
 });
