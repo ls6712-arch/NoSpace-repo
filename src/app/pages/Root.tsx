@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
+import { SideRail } from "../components/nav/SideRail";
+import { SkipLink } from "../components/nav/SkipLink";
+import { NO_RAIL_PATHS } from "../components/nav/navItems";
 import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
 import { AccountPrompts } from "../components/AccountPrompts";
@@ -161,19 +164,29 @@ export function Root() {
     );
   }
 
+  // Signed in, on an app page: from 744px wide (and 480px tall) the left rail
+  // replaces the top header and the bottom bar, and the page sits to its right.
+  // Signed-out visitors, and the few pages that keep the top header, never get it.
+  const rail = !!user && !NO_RAIL_PATHS(location.pathname);
+  const railPad = rail ? "rail:pl-[72px] railwide:pl-[240px]" : "";
+
   return (
     <div className="min-h-viewport">
-      <PreviewBanner />
-      <NetworkBanner />
-      <AccountStatusBanner />
-      <Header />
-      <main>
+      {rail && <SkipLink />}
+      {rail && <SideRail />}
+      <div className={railPad}>
+        <PreviewBanner />
+        <NetworkBanner />
+        <AccountStatusBanner />
+      </div>
+      <Header hideWithRail={rail} />
+      <main id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
         <Outlet />
       </main>
       <CartDrawer />
       <BadgeUnlockToast />
       <AccountPrompts />
-      <BottomTabBar />
+      <BottomTabBar railEligible={rail} />
     </div>
   );
 }

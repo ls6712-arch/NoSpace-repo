@@ -585,6 +585,19 @@ Approved by the founder on Oct 30, 2026. Counts use `plural()`, dates use `dates
 
 Two reasons join with " · " ("Fits your Thursday evening · Priya’s going"). The free time screen reuses "When are you usually free?" and the "{N} windows a week" line from onboarding, with Save.
 
+## Navigation rail (Oct 30, 2026)
+
+From 744px wide (and 480px tall) a signed-in person gets a left rail in place of the bottom bar and the top header. Icons only up to 1279px, icons and words from 1280px. Labels are the same as the bottom bar's.
+
+| Where | String |
+|---|---|
+| Rail items, top to bottom | Home, Discover, Search, Log, Week, Chats, Notifications |
+| Rail items, bottom | You, More |
+| Log's accessible name | Log a Moment |
+| Search | Opens a panel beside the rail with the same box as the top header's ("Search Moments, people, Spaces") |
+| More | Menu from the rail with Settings, Reports (admins only), Theme (System, Light, Dark) and Log out. The top header's account menu is the same menu, plus You. Approved Oct 30, 2026 |
+| Skip to content | First link on a page with the rail, for keyboard and screen reader users. Approved Oct 30, 2026 |
+
 ## Retired terms
 
 Never use these in UI copy.
