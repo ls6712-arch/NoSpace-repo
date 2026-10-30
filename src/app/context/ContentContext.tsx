@@ -18,6 +18,7 @@ import { InFlightGuard, InFlightSkipped } from "../lib/inFlightGuard";
 import { plural } from "../lib/plural";
 import { notifyError } from "../components/ui/toaster";
 import { friendlyError } from "../lib/friendlyError";
+import { testAccountIds } from "../lib/testAccounts";
 
 const LISTINGS_KEY = "sushii.listings.v1";
 
@@ -408,6 +409,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       if (error) console.warn("[ContentContext] posts select failed:", error);
       return false;
     }
+
+    // Test accounts stay out of every feed (profiles.is_test); a person still sees their own.
+    const hiddenIds = await testAccountIds(data.map((row: any) => row.user_id as string), user?.id);
+    if (hiddenIds.size > 0) data = data.filter((row: any) => !hiddenIds.has(row.user_id as string));
 
     const userIds = [...new Set(data.map((row: any) => row.user_id as string))];
     const { data: profilesData } = userIds.length

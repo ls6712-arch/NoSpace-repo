@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { withoutTestAccounts } from "./testAccounts";
 
 /** The landing page "See who is on" row stays hidden until this many real public Shelves exist. */
 export const MIN_PUBLIC_SHELVES = 6;
@@ -25,8 +26,10 @@ export async function fetchPublicShelves(limit = 24): Promise<PublicShelf[]> {
     .not("username", "is", null)
     .limit(limit);
   if (error || !profiles?.length) return [];
+  const visible = await withoutTestAccounts(profiles, (p) => p.id as string);
+  if (visible.length === 0) return [];
 
-  const ids = profiles.map((p) => p.id as string);
+  const ids = visible.map((p) => p.id as string);
   const { data: posts } = await supabase
     .from("posts")
     .select("user_id, corner")
@@ -43,7 +46,7 @@ export async function fetchPublicShelves(limit = 24): Promise<PublicShelf[]> {
   }
 
   const shelves: PublicShelf[] = [];
-  for (const p of profiles) {
+  for (const p of visible) {
     const list = interests.get(p.id as string);
     const firstName = ((p.display_name as string | null) ?? "").trim().split(/\s+/)[0]?.slice(0, 30);
     if (!list?.length || !firstName) continue;

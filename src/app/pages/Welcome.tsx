@@ -5,7 +5,6 @@ import { formatInviteCodeInput, rawInviteCode } from "../lib/inviteCode";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { WaitlistForm } from "../components/WaitlistForm";
 import { APP_NAME } from "../config";
 import { OFFLINE_LINE } from "../lib/stateCopy";
 
@@ -63,7 +62,7 @@ export function Welcome() {
     <div className="min-h-viewport bg-surface px-5 pb-24 pt-16">
       <div className="mx-auto max-w-sm">
         <h1 className="text-center text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
-          {APP_NAME} is invite-only for now.
+          Enter your invite code
         </h1>
 
         <div className="mt-8 space-y-3">
@@ -89,11 +88,6 @@ export function Welcome() {
           >
             Continue
           </Button>
-        </div>
-
-        <div className="mt-10 border-t border-[var(--hairline)] pt-8">
-          <p className="mb-3 text-small text-muted-foreground">No invite yet?</p>
-          <WaitlistForm />
         </div>
 
         <button

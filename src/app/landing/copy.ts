@@ -2,7 +2,7 @@ import { APP_NAME } from "../config";
 
 /** Every line on the signed-out landing page, in one place. */
 export const LANDING_COPY = {
-  requestInvite: "Request an invite",
+  signUp: "Sign up",
   logIn: "Log in",
   heroHeadline: "Welcome to the rest of you.",
   heroSub: "Save what you want to try, go do it, and share who you’re becoming.",
@@ -21,8 +21,8 @@ export const LANDING_COPY = {
   privacyHeading: "You choose who sees each post.",
   privacyLine: "Pick Only you, Followers or Public for each post. Nothing about your account has to be public.",
   shelvesHeading: `See who’s on ${APP_NAME}.`,
-  inviteHeading: `${APP_NAME} is invite-only.`,
-  inviteLine: `Every member can invite three friends. Know someone on ${APP_NAME}? Ask them. If not, leave your email.`,
+  joinHeading: `Join ${APP_NAME}.`,
+  joinLine: "Create an account to get started.",
 } as const;
 
 /** Alt text for each real screen. */

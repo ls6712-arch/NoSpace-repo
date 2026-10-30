@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { withoutTestAccounts } from "./testAccounts";
 
 /**
  * Finding people.
@@ -70,8 +71,11 @@ export function profilePath(person: { username?: string | null; id: string }) {
  * Attaches hobby presence and a post count to a set of profiles, so a person
  * card can say what they actually do rather than how many followers they have.
  */
-async function decorate(people: Person[]): Promise<Person[]> {
-  if (!supabase || people.length === 0) return people;
+async function decorate(allPeople: Person[]): Promise<Person[]> {
+  if (!supabase || allPeople.length === 0) return allPeople;
+  // Test accounts (profiles.is_test) never appear in a list of people.
+  const people = await withoutTestAccounts(allPeople, (p) => p.id);
+  if (people.length === 0) return people;
   const ids = people.map((p) => p.id);
 
   let postRows: any[] | null = null;

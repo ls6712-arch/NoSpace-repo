@@ -63,10 +63,11 @@ export const TIKTOK_URL = "";
  */
 export const askSooshEnabled = import.meta.env.VITE_ASK_SOOSH === "true";
 
-// The Soosh onboarding (Stubby, 12 screens) replaces the two-step one in four
-// PRs. Until the last one lands, the new flow is on in development and behind
-// VITE_SOOSH_ONBOARDING=1 on a preview; production keeps the old one.
-export const sooshOnboardingEnabled = import.meta.env.DEV || import.meta.env.VITE_SOOSH_ONBOARDING === "1";
+// The Soosh onboarding (Stubby, 12 screens) is how everyone signs up: open to
+// anyone, with the birthday step that keeps out under-18s. The old two-step
+// onboarding and the old log in page stay in the code for now but no longer
+// run. Sign-up there has no age check, so do not switch this off.
+export const sooshOnboardingEnabled = true;
 
 // Sign in with Apple needs an Apple Developer account and a Services ID set up
 // in Supabase (Authentication > Sign In / Providers > Apple). Until that exists

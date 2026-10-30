@@ -117,14 +117,3 @@ export async function revokeInvite(code: string): Promise<boolean> {
   const { data, error } = await supabase.rpc("revoke_invite", { p_code: code });
   return !error && !!data;
 }
-
-export async function joinWaitlist(email: string, hobby: string): Promise<boolean> {
-  if (!supabase || !email.trim()) return false;
-  const { error } = await supabase.rpc("join_waitlist", {
-    p_email: email.trim(),
-    p_hobby: hobby.trim() || null,
-  });
-  // "Always true for duplicates" per the RPC contract — a genuine failure
-  // (network, unexpected server error) is the only case this reports back.
-  return !error;
-}
