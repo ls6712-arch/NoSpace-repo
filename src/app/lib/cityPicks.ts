@@ -54,13 +54,16 @@ function toPick(r: Record<string, any>): CityPick {
   };
 }
 
+/** A pick with no end is taken to last this long, so an evening event does not vanish the moment it starts. */
+export const DEFAULT_PICK_HOURS = 3;
+
 /**
  * The picks that overlap [from, to), soonest first, at most 6. A pick with no
- * end counts as the moment it starts. Unpublished ones never show here.
+ * end counts as lasting 3 hours from its start. Unpublished ones never show here.
  */
 export function visiblePicks(picks: readonly CityPick[], from: number, to: number, limit = PICKS_MAX): CityPick[] {
   return picks
-    .filter((p) => p.published && p.startsAt < to && (p.endsAt ?? p.startsAt) >= from)
+    .filter((p) => p.published && p.startsAt < to && (p.endsAt ?? p.startsAt + DEFAULT_PICK_HOURS * 3_600_000) >= from)
     .sort((a, b) => a.startsAt - b.startsAt || a.id - b.id)
     .slice(0, limit);
 }

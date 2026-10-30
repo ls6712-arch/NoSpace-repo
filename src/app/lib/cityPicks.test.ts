@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { nyTimeToMs } from "./homeWeek";
 import { parseNyLocal, pickPill, pickProblem, toNyLocal, visiblePicks, type CityPick, type PickInput } from "./cityPicks";
 
-const ny = (m: number, d: number, h: number) => nyTimeToMs(2026, m, d, h);
+const ny = (m: number, d: number, h: number, min = 0) => nyTimeToMs(2026, m, d, h) + min * 60_000;
 const pick = (over: Partial<CityPick> = {}): CityPick => ({
   id: 1, title: "Halloween parade", place: "Sixth Avenue", startsAt: ny(10, 31, 19), endsAt: null, price: "free", url: null, cornerKey: null, color: "orange", published: true, ...over,
 });
@@ -30,6 +30,15 @@ describe("visiblePicks", () => {
     const marathon = pick({ id: 7, startsAt: ny(10, 30, 8), endsAt: ny(10, 30, 18) });
     expect(visiblePicks([marathon], from, to)).toHaveLength(1);
     expect(visiblePicks([pick({ id: 8, startsAt: ny(10, 30, 8), endsAt: ny(10, 30, 10) })], from, to)).toHaveLength(0);
+  });
+
+  it("treats a pick with no end as lasting 3 hours, so it stays up after it starts", () => {
+    const evening = pick({ id: 5, startsAt: ny(10, 30, 19), endsAt: null });
+    expect(visiblePicks([evening], ny(10, 30, 20), to)).toHaveLength(1);
+    expect(visiblePicks([evening], ny(10, 30, 21, 59), to)).toHaveLength(1);
+    expect(visiblePicks([evening], ny(10, 30, 22, 1), to)).toHaveLength(0);
+    // A real end still wins over the default.
+    expect(visiblePicks([pick({ id: 6, startsAt: ny(10, 30, 19), endsAt: ny(10, 30, 20) })], ny(10, 30, 21), to)).toHaveLength(0);
   });
 
   it("shows at most 6", () => {
