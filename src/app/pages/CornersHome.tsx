@@ -238,7 +238,7 @@ export function CornersHome() {
             <button
               type="button"
               onClick={() => update(NO_PICK)}
-              className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-[var(--accent-text)] hover:underline"
+              className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-accent-text hover:underline"
             >
               Clear
             </button>
@@ -258,7 +258,7 @@ export function CornersHome() {
               <button
                 type="button"
                 onClick={() => update(NO_PICK)}
-                className="inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] hover:underline"
+                className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text hover:underline"
               >
                 Clear
               </button>
@@ -292,7 +292,7 @@ export function CornersHome() {
                     {cat.name}
                   </Link>
                 </h2>
-                <Link to={`/browse/${cat.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+                <Link to={`/browse/${cat.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-accent-text hover:underline">
                   See all
                 </Link>
               </div>

@@ -267,7 +267,7 @@ function AllCornersBrowser({ query }: { query: string }) {
               aria-label={`Browse the ${c.name} Corner`}
               className="group flex min-h-14 items-center justify-between gap-4 border-t border-border py-3"
             >
-              <span className="text-title text-foreground transition-colors duration-fast group-hover:text-[var(--accent-text)]">
+              <span className="text-title text-foreground transition-colors duration-fast group-hover:text-accent-text">
                 {c.name}
               </span>
               <span className="size-2 shrink-0 rounded-full bg-[var(--cat)]" aria-hidden="true" />

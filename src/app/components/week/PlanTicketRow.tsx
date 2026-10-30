@@ -64,7 +64,7 @@ export function PlanTicketRow({
             <button
               type="button"
               onClick={() => onBring(plan)}
-              className="-mb-1 inline-flex min-h-11 items-center self-start text-small font-semibold text-[var(--accent-text)] underline-offset-4 hover:underline"
+              className="-mb-1 inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline"
             >
               {WEEK_VIEW.bringSomeone}
             </button>

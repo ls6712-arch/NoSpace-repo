@@ -14,7 +14,7 @@ import { tieNumbers } from "../../lib/typography";
 /** The "Start here" label's hand-drawn arrow (the path from the approved design, docs/design/door-list). */
 function Arrow() {
   return (
-    <svg width="64" height="26" viewBox="0 0 64 26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-[var(--accent-text)]">
+    <svg width="64" height="26" viewBox="0 0 64 26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-accent-text">
       <path d="M2 6c14 14 30 16 54 10" />
       <path d="M48 9l9 7-10 4" />
     </svg>
@@ -100,7 +100,7 @@ export const StartHere = forwardRef<
     if (cards.length === 0) return null;
     return (
       <section className={SECTION_GAP} aria-labelledby="start-here-title">
-        <div className="mb-1 flex items-center gap-2 text-small font-semibold text-[var(--accent-text)]">
+        <div className="mb-1 flex items-center gap-2 text-small font-semibold text-accent-text">
           <span>Start here</span>
           <Arrow />
         </div>
@@ -109,7 +109,7 @@ export const StartHere = forwardRef<
             {moodLine}
           </h2>
           {seeAllTo && (
-            <Link to={seeAllTo} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+            <Link to={seeAllTo} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-accent-text hover:underline">
               See all
             </Link>
           )}

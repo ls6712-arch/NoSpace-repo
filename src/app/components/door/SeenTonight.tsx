@@ -83,7 +83,7 @@ export function SeenTonight({ posts, onOpen }: { posts: Post[]; onOpen: (post: P
         </h2>
         <a
           href="#all-moments"
-          className="inline-flex min-h-11 shrink-0 items-center text-small text-[var(--accent-text)] hover:underline"
+          className="inline-flex min-h-11 shrink-0 items-center text-small text-accent-text hover:underline"
           onClick={(e) => {
             // A plain href would be read by the hash router as a route.
             e.preventDefault();

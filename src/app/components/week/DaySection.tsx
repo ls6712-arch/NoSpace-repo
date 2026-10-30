@@ -56,7 +56,7 @@ export function DaySection({
               <Link
                 to={findSomethingPath(it.slot)}
                 onClick={() => track({ name: "week_find_something", window: it.slot.keys[0] })}
-                className="inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline-offset-4 hover:underline"
               >
                 {WEEK_VIEW.findSomething}
               </Link>
