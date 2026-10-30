@@ -25,7 +25,7 @@
 -- 10 from E, corner dv-c02 [null: included] / 11 from E [null: included] /
 -- 12 from E [Austin], although E's private city is New York (excluded: only posts.city counts) /
 -- 13 from G [null], although G's private city is Austin (included: another person's private
--- city is never read).
+-- city is never read) / 14 from E, still in its 2 hour hold (excluded).
 
 begin;
 
@@ -104,8 +104,9 @@ begin
          ('00000000-0000-4000-8000-000000009201', v_f, 'member', 'active');
   insert into public.space_join_requests (space_id, user_id) values ('00000000-0000-4000-8000-000000009204', v_a);
 
-  insert into public.posts (user_id, hobby_slug, sub_hobby, type, media_url, caption, visibility, audience, city)
-  select m.uid, 'dv', m.corner, 'text', 'fixture', m.cap, m.vis, m.aud, m.city
+  -- visible_at is set in the past: a new Moment is held for 2 hours, and the function rightly hides it until then.
+  insert into public.posts (user_id, hobby_slug, sub_hobby, type, media_url, caption, visibility, audience, city, visible_at)
+  select m.uid, 'dv', m.corner, 'written', 'fixture', m.cap, m.vis, m.aud, m.city, now() - interval '1 minute'
   from (values
     (v_e, 'dv-c01', 'DV moment 01', 'public', null::text, 'New York'::text),
     (v_b, 'dv-c01', 'DV moment 02', 'public', null, 'New York'),
@@ -121,6 +122,10 @@ begin
     (v_e, 'dv-c01', 'DV moment 12', 'public', null, 'Austin'),
     (v_g, 'dv-c01', 'DV moment 13', 'public', null, null)
   ) as m(uid, corner, cap, vis, aud, city);
+
+  -- 14 from E, still inside its 2 hour hold (excluded).
+  insert into public.posts (user_id, hobby_slug, sub_hobby, type, media_url, caption, visibility, city, visible_at)
+  values (v_e, 'dv', 'dv-c01', 'written', 'fixture', 'DV moment 14', 'public', 'New York', now() + interval '1 hour');
 
   insert into public.space_moments (space_id, post_id, status)
   select '00000000-0000-4000-8000-000000009201', po.id, 'approved'
@@ -154,6 +159,9 @@ begin
   v_i := v_i + 1;
   results := results || (v_i || case when 'DV moment 11' = any (coalesce(v_caps, '{}')) and 'DV moment 13' = any (coalesce(v_caps, '{}')) then ' PASS a Moment with no city is included, even when its author''s private city is elsewhere' else ' FAIL a null-city Moment was left out' end);
 
+  v_i := v_i + 1;
+  results := results || (v_i || case when 'DV moment 14' <> all (coalesce(v_caps, '{}')) then ' PASS a Moment still in its 2 hour hold never appears' else ' FAIL held Moment appeared' end);
+
   v_caps := (select array_agg(po.caption order by po.caption)
              from public.discover_moments('dv/dv-c02', null, 50) dm
              join public.posts po on po.id = dm.post_id
@@ -178,10 +186,10 @@ begin
 
   -- discover_corners ----------------------------------------------------------------
   perform set_config('role', v_owner_role, true);
-  update public.profile_private pp set picks = array['dv/dv-c01']::text[] where pp.user_id = v_a;
+  update public.profile_private pp set picks = array['dv/dv-c01', 'dv/dv-x1', 'dv/dv-x2']::text[] where pp.user_id = v_a;
   insert into public.hobby_follows (user_id, hobby_key) values (v_a, 'dv:dv-c02');
   insert into public.posts (user_id, hobby_slug, sub_hobby, type, media_url, caption, visibility)
-  values (v_a, 'dv', 'dv-c03', 'text', 'fixture', 'DV own moment', 'public');
+  values (v_a, 'dv', 'dv-c03', 'written', 'fixture', 'DV own moment', 'public');
   perform set_config('role', 'authenticated', true);
 
   v_keys := (select array_agg(dc.corner_key order by dc.corner_key)
