@@ -14,7 +14,12 @@ export type AnalyticsEvent =
   | { name: "pursuit_share_native_sheet_opened"; pursuitId: string }
   | { name: "discover_for_you_personalized"; signalCount: number }
   | { name: "moment_double_tap_loved"; postId: number }
-  | { name: "moment_quick_react_opened"; postId: number };
+  | { name: "moment_quick_react_opened"; postId: number }
+  | { name: "home_suggestion_shown"; kind: string; position: number }
+  | { name: "home_suggestion_opened"; kind: string; position: number }
+  | { name: "home_suggestion_going"; kind: string; position: number }
+  | { name: "home_suggestion_invite"; kind: string; position: number }
+  | { name: "home_suggestion_dismissed"; kind: string; position: number };
 
 function sendToConsole(event: AnalyticsEvent) {
   if (import.meta.env.DEV) {
