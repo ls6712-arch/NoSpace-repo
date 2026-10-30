@@ -21,7 +21,7 @@ export function ScreenFrame({
     <section className="flex flex-1 flex-col pb-6">
       {hero && <div className="flex flex-1 items-center justify-center pt-8">{hero}</div>}
       {!hero && <div className="h-6" />}
-      <h1 className="transfer-headline mt-4 text-display">{title}</h1>
+      <h1 className="transfer-headline mt-4 break-words text-display">{title}</h1>
       {intro && <p className="mt-3 text-body transfer-muted">{intro}</p>}
       {children && <div className="mt-6 flex flex-col gap-4">{children}</div>}
       {footer && <div className="mt-auto flex flex-col gap-3 pt-8">{footer}</div>}

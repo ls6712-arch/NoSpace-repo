@@ -18,7 +18,7 @@ export function SignUpScreen() {
   const { next, redirectTo } = useOnboarding();
   const { signInWithGoogle, signInWithApple, sendEmailCode } = useAuth();
   const [agreed, setAgreed] = useState(false);
-  // From "No Soosh account for that email yet" on the log in screen: the address is already typed.
+  // From the log in screen's "New to Soosh? Get started": the address is already typed.
   const [params] = useSearchParams();
   const carried = params.get("email") ?? "";
   const [emailOpen, setEmailOpen] = useState(!!carried);

@@ -104,19 +104,19 @@ describe("log in screens", () => {
     await waitFor(() => expect(screen.getByLabelText("Password")).toBeTruthy());
   });
 
-  it("never creates an account for an email nobody has", async () => {
-    auth.sendSignInCode.mockResolvedValue({ error: null, noAccount: true });
+  it("treats an email nobody has exactly like one that has an account", async () => {
+    // The auth layer answers both the same way (see sendSignInCode); the screen must not differ either.
+    auth.sendSignInCode.mockResolvedValue({ error: null });
     renderAt("/login?mode=signin&view=email");
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "new@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Send me a code" }));
-    await waitFor(() => expect(screen.getByRole("heading", { name: "No Soosh account for that email yet." })).toBeTruthy());
+    await waitFor(() => expect(screen.getByLabelText("Code")).toBeTruthy());
+    expect(screen.getByRole("heading", { name: "Check your inbox at new@example.com." })).toBeTruthy();
     expect(auth.sendSignInCode).toHaveBeenCalledWith("new@example.com");
-    // Neither the sign-up code call nor the password sign-up was made.
+    // Nothing says the person is new, and nothing was created.
+    expect(screen.queryByText(/No Soosh account|might be new|If there’s a Soosh account/)).toBeNull();
     expect(auth.sendEmailCode).not.toHaveBeenCalled();
     expect(auth.signUp).not.toHaveBeenCalled();
-    // Get started goes to the sign-up screen with the email already typed.
-    fireEvent.click(screen.getByRole("button", { name: "Get started" }));
-    await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/onboarding?step=signup&email=new%40example.com&redirect=%2F"));
   });
 
   it("moves to the code screen when the email has an account", async () => {
@@ -125,7 +125,7 @@ describe("log in screens", () => {
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Send me a code" }));
     await waitFor(() => expect(screen.getByLabelText("Code")).toBeTruthy());
-    expect(screen.getByText("We sent a 6-digit code to mia@example.com.")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Check your inbox at mia@example.com." })).toBeTruthy();
   });
 
   it("shrugs at a wrong password and says so", async () => {
@@ -151,5 +151,67 @@ describe("log in screens", () => {
     auth.profile = { onboarding_completed: true };
     renderAt("/login?mode=signin&redirect=%2Fpursuit%2Fabc");
     await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/pursuit/abc"));
+  });
+});
+
+describe("the code screen, in stages", () => {
+  const openCode = async () => {
+    auth.sendSignInCode.mockResolvedValue({ error: null });
+    renderAt("/login?mode=signin&view=email");
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send me a code" }));
+    await waitFor(() => expect(screen.getByLabelText("Code")).toBeTruthy());
+  };
+
+  it("shows the inbox line, the promise and a countdown for the first 30 seconds", async () => {
+    await openCode();
+    expect(screen.getByText("Codes usually arrive in under a minute.")).toBeTruthy();
+    expect(screen.getByText("Send a new code in 0:30")).toBeTruthy();
+    expect(screen.queryByText("Still nothing? Check your spam folder.")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Log in with password" })).toBeNull();
+    // The code field is a one-time-code field.
+    expect(screen.getByLabelText("Code").getAttribute("autocomplete")).toBe("one-time-code");
+    // "New to Soosh? Get started" is there from the start.
+    expect(screen.getByRole("button", { name: "New to Soosh? Get started" })).toBeTruthy();
+  });
+
+  it("counts down, then offers three equal options and keeps the footer link", async () => {
+    // Fake clock from the start, so the countdown begins on it (it still advances on its own for waitFor).
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      await openCode();
+      // One second at a time: each tick schedules the next only after React has re-rendered.
+      const seconds = async (n: number) => {
+        for (let i = 0; i < n; i++) {
+          await act(async () => {
+            await vi.advanceTimersByTimeAsync(1000);
+          });
+        }
+      };
+      await seconds(10);
+      expect(screen.getByText("Send a new code in 0:20")).toBeTruthy();
+      await seconds(20);
+      expect(screen.getByText("Still nothing? Check your spam folder.")).toBeTruthy();
+      expect(screen.queryByText(/Send a new code in/)).toBeNull();
+      expect(screen.queryByText("Codes usually arrive in under a minute.")).toBeNull();
+      const options = ["Send a new code", "Log in with password", "Use a different email"].map((name) => screen.getByRole("button", { name }));
+      // Equal: the same kind of button, none of them the primary one.
+      expect(new Set(options.map((o) => o.getAttribute("data-variant")))).toEqual(new Set(["plain"]));
+      expect(screen.getByRole("button", { name: "New to Soosh? Get started" })).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("never uses the old wording that hints at an account", async () => {
+    await openCode();
+    expect(screen.queryByText(/No code\? You might be new here/)).toBeNull();
+    expect(screen.queryByText(/If there’s a Soosh account for/)).toBeNull();
+  });
+
+  it("opens sign-up with the email typed from the footer link", async () => {
+    await openCode();
+    fireEvent.click(screen.getByRole("button", { name: "New to Soosh? Get started" }));
+    await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/onboarding?step=signup&email=mia%40example.com&redirect=%2F"));
   });
 });

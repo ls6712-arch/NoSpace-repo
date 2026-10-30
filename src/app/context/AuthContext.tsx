@@ -15,6 +15,7 @@ import { claimInvite } from "../lib/invites";
 import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 import { friendlyError } from "../lib/friendlyError";
 import { isNoAccountError } from "../lib/authErrors";
+import { recordSendMs, waitForTypicalSend } from "../lib/sendTiming";
 import { flushTermsAcceptance } from "../lib/termsAcceptance";
 import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
 
@@ -91,10 +92,11 @@ interface AuthContextType {
   sendEmailCode: (email: string) => Promise<{ error: string | null }>;
   /**
    * The sign-in side of the code: emails a code to an existing account and
-   * never creates one. `noAccount` is true when nobody has that email, so the
-   * log in screen can send the person to Get started instead.
+   * never creates one. An address with no account answers exactly like one
+   * with an account (no error, and about as slowly), so this cannot be used,
+   * and the screen cannot show, whether someone has an account.
    */
-  sendSignInCode: (email: string) => Promise<{ error: string | null; noAccount?: boolean }>;
+  sendSignInCode: (email: string) => Promise<{ error: string | null }>;
   /** Checks the code from sendEmailCode and signs in. */
   verifyEmailCode: (email: string, code: string) => Promise<{ error: string | null; wrong?: boolean }>;
   /** Re-sends the signup confirmation email — the one self-service option
@@ -402,10 +404,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const sendSignInCode: AuthContextType["sendSignInCode"] = async (email) => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    const startedAt = Date.now();
     try {
       const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
-      if (!error) return { error: null };
-      if (isNoAccountError(error)) return { error: null, noAccount: true };
+      if (!error) {
+        recordSendMs(Date.now() - startedAt);
+        return { error: null };
+      }
+      if (isNoAccountError(error)) {
+        await waitForTypicalSend(startedAt);
+        return { error: null };
+      }
       return { error: friendlyError(error) };
     } catch {
       return { error: OFFLINE_LINE };

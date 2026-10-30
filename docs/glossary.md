@@ -440,11 +440,9 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 | Continue | Button after the email is typed, which sends the code |
 | Add your email / Add your first name / Add your birthday / Add a neighborhood | The primary button while its field is empty: it says what is missing |
 | That doesn’t look like an email address. | Email field error |
-| Check your email | Heading of the code screen |
-| We sent a 6-digit code to {email}. | Line under it |
+| Check your email | Heading of the “Check your email” confirmation after a password reset link is sent (the code screen has its own, below) |
 | Code | Label of the code field |
 | That code didn’t match. Try again or send a new one. | Wrong or expired code (Stubby shrugs) |
-| Send a new code / Send a new code in {n} seconds | Resend, which waits 30 seconds |
 | New code sent. | After a resend |
 | First name / Username | Labels on the name screen. What should people call you? is the heading |
 | @{username} is free | Under the username while it is available |
@@ -459,7 +457,7 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 
 ### Log in (Soosh log in brief, Oct 29, 2026)
 
-**Proposed Oct 30, 2026, awaiting approval.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, Check your email, the code screen lines and Log out from above. Existing lines kept as they were: Log in, Forgot your password?, "If there’s an account for that address, a reset link is on its way. Check your spam folder if it doesn’t arrive."
+**Proposed Oct 30, 2026, awaiting approval.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, the wrong code line, New code sent. and Log out from above. Existing lines kept as they were: Log in, Forgot your password?, "If there’s an account for that address, a reset link is on its way. Check your spam folder if it doesn’t arrive."
 
 | Term | Meaning |
 |---|---|
@@ -472,8 +470,22 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 | That email and password didn’t match. | Wrong password (Stubby shrugs) |
 | Reset your password | Heading of the forgot-password screen |
 | Send reset link | Button on it. Check your email follows, with the reset line above and a Log in button |
-| No Soosh account for that email yet. | An email with no account. The button is Get started and goes to sign up with the email already typed. A second link, Use a different email, goes back |
 | Signing you in… | While the session is made (Stubby thinks) |
+
+### The code screen, in stages (log in brief revision 3, Oct 30, 2026)
+
+**Proposed Oct 30, 2026, awaiting approval.** Used by log in and by sign-up. Nothing on it depends on whether the address has an account: a late code must never suggest the person is new, and an address with no account sees the same words at the same times as one with an account.
+
+| Term | Meaning |
+|---|---|
+| Check your inbox at {email}. | Heading, from the first second |
+| Codes usually arrive in under a minute. | Line under it, for the first 30 seconds |
+| Send a new code in {m:ss} | Countdown for the first 30 seconds (0:30, 0:29, and so on) |
+| Still nothing? Check your spam folder. | Replaces the two lines above after 30 seconds |
+| Send a new code · Log in with password · Use a different email | Three equal options after 30 seconds. Sign-up has no Log in with password. Send a new code starts the 30 seconds again |
+| New to Soosh? Get started | Footer link on the log in code screen, from the first second. Opens sign-up with the email typed. Not on the sign-up code screen, where the person is already doing that |
+
+Log in with password and Use my password instead (email screen) mean the same thing; the first is the wording from the brief, so check you want both.
 
 ## Retired terms
 
@@ -483,3 +495,5 @@ Never use these in UI copy.
 |---|---|---|
 | Rooms | Oct 28, 2026 (UI removed) | The group's own name, under Browse by |
 | See all rooms | Oct 28, 2026 (UI removed) | See all |
+| We sent a 6-digit code to {email}. | Oct 30, 2026 | Check your inbox at {email}. |
+| Send a new code in {n} seconds | Oct 30, 2026 | Send a new code in {m:ss} |

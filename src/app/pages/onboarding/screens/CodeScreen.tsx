@@ -8,7 +8,7 @@ import { StepStubby } from "../StepStubby";
 
 /** Screen 3: the 6-digit code from the email. Stubby stamps when it is right and shrugs when it is not. */
 export function CodeScreen() {
-  const { next, react, redirectTo } = useOnboarding();
+  const { next, react, redirectTo, back } = useOnboarding();
   const { sendEmailCode } = useAuth();
   const navigate = useNavigate();
   const email = readEmail();
@@ -25,6 +25,8 @@ export function CodeScreen() {
       resend={sendEmailCode}
       onWrong={() => react("shrug")}
       onVerified={() => next({ stamp: true })}
+      // Same stages as log in, without the password: it is the one way in here.
+      onDifferentEmail={() => back?.()}
     />
   );
 }

@@ -16,7 +16,7 @@ import { ScreenFrame } from "../onboarding/screens/ScreenFrame";
 import { slide } from "../onboarding/transitions";
 
 /** The log in screens, in the order that decides which way a screen slides. */
-const VIEWS = ["welcome", "email", "code", "password", "reset", "resetsent", "noaccount", "signingin"] as const;
+const VIEWS = ["welcome", "email", "code", "password", "reset", "resetsent", "signingin"] as const;
 type View = (typeof VIEWS)[number];
 const isView = (v: string | null): v is View => !!v && (VIEWS as readonly string[]).includes(v);
 
@@ -31,8 +31,9 @@ export const WRONG_PASSWORD_LINE = "That email and password didn’t match.";
 /**
  * The returning-user door, in the Soosh onboarding look (Transfer frame and
  * Stubby). Codes first: Google, Apple (when it is on) or an emailed code, with
- * the password behind "Use my password instead". An email with no account goes
- * to Get started and is never signed up from here. A signed-in person with
+ * the password behind "Use my password instead". Nobody is signed up from
+ * here, and an email with no account looks exactly like one with an account
+ * (same screen, same words, same wait), so nothing on it says who is new. A signed-in person with
  * onboarding unfinished is sent back into it; it resumes where they stopped.
  *
  * The screen lives in the URL (`?view=`) so the back button works. Only used
@@ -145,13 +146,10 @@ export function LoginV2() {
     }
     setError(null);
     setBusy(true);
-    // Never signs anyone up: an address with no account goes to Get started.
+    // Never signs anyone up, and an address with no account gets the same
+    // answer, the same screen and the same wait as one with an account.
     const result = await sendSignInCode(mail);
     setBusy(false);
-    if (result.noAccount) {
-      go("noaccount");
-      return;
-    }
     if (result.error) {
       setError(result.error);
       return;
@@ -199,6 +197,9 @@ export function LoginV2() {
     }
     go("resetsent");
   };
+
+  // Opens sign-up with the address already typed.
+  const getStartedHref = `/onboarding?step=signup&email=${encodeURIComponent(email.trim())}&redirect=${encodeURIComponent(redirectTo)}`;
 
   const emailField = (autoFocus: boolean) => (
     <TransferField
@@ -276,7 +277,14 @@ export function LoginV2() {
           <CodeEntry
             email={email}
             hero={null}
-            resend={async (e) => ({ error: (await sendSignInCode(e)).error })}
+            resend={sendSignInCode}
+            onDifferentEmail={() => go("email")}
+            onPassword={() => go("password")}
+            footer={
+              <button type="button" className="transfer-link self-center" onClick={() => navigate(getStartedHref)}>
+                New to Soosh? Get started
+              </button>
+            }
             onChecking={(checking) => {
               if (checking) signingInHere.current = true;
             }}
@@ -351,24 +359,6 @@ export function LoginV2() {
             title="Check your email"
             intro="If there’s an account for that address, a reset link is on its way. Check your spam folder if it doesn’t arrive."
             footer={<TransferButton onClick={() => go("password")}>Log in</TransferButton>}
-          />
-        );
-      case "noaccount":
-        return (
-          <ScreenFrame
-            title="No Soosh account for that email yet."
-            footer={
-              <>
-                <TransferButton
-                  onClick={() => navigate(`/onboarding?step=signup&email=${encodeURIComponent(email.trim())}&redirect=${encodeURIComponent(redirectTo)}`)}
-                >
-                  Get started
-                </TransferButton>
-                <button type="button" className="transfer-link self-center" onClick={() => go("email")}>
-                  Use a different email
-                </button>
-              </>
-            }
           />
         );
       case "signingin":

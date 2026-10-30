@@ -1,18 +1,27 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ScreenFrame } from "../../pages/onboarding/screens/ScreenFrame";
 import { useAuth } from "../../context/AuthContext";
-import { plural } from "../../lib/plural";
+import { formatCountdown } from "../../lib/countdown";
+import { TransferButton } from "./TransferButton";
 import { TransferField } from "./TransferField";
 
 export const CODE_LENGTH = 6;
-const RESEND_AFTER_S = 30;
+/** Seconds before a new code can be asked for, and before the screen offers other ways in. */
+export const RESEND_AFTER_S = 30;
 export const WRONG_CODE_LINE = "That code didn’t match. Try again or send a new one.";
 
 /**
- * The 6-digit code screen, shared by sign-up (CodeScreen) and log in. It
- * checks the code as soon as the sixth digit is typed. The caller owns what
- * Stubby does (`onWrong`, `onVerified`) and which email call a resend uses: a
- * sign-up code may create the account, a log in code never does.
+ * The 6-digit code screen, shared by sign-up (CodeScreen) and log in, in
+ * two stages. For the first 30 seconds: "Check your inbox at {email}.",
+ * "Codes usually arrive in under a minute." and a countdown to a new code.
+ * After that: "Still nothing? Check your spam folder." and equal options to
+ * send a new code, log in with a password (log in only) or use a different email.
+ *
+ * Nothing on it depends on whether the address has an account: a late code
+ * must never suggest the person is new, so known and unknown emails see the
+ * same words at the same times. The code is checked as soon as the sixth digit
+ * is typed. The caller owns what Stubby does and which email call a resend
+ * uses: a sign-up code may create the account, a log in code never does.
  */
 export function CodeEntry({
   email,
@@ -21,6 +30,9 @@ export function CodeEntry({
   onChecking,
   onWrong,
   onVerified,
+  onDifferentEmail,
+  onPassword,
+  footer,
 }: {
   email: string;
   hero: ReactNode;
@@ -28,6 +40,11 @@ export function CodeEntry({
   onChecking?: (checking: boolean) => void;
   onWrong: () => void;
   onVerified: () => void;
+  onDifferentEmail: () => void;
+  /** Log in only: sign-up has no password. Leave out and the option is not shown. */
+  onPassword?: () => void;
+  /** Always shown under the screen, from the first second ("New to Soosh? Get started" on log in). */
+  footer?: ReactNode;
 }) {
   const { verifyEmailCode } = useAuth();
   const [code, setCode] = useState("");
@@ -35,7 +52,9 @@ export function CodeEntry({
   const [checking, setChecking] = useState(false);
   const [sentNew, setSentNew] = useState(false);
   const [wait, setWait] = useState(RESEND_AFTER_S);
+  const [sending, setSending] = useState(false);
   const checked = useRef("");
+  const late = wait <= 0;
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -64,9 +83,11 @@ export function CodeEntry({
   );
 
   const sendNew = async () => {
-    if (wait > 0) return;
+    if (!late || sending) return;
+    setSending(true);
     setError(null);
     const result = await resend(email);
+    setSending(false);
     if (result.error) {
       setError(result.error);
       return;
@@ -78,7 +99,12 @@ export function CodeEntry({
   };
 
   return (
-    <ScreenFrame title="Check your email" intro={`We sent a ${CODE_LENGTH}-digit code to ${email}.`} hero={hero}>
+    <ScreenFrame
+      title={`Check your inbox at ${email}.`}
+      intro={late ? undefined : "Codes usually arrive in under a minute."}
+      hero={hero}
+      footer={footer}
+    >
       <TransferField
         label="Code"
         data-code="true"
@@ -100,9 +126,25 @@ export function CodeEntry({
         error={error}
         hint={sentNew ? "New code sent." : undefined}
       />
-      <button type="button" className="transfer-link self-start" disabled={wait > 0} onClick={() => void sendNew()}>
-        {wait > 0 ? `Send a new code in ${plural(wait, "second")}` : "Send a new code"}
-      </button>
+      {/* Announced once when the second stage starts; the ticking countdown is outside it on purpose. */}
+      <div aria-live="polite">{late && <p className="text-body transfer-muted">Still nothing? Check your spam folder.</p>}</div>
+      {late ? (
+        <div className="flex flex-col gap-3">
+          <TransferButton variant="plain" disabled={sending} onClick={() => void sendNew()}>
+            Send a new code
+          </TransferButton>
+          {onPassword && (
+            <TransferButton variant="plain" onClick={onPassword}>
+              Log in with password
+            </TransferButton>
+          )}
+          <TransferButton variant="plain" onClick={onDifferentEmail}>
+            Use a different email
+          </TransferButton>
+        </div>
+      ) : (
+        <p className="text-small transfer-muted">{`Send a new code in ${formatCountdown(wait)}`}</p>
+      )}
     </ScreenFrame>
   );
 }
