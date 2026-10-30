@@ -550,6 +550,59 @@ Put a face on your card, Tonight’s yours., Tomorrow’s yours., This weekend�
 | Add a password · Skip for now | The two equal answers on that screen. Add a password is also the Settings > Account button for an account without a password |
 | Change password | Settings > Account button for an account that has one (as before) |
 
+## Profile
+
+The profile rebuild (`/you`, `/u/:username`). **Every row below is a new string, taken from the build brief, for approval.** The profile shows no "Shelf", "Corner" or "stamps".
+
+| Term | Meaning |
+|---|---|
+| Friend | Two people who follow each other. Shown as a count ("Friends") and as the button "Friends" on a friend's profile |
+| Follower | Someone who follows you, one way. A profile you follow without being followed back shows "Following"; one that follows you first shows "Follow back"; otherwise "Follow", then "Requested" while it waits for them to accept |
+| Level 4 of 8 | Eyebrow on the level card. Sentence case (the brief's all-caps eyebrow is not used: no ALL CAPS) |
+| Just Getting Started, First Step, Out & About, Weekend Regular, Plan Maker, Good Company, Neighborhood Regular, Local Legend | The eight levels, at 0, 1, 3, 7, 10, 20, 35 and 50 Stubs. Kept in `src/app/lib/levels.ts` and in the database function `private.level_for`; `levels.test.ts` pins the thresholds |
+| 7 of 10 Stubs · 3 more to Plan Maker | Progress line on your own level card. Others see "Level 4 of 8 · 7 Stubs" with no progress |
+| Log 1 Moment to earn your first Stub and reach First Step. | Level card with 0 Stubs |
+| All levels | Link on the level card that lists all 8 |
+| You both | Eyebrow on a friend's profile over the Pursuit categories you share, written as given and joined naturally ("Climbing and Pottery.") |
+| You do this too | Tag on a friend's Pursuit in a category you also have a Pursuit in |
+| Friends with Sam R. and 2 others you know | Mutual friends on a friend's profile. A follower sees a count only; others see nothing |
+| Plan something together | Primary button on a friend's profile. Replaced by "{name} isn’t taking plans right now" when they paused planning |
+| Plan with {first name} | Title of the plan sheet. Sections: Do what?, When you’re both free, Where |
+| Something new | The always-there option under Do what? |
+| Picked from both your schedules. Neither of you sees the other’s full availability. | Line under the times |
+| Suggest somewhere else · Send invite · Send an open invite | Plan sheet actions. "Send an open invite" replaces the times when none are shared (No shared times in the next 2 weeks.) |
+| {first name} sees the plan, not who suggested which time. | Caption under Send invite |
+| Invite sent to {first name} | Toast after sending |
+| You both have memberships here · {name} is a member | The note on a suggested place |
+| Your planning | Owner-only card. Rows: Availability, Free time, Budget, Memberships & gear, Calendar (Not connected), Pause planning |
+| Only you see this | Pill on the planning card |
+| Friends: shared times only, when planning · Only you · Only you, never shared · Friends: names only | Who sees each planning row |
+| Pause planning · Hide you from all suggestions and plans | Owner switch and its line |
+| Who can see my time | Link to the page that lists each time-related field and who sees it |
+| Pick your Pursuits | New-user heading over the category pills. Picking one starts an ongoing Pursuit; picking it again takes it back |
+| Active · n, Finished · n | The two filter pills on the Pursuits tab |
+| Finish · Reopen · Archive · Unarchive · Delete | Owner actions on a Pursuit, in its detail sheet. Archive hides it from everyone but you and keeps its Stubs; Delete asks first ("Its Stubs go with it. Its Moments stay. To keep the Stubs, archive it instead.") |
+| Archived · n | Third filter pill on your own Pursuits tab, shown only when something is archived |
+| Morning · Afternoon · Evening | The three day parts of Your planning (the availability buttons, screen reader labels like "Mon morning") and of Plan together (the time cards, "Sat, Nov 7 / Afternoon"). Approved Oct 30, 2026. In running text they are lowercase: "Thu evenings", "Mon mornings and evenings". **Daytime:** Morning and Afternoon together make up Daytime, the word the free-time grid on onboarding uses (Daytime · Evening). **Hours:** none are stored (`planning_prefs` holds only the part, one of `morning`, `afternoon`, `evening`). The only hours the app defines are for Daytime and Evening, in `slotOf()` in `src/app/lib/firstPlan.ts`: Daytime is 6am to 5:59pm and Evening is 6pm to midnight. Where Morning ends and Afternoon begins is not defined anywhere, so no hours are given for those two |
+| Add when you’re usually free to get plan suggestions. · Not now | One-time prompt on Your planning while no availability is set |
+| GIFs can’t be added here. Choose a photo. | Shown when a GIF is picked for a Moment. Moments take photos only, because video and GIF files carry GPS and creation time the app can’t strip |
+| Your Moments show up here. | Caption under the first-run Moments grid. **Changed Oct 30, 2026:** it used to continue "Friends see the day and neighborhood, never the exact time." That line is held back until exact times are really private (`docs/tickets/posts-column-privacy.md`), because the old columns can still be read directly. Restore it when that ticket ships |
+| Visible to others at 7:42 pm | Owner-only label on a Moment inside its 2 hour delay |
+| This profile is private. | Shown to a stranger on a private profile, with the name, the level name and Follow |
+| Add your neighborhood and a short bio | The link on your profile while both are empty |
+| Private profile | Settings > Profile switch: people who don’t follow you see only your name and level |
+
+### The 2 hour hold on new Moments
+
+New, for approval. A new Moment is visible only to its owner for 2 hours (everywhere in the app, not only on the profile), unless the owner shares it now.
+
+| Term | Meaning |
+|---|---|
+| Share now | Switch on Log a Moment, off by default, shown when anyone but you can see the Moment. Also the confirm button below |
+| Shows this Moment to others right away. | Helper text under Share now |
+| Share now? | Title of the confirm that appears when you send a still-held Moment into a chat, or add it to a Space (Add from my Moments) |
+| Anyone who can see your Moments will see this one too. | Body of that confirm. Cancel, or a failed release, leaves the Moment held and shares nothing; Share now shows it to others, then sends it. A Space's hosts are told about an approval share only after the release |
+
 ## Home v2 (Oct 30, 2026)
 
 Approved by the founder on Oct 30, 2026. Counts use `plural()`, dates use `dates.ts`.

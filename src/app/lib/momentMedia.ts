@@ -40,7 +40,8 @@ export async function uploadMomentFile(
   file: File,
 ): Promise<{ path: string | null; error: string | null }> {
   if (!supabase) return { path: null, error: "not configured" };
-  const prepared = await prepareForUpload(file);
+  // Photos only: video and GIF metadata (GPS, creation time) can't be stripped here.
+  const prepared = await prepareForUpload(file, { allowVideo: false, allowGif: false });
   if (prepared.error !== null) return { path: null, error: prepared.error };
   const ready = prepared.file;
   const path = `${userId}/${crypto.randomUUID()}.${storageExtension(ready)}`;

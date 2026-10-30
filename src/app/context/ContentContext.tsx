@@ -1,3 +1,4 @@
+import { withShareNow } from "../lib/momentHold";
 import {
   createContext,
   useContext,
@@ -73,6 +74,8 @@ export interface ForSaleInput {
 }
 
 export interface NewPostInput {
+  /** Release this Moment to others now instead of after the 2 hour hold. */
+  shareNow?: boolean;
   hobbySlug: string;
   /** Optional specific hobby within the space, e.g. "pottery" in "workbench". */
   subHobby?: string;
@@ -735,13 +738,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       };
       // posts.audience only exists once its migration has run; without it the
       // Moment is saved with its visibility alone, as before.
+      // "Share now" asks for a visible_at at the moment of posting (see lib/momentHold.ts).
+      const held = withShareNow(row, input.shareNow);
       let { data, error } = await supabase
         .from("posts")
-        .insert((input.audience ? { ...row, audience: input.audience } : row) as typeof row)
+        .insert((input.audience ? { ...held, audience: input.audience } : held) as typeof row)
         .select(POST_COLUMNS)
         .single();
       if (input.audience && error && isMissingCountColumn(error) && input.audience !== "group") {
-        ({ data, error } = await supabase.from("posts").insert(row).select(POST_COLUMNS).single());
+        ({ data, error } = await supabase.from("posts").insert(held as typeof row).select(POST_COLUMNS).single());
       }
 
       if (!error && data) {

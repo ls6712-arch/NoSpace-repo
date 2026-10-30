@@ -21,8 +21,8 @@ import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
 import { HomeFeed } from "./pages/HomeFeed";
 import { Log } from "./pages/Log";
-import { You } from "./pages/You";
-import { YouHome } from "./pages/YouHome";
+import { Profile } from "./pages/Profile";
+import { WhoCanSeeMyTime } from "./pages/WhoCanSeeMyTime";
 import { Onboarding } from "./pages/Onboarding";
 import { Week } from "./pages/Week";
 import { WeekFree } from "./pages/WeekFree";
@@ -35,7 +35,6 @@ import { AdminCorners } from "./pages/AdminCorners";
 import { AdminReports } from "./pages/AdminReports";
 import { AdminInvites } from "./pages/AdminInvites";
 import { HobbyArchive } from "./pages/HobbyArchive";
-import { PublicProfile } from "./pages/PublicProfile";
 import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
 import { PursuitRecap } from "./pages/PursuitRecap";
@@ -119,9 +118,10 @@ export const router = createHashRouter([
       { path: "admin/invites", Component: AdminInvites },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
-      { path: "you", Component: YouHome },
-      // The page /you used to be: links, badges, followers, the Shelf.
-      { path: "you/all", Component: You },
+      // Your own profile, and anyone's at /u/:username (the server decides what each viewer gets).
+      { path: "you", Component: Profile },
+      // The old "everything about you" page is gone; keep the link working.
+      { path: "you/all", loader: () => redirect("/you") },
       // The old personal page. Anyone who saved or shared /me landed on a
       // 404 after the rename; send them to My Space instead.
       { path: "me", loader: () => redirect("/my-space") },
@@ -132,6 +132,7 @@ export const router = createHashRouter([
       { path: "profile", Component: ProfileSettingsPage },
       { path: "account", Component: AccountSettingsPage },
       { path: "privacy", Component: PrivacySettingsPage },
+      { path: "privacy/time", Component: WhoCanSeeMyTime },
       { path: "notifications", Component: NotificationsSettingsPage },
       { path: "data", Component: DataSettingsPage },
       { path: "pause-or-leave", Component: PauseOrLeaveSettingsPage },
@@ -175,7 +176,7 @@ export const router = createHashRouter([
       // needs a URL of its own — everywhere else it's a dialog opened from
       // inside whatever grid it's already sitting in.
       { path: "moment/:id", Component: MomentPage },
-      { path: "u/:username", Component: PublicProfile },
+      { path: "u/:username", Component: Profile },
       {
         path: "u/:username/studio",
         loader: ({ params }) => (extraConceptsEnabled ? null : redirect(`/u/${params.username}`)),

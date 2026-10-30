@@ -121,3 +121,41 @@ describe("prepareForUpload", () => {
     expect(r).toEqual({ file: null, error: UPLOAD_COPY.wrongType });
   });
 });
+
+describe("prepareForUpload strips photo metadata", () => {
+  // A minimal JPEG: SOI, then an APP1 "Exif" segment carrying a GPS tag, then EOI.
+  const withGps = () => {
+    const exif = new TextEncoder().encode("Exif\0\0GPSLatitude GPSLongitude DateTimeOriginal Make Model");
+    const seg = new Uint8Array(4 + exif.length);
+    seg.set([0xff, 0xe1, (exif.length + 2) >> 8, (exif.length + 2) & 0xff]);
+    seg.set(exif, 4);
+    return new Uint8Array([0xff, 0xd8, ...seg, 0xff, 0xd9]);
+  };
+  const text = async (f: File) => new TextDecoder("latin1").decode(new Uint8Array(await f.arrayBuffer()));
+
+  it("stores only the re-encoded pixels, never the original bytes", async () => {
+    const original = new File([withGps()], "IMG_1.jpg", { type: "image/jpeg" });
+    expect(await text(original)).toContain("GPSLatitude");
+    const out = await prepareForUpload(original, {
+      deps: deps({ encodeJpeg: async () => new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], { type: "image/jpeg" }) }),
+    });
+    expect(out.error).toBeNull();
+    const stored = await text(out.file!);
+    expect(stored).not.toContain("Exif");
+    expect(stored).not.toContain("GPS");
+    expect(stored).not.toContain("DateTimeOriginal");
+  });
+});
+
+describe("Moment uploads are photos only", () => {
+  it("refuses a GIF when GIFs are off, and a video when videos are off", async () => {
+    const gif = await prepareForUpload(file("a.gif", "image/gif"), { allowVideo: false, allowGif: false, deps: deps() });
+    expect(gif).toEqual({ file: null, error: UPLOAD_COPY.gifBlocked });
+    const video = await prepareForUpload(file("a.mp4", "video/mp4"), { allowVideo: false, allowGif: false, deps: deps() });
+    expect(video).toEqual({ file: null, error: UPLOAD_COPY.photoOnly });
+  });
+  it("still takes a GIF where nothing says otherwise", async () => {
+    const gif = await prepareForUpload(file("a.gif", "image/gif"), { deps: deps() });
+    expect(gif.error).toBeNull();
+  });
+});
