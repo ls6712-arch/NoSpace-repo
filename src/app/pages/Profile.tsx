@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { ArrowLeft, Check, Settings as SettingsIcon, Share2 } from "lucide-react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { useAuth } from "../context/AuthContext";
-import { fetchProfile, isClosed, type FollowState, type FriendProfile, type OpenProfileDto, type OwnerProfile, type ProfileDto } from "../lib/profileApi";
+import { fetchProfile, isClosed, resolveHandle, type FollowState, type FriendProfile, type OpenProfileDto, type OwnerProfile, type ProfileDto } from "../lib/profileApi";
 import { follow, unfollow } from "../lib/profileFollows";
 import { firstName, mutualFriendsLine } from "../lib/profileFormat";
 import { youBothSentence } from "../lib/youBoth";
@@ -126,9 +126,18 @@ export function Profile() {
         return;
       }
       if (r.value && r.value.role === "owner" && !r.value.private && r.value.pursuitCount === 0) setPickerOn(true);
+      if (!r.value && param) {
+        // A link made from a display name: send it to the username it belongs to.
+        const h = await resolveHandle(param);
+        if (mine !== run.current) return;
+        if (h.ok && h.value) {
+          navigate(`/u/${encodeURIComponent(h.value)}`, { replace: true });
+          return;
+        }
+      }
       setLoad(r.value ? { status: "ready", profile: r.value } : { status: "missing" });
     },
-    [username],
+    [username, param, navigate],
   );
 
   useEffect(() => {

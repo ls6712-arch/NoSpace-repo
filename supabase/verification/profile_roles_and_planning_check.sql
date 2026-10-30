@@ -183,6 +183,19 @@ begin
   v_b := public.get_profile(v_a::text) ->> 'id' = v_a::text;
   results := results || (v_i || case when v_b then ' PASS a profile link by user id resolves' else ' FAIL id link' end);
 
+  -- A link made from a display name finds the one username it belongs to.
+  perform set_config('request.jwt.claim.sub', v_p::text, true);
+  v_i := v_i + 1;
+  v_b := public.resolve_profile_handle('check ' || right(v_a::text, 4)) = 'pcheck' || right(v_a::text, 4);
+  update public.profiles p set display_name = 'Twin Name' where p.id in (v_m, v_z);
+  v_b := v_b and public.resolve_profile_handle('twin name') is null;
+  update public.profiles p set display_name = 'Check ' || right(v_z::text, 4) where p.id = v_z;
+  v_b := v_b and public.resolve_profile_handle(' TWIN name ') = 'pcheck' || right(v_m::text, 4);
+  v_b := v_b and public.resolve_profile_handle('nobody by this name') is null;
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  v_b := v_b and public.resolve_profile_handle('Check ' || right(v_x::text, 4)) is null;
+  results := results || (v_i || case when v_b then ' PASS a display name resolves to one username, never to a blocked or shared name' else ' FAIL handle resolution' end);
+
   -- Signed out: public view.
   perform set_config('request.jwt.claim.sub', '', true);
   v_j := public.get_profile('pcheck' || right(v_a::text, 4));

@@ -17,6 +17,7 @@ const api = vi.hoisted(() => ({
   setPursuitArchived: vi.fn(),
   deletePursuit: vi.fn(),
   suggestPlan: vi.fn(),
+  resolveHandle: vi.fn(),
   sendPlanInvite: vi.fn(),
 }));
 vi.mock("../lib/profileApi", async (orig) => ({ ...(await orig<typeof import("../lib/profileApi")>()), ...api }));
@@ -192,8 +193,26 @@ describe("Other viewers", () => {
     expect(screen.queryByText("Your planning")).toBeNull();
   });
 
+  it("sends a link made from a display name to the username it belongs to", async () => {
+    api.fetchProfile.mockImplementation((h: string) => ok(h === "maya" ? friend : null));
+    api.resolveHandle.mockImplementation(() => ok("maya"));
+    show("/u/Maya%20Lin");
+    expect(await screen.findByRole("heading", { name: "Maya Lin" })).toBeTruthy();
+    expect(api.resolveHandle).toHaveBeenCalledWith("Maya Lin");
+    expect(screen.getByTestId("where").textContent).toBe("/u/maya");
+  });
+
+  it("still shows the 404 when a display name matches nobody, or more than one person", async () => {
+    api.fetchProfile.mockImplementation(() => ok(null));
+    api.resolveHandle.mockImplementation(() => ok(null));
+    show("/u/Nobody");
+    expect(await screen.findByText("This page doesn’t exist")).toBeTruthy();
+    expect(screen.getByTestId("where").textContent).toBe("/u/Nobody");
+  });
+
   it("shows the standard 404 for a blocked or missing profile", async () => {
     api.fetchProfile.mockImplementation(() => ok(null));
+    api.resolveHandle.mockImplementation(() => ok(null));
     show("/u/maya");
     expect(await screen.findByText("This page doesn’t exist")).toBeTruthy();
   });

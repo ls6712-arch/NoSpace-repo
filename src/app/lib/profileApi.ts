@@ -172,6 +172,8 @@ export function fetchMoments(
 ): Promise<ProfileResult<MomentPage<OwnerMoment | SharedMoment>>> {
   return rpc("get_profile_moments", { p_profile: profileId, p_limit: limit, p_offset: offset, p_pursuit: pursuitId });
 }
+/** The username a display-name link belongs to; null when none or more than one person has that name. */
+export const resolveHandle = (handle: string) => rpc<string | null>("resolve_profile_handle", { p_handle: handle });
 export const fetchStubs = (profileId: string) => rpc<StubItem[]>("get_profile_stubs", { p_profile: profileId });
 export const fetchPursuits = (profileId: string) => rpc<PursuitItem[]>("get_profile_pursuits", { p_profile: profileId });
 

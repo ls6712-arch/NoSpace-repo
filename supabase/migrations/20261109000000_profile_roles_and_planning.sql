@@ -413,6 +413,25 @@ $$;
 revoke all on function public.get_profile(text) from public;
 grant execute on function public.get_profile(text) to anon, authenticated;
 
+-- A link made before usernames existed carries a display name. Returns the one
+-- username it belongs to, or null when nobody or more than one person has that
+-- name, or when either side blocked the other. Usernames are public already.
+create function public.resolve_profile_handle(p_handle text)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case when count(*) = 1 then max(p.username) else null end
+    from public.profiles p
+   where lower(p.display_name) = lower(btrim(p_handle))
+     and p.paused_at is null and p.deletion_requested_at is null
+     and not (auth.uid() is not null and private.is_blocked_between(auth.uid(), p.id));
+$$;
+revoke all on function public.resolve_profile_handle(text) from public;
+grant execute on function public.resolve_profile_handle(text) to anon, authenticated;
+
 -- ─────────────────────────────────────────────────────────────────────────
 -- 6. Moments, Stubs and Pursuits lists, per role
 -- ─────────────────────────────────────────────────────────────────────────

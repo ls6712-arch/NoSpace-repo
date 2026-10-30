@@ -962,6 +962,10 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         audience: toGroup ? "group" : audience === "public" ? "everyone" : "friends",
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,
+        // GUARD (docs/tickets/posts-column-privacy.md): posts.starts_at and posts.location_name
+        // are readable by everyone today. Only the existing Activity fields may write them;
+        // do not add an exact place or time for a plain Moment until that ticket is done.
+        // Log.guard.test.ts fails if this changes.
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
         locationName: locationName.trim() ? locationName.trim() : undefined,
         locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
