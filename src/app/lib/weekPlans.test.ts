@@ -36,6 +36,8 @@ beforeEach(() => {
       { event_id: 1, user_id: "me" },
       { event_id: 1, user_id: "friend" },
       { event_id: 1, user_id: "follower" },
+      { event_id: 1, user_id: "oneway" },
+      { event_id: 1, user_id: "buddy" },
       { event_id: 1, user_id: "stranger1" },
       { event_id: 1, user_id: "stranger2" },
       { event_id: 2, user_id: "me" },
@@ -48,14 +50,22 @@ beforeEach(() => {
     space_corners: [{ space_id: "s1", corner_id: 7, is_primary: true }],
     corners: [{ id: 7, space_slug: "sports-martial-arts", slug: "climbing" }],
     profile_follows: [
+      // Mutual: both agreed.
       { follower_id: "me", followed_id: "friend", status: "accepted" },
-      { follower_id: "follower", followed_id: "me", status: "accepted" },
+      { follower_id: "friend", followed_id: "me", status: "accepted" },
+      { follower_id: "me", followed_id: "buddy", status: "accepted" },
+      { follower_id: "buddy", followed_id: "me", status: "accepted" },
+      // One way only: never named.
+      { follower_id: "me", followed_id: "follower", status: "accepted" },
+      { follower_id: "oneway", followed_id: "me", status: "accepted" },
       { follower_id: "me", followed_id: "stranger1", status: "pending" },
       { follower_id: "stranger2", followed_id: "me", status: "declined" },
     ],
     profiles: [
       { id: "friend", display_name: "Priya Shah", avatar_url: null },
-      { id: "follower", display_name: "Sam Lee", avatar_url: null },
+      { id: "buddy", display_name: "Sam Lee", avatar_url: null },
+      { id: "follower", display_name: "Followed By Me Only", avatar_url: null },
+      { id: "oneway", display_name: "Follows Me Only", avatar_url: null },
       { id: "stranger1", display_name: "Nope One", avatar_url: null },
       { id: "stranger2", display_name: "Nope Two", avatar_url: null },
     ],
@@ -81,12 +91,20 @@ describe("fetchWeekDetail", () => {
     expect(event.color).toBeTruthy();
   });
 
-  it("names only the viewer's accepted connections, either way round, and counts everyone", async () => {
+  it("names only mutual connections and counts everyone", async () => {
     const [, event] = await fetchWeekDetail("me", FROM, TO);
     expect(event.going.friends.map((f) => f.name).sort()).toEqual(["Priya Shah", "Sam Lee"]);
-    expect(event.going.total).toBe(5);
-    const everyone = JSON.stringify(event);
-    expect(everyone).not.toContain("Nope");
+    expect(event.going.total).toBe(7);
+    expect(JSON.stringify(event)).not.toContain("Nope");
+  });
+
+  it("never names a one-way follow, in either direction", async () => {
+    const [, event] = await fetchWeekDetail("me", FROM, TO);
+    const text = JSON.stringify(event);
+    expect(text).not.toContain("Followed By Me Only");
+    expect(text).not.toContain("Follows Me Only");
+    expect(event.going.friends.map((f) => f.id)).not.toContain("follower");
+    expect(event.going.friends.map((f) => f.id)).not.toContain("oneway");
   });
 
   it("numbers a Pursuit's sessions among all of them, not just the ones in range", async () => {

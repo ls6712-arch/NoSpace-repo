@@ -40,7 +40,7 @@ export function GlanceCard({
         <div className="flex flex-col gap-2 p-4">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-small font-semibold">{WEEK_VIEW.freeEvenings}</h2>
-            <Link to="/week/free?from=week" className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline-offset-4 hover:underline">
+            <Link to="/week/free?from=week" className="inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] underline-offset-4 hover:underline">
               {WEEK_VIEW.change}
             </Link>
           </div>

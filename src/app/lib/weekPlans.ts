@@ -173,7 +173,11 @@ async function primaryCornerBySpace(ids: string[]): Promise<Map<string, { key: s
   return out;
 }
 
-/** Ids the viewer is connected to (an accepted follow either way), among `ids`. */
+/**
+ * Ids the viewer is connected to, among `ids`: an accepted follow in both
+ * directions ("both of you agreed", the same rule as the Log screen's
+ * Connections). A one-way follow, in either direction, is never enough.
+ */
 async function connectedAmong(userId: string, ids: string[]): Promise<Set<string>> {
   const out = new Set<string>();
   if (!supabase || ids.length === 0) return out;
@@ -182,8 +186,8 @@ async function connectedAmong(userId: string, ids: string[]): Promise<Set<string
       supabase.from("profile_follows").select("followed_id").eq("follower_id", userId).eq("status", "accepted").in("followed_id", ids),
       supabase.from("profile_follows").select("follower_id").eq("followed_id", userId).eq("status", "accepted").in("follower_id", ids),
     ]);
-    for (const r of (mine.data ?? []) as { followed_id: string }[]) out.add(r.followed_id);
-    for (const r of (theirs.data ?? []) as { follower_id: string }[]) out.add(r.follower_id);
+    const iFollow = new Set(((mine.data ?? []) as { followed_id: string }[]).map((r) => r.followed_id));
+    for (const r of (theirs.data ?? []) as { follower_id: string }[]) if (iFollow.has(r.follower_id)) out.add(r.follower_id);
   } catch {
     // Nobody is named.
   }
