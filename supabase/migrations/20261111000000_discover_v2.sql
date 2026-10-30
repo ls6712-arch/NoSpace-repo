@@ -3,6 +3,7 @@
 -- Run AFTER 20261110000000_profile_roles_and_planning.sql (and so after
 -- 20261109000000_home_suggestions.sql, which made suggestion_events).
 --
+--   posts.city                         the city a Moment was made in (nullable, no backfill).
 --   public.discover_moments(p_corner, p_cursor, p_limit)
 --       Moments from people the caller does not follow, in Spaces the caller has not
 --       joined. Everyone Moments only, newest first, keyset paged by created_at.
@@ -27,9 +28,14 @@
 -- Decisions made with the founder while building this (see the PR):
 --   * "Everyone" is posts.visibility = 'public' with audience null or 'everyone'. That is
 --     how the app already words it, and all 24 live Moments are audience null / public.
---   * posts has no city. A Moment is "in the viewer's city" when its AUTHOR's private city
---     matches the viewer's, or either city is unknown. The city is compared inside the
---     function and never returned.
+--   * A Moment now carries its own city: posts.city (nullable text, no backfill). The
+--     composer defaults it from the author's own profile_private.city and lets the author
+--     remove it (saving null). Older Moments have null, and null counts as local.
+--     discover_moments filters on posts.city only and never reads another person's
+--     profile_private. The viewer's own city, read from their own row, is the one thing it
+--     compares against. posts has table-wide column grants today, so the new column is
+--     readable and writable like its neighbours; when docs/tickets/posts-column-privacy.md
+--     moves posts to explicit column grants, city must be in the readable list.
 --   * Built-in Corners live in code (hobbies.ts), not in public.corners (6 live rows), so
 --     discover_corners takes the candidate Corner keys from the app (p_candidates, the
 --     Corners that have a guide). Without it, it falls back to the rows in public.corners.
@@ -40,6 +46,11 @@
 -- private data, or anything about people other than who made a Moment.
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
 -- Rollback: rollback_20261111000000_discover_v2.sql.
+
+-- 0. A Moment's city ---------------------------------------------------------------------
+
+alter table public.posts
+  add column city text check (city is null or char_length(btrim(city)) between 1 and 80);
 
 -- 1. The log learns about Discover ---------------------------------------------------
 
@@ -149,11 +160,8 @@ begin
     )
     and not private.is_blocked_between(v_me, po.user_id)
     and not coalesce((select pr.is_test from public.profiles pr where pr.id = po.user_id), false)
-    -- the author's city matches, or either city is unknown (never returned)
-    and (
-      v_city = ''
-      or coalesce((select lower(btrim(coalesce(pa.city, ''))) from public.profile_private pa where pa.user_id = po.user_id), '') in ('', v_city)
-    )
+    -- the Moment's own city matches; no city on the Moment counts as local
+    and (v_city = '' or po.city is null or lower(btrim(po.city)) = v_city)
     and (
       v_corner is null
       or (po.hobby_slug || '/' || lower(coalesce(nullif(btrim(po.corner), ''), nullif(btrim(po.sub_hobby), ''), ''))) = v_corner

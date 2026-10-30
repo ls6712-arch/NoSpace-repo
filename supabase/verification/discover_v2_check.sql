@@ -19,9 +19,13 @@
 -- to join), …9205 (open, A's neighborhood), …9206 (open, Austin). Moments carry the
 -- caption 'DV moment NN'. Every lookup is scoped to these ids and captions.
 --
--- Moments: 01 from E (must appear) / 02 from B, followed / 03 from F, shared to Space 9201
--- / 04 from A / 05 from C, blocked / 06 from D, test account / 07 from H, followers only /
--- 08 from G, Austin / 09 from E, 'friends' audience / 10 from E, corner dv-c02.
+-- Moments (posts.city in brackets): 01 from E [New York] (must appear) / 02 from B, followed /
+-- 03 from F, shared to Space 9201 / 04 from A / 05 from C, blocked / 06 from D, test account /
+-- 07 from H, followers only / 08 from G [Austin] / 09 from E, 'friends' audience /
+-- 10 from E, corner dv-c02 [null: included] / 11 from E [null: included] /
+-- 12 from E [Austin], although E's private city is New York (excluded: only posts.city counts) /
+-- 13 from G [null], although G's private city is Austin (included: another person's private
+-- city is never read).
 
 begin;
 
@@ -100,20 +104,23 @@ begin
          ('00000000-0000-4000-8000-000000009201', v_f, 'member', 'active');
   insert into public.space_join_requests (space_id, user_id) values ('00000000-0000-4000-8000-000000009204', v_a);
 
-  insert into public.posts (user_id, hobby_slug, sub_hobby, type, media_url, caption, visibility, audience)
-  select m.uid, 'dv', m.corner, 'text', 'fixture', m.cap, m.vis, m.aud
+  insert into public.posts (user_id, hobby_slug, sub_hobby, type, media_url, caption, visibility, audience, city)
+  select m.uid, 'dv', m.corner, 'text', 'fixture', m.cap, m.vis, m.aud, m.city
   from (values
-    (v_e, 'dv-c01', 'DV moment 01', 'public', null::text),
-    (v_b, 'dv-c01', 'DV moment 02', 'public', null),
-    (v_f, 'dv-c01', 'DV moment 03', 'public', null),
-    (v_a, 'dv-c01', 'DV moment 04', 'public', null),
-    (v_c, 'dv-c01', 'DV moment 05', 'public', null),
-    (v_d, 'dv-c01', 'DV moment 06', 'public', null),
-    (v_h, 'dv-c01', 'DV moment 07', 'followers', 'friends'),
-    (v_g, 'dv-c01', 'DV moment 08', 'public', null),
-    (v_e, 'dv-c01', 'DV moment 09', 'followers', 'friends'),
-    (v_e, 'dv-c02', 'DV moment 10', 'public', 'everyone')
-  ) as m(uid, corner, cap, vis, aud);
+    (v_e, 'dv-c01', 'DV moment 01', 'public', null::text, 'New York'::text),
+    (v_b, 'dv-c01', 'DV moment 02', 'public', null, 'New York'),
+    (v_f, 'dv-c01', 'DV moment 03', 'public', null, 'New York'),
+    (v_a, 'dv-c01', 'DV moment 04', 'public', null, 'New York'),
+    (v_c, 'dv-c01', 'DV moment 05', 'public', null, 'New York'),
+    (v_d, 'dv-c01', 'DV moment 06', 'public', null, 'New York'),
+    (v_h, 'dv-c01', 'DV moment 07', 'followers', 'friends', 'New York'),
+    (v_g, 'dv-c01', 'DV moment 08', 'public', null, 'Austin'),
+    (v_e, 'dv-c01', 'DV moment 09', 'followers', 'friends', 'New York'),
+    (v_e, 'dv-c02', 'DV moment 10', 'public', 'everyone', null),
+    (v_e, 'dv-c01', 'DV moment 11', 'public', null, null),
+    (v_e, 'dv-c01', 'DV moment 12', 'public', null, 'Austin'),
+    (v_g, 'dv-c01', 'DV moment 13', 'public', null, null)
+  ) as m(uid, corner, cap, vis, aud, city);
 
   insert into public.space_moments (space_id, post_id, status)
   select '00000000-0000-4000-8000-000000009201', po.id, 'approved'
@@ -128,7 +135,7 @@ begin
              join public.posts po on po.id = dm.post_id
              where po.caption like 'DV moment %');
   v_i := v_i + 1;
-  results := results || (v_i || case when v_caps = array['DV moment 01', 'DV moment 10'] then ' PASS A sees exactly the stranger Everyone Moments (01, 10)' else ' FAIL A saw ' || coalesce(array_to_string(v_caps, '+'), 'nothing') end);
+  results := results || (v_i || case when v_caps = array['DV moment 01', 'DV moment 10', 'DV moment 11', 'DV moment 13'] then ' PASS A sees exactly the stranger Everyone Moments in New York or with no city (01, 10, 11, 13)' else ' FAIL A saw ' || coalesce(array_to_string(v_caps, '+'), 'nothing') end);
 
   v_i := v_i + 1;
   results := results || (v_i || case when 'DV moment 02' <> all (coalesce(v_caps, '{}')) then ' PASS a followed author never appears' else ' FAIL followed author appeared' end);
@@ -143,7 +150,9 @@ begin
   v_i := v_i + 1;
   results := results || (v_i || case when 'DV moment 07' <> all (coalesce(v_caps, '{}')) and 'DV moment 09' <> all (coalesce(v_caps, '{}')) then ' PASS a followers-only Moment (visibility and audience) never appears' else ' FAIL non-Everyone Moment appeared' end);
   v_i := v_i + 1;
-  results := results || (v_i || case when 'DV moment 08' <> all (coalesce(v_caps, '{}')) then ' PASS an author in another city never appears' else ' FAIL other city appeared' end);
+  results := results || (v_i || case when 'DV moment 08' <> all (coalesce(v_caps, '{}')) and 'DV moment 12' <> all (coalesce(v_caps, '{}')) then ' PASS a Moment with another city never appears, even when its author''s private city matches' else ' FAIL other city appeared' end);
+  v_i := v_i + 1;
+  results := results || (v_i || case when 'DV moment 11' = any (coalesce(v_caps, '{}')) and 'DV moment 13' = any (coalesce(v_caps, '{}')) then ' PASS a Moment with no city is included, even when its author''s private city is elsewhere' else ' FAIL a null-city Moment was left out' end);
 
   v_caps := (select array_agg(po.caption order by po.caption)
              from public.discover_moments('dv/dv-c02', null, 50) dm
@@ -160,9 +169,12 @@ begin
   perform set_config('role', v_owner_role, true);
   insert into public.profile_follows (follower_id, followed_id, status) values (v_a, v_e, 'accepted');
   perform set_config('role', 'authenticated', true);
-  v_n := (select count(*) from public.discover_moments(null, null, 50) dm join public.posts po on po.id = dm.post_id where po.caption like 'DV moment %');
+  v_caps := (select array_agg(po.caption order by po.caption)
+             from public.discover_moments(null, null, 50) dm
+             join public.posts po on po.id = dm.post_id
+             where po.caption like 'DV moment %');
   v_i := v_i + 1;
-  results := results || (v_i || case when v_n = 0 then ' PASS after A follows E, E''s Moments leave Discover' else ' FAIL ' || v_n || ' left after following' end);
+  results := results || (v_i || case when v_caps = array['DV moment 13'] then ' PASS after A follows E, all of E''s Moments leave Discover (only G''s remains)' else ' FAIL after following, A saw ' || coalesce(array_to_string(v_caps, '+'), 'nothing') end);
 
   -- discover_corners ----------------------------------------------------------------
   perform set_config('role', v_owner_role, true);
@@ -205,6 +217,15 @@ begin
                and (a.attname ilike '%follower%' or a.attname ilike '%member%count%' or a.attname ilike '%members%'));
   v_i := v_i + 1;
   results := results || (v_i || case when v_text is null then ' PASS no function returns a follower or member count column' else ' FAIL columns ' || v_text end);
+
+  -- discover_moments never reads another person's profile_private: the only mention is the
+  -- caller's own row.
+  perform set_config('role', v_owner_role, true);
+  v_text := pg_get_functiondef('public.discover_moments(text,timestamptz,integer)'::regprocedure);
+  v_n := (length(v_text) - length(replace(v_text, 'profile_private', ''))) / length('profile_private');
+  v_i := v_i + 1;
+  results := results || (v_i || case when v_n = 1 and position('from public.profile_private pp where pp.user_id = auth.uid()' in v_text) > 0
+    then ' PASS discover_moments mentions profile_private once, for the caller''s own row' else ' FAIL profile_private appears ' || v_n || ' times' end);
 
   -- Logging --------------------------------------------------------------------------
   perform set_config('role', 'authenticated', true);

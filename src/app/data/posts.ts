@@ -52,6 +52,8 @@ export interface Post {
    * maker) or "everyone". Older Moments have none; read `visibility` for
    * those. A group Moment is stored with visibility "just_me". */
   audience?: "group" | "friends" | "everyone";
+  /** The city the Moment was made in, from the author when they posted ("New York"). Null on older Moments. */
+  city?: string;
   caption: string;
   likes: number;
   /** Public reaction totals (posts.love_count / posts.in_count, kept in step

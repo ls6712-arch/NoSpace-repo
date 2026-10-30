@@ -19,3 +19,6 @@ alter table public.suggestion_events add constraint suggestion_events_kind_check
 alter table public.suggestion_events drop constraint suggestion_events_action_check;
 alter table public.suggestion_events add constraint suggestion_events_action_check
   check (action in ('shown', 'opened', 'going', 'invite', 'dismissed'));
+
+-- Drops every Moment's city (it is not kept anywhere else).
+alter table public.posts drop column if exists city;
