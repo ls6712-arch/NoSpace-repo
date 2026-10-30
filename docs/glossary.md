@@ -632,7 +632,6 @@ Approved by the founder on Oct 30, 2026. Counts use `plural()`, dates use `dates
 | Why: `trending` | People are joining |
 | Why: `soon` | Starting soon |
 | Your week card, no free time saved | Add when you’re usually free (opens the free time screen) |
-| Week page (placeholder) | Week / Your week is coming soon. / Back to Home |
 | Week page, signed out | Your week lives here / Make an account to see your free time and your plans in one place. / Create an account |
 | Greeting, no name on record | Welcome back |
 
@@ -650,6 +649,29 @@ From 744px wide (and 480px tall) a signed-in person gets a left rail in place of
 | Search | Opens a panel beside the rail with the same box as the top header's ("Search Moments, people, Spaces") |
 | More | Menu from the rail with Settings, Reports (admins only), Theme (System, Light, Dark) and Log out. The top header's account menu is the same menu, plus You. Approved Oct 30, 2026 |
 | Skip to content | First link on a page with the rail, for keyboard and screen reader users. Approved Oct 30, 2026 |
+
+## Week view (brief of Oct 30, 2026)
+
+The wording of `/week`, taken from the founder's Week view brief. Opens from Home's Your week card; it is not a tab.
+
+| Term | Use |
+|---|---|
+| Your week | Page title (36px). Subline: "Fri Oct 30 to Thu Nov 5 · New York" (the next 7 days, today first) |
+| {N} good plan hours this week | At-a-glance line. N is the hours inside your free time covered by a listing or open Pursuit session in your Corners that fits your budget. Hidden when 0 |
+| Free evenings you told us · Change | The evenings saved in your free time, one chip per weekday, and a link to the free time screen |
+| Monthly budget | Label of the slider: Free only, $50, $100, $200. Saves on release. Private, like the budget on onboarding |
+| ${sum} planned so far · ${left} left this month | Under the slider. ", plus {k} without a price" when some listings have none. At Free only: "Only free plans and ones your pass covers" |
+| Tonight · Today · Tomorrow · {Weekday} | Day headings. Tonight from 6 PM, Today before. The date sits beside it in muted text |
+| Pursuit · session {n} of {m} | Kind line on a ticket for a Pursuit's session. Not shown for a one-session plan |
+| You and Priya · Priya, Sam and Maya · 4 going | Who is going. At most 3 named, only people you are connected to |
+| Bring someone | Link on a ticket where only you are going. Opens the tear off half share |
+| Free evening · Free daytime · Free all day | A free window with no plan in it |
+| Find something | Link in a free window. Opens Discover for that window |
+| {Weekday} {date} · Nothing on | One-line row for a day with no plan and no free time |
+| Tell us when you’re usually free | Card (the whole card is the link) in place of the free windows when none are saved |
+| Sunday night, this week flips | Card. Body: "Your Stubs from this week become one card you can share, and next week fills with new ideas." Static for now |
+| Change when you’re free | Link at the bottom. Opens the free time screen, which returns to where it was opened from |
+| Something went wrong. Try again. | The existing error line, as a toast, when the budget does not save |
 
 ## Retired terms
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
@@ -14,11 +14,14 @@ import { WEEK_SIGNED_OUT } from "../lib/homeCopy";
 /**
  * /week/free: when you are usually free, as a screen of its own. It is the
  * onboarding question (same grid, same save) for someone who is already in:
- * Save writes `free_windows` and goes back to Home, nothing else follows.
+ * Save writes `free_windows` and goes back to where it was opened from (the
+ * Week view says so with `?from=week`; anything else is Home), nothing else follows.
  */
 export function WeekFree() {
   const { user, isConfigured } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const back = params.get("from") === "week" ? "/week" : "/my-space";
   const [windows, setWindows] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,13 +59,13 @@ export function WeekFree() {
       setError(ERROR_LINE);
       return;
     }
-    navigate("/my-space", { replace: true });
+    navigate(back, { replace: true });
   };
 
   return (
     <div className="soosh-transfer min-h-viewport" data-tone="platform">
       <div className="transfer-column flex min-h-viewport flex-col px-4">
-        <Link to="/my-space" className="transfer-icon-button -ml-2 mt-4" aria-label="Back">
+        <Link to={back} className="transfer-icon-button -ml-2 mt-4" aria-label="Back">
           <ArrowLeft className="size-6" strokeWidth={2.5} aria-hidden="true" />
         </Link>
         <section className="flex flex-1 flex-col pb-6">

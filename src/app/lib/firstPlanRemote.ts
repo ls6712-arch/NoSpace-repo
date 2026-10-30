@@ -17,6 +17,7 @@ import {
 } from "./pursuitsRemote";
 import { rsvpToEvent } from "./spaces";
 import { ERROR_LINE } from "./stateCopy";
+import { eventPrices } from "./weekPlans";
 import { fetchPasses, fetchTaste, fetchCornerActivity, fetchInviteCorner } from "./tasteRemote";
 import type { InviteInput, LiveEventInput, LivePursuitInput, Plan, PlanInput } from "./firstPlan";
 import type { Pass } from "./tasteModel";
@@ -51,20 +52,6 @@ export async function privatePlace(userId: string): Promise<{ city: string; area
   } catch {
     return { city: "", area: "" };
   }
-}
-
-/** Listed prices, by event id. The column only exists after migration 20261106000000; before it this is empty. */
-async function eventPrices(ids: number[]): Promise<Map<number, string>> {
-  const out = new Map<number, string>();
-  if (!supabase || ids.length === 0) return out;
-  try {
-    const { data, error } = await supabase.from("space_events").select("id, price").in("id", ids);
-    if (error || !Array.isArray(data)) return out;
-    for (const r of data as { id: number; price: string | null }[]) if (r.price) out.set(r.id, r.price);
-  } catch {
-    // No prices known: the budget rule then treats every listing as unpriced.
-  }
-  return out;
 }
 
 async function friendsPlan(token: string): Promise<InviteInput | null> {
@@ -118,6 +105,7 @@ export async function loadPlanInput(ctx: PlanContext, now = Date.now()): Promise
         eventId: f.e.id,
         title: f.e.title,
         startsAt: new Date(f.e.startsAt).getTime(),
+        endsAt: f.e.endsAt ? new Date(f.e.endsAt).getTime() : null,
         place: eventPlace(f.e) || [f.space?.neighborhood, f.space?.city].filter(Boolean).join(", "),
         price: prices.get(f.e.id) ?? null,
         online: f.e.meets === "online",
