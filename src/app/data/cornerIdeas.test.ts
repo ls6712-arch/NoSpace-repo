@@ -66,6 +66,37 @@ describe("corner ideas", () => {
     expect(CORNER_IDEAS["nature-outdoors/surfing"].time).toBe("weekend");
   });
 
+  it("makes any idea that means booking a paid class, session, tour or room Treat me", () => {
+    const named = [
+      "nature-outdoors/kayaking", "travel-adventure/rafting", "health-wellness/sauna-cold-plunge", "health-wellness/sound-baths",
+      "music/karaoke", "sports-fitness/boxing", "sports-fitness/dance", "art-creative/improv", "travel-adventure/travel",
+      "travel-adventure/road-trips", "sports-fitness/martial-arts", "crafts-making/pottery", "sports-fitness/climbing",
+      "nature-outdoors/surfing", "sports-fitness/padel",
+    ];
+    for (const k of named) expect(CORNER_IDEAS[k].spend, k).toBe("treat");
+    for (const [key, idea] of Object.entries(CORNER_IDEAS)) {
+      if (/\b(class|lesson|session|tour|workshop)\b/i.test(idea.ideaTitle) && !/drop-in/i.test(idea.ideaTitle)) {
+        expect(idea.spend, `${key}: ${idea.ideaTitle}`).toBe("treat");
+      }
+    }
+    expect(Object.values(CORNER_IDEAS).filter((i) => i.spend === "treat")).toHaveLength(named.length);
+  });
+
+  it("keeps drop-ins and open play at Under $25 or below", () => {
+    for (const k of ["sports-fitness/pickleball", "sports-fitness/volleyball", "art-creative/life-drawing", "music/choir", "sports-fitness/run-clubs"]) {
+      expect(CORNER_IDEAS[k].spend, k).not.toBe("treat");
+    }
+  });
+
+  it("includes Solo on every idea done at home alone", () => {
+    const atHome = /\b(your (kitchen|home|room|closet|living room)|at home|a quiet (room|seat)|a laptop|floor space)\b/i;
+    const withOthers = /friend|guest|crew|others|team|group/i;
+    const checked = Object.entries(CORNER_IDEAS).filter(([, i]) => atHome.test(i.how) && !withOthers.test(`${i.ideaTitle} ${i.how}`));
+    expect(checked.length).toBeGreaterThan(15);
+    for (const [key, idea] of checked) expect(idea.who, key).toContain("solo");
+    expect(CORNER_IDEAS["travel-adventure/skiing"].who).toEqual(["solo"]);
+  });
+
   it("looks an idea up by Space and Corner", () => {
     expect(cornerIdea("food-cooking", "sourdough")?.ideaTitle).toBe("Start a sourdough starter");
     expect(cornerIdea("food-cooking", "not-a-corner")).toBeUndefined();
