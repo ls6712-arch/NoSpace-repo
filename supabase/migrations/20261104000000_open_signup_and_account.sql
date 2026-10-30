@@ -17,6 +17,18 @@
 --   profiles.username        unique, case-insensitive. A person can set it during
 --                            onboarding only, through set_username_during_onboarding().
 --                            After that it stays read-only, as before.
+--   claim_invite()           an already-active person can claim an invite too: it
+--                            still sets invited_by and creates the two-way follow
+--                            (it used to answer 'already_active' and do nothing,
+--                            which with open sign-up meant no invite ever attached).
+--   remove_underage_account() an under-18 sign-up is removed: it sets
+--                            deletion_requested_at to 14 days ago, so the nightly
+--                            purge (20261103000000_account_deletion_purge.sql)
+--                            erases the account on its next run, no grace period.
+--   deletion guard           once the 14 days are up, deletion_requested_at can no
+--                            longer be cleared, so nobody can "keep" an account
+--                            that is due for the next purge (this is what stops an
+--                            under-18 account cancelling its own removal).
 --   handle_new_user()        now makes a usable, unique username from the email
 --                            prefix (it used to copy it as it was and could collide).
 --
@@ -25,9 +37,9 @@
 -- no unique index on username and no duplicate lowercase usernames; the
 -- column-privacy migration (20261031000000) has NOT run there.
 --
--- Run AFTER 20261102000000_space_events_listing.sql.
+-- Run AFTER 20261103000000_account_deletion_purge.sql.
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
--- Rollback: rollback_20261103000000_open_signup_and_account.sql.
+-- Rollback: rollback_20261104000000_open_signup_and_account.sql.
 
 -- 1. Open sign-up -----------------------------------------------------------
 
@@ -280,3 +292,114 @@ begin
   return new;
 end
 $$;
+
+-- 5. Claiming an invite when already active -----------------------------------
+--
+-- Same answers as before ('claimed', 'already_active', 'invalid'). What changed:
+-- an active person with no inviter yet can claim a valid invite, and then gets
+-- invited_by and the two-way follow. Someone who already has an inviter keeps
+-- it and the invite stays open. A stale or used link, or one from yourself,
+-- answers 'already_active' to an active person (nothing to tell them) and
+-- 'invalid' to a pending one, as before. invite_allowance is never lowered.
+
+create or replace function public.claim_invite(p_code text)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  uid uuid := auth.uid();
+  inv public.invites%rowtype;
+  v_access text;
+  v_invited_by uuid;
+  grant_n integer;
+begin
+  if uid is null then
+    raise exception 'Sign in first.' using errcode = '28000';
+  end if;
+
+  v_access := (select p.access from public.profiles p where p.id = uid);
+  v_invited_by := (select p.invited_by from public.profiles p where p.id = uid);
+
+  if v_invited_by is not null then
+    return 'already_active';
+  end if;
+
+  select * into inv from public.invites i
+  where replace(i.code, '-', '') = upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z0-9]', '', 'g'))
+  for update;
+
+  if not found or inv.status <> 'open' or inv.expires_at <= now() or inv.inviter_id = uid then
+    return case when v_access = 'active' then 'already_active' else 'invalid' end;
+  end if;
+
+  select coalesce((c.value #>> '{}')::integer, 0) into grant_n
+  from public.app_config c where c.key = 'invites_per_new_member';
+
+  update public.invites i
+  set status = 'claimed', claimed_by = uid, claimed_at = now()
+  where i.code = inv.code;
+
+  update public.profiles p
+  set access = 'active', invited_by = inv.inviter_id, invite_allowance = greatest(p.invite_allowance, coalesce(grant_n, 0))
+  where p.id = uid;
+
+  insert into public.profile_follows (follower_id, followed_id, status, responded_at)
+  values (uid, inv.inviter_id, 'accepted', now()),
+         (inv.inviter_id, uid, 'accepted', now())
+  on conflict (follower_id, followed_id)
+  do update set status = 'accepted', responded_at = now();
+
+  return 'claimed';
+end
+$$;
+
+-- 6. Under-18 removal -----------------------------------------------------------
+--
+-- The 14 days must match purge_deleted_accounts() and DELETION_GRACE_DAYS
+-- (src/app/lib/accountStatus.ts). Only an account that has not finished
+-- onboarding can be removed this way, so it cannot be used to skip the grace
+-- period on an established account. Nothing else is kept: the birthdate was
+-- never saved, and the purge deletes the auth user and everything that cascades.
+
+create or replace function public.remove_underage_account()
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+begin
+  if v_uid is null then
+    raise exception 'Sign in first.' using errcode = '28000';
+  end if;
+  update public.profiles p
+  set deletion_requested_at = now() - interval '14 days'
+  where p.id = v_uid and p.onboarding_completed = false;
+  return found;
+end
+$$;
+revoke all on function public.remove_underage_account() from public, anon;
+grant execute on function public.remove_underage_account() to authenticated;
+
+create or replace function private.guard_deletion_cancel()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.deletion_requested_at is null
+     and old.deletion_requested_at is not null
+     and old.deletion_requested_at <= now() - interval '14 days' then
+    raise exception 'This account has been removed.' using errcode = 'P0001';
+  end if;
+  return new;
+end
+$$;
+revoke all on function private.guard_deletion_cancel() from public;
+
+create trigger profiles_guard_deletion_cancel
+  before update of deletion_requested_at on public.profiles
+  for each row execute function private.guard_deletion_cancel();

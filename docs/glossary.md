@@ -203,7 +203,7 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 | What should people call you? / This is how your name shows on your Shelf. | Onboarding name step: required display name, with a live preview under "Your Shelf" |
 | Moments logged | Headline stat |
 | Is this how you’d like to be known? / Save name | One-time prompt for accounts named after their email; saving unchanged confirms the name |
-| I’m 16 or older and agree to the Terms and Privacy Policy | Required sign-up checkbox (email and Google). Both documents are linked. Shown once more, with a Continue button, to any account with no recorded acceptance: in onboarding for a new account, as a prompt that can't be closed for an existing one (Log out is the only other way out) |
+| I’m 18 or older and agree to the Terms and Privacy Policy | Required sign-up checkbox (email and Google). Both documents are linked. Shown once more, with a Continue button, to any account with no recorded acceptance: in onboarding for a new account, as a prompt that can't be closed for an existing one (Log out is the only other way out) |
 | Terms and Privacy Policy | Title of that one-time prompt for existing accounts |
 | Milestones | Private badges, shared one at a time |
 | Followers / Following | People connections |
@@ -432,7 +432,7 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 
 ### Onboarding, account screens (PR 2)
 
-**Proposed Oct 30, 2026, awaiting approval.** The strings the brief gives for these screens (I already have an account, Continue with Google, Continue with Apple, Continue with email, Never shown to anyone, Use my location, the wrong code line and the under-age line) are used as written. The rest are new.
+**Approved by the founder, Oct 30, 2026.** The strings the brief gives for these screens (I already have an account, Continue with Google, Continue with Apple, Continue with email, Never shown to anyone, Use my location, the wrong code line and the under-age line) are used as written. The rest are new.
 
 | Term | Meaning |
 |---|---|
@@ -456,6 +456,24 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 | Where are you? / Neighborhood or city | Heading and label on screen 6 |
 | Location is off. Type your neighborhood instead. | Location denied. Shown once, no repeat |
 | That’s outside New York. Type your city instead. | Location read, but not in New York |
+
+### Log in (Soosh log in brief, Oct 29, 2026)
+
+**Proposed Oct 30, 2026, awaiting approval.** Reuses Continue with Google, Continue with Apple, Continue with email, Get started, Check your email, the code screen lines and Log out from above. Existing lines kept as they were: Log in, Forgot your password?, "If there’s an account for that address, a reset link is on its way. Check your spam folder if it doesn’t arrive."
+
+| Term | Meaning |
+|---|---|
+| Welcome back. | Headline of the returning-user screen (Stubby wakes up when you tap or type) |
+| New here? Get started | Link on it, to the onboarding |
+| Log in | Heading of the email screen and of the password screen, and the password button |
+| Send me a code | Button on the email screen. Says Add your email while the field is empty |
+| Use my password instead | Link on the email screen: email and password for people who prefer it |
+| Add your password | The log in button while the password is empty |
+| That email and password didn’t match. | Wrong password (Stubby shrugs) |
+| Reset your password | Heading of the forgot-password screen |
+| Send reset link | Button on it. Check your email follows, with the reset line above and a Log in button |
+| No Soosh account for that email yet. | An email with no account. The button is Get started and goes to sign up with the email already typed. A second link, Use a different email, goes back |
+| Signing you in… | While the session is made (Stubby thinks) |
 
 ## Retired terms
 

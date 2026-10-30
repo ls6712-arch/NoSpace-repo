@@ -6,7 +6,7 @@ import { isStep, type OnboardingStep } from "../pages/onboarding/steps";
  * What the onboarding screens write: the last finished step, birthdate, area
  * and city (profile_private, owner-only) and the username (a database function
  * that only works until onboarding is finished). All of it comes from migration
- * 20261103000000. Before that migration is live each call quietly does nothing,
+ * 20261104000000. Before that migration is live each call quietly does nothing,
  * so the screens still work and nobody is blocked by a missing column.
  */
 // PostgREST: PGRST202 no such function, PGRST204 no such column; Postgres: 42883 no such function, 42703 no such column.
@@ -96,5 +96,19 @@ export async function suggestUsername(username: string): Promise<string | null> 
     return !error && typeof data === "string" ? data : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * An under-18 sign-up: the database marks the account for the nightly purge
+ * with no grace period (migration 20261104000000). Quietly does nothing before
+ * that migration is live; the caller signs out either way.
+ */
+export async function removeUnderageAccount(): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.rpc("remove_underage_account");
+  } catch {
+    // Signing out still happens.
   }
 }

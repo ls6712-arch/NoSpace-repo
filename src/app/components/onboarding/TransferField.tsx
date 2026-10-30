@@ -37,11 +37,14 @@ export function TransferField({
           {...input}
         />
       </div>
-      {note && (
-        <p id={noteId} role={error ? "alert" : undefined} className={error ? "transfer-label mt-2 text-small" : "mt-2 text-small transfer-muted"}>
-          {note}
-        </p>
-      )}
+      {/* Always rendered, so a screen reader announces the error when it appears. */}
+      <p
+        id={note ? noteId : undefined}
+        aria-live="polite"
+        className={note ? (error ? "transfer-label mt-2 text-small" : "mt-2 text-small transfer-muted") : "sr-only"}
+      >
+        {note}
+      </p>
     </div>
   );
 }

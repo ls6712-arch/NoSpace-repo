@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowLeft } from "lucide-react";
 import { StepHeader } from "../../components/onboarding/StepHeader";
 import type { StubbyState } from "../../components/stubby/Stubby";
@@ -15,7 +15,8 @@ import {
   writeLastFinished,
 } from "../../lib/onboardingProgress";
 import { fetchRemoteStep, saveRemoteStep } from "../../lib/onboardingRemote";
-import { PAGE_FROM, page } from "../../lib/motionTokens";
+import { page } from "../../lib/motionTokens";
+import { slide } from "./transitions";
 import { ERROR_LINE, OFFLINE_LINE } from "../../lib/stateCopy";
 import { OnboardingContext, type OnboardingApi } from "./OnboardingContext";
 import { PlaceholderScreen } from "./PlaceholderScreen";
@@ -31,14 +32,6 @@ import {
   slideDirection,
   type OnboardingStep,
 } from "./steps";
-
-/** Between steps the old screen slides 24px away and the new one comes in from the other side. */
-const SLIDE = 24;
-const slide: Variants = {
-  enter: (dir: number) => (dir === 0 ? PAGE_FROM : { opacity: 0, x: dir * SLIDE }),
-  center: { opacity: 1, x: 0, y: 0 },
-  exit: (dir: number) => ({ opacity: 0, x: -dir * SLIDE }),
-};
 
 /** How long a one-shot reaction is held before Stubby goes back to idle, so the same reaction can play again. */
 const REACTION_HOLD_MS = 150;
@@ -64,6 +57,8 @@ export function OnboardingFlow() {
   const userId = user?.id;
   const signedIn = !!user;
   const inviteCode = params.get("invite");
+  // An address typed on the log in screen, carried to sign up so it is not typed twice.
+  const emailParam = params.get("email");
 
   // The destination: the URL's, else the one kept across a sign-in round trip, else Discover.
   const urlRedirect = params.get("redirect");
@@ -88,9 +83,10 @@ export function OnboardingFlow() {
     (s: OnboardingStep) => {
       const q = new URLSearchParams({ step: s, redirect: redirectTo });
       if (inviteCode) q.set("invite", inviteCode);
+      if (emailParam) q.set("email", emailParam);
       return `/onboarding?${q.toString()}`;
     },
-    [redirectTo, inviteCode],
+    [redirectTo, inviteCode, emailParam],
   );
 
   // A missing or out-of-reach ?step= is replaced with the screen the person should be on.

@@ -14,6 +14,7 @@ import { takeSavedInviteCode } from "../lib/inviteCode";
 import { claimInvite } from "../lib/invites";
 import { ERROR_LINE, OFFLINE_LINE } from "../lib/stateCopy";
 import { friendlyError } from "../lib/friendlyError";
+import { isNoAccountError } from "../lib/authErrors";
 import { flushTermsAcceptance } from "../lib/termsAcceptance";
 import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
 
@@ -88,6 +89,12 @@ interface AuthContextType {
   /** Emails a 6-digit code (new and existing accounts alike; no password). The
    * Supabase email templates have to print `{{ .Token }}`: see docs/email-templates.md. */
   sendEmailCode: (email: string) => Promise<{ error: string | null }>;
+  /**
+   * The sign-in side of the code: emails a code to an existing account and
+   * never creates one. `noAccount` is true when nobody has that email, so the
+   * log in screen can send the person to Get started instead.
+   */
+  sendSignInCode: (email: string) => Promise<{ error: string | null; noAccount?: boolean }>;
   /** Checks the code from sendEmailCode and signs in. */
   verifyEmailCode: (email: string, code: string) => Promise<{ error: string | null; wrong?: boolean }>;
   /** Re-sends the signup confirmation email — the one self-service option
@@ -214,8 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Step 2's actual claim-on-sign-in: run right after every profile load
-   * that might be a brand-new or still-pending account. A pending account
-   * with a code saved from the arrival page (localStorage — the only thing
+   * that might be a brand-new account. An account with a code saved from the arrival page (localStorage — the only thing
    * that survives the Google redirect, whose redirect_to is the bare site
    * root) gets that code claimed here, before Root.tsx ever has to decide
    * where to route them. The code is taken (read + cleared) regardless of
@@ -228,11 +234,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const row = await loadProfile(userId, expectName);
     // Writes the time from the sign-up checkbox, if one is waiting.
     void flushTermsAcceptance();
-    if (row?.access !== "pending") return;
+    // Anyone with a saved code claims it, active or not: since sign-up is open
+    // nobody is pending any more, and claim_invite still records who invited
+    // them (and the two-way follow) for an active account with no inviter.
     const code = takeSavedInviteCode();
     if (!code) return;
     const result = await claimInvite(code);
-    if (result === "invalid") setInviteClaimError("That invite has expired or was already used.");
+    if (result === "invalid" && row?.access === "pending") setInviteClaimError("That invite has expired or was already used.");
     if (result === "claimed" || result === "already_active") await loadProfile(userId);
   };
 
@@ -392,6 +400,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const sendSignInCode: AuthContextType["sendSignInCode"] = async (email) => {
+    if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
+      if (!error) return { error: null };
+      if (isNoAccountError(error)) return { error: null, noAccount: true };
+      return { error: friendlyError(error) };
+    } catch {
+      return { error: OFFLINE_LINE };
+    }
+  };
+
   const verifyEmailCode: AuthContextType["verifyEmailCode"] = async (email, code) => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     try {
@@ -505,6 +525,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         signInWithApple,
         sendEmailCode,
+        sendSignInCode,
         verifyEmailCode,
         resendConfirmation,
         resetPassword,

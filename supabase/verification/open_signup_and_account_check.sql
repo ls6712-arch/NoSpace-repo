@@ -2,7 +2,7 @@
 -- area, onboarding_step, usernames, handle_new_user).
 --
 -- Not a migration, nothing here alters the schema. Run this AFTER
--- 20261103000000_open_signup_and_account.sql. Run before it, the script stops at
+-- 20261104000000_open_signup_and_account.sql. Run before it, the script stops at
 -- the first check and says so ("NOT APPLIED"); it never creates anything then.
 --
 -- Same pattern as every earlier script: one transaction, one do $$ ... $$
@@ -15,9 +15,13 @@
 --
 -- Fixed ids: A …5101, B …5102 (same email prefix on different domains, so the
 -- second one proves the username collision handling), C …5103 (a very short
--- prefix). Every count and lookup is scoped to those ids, never to a whole live
+-- prefix; later the under-18 removal), D …5104 (an inviter), E …5105 (active,
+-- no inviter, claims an invite), F …5106 (active, stale and self invites),
+-- G …5107 (pending, claims), H …5108 (pending, bad code).
+-- Invite codes: ACCTCHK1 to ACCTCHK5. Every count and lookup is scoped to those ids, never to a whole live
 -- table; whole-table facts (a column being NOT NULL, an index existing) are read
--- from the catalog instead.
+-- from the catalog instead. The nightly purge is run inside the transaction to prove
+-- C is erased; it is rolled back with everything else.
 
 begin;
 
@@ -31,14 +35,26 @@ declare
   v_a uuid := '00000000-0000-4000-8000-000000005101';
   v_b uuid := '00000000-0000-4000-8000-000000005102';
   v_c uuid := '00000000-0000-4000-8000-000000005103';
+  v_d uuid := '00000000-0000-4000-8000-000000005104';
+  v_e uuid := '00000000-0000-4000-8000-000000005105';
+  v_f uuid := '00000000-0000-4000-8000-000000005106';
+  v_g uuid := '00000000-0000-4000-8000-000000005107';
+  v_h uuid := '00000000-0000-4000-8000-000000005108';
+  v_uuid uuid;
+  v_ts timestamptz;
   v_ma int;
   v_mb int;
 begin
   v_owner_role := current_user;
 
+  if to_regprocedure('public.purge_deleted_accounts()') is null then
+    raise exception 'RESULTS: NOT APPLIED (run 20261103000000_account_deletion_purge.sql first, nothing was created)';
+  end if;
+
   if to_regprocedure('public.set_username_during_onboarding(text)') is null
-     or to_regprocedure('public.my_member_no()') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261103000000_open_signup_and_account.sql first, nothing was created)';
+     or to_regprocedure('public.my_member_no()') is null
+     or to_regprocedure('public.remove_underage_account()') is null then
+    raise exception 'RESULTS: NOT APPLIED (run 20261104000000_open_signup_and_account.sql first, nothing was created)';
   end if;
 
   -- ───────────────────────────────────────────────────────────────────────
@@ -305,6 +321,201 @@ begin
     when others then
       results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
   end;
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- Invites: claiming as an already-active person still attaches the inviter.
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('role', v_owner_role, true);
+  insert into auth.users
+    (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, is_super_admin)
+  values
+    (v_d, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'acctinv.d@acct-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    (v_e, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'acctinv.e@acct-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    (v_f, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'acctinv.f@acct-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    (v_g, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'acctinv.g@acct-test.invalid', '', now(), now(), now(), '{}', '{}', false),
+    (v_h, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'acctinv.h@acct-test.invalid', '', now(), now(), now(), '{}', '{}', false);
+  update public.profiles p set access = 'pending' where p.id in (v_g, v_h);
+  update public.profiles p set invite_allowance = 5 where p.id = v_e;
+  insert into public.invites (code, inviter_id) values ('ACCTCHK1', v_d), ('ACCTCHK2', v_d), ('ACCTCHK5', v_d), ('ACCTCHK3', v_f);
+  insert into public.invites (code, inviter_id, expires_at) values ('ACCTCHK4', v_d, now() - interval '1 day');
+
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.profiles p where p.id in (v_d, v_e, v_f, v_g, v_h));
+  results := array_append(results, case when v_n = 5 then format('%s PASS (5 invite fixture profiles; E, F active and G, H pending)', v_i)
+                                        else format('%s FAIL (expected 5 profiles, got %s)', v_i, v_n) end);
+
+  -- E: active, no inviter, claims a valid invite.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_e), true);
+  v_i := v_i + 1;
+  v_text := public.claim_invite('acctchk1');
+  results := array_append(results, case when v_text = 'claimed' then format('%s PASS (an active person claims an invite)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+
+  perform set_config('role', v_owner_role, true);
+  v_i := v_i + 1;
+  v_uuid := (select p.invited_by from public.profiles p where p.id = v_e);
+  results := array_append(results, case when v_uuid = v_d then format('%s PASS (invited_by is the inviter)', v_i)
+                                        else format('%s FAIL (invited_by %s)', v_i, v_uuid) end);
+
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.profile_follows f
+          where f.status = 'accepted'
+            and ((f.follower_id = v_e and f.followed_id = v_d) or (f.follower_id = v_d and f.followed_id = v_e)));
+  results := array_append(results, case when v_n = 2 then format('%s PASS (two-way follow created)', v_i)
+                                        else format('%s FAIL (%s follow rows)', v_i, v_n) end);
+
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.invites i where i.code = 'ACCTCHK1' and i.status = 'claimed' and i.claimed_by = v_e);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (the invite is marked claimed by E)', v_i)
+                                        else format('%s FAIL (invite not claimed by E)', v_i) end);
+
+  v_i := v_i + 1;
+  v_n := (select p.invite_allowance from public.profiles p where p.id = v_e);
+  results := array_append(results, case when v_n >= 5 then format('%s PASS (E''s invite allowance was not lowered)', v_i)
+                                        else format('%s FAIL (allowance %s)', v_i, v_n) end);
+
+  -- E already has an inviter: a second invite is not consumed.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_e), true);
+  v_i := v_i + 1;
+  v_text := public.claim_invite('ACCTCHK2');
+  results := array_append(results, case when v_text = 'already_active' then format('%s PASS (a second invite answers already_active)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+  perform set_config('role', v_owner_role, true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.invites i where i.code = 'ACCTCHK2' and i.status = 'open');
+  results := array_append(results, case when v_n = 1 then format('%s PASS (the second invite is still open)', v_i)
+                                        else format('%s FAIL (second invite was used)', v_i) end);
+
+  -- F: active. A made-up code, their own invite and an expired one change nothing.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_f), true);
+  v_i := v_i + 1;
+  v_text := public.claim_invite('NOPE-NOPE');
+  results := array_append(results, case when v_text = 'already_active' then format('%s PASS (an unknown code tells an active person nothing is wrong)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+  v_i := v_i + 1;
+  v_text := public.claim_invite('ACCTCHK3');
+  results := array_append(results, case when v_text = 'already_active' then format('%s PASS (your own invite is not claimable)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+  v_i := v_i + 1;
+  v_text := public.claim_invite('ACCTCHK4');
+  results := array_append(results, case when v_text = 'already_active' then format('%s PASS (an expired invite is not claimable)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+  perform set_config('role', v_owner_role, true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.profiles p where p.id = v_f and p.invited_by is null);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (F still has no inviter)', v_i)
+                                        else format('%s FAIL (F got an inviter)', v_i) end);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.invites i where i.code in ('ACCTCHK3', 'ACCTCHK4') and i.status = 'open');
+  results := array_append(results, case when v_n = 2 then format('%s PASS (the self and expired invites stay open)', v_i)
+                                        else format('%s FAIL (%s still open)', v_i, v_n) end);
+
+  -- G: pending, claims: becomes active with the inviter, as before.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_g), true);
+  v_i := v_i + 1;
+  v_text := public.claim_invite('ACCTCHK5');
+  results := array_append(results, case when v_text = 'claimed' then format('%s PASS (a pending person claims and is activated)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+  perform set_config('role', v_owner_role, true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.profiles p where p.id = v_g and p.access = 'active' and p.invited_by = v_d);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (G is active with D as inviter)', v_i)
+                                        else format('%s FAIL (G not activated)', v_i) end);
+
+  -- H: pending with a bad code is still told it is invalid.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_h), true);
+  v_i := v_i + 1;
+  v_text := public.claim_invite('NOPE-NOPE');
+  results := array_append(results, case when v_text = 'invalid' then format('%s PASS (a pending person with a bad code gets invalid)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+
+  -- Signed out cannot claim.
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{}', true);
+  v_i := v_i + 1;
+  begin
+    v_text := public.claim_invite('ACCTCHK1');
+    results := array_append(results, format('%s FAIL (anon claimed: %s)', v_i, v_text));
+  exception
+    when insufficient_privilege then
+      results := array_append(results, format('%s PASS (anon refused)', v_i));
+    when sqlstate '28000' then
+      results := array_append(results, format('%s PASS (anon told to sign in)', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- ───────────────────────────────────────────────────────────────────────
+  -- Under-18 removal: due for the next purge, and it cannot be cancelled.
+  -- ───────────────────────────────────────────────────────────────────────
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_a), true);
+  v_i := v_i + 1;
+  v_text := public.remove_underage_account()::text;
+  results := array_append(results, case when v_text = 'false' then format('%s PASS (an account that finished onboarding is not removed)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_c), true);
+  v_i := v_i + 1;
+  v_text := public.remove_underage_account()::text;
+  results := array_append(results, case when v_text = 'true' then format('%s PASS (C, mid-onboarding, is removed)', v_i)
+                                        else format('%s FAIL (got %s)', v_i, v_text) end);
+
+  perform set_config('role', v_owner_role, true);
+  v_ts := (select p.deletion_requested_at from public.profiles p where p.id = v_c);
+  v_i := v_i + 1;
+  results := array_append(results, case when v_ts is not null and v_ts <= now() - interval '14 days' then format('%s PASS (C is already past the 14 days, so the next purge takes it)', v_i)
+                                        else format('%s FAIL (deletion_requested_at %s)', v_i, v_ts) end);
+  v_i := v_i + 1;
+  v_ts := (select p.deletion_requested_at from public.profiles p where p.id = v_a);
+  results := array_append(results, case when v_ts is null then format('%s PASS (A was left alone)', v_i)
+                                        else format('%s FAIL (A got a deletion date)', v_i) end);
+
+  -- C cannot cancel it.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_c), true);
+  v_i := v_i + 1;
+  begin
+    update public.profiles p set deletion_requested_at = null where p.id = v_c;
+    results := array_append(results, format('%s FAIL (C cancelled the removal)', v_i));
+  exception
+    when raise_exception then
+      results := array_append(results, format('%s PASS (a removal past its 14 days cannot be cancelled)', v_i));
+    when others then
+      results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- Someone inside the 14 days (asked to delete today) can still keep their account.
+  perform set_config('role', v_owner_role, true);
+  update public.profiles p set deletion_requested_at = now() where p.id = v_f;
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_f), true);
+  v_i := v_i + 1;
+  begin
+    update public.profiles p set deletion_requested_at = null where p.id = v_f;
+    v_n := (select count(*) from public.profiles p where p.id = v_f and p.deletion_requested_at is null);
+    results := array_append(results, case when v_n = 1 then format('%s PASS (inside the 14 days, Keep my account still works)', v_i)
+                                          else format('%s FAIL (not cleared)', v_i) end);
+  exception when others then
+    results := array_append(results, format('%s ERROR %s: %s', v_i, sqlstate, sqlerrm));
+  end;
+
+  -- The nightly purge takes C and only C of the fixture (rolled back with everything else).
+  perform set_config('role', v_owner_role, true);
+  perform public.purge_deleted_accounts();
+  v_i := v_i + 1;
+  v_n := (select count(*) from auth.users u where u.id = v_c);
+  results := array_append(results, case when v_n = 0 then format('%s PASS (the purge erased C)', v_i)
+                                        else format('%s FAIL (C is still there)', v_i) end);
+  v_i := v_i + 1;
+  v_n := (select count(*) from auth.users u where u.id in (v_a, v_b, v_d, v_e, v_f, v_g, v_h));
+  results := array_append(results, case when v_n = 7 then format('%s PASS (the other 7 fixture accounts are untouched)', v_i)
+                                        else format('%s FAIL (%s of 7 left)', v_i, v_n) end);
 
   perform set_config('role', v_owner_role, true);
   raise exception 'RESULTS: %', array_to_string(results, ', ');

@@ -5,13 +5,16 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { APP_NAME, sooshOnboardingEnabled } from "../config";
+import { APP_NAME } from "../config";
 import { OFFLINE_LINE } from "../lib/stateCopy";
 import { TermsCheckbox } from "../components/TermsCheckbox";
 import { rememberTermsAcceptance } from "../lib/termsAcceptance";
 import { DISPLAY_NAME_MAX, validateDisplayName } from "../lib/displayName";
+import { sooshOnboardingEnabled } from "../config";
+import { LoginV2 } from "./login/LoginV2";
 
-export function Login() {
+/** The old log in and sign up page. Still what /login shows until `sooshOnboardingEnabled` (config.ts) is on. */
+function LoginLegacy() {
   const { user, signIn, signUp, signInWithGoogle, resendConfirmation, resetPassword, isConfigured } =
     useAuth();
   const navigate = useNavigate();
@@ -30,13 +33,6 @@ export function Login() {
   const [mode, setMode] = useState<"signin" | "signup">(
     searchParams.get("mode") === "signin" ? "signin" : "signup",
   );
-  // New accounts are made in the Soosh onboarding (Google, Apple or an email
-  // code); this page stays for people who already have a password.
-  useEffect(() => {
-    if (sooshOnboardingEnabled && mode === "signup" && !user) {
-      navigate(`/onboarding?redirect=${encodeURIComponent(redirectTo)}`, { replace: true });
-    }
-  }, [mode, user]);
   const [resetSent, setResetSent] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -316,4 +312,9 @@ export function Login() {
       </div>
     </div>
   );
+}
+
+/** /login: the Soosh log in (Transfer frame, codes first), or the old page while the flag is off. */
+export function Login() {
+  return sooshOnboardingEnabled ? <LoginV2 /> : <LoginLegacy />;
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import { TermsCheckbox } from "../../../components/TermsCheckbox";
 import { TransferButton } from "../../../components/onboarding/TransferButton";
 import { TransferField } from "../../../components/onboarding/TransferField";
@@ -17,8 +18,11 @@ export function SignUpScreen() {
   const { next, redirectTo } = useOnboarding();
   const { signInWithGoogle, signInWithApple, sendEmailCode } = useAuth();
   const [agreed, setAgreed] = useState(false);
-  const [emailOpen, setEmailOpen] = useState(false);
-  const [email, setEmail] = useState("");
+  // From "No Soosh account for that email yet" on the log in screen: the address is already typed.
+  const [params] = useSearchParams();
+  const carried = params.get("email") ?? "";
+  const [emailOpen, setEmailOpen] = useState(!!carried);
+  const [email, setEmail] = useState(carried);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 

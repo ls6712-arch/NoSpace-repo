@@ -129,7 +129,15 @@ export function Root() {
   // onboarded" would flash the gate at an already-onboarded account on
   // every login. Every pre-existing account was backfilled to true by that
   // same migration, so this only ever catches a genuinely brand-new signup.
-  if (user && profile && !profile.onboarding_completed && location.pathname !== "/onboarding") {
+  // The Soosh log in sends an unfinished account into the onboarding itself, with the
+  // destination it was going to, so this gate steps aside there.
+  if (
+    user &&
+    profile &&
+    !profile.onboarding_completed &&
+    location.pathname !== "/onboarding" &&
+    !(sooshOnboardingEnabled && location.pathname === "/login")
+  ) {
     const next = `${location.pathname}${location.search}`;
     return <Navigate to={`/onboarding?redirect=${encodeURIComponent(next)}`} replace />;
   }
@@ -137,7 +145,7 @@ export function Root() {
   // The signed-out landing page has its own nav (Home.tsx renders it), and a
   // visitor never sees the member nav, tab bar or prompts.
   // Onboarding and a Pursuit's recap are one focused screen each: no top bar or tab bar around them.
-  if ((!user && location.pathname === "/") || location.pathname === "/onboarding" || /^\/pursuit\/[^/]+\/recap$/.test(location.pathname)) {
+  if ((!user && location.pathname === "/") || location.pathname === "/onboarding" || (sooshOnboardingEnabled && location.pathname === "/login") || /^\/pursuit\/[^/]+\/recap$/.test(location.pathname)) {
     return (
       <div className="min-h-viewport">
         <PreviewBanner />

@@ -1,7 +1,7 @@
 import { supabase } from "../../lib/supabase";
 import { TERMS_VERSION } from "../config";
 
-/** Sign-up has a required "I'm 16 or older and agree to the Terms and Privacy
+/** Sign-up has a required "I'm 18 or older and agree to the Terms and Privacy
  * Policy" checkbox. The client only ever SIGNALS acceptance of one version;
  * the time is stamped by the database (public.accept_terms(p_version) uses
  * now() and has no time argument), so nothing the browser says can set or

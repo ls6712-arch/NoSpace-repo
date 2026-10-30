@@ -23,7 +23,7 @@ export function TermsCheckbox({
         className="mt-0.5 size-5 shrink-0 accent-[var(--coral-deep)]"
       />
       <label htmlFor={id} className="min-h-6 text-small leading-snug">
-        I’m 16 or older and agree to the{" "}
+        I’m 18 or older and agree to the{" "}
         <Link to="/terms" target="_blank" rel="noreferrer" className={link}>
           Terms
         </Link>{" "}

@@ -2,10 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { TransferButton } from "../../../components/onboarding/TransferButton";
 import { TransferField } from "../../../components/onboarding/TransferField";
-import { supabase } from "../../../../lib/supabase";
 import { useAuth } from "../../../context/AuthContext";
 import { MIN_AGE, checkBirthdate } from "../../../lib/age";
-import { savePrivate } from "../../../lib/onboardingRemote";
+import { removeUnderageAccount, savePrivate } from "../../../lib/onboardingRemote";
 import { ERROR_LINE } from "../../../lib/stateCopy";
 import { useOnboarding } from "../OnboardingContext";
 import { StepStubby } from "../StepStubby";
@@ -18,8 +17,8 @@ const todayIso = () => {
 
 /**
  * Screen 5: a date of birth, never shown to anyone. Under the minimum age
- * the screen becomes a calm stop: nothing is saved, the account is hidden and
- * the person is signed out.
+ * the screen becomes a calm stop: nothing is saved, the account is removed by
+ * the next nightly purge (no grace period) and the person is signed out.
  */
 export function BirthdayScreen() {
   const { next, setStubby } = useOnboarding();
@@ -68,15 +67,10 @@ export function BirthdayScreen() {
   };
 
   const leave = async () => {
-    // Nothing about this person was saved but the account itself, so hide it
-    // with the existing deletion request and sign out.
-    if (user && supabase) {
-      try {
-        await supabase.from("profiles").update({ deletion_requested_at: new Date().toISOString() }).eq("id", user.id);
-      } catch {
-        // Signing out still happens.
-      }
-    }
+    // Nothing about this person was saved but the account itself. The database
+    // marks it for the nightly purge, which erases it on its next run, then
+    // the person is signed out.
+    if (user) await removeUnderageAccount();
     await signOut();
     navigate("/", { replace: true });
   };

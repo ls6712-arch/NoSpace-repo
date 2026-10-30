@@ -2,7 +2,7 @@
  * The minimum age for Soosh. Plans mean meeting people in person and some
  * places serve alcohol; 13+ would need a separate teen mode (onboarding brief,
  * section 10.2). The same number is written in the database trigger
- * `private.check_birthdate()` (migration 20261103000000): change both.
+ * `private.check_birthdate()` (migration 20261104000000): change both.
  */
 export const MIN_AGE = 18;
 
