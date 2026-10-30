@@ -650,6 +650,16 @@ From 744px wide (and 480px tall) a signed-in person gets a left rail in place of
 | More | Menu from the rail with Settings, Reports (admins only), Theme (System, Light, Dark) and Log out. The top header's account menu is the same menu, plus You. Approved Oct 30, 2026 |
 | Skip to content | First link on a page with the rail, for keyboard and screen reader users. Approved Oct 30, 2026 |
 
+## Discover v2 (Oct 30, 2026)
+
+The Moment city, from PR 1 (approved Oct 30, 2026). The Discover page strings come with PR 2.
+
+| Where | String |
+|---|---|
+| City chip on the composer | {city}, with a close mark (for example "New York"). Removing it saves no city. |
+| City chip, accessible label | Remove {city} from this Moment |
+| Moment card meta line | {Corner} · {city} (for example "Pottery · New York"), shown only when the Moment has a city |
+
 ## Week view (brief of Oct 30, 2026)
 
 The wording of `/week`, taken from the founder's Week view brief. Opens from Home's Your week card; it is not a tab.

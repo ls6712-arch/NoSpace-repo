@@ -80,7 +80,7 @@ export function FeedCard({
 }) {
   const corner = post.corner ?? post.subHobby;
   const cornerName = (post.interest || (corner ? subHobbyLabel(corner) : undefined)) ?? "";
-  const meta = [cornerName, post.locationName, formatWhen(post.createdAt)].filter(Boolean).join(" · ");
+  const meta = [cornerName, post.city, post.locationName, formatWhen(post.createdAt)].filter(Boolean).join(" · ");
   const media = post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls : post.media ? [post.media] : [];
   const upcoming = post.startsAt != null && post.startsAt > Date.now();
   const { mine, toggle } = useReactionState(post.id);

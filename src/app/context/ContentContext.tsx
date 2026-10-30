@@ -102,6 +102,8 @@ export interface NewPostInput {
   visibility: Visibility;
   /** Who the Moment is for ("group" needs pursuitId). Written only when set. */
   audience?: "group" | "friends" | "everyone";
+  /** The city shown on the Moment ("New York"). Null or missing saves no city. */
+  city?: string | null;
   forSale?: ForSaleInput;
   /** Set when this moment is a thing happening at a time. */
   startsAt?: number;
@@ -152,10 +154,14 @@ export const POST_COLUMNS_WITH_MEDIA_PATHS = `${BASE_POST_COLUMNS}, media_paths`
  * Reflection's private column on the wire regardless of what the caller's
  * own mapper does with it (see the comment above this constant). */
 export const POST_COLUMNS_WITH_COUNTS = `${POST_COLUMNS_WITH_MEDIA_PATHS}, love_count, in_count`;
-/** The top tier: also who the Moment is for (posts.audience, migration
- * 20261101000000). Dropped first when that column is missing, so the counts
- * and media paths keep working. */
-export let POST_COLUMNS = `${POST_COLUMNS_WITH_COUNTS}, audience`;
+/** Also who the Moment is for (posts.audience, migration 20261101000000).
+ * Dropped when that column is missing, so the counts and media paths keep
+ * working. */
+export const POST_COLUMNS_WITH_AUDIENCE = `${POST_COLUMNS_WITH_COUNTS}, audience`;
+/** The top tier: also the city a Moment was made in (posts.city, migration
+ * 20261111000000). Dropped first when that column is missing, so audience
+ * keeps working. */
+export let POST_COLUMNS = `${POST_COLUMNS_WITH_AUDIENCE}, city`;
 /** True for any "column doesn't exist" error, not only a count column's —
  * the message-based OR clause exists for anything that logs this error
  * message manually; the `code` check alone already catches every real
@@ -196,6 +202,7 @@ export function rowToPost(row: any, creatorName: string): Post {
     createdAt: new Date(row.created_at).getTime(),
     visibility: row.visibility,
     audience: row.audience ?? undefined,
+    city: row.city ?? undefined,
     userId: row.user_id,
     startsAt: row.starts_at ? new Date(row.starts_at).getTime() : undefined,
     locationName: row.location_name ?? undefined,
@@ -381,7 +388,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       .from("posts")
       .select(POST_COLUMNS)
       .order("created_at", { ascending: false });
-    // posts.audience isn't in this database yet: drop only it first.
+    // posts.city isn't in this database yet: drop only it first.
+    if (isMissingCountColumn(error) && POST_COLUMNS !== POST_COLUMNS_WITH_AUDIENCE && POST_COLUMNS !== POST_COLUMNS_WITH_COUNTS
+        && POST_COLUMNS !== POST_COLUMNS_WITH_MEDIA_PATHS && POST_COLUMNS !== BASE_POST_COLUMNS) {
+      POST_COLUMNS = POST_COLUMNS_WITH_AUDIENCE;
+      ({ data, error } = await supabase
+        .from("posts")
+        .select(POST_COLUMNS)
+        .order("created_at", { ascending: false }));
+    }
+    // posts.audience isn't in this database yet: drop only it next.
     if (isMissingCountColumn(error) && POST_COLUMNS !== POST_COLUMNS_WITH_COUNTS && POST_COLUMNS !== POST_COLUMNS_WITH_MEDIA_PATHS && POST_COLUMNS !== BASE_POST_COLUMNS) {
       POST_COLUMNS = POST_COLUMNS_WITH_COUNTS;
       ({ data, error } = await supabase
@@ -740,11 +756,17 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // Moment is saved with its visibility alone, as before.
       // "Share now" asks for a visible_at at the moment of posting (see lib/momentHold.ts).
       const held = withShareNow(row, input.shareNow);
+      // posts.city is the same: sent only when set, and dropped when its column is missing.
+      const withAudience = input.audience ? { ...held, audience: input.audience } : held;
+      const withCity = input.city?.trim() ? { ...withAudience, city: input.city.trim() } : withAudience;
       let { data, error } = await supabase
         .from("posts")
-        .insert((input.audience ? { ...held, audience: input.audience } : held) as typeof row)
+        .insert(withCity as typeof row)
         .select(POST_COLUMNS)
         .single();
+      if (input.city?.trim() && error && isMissingCountColumn(error)) {
+        ({ data, error } = await supabase.from("posts").insert(withAudience as typeof row).select(POST_COLUMNS).single());
+      }
       if (input.audience && error && isMissingCountColumn(error) && input.audience !== "group") {
         ({ data, error } = await supabase.from("posts").insert(held as typeof row).select(POST_COLUMNS).single());
       }

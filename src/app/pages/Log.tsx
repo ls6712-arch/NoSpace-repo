@@ -404,6 +404,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   const [isActivity, setIsActivity] = useState(false);
   const [startsAt, setStartsAt] = useState("");
   const [locationName, setLocationName] = useState("");
+  // The Moment's city defaults to the author's own; removing the chip saves no city.
+  const [cityRemoved, setCityRemoved] = useState(false);
   const [locationPrivacy, setLocationPrivacy] = useState<LocationPrivacy>("neighborhood");
   const [savedAs, setSavedAs] = useState<null | "shared" | "private">(null);
   // The just-created Moment's id, for the "Saved." screen's own shared-
@@ -963,6 +965,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         caption,
         visibility: toGroup ? "just_me" : audience,
         audience: toGroup ? "group" : audience === "public" ? "everyone" : "friends",
+        city: circle === "private" || cityRemoved || !myCity.trim() ? null : myCity.trim(),
         shareNow: circle !== "private" && shareNow,
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,
@@ -1087,6 +1090,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     setStartsAt("");
     setLocationName("");
     setLocationPrivacy("neighborhood");
+    setCityRemoved(false);
     setScreen(pursuitScoped ? "caption" : "camera");
     audienceDecidedRef.current = false;
     setToGroup(false);
@@ -1574,6 +1578,20 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             </span>
           </button>
         </div>
+
+        {circle !== "private" && !cityRemoved && myCity.trim() && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={() => setCityRemoved(true)}
+              aria-label={`Remove ${myCity.trim()} from this Moment`}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-small text-foreground"
+            >
+              <span className="truncate">{myCity.trim()}</span>
+              <X className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         <Segmented label="Who sees this" value={circle} onChange={chooseCircle} options={circleOptions} className="mb-2" />
         <p className="mb-4 text-center text-caption text-muted-foreground">
