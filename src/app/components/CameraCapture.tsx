@@ -65,7 +65,8 @@ export function CameraCapture({
   onTextOnly: () => void;
 }) {
   const navigate = useNavigate();
-  const [captureMode, setCaptureMode] = useState<CaptureMode>("photo");
+  // Photos only: video and GIF files carry GPS and creation time this app can't strip.
+  const [captureMode] = useState<CaptureMode>("photo");
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
@@ -103,7 +104,7 @@ export function CameraCapture({
     }
 
     navigator.mediaDevices
-      .getUserMedia({ video: { facingMode }, audio: true })
+      .getUserMedia({ video: { facingMode }, audio: false })
       .then((stream) => {
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
@@ -114,7 +115,7 @@ export function CameraCapture({
         if (videoRef.current) videoRef.current.srcObject = stream;
       })
       .catch(() => {
-        if (!cancelled) setCameraError("Camera access isn’t available. Pick a photo or video instead.");
+        if (!cancelled) setCameraError("Camera access isn’t available. Pick a photo instead.");
       });
 
     return () => {
@@ -248,7 +249,7 @@ export function CameraCapture({
       <input
         ref={libraryInputRef}
         type="file"
-        accept="image/*,video/*"
+        accept="image/*"
         multiple
         className="hidden"
         onChange={pickFromLibrary}
@@ -299,31 +300,6 @@ export function CameraCapture({
 
         {/* Bottom overlay: mode pill + capture row */}
         <div className="absolute inset-x-0 bottom-0 bg-scrim px-4 pb-4 pt-10">
-          {cameraAvailable && (
-            <div className="mb-4 flex justify-center">
-              <div className="flex rounded-control bg-scrim-solid/40 p-1 text-caption">
-                <button
-                  type="button"
-                  onClick={() => !recording && setCaptureMode("photo")}
-                  className={`rounded-control px-3.5 py-1.5 transition-colors ${
-                    captureMode === "photo" ? "bg-coral-deep text-on-brand" : "text-on-media/90"
-                  }`}
-                >
-                  Photo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => !recording && setCaptureMode("video")}
-                  className={`rounded-control px-3.5 py-1.5 transition-colors ${
-                    captureMode === "video" ? "bg-coral-deep text-on-brand" : "text-on-media/90"
-                  }`}
-                >
-                  Video
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="flex items-center justify-center gap-8">
             <button
               type="button"

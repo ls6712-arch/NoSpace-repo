@@ -15,7 +15,7 @@ import type { PursuitItem } from "./profileApi";
 const NOW = new Date(2026, 9, 30, 12).getTime();
 const pursuit = (over: Partial<PursuitItem>): PursuitItem => ({
   id: "p", category: "Climbing", goal: "Send my first V4", target: 5, momentCount: 2, stubCount: 2,
-  finished: false, lastMomentDate: null, finishedAt: null, sharedWithYou: false, ...over,
+  finished: false, archived: false, lastMomentDate: null, finishedAt: null, sharedWithYou: false, ...over,
 });
 
 describe("moment meta (date coarsening)", () => {

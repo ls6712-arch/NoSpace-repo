@@ -875,7 +875,7 @@ export function Messages() {
                 size="page"
                 icon={<MessagesSquare />}
                 line="No open chats."
-                hint="A chat opens when someone accepts a Make together or Explore together request, or when you send someone a message from their Shelf."
+                hint="A chat opens when someone accepts a Make together or Explore together request, or when you send someone a message from their profile."
                 action={{ label: "New message", onClick: openPicker }}
               />
             ) : (

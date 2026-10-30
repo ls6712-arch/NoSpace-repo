@@ -115,41 +115,76 @@ class Query implements PromiseLike<{ data: any; error: null; count?: number }> {
 }
 
 const mayaPosts = () => posts.filter((p) => p.user_id === ME);
+
+/** Which kind of viewer the profile page is shown to (localStorage "preview-profile-role"); the owner by default. */
+const previewRole = (): string => {
+  try {
+    return localStorage.getItem("preview-profile-role") ?? "owner";
+  } catch {
+    return "owner";
+  }
+};
+
+const identity = { id: ME, username: "maya", displayName: "Maya Lin", avatarUrl: null, followState: "none" };
+const open = {
+  ...identity,
+  private: false,
+  neighborhood: "Greenpoint, Brooklyn",
+  bio: "Half marathon in the spring. Sourdough on Sundays.",
+  stubCount: 8,
+  pursuitCount: 3,
+  friendCount: 2,
+  level: { index: 4, name: "Weekend Regular" },
+};
+const previewProfile = (): unknown => {
+  switch (previewRole()) {
+    case "friend":
+      return { ...open, role: "friend", followState: "accepted", followsYou: true, planningPaused: false, mutualFriendCount: 3, sharedCategories: ["Running", "Baking"], mutualFriends: [{ id: "m1", name: "Sam R.", avatarUrl: null }, { id: "m2", name: "Jo K.", avatarUrl: null }, { id: "m3", name: "Ana P.", avatarUrl: null }] };
+    case "follower":
+      return { ...open, role: "follower", followState: "accepted", followsYou: false, mutualFriendCount: 1 };
+    case "public":
+      return { ...open, role: "public", followsYou: false };
+    case "private":
+      return { ...identity, role: "public", private: true, levelName: "Weekend Regular" };
+    case "blocked":
+      return null;
+    case "new":
+      return { ...open, role: "owner", neighborhood: null, bio: null, stubCount: 0, pursuitCount: 0, friendCount: 0, level: { index: 1, name: "Just Getting Started" }, stubsToNext: 1, planningPaused: false, isPrivate: false };
+    default:
+      return { ...open, role: "owner", stubsToNext: 2, planningPaused: false, isPrivate: false };
+  }
+};
+const previewMoments = () => {
+  const role = previewRole();
+  if (role === "new") return { total: 0, items: [] };
+  const rows = mayaPosts();
+  return {
+    total: rows.length,
+    items: rows.map((p) =>
+      role === "owner"
+        ? { id: p.id, photoUrl: p.media_url, caption: p.caption, category: p.corner, occurredAt: p.created_at ?? new Date().toISOString(), placeName: "Domino Park", neighborhood: "Williamsburg", visibleAt: null }
+        : { id: p.id, photoUrl: p.media_url, caption: p.caption, category: p.corner, date: String(p.created_at ?? new Date().toISOString()).slice(0, 10), neighborhood: "Williamsburg" },
+    ),
+  };
+};
+const previewPursuits = () => {
+  const role = previewRole();
+  if (role === "new") return [];
+  const own = role === "owner";
+  return [
+    { id: "pu1", category: "Running", goal: "Half marathon", target: 5, momentCount: 2, stubCount: 2, finished: false, archived: false, lastMomentDate: own ? "2026-10-24T19:00:00Z" : null, finishedAt: null, sharedWithYou: role === "friend" },
+    { id: "pu2", category: "Baking", goal: "Sourdough, 10 loaves", target: null, momentCount: 10, stubCount: 1, finished: true, archived: false, lastMomentDate: null, finishedAt: own ? "2026-10-12" : "2026-10", sharedWithYou: role === "friend" },
+  ];
+};
+const previewStubs = () =>
+  previewRole() === "new" ? [] : [{ id: 1, date: previewRole() === "owner" ? "2026-10-24T19:00:00Z" : null, day: "2026-10-24", title: "Eleven miles along the river", category: "Running" }];
+
 const rpcResults: Record<string, (args: any) => any> = {
   my_profile_private: () => [ownPrivate(ME)],
-  get_profile: () => ({
-    role: "owner",
-    id: ME,
-    username: "maya",
-    displayName: "Maya",
-    avatarUrl: null,
-    followState: "none",
-    private: false,
-    neighborhood: "Greenpoint, Brooklyn",
-    bio: "Half marathon in the spring. Sourdough on Sundays.",
-    stubCount: 8,
-    pursuitCount: 3,
-    friendCount: 2,
-    level: { index: 4, name: "Weekend Regular" },
-    stubsToNext: 2,
-    planningPaused: false,
-    isPrivate: false,
-  }),
-  get_profile_moments: () => ({
-    total: mayaPosts().length,
-    items: mayaPosts().map((p) => ({
-      id: p.id,
-      photoUrl: p.media_url,
-      caption: p.caption,
-      category: p.corner,
-      occurredAt: p.created_at ?? new Date().toISOString(),
-      placeName: null,
-      neighborhood: null,
-      visibleAt: null,
-    })),
-  }),
-  get_profile_stubs: () => [],
-  get_profile_pursuits: () => [],
+  get_profile: () => previewProfile(),
+  get_profile_moments: () => previewMoments(),
+  get_profile_stubs: () => previewStubs(),
+  get_profile_pursuits: () => previewPursuits(),
   get_my_planning: () => ({
     availability: [],
     freeHoursPerWeek: null,
@@ -158,6 +193,12 @@ const rpcResults: Record<string, (args: any) => any> = {
     shareMembershipsWithFriends: true,
     calendarConnected: false,
     planningPaused: false,
+  }),
+  suggest_plan: () => ({
+    status: "ok",
+    slots: [{ date: "2026-11-07", part: "afternoon" }, { date: "2026-11-08", part: "evening" }],
+    categories: ["Running", "Baking", "Something new"],
+    place: { name: "Brooklyn Boulders", note: "You both have memberships here" },
   }),
   corner_activity_30d: () => cornerActivity,
 };

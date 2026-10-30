@@ -88,7 +88,7 @@ export function HobbyArchive() {
       <SignUpPrompt
         title="Your Moments by Corner"
         body="Every Corner you post in shows its photos, videos and notes here. Make an account and yours starts filling up."
-        cta="Start my Shelf"
+        cta="Create an account"
       />
     );
   }
@@ -101,10 +101,10 @@ export function HobbyArchive() {
             No such hobby
           </h1>
           <p className="mb-6 text-small text-muted-foreground">
-            That Corner isn’t on your Shelf.
+            That Corner isn’t on your profile.
           </p>
           <Link to="/you">
-            <Button variant="outline">Back to your Shelf</Button>
+            <Button variant="outline">Back to your profile</Button>
           </Link>
         </div>
       </div>

@@ -113,6 +113,8 @@ export interface PursuitItem {
   momentCount: number;
   stubCount: number;
   finished: boolean;
+  /** Owner only: others never receive an archived Pursuit. */
+  archived: boolean;
   /** Owner only. */
   lastMomentDate: string | null;
   /** Owner: YYYY-MM-DD. Others: YYYY-MM. */
@@ -189,6 +191,10 @@ export const createPursuit = (category: string, goal: string, target: number | n
   rpc<string>("create_profile_pursuit", { p_category: category, p_goal: goal, p_target: target });
 export const setPursuitFinished = (id: string, finished: boolean) =>
   rpc<null>("set_pursuit_finished", { p_id: id, p_finished: finished });
+
+export const setPursuitArchived = (id: string, archived: boolean) =>
+  rpc<null>("set_pursuit_archived", { p_id: id, p_archived: archived });
+export const deletePursuit = (id: string) => rpc<null>("delete_profile_pursuit", { p_id: id });
 
 export const suggestPlan = (friendId: string, category: string | null) =>
   rpc<PlanSuggestion>("suggest_plan", { p_friend_id: friendId, p_category: category });

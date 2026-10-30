@@ -579,9 +579,12 @@ The profile rebuild (`/you`, `/u/:username`). **Every row below is a new string,
 | Friends: shared times only, when planning · Only you · Only you, never shared · Friends: names only | Who sees each planning row |
 | Pause planning · Hide you from all suggestions and plans | Owner switch and its line |
 | Who can see my time | Link to the page that lists each time-related field and who sees it |
-| Pick your Pursuits | New-user heading over the category pills. Picking one starts an ongoing Pursuit |
+| Pick your Pursuits | New-user heading over the category pills. Picking one starts an ongoing Pursuit; picking it again takes it back |
 | Active · n, Finished · n | The two filter pills on the Pursuits tab |
-| Mark finished · Reopen | Owner actions on a Pursuit. "Mark finished" is the brief's wording; the style guide's action table says Finish, so this is the one place to decide |
+| Finish · Reopen · Archive · Unarchive · Delete | Owner actions on a Pursuit, in its detail sheet. Archive hides it from everyone but you and keeps its Stubs; Delete asks first ("Its Stubs go with it. Its Moments stay. To keep the Stubs, archive it instead.") |
+| Archived · n | Third filter pill on your own Pursuits tab, shown only when something is archived |
+| Add when you’re usually free to get plan suggestions. · Not now | One-time prompt on Your planning while no availability is set |
+| GIFs can’t be added here. Choose a photo. | Shown when a GIF is picked for a Moment. Moments take photos only, because video and GIF files carry GPS and creation time the app can’t strip |
 | Visible to others at 7:42 pm | Owner-only label on a Moment inside its 2 hour delay |
 | This profile is private. | Shown to a stranger on a private profile, with the name, the level name and Follow |
 | Add your neighborhood and a short bio | The link on your profile while both are empty |

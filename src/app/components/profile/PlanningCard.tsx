@@ -23,6 +23,16 @@ const PARTS: { key: DayPart; label: string }[] = [
   { key: "morning", label: "Morning" }, { key: "afternoon", label: "Afternoon" }, { key: "evening", label: "Evening" },
 ];
 
+const PROMPT_KEY = "soosh.planningPromptDismissed";
+
+function promptDismissed(): boolean {
+  try {
+    return localStorage.getItem(PROMPT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 type Row = "availability" | "hours" | "budget" | "memberships";
 
 function EditSheet({ prefs, open, onOpenChange, onSaved }: { prefs: PlanningPrefs; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (p: PlanningPrefs) => void }) {
@@ -135,6 +145,7 @@ function EditSheet({ prefs, open, onOpenChange, onSaved }: { prefs: PlanningPref
 export function PlanningCard({ onPausedChange }: { onPausedChange?: (paused: boolean) => void }) {
   const { state, reload, set } = useSection(fetchMyPlanning, "planning");
   const [editing, setEditing] = useState<Row | null>(null);
+  const [promptOff, setPromptOff] = useState(promptDismissed);
 
   if (state.status === "loading") return <Skeleton className="h-72 w-full rounded-card" />;
   if (state.status === "error") return <ErrorNotice onRetry={reload} />;
@@ -178,6 +189,31 @@ export function PlanningCard({ onPausedChange }: { onPausedChange?: (paused: boo
           Only you see this
         </span>
       </div>
+      {p.availability.length === 0 && !promptOff && (
+        <div role="note" className="mb-1 mt-2 rounded-control bg-card p-3">
+          <p className="text-small">Add when you’re usually free to get plan suggestions.</p>
+          <div className="mt-2 flex gap-2">
+            <Button size="sm" className="min-h-11" onClick={() => setEditing("availability")}>
+              Add
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="min-h-11"
+              onClick={() => {
+                try {
+                  localStorage.setItem(PROMPT_KEY, "1");
+                } catch {
+                  // Fine: it asks again next visit.
+                }
+                setPromptOff(true);
+              }}
+            >
+              Not now
+            </Button>
+          </div>
+        </div>
+      )}
       <ul>
         {row("availability", "Availability", avail, "Friends: shared times only, when planning", "When you’re usually free, used to suggest times")}
         {row("hours", "Free time", hours, "Only you", "How many hours a week you can spare")}

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Check, Plus } from "lucide-react";
-import { createPursuit, fetchMoments, fetchPursuits, setPursuitFinished, type OwnerMoment, type PursuitItem } from "../../lib/profileApi";
+import { createPursuit, deletePursuit, fetchMoments, fetchPursuits, setPursuitArchived, setPursuitFinished, type OwnerMoment, type PursuitItem } from "../../lib/profileApi";
 import { momentAlt, momentTitle, ownerMomentMeta, pursuitFraction, pursuitStatus } from "../../lib/profileFormat";
 import { Button } from "../ui/button";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { ConfirmDialog } from "../ConfirmDialog";
 import { ErrorNotice } from "../StateViews";
 import { notifyError } from "../ui/toaster";
 import { ERROR_LINE } from "../../lib/stateCopy";
@@ -56,28 +57,53 @@ function DetailSheet({
   pursuit,
   onClose,
   onToggle,
+  onArchive,
+  onDelete,
 }: {
   profileId: string;
   pursuit: PursuitItem | null;
   onClose: () => void;
   onToggle: (p: PursuitItem) => void;
+  onArchive: (p: PursuitItem) => void;
+  onDelete: (p: PursuitItem) => void;
 }) {
-  const open = pursuit !== null;
+  const [confirming, setConfirming] = useState(false);
   return (
-    <ResponsiveSheet
-      open={open}
-      onOpenChange={(o) => !o && onClose()}
-      title={pursuit?.goal ?? "Pursuit"}
-      footer={
-        pursuit && (
-          <Button variant={pursuit.finished ? "outline" : "default"} className="min-h-11 w-full" onClick={() => onToggle(pursuit)}>
-            {pursuit.finished ? "Reopen" : "Mark finished"}
-          </Button>
-        )
-      }
-    >
-      {pursuit && <DetailMoments profileId={profileId} pursuit={pursuit} />}
-    </ResponsiveSheet>
+    <>
+      <ResponsiveSheet
+        open={pursuit !== null}
+        onOpenChange={(o) => !o && onClose()}
+        title={pursuit?.goal ?? "Pursuit"}
+        footer={
+          pursuit && (
+            <div className="flex flex-col gap-2">
+              <Button variant={pursuit.finished ? "outline" : "default"} className="min-h-11 w-full" onClick={() => onToggle(pursuit)}>
+                {pursuit.finished ? "Reopen" : "Finish"}
+              </Button>
+              <Button variant="outline" className="min-h-11 w-full" onClick={() => onArchive(pursuit)}>
+                {pursuit.archived ? "Unarchive" : "Archive"}
+              </Button>
+              <Button variant="ghost" className="min-h-11 w-full text-[var(--coral-text)]" onClick={() => setConfirming(true)}>
+                Delete
+              </Button>
+            </div>
+          )
+        }
+      >
+        {pursuit && <DetailMoments profileId={profileId} pursuit={pursuit} />}
+      </ResponsiveSheet>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Delete this Pursuit?"
+        description="Its Stubs go with it. Its Moments stay. To keep the Stubs, archive it instead."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (pursuit) onDelete(pursuit);
+          setConfirming(false);
+        }}
+      />
+    </>
   );
 }
 
@@ -175,7 +201,7 @@ function CreateSheet({ open, onOpenChange, onCreated }: { open: boolean; onOpenC
 
 export function PursuitsPane({ profileId, owner, onChanged }: { profileId: string; owner: boolean; onChanged?: () => void }) {
   const { state, reload, set } = useSection(() => fetchPursuits(profileId), profileId);
-  const [filter, setFilter] = useState<"active" | "finished">("active");
+  const [filter, setFilter] = useState<"active" | "finished" | "archived">("active");
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -183,9 +209,10 @@ export function PursuitsPane({ profileId, owner, onChanged }: { profileId: strin
   if (state.status === "error") return <ErrorNotice onRetry={reload} />;
 
   const list = state.value;
-  const active = list.filter((p) => !p.finished);
-  const finished = list.filter((p) => p.finished);
-  const shown = filter === "active" ? active : finished;
+  const active = list.filter((p) => !p.finished && !p.archived);
+  const finished = list.filter((p) => p.finished && !p.archived);
+  const archived = list.filter((p) => p.archived);
+  const shown = filter === "active" ? active : filter === "finished" ? finished : archived;
   const open = list.find((p) => p.id === openId) ?? null;
 
   // Optimistic: flip it now, put it back if the save fails.
@@ -204,7 +231,33 @@ export function PursuitsPane({ profileId, owner, onChanged }: { profileId: strin
     void reload();
   };
 
-  const pill = (key: "active" | "finished", label: string, n: number) => (
+  const archive = async (p: PursuitItem) => {
+    const before = list;
+    set(list.map((x) => (x.id === p.id ? { ...x, archived: !p.archived } : x)));
+    setOpenId(null);
+    const r = await setPursuitArchived(p.id, !p.archived);
+    if (!r.ok) {
+      set(before);
+      notifyError(ERROR_LINE);
+      return;
+    }
+    onChanged?.();
+  };
+
+  const remove = async (p: PursuitItem) => {
+    const before = list;
+    set(list.filter((x) => x.id !== p.id));
+    setOpenId(null);
+    const r = await deletePursuit(p.id);
+    if (!r.ok) {
+      set(before);
+      notifyError(ERROR_LINE);
+      return;
+    }
+    onChanged?.();
+  };
+
+  const pill = (key: "active" | "finished" | "archived", label: string, n: number) => (
     <button
       type="button"
       aria-pressed={filter === key}
@@ -220,9 +273,10 @@ export function PursuitsPane({ profileId, owner, onChanged }: { profileId: strin
       <div className="flex gap-2">
         {pill("active", "Active", active.length)}
         {pill("finished", "Finished", finished.length)}
+        {owner && archived.length > 0 && pill("archived", "Archived", archived.length)}
       </div>
       {shown.length === 0 ? (
-        <p className="py-2 text-small text-muted-foreground">{filter === "active" ? "No active Pursuits" : "Nothing finished yet"}</p>
+        <p className="py-2 text-small text-muted-foreground">{filter === "active" ? "No active Pursuits" : filter === "finished" ? "Nothing finished yet" : "Nothing archived"}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {shown.map((p) => (
@@ -242,7 +296,7 @@ export function PursuitsPane({ profileId, owner, onChanged }: { profileId: strin
             <Plus className="size-4" aria-hidden="true" />
             Start a Pursuit
           </button>
-          <DetailSheet profileId={profileId} pursuit={open} onClose={() => setOpenId(null)} onToggle={toggle} />
+          <DetailSheet profileId={profileId} pursuit={open} onClose={() => setOpenId(null)} onToggle={toggle} onArchive={archive} onDelete={remove} />
           <CreateSheet
             open={creating}
             onOpenChange={setCreating}

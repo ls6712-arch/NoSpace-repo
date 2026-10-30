@@ -14,6 +14,8 @@ const api = vi.hoisted(() => ({
   saveProfileDetails: vi.fn(),
   createPursuit: vi.fn(),
   setPursuitFinished: vi.fn(),
+  setPursuitArchived: vi.fn(),
+  deletePursuit: vi.fn(),
   suggestPlan: vi.fn(),
   sendPlanInvite: vi.fn(),
 }));
@@ -33,7 +35,7 @@ const base = { id: "p1", username: "maya", displayName: "Maya Lin", avatarUrl: n
 const owner = { ...base, role: "owner", stubsToNext: 3, planningPaused: false, isPrivate: false };
 const friend = { ...base, role: "friend", followState: "accepted", followsYou: true, planningPaused: false, mutualFriends: [], mutualFriendCount: 0, sharedCategories: ["Climbing", "Pottery"] };
 const emptyPlanning = { availability: [], freeHoursPerWeek: null, monthlyBudgetCents: null, memberships: [], shareMembershipsWithFriends: true, calendarConnected: false, planningPaused: false };
-const pursuit = (over: object) => ({ id: "x", category: "Climbing", goal: "Send my first V4", target: 5, momentCount: 2, stubCount: 2, finished: false, lastMomentDate: null, finishedAt: null, sharedWithYou: false, ...over });
+const pursuit = (over: object) => ({ id: "x", category: "Climbing", goal: "Send my first V4", target: 5, momentCount: 2, stubCount: 2, finished: false, archived: false, lastMomentDate: null, finishedAt: null, sharedWithYou: false, ...over });
 const ok = <T,>(value: T) => Promise.resolve({ ok: true as const, value });
 
 function Where() {
@@ -215,22 +217,113 @@ describe("New user", () => {
     expect(screen.getByText("Level 1 of 8")).toBeTruthy();
     expect(screen.getByText("Log 1 Moment to earn your first Stub and reach First Step.")).toBeTruthy();
     expect(screen.getByText("Your Moments show up here. Friends see the day and neighborhood, never the exact time.")).toBeTruthy();
-    expect(screen.getAllByText("Add").length).toBe(4);
+    expect(screen.getAllByText("Add").length).toBe(5);
+    expect(screen.getByText("Add when you’re usually free to get plan suggestions.")).toBeTruthy();
   });
 
-  it("starts an ongoing Pursuit as soon as a pill is picked, and undoes it on failure", async () => {
+  it("starts an ongoing Pursuit for each pill, lets you pick more than one, and undoes a failed pick", async () => {
     api.fetchProfile.mockImplementation(() => ok(fresh));
     api.createPursuit.mockImplementationOnce(() => ok("id-1"));
     api.createPursuit.mockImplementationOnce(() => Promise.resolve({ ok: false, message: "x" }));
+    api.createPursuit.mockImplementationOnce(() => ok("id-3"));
     show("/you");
     const group = (await screen.findByText("Pick your Pursuits")).closest("section")!;
     const climbing = within(group).getByRole("button", { name: "Climbing" });
     fireEvent.click(climbing);
     expect(climbing.getAttribute("aria-pressed")).toBe("true");
     await waitFor(() => expect(api.createPursuit).toHaveBeenCalledWith("Climbing", "Climbing", null));
-    const pottery = within(group).getByRole("button", { name: "Pottery" });
-    fireEvent.click(pottery);
+    fireEvent.click(within(group).getByRole("button", { name: "Pottery" }));
     await waitFor(() => expect(within(group).getByRole("button", { name: "Pottery" }).getAttribute("aria-pressed")).toBe("false"));
     expect(toast.notifyError).toHaveBeenCalled();
+    fireEvent.click(within(group).getByRole("button", { name: "Cooking" }));
+    await waitFor(() => expect(api.createPursuit).toHaveBeenCalledWith("Cooking", "Cooking", null));
+    expect(within(group).getByRole("button", { name: "Climbing" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("takes a pick back when the pill is tapped again", async () => {
+    api.fetchProfile.mockImplementation(() => ok(fresh));
+    api.createPursuit.mockImplementation(() => ok("id-1"));
+    api.deletePursuit.mockImplementation(() => ok(null));
+    show("/you");
+    const group = (await screen.findByText("Pick your Pursuits")).closest("section")!;
+    fireEvent.click(within(group).getByRole("button", { name: "Yoga" }));
+    await waitFor(() => expect(api.createPursuit).toHaveBeenCalled());
+    await waitFor(() => expect(api.fetchProfile.mock.calls.length).toBeGreaterThan(1));
+    fireEvent.click(within(group).getByRole("button", { name: "Yoga" }));
+    await waitFor(() => expect(api.deletePursuit).toHaveBeenCalledWith("id-1"));
+    expect(within(group).getByRole("button", { name: "Yoga" }).getAttribute("aria-pressed")).toBe("false");
+  });
+});
+
+describe("Pursuit actions", () => {
+  const open = async () => {
+    api.fetchProfile.mockImplementation(() => ok(owner));
+    api.fetchPursuits.mockImplementation(() => ok([pursuit({ id: "a" })]));
+    api.fetchMoments.mockImplementation(() => ok({ total: 0, items: [] }));
+    show("/you?tab=pursuits");
+    fireEvent.click(await screen.findByRole("button", { name: /Send my first V4/ }));
+    await screen.findByRole("button", { name: "Finish" });
+  };
+
+  it("says Finish, not Mark finished, and finishes right away", async () => {
+    api.setPursuitFinished.mockImplementation(() => ok(null));
+    await open();
+    expect(screen.queryByText("Mark finished")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Finish" }));
+    await waitFor(() => expect(api.setPursuitFinished).toHaveBeenCalledWith("a", true));
+  });
+
+  it("archives, and shows it under Archived", async () => {
+    api.setPursuitArchived.mockImplementation(() => ok(null));
+    await open();
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+    await waitFor(() => expect(api.setPursuitArchived).toHaveBeenCalledWith("a", true));
+    expect(await screen.findByRole("button", { name: "Archived · 1" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Active · 0" })).toBeTruthy();
+  });
+
+  it("asks before deleting, and puts the Pursuit back if deleting fails", async () => {
+    api.deletePursuit.mockImplementation(() => Promise.resolve({ ok: false, message: "x" }));
+    await open();
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    expect(await screen.findByText("Its Stubs go with it. Its Moments stay. To keep the Stubs, archive it instead.")).toBeTruthy();
+    expect(api.deletePursuit).not.toHaveBeenCalled();
+    const confirm = screen.getAllByRole("button", { name: "Delete" }).at(-1)!;
+    fireEvent.click(confirm);
+    await waitFor(() => expect(api.deletePursuit).toHaveBeenCalledWith("a"));
+    await waitFor(() => expect(toast.notifyError).toHaveBeenCalled());
+    expect(await screen.findByText("Send my first V4")).toBeTruthy();
+  });
+});
+
+describe("Planning prompt", () => {
+  it("is shown once and goes away when dismissed", async () => {
+    localStorage.clear();
+    api.fetchProfile.mockImplementation(() => ok(owner));
+    show("/you");
+    fireEvent.click(await screen.findByRole("button", { name: "Not now" }));
+    expect(screen.queryByText("Add when you’re usually free to get plan suggestions.")).toBeNull();
+    cleanup();
+    show("/you");
+    await screen.findByText("Your planning");
+    expect(screen.queryByText("Add when you’re usually free to get plan suggestions.")).toBeNull();
+  });
+
+  it("is not shown once availability is set", async () => {
+    localStorage.clear();
+    api.fetchProfile.mockImplementation(() => ok(owner));
+    api.fetchMyPlanning.mockImplementation(() => ok({ ...emptyPlanning, availability: [{ day: "thu", part: "evening" }] }));
+    show("/you");
+    await screen.findByText("Thu evenings");
+    expect(screen.queryByText("Add when you’re usually free to get plan suggestions.")).toBeNull();
+  });
+
+  it("shows the plan sheet the same empty answer when someone has no availability", async () => {
+    api.fetchProfile.mockImplementation(() => ok(friend));
+    api.suggestPlan.mockImplementation(() => ok({ status: "ok", slots: [], categories: ["Something new"] }));
+    show("/u/maya");
+    fireEvent.click(await screen.findByRole("button", { name: "Plan something together" }));
+    expect(await screen.findByText("No shared times in the next 2 weeks.")).toBeTruthy();
+    expect(screen.queryByText(/hasn.t (set|added)|no availability/i)).toBeNull();
   });
 });

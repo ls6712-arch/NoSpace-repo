@@ -194,7 +194,7 @@ export function Inbox() {
                 ))}
                 {followRequests.map((r) => (
                   <Collapsing key={`follow:${r.followerId}`} id={`follow:${r.followerId}`} className="mb-3 rounded-card bg-card p-4">
-                    <p className="text-body font-semibold">{`${r.displayName.slice(0, 60)} wants to follow your Shelf`}</p>
+                    <p className="text-body font-semibold">{`${r.displayName.slice(0, 60)} wants to follow you`}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <PillButton disabled={busy === r.followerId} onClick={() => void answerFollow(r.followerId, true)}>
                         Accept

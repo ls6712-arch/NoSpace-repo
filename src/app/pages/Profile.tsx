@@ -37,7 +37,7 @@ type TabValue = (typeof TABS)[number]["value"];
 
 type Load = { status: "loading" } | { status: "error" } | { status: "missing" } | { status: "ready"; profile: ProfileDto };
 
-function Tabs({ profile, owner }: { profile: OpenProfileDto; owner: boolean }) {
+function Tabs({ profile, owner, rev, onPursuitsChanged }: { profile: OpenProfileDto; owner: boolean; rev: number; onPursuitsChanged: () => void }) {
   const [params, setParams] = useSearchParams();
   const raw = params.get("tab");
   const tab: TabValue = TABS.some((t) => t.value === raw) ? (raw as TabValue) : "moments";
@@ -65,7 +65,7 @@ function Tabs({ profile, owner }: { profile: OpenProfileDto; owner: boolean }) {
       </TabsPrimitive.List>
       <TabsPrimitive.Content value="moments" className="outline-none"><MomentsPane profileId={profile.id} owner={owner} /></TabsPrimitive.Content>
       <TabsPrimitive.Content value="stubs" className="outline-none"><StubsPane profileId={profile.id} owner={owner} /></TabsPrimitive.Content>
-      <TabsPrimitive.Content value="pursuits" className="outline-none"><PursuitsPane profileId={profile.id} owner={owner} /></TabsPrimitive.Content>
+      <TabsPrimitive.Content value="pursuits" className="outline-none"><PursuitsPane key={rev} profileId={profile.id} owner={owner} onChanged={onPursuitsChanged} /></TabsPrimitive.Content>
     </TabsPrimitive.Root>
   );
 }
@@ -109,6 +109,9 @@ export function Profile() {
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   const [unfollowOpen, setUnfollowOpen] = useState(false);
+  // The picker stays up once it has been shown, so more than one pill can be picked.
+  const [pickerOn, setPickerOn] = useState(false);
+  const [rev, setRev] = useState(0);
   const run = useRef(0);
 
   const fetchIt = useCallback(
@@ -122,6 +125,7 @@ export function Profile() {
         if (!silent) setLoad({ status: "error" });
         return;
       }
+      if (r.value && r.value.role === "owner" && !r.value.private && r.value.pursuitCount === 0) setPickerOn(true);
       setLoad(r.value ? { status: "ready", profile: r.value } : { status: "missing" });
     },
     [username],
@@ -299,11 +303,18 @@ export function Profile() {
           )}
 
           {ownerP ? <LevelCard stubCount={p.stubCount} stubsToNext={ownerP.stubsToNext} /> : <LevelCardCompact index={p.level.index} name={p.level.name} stubCount={p.stubCount} />}
-          {ownerP && ownerP.pursuitCount === 0 && <PickPursuits onStarted={() => void fetchIt(true)} />}
+          {ownerP && pickerOn && (
+            <PickPursuits
+              onChanged={() => {
+                setRev((n) => n + 1);
+                void fetchIt(true);
+              }}
+            />
+          )}
         </div>
 
         <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <Tabs profile={p} owner={owner} />
+          <Tabs profile={p} owner={owner} rev={rev} onPursuitsChanged={() => void fetchIt(true)} />
         </div>
 
         {owner && (

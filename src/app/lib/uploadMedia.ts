@@ -98,13 +98,15 @@ export type PreparedUpload = { file: File; error: null } | { file: null; error: 
 export interface PrepareOptions {
   /** Videos are refused (with a sentence) where the destination takes photos only. */
   allowVideo?: boolean;
+  /** GIFs are refused where false: they are passed through untouched, so their metadata would be kept. */
+  allowGif?: boolean;
   maxMb?: number;
   maxEdge?: number;
   deps?: MediaDeps;
 }
 
 export async function prepareForUpload(file: File, options: PrepareOptions = {}): Promise<PreparedUpload> {
-  const { allowVideo = true, maxMb = MAX_UPLOAD_MB, maxEdge = MAX_IMAGE_EDGE } = options;
+  const { allowVideo = true, allowGif = true, maxMb = MAX_UPLOAD_MB, maxEdge = MAX_IMAGE_EDGE } = options;
   const deps = options.deps ?? browserDeps();
   const kind = mediaKindOf(file);
 
@@ -120,6 +122,7 @@ export async function prepareForUpload(file: File, options: PrepareOptions = {})
   if (kind !== "image") return { file: null, error: allowVideo ? UPLOAD_COPY.wrongType : UPLOAD_COPY.photoOnly };
 
   if (isGif(file)) {
+    if (!allowGif) return { file: null, error: UPLOAD_COPY.gifBlocked };
     if (file.size > maxMb * 1024 * 1024) return { file: null, error: UPLOAD_COPY.tooBig(maxMb) };
     return { file: new File([file], file.name, { type: "image/gif" }), error: null };
   }

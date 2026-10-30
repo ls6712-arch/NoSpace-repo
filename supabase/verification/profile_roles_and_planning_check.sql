@@ -72,15 +72,18 @@ begin
   insert into public.blocks (blocker_id, blocked_id) values (v_a, v_x), (v_z, v_a);
 
   -- Pursuits: A has Climbing (target 2) and a solo one; F has Climbing too.
-  insert into public.pursuits (id, user_id, title, sub_hobby, target_moments, visibility) values
-    ('pcheck-a-climb', v_a, 'Send my first V4', 'Climbing', 2, 'friends'),
-    ('pcheck-a-solo', v_a, 'Secret thing', 'Journaling', null, 'solo'),
-    ('pcheck-f-climb', v_f, 'Climb more', 'Climbing', null, 'friends');
+  insert into public.pursuits (id, user_id, title, sub_hobby, target_moments, visibility, shared) values
+    ('pcheck-a-climb', v_a, 'Send my first V4', 'Climbing', 2, 'friends', true),
+    ('pcheck-a-solo', v_a, 'Secret thing', 'Pottery', null, 'solo', false),
+    ('pcheck-f-climb', v_f, 'Climb more', 'Climbing', null, 'friends', true);
 
   -- Moments: one public, one inside its 2 hour delay, one friends-only, one on the Pursuit.
-  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, sub_hobby, starts_at, location_name, neighborhood, pursuit_id)
-  values (v_a, 'sports-fitness', 'photo', 'u/a/1.jpg', 'First wall', 'public', 'Climbing', '2026-10-24 19:00:00+00', 'Secret Gym', 'Gowanus', 'pcheck-a-climb');
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, sub_hobby, pursuit_id)
+  values (v_a, 'sports-fitness', 'photo', 'u/a/1.jpg', 'First wall', 'public', 'Climbing', 'pcheck-a-climb');
   v_post1 := (select po.id from public.posts po where po.user_id = v_a and po.caption = 'First wall');
+  -- The exact time and place are set by the owner, through the function.
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  perform public.set_post_private(v_post1, '2026-10-24 19:00:00+00', 'Secret Gym', 'Gowanus');
   insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, sub_hobby)
   values (v_a, 'sports-fitness', 'photo', 'u/a/2.jpg', 'Just now', 'public', 'Climbing');
   v_post2 := (select po.id from public.posts po where po.user_id = v_a and po.caption = 'Just now');
@@ -174,6 +177,11 @@ begin
   perform set_config('request.jwt.claim.sub', v_a::text, true);
   v_b := v_b and public.get_profile('pcheck' || right(v_x::text, 4)) is null;
   results := results || (v_i || case when v_b then ' PASS blocked in either direction returns nothing' else ' FAIL blocked profile returned' end);
+
+  -- A link made from a user id (Moment cards link that way) finds the same profile.
+  v_i := v_i + 1;
+  v_b := public.get_profile(v_a::text) ->> 'id' = v_a::text;
+  results := results || (v_i || case when v_b then ' PASS a profile link by user id resolves' else ' FAIL id link' end);
 
   -- Signed out: public view.
   perform set_config('request.jwt.claim.sub', '', true);
@@ -359,6 +367,22 @@ begin
     and v_j ->> 'status' = 'ok'
     then ' PASS rate limit stops at 10 per pair and serves the cache' else ' FAIL rate limit' end);
 
+
+  -- No availability set: the same empty answer whichever side is missing it.
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  v_j := public.suggest_plan(v_m, null);
+  v_i := v_i + 1;
+  v_b := v_j ->> 'status' = 'ok' and v_j -> 'slots' = '[]'::jsonb;
+  perform set_config('request.jwt.claim.sub', v_m::text, true);
+  perform public.set_my_planning('[{"day":"mon","part":"evening"}]'::jsonb, null, null, '[]'::jsonb, true);
+  perform set_config('request.jwt.claim.sub', v_f::text, true);
+  perform public.set_my_planning('[]'::jsonb, null, null, '[]'::jsonb, true);
+  perform set_config('request.jwt.claim.sub', v_m::text, true);
+  v_j := public.suggest_plan(v_f, null);
+  v_b := v_b and v_j ->> 'status' = 'ok' and v_j -> 'slots' = '[]'::jsonb
+        and (select string_agg(k, ',' order by k) from jsonb_object_keys(v_j) k) = 'categories,slots,status';
+  results := results || (v_i || case when v_b then ' PASS no availability on either side gives the same empty answer' else ' FAIL no-availability answers differ' end);
+
   -- Rejections.
   v_i := v_i + 1;
   begin
@@ -434,10 +458,168 @@ begin
     when others then results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
   end;
 
+
+  -- Column privacy: no direct path for non-owners -----------------------------
+  v_i := v_i + 1;
+  v_b := not exists (select 1 from information_schema.columns c
+                      where c.table_schema = 'public' and c.table_name = 'posts' and c.column_name in ('place_name', 'occurred_at'));
+  results := results || (v_i || case when v_b then ' PASS posts has no place_name or occurred_at column' else ' FAIL private columns on posts' end);
+
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.post_private pp where pp.post_id in (v_post1, v_post2, v_post3, v_post4));
+  results := results || (v_i || case when v_n = 4 then ' PASS every new Moment gets a private row' else ' FAIL private rows: ' || v_n end);
+
+  foreach v_t in array array['post_private', 'planning_prefs', 'plan_suggestions', 'plans'] loop
+    v_i := v_i + 1;
+    begin
+      perform set_config('request.jwt.claim.sub', v_p::text, true);
+      set local role authenticated;
+      execute 'select count(*) from public.' || v_t into v_n;
+      reset role;
+      if v_t = 'plans' then
+        results := results || (v_i || case when v_n = 0 then ' PASS a signed-in stranger reads no rows of plans' else ' FAIL plans leaked ' || v_n end);
+      else
+        results := results || (v_i || ' FAIL a signed-in role read ' || v_t);
+      end if;
+    exception
+      when insufficient_privilege then
+        reset role;
+        results := results || (v_i || ' PASS signed-in direct select of ' || v_t || ' is denied');
+      when others then
+        reset role;
+        results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+    end;
+    v_i := v_i + 1;
+    begin
+      set local role anon;
+      execute 'select count(*) from public.' || v_t into v_n;
+      reset role;
+      results := results || (v_i || ' FAIL anon read ' || v_t);
+    exception
+      when insufficient_privilege then
+        reset role;
+        results := results || (v_i || ' PASS anon direct select of ' || v_t || ' is denied');
+      when others then
+        reset role;
+        results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+    end;
+  end loop;
+
+  -- Even a third party who is a friend of one side cannot read someone else's plan.
+  perform set_config('request.jwt.claim.sub', v_m::text, true);
+  v_i := v_i + 1;
+  begin
+    set local role authenticated;
+    v_n := (select count(*) from public.plans pl where pl.creator_id = v_a);
+    reset role;
+    results := results || (v_i || case when v_n = 0 then ' PASS a third party sees none of A''s plans' else ' FAIL third party read plans' end);
+  exception
+    when others then
+      reset role;
+      results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+
+  -- The writer-only functions are not callable by anon.
+  v_i := v_i + 1;
+  v_b := not has_function_privilege('anon', 'public.get_my_post_private(bigint[])', 'execute')
+     and not has_function_privilege('anon', 'public.suggest_plan(uuid, text)', 'execute')
+     and not has_function_privilege('anon', 'public.get_my_planning()', 'execute');
+  results := results || (v_i || case when v_b then ' PASS anon cannot execute the owner functions' else ' FAIL anon execute' end);
+
+  -- The owner function returns only the owner's own rows.
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.get_my_post_private(array[v_post1]) g where g.place_name = 'Secret Gym');
+  perform set_config('request.jwt.claim.sub', v_f::text, true);
+  v_n := v_n + (select count(*) from public.get_my_post_private(array[v_post1]) g);
+  results := results || (v_i || case when v_n = 1 then ' PASS only the owner reads the exact place' else ' FAIL owner place read: ' || v_n end);
+  v_i := v_i + 1;
+  begin
+    perform public.set_post_private(v_post1, now(), 'Elsewhere', null);
+    results := results || (v_i || ' FAIL someone else set a Moment place');
+  exception
+    when insufficient_privilege then results := results || (v_i || ' PASS only the owner can set a Moment place');
+    when others then results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+
+  -- profiles: the new columns are not readable or writable directly.
+  v_i := v_i + 1;
+  v_b := true;
+  foreach v_t in array array['is_private', 'planning_paused', 'neighborhood'] loop
+    v_b := v_b and not has_column_privilege('anon', 'public.profiles', v_t, 'select')
+               and not has_column_privilege('authenticated', 'public.profiles', v_t, 'select')
+               and not has_column_privilege('authenticated', 'public.profiles', v_t, 'update')
+               and not has_column_privilege('anon', 'public.profiles', v_t, 'update');
+  end loop;
+  results := results || (v_i || case when v_b then ' PASS profile privacy columns have no direct select or update' else ' FAIL profile column privileges' end);
+
+  -- Old Moments: a null visible_at still counts as visible, and the backfill fills it.
+  update public.posts po set visible_at = null where po.id = v_post1;
+  perform set_config('request.jwt.claim.sub', v_f::text, true);
+  v_j := public.get_profile_moments(v_a);
+  v_i := v_i + 1;
+  results := results || (v_i || case when exists (select 1 from jsonb_array_elements(v_j -> 'items') e where e ->> 'caption' = 'First wall')
+    then ' PASS a Moment with no visible_at stays visible' else ' FAIL null visible_at hid a Moment' end);
+  update public.posts po set visible_at = po.created_at where po.id = v_post1 and po.visible_at is null;
+  insert into public.post_private (post_id, user_id, occurred_at)
+    select po.id, po.user_id, po.created_at from public.posts po where po.id = v_post1
+    on conflict (post_id) do nothing;
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select po.visible_at = po.created_at from public.posts po where po.id = v_post1)
+    and (select count(*) from public.post_private pp where pp.post_id = v_post1) = 1
+    then ' PASS the backfill statements are idempotent and keep the Moment' else ' FAIL backfill' end);
+
+  -- Archive and delete -----------------------------------------------------------
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  perform public.set_pursuit_archived('pcheck-a-climb', true);
+  v_j := public.get_profile_pursuits(v_a);
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select (e ->> 'archived')::boolean from jsonb_array_elements(v_j) e where e ->> 'id' = 'pcheck-a-climb')
+    and (public.get_profile('pcheck' || right(v_a::text, 4)) ->> 'pursuitCount')::int = 1
+    then ' PASS archive keeps it for the owner and drops it from the count' else ' FAIL archive owner view' end);
+  perform set_config('request.jwt.claim.sub', v_f::text, true);
+  v_i := v_i + 1;
+  results := results || (v_i || case when jsonb_array_length(public.get_profile_pursuits(v_a)) = 0
+    and public.get_profile('pcheck' || right(v_a::text, 4)) -> 'sharedCategories' = '[]'::jsonb
+    then ' PASS an archived Pursuit is gone for friends, categories included' else ' FAIL archive friend view' end);
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  perform public.set_pursuit_archived('pcheck-a-climb', false);
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select pu.archived_at is null from public.pursuits pu where pu.id = 'pcheck-a-climb')
+    then ' PASS unarchive' else ' FAIL unarchive' end);
+  v_i := v_i + 1;
+  begin
+    perform set_config('request.jwt.claim.sub', v_f::text, true);
+    perform public.set_pursuit_archived('pcheck-a-climb', true);
+    results := results || (v_i || ' FAIL someone else archived a Pursuit');
+  exception
+    when raise_exception then results := results || (v_i || ' PASS only the owner can archive');
+    when others then results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+  v_i := v_i + 1;
+  begin
+    perform set_config('request.jwt.claim.sub', v_f::text, true);
+    perform public.delete_profile_pursuit('pcheck-a-climb');
+    results := results || (v_i || ' FAIL someone else deleted a Pursuit');
+  exception
+    when raise_exception then results := results || (v_i || ' PASS only the owner can delete');
+    when others then results := results || (v_i || ' ERROR ' || sqlstate || ': ' || sqlerrm);
+  end;
+  -- Deleting is a cascade, never a loose end: the Moments keep and the Stubs go.
+  v_i := v_i + 1;
+  v_b := (select c.confdeltype = 'n' from pg_constraint c where c.conname = 'posts_pursuit_id_fkey')
+     and (select c.confdeltype = 'c' from pg_constraint c where c.conname = 'stubs_pursuit_id_fkey');
+  results := results || (v_i || case when v_b then ' PASS deleting a Pursuit keeps its Moments and removes its Stubs' else ' FAIL delete cascade' end);
+  perform set_config('request.jwt.claim.sub', v_a::text, true);
+  v_i := v_i + 1;
+  perform public.delete_profile_pursuit('pcheck-a-solo');
+  results := results || (v_i || case when not exists (select 1 from public.pursuits pu where pu.id = 'pcheck-a-solo')
+    then ' PASS the owner can delete a Pursuit' else ' FAIL delete' end);
+
   -- Cascade: a deleted user takes their planning and plans with them.
   v_i := v_i + 1;
   v_b := (select bool_and(c.confdeltype = 'c') from pg_constraint c
-           where c.contype = 'f' and c.conrelid in ('public.planning_prefs'::regclass, 'public.plans'::regclass, 'public.plan_suggestions'::regclass)
+           where c.contype = 'f' and c.conrelid in ('public.planning_prefs'::regclass, 'public.plans'::regclass, 'public.plan_suggestions'::regclass, 'public.post_private'::regclass)
              and c.confrelid = 'auth.users'::regclass);
   results := results || (v_i || case when v_b then ' PASS planning tables cascade on user delete' else ' FAIL cascade' end);
 

@@ -119,8 +119,8 @@ export function PauseOrLeaveSection() {
             label={paused ? "Your account is paused" : "Pause your account"}
             description={
               paused
-                ? "No one else can see your Shelf or Moments. Resume to post and be seen again."
-                : "Hide your Shelf and Moments from everyone until you come back."
+                ? "No one else can see your profile or Moments. Resume to post and be seen again."
+                : "Hide your profile and Moments from everyone until you come back."
             }
           >
             {paused ? (
@@ -176,7 +176,7 @@ export function PauseOrLeaveSection() {
           <DialogHeader>
             <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Pause your account?</DialogTitle>
             <DialogDescription>
-              Your Shelf, Moments and Pursuits are hidden from everyone, and you're logged out on
+              Your profile, Moments and Pursuits are hidden from everyone, and you're logged out on
               every device. Nothing is deleted. Log back in any time and choose Resume to come back.
             </DialogDescription>
           </DialogHeader>
@@ -201,7 +201,7 @@ export function PauseOrLeaveSection() {
           <DialogHeader>
             <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Delete your account?</DialogTitle>
             <DialogDescription>
-              Your profile, Shelf, Moments, Pursuits, reactions and Space memberships will be
+              Your profile, Moments, Pursuits, reactions and Space memberships will be
               removed. You're hidden from everyone right away and logged out on every device.
             </DialogDescription>
           </DialogHeader>

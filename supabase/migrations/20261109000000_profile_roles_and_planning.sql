@@ -10,8 +10,14 @@
 --     pursuits.finished_at (null = active). Only target_moments is new.
 --   * A Stub is a public.stubs row of kind 'session' (one per Moment that
 --     counts toward a Pursuit). Stub counts are derived, never stored.
---   * A Moment's occurred_at is posts.starts_at, else created_at. Its place_name
---     is posts.location_name. neighborhood and visible_at are new.
+--   * A Moment's exact time (occurred_at) and exact place (place_name) live in
+--     public.post_private: no grants for anyone, no policy, reachable only through
+--     get_my_post_private() / set_post_private() (the owner) and the profile
+--     functions below. posts.starts_at and posts.location_name belong to the
+--     separate Activity feature and are not read by the profile at all.
+--     neighborhood (public, coarse) and visible_at are new columns on posts.
+--   * Non-owners see only Pursuits the owner shared (pursuits.shared), as the
+--     old public profile did.
 --   * The profile reads are security definer functions that build a different
 --     jsonb shape per role, so a field a viewer may not see is never sent.
 --   * planning_prefs, plans and plan_suggestions have RLS on and no policy for
@@ -34,7 +40,9 @@ alter table public.profiles
 -- everyone else gets them through get_profile() below.
 
 alter table public.pursuits
-  add column target_moments integer check (target_moments is null or target_moments between 1 and 1000);
+  add column target_moments integer check (target_moments is null or target_moments between 1 and 1000),
+  -- Archive hides a Pursuit from everyone but its owner and keeps its Stubs; deleting removes the Stubs too.
+  add column archived_at timestamptz;
 
 alter table public.posts
   add column neighborhood text check (char_length(neighborhood) <= 80),
@@ -58,8 +66,73 @@ create trigger posts_set_visible_at
   before insert on public.posts
   for each row execute function private.posts_set_visible_at();
 
--- Moments that already exist were visible when they were made.
-update public.posts p set visible_at = p.created_at where p.visible_at is null;
+-- Moments made before this migration get visible_at and occurred_at from the
+-- backfill migration (20261109010000); until then a null visible_at counts as
+-- visible, so no old Moment disappears in between.
+
+create table public.post_private (
+  post_id bigint primary key references public.posts (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  occurred_at timestamptz not null,
+  place_name text check (char_length(place_name) <= 80)
+);
+create index post_private_user_idx on public.post_private (user_id);
+alter table public.post_private enable row level security;
+revoke all on public.post_private from anon, authenticated;
+-- No grant and no policy: a direct select fails for every signed-in role.
+
+create function private.posts_seed_private()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.post_private (post_id, user_id, occurred_at)
+  values (new.id, new.user_id, coalesce(new.created_at, now()))
+  on conflict (post_id) do nothing;
+  return new;
+end;
+$$;
+revoke all on function private.posts_seed_private() from public, anon, authenticated;
+create trigger posts_seed_private
+  after insert on public.posts
+  for each row execute function private.posts_seed_private();
+
+-- The owner reads their own exact time and place.
+create function public.get_my_post_private(p_ids bigint[])
+returns table (post_id bigint, occurred_at timestamptz, place_name text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select pp.post_id, pp.occurred_at, pp.place_name
+    from public.post_private pp
+   where pp.user_id = auth.uid() and pp.post_id = any (p_ids);
+$$;
+
+create function public.set_post_private(p_post_id bigint, p_occurred_at timestamptz, p_place_name text, p_neighborhood text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not exists (select 1 from public.posts po where po.id = p_post_id and po.user_id = auth.uid()) then
+    raise exception 'That Moment isn’t yours.' using errcode = '42501';
+  end if;
+  insert into public.post_private (post_id, user_id, occurred_at, place_name)
+  values (p_post_id, auth.uid(), coalesce(p_occurred_at, now()), nullif(btrim(left(p_place_name, 80)), ''))
+  on conflict (post_id) do update
+    set occurred_at = coalesce(p_occurred_at, public.post_private.occurred_at),
+        place_name = nullif(btrim(left(p_place_name, 80)), '');
+  update public.posts po set neighborhood = nullif(btrim(left(p_neighborhood, 80)), '')
+   where po.id = p_post_id;
+end;
+$$;
+revoke all on function public.get_my_post_private(bigint[]), public.set_post_private(bigint, timestamptz, text, text) from public, anon;
+grant execute on function public.get_my_post_private(bigint[]), public.set_post_private(bigint, timestamptz, text, text) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 2. A Pursuit with a target finishes itself when its last Moment lands
@@ -231,7 +304,7 @@ declare
   v_paused boolean;
 begin
   v_id := (select p.id from public.profiles p
-            where lower(p.username) = lower(p_username)
+            where (p.id::text = p_username or lower(p.username) = lower(p_username))
               and p.paused_at is null and p.deletion_requested_at is null);
   if v_id is null then
     return null;
@@ -265,8 +338,8 @@ begin
   end if;
 
   v_pursuits := (select count(*) from public.pursuits pu
-                  where pu.user_id = v_id
-                    and (v_role = 'owner' or pu.visibility <> 'solo'));
+                  where pu.user_id = v_id and pu.archived_at is null
+                    and (v_role = 'owner' or pu.shared));
   v_friends := (select count(*) from public.profile_follows f
                  where f.followed_id = v_id and f.status = 'accepted'
                    and exists (select 1 from public.profile_follows g
@@ -324,11 +397,11 @@ begin
     v_out := v_out || jsonb_build_object('sharedCategories', coalesce((
       select jsonb_agg(distinct a.cat order by a.cat) from (
         select coalesce(nullif(pu.sub_hobby, ''), nullif(pu.interest, '')) as cat
-          from public.pursuits pu where pu.user_id = v_id
+          from public.pursuits pu where pu.user_id = v_id and pu.archived_at is null
       ) a
       join (
         select coalesce(nullif(pu.sub_hobby, ''), nullif(pu.interest, '')) as cat
-          from public.pursuits pu where pu.user_id = v_viewer
+          from public.pursuits pu where pu.user_id = v_viewer and pu.archived_at is null
       ) b on lower(b.cat) = lower(a.cat)
       where a.cat is not null
     ), '[]'::jsonb));
@@ -380,44 +453,46 @@ begin
   v_total := (select count(*) from public.posts po
                where po.user_id = p_profile and po.visibility = 'public'
                  and (p_pursuit is null or po.pursuit_id = p_pursuit)
-                 and (v_role = 'owner' or (po.visible_at <= now()
+                 and (v_role = 'owner' or (coalesce(po.visible_at, po.created_at) <= now()
                        and (po.audience is null or po.audience = 'everyone'
                             or (po.audience = 'friends' and v_role = 'friend')))));
 
   if v_role = 'owner' then
     v_items := coalesce((
       select jsonb_agg(x.j order by x.occ desc) from (
-        select coalesce(po.starts_at, po.created_at) as occ,
+        select coalesce(pp.occurred_at, po.created_at) as occ,
                jsonb_build_object(
                  'id', po.id, 'photoUrl', po.media_url, 'caption', left(po.caption, 200),
                  'category', coalesce(nullif(po.sub_hobby, ''), nullif(po.interest, '')),
-                 'occurredAt', coalesce(po.starts_at, po.created_at),
-                 'placeName', po.location_name, 'neighborhood', po.neighborhood,
+                 'occurredAt', coalesce(pp.occurred_at, po.created_at),
+                 'placeName', pp.place_name, 'neighborhood', po.neighborhood,
                  'visibleAt', case when po.visible_at > now() then po.visible_at else null end
                ) as j
           from public.posts po
+          left join public.post_private pp on pp.post_id = po.id
          where po.user_id = p_profile and po.visibility = 'public'
            and (p_pursuit is null or po.pursuit_id = p_pursuit)
-         order by coalesce(po.starts_at, po.created_at) desc
+         order by coalesce(pp.occurred_at, po.created_at) desc
          limit v_limit offset greatest(coalesce(p_offset, 0), 0)
       ) x
     ), '[]'::jsonb);
   else
     v_items := coalesce((
       select jsonb_agg(x.j order by x.occ desc) from (
-        select coalesce(po.starts_at, po.created_at) as occ,
+        select coalesce(pp.occurred_at, po.created_at) as occ,
                jsonb_build_object(
                  'id', po.id, 'photoUrl', po.media_url, 'caption', left(po.caption, 200),
                  'category', coalesce(nullif(po.sub_hobby, ''), nullif(po.interest, '')),
-                 'date', to_char(coalesce(po.starts_at, po.created_at) at time zone 'UTC', 'YYYY-MM-DD'),
+                 'date', to_char(coalesce(pp.occurred_at, po.created_at) at time zone 'UTC', 'YYYY-MM-DD'),
                  'neighborhood', po.neighborhood
                ) as j
           from public.posts po
+          left join public.post_private pp on pp.post_id = po.id
          where po.user_id = p_profile and po.visibility = 'public'
            and (p_pursuit is null or po.pursuit_id = p_pursuit)
-           and po.visible_at <= now()
+           and coalesce(po.visible_at, po.created_at) <= now()
            and (po.audience is null or po.audience = 'everyone' or (po.audience = 'friends' and v_role = 'friend'))
-         order by coalesce(po.starts_at, po.created_at) desc
+         order by coalesce(pp.occurred_at, po.created_at) desc
          limit v_limit offset greatest(coalesce(p_offset, 0), 0)
       ) x
     ), '[]'::jsonb);
@@ -446,15 +521,16 @@ begin
     select jsonb_agg(jsonb_build_object(
              'id', s.id,
              'date', case when v_role = 'owner' then s.issued_at else null end,
-             'day', to_char(coalesce(po.starts_at, po.created_at) at time zone 'UTC', 'YYYY-MM-DD'),
+             'day', to_char(coalesce(pp.occurred_at, po.created_at) at time zone 'UTC', 'YYYY-MM-DD'),
              'title', left(coalesce(nullif(po.caption, ''), nullif(po.sub_hobby, ''), nullif(po.interest, '')), 120),
              'category', coalesce(nullif(pu.sub_hobby, ''), nullif(pu.interest, ''))
            ) order by s.issued_at desc)
       from public.stubs s
       join public.posts po on po.id = s.post_id
+      left join public.post_private pp on pp.post_id = po.id
       left join public.pursuits pu on pu.id = s.pursuit_id
      where s.user_id = p_profile and s.kind = 'session'
-       and (v_role = 'owner' or (po.visible_at <= now() and po.visibility = 'public'
+       and (v_role = 'owner' or (coalesce(po.visible_at, po.created_at) <= now() and po.visibility = 'public'
             and (po.audience is null or po.audience = 'everyone' or (po.audience = 'friends' and v_role = 'friend'))))
   ), '[]'::jsonb);
 end;
@@ -485,23 +561,24 @@ begin
                'goal', left(pu.title, 60),
                'target', pu.target_moments,
                'momentCount', (select count(*) from public.posts po where po.pursuit_id = pu.id and po.user_id = p_profile
-                                and (v_role = 'owner' or po.visible_at <= now())),
+                                and (v_role = 'owner' or coalesce(po.visible_at, po.created_at) <= now())),
                'stubCount', (select count(*) from public.stubs s where s.pursuit_id = pu.id and s.kind = 'session'),
                'finished', pu.finished_at is not null,
+               'archived', pu.archived_at is not null,
                'lastMomentDate', case when v_role = 'owner' then
-                   (select max(coalesce(po.starts_at, po.created_at)) from public.posts po where po.pursuit_id = pu.id) else null end,
+                   (select max(coalesce(pp.occurred_at, po.created_at)) from public.posts po left join public.post_private pp on pp.post_id = po.id where po.pursuit_id = pu.id) else null end,
                'finishedAt', case when pu.finished_at is null then null
                                   when v_role = 'owner' then to_char(pu.finished_at at time zone 'UTC', 'YYYY-MM-DD')
                                   else to_char(pu.finished_at at time zone 'UTC', 'YYYY-MM') end,
                'sharedWithYou', v_role = 'friend' and exists (
                    select 1 from public.pursuits mine
-                    where mine.user_id = v_viewer
+                    where mine.user_id = v_viewer and mine.archived_at is null
                       and lower(coalesce(nullif(mine.sub_hobby, ''), nullif(mine.interest, ''))) =
                           lower(coalesce(nullif(pu.sub_hobby, ''), nullif(pu.interest, ''))))
              ) as j
         from public.pursuits pu
        where pu.user_id = p_profile
-         and (v_role = 'owner' or pu.visibility <> 'solo')
+         and (v_role = 'owner' or (pu.shared and pu.archived_at is null))
     ) x
   ), '[]'::jsonb);
 end;
@@ -554,9 +631,9 @@ begin
   if btrim(coalesce(p_category, '')) = '' then
     raise exception 'Pick a category.';
   end if;
-  insert into public.pursuits (id, user_id, title, sub_hobby, target_moments, visibility)
+  insert into public.pursuits (id, user_id, title, sub_hobby, target_moments, visibility, shared)
   values (v_id, auth.uid(), left(btrim(coalesce(nullif(p_goal, ''), p_category)), 60),
-          left(btrim(p_category), 60), p_target, 'friends');
+          left(btrim(p_category), 60), p_target, 'friends', true);
   return v_id;
 end;
 $$;
@@ -572,6 +649,38 @@ begin
      set finished_at = case when p_finished then coalesce(pu.finished_at, now()) else null end,
          updated_at = now()
    where pu.id = p_id and pu.user_id = auth.uid();
+  if not found then
+    raise exception 'That Pursuit isn’t yours.';
+  end if;
+end;
+$$;
+
+create function public.set_pursuit_archived(p_id text, p_archived boolean)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update public.pursuits pu
+     set archived_at = case when p_archived then coalesce(pu.archived_at, now()) else null end,
+         updated_at = now()
+   where pu.id = p_id and pu.user_id = auth.uid();
+  if not found then
+    raise exception 'That Pursuit isn’t yours.';
+  end if;
+end;
+$$;
+
+-- Its Moments stay (posts.pursuit_id goes null); its Stubs go with it.
+create function public.delete_profile_pursuit(p_id text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  delete from public.pursuits pu where pu.id = p_id and pu.user_id = auth.uid();
   if not found then
     raise exception 'That Pursuit isn’t yours.';
   end if;
@@ -719,11 +828,11 @@ begin
   v_cats := coalesce((
     select jsonb_agg(distinct a.cat order by a.cat) from (
       select coalesce(nullif(pu.sub_hobby, ''), nullif(pu.interest, '')) as cat
-        from public.pursuits pu where pu.user_id = v_me
+        from public.pursuits pu where pu.user_id = v_me and pu.archived_at is null
     ) a
     join (
       select coalesce(nullif(pu.sub_hobby, ''), nullif(pu.interest, '')) as cat
-        from public.pursuits pu where pu.user_id = p_friend_id
+        from public.pursuits pu where pu.user_id = p_friend_id and pu.archived_at is null
     ) b on lower(b.cat) = lower(a.cat)
     where a.cat is not null
   ), '[]'::jsonb) || to_jsonb('Something new'::text);
@@ -801,12 +910,14 @@ $$;
 revoke all on function
   public.set_planning_paused(boolean), public.update_profile_details(text, text, boolean),
   public.create_profile_pursuit(text, text, integer), public.set_pursuit_finished(text, boolean),
+  public.set_pursuit_archived(text, boolean), public.delete_profile_pursuit(text),
   public.get_my_planning(), public.set_my_planning(jsonb, integer, integer, jsonb, boolean),
   public.suggest_plan(uuid, text), public.send_plan_invite(uuid, text, date, text, text)
   from public, anon;
 grant execute on function
   public.set_planning_paused(boolean), public.update_profile_details(text, text, boolean),
   public.create_profile_pursuit(text, text, integer), public.set_pursuit_finished(text, boolean),
+  public.set_pursuit_archived(text, boolean), public.delete_profile_pursuit(text),
   public.get_my_planning(), public.set_my_planning(jsonb, integer, integer, jsonb, boolean),
   public.suggest_plan(uuid, text), public.send_plan_invite(uuid, text, date, text, text)
   to authenticated;

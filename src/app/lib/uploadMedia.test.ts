@@ -146,3 +146,16 @@ describe("prepareForUpload strips photo metadata", () => {
     expect(stored).not.toContain("DateTimeOriginal");
   });
 });
+
+describe("Moment uploads are photos only", () => {
+  it("refuses a GIF when GIFs are off, and a video when videos are off", async () => {
+    const gif = await prepareForUpload(file("a.gif", "image/gif"), { allowVideo: false, allowGif: false, deps: deps() });
+    expect(gif).toEqual({ file: null, error: UPLOAD_COPY.gifBlocked });
+    const video = await prepareForUpload(file("a.mp4", "video/mp4"), { allowVideo: false, allowGif: false, deps: deps() });
+    expect(video).toEqual({ file: null, error: UPLOAD_COPY.photoOnly });
+  });
+  it("still takes a GIF where nothing says otherwise", async () => {
+    const gif = await prepareForUpload(file("a.gif", "image/gif"), { deps: deps() });
+    expect(gif.error).toBeNull();
+  });
+});
