@@ -146,9 +146,9 @@ begin
   results := results || (v_i || case when v_keys = 'avatarUrl,bio,displayName,followState,friendCount,id,isPrivate,level,neighborhood,planningPaused,private,pursuitCount,role,stubCount,stubsToNext,username'
     then ' PASS owner keys' else ' FAIL owner keys: ' || v_keys end);
   v_i := v_i + 1;
-  results := results || (v_i || case when (v_j ->> 'friendCount')::int = 3 and (v_j ->> 'pursuitCount')::int = 2
+  results := results || (v_i || case when (v_j ->> 'friendCount')::int = 2 and (v_j ->> 'pursuitCount')::int = 2
     and (v_j ->> 'stubCount')::int = (select count(*) from public.stubs s where s.user_id = v_a and s.kind = 'session')
-    then ' PASS owner counts: 3 friends, 2 Pursuits, Stubs match' else ' FAIL owner counts: ' || v_j::text end);
+    then ' PASS owner counts: 2 friends (blocking Z removed that friendship), 2 Pursuits, Stubs match' else ' FAIL owner counts: ' || v_j::text end);
 
   perform set_config('request.jwt.claim.sub', v_f::text, true);
   v_j := public.get_profile('pcheck' || right(v_a::text, 4));
@@ -772,13 +772,15 @@ begin
 
   -- Release effects wait for visible_at. INV invited N1 and N2.
   update public.profiles p set invited_by = v_inv where p.id in (v_n1, v_n2);
+  -- posts_corner_fkey: a Moment's Corner must exist, so the fixture Corner starts at 0.
+  insert into public.corners (space_slug, slug, name, moment_count) values ('pcheck-space', 'pcheckcorner', 'Pcheck corner', 0);
   perform set_config('request.jwt.claim.sub', v_n1::text, true);
   insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, corner)
   values (v_n1, 'pcheck-space', 'photo', 'u/n1/1.jpg', 'N1 first', 'public', 'pcheckcorner');
   v_post7 := (select po.id from public.posts po where po.user_id = v_n1 and po.caption = 'N1 first');
   v_i := v_i + 1;
   v_b := (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'first_moment') = 0
-     and (select count(*) from public.corners c where c.slug = 'pcheckcorner') = 0
+     and (select c.moment_count from public.corners c where c.slug = 'pcheckcorner') = 0
      and (select po.notified_at is null from public.posts po where po.id = v_post7);
   results := results || (v_i || case when v_b then ' PASS a held first Moment sends no notification and adds no Corner count' else ' FAIL held effects fired on insert' end);
 
