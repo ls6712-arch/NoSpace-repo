@@ -163,6 +163,39 @@ grant execute on function public.get_my_post_private(bigint[]), public.set_post_
 -- inviter and the Corner's Moment count. Same pattern as the repo's other
 -- deferred work (pg_cron calling a sweep function).
 -- ─────────────────────────────────────────────────────────────────────────
+-- The host notice for a Moment shared into an approval Space. It used to fire
+-- from the space_moments insert trigger; for a held Moment it now waits for the
+-- release (apply_release_effects), so hosts are never told about a Moment that
+-- nobody but its owner can open.
+create function private.notify_space_moment_pending(p_space_id uuid, p_post_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_author_id uuid;
+  v_author_name text;
+  v_space_name text;
+  v_space_slug text;
+begin
+  v_author_id := (select po.user_id from public.posts po where po.id = p_post_id);
+  v_author_name := (select coalesce(nullif(trim(pr.display_name), ''), pr.username, 'Someone')
+                      from public.profiles pr where pr.id = v_author_id);
+  select sp.name, sp.slug into v_space_name, v_space_slug from public.spaces sp where sp.id = p_space_id;
+
+  insert into public.notifications (user_id, kind, body, href, actor_name)
+  select sm.user_id, 'space_moment_pending',
+         left(coalesce(v_author_name, 'Someone'), 60) || ' shared a Moment in ' || left(v_space_name, 150) || ' for approval.',
+         '/space/' || v_space_slug || '?tab=manage',
+         v_author_name
+    from public.space_members sm
+   where sm.space_id = p_space_id and sm.role = 'host' and sm.status = 'active'
+     and sm.user_id <> v_author_id;
+end;
+$$;
+revoke all on function private.notify_space_moment_pending(uuid, bigint) from public, anon, authenticated;
+
 create function private.apply_release_effects(p_post_id bigint)
 returns void
 language plpgsql
@@ -192,6 +225,11 @@ begin
     on conflict (space_slug, slug)
       do update set moment_count = public.corners.moment_count + 1;
   end if;
+
+  -- Host notices for Spaces this Moment was shared into while it was held.
+  perform private.notify_space_moment_pending(sm.space_id, sm.post_id)
+     from public.space_moments sm
+    where sm.post_id = p_post_id and sm.status = 'pending' and sm.removed_by_host = false;
 
   -- First-Moment notice to whoever invited this person (was notify_first_moment on insert).
   if v_post.visibility not in ('public', 'followers') then
@@ -311,6 +349,40 @@ begin
   end if;
 
   -- INSERT: counted when released (apply_release_effects), not here.
+  return new;
+end;
+$function$;
+
+-- The space_moments trigger tells the hosts only when the Moment is already
+-- released; otherwise the release does it (above). The approval notice is as before.
+create or replace function public.notify_space_moment_status()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  v_author_id uuid;
+  v_space_name text;
+  v_space_slug text;
+begin
+  if tg_op = 'INSERT' and new.status = 'pending' then
+    if exists (select 1 from posts where posts.id = new.post_id and coalesce(posts.visible_at, posts.created_at) <= now()) then
+      perform private.notify_space_moment_pending(new.space_id, new.post_id);
+    end if;
+
+  elsif tg_op = 'UPDATE' and old.status = 'pending' and new.status = 'approved' then
+    select posts.user_id into v_author_id from posts where posts.id = new.post_id;
+    select spaces.name, spaces.slug into v_space_name, v_space_slug
+      from spaces where spaces.id = new.space_id;
+
+    insert into notifications (user_id, kind, body, href)
+    values (
+      v_author_id, 'space_moment_approved',
+      'Your Moment is now on the table in ' || left(v_space_name, 150) || '.',
+      '/space/' || v_space_slug
+    );
+  end if;
   return new;
 end;
 $function$;

@@ -7,6 +7,9 @@ import { signMomentPaths } from "../lib/momentMedia";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { friendlyError } from "../lib/friendlyError";
+import { ERROR_LINE } from "../lib/stateCopy";
+import { getMomentHold, releaseMoment } from "../lib/profileApi";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { Loadable, Skeleton } from "./ui/skeleton";
 import { EmptyState } from "./StateViews";
 import { ImageWithFallback } from "./ImageWithFallback";
@@ -41,6 +44,8 @@ export function AddMomentToSpaceDialog({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [donePending, setDonePending] = useState(false);
+  // A Moment still held back from others: waits for the owner to say Share now.
+  const [heldPost, setHeldPost] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open || !supabase || !user) return;
@@ -92,10 +97,18 @@ export function AddMomentToSpaceDialog({
     };
   }, [open, user]);
 
-  const link = async (postId: number) => {
+  const link = async (postId: number, released = false) => {
     if (!supabase) return;
-    setLinking(postId);
     setError(null);
+    if (!released) {
+      // The Space would show it to everyone in it, and tell its hosts, so a held Moment is released first.
+      const hold = await getMomentHold(postId);
+      if (hold.ok && hold.value) {
+        setHeldPost(postId);
+        return;
+      }
+    }
+    setLinking(postId);
     // Read the row back rather than assuming from posting_mode client-side
     // — set_space_moment_status() is the one source of truth for whether
     // this landed 'approved' (immediate, or the poster's own Space) or
@@ -119,7 +132,20 @@ export function AddMomentToSpaceDialog({
     onAdded?.();
   };
 
+  const shareNow = async () => {
+    const postId = heldPost;
+    setHeldPost(null);
+    if (postId === null) return;
+    const r = await releaseMoment(postId);
+    if (!r.ok) {
+      setError(ERROR_LINE);
+      return;
+    }
+    await link(postId, true);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
@@ -186,5 +212,14 @@ export function AddMomentToSpaceDialog({
         </div>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog
+      open={heldPost !== null}
+      onOpenChange={(o) => !o && setHeldPost(null)}
+      title="Share now?"
+      description="Anyone who can see your Moments will see this one too."
+      confirmLabel="Share now"
+      onConfirm={shareNow}
+    />
+    </>
   );
 }

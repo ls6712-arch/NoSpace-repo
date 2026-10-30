@@ -43,6 +43,9 @@ declare
   v_post7 bigint;
   v_post8 bigint;
   v_post9 bigint;
+  v_post10 bigint;
+  v_post11 bigint;
+  v_space uuid := '00000000-0000-4000-8000-000000007201';
   v_ts timestamptz;
   v_post1 bigint;
   v_post2 bigint;
@@ -882,6 +885,62 @@ begin
   v_b := (v_j ->> 'stubCount')::int = 1 and (v_j -> 'level' ->> 'index')::int = 2
      and (public.get_profile_moments(v_f) ->> 'total')::int = 1;
   results := results || (v_i || case when v_b then ' PASS after release others count it: Stub 1, level 2, Moments 1' else ' FAIL others counts after release' end);
+
+  -- Sharing a held Moment into a Space: the host is told only after release ------
+  insert into public.spaces (id, slug, name, description, cover_image, meets, posting_mode)
+  values (v_space, 'pcheck-space-7201', 'Pcheck Space', 'Fixture', 'x', 'online', 'approval');
+  insert into public.space_members (space_id, user_id, role, status) values (v_space, v_inv, 'host', 'active');
+  perform set_config('request.jwt.claim.sub', v_m::text, true);
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility)
+  values (v_m, 'sports-fitness', 'photo', 'u/m/s1.jpg', 'M held for the Space', 'public');
+  v_post10 := (select po.id from public.posts po where po.user_id = v_m and po.caption = 'M held for the Space');
+  insert into public.space_moments (space_id, post_id) values (v_space, v_post10);
+  v_i := v_i + 1;
+  v_b := (select sm.status = 'pending' from public.space_moments sm where sm.post_id = v_post10)
+     and (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'space_moment_pending') = 0;
+  results := results || (v_i || case when v_b then ' PASS a held Moment shared into an approval Space sends no host notice' else ' FAIL host told about a held Moment' end);
+
+  v_n := public.sweep_released_moments();
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'space_moment_pending') = 0
+    then ' PASS the sweep does not tell the host while it is still held' else ' FAIL sweep told the host early' end);
+
+  perform public.release_moment(v_post10);
+  v_i := v_i + 1;
+  v_b := (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'space_moment_pending') = 1
+     and exists (select 1 from public.notifications n where n.user_id = v_inv and n.kind = 'space_moment_pending'
+                   and n.href = '/space/pcheck-space-7201?tab=manage' and char_length(n.body) <= 300);
+  results := results || (v_i || case when v_b then ' PASS releasing it tells the host once, with the manage link' else ' FAIL release host notice' end);
+  perform public.release_moment(v_post10);
+  v_n := public.sweep_released_moments();
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'space_moment_pending') = 1
+    then ' PASS releasing again or sweeping sends no second host notice' else ' FAIL duplicate host notice' end);
+
+  -- Shared after release: told at once, as before.
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, visible_at)
+  values (v_m, 'sports-fitness', 'photo', 'u/m/s2.jpg', 'M shared now for the Space', 'public', now() - interval '1 hour');
+  v_post11 := (select po.id from public.posts po where po.user_id = v_m and po.caption = 'M shared now for the Space');
+  insert into public.space_moments (space_id, post_id) values (v_space, v_post11);
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'space_moment_pending') = 2
+    then ' PASS a Moment that is already released notifies the host at once' else ' FAIL released share notice' end);
+
+  -- Shared while held, then the 2 hours pass: the sweep tells the host once.
+  insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility)
+  values (v_m, 'sports-fitness', 'photo', 'u/m/s3.jpg', 'M held then due', 'public');
+  insert into public.space_moments (space_id, post_id)
+    select v_space, po.id from public.posts po where po.user_id = v_m and po.caption = 'M held then due';
+  update public.posts po set visible_at = po.created_at where po.user_id = v_m and po.caption = 'M held then due';
+  v_n := public.sweep_released_moments();
+  v_n := public.sweep_released_moments();
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select count(*) from public.notifications n where n.user_id = v_inv and n.kind = 'space_moment_pending') = 3
+    then ' PASS a Moment shared while held notifies the host once, when the sweep releases it' else ' FAIL sweep host notice' end);
+  v_i := v_i + 1;
+  results := results || (v_i || case when (select count(*) from public.notifications n where n.user_id = v_m and n.kind = 'space_moment_pending') = 0
+    then ' PASS the author is never told about their own share' else ' FAIL author notified' end);
+
 
   -- Cascade: a deleted user takes their planning and plans with them.
   v_i := v_i + 1;

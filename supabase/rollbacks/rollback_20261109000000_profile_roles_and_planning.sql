@@ -82,6 +82,7 @@ drop trigger if exists posts_release_on_insert on public.posts;
 drop function if exists private.posts_release_on_insert();
 drop function if exists public.sweep_released_moments();
 drop function if exists private.apply_release_effects(bigint);
+drop function if exists private.notify_space_moment_pending(uuid, bigint);
 
 create function public.notify_first_moment()
 returns trigger
@@ -196,4 +197,50 @@ as $function$
     and sm.removed_by_host = false
     and sm.added_at > now() - interval '30 days'
     and (s.status <> 'deleted' or private.is_admin(auth.uid()));
+$function$;
+
+create or replace function public.notify_space_moment_status()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  v_author_id uuid;
+  v_author_name text;
+  v_space_name text;
+  v_space_slug text;
+begin
+  if tg_op = 'INSERT' and new.status = 'pending' then
+    select posts.user_id into v_author_id from posts where posts.id = new.post_id;
+    select coalesce(nullif(trim(profiles.display_name), ''), profiles.username, 'Someone')
+      into v_author_name from profiles where profiles.id = v_author_id;
+    select spaces.name, spaces.slug into v_space_name, v_space_slug
+      from spaces where spaces.id = new.space_id;
+
+    insert into notifications (user_id, kind, body, href, actor_name)
+    select space_members.user_id, 'space_moment_pending',
+      left(coalesce(v_author_name, 'Someone'), 60) || ' shared a Moment in ' || left(v_space_name, 150) || ' for approval.',
+      '/space/' || v_space_slug || '?tab=manage',
+      v_author_name
+    from space_members
+    where space_members.space_id = new.space_id
+      and space_members.role = 'host'
+      and space_members.status = 'active'
+      and space_members.user_id <> v_author_id;
+
+  elsif tg_op = 'UPDATE' and old.status = 'pending' and new.status = 'approved' then
+    select posts.user_id into v_author_id from posts where posts.id = new.post_id;
+    select spaces.name, spaces.slug into v_space_name, v_space_slug
+      from spaces where spaces.id = new.space_id;
+
+    insert into notifications (user_id, kind, body, href)
+    values (
+      v_author_id, 'space_moment_approved',
+      'Your Moment is now on the table in ' || left(v_space_name, 150) || '.',
+      '/space/' || v_space_slug
+    );
+  end if;
+  return new;
+end;
 $function$;

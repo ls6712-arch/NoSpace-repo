@@ -599,8 +599,8 @@ New, for approval. A new Moment is visible only to its owner for 2 hours (everyw
 |---|---|
 | Share now | Switch on Log a Moment, off by default, shown when anyone but you can see the Moment. Also the confirm button below |
 | Shows this Moment to others right away. | Helper text under Share now |
-| Share now? | Title of the confirm that appears when you send a still-held Moment into a chat |
-| Anyone who can see your Moments will see this one too. | Body of that confirm. Cancel leaves the Moment held and shares nothing; Share now shows it to others, then sends it |
+| Share now? | Title of the confirm that appears when you send a still-held Moment into a chat, or add it to a Space (Add from my Moments) |
+| Anyone who can see your Moments will see this one too. | Body of that confirm. Cancel, or a failed release, leaves the Moment held and shares nothing; Share now shows it to others, then sends it. A Space's hosts are told about an approval share only after the release |
 
 ## Retired terms
 
