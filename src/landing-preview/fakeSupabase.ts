@@ -125,6 +125,15 @@ const previewRole = (): string => {
   }
 };
 
+/** Preview-only switches (localStorage): "preview-empty" empties the three tabs, "preview-planning" = "filled" fills Your planning, "preview-plan" = "none" leaves no shared times, "preview-signed-out" = "1" removes the session. */
+const flag = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
 const identity = { id: ME, username: "maya", displayName: "Maya Lin", avatarUrl: null, followState: "none" };
 const open = {
   ...identity,
@@ -156,7 +165,7 @@ const previewProfile = (): unknown => {
 };
 const previewMoments = () => {
   const role = previewRole();
-  if (role === "new") return { total: 0, items: [] };
+  if (role === "new" || flag("preview-empty") === "1") return { total: 0, items: [] };
   const rows = mayaPosts();
   return {
     total: rows.length,
@@ -169,7 +178,7 @@ const previewMoments = () => {
 };
 const previewPursuits = () => {
   const role = previewRole();
-  if (role === "new") return [];
+  if (role === "new" || flag("preview-empty") === "1") return [];
   const own = role === "owner";
   return [
     { id: "pu1", category: "Running", goal: "Half marathon", target: 5, momentCount: 2, stubCount: 2, finished: false, archived: false, lastMomentDate: own ? "2026-10-24T19:00:00Z" : null, finishedAt: null, sharedWithYou: role === "friend" },
@@ -177,7 +186,7 @@ const previewPursuits = () => {
   ];
 };
 const previewStubs = () =>
-  previewRole() === "new" ? [] : [{ id: 1, date: previewRole() === "owner" ? "2026-10-24T19:00:00Z" : null, day: "2026-10-24", title: "Eleven miles along the river", category: "Running" }];
+  previewRole() === "new" || flag("preview-empty") === "1" ? [] : [{ id: 1, date: previewRole() === "owner" ? "2026-10-24T19:00:00Z" : null, day: "2026-10-24", title: "Eleven miles along the river", category: "Running" }];
 
 const rpcResults: Record<string, (args: any) => any> = {
   my_profile_private: () => [ownPrivate(ME)],
@@ -185,21 +194,35 @@ const rpcResults: Record<string, (args: any) => any> = {
   get_profile_moments: () => previewMoments(),
   get_profile_stubs: () => previewStubs(),
   get_profile_pursuits: () => previewPursuits(),
-  get_my_planning: () => ({
-    availability: [],
-    freeHoursPerWeek: null,
-    monthlyBudgetCents: null,
-    memberships: [],
-    shareMembershipsWithFriends: true,
-    calendarConnected: false,
-    planningPaused: false,
-  }),
-  suggest_plan: () => ({
+  get_my_planning: () =>
+    flag("preview-planning") === "filled"
+      ? {
+          availability: [{ day: "thu", part: "evening" }, { day: "sat", part: "morning" }, { day: "sat", part: "afternoon" }, { day: "sun", part: "morning" }, { day: "sun", part: "afternoon" }],
+          freeHoursPerWeek: 9,
+          monthlyBudgetCents: 10000,
+          memberships: [{ name: "Brooklyn Boulders", monthly_cost_cents: 9000 }, { name: "Greenpoint Pottery Studio", monthly_cost_cents: 12000 }],
+          shareMembershipsWithFriends: true,
+          calendarConnected: false,
+          planningPaused: false,
+        }
+      : {
+          availability: [],
+          freeHoursPerWeek: null,
+          monthlyBudgetCents: null,
+          memberships: [],
+          shareMembershipsWithFriends: true,
+          calendarConnected: false,
+          planningPaused: false,
+        },
+  suggest_plan: () =>
+    flag("preview-plan") === "none"
+      ? { status: "ok", slots: [], categories: ["Something new"] }
+      : {
     status: "ok",
     slots: [{ date: "2026-11-07", part: "afternoon" }, { date: "2026-11-08", part: "evening" }],
     categories: ["Running", "Baking", "Something new"],
     place: { name: "Brooklyn Boulders", note: "You both have memberships here" },
-  }),
+  },
   corner_activity_30d: () => cornerActivity,
 };
 
@@ -217,10 +240,10 @@ export const supabase: any = {
     return Promise.resolve({ data: fn ? fn(args) : [], error: null });
   },
   auth: {
-    getSession: async () => ({ data: { session }, error: null }),
-    getUser: async () => ({ data: { user: session.user }, error: null }),
+    getSession: async () => ({ data: { session: flag("preview-signed-out") === "1" ? null : session }, error: null }),
+    getUser: async () => ({ data: { user: flag("preview-signed-out") === "1" ? null : session.user }, error: null }),
     onAuthStateChange: (cb: (e: string, s: unknown) => void) => {
-      setTimeout(() => cb("INITIAL_SESSION", session), 0);
+      setTimeout(() => cb("INITIAL_SESSION", flag("preview-signed-out") === "1" ? null : session), 0);
       return { data: { subscription: { unsubscribe() {} } } };
     },
     signOut: async () => ({ error: null }),

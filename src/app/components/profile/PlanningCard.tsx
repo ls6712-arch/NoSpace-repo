@@ -85,38 +85,27 @@ function EditSheet({ prefs, open, onOpenChange, onSaved }: { prefs: PlanningPref
       }
     >
       <div className="flex flex-col gap-5 pb-2">
-        <fieldset>
+        <fieldset className="min-w-0">
           <legend className="text-small font-semibold">Availability</legend>
           <p className="mb-2 text-caption text-muted-foreground">Pick the parts of the day you’re usually free.</p>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-caption">
-              <thead>
-                <tr>
-                  <th scope="col" className="sr-only">Part of day</th>
-                  {DAYS.map((d) => (
-                    <th key={d.key} scope="col" className="px-1 pb-1 font-medium text-muted-foreground">{d.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
+          <div className="flex flex-col gap-1.5">
+            {DAYS.map((d) => (
+              <div key={d.key} role="group" aria-label={d.label} className="grid grid-cols-[2.75rem_1fr_1fr_1fr] items-center gap-1.5">
+                <span className="text-caption font-medium text-muted-foreground" aria-hidden="true">{d.label}</span>
                 {PARTS.map((p) => (
-                  <tr key={p.key}>
-                    <th scope="row" className="pr-2 text-left font-medium text-muted-foreground">{p.label}</th>
-                    {DAYS.map((d) => (
-                      <td key={d.key} className="p-0.5 text-center">
-                        <button
-                          type="button"
-                          aria-pressed={has(d.key, p.key)}
-                          aria-label={`${d.label} ${p.key}`}
-                          onClick={() => flip(d.key, p.key)}
-                          className={cn("size-11 rounded-control border border-border focus-visible:ring-[3px] focus-visible:outline-1", has(d.key, p.key) && "border-accent bg-accent")}
-                        />
-                      </td>
-                    ))}
-                  </tr>
+                  <button
+                    key={p.key}
+                    type="button"
+                    aria-pressed={has(d.key, p.key)}
+                    aria-label={`${d.label} ${p.key}`}
+                    onClick={() => flip(d.key, p.key)}
+                    className={cn("min-h-11 min-w-0 rounded-control border border-border px-1 text-caption focus-visible:ring-[3px] focus-visible:outline-1", has(d.key, p.key) && "border-accent bg-accent text-accent-foreground")}
+                  >
+                    {p.label}
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            ))}
           </div>
         </fieldset>
         <div>
