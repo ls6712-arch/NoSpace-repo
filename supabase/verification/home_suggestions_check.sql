@@ -131,9 +131,10 @@ begin
   values ('00000000-0000-4000-8000-000000008227', v_a, 'host', 'active'),
          ('00000000-0000-4000-8000-000000008228', v_a, 'member', 'active');
 
-  -- An open Pursuit in Corner 19 that friend B has joined; A is not a member of it.
-  insert into public.pursuits (id, user_id, title, hobby_slug, sub_hobby, visibility, space_id, capacity)
-  values ('hs-pursuit-1', v_e, 'HS pursuit 1', 'hs', 'hs-c19', 'open', '00000000-0000-4000-8000-000000008219', 5);
+  -- An open Pursuit in Corner 19 that friend B has joined; A is not a member of it. Live requires an
+  -- open Pursuit to be shared and to have a capacity (pursuits_open_is_shared_with_capacity).
+  insert into public.pursuits (id, user_id, title, hobby_slug, sub_hobby, visibility, shared, space_id, capacity)
+  values ('hs-pursuit-1', v_e, 'HS pursuit 1', 'hs', 'hs-c19', 'open', true, '00000000-0000-4000-8000-000000008219', 5);
   insert into public.pursuit_members (pursuit_id, user_id, role, status) values ('hs-pursuit-1', v_b, 'member', 'joined');
   insert into public.pursuit_sessions (pursuit_id, starts_at, place, created_by) values ('hs-pursuit-1', v_t5, 'HS studio', v_e);
 

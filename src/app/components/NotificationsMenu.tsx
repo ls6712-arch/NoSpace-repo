@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import {
   Bell,
@@ -20,10 +20,9 @@ import {
 } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
-import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 import { respondToFollow } from "../lib/profileFollows";
 import { formatBadgeCount } from "../lib/messageSync";
-import { groupNotifications, unreadGroupCount } from "../lib/notificationGrouping";
+import { useNotificationBadge } from "../lib/useNotificationBadge";
 import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
 import { APP_NAME } from "../config";
@@ -72,11 +71,8 @@ export function NotificationsMenu() {
   const { user } = useAuth();
   const location = useLocation();
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
-  const incomingFollows = useIncomingFollowRequests(user?.id, followRefreshKey) ?? [];
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
-
-  const groups = useMemo(() => groupNotifications(social.notifications), [social.notifications]);
-  const groupedUnread = unreadGroupCount(groups);
+  const { groups, groupedUnread, incoming, incomingFollows, badgeCount } = useNotificationBadge(followRefreshKey);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -105,23 +101,6 @@ export function NotificationsMenu() {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
-
-  // Requests waiting on you specifically — never ones you sent. The signed-out
-  // case used to fall through to "show everything", so your own outgoing ask
-  // reappeared here with an Accept button and you could answer yourself.
-  const incoming = social.participations.filter(
-    (p) =>
-      p.status === "pending" &&
-      (p.kind === "make_together" || p.kind === "explore_together") &&
-      (user ? p.toUser === user.id : false) &&
-      !social.blockedIds.includes(p.fromUser),
-  );
-
-  // A pending follow request lives in profile_follows, not SocialContext —
-  // this used to only light the bell for one (the request itself was only
-  // answerable from /inbox); it's now rendered and answerable right here
-  // too, the same respondToFollow() /inbox uses, via answerFollow() below.
-  const badgeCount = groupedUnread + incoming.length + incomingFollows.length;
 
   const answerFollow = async (followerId: string, accept: boolean) => {
     if (!user || respondingTo) return;

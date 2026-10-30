@@ -42,7 +42,7 @@ export interface LoadedPlanInput extends PlanInput {
   city: string;
 }
 
-async function privatePlace(userId: string): Promise<{ city: string; area: string }> {
+export async function privatePlace(userId: string): Promise<{ city: string; area: string }> {
   if (!supabase) return { city: "", area: "" };
   try {
     const { data } = await supabase.from("profile_private").select("city, area").eq("user_id", userId).maybeSingle();

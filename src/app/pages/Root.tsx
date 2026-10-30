@@ -52,6 +52,9 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   IS_CORNERS_PATH(pathname) ||
   pathname === "/you" ||
   pathname.startsWith("/you/") ||
+  // Week shows its own sign-up prompt, like You.
+  pathname === "/week" ||
+  pathname.startsWith("/week/") ||
   pathname === "/studio" ||
   pathname.startsWith("/u/") ||
   // A Pursuit invite link: shows who invited you and to what before asking

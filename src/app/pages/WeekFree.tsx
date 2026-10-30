@@ -1,0 +1,90 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { ArrowLeft } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { SignUpPrompt } from "../components/SignUpPrompt";
+import { TimeGrid } from "../components/onboarding/TimeGrid";
+import { TransferButton } from "../components/onboarding/TransferButton";
+import { savePrivate } from "../lib/onboardingRemote";
+import { ERROR_LINE } from "../lib/stateCopy";
+import { ALL_WINDOWS, windowCountLine } from "../lib/tasteModel";
+import { fetchTaste } from "../lib/tasteRemote";
+import { WEEK_SIGNED_OUT } from "../lib/homeCopy";
+
+/**
+ * /week/free: when you are usually free, as a screen of its own. It is the
+ * onboarding question (same grid, same save) for someone who is already in:
+ * Save writes `free_windows` and goes back to Home, nothing else follows.
+ */
+export function WeekFree() {
+  const { user, isConfigured } = useAuth();
+  const navigate = useNavigate();
+  const [windows, setWindows] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let live = true;
+    void fetchTaste(user.id).then((t) => {
+      if (live && t.windows.length > 0) setWindows((cur) => (cur.length > 0 ? cur : t.windows));
+    });
+    return () => {
+      live = false;
+    };
+  }, [user]);
+
+  if (isConfigured && !user) {
+    return <SignUpPrompt title={WEEK_SIGNED_OUT.title} body={WEEK_SIGNED_OUT.body} cta={WEEK_SIGNED_OUT.cta} />;
+  }
+
+  const toggle = (key: string) => {
+    setError(null);
+    setWindows((cur) => {
+      const on = cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key];
+      return ALL_WINDOWS.filter((w) => on.includes(w));
+    });
+  };
+
+  const save = async () => {
+    if (saving || !user) return;
+    setSaving(true);
+    setError(null);
+    const saved = await savePrivate(user.id, { free_windows: windows.length > 0 ? windows : null });
+    setSaving(false);
+    if (saved.error) {
+      setError(ERROR_LINE);
+      return;
+    }
+    navigate("/my-space", { replace: true });
+  };
+
+  return (
+    <div className="soosh-transfer min-h-viewport" data-tone="platform">
+      <div className="transfer-column flex min-h-viewport flex-col px-4">
+        <Link to="/my-space" className="transfer-icon-button -ml-2 mt-4" aria-label="Back">
+          <ArrowLeft className="size-6" strokeWidth={2.5} aria-hidden="true" />
+        </Link>
+        <section className="flex flex-1 flex-col pb-6">
+          <h1 className="transfer-headline mt-8 break-words text-display">When are you usually free?</h1>
+          <div className="mt-6 flex flex-col gap-4">
+            <TimeGrid windows={windows} onToggle={toggle} />
+            <p aria-live="polite" className="transfer-label text-body">
+              {windowCountLine(windows.length)}
+            </p>
+          </div>
+          <div className="mt-auto flex flex-col gap-3 pt-8">
+            {error && (
+              <p role="alert" className="transfer-label text-small">
+                {error}
+              </p>
+            )}
+            <TransferButton onClick={() => void save()} disabled={saving}>
+              Save
+            </TransferButton>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
