@@ -43,6 +43,7 @@ const data = (over: Partial<WeekData> = {}): WeekData => {
     budget: 50,
     passes: [],
     plans: [],
+    picks: [],
     goodHours: 0,
     reload: vi.fn(),
     saveBudget,
@@ -218,6 +219,30 @@ describe("Week", () => {
     show();
     expect(screen.getByRole("link", { name: "Tell us when you’re usually free" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Find something" }).getAttribute("href")).toBe("/discover");
+  });
+
+  it("shows the hand-picked row with each pick's pill, and links out when there is a link", () => {
+    hook.value = data({
+      picks: [
+        { id: 1, title: "Halloween parade", place: "Sixth Avenue", startsAt: ny(10, 31, 19), endsAt: null, price: "free", url: "https://example.com/parade", cornerKey: null, color: "orange", published: true },
+        { id: 2, title: "Marathon", place: null, startsAt: ny(11, 1, 9), endsAt: null, price: null, url: null, cornerKey: null, color: "lime", published: true },
+      ],
+    });
+    show();
+    expect(screen.getByRole("heading", { name: "This week in New York" })).toBeTruthy();
+    expect(screen.getByText("Picked by Soosh")).toBeTruthy();
+    expect(screen.getByText("Sat 31 · 7 PM · free")).toBeTruthy();
+    expect(screen.getByText("Sun 1 · 9 AM")).toBeTruthy();
+    const link = screen.getByRole("link", { name: /Halloween parade/ });
+    expect(link.getAttribute("href")).toBe("https://example.com/parade");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(screen.getByText("Marathon").closest("a")).toBeNull();
+  });
+
+  it("hides the whole hand-picked row when there are no picks", () => {
+    show();
+    expect(screen.queryByText("This week in New York")).toBeNull();
+    expect(screen.queryByText("Picked by Soosh")).toBeNull();
   });
 
   it("has the Sunday night card", () => {

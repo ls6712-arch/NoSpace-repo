@@ -13,6 +13,8 @@ export const WEEK_VIEW = {
   backToHome: "Back to Home",
   keyPlan: "Plan",
   keyFree: "Free",
+  cityPicks: "This week in New York",
+  pickedBy: "Picked by Soosh",
   freeEvenings: "Free evenings you told us",
   change: "Change",
   monthlyBudget: "Monthly budget",
@@ -33,3 +35,16 @@ export const WEEK_SIGNED_OUT = {
 
 /** Home's greeting when the person has no name on record. */
 export const GREETING_NO_NAME = "Welcome back";
+
+/** The admin page for "This week in New York" picks. Listed in docs/glossary.md, Week view. */
+export const ADMIN_PICKS = {
+  title: "City picks",
+  line: "The hand-picked things on the Week view, This week in New York. Published picks show to everyone signed in.",
+  add: "Add a pick",
+  edit: "Edit pick",
+  noAccessTitle: "Nothing here for you",
+  noAccessBody: "This screen is for whoever manages City picks.",
+  emptyTitle: "No picks yet.",
+  emptyBody: "Add a pick, then publish it.",
+  deleteBody: "This removes the pick for good.",
+} as const;
