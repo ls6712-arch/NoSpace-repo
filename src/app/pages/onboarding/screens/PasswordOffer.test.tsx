@@ -44,6 +44,8 @@ describe("the password offer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "What should people call you?" })).toBeTruthy());
     expect(auth.updatePassword).not.toHaveBeenCalled();
+    // Skipping is not a "yours": nothing was added.
+    expect(react).not.toHaveBeenCalled();
     expect(readPasswordOffer()).toBe(false);
   });
 
@@ -53,7 +55,10 @@ describe("the password offer", () => {
     render(<NameStep />);
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "a-long-password" } });
     fireEvent.click(screen.getByRole("button", { name: "Add a password" }));
-    await waitFor(() => expect(screen.getByRole("heading", { name: "What should people call you?" })).toBeTruthy());
+    // Stubby punches its tab first; the name screen waits for that to land.
+    await waitFor(() => expect(react).toHaveBeenCalledWith("yours"));
+    expect(screen.getByRole("heading", { name: "Want a password too?" })).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "What should people call you?" })).toBeTruthy(), { timeout: 3000 });
     expect(auth.updatePassword).toHaveBeenCalledWith("a-long-password");
     expect(readPasswordOffer()).toBe(false);
   });

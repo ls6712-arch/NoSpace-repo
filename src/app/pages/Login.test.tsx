@@ -296,3 +296,60 @@ describe("the code screen, in stages", () => {
     await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/onboarding?step=signup&email=mia%40example.com&redirect=%2F"));
   });
 });
+
+describe("log in code screen, details", () => {
+  const openAt = (view: string) => {
+    sessionStorage.setItem("soosh.onboarding.email", "mia@example.com");
+    renderAt(`/login?mode=signin&view=${view}`);
+  };
+
+  it("has New to Soosh? Get started on the very first render, before any timer or request", () => {
+    openAt("code");
+    // Synchronous: no waitFor, no timers. The link is part of the first paint of the screen.
+    expect(screen.getByRole("button", { name: "New to Soosh? Get started" })).toBeTruthy();
+    expect(screen.getByText("Send a new code in 0:30")).toBeTruthy();
+  });
+
+  it("has Stubby think while the code is awaited, shrug at a wrong one, and think again while one is checked", async () => {
+    auth.verifyEmailCode.mockResolvedValue({ error: "no", wrong: true });
+    openAt("code");
+    expect(stubby()).toBe("thinking");
+    fireEvent.change(screen.getByLabelText("Code"), { target: { value: "999999" } });
+    await waitFor(() => expect(auth.verifyEmailCode).toHaveBeenCalledWith("mia@example.com", "999999"));
+    await waitFor(() => expect(stubby()).toBe("shrug"));
+  });
+
+  it("goes back to the email screen from 'Use a different email' with the address in and selected", async () => {
+    const select = vi.spyOn(HTMLInputElement.prototype, "select");
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      openAt("code");
+      for (let i = 0; i < 30; i++) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(1000);
+        });
+      }
+      fireEvent.click(screen.getByRole("button", { name: "Use a different email" }));
+      await waitFor(() => expect(screen.getByLabelText("Password (if you have one)")).toBeTruthy());
+      const input = screen.getByLabelText("Email") as HTMLInputElement;
+      expect(input.value).toBe("mia@example.com");
+      // Focused, and its text selected (selectionStart is null on an email input by spec, so select() is what is checked).
+      await waitFor(() => {
+        expect(document.activeElement).toBe(input);
+        expect(select.mock.contexts).toContain(input);
+      });
+    } finally {
+      select.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it("says it is too many, with no time, when the hourly cap is hit on the email screen", async () => {
+    auth.sendSignInCode.mockResolvedValue({ error: null, tooMany: true });
+    renderAt("/login?mode=signin&view=email");
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "mia@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send me a code" }));
+    await waitFor(() => expect(screen.getByText("Too many codes for now. Try again in a little while, or log in with your password.")).toBeTruthy());
+    expect(screen.queryByLabelText("Code")).toBeNull();
+  });
+});

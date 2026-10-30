@@ -92,6 +92,19 @@ describe("the rest of the sign-in calls", () => {
     expect(signup).toEqual({ error: null, retryAfterSeconds: 52 });
   });
 
+  it("reports the hourly cap, which has no time to give, as too many (never a guessed wait)", async () => {
+    otp.fn.mockResolvedValue({ error: { status: 429, code: "over_email_send_rate_limit", message: "email rate limit exceeded" } });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    let login: unknown;
+    let signup: unknown;
+    await act(async () => {
+      login = await result.current.sendSignInCode("mia@example.com");
+      signup = await result.current.sendEmailCode("mia@example.com");
+    });
+    expect(login).toEqual({ error: null, tooMany: true });
+    expect(signup).toEqual({ error: null, tooMany: true });
+  });
+
   it("hands the log in screen the status of a failed password log in, and nothing that says why", async () => {
     otp.password.mockResolvedValue({ error: { message: "Invalid login credentials", status: 400, code: "invalid_credentials" } });
     const { result } = renderHook(() => useAuth(), { wrapper });
