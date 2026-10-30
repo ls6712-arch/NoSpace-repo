@@ -1938,6 +1938,75 @@ summary:focus-visible,
   background: var(--transfer-platform);
 }
 
+/* Member card (screen 10): signal card, tilted, cobalt drop, the number big, a dashed rule, then name and joined. */
+.soosh-transfer .transfer-card {
+  position: relative;
+  padding: 20px;
+  border: 3px solid var(--transfer-navy);
+  border-radius: 18px;
+  background: var(--transfer-signal);
+  color: var(--transfer-navy);
+  box-shadow: 0 8px 0 var(--transfer-cobalt);
+  transform: rotate(-2deg);
+}
+.soosh-transfer .transfer-card-number {
+  font-family: var(--transfer-display);
+  font-size: 64px;
+  line-height: 1;
+}
+.soosh-transfer .transfer-card-rule { margin-block: 16px; border: 0; border-top: 3px dashed var(--transfer-navy); }
+.soosh-transfer .transfer-card-photo {
+  width: 64px;
+  height: 64px;
+  border: 3px solid var(--transfer-navy);
+  border-radius: 9999px;
+  background: var(--transfer-white);
+  overflow: hidden;
+}
+
+/* Plan ticket (screen 11): signal body, a white 58px tab behind a dashed perforation, Stubby's eyes peeking over the top. */
+.soosh-transfer .transfer-ticket {
+  position: relative;
+  display: flex;
+  border: 3px solid var(--transfer-navy);
+  border-radius: 16px;
+  background: var(--transfer-signal);
+  color: var(--transfer-navy);
+  box-shadow: 0 6px 0 var(--transfer-cobalt);
+}
+.soosh-transfer .transfer-ticket-body { flex: 1; min-width: 0; padding: 20px 16px 20px 20px; }
+.soosh-transfer .transfer-ticket-tab {
+  flex: none;
+  width: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 3px dashed var(--transfer-navy);
+  border-radius: 0 13px 13px 0;
+  background: var(--transfer-white);
+  font-family: var(--transfer-display);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.08em;
+}
+.soosh-transfer .transfer-ticket-eyes { position: absolute; top: -18px; right: 74px; }
+
+/* A white panel on a dark screen, for the shared photo picker. */
+.soosh-transfer .transfer-panel {
+  padding: 16px;
+  border: 3px solid var(--transfer-navy);
+  border-radius: 14px;
+  background: var(--transfer-white);
+  color: var(--transfer-navy);
+  /* The shared photo picker is built from the app's tokens, so give it the light ones here. */
+  color-scheme: light;
+  --foreground: var(--transfer-navy);
+  --muted-foreground: var(--transfer-muted);
+  --border: var(--transfer-line);
+  --background: var(--transfer-white);
+  --surface-muted: var(--transfer-platform);
+}
+
 /* Keyboard focus. The app-wide ring is !important, so the Transfer ring has to be
    as well: cobalt on light screens, white on cobalt and navy. */
 .soosh-transfer :is(a, button, input, select, textarea, [tabindex]):focus-visible,

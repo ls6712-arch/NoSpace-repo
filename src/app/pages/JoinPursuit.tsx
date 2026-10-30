@@ -7,7 +7,7 @@ import { addJoinedProject } from "../lib/journal";
 import { InvitePreview, fetchInvitePreview, fetchPursuitAsProject, joinViaLink } from "../lib/pursuitsRemote";
 import { targetText } from "../lib/pursuitProgress";
 import { PersonAvatar } from "./CreatePursuit";
-import { APP_NAME } from "../config";
+import { APP_NAME, sooshOnboardingEnabled } from "../config";
 import { plural, pluralWord } from "../lib/plural";
 import { ERROR_LINE } from "../lib/stateCopy";
 
@@ -125,7 +125,8 @@ export function JoinPursuit() {
             </Button>
           ) : (
             <>
-              <Link to={`/login?redirect=${encodeURIComponent(here)}`}>
+              {/* With the Soosh flow on, a friend's link lands on its arrival screen ("{Name} saved you a spot"), not the plain log in. */}
+              <Link to={sooshOnboardingEnabled ? `/onboarding?redirect=${encodeURIComponent(here)}` : `/login?redirect=${encodeURIComponent(here)}`}>
                 <Button variant="coral" className="h-11 w-full rounded-control">
                   Sign up or log in to join
                 </Button>

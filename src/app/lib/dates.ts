@@ -115,6 +115,13 @@ export function formatMonth(input: DateInput, opts: { now?: number } = {}): stri
   return fmt(isThisYear(d, now) ? { month: "long" } : { month: "long", year: "numeric" }).format(d);
 }
 
+/** "October 2026": always with the year, for "Joined October 2026". */
+export function formatMonthYear(input: DateInput): string {
+  const d = toDate(input);
+  if (Number.isNaN(d.getTime())) return "";
+  return fmt({ month: "long", year: "numeric" }).format(d);
+}
+
 /** "Wed" or "Wednesday". */
 export function formatWeekday(
   input: DateInput,

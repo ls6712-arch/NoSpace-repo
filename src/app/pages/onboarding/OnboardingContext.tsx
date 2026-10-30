@@ -26,6 +26,11 @@ export type OnboardingApi = {
   react: (state: StubbyState) => void;
   /** Hold a looping state (thinking) until the next call. */
   setStubby: (state: StubbyState) => void;
+  /**
+   * Ends onboarding now: marks it finished and lands on Home (or `to`). For a screen that
+   * leaves early, like "I'm going solo" skipping the invite screen.
+   */
+  finish: (to?: string) => void;
   /** True while the last screen's save is in flight. */
   finishing: boolean;
   finishError: string | null;

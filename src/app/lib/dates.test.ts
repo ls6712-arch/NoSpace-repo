@@ -48,3 +48,11 @@ describe("formatWait", () => {
     expect(formatWait(-3)).toBe("");
   });
 });
+
+describe("formatMonthYear", () => {
+  it("always has the year", async () => {
+    const { formatMonthYear } = await import("./dates");
+    expect(formatMonthYear(new Date(2026, 9, 5))).toBe("October 2026");
+    expect(formatMonthYear("not a date")).toBe("");
+  });
+});
