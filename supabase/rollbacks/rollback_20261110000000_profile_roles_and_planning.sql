@@ -1,4 +1,4 @@
--- Rollback for 20261109000000_profile_roles_and_planning.sql.
+-- Rollback for 20261110000000_profile_roles_and_planning.sql.
 -- The one change to enforce_notification_insert was adding 'plan_invite' to the
 -- allowed kinds: after this file, re-run that function's definition from
 -- 20261022000000_save_notification.sql to take it out again.

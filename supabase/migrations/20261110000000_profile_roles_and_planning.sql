@@ -1,6 +1,6 @@
 -- Soosh profile: role-aware reads, Pursuit targets, planning and plans.
 --
--- Run AFTER 20261108000000_require_birthdate.sql.
+-- Run AFTER 20261109000000_home_suggestions.sql.
 --
 -- Decisions (the repo already had most of this, so it is extended, not copied):
 --   * Friend = two accepted rows in public.profile_follows (one each way). The
@@ -24,7 +24,7 @@
 --     anyone but the owner. Friends only ever see output of suggest_plan().
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
--- Rollback: rollback_20261109000000_profile_roles_and_planning.sql (it also puts the two posts policies back).
+-- Rollback: rollback_20261110000000_profile_roles_and_planning.sql (it also puts the two posts policies back).
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. Columns
@@ -90,7 +90,7 @@ create trigger posts_set_visible_at
   for each row execute function private.posts_set_visible_at();
 
 -- Moments made before this migration get visible_at and occurred_at from the
--- backfill migration (20261109010000); until then a null visible_at counts as
+-- backfill migration (20261110010000); until then a null visible_at counts as
 -- visible, so no old Moment disappears in between.
 
 create table public.post_private (

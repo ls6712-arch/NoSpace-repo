@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { TermsCheckbox } from "../components/TermsCheckbox";
-import { TERMS_VERSION } from "../config";
+import { TERMS_VERSION, suggestionLoggingEnabled } from "../config";
 import { PrivacyPolicy } from "./PrivacyPolicy";
 import { Terms } from "./Terms";
 
@@ -41,5 +41,13 @@ describe("the 18+ Terms and Privacy Policy", () => {
   it("has no open TODO about the date of birth left in the Privacy Policy source", () => {
     const source = fs.readFileSync(path.resolve(__dirname, "PrivacyPolicy.tsx"), "utf8");
     expect(source).not.toMatch(/TODO\(landing page spec §4/);
+  });
+
+  it("tells people about the record of Home suggestions, and logging is on only while it does", () => {
+    const privacy = text(<PrivacyPolicy />);
+    const line = "We keep a short record of the suggestions we show you on Home and which ones you open or join, for 90 days. We use it to make suggestions fit you better. Only you can see it, and it is deleted with your account.";
+    expect(privacy).toContain(line);
+    // The record is only written while this says so.
+    if (suggestionLoggingEnabled) expect(privacy).toContain("We keep a short record of the suggestions we show you on Home");
   });
 });

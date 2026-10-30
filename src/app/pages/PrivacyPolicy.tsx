@@ -24,6 +24,11 @@ export function PrivacyPolicy() {
         We ask for your date of birth to confirm you’re 18 or over. It’s kept private,
         never shown on your profile or to anyone else, and never used for ads.
       </p>
+      <p>
+        We keep a short record of the suggestions we show you on Home and which ones
+        you open or join, for 90 days. We use it to make suggestions fit you better.
+        Only you can see it, and it is deleted with your account.
+      </p>
 
       <h2>Who else sees it</h2>
       <p>

@@ -24,6 +24,8 @@ import { Log } from "./pages/Log";
 import { Profile } from "./pages/Profile";
 import { WhoCanSeeMyTime } from "./pages/WhoCanSeeMyTime";
 import { Onboarding } from "./pages/Onboarding";
+import { Week } from "./pages/Week";
+import { WeekFree } from "./pages/WeekFree";
 import { Messages } from "./pages/Messages";
 import { Inbox } from "./pages/Inbox";
 import { People } from "./pages/People";
@@ -96,6 +98,8 @@ export const router = createHashRouter([
       { path: "welcome", Component: Welcome },
       { path: "i/:code", Component: InviteArrival },
       { path: "my-space", Component: HomeFeed },
+      { path: "week", Component: Week },
+      { path: "week/free", Component: WeekFree },
       // The sheet-of-six grid Home used to be, until the feed replaced it.
       { path: "my-space/all", Component: MySpace },
       { path: "discover", Component: Discover },

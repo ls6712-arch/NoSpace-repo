@@ -603,6 +603,41 @@ New, for approval. A new Moment is visible only to its owner for 2 hours (everyw
 | Share now? | Title of the confirm that appears when you send a still-held Moment into a chat, or add it to a Space (Add from my Moments) |
 | Anyone who can see your Moments will see this one too. | Body of that confirm. Cancel, or a failed release, leaves the Moment held and shares nothing; Share now shows it to others, then sends it. A Space's hosts are told about an approval share only after the release |
 
+## Home v2 (Oct 30, 2026)
+
+Approved by the founder on Oct 30, 2026. Counts use `plural()`, dates use `dates.ts`.
+
+| Where | String |
+|---|---|
+| Greeting | Hi {FirstName} |
+| Greeting subline | {Neighborhood or city} · {Weekday}, {Mon} {D} |
+| Your week card: title / link | Your week / Open |
+| Your week card: count line | {N} free windows left · {N} plan (the plan part only when there is one or more) |
+| Your week card: day chips | Free evening, Free all day, Free daytime, or the plan's short title and time ("Bouldering 7 PM") |
+| Best fit label | Best fit for you |
+| Best fit buttons | I’m going (event), Ask to join (open Pursuit), Start (at home), Invite a friend |
+| At-home badge | At home |
+| At-home detail | Your first step: {the guide's first step} |
+| At-home row in More ways | At home · about {duration} (for example "At home · about 30 min"; just "At home" when the Corner has no typical time) |
+| More ways heading / link | More ways this week / See all |
+| Log card | Log a Moment / Did something today? Log it and get a Stub. |
+| Feed heading | From your people |
+| Bottom bar | Home, Discover, Log, Week, You |
+| Why: `fits_window` | Fits your {Weekday} {evening, daytime} |
+| Why: `picked` | One of your picks |
+| Why: `friend_going` | {FirstName}’s going (only where you could already see who is going) |
+| Why: `pass` | Your {pass kind} pass (for example "Your museum pass") |
+| Why: `affinity`, no pick | You might like this |
+| Why: `nearby` | Close to you |
+| Why: `trending` | People are joining |
+| Why: `soon` | Starting soon |
+| Your week card, no free time saved | Add when you’re usually free (opens the free time screen) |
+| Week page (placeholder) | Week / Your week is coming soon. / Back to Home |
+| Week page, signed out | Your week lives here / Make an account to see your free time and your plans in one place. / Create an account |
+| Greeting, no name on record | Welcome back |
+
+Two reasons join with " · " ("Fits your Thursday evening · Priya’s going"). The free time screen reuses "When are you usually free?" and the "{N} windows a week" line from onboarding, with Save.
+
 ## Retired terms
 
 Never use these in UI copy.

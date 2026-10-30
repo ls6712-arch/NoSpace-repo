@@ -1,4 +1,4 @@
--- Rollback for 20261109010000_profile_backfill_moments.sql.
+-- Rollback for 20261110010000_profile_backfill_moments.sql.
 -- Undoes only what the backfill could have written: a visible_at equal to the
 -- Moment's created_at, and a private row with no place whose time is created_at.
 -- A Moment whose owner set its own time or place afterwards is left alone.

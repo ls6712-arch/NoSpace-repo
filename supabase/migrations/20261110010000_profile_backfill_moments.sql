@@ -1,6 +1,6 @@
 -- Profile backfill: old Moments keep showing.
 --
--- Run AFTER 20261109000000_profile_roles_and_planning.sql.
+-- Run AFTER 20261110000000_profile_roles_and_planning.sql.
 --
 -- Moments made before the profile migration have no visible_at and no private
 -- row. This sets occurred_at = created_at (in public.post_private) and
@@ -10,7 +10,7 @@
 -- never touched.
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
--- Rollback: rollback_20261109010000_profile_backfill_moments.sql.
+-- Rollback: rollback_20261110010000_profile_backfill_moments.sql.
 
 insert into public.post_private (post_id, user_id, occurred_at)
 select po.id, po.user_id, po.created_at
