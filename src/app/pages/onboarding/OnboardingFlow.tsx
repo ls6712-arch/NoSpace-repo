@@ -158,7 +158,7 @@ export function OnboardingFlow() {
 
   const advancing = useRef(false);
   const next = useCallback(
-    (opts?: { stamp?: boolean }) => {
+    (opts?: { stamp?: boolean; reaction?: StubbyState }) => {
       if (advancing.current) return;
       const go = () => {
         advancing.current = false;
@@ -172,9 +172,10 @@ export function OnboardingFlow() {
         if (to) navigate(hrefFor(to), { state: { n: pushed + 1 } });
         else void finish();
       };
-      if (opts?.stamp && !reduce) {
+      const reaction = opts?.reaction ?? (opts?.stamp ? "stamped" : null);
+      if (reaction && !reduce) {
         advancing.current = true;
-        react("stamped");
+        react(reaction);
         beatTimer.current = setTimeout(go, STAMP_BEAT_MS);
       } else {
         go();

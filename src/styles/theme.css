@@ -1870,6 +1870,74 @@ summary:focus-visible,
 .soosh-transfer .transfer-link:disabled { cursor: default; text-decoration: none; opacity: 0.8; }
 
 
+/* Taste screens (7 to 9). A choice chip: 50px, radius 12. Off is white with a 2px line
+   border and an empty dot; on is cobalt with white text and a signal dot in a navy ring. */
+.soosh-transfer .transfer-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 50px;
+  padding: 8px 14px;
+  border: 2px solid var(--transfer-line);
+  border-radius: 12px;
+  background: var(--transfer-white);
+  color: var(--transfer-navy);
+  font-family: var(--transfer-label);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.soosh-transfer .transfer-chip[aria-pressed="true"] {
+  border-color: var(--transfer-cobalt);
+  background: var(--transfer-cobalt);
+  color: var(--transfer-white);
+}
+.soosh-transfer .transfer-chip-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--transfer-line);
+  border-radius: 9999px;
+  background: transparent;
+}
+.soosh-transfer .transfer-chip[aria-pressed="true"] .transfer-chip-dot {
+  border-color: var(--transfer-navy);
+  background: var(--transfer-signal);
+  box-shadow: 0 0 0 2px var(--transfer-navy);
+}
+.soosh-transfer .transfer-chip-sub { display: block; font-weight: 400; font-size: 13px; line-height: 1.2; }
+.soosh-transfer .transfer-chip[aria-pressed="true"] .transfer-chip-sub { color: var(--transfer-line); }
+
+/* One free window: 40px, dashed when off, cobalt with a signal check when on. */
+.soosh-transfer .transfer-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px dashed var(--transfer-line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--transfer-signal);
+  cursor: pointer;
+}
+.soosh-transfer .transfer-cell[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--transfer-cobalt);
+  background: var(--transfer-cobalt);
+}
+
+/* The Next and Skip row stays on screen over the long list of Corners. */
+.soosh-transfer .transfer-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  margin-inline: -16px;
+  padding-inline: 16px;
+  padding-bottom: 16px;
+  background: var(--transfer-platform);
+}
+
 /* Keyboard focus. The app-wide ring is !important, so the Transfer ring has to be
    as well: cobalt on light screens, white on cobalt and navy. */
 .soosh-transfer :is(a, button, input, select, textarea, [tabindex]):focus-visible,

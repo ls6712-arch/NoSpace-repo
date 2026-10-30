@@ -3,6 +3,7 @@ import { fetchInvitePreview } from "../../lib/invites";
 import { joinTokenFrom } from "../../lib/joinToken";
 import { saveInviteCode } from "../../lib/inviteCode";
 import { fetchInvitePreview as fetchPursuitInvite } from "../../lib/pursuitsRemote";
+import { fetchInviteCorner } from "../../lib/tasteRemote";
 
 /** A friend whose half the person is arriving with, from `?invite=CODE` or `?redirect=/join/TOKEN`. */
 export interface Arrival {
@@ -10,6 +11,8 @@ export interface Arrival {
   avatar: string | null;
   /** A line the friend wrote with the invite, if any. */
   note: string | null;
+  /** The Corner of the friend's Pursuit ("space/slug"), when the link is for one and the person is signed in to ask. */
+  cornerKey?: string;
 }
 
 /**
@@ -31,9 +34,11 @@ export function useArrival(inviteCode: string | null, redirectTo: string): Arriv
         setArrival({ name: p.inviterName.slice(0, 60), avatar: p.inviterAvatar, note: p.note });
       });
     } else if (joinToken) {
-      void fetchPursuitInvite(joinToken).then((p) => {
+      void fetchPursuitInvite(joinToken).then(async (p) => {
         if (!live || !p) return;
-        setArrival({ name: p.ownerName.slice(0, 60), avatar: p.ownerAvatar ?? null, note: null });
+        const cornerKey = (await fetchInviteCorner(joinToken)) ?? undefined;
+        if (!live) return;
+        setArrival({ name: p.ownerName.slice(0, 60), avatar: p.ownerAvatar ?? null, note: null, cornerKey });
       });
     }
     return () => {
