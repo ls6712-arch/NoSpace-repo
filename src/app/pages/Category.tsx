@@ -152,7 +152,7 @@ export function CategoryPage() {
               <button
                 type="button"
                 onClick={() => setSearchParams(new URLSearchParams())}
-                className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-accent-text hover:underline"
+                className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-[var(--accent-text)] hover:underline"
               >
                 Clear
               </button>

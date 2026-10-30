@@ -374,7 +374,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
                   <ol className="space-y-3">
                     {corner.steps.map((step, i) => (
                       <li key={step} className="flex items-center gap-4 rounded-card bg-card p-4">
-                        <span className="text-title font-semibold text-accent-text" aria-hidden="true">{i + 1}</span>
+                        <span className="text-title font-semibold text-[var(--accent-text)]" aria-hidden="true">{i + 1}</span>
                         <span className="text-body">{tieNumbers(step)}</span>
                       </li>
                     ))}
@@ -388,7 +388,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {corner.worth.map((w) => (
                     <li key={w} className="flex gap-2 rounded-card border border-border p-4 text-body">
-                      <Sparkle className="mt-1 size-4 shrink-0 text-accent-text" aria-hidden="true" />
+                      <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
                       {w}
                     </li>
                   ))}
@@ -425,7 +425,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {corner.needs.map((need) => (
                 <li key={need} className="flex gap-2 rounded-card border border-border p-4 text-body">
-                  <Sparkle className="mt-1 size-4 shrink-0 text-accent-text" aria-hidden="true" />
+                  <Sparkle className="mt-1 size-4 shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
                   {need}
                 </li>
               ))}
@@ -548,7 +548,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
                 More Corners like this
               </h2>
               {category && (
-                <Link to={`/browse/${category.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-accent-text hover:underline">
+                <Link to={`/browse/${category.slug}`} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
                   See all
                 </Link>
               )}
