@@ -1,58 +1,52 @@
 import { Link, useLocation } from "react-router";
-import { Plus } from "lucide-react";
+import { CalendarDays, House, Plus, Search, UserRound, type LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { pop, press, PRESS_SCALE } from "../lib/motionTokens";
 import { useAuth } from "../context/AuthContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 
 /**
- * Phone and tablet navigation: three text tabs and a "+ Log" pill. Matches the
- * desktop top nav's Discover / Home / Create in the same order (plus
- * Profile, which hangs off the avatar on desktop) — one mental model, not
- * two. The desktop button reads "Log a Moment"; this tab says "Log" (the
- * glossary's short form) since a single-line tab has no room for more.
+ * Phone and tablet navigation: Home, Discover, Log, Week and You. Each tab is a
+ * line icon over a short label, so it reads the same as the desktop top nav's
+ * destinations in the same order (Profile hangs off the avatar there). The
+ * desktop button reads "Log a Moment"; this tab says "Log" (the glossary's
+ * short form) since a single-line tab has no room for more.
  *
  * Log sits in the middle because it's the thing you came to do. It is the
- * one solid shape on the bar: an accent pill reading "+ Log". On the Log
- * screen the plus turns 45 degrees into a cross (on `pop`).
+ * one solid shape on the bar: an accent pill holding a plus, with "Log" under
+ * it. On the Log screen the plus turns 45 degrees into a cross (on `pop`).
  *
  * Inbox isn't a tab of its own here: the header's notification bell and
- * message icon (Header.tsx) are visible on every breakpoint, including this
- * one, so /inbox stays one tap away without needing a sixth slot. The one
- * inbox-adjacent signal that lived on this bar — a dot for a pending follow
- * request someone's waiting on — moves to Profile below, the nearest
- * personal-content tab, so it isn't lost.
+ * message icon are visible on every breakpoint, including this one, so /inbox
+ * stays one tap away without needing another slot. The one inbox-adjacent
+ * signal that lived on this bar, a dot for a pending follow request someone's
+ * waiting on, sits on You, the nearest personal-content tab.
  *
  * Visible below lg, exactly where the desktop top nav is hidden, so there is
  * never a width with no primary navigation and never two at once.
  */
-export const TABS = [
+export const TABS: {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  match: (p: string) => boolean;
+  accent?: boolean;
+}[] = [
+  { to: "/my-space", label: "Home", icon: House, match: (p) => p.startsWith("/my-space") },
   {
     to: "/discover",
     label: "Discover",
-    match: (p: string) =>
+    icon: Search,
+    match: (p) =>
       p.startsWith("/discover") ||
       p.startsWith("/corners") ||
       p.startsWith("/browse") ||
       p.startsWith("/space") ||
       p.startsWith("/people"),
   },
-  {
-    to: "/my-space",
-    label: "Home",
-    match: (p: string) => p.startsWith("/my-space"),
-  },
-  {
-    to: "/create",
-    label: "Log",
-    match: (p: string) => p.startsWith("/create") || p.startsWith("/log"),
-    accent: true,
-  },
-  {
-    to: "/you",
-    label: "You",
-    match: (p: string) => p.startsWith("/you"),
-  },
+  { to: "/create", label: "Log", icon: Plus, match: (p) => p.startsWith("/create") || p.startsWith("/log"), accent: true },
+  { to: "/week", label: "Week", icon: CalendarDays, match: (p) => p.startsWith("/week") },
+  { to: "/you", label: "You", icon: UserRound, match: (p) => p.startsWith("/you") },
 ];
 
 export function BottomTabBar() {
@@ -71,23 +65,24 @@ export function BottomTabBar() {
         style={{ paddingBottom: "var(--safe-bottom)", paddingLeft: "var(--safe-left)", paddingRight: "var(--safe-right)" }}
         aria-label="Main"
       >
-        <div className="mx-auto grid max-w-md grid-cols-4 items-center px-1 py-2">
+        <div className="mx-auto grid max-w-md grid-cols-5 items-end px-1 pb-1.5 pt-1.5">
           {TABS.map((tab) => {
             const active = tab.match(pathname);
+            const Icon = tab.icon;
             if (tab.accent) {
               return (
-                <Link key={tab.to} to={tab.to} aria-current={active ? "page" : undefined} aria-label="Log a Moment" className="flex justify-center">
+                <Link key={tab.to} to={tab.to} aria-current={active ? "page" : undefined} aria-label="Log a Moment" className="flex min-h-12 flex-col items-center justify-end gap-0.5">
                   <motion.span
                     whileTap={{ scale: PRESS_SCALE }}
                     transition={press}
-                    className="inline-flex min-h-12 items-center gap-1 rounded-full px-6 text-body font-semibold"
+                    className="inline-flex h-10 w-12 items-center justify-center rounded-full"
                     style={{ backgroundColor: "var(--accent)", color: "var(--accent-foreground)" }}
                   >
                     <motion.span animate={{ rotate: active ? 45 : 0 }} transition={pop} className="inline-flex" aria-hidden="true">
-                      <Plus className="size-4" strokeWidth={2.6} />
+                      <Icon className="size-[22px]" strokeWidth={2.4} />
                     </motion.span>
-                    {tab.label}
                   </motion.span>
+                  <span className="text-caption font-semibold text-foreground">{tab.label}</span>
                 </Link>
               );
             }
@@ -96,15 +91,16 @@ export function BottomTabBar() {
                 key={tab.to}
                 to={tab.to}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex min-h-12 items-center justify-center rounded-card text-body font-semibold transition-colors ${active ? "text-accent-text" : "text-foreground"}`}
+                className={`relative flex min-h-12 flex-col items-center justify-end gap-1 rounded-card pb-0.5 transition-colors ${active ? "text-accent-text" : "text-muted-foreground"}`}
               >
                 <span className="relative">
-                  {tab.label}
+                  <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
                   {/* A dot, not a number: something is waiting, not how much. */}
                   {tab.to === "/you" && waiting && (
-                    <span className="absolute -right-2.5 -top-0.5 size-2 rounded-full" style={{ backgroundColor: "var(--coral-deep)" }} aria-hidden="true" />
+                    <span className="absolute -right-1 -top-0.5 size-2 rounded-full" style={{ backgroundColor: "var(--coral-deep)" }} aria-hidden="true" />
                   )}
                 </span>
+                <span className={`text-caption ${active ? "font-bold" : "font-medium"}`}>{tab.label}</span>
               </Link>
             );
           })}
