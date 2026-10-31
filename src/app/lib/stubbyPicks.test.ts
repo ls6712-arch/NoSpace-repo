@@ -112,6 +112,13 @@ describe("stubbyPicks", () => {
     expect(got).toMatchObject({ id: "pursuit:p9", kind: "open-pursuit", hostName: "Priya", pursuitId: "p9", endsAt: ny(11, 3, 21) });
   });
 
+  it("carries whether the host must approve, so the button can say Ask to join", () => {
+    const pursuit = (needsApproval?: boolean) => ({ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta", startsAt: ny(11, 3, 19), hostName: "Priya", needsApproval });
+    expect(stubbyPicks(input({ pursuits: [pursuit(true)] })).get(tueEve.key)?.needsApproval).toBe(true);
+    expect(stubbyPicks(input({ pursuits: [pursuit()] })).get(tueEve.key)?.needsApproval).toBeUndefined();
+    expect(stubbyPicks(input({ events: [event(1)] })).get(tueEve.key)?.needsApproval).toBeUndefined();
+  });
+
   it("reads windows in New York time", () => {
     expect(nyWindowKey(ny(11, 3, 19))).toBe("tue-eve");
     expect(nyWindowKey(ny(11, 3, 5))).toBeNull();

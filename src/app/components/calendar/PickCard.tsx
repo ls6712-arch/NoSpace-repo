@@ -13,7 +13,7 @@ export function PickCard({ slot, onOpen, onKeep, className }: { slot: CalendarFr
   const pick = slot.pick;
   if (!pick) return null;
   return (
-    <div className={cn("flex min-w-0 flex-col gap-1 rounded-control p-2", PICK_BORDER, className)}>
+    <div className={cn("flex min-w-0 flex-col gap-1.5 overflow-hidden rounded-control p-2", PICK_BORDER, className)}>
       <button type="button" data-hit aria-label={describePick(pick)} onClick={() => onOpen(slot)} className="flex min-h-6 min-w-0 flex-col items-start gap-0.5 text-left text-foreground">
         <span className="text-caption font-semibold text-accent-text">{SHEET.stubbysPick}</span>
         <span className="line-clamp-2 text-small font-bold leading-tight">{pick.title}</span>
@@ -25,7 +25,7 @@ export function PickCard({ slot, onOpen, onKeep, className }: { slot: CalendarFr
         onClick={() => onKeep(slot)}
         className="inline-flex min-h-8 items-center self-start rounded-full bg-foreground px-4 text-caption font-semibold text-background"
       >
-        {SHEET.keep}
+        {pick.needsApproval ? SHEET.askToJoin : SHEET.keep}
       </button>
     </div>
   );

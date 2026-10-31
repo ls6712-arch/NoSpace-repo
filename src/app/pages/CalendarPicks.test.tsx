@@ -228,6 +228,53 @@ describe("Stubby's picks", () => {
   });
 });
 
+describe("a pick that needs the host's approval", () => {
+  beforeEach(() => setWide(true));
+  const pottery = { key: "crafts/pottery", name: "Pottery", spaceSlug: "crafts", slug: "pottery" };
+  const group = (needsApproval: boolean) => {
+    hook.value = data({
+      budget: 50,
+      stubby: { picks: [pottery], events: [], pursuits: [{ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta from scratch", startsAt: ny(10, 31, 19), hostName: "Priya Shah", needsApproval }], area: "" },
+    });
+  };
+
+  it("says Ask to join, never Keep", () => {
+    group(true);
+    show("/calendar?view=week");
+    expect(screen.getByRole("button", { name: "Ask to join" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Keep" })).toBeNull();
+  });
+
+  it("says Keep for a group you join at once", () => {
+    group(false);
+    show("/calendar?view=week");
+    expect(screen.getByRole("button", { name: "Keep" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Ask to join" })).toBeNull();
+  });
+
+  it("sends the request, says Request sent with Undo, and stops offering it", async () => {
+    group(true);
+    picks.keepPick.mockResolvedValueOnce({ requested: true });
+    show("/calendar?view=week");
+    fireEvent.click(screen.getByRole("button", { name: "Ask to join" }));
+    await flush();
+    expect(picks.keepPick).toHaveBeenCalledTimes(1);
+    expect(lastToast().message).toBe("Request sent");
+    expect(screen.queryByText("Stubby’s pick")).toBeNull();
+    lastToast().undo();
+    await flush();
+    expect(picks.undoKeep).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Stubby’s pick")).toBeTruthy();
+  });
+
+  it("uses Ask to join in the pick's own sheet too", () => {
+    group(true);
+    show("/calendar?view=week");
+    fireEvent.click(screen.getByRole("button", { name: /^Stubby’s pick, / }));
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Ask to join" })).toBeTruthy();
+  });
+});
+
 describe("Stubby's picks on a phone", () => {
   it("shows the pick under the day in Month, with Keep", async () => {
     withEvents([event(1)]);

@@ -45,6 +45,7 @@ export const SHEET = {
   yourBlock: "Your block",
   stubbysPick: "Stubby’s pick",
   keep: "Keep",
+  askToJoin: "Ask to join",
   notThis: "Not this",
   findSomething: "Find something",
   stub: "Stub",

@@ -780,10 +780,11 @@ One pick at most in each free stretch of the next 7 days, made in the browser. N
 | Term | Use |
 |---|---|
 | Stubby’s pick | The label on a pick: white, a dashed border in the accent text colour. Row in Show: Stubby’s picks, "Ideas for your free time" |
-| Keep | Makes the pick a plan (the event's own "I'm going", or joining the open Pursuit). Toast: Plan made · Undo. If it only asks to join: Request sent · Undo (to confirm) |
+| Keep | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo |
+| Ask to join | The button instead of Keep when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
 | Not this | Swaps in the next match. After 3 on one stretch the stretch goes back to Find something. Kept in this browser only |
 | Find something | What a free stretch says when nothing fits: never filler |
-| You said Tuesday evenings work, and you picked Climbing. | The reason line. It names the usual week only when the pick falls in it. Otherwise: "You picked Climbing." (to confirm). A pass adds " You have a climbing pass." |
+| You said Tuesday evenings work, and you picked Climbing. | The reason line. It names the usual week only when the pick falls in it. Otherwise: "You picked Climbing." (approved Nov 1, 2026). A pass adds " You have a climbing pass." |
 
 ## Retired terms
 

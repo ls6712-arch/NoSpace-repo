@@ -38,6 +38,8 @@ export interface StubbyPick {
   eventId?: number;
   pursuitId?: string;
   hostName?: string;
+  /** The host answers a request to join. The button says Ask to join, not Keep. */
+  needsApproval?: boolean;
 }
 
 export interface PickInput {
@@ -121,6 +123,7 @@ function candidates(input: PickInput): Candidate[] {
         reason: reasonLine({ windowKey: windowKey(p.startsAt), cornerName: corner.name, pass: passFor(corner.slug, passes) }),
         pursuitId: p.pursuitId,
         hostName: p.hostName.trim().split(/\s+/)[0],
+        needsApproval: p.needsApproval || undefined,
       },
     });
   }

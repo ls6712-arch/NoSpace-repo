@@ -3,7 +3,7 @@ import { DEFAULT_CHECK_IN_DAYS, addJoinedProject, startProject, type PursuitMemb
 import { fetchCornersLive } from "./cornersLive";
 import { eventPlace } from "./eventTicket";
 import { joinTokenFrom } from "./joinToken";
-import { fetchNextSession, fetchOpenPursuits, joinOpenPursuit, mirrorPursuitOpen, saveSession } from "./openPursuits";
+import { fetchNextSession, fetchOpenPursuits, joinOpenPursuit, joinsInstantly, mirrorPursuitOpen, saveSession } from "./openPursuits";
 import { endsAtFor } from "./pursuitGoal";
 import { defaultMeasure } from "./pursuitProgress";
 import {
@@ -116,7 +116,7 @@ export async function loadPlanInput(ctx: PlanContext, now = Date.now()): Promise
     for (const g of groups) {
       for (const p of g.list) {
         if (!p.session || p.session.startsAt <= now || p.taken >= p.capacity || p.mine === "joined" || p.mine === "declined") continue;
-        pursuits.push({ cornerKey: g.key, pursuitId: p.pursuitId, title: p.title, startsAt: p.session.startsAt, hostName: p.ownerName });
+        pursuits.push({ cornerKey: g.key, pursuitId: p.pursuitId, title: p.title, startsAt: p.session.startsAt, hostName: p.ownerName, needsApproval: !joinsInstantly(p.taken, p.capacity) || undefined });
       }
     }
   }

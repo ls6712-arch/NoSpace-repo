@@ -56,6 +56,8 @@ export interface LivePursuitInput {
   /** The Pursuit's next session. One with no session has no time and is not offered. */
   startsAt: number;
   hostName: string;
+  /** Joining sends a request the host answers (more than half the spots are taken). Left out when it joins at once. */
+  needsApproval?: boolean;
 }
 
 export interface InviteInput {

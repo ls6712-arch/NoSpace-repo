@@ -588,7 +588,7 @@ function PickSheet({ slot, onKeep, onNotThis, onClose }: { slot: CalendarFreeSlo
             onClose();
           }}
         >
-          {SHEET.keep}
+          {pick.needsApproval ? SHEET.askToJoin : SHEET.keep}
         </button>
         <button
           type="button"

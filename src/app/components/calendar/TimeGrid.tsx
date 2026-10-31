@@ -36,6 +36,8 @@ const HOUR_MS = 3_600_000;
 const LABEL_PX = 56;
 const HEIGHT = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX;
 const MIN_BLOCK_PX = 24;
+/** A pick card needs room for its label, its title, its time and its button. */
+const PICK_MIN_PX = 150;
 /** A pointer that moves less than this is a click, not a drag. */
 const DRAG_PX = 6;
 
@@ -330,9 +332,7 @@ function DayColumn({
             >
               {FREE_LABEL[f.part]}
             </button>
-            {filters.picks && f.pick ? (
-              <PickCard slot={f} onOpen={handlers.onPick} onKeep={handlers.onKeep} className="w-full" />
-            ) : (
+            {!(filters.picks && f.pick) && (
               <Link
                 data-hit
                 to={findSomethingPath(f)}
@@ -345,6 +345,18 @@ function DayColumn({
           </div>
         );
       })}
+      {filters.picks &&
+        free.map((f) => {
+          if (!f.pick) return null;
+          // Where the thing is, inside the stretch: tall enough for its card even when it is short.
+          const box = blockBox(day, f.pick.startsAt, f.pick.endsAt);
+          const height = Math.max(box.height, PICK_MIN_PX);
+          return (
+            <div key={`pick-${f.slotKey}`} className="absolute inset-x-1 z-[1]" style={{ top: Math.min(box.top, HEIGHT - height), height }}>
+              <PickCard slot={f} onOpen={handlers.onPick} onKeep={handlers.onKeep} className="h-full w-full" />
+            </div>
+          );
+        })}
       {blocks.map((b) => {
         const box = blockBox(day, b.startMs, b.endMs);
         const id = `block-${b.entry.id}-${b.startMs}`;
