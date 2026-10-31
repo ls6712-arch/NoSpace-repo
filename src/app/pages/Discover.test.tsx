@@ -66,10 +66,20 @@ const space = (id: string, over: Partial<DiscoverSpace> = {}): DiscoverSpace => 
 });
 
 const show = () => render(<MemoryRouter><Discover /></MemoryRouter>);
+/** Opens a pill's dropdown and picks a value, the way a keyboard does. */
+const choose = (group: string, value: string) => {
+  const trigger = screen.getByRole("combobox", { name: new RegExp(`^${group}:`) });
+  fireEvent.keyDown(trigger, { key: "Enter" });
+  fireEvent.click(screen.getByRole("option", { name: value }));
+};
 const settle = () => act(async () => { await Promise.resolve(); await Promise.resolve(); });
 
 beforeEach(() => {
   // jsdom has no matchMedia (the reduced motion hook reads it).
+  // Radix Select (the pill dropdowns) reads these, and jsdom has neither.
+  Element.prototype.hasPointerCapture ??= () => false;
+  Element.prototype.releasePointerCapture ??= () => {};
+  Element.prototype.scrollIntoView ??= () => {};
   window.matchMedia = ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
   auth.value = { user: { id: "u1" }, profile: { display_name: "Alex" }, isConfigured: true };
   taste.value = { picks: [], windows: [], budget: null };
@@ -118,9 +128,9 @@ describe("Discover ideas", () => {
     taste.value = { picks: [], windows: ["thu-eve"], budget: 0 };
     show();
     await settle();
-    expect(screen.getByRole("button", { name: "Time: Tonight" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Spend: Free" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Who: A friend" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Time: Tonight" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Spend: Free" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Who: A friend" })).toBeTruthy();
   });
 
   it("starts at Weekend when the next window is free all day", async () => {
@@ -129,8 +139,8 @@ describe("Discover ideas", () => {
     taste.value = { picks: [], windows: ["sat-day", "sat-eve"], budget: 100 };
     show();
     await settle();
-    expect(screen.getByRole("button", { name: "Time: Weekend" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Spend: Under $25" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Time: Weekend" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Spend: Under $25" })).toBeTruthy();
   });
 
   it("reshuffles the row at once when a pill changes, with no network call", async () => {
@@ -141,8 +151,8 @@ describe("Discover ideas", () => {
     const before = titles();
     const calls = () => Object.values(fetchers).reduce((n, f) => n + f.mock.calls.length, 0);
     const callsBefore = calls();
-    fireEvent.click(screen.getByRole("button", { name: "Who: A friend" })); // to New people
-    expect(screen.getByRole("button", { name: "Who: New people" })).toBeTruthy();
+    choose("Who", "New people");
+    expect(screen.getByRole("combobox", { name: "Who: New people" })).toBeTruthy();
     expect(titles()).not.toEqual(before);
     expect(calls()).toBe(callsBefore);
     expect(titles().length).toBeGreaterThanOrEqual(3);
@@ -213,6 +223,35 @@ describe("Discover fails one section at a time", () => {
     await settle();
     expect(screen.getByText("Nothing new nearby yet.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Log a Moment" }).getAttribute("href")).toBe("/create");
+  });
+});
+
+describe("Discover pill dropdowns", () => {
+  it("opens a list of every value, the current one marked, for each pill", async () => {
+    show();
+    await settle();
+    const cases: [string, string[], string][] = [
+      ["Time", ["An hour", "Tonight", "Weekend"], "Tonight"],
+      ["Spend", ["Free", "Under $25", "Treat me"], "Under $25"],
+      ["Who", ["Solo", "A friend", "New people"], "A friend"],
+    ];
+    for (const [group, values, current] of cases) {
+      fireEvent.keyDown(screen.getByRole("combobox", { name: new RegExp(`^${group}:`) }), { key: "Enter" });
+      expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(values);
+      expect(screen.getByRole("option", { name: current }).getAttribute("aria-selected")).toBe("true");
+      fireEvent.keyDown(screen.getByRole("listbox"), { key: "Escape" });
+    }
+  });
+
+  it("changes the row and the pill when a value is picked, and picking Weekend keeps at least 3 ideas", async () => {
+    show();
+    await settle();
+    choose("Time", "Weekend");
+    choose("Spend", "Treat me");
+    expect(screen.getByRole("combobox", { name: "Time: Weekend" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Spend: Treat me" })).toBeTruthy();
+    const section = screen.getByRole("heading", { name: "What could you do?" }).closest("section")!;
+    expect(within(section).getAllByRole("link").length).toBeGreaterThanOrEqual(3);
   });
 });
 
