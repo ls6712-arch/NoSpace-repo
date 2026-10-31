@@ -36,6 +36,7 @@ vi.mock("./pursuitsRemote", async (orig) => ({
   mirrorPursuit: async (_u: string, p: { id: string }) => void remote.mirrored.push(p.id),
   mirrorPursuitMeasure: async () => undefined,
   saveInvites: async () => null,
+  getOrCreateInviteLink: async () => ({ token: "tok-1" }),
 }));
 vi.mock("./openPursuits", async (orig) => ({ ...(await orig<typeof import("./openPursuits")>()), mirrorPursuitOpen: async () => undefined }));
 
@@ -43,6 +44,8 @@ import { LOCAL_CLEARED_EVENT } from "./localData";
 import { activePursuits } from "./pursuitTrail";
 import { addJoinedProject, mergeRemoteProjects, startProject, getJournal, type Project } from "./journal";
 import { createPlan } from "./planEdits";
+import { startSmallPursuit, tearOffHalf } from "./firstPlanRemote";
+import type { Plan } from "./firstPlan";
 import { restoreOwnPursuits } from "./pursuitsRemote";
 
 const owner = { id: "u1", username: "maya", displayName: "Maya", avatarUrl: undefined };
@@ -97,5 +100,34 @@ describe("one-off plans stay out of the person's Pursuit lists", () => {
     expect(projects.map((p) => p.id)).toEqual(expect.arrayContaining(["real-3"]));
     expect(projects.map((p) => p.id)).not.toContain("plan-3");
     expect(activePursuits(projects, () => []).map((p) => p.id)).not.toContain("plan-3");
+  });
+
+  describe("Bring someone on a listing", () => {
+    const listing: Plan = {
+      id: "event:12", kind: "event", title: "Bouldering night", corner: { key: "sports/climbing", name: "Climbing", spaceSlug: "sports", slug: "climbing" },
+      startsAt: Date.now() + 86_400_000, when: null, reason: "", eventId: 12,
+    };
+
+    it("is made as a one-off plan: kept out of the journal and marked is_plan, with its link to share", async () => {
+      const before = getJournal().projects.length;
+      const r = await tearOffHalf(listing, owner, undefined, { asPlan: true });
+      expect(r.half?.url).toContain("tok-1");
+      expect(r.ownPursuitId).toBeTruthy();
+      expect(getJournal().projects).toHaveLength(before);
+      expect(getJournal().projects.some((p) => p.id === r.ownPursuitId)).toBe(false);
+      expect(db.updates).toContainEqual({ table: "pursuits", patch: { is_plan: true } });
+    });
+
+    it("does not come back when the friend takes their half (they join it from the link)", async () => {
+      const r = await tearOffHalf(listing, owner, undefined, { asPlan: true });
+      addJoinedProject(proj(r.ownPursuitId!, { plan: true }));
+      expect(getJournal().projects.some((p) => p.id === r.ownPursuitId)).toBe(false);
+    });
+
+    it("leaves an at-home plan from the first plan as the Pursuit it has always been", async () => {
+      const r = await startSmallPursuit({ ...listing, kind: "at-home", id: "home:x", eventId: undefined }, owner);
+      expect(getJournal().projects.some((p) => p.id === r.pursuitId)).toBe(true);
+      expect(db.updates).not.toContainEqual({ table: "pursuits", patch: { is_plan: true } });
+    });
   });
 });
