@@ -659,7 +659,10 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 | Where | String |
 |---|---|
 | Header line | What’s out there in {city} ▾ above the title Discover. The city is the tappable part and opens the city sheet (title is always Discover, 28px/800) |
-| Search | Discover has no search box of its own (Oct 31, 2026). Search is the nav one: the header icon on a phone, the rail's Search panel from 744px ("Search Moments, people, Spaces") |
+| Search box on Discover | Under the title, full width: Search Moments, people, Spaces. It is the same box as the nav one and only leads to Search, where the cursor is already in the box (founder, Oct 31, 2026). Nothing is added to the bottom bar |
+| Empty Search | Nothing typed: Busy this week (the Corners with the most events in the next 7 days, each with its event count) and Corners (a row of up to six). A section with nothing in it is left out, and neither says "Be the first". With both empty: Type something to search. |
+| / | On desktop, pressing / opens search, except while typing in a field |
+| Search (old note) | Discover had no search box of its own before this (Oct 31, 2026). Search is the nav one: the header icon on a phone, the rail's Search panel from 744px ("Search Moments, people, Spaces") |
 | Jump chips | Ideas / Corners / Spaces / Moments |
 | Ideas heading / subline | What could you do? / Ideas for what you’ve got. Tap a pill to change it. |
 | Time pill | An hour / Tonight / Weekend (each includes the ones before it) |

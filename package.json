@@ -14,6 +14,7 @@
     "visual": "node scripts/visual/run.ts",
     "visual:selftest": "node scripts/visual/run.ts --selftest",
     "visual:pages": "node scripts/visual/page-shell.ts --out docs/qa/one-skin/pr5",
+    "visual:search": "node scripts/visual/search.ts dist docs/qa/one-skin/search",
     "visual:pages:selftest": "node scripts/visual/page-shell.ts --selftest",
     "build:app": "vite build",
     "landing:screens": "node scripts/landing-screens/capture.mjs"

@@ -25,7 +25,7 @@ function Pill<T extends string>({
     <Select value={value} onValueChange={(v) => onPick(v as T)}>
       <SelectTrigger
         aria-label={`${group}: ${labels[value]}`}
-        className="h-auto min-h-11 shrink-0 justify-center gap-1.5 rounded-full border-2 border-foreground bg-transparent px-3 py-0 text-small font-semibold data-[size=default]:h-auto [&_svg]:opacity-100"
+        className="h-auto min-h-11 w-auto shrink-0 justify-center gap-1.5 rounded-full border-2 border-foreground bg-transparent px-3 py-0 text-small font-semibold data-[size=default]:h-auto [&_svg]:opacity-100"
       >
         <SelectValue />
       </SelectTrigger>
