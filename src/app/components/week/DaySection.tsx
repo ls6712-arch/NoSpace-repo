@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { track } from "../../lib/analytics";
 import { WEEK_VIEW } from "../../lib/homeCopy";
 import type { Pass } from "../../lib/tasteModel";
 import { canBring } from "../../lib/weekActions";
-import { dayDate, dayHeading, findSomethingPath, FREE_LABEL, nothingOnLine, type DayContent, type WeekPlanDetail } from "../../lib/weekView";
+import { dayDate, dayHeading, findSomethingPath, FREE_LABEL, nothingOnLine, type DayContent, type FreeSlot, type WeekPlanDetail } from "../../lib/weekView";
 import { PlanTicketRow } from "./PlanTicketRow";
 
 /**
@@ -17,6 +18,9 @@ export function DaySection({
   passes,
   onBring,
   heading,
+  onOpenPlan,
+  onOpenFree,
+  renderPick,
 }: {
   content: DayContent;
   now: number;
@@ -24,6 +28,11 @@ export function DaySection({
   onBring: (plan: WeekPlanDetail) => void;
   /** Overrides the heading and date (the calendar's own wording, with no "Tonight"). */
   heading?: { title: string; date: string };
+  /** The calendar opens a plan's or a free slot's sheet. */
+  onOpenPlan?: (plan: WeekPlanDetail) => void;
+  onOpenFree?: (slot: FreeSlot) => void;
+  /** Stubby's pick for a free slot, when it has one: shown in place of Find something. */
+  renderPick?: (slot: FreeSlot) => ReactNode;
 }) {
   const { day, plans, free } = content;
   const id = `week-day-${day.offset}`;
@@ -47,20 +56,28 @@ export function DaySection({
       <ul className="flex flex-col gap-3">
         {items.map((it) =>
           it.plan ? (
-            <PlanTicketRow key={it.plan.id} plan={it.plan} passes={passes} canBring={canBring(it.plan)} onBring={onBring} />
+            <PlanTicketRow key={it.plan.id} plan={it.plan} passes={passes} canBring={canBring(it.plan)} onBring={onBring} onOpen={onOpenPlan} />
           ) : (
             <li
-              key={it.slot.keys.join("+")}
-              className="flex min-h-14 items-center justify-between gap-3 rounded-card border-[1.5px] border-dashed border-border px-4"
+              key={it.slot.keys.join("+") + it.slot.startMs}
+              className="flex min-h-14 flex-wrap items-center justify-between gap-3 rounded-card border-[1.5px] border-dashed border-border px-4 py-2"
             >
-              <span className="text-body font-semibold">{FREE_LABEL[it.slot.part]}</span>
-              <Link
-                to={findSomethingPath(it.slot)}
-                onClick={() => track({ name: "week_find_something", window: it.slot.keys[0] })}
-                className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline-offset-4 hover:underline"
-              >
-                {WEEK_VIEW.findSomething}
-              </Link>
+              {onOpenFree ? (
+                <button type="button" onClick={() => onOpenFree(it.slot)} className="min-h-11 text-left text-body font-semibold">
+                  {FREE_LABEL[it.slot.part]}
+                </button>
+              ) : (
+                <span className="text-body font-semibold">{FREE_LABEL[it.slot.part]}</span>
+              )}
+              {renderPick?.(it.slot) ?? (
+                <Link
+                  to={findSomethingPath(it.slot)}
+                  onClick={() => track({ name: "week_find_something", window: it.slot.keys[0] })}
+                  className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline-offset-4 hover:underline"
+                >
+                  {WEEK_VIEW.findSomething}
+                </Link>
+              )}
             </li>
           ),
         )}

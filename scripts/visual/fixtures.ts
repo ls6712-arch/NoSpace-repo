@@ -18,7 +18,37 @@ export const SPACE_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1";
 export const SPACE_SLUG = "clay-hands";
 export const MEDIA_ORIGIN = "https://fixture.supabase.co/storage/v1/object/public/moments";
 
-export function buildFixtures(now = new Date()): Fixtures {
+const NY = "America/New_York";
+const nyFmt = new Intl.DateTimeFormat("en-US", { timeZone: NY, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", hourCycle: "h23" });
+const nyParts = (d: Date) => {
+  const p: Record<string, number> = {};
+  for (const x of nyFmt.formatToParts(d)) if (x.type !== "literal") p[x.type] = Number(x.value);
+  return { y: p.year, m: p.month, d: p.day, hour: p.hour % 24 };
+};
+
+/** The moment that is `hour`:`minute` in New York, `dayOffset` days after today there. The calendar QA data is laid out in New York time, whatever the clock. */
+export function nyAt(now: Date, dayOffset: number, hour: number, minute = 0): Date {
+  const t = nyParts(now);
+  const guess = Date.UTC(t.y, t.m - 1, t.d + dayOffset, hour, 0, 0);
+  let ms = guess;
+  // Two passes settle the offset across a daylight saving change.
+  for (let i = 0; i < 2; i++) {
+    const p = nyParts(new Date(ms));
+    ms += guess - Date.UTC(p.y, p.m - 1, p.d, p.hour, 0, 0);
+  }
+  return new Date(ms + minute * 60_000);
+}
+
+export interface FixtureOptions {
+  /**
+   * Adds the calendar QA person's week: every window free, a Pottery pick near Gowanus on $50 a month, one block,
+   * four Pottery listings on one day (so Not this has somewhere to go) and a group that needs the host's approval.
+   * Screenshots only: these rows exist nowhere but in this harness, never in a database.
+   */
+  calendarQa?: boolean;
+}
+
+export function buildFixtures(now = new Date(), opts: FixtureOptions = {}): Fixtures {
   const ago = (days: number, h = 0) => new Date(now.getTime() - days * 864e5 - h * 36e5).toISOString();
   const ahead = (hours: number) => new Date(now.getTime() + hours * 36e5).toISOString();
   const media = (n: number) => `${MEDIA_ORIGIN}/${n}.svg`;
@@ -164,5 +194,52 @@ export function buildFixtures(now = new Date()): Fixtures {
   // config.ts (which can't be imported here: it reads import.meta.env).
   const termsVersion = fs.readFileSync(new URL("../../src/app/config.ts", import.meta.url), "utf8").match(/TERMS_VERSION = "([^"]+)"/)?.[1] ?? "";
   const terms_acceptances = profiles.map((p) => ({ user_id: p.id, terms_version: termsVersion, accepted_at: ago(119) }));
-  return { ...empties, ...({ pursuit_sessions, pursuit_session_rsvps: [], stubs, profile_private: [{ user_id: ME, city: "New York" }] } as unknown as Fixtures), profile_follows, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
+  const qa = opts.calendarQa ? calendarQaRows(now) : null;
+  const base = {
+    ...empties,
+    ...({ pursuit_sessions, pursuit_session_rsvps: [], stubs, profile_private: [{ user_id: ME, city: "New York" }], calendar_feed_tokens: [] } as unknown as Fixtures),
+    profile_follows, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events,
+    event_rsvps, participations, messages, notifications, profile_settings, app_config, categories,
+  } as unknown as Fixtures;
+  if (!qa) return base;
+  // The calendar QA person: no other plans in the way, and the rows Stubby's picks are made from.
+  return {
+    ...base,
+    ...({ pursuit_sessions: [], profile_private: qa.profile_private, calendar_entries: qa.calendar_entries, corners: qa.corners, space_corners: qa.space_corners } as unknown as Fixtures),
+    spaces: [...spaces, ...qa.spaces],
+    space_events: [...space_events, ...qa.space_events],
+  } as unknown as Fixtures;
+}
+
+/** The calendar QA person. Times are New York wall clock, a few days ahead of whenever the harness runs. */
+export const QA_SPACE_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2";
+function calendarQaRows(now: Date) {
+  const at = (day: number, hour: number, minute = 0) => nyAt(now, day, hour, minute);
+  const iso = (d: Date) => d.toISOString();
+  const ago = (days: number) => new Date(now.getTime() - days * 864e5).toISOString();
+  const windows = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].flatMap((d) => [`${d}-day`, `${d}-eve`]);
+  const event = (id: number, title: string, day: number, hour: number, minute: number, price: string | null) => ({
+    id, space_id: QA_SPACE_ID, title, description: null, starts_at: iso(at(day, hour, minute)), ends_at: iso(at(day, hour + 2, minute)), timezone: "America/New_York",
+    meets: "in_person", neighborhood: "Gowanus", city: "New York", featured: false, status: "scheduled", created_by: ME, created_at: ago(2), price, capacity: null, booking_url: null,
+  });
+  return {
+    profile_private: [{ user_id: ME, city: "New York", area: "Gowanus", picks: ["crafts-making/pottery"], free_windows: windows, monthly_budget: 50 }],
+    // One block tomorrow evening, with a note.
+    calendar_entries: [{ id: 1, user_id: ME, kind: "block", starts_at: iso(at(1, 18)), ends_at: iso(at(1, 20)), repeat: "none", note: "Dentist", created_at: ago(1) }],
+    corners: [{ id: 501, space_slug: "crafts-making", slug: "pottery", name: "Pottery" }],
+    space_corners: [{ space_id: QA_SPACE_ID, corner_id: 501, is_primary: true }],
+    spaces: [{
+      id: QA_SPACE_ID, slug: "gowanus-clay", name: "Gowanus Clay", description: "A shared studio in Gowanus.", cover_image: null, category_slug: "crafts-making", meets: "in_person",
+      neighborhood: "Gowanus", city: "New York", access: "open", join_questions: [], rules: null, member_cap: null, posting_mode: "immediate", events_created_by: "hosts",
+      status: "active", created_by: ME, created_at: ago(90), host_handoff_started_at: null, studio_capacity: null, studio_hourly_rate: null, studio_hours: null,
+    }] as Row<"spaces">[],
+    // Four listings two days from now, all inside the budget, so Not this can swap three times; one over budget later in the week.
+    space_events: [
+      event(101, "Kiln open day", 2, 11, 0, "$15"),
+      event(102, "Hand-building basics", 2, 14, 0, "$30"),
+      event(103, "Wheel throwing night", 2, 18, 30, "$25"),
+      event(104, "Glaze swap", 2, 20, 30, "Free"),
+      event(105, "Raku firing", 4, 15, 0, "$80"),
+    ] as Row<"space_events">[],
+  };
 }

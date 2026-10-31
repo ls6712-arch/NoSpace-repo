@@ -55,7 +55,7 @@ async function main() {
   const lines = ["| view | width | theme | title | sideways | coral fills | text under 12px |", "|---|---|---|---|---|---|---|"];
   try {
     for (const th of THEMES) for (const w of WIDTHS) {
-      const ctx = await browser.newContext({ viewport: { width: w, height: HEIGHT[w] ?? 900 }, hasTouch: w < 744, isMobile: w < 744, colorScheme: th, reducedMotion: "reduce" });
+      const ctx = await browser.newContext({ viewport: { width: w, height: HEIGHT[w] ?? 900 }, hasTouch: w < 744, isMobile: w < 744, colorScheme: th, reducedMotion: "reduce", permissions: ["clipboard-read", "clipboard-write"] });
       await installSupabaseMock(ctx, buildFixtures(), path.join(HERE, "database.types.ts"));
       await ctx.addInitScript(([t, se]) => { localStorage.setItem("soosh-theme-preference", t as string); localStorage.setItem("sb-fixture-auth-token", JSON.stringify(se)); }, [th, seededSession()] as const);
       for (const view of VIEWS) {
@@ -72,6 +72,38 @@ async function main() {
         if (m.small.length) fails.push(`${name}: text under 12px: ${m.small.slice(0, 3).join(", ")}`);
         await p.close();
       }
+      // The Make a plan sheet, and the time sheet from a tap on empty hours (a click on the grid from 744px, a tap on a day on a phone).
+      const sheets = await ctx.newPage();
+      await sheets.goto(`http://localhost:${port}/#/calendar?view=week`);
+      await sheets.waitForSelector("main h1", { timeout: 15000 });
+      await sheets.waitForTimeout(800);
+      await sheets.getByRole("button", { name: "Make a plan", exact: true }).first().click();
+      await sheets.waitForTimeout(800);
+      const planShot = `make-a-plan-${w}-${th}`;
+      await sheets.screenshot({ path: path.join(OUT, `${planShot}.png`) });
+      lines.push(`| make a plan sheet | ${w} | ${th} | ${(await sheets.getByRole("dialog").first().textContent())?.slice(0, 24) ?? ""} | no | n/a | n/a |`);
+      await sheets.keyboard.press("Escape");
+      if (w >= 744) {
+        await sheets.waitForTimeout(400);
+        await sheets.locator(".cursor-cell").first().click({ position: { x: 20, y: 300 } });
+        await sheets.waitForTimeout(800);
+        await sheets.screenshot({ path: path.join(OUT, `time-sheet-${w}-${th}.png`) });
+      }
+      await sheets.close();
+
+      // "Your calendars": the subscribe link, before and after Copy subscribe link. A wide screen shows it under Show; below 1128px it is in the Show sheet.
+      const link = await ctx.newPage();
+      await link.goto(`http://localhost:${port}/#/calendar?view=week`);
+      await link.waitForSelector("main h1", { timeout: 15000 });
+      if (w < 1128) await link.getByRole("button", { name: "Show", exact: true }).click();
+      const card = link.locator("section[aria-labelledby='calendar-feed-h']");
+      await card.waitFor({ timeout: 15000 });
+      await card.screenshot({ path: path.join(OUT, `your-calendars-${w}-${th}.png`) });
+      await card.getByRole("button", { name: "Copy subscribe link" }).click();
+      await card.getByRole("button", { name: "Reset link" }).waitFor({ timeout: 10000 });
+      await card.screenshot({ path: path.join(OUT, `your-calendars-copied-${w}-${th}.png`) });
+      lines.push(`| your calendars | ${w} | ${th} | ${(await card.getByRole("heading").textContent()) ?? ""} | no | n/a | n/a |`);
+      await link.close();
       await ctx.close();
     }
   } finally {

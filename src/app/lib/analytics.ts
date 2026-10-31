@@ -23,6 +23,13 @@ export type AnalyticsEvent =
   | { name: "calendar_opened"; view: "day" | "week" | "month" | "list" }
   | { name: "calendar_view_changed"; view: "day" | "week" | "month" | "list" }
   | { name: "calendar_filter_changed"; row: string; on: boolean }
+  | { name: "calendar_slot_tapped"; kind: "empty" | "plan" | "free" | "block" | "stub" }
+  | { name: "plan_created_from_calendar" }
+  | { name: "free_time_added"; repeat: "none" | "weekly" }
+  | { name: "block_added"; repeat: "none" | "weekly" }
+  | { name: "plan_cancelled" }
+  | { name: "plan_left" }
+  | { name: "undo_used" }
   | { name: "week_day_tapped"; offset: number }
   | { name: "week_find_something"; window: string }
   | { name: "week_budget_changed" }

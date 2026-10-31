@@ -98,7 +98,7 @@ describe("Calendar, Week view on a phone", () => {
     hook.value = data({ plans: [plan()] });
     show();
     expect(screen.getAllByRole("button", { pressed: false }).length + screen.getAllByRole("button", { pressed: true }).length).toBeGreaterThanOrEqual(7);
-    expect(screen.getByRole("button", { name: "Saturday 31, 1 plan, free daytime" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Saturday 31, 1 plan, free all day" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Monday 2, nothing on" })).toBeTruthy();
   });
 
@@ -144,7 +144,8 @@ describe("Calendar, Week view on a phone", () => {
     hook.value = data({ plans: [plan({ kind: "session", title: "Pottery", pursuitId: "p9", session: { n: 4, total: 5 }, cornerKey: "crafts/pottery" })] });
     show();
     expect(screen.getByText("Pursuit · session 4 of 5")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Pottery" }).getAttribute("href")).toBe("/pursuit/p9");
+    fireEvent.click(screen.getByRole("button", { name: "Pursuit session, 7 PM, Pottery" }));
+    expect(screen.getByRole("link", { name: "Open Pursuit" }).getAttribute("href")).toBe("/pursuit/p9");
   });
 
   it("names a pass instead of a price", () => {
@@ -343,9 +344,9 @@ describe("Calendar, the four views", () => {
     it("draws Month as Sunday first cells with chips and the coral Make a plan in the header", () => {
       hook.value = data({ plans: [plan()] });
       at("/calendar");
-      expect(screen.getByRole("link", { name: "Make a plan" }).getAttribute("href")).toBe("/discover");
-      expect(screen.getByRole("group", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
-      expect(screen.getByRole("group", { name: "Stub, Pottery #2" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Make a plan" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Stub, Pottery #2" })).toBeTruthy();
       expect(screen.queryByRole("button", { name: "Show" })).toBeNull();
     });
 
@@ -355,7 +356,7 @@ describe("Calendar, the four views", () => {
         plans: [1, 2, 3, 4].map((n) => plan({ id: `event-${n}`, title: `Thing ${n}`, startsAt: ny(10, 31, 8 + n), endsAt: ny(10, 31, 9 + n) })),
       });
       at("/calendar");
-      expect(screen.getAllByRole("group", { name: /^Plan, / })).toHaveLength(2);
+      expect(screen.getAllByRole("button", { name: /^Plan, / })).toHaveLength(2);
       const more = screen.getByRole("button", { name: "2 more" });
       fireEvent.click(more);
       expect(where()).toBe("/calendar?view=day&date=2026-10-31");
@@ -364,7 +365,7 @@ describe("Calendar, the four views", () => {
     it("draws Week as a time grid with a block for the plan and a Find something in free time", () => {
       hook.value = data({ plans: [plan()] });
       at("/calendar?view=week");
-      expect(screen.getByRole("group", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
       expect(screen.getAllByRole("link", { name: "Find something" }).length).toBeGreaterThan(0);
       expect(screen.getByText("7 PM")).toBeTruthy();
     });
@@ -383,7 +384,7 @@ describe("Calendar, the four views", () => {
       hook.value = data({ plans: [plan()] });
       at("/calendar?view=day&date=2026-10-31");
       expect(screen.getAllByRole("button", { name: /^(Today|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) \d/ })).toHaveLength(7);
-      expect(screen.getByRole("group", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
     });
 
     it("marks Show checkboxes and remembers them per view", () => {
@@ -391,7 +392,7 @@ describe("Calendar, the four views", () => {
       const stubs = screen.getByRole("checkbox", { name: /Stubs you collected/ }) as HTMLInputElement;
       expect(stubs.checked).toBe(true);
       fireEvent.click(stubs);
-      expect(screen.queryByRole("group", { name: "Stub, Pottery #2" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Stub, Pottery #2" })).toBeNull();
       expect(JSON.parse(window.localStorage.getItem(FILTERS_KEY) ?? "{}").month.stubs).toBe(false);
       fireEvent.click(screen.getByRole("button", { name: "Week" }));
       expect((screen.getByRole("checkbox", { name: /Stubs you collected/ }) as HTMLInputElement).checked).toBe(true);
@@ -399,14 +400,14 @@ describe("Calendar, the four views", () => {
 
     it("only lists the kinds that exist today", () => {
       at("/calendar");
-      expect(screen.getAllByRole("checkbox").map((c) => c.closest("label")?.textContent)).toEqual(["Plans", "Pursuit sessions", "Free time", "Stubs you collected"]);
+      expect(screen.getAllByRole("checkbox").map((c) => c.closest("label")?.textContent)).toEqual(["Plans", "Pursuit sessions", "Stubby’s picksIdeas for your free time", "Free time", "Stubs you collected", "Your blocks"]);
     });
 
     it("hides free time when it is turned off", () => {
       at("/calendar?view=week");
       expect(screen.getAllByRole("link", { name: "Find something" }).length).toBeGreaterThan(0);
       fireEvent.click(screen.getByRole("checkbox", { name: /Free time/ }));
-      expect(screen.queryAllByRole("group", { name: /^Free / })).toHaveLength(0);
+      expect(screen.queryAllByRole("button", { name: /^Free / })).toHaveLength(0);
     });
   });
 
@@ -419,7 +420,7 @@ describe("Calendar, the four views", () => {
       fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31, 1 plan/ }));
       const list = document.querySelector("[aria-live='polite']") as HTMLElement;
       expect(within(list).getByText("Bouldering night")).toBeTruthy();
-      expect(within(list).getByRole("link", { name: "Make a plan for tomorrow" }).getAttribute("href")).toBe("/discover");
+      expect(within(list).getByRole("button", { name: "Make a plan for tomorrow" })).toBeTruthy();
     });
 
     it("lists a day's Stubs when it is tapped", () => {
@@ -431,7 +432,7 @@ describe("Calendar, the four views", () => {
 
     it("opens a Show sheet instead of a side panel, and has Make a plan in the header", () => {
       at("/calendar");
-      expect(screen.getByRole("link", { name: "Make a plan" }).getAttribute("href")).toBe("/discover");
+      expect(screen.getByRole("button", { name: "Make a plan" })).toBeTruthy();
       fireEvent.click(screen.getByRole("button", { name: "Show" }));
       expect(screen.getByRole("checkbox", { name: /Plans/ })).toBeTruthy();
     });
@@ -477,7 +478,7 @@ describe("Calendar, a tablet", () => {
 
   it("has Make a plan in the header and Show as a sheet, not a panel", () => {
     at("/calendar");
-    expect(screen.getByRole("link", { name: "Make a plan" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Make a plan" })).toBeTruthy();
     expect(screen.queryByRole("checkbox")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Show" }));
     expect(screen.getByRole("checkbox", { name: /Plans/ })).toBeTruthy();

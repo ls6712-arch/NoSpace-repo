@@ -34,6 +34,8 @@ function rowToProject(row: any): Project {
     customSpace: row.custom_space ?? undefined,
     inspiredByPostId: row.inspired_by_post_id ?? undefined,
     shared: !!row.shared,
+    // Column from supabase/migrations/20261113000000_calendar_edits.sql; absent reads as a Pursuit.
+    plan: row.is_plan ? true : undefined,
     startedAt: new Date(row.started_at).getTime(),
     finishedAt: row.finished_at ? new Date(row.finished_at).getTime() : undefined,
     goal: rowToGoal(row),
@@ -667,4 +669,19 @@ export function pursuitTogetherHref(post: { id: number | string; userId?: string
   const title = (post.caption ?? "").split(/[.\n]/)[0].slice(0, 60).trim();
   if (title) params.set("title", title);
   return `/pursuits/new?${params.toString()}`;
+}
+
+/**
+ * Marks the Pursuit row as a one-off plan (`pursuits.is_plan`, from the calendar
+ * migration), so the person's other devices and a friend who joins it keep it out
+ * of their Pursuit lists too. Best effort: before that migration is live the
+ * column is not there and the update does nothing.
+ */
+export async function markAsPlan(pursuitId: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuits").update({ is_plan: true }).eq("id", pursuitId);
+  } catch {
+    // Without the column the plan is a plain Pursuit on this person's other devices until the migration is applied.
+  }
 }
