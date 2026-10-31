@@ -11,7 +11,7 @@ import { formatAmount, pursuitCorner, unitFor } from "../lib/pursuitProgress";
 import { usePursuitMembers, usePursuitProgress } from "../lib/usePursuitProgress";
 import { daysBetween } from "../lib/pursuitGoal";
 import { withLine } from "../lib/withLine";
-import { formatDateRange } from "../lib/dates";
+import { formatDate, formatDateRange } from "../lib/dates";
 import { plural } from "../lib/plural";
 import { renderRecap } from "../lib/recapImage";
 import { heroCandidates } from "../lib/discoverHero";
@@ -19,7 +19,7 @@ import { useInterests } from "../lib/interests";
 import { fetchOpenPursuits } from "../lib/openPursuits";
 import { formatDateTime } from "../lib/dates";
 import { cornerMeta, curatedBySlug } from "../data/curatedCorners";
-import { Ticket } from "../components/stub/Ticket";
+import { StubArt } from "../components/stub/StubArt";
 import { PillButton } from "../components/ui/PillButton";
 import { Confetti } from "../components/pursuit/Confetti";
 import { ImageWithFallback } from "../components/ImageWithFallback";
@@ -103,7 +103,6 @@ export function PursuitRecap() {
   const done = Math.min(measure ? Math.max(tiles.length, 0) : 0, target) || tiles.length;
   const stubCount = { done: Math.min(target || done, target || done), total: target || done };
   const meta = [withLine(others), formatDateRange(project.startedAt, finished)].filter(Boolean).join(" · ");
-  const completed = projects.filter((p) => pursuitStatus(p) === "complete").length;
   const headline = target > 0 ? `You finished ${formatAmount(target)} ${unit}`.trim() : `You finished ${project.title}`;
 
   const share = async () => {
@@ -202,16 +201,24 @@ export function PursuitRecap() {
           </ul>
         )}
 
-        {/* The gold stub, on a soft amber glow (a static gradient: the animated shader is not used). */}
+        {/* The Finisher, on a soft amber glow (a static gradient: the animated shader is not used). */}
         <div className="rounded-card p-3" style={{ background: "radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--cat-amber) 28%, transparent), transparent 70%)" }}>
-          <Ticket
-            variant="finish"
-            serial={Math.max(1, completed)}
-            title={corner}
-            meta={meta}
-            count={target > 0 ? { done: stubCount.done, total: stubCount.total } : undefined}
-            layoutId={`stub-${project.id}`}
-          />
+          <div className="flex justify-center">
+            <StubArt
+              face={{
+                kind: "finish",
+                title: project.title,
+                cornerName: corner,
+                color: "var(--cat-amber)",
+                day: formatDate(finished),
+                goal: target > 0 ? Math.round(target) : undefined,
+                photoUrl: tiles[tiles.length - 1]?.image ?? undefined,
+              }}
+              width={232}
+              interactive
+              shimmer
+            />
+          </div>
         </div>
 
         <div className="flex flex-col items-center gap-2">

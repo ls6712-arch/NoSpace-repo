@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Flame, Plus, Minus } from "lucide-react";
+import { StubArt } from "../../components/stub/StubArt";
+import { StubReveal } from "../../components/stub/StubReveal";
+import { KIND_LABEL, type StubFace } from "../../lib/stubFace";
 import { Ticket } from "../../components/stub/Ticket";
 import { AvatarStack } from "../../components/ui/AvatarStack";
 import { BottomSheet } from "../../components/ui/BottomSheet";
@@ -100,6 +103,14 @@ const GROUP_DONE: Record<string, number> = { u1: 3, u2: 2, u3: 0, u4: 1 };
 const entriesFor = (m: PursuitMember): ProgressEntry[] =>
   Array.from({ length: GROUP_DONE[m.userId ?? ""] ?? 0 }, (_, i) => ({ id: `${m.userId}-${i}`, projectId: "kit", userId: m.userId, amount: 1, createdAt: i }));
 
+/** One of each Stub, as the profile would build them. Names and numbers are made up for the kit. */
+const STUB_FACES: StubFace[] = [
+  { kind: "regular", title: "Pottery", cornerName: "Pottery", color: "var(--cat-orange)", day: "Oct 30", monthShort: "Oct", monthLong: "October" },
+  { kind: "finish", title: "5 pastas from scratch", cornerName: "Pasta", color: "var(--cat-amber)", day: "Oct 31", goal: 5 },
+  { kind: "event", title: "Clay Corner", eventTitle: "Wheel night", neighborhood: "Gowanus", hostName: "Maya", cornerName: "Pottery", color: "var(--cat-blue)", day: "Oct 30", serial: 147 },
+  { kind: "drop", title: "Sunrise week", cornerName: "Running", color: "var(--cat-pink)", day: "Nov 7", goal: 5, edition: 42, editionsTotal: 318 },
+];
+
 export function DevKit() {
   const [moods, setMoods] = useState<string[]>(["Move"]);
   const [who, setWho] = useState<"open" | "friends" | "solo">("open");
@@ -108,6 +119,7 @@ export function DevKit() {
   const [open, setOpen] = useState(false);
   const [fullOpen, setFullOpen] = useState(false);
   const [revealKey, setRevealKey] = useState(0);
+  const [stubReveal, setStubReveal] = useState<StubFace | null>(null);
   const [big, setBig] = useState(false);
   const [pursuitSheet, setPursuitSheet] = useState(false);
   const [confetti, setConfetti] = useState(0);
@@ -205,6 +217,22 @@ export function DevKit() {
           </PillButton>
           <Ticket key={revealKey} reveal serial={15} title="Pasta" meta="Session 3 of 5" count={{ done: 3, total: 5 }} color="var(--cat-amber)" />
         </div>
+      </Section>
+
+      <Section title="The four Stubs">
+        <div className="flex flex-wrap gap-6 rounded-card bg-[var(--ink)] p-6">
+          {STUB_FACES.map((f) => (
+            <StubArt key={f.kind} face={f} width={200} interactive shimmer={f.kind === "drop" || f.kind === "finish"} />
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {STUB_FACES.map((f) => (
+            <PillButton key={f.kind} variant="outline" onClick={() => setStubReveal(f)}>
+              {`Earn a ${KIND_LABEL[f.kind]}`}
+            </PillButton>
+          ))}
+        </div>
+        {stubReveal && <StubReveal face={stubReveal} onDone={() => setStubReveal(null)} onPin={async () => null} />}
       </Section>
 
       <Section title="Shared element">

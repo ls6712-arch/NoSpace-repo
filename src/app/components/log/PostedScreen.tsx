@@ -2,22 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import { Ticket } from "../stub/Ticket";
+import { StubArt } from "../stub/StubArt";
+import { StubReveal } from "../stub/StubReveal";
 import { PillButton } from "../ui/PillButton";
 import { Chip } from "../ui/Chip";
 import type { CornerSuggestion } from "../../lib/cornerSuggestions";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { editionLabel, fetchLovers, fetchStubForPost, type StubRow } from "../../lib/stubs";
+import { fetchEarnedStub, fetchLovers, pinStub } from "../../lib/stubs";
+import { faceFromEarned, type StubFace } from "../../lib/stubFace";
+import { signMomentPaths } from "../../lib/momentMedia";
 import { fetchNextSession, fetchOpenPursuits } from "../../lib/openPursuits";
 import { profilesById } from "../../lib/pursuitsRemote";
 import { relatedCorner } from "../../lib/relatedCorner";
 import { cornerPath } from "../../lib/cornerPath";
 import { curatedBySlug, cornerMeta } from "../../data/curatedCorners";
-import { categoryColor, cornerColor } from "../../lib/categoryStyle";
-import { formatDate, formatDateTime, formatMonth } from "../../lib/dates";
+import { formatDateTime } from "../../lib/dates";
 import { plural } from "../../lib/plural";
-import { withLine } from "../../lib/withLine";
-import { haptic, PAGE_FROM, PAGE_TO, page, PRESS_SCALE, shared } from "../../lib/motionTokens";
+import { haptic, PAGE_FROM, PAGE_TO, page, pop, PRESS_SCALE, shared } from "../../lib/motionTokens";
 
 const MotionLink = motion.create(Link);
 
@@ -40,21 +41,6 @@ export const LOG_PHOTO_LAYOUT_ID = "log-photo";
  * finishes a Pursuit or a drop, or is a Corner's 10th day this month
  * (20261115000000); most Moments earn none, and then no ticket shows.
  */
-/** The words on the Stub a Moment just earned. */
-function ticketFor(stub: StubRow, cornerName?: string): { title: string; line: string } {
-  const name = cornerName ?? "Your Corner";
-  switch (stub.kind) {
-    case "drop":
-      return { title: name, line: stub.edition ? editionLabel(stub.edition) : "" };
-    case "regular":
-      return { title: name, line: stub.period ? `10 days in ${formatMonth(`${stub.period}T12:00:00`)}` : "10 days this month" };
-    case "event":
-      return { title: name, line: "" };
-    default:
-      return { title: name, line: "Pursuit finished" };
-  }
-}
-
 export function PostedScreen({
   postId,
   audience,
@@ -78,7 +64,8 @@ export function PostedScreen({
   onDone?: () => void;
 }) {
   const [cornerState, setCornerState] = useState<"offer" | "skipped" | { added: string } | "failed">("offer");
-  const [stub, setStub] = useState<StubRow | null>(null);
+  const [stub, setStub] = useState<StubFace | null>(null);
+  const [revealing, setRevealing] = useState(false);
   const [lover, setLover] = useState<{ name: string; avatarUrl?: string } | null>(null);
   const [nextSession, setNextSession] = useState<number | null>(null);
   const [group, setGroup] = useState<string | null>(null);
@@ -89,8 +76,12 @@ export function PostedScreen({
   useEffect(() => {
     if (postId == null) return;
     let live = true;
-    void fetchStubForPost(postId).then((s) => {
-      if (live) setStub(s);
+    void fetchEarnedStub(postId).then(async (e) => {
+      if (!e) return;
+      const cover = e.coverPath ? (await signMomentPaths([e.coverPath])).get(e.coverPath) : undefined;
+      if (!live) return;
+      setStub(faceFromEarned(e, cover));
+      setRevealing(true);
     });
     return () => {
       live = false;
@@ -143,9 +134,6 @@ export function PostedScreen({
     };
   }, [related]);
 
-  const color = corner ? `var(--cat-${cornerColor(corner.spaceSlug, corner.slug)})` : `var(--cat-${categoryColor("food-drink")})`;
-  const meta = [place, formatDate(Date.now()), pursuit ? withLine(pursuit.otherNames).toLowerCase() : ""].filter(Boolean).join(" · ");
-  const ticket = stub ? ticketFor(stub, corner?.name) : null;
 
   const rows: { key: string; to: string; title: string; line: string }[] = [];
   if (pursuit && corner) {
@@ -171,24 +159,16 @@ export function PostedScreen({
 
   return (
     <div className="flex min-h-viewport flex-col bg-background">
+      {stub && revealing && <StubReveal face={stub} onDone={() => setRevealing(false)} onPin={stub.id ? () => pinStub(stub.id!, true) : undefined} />}
       <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-1 flex-col gap-6 pt-10 pb-40">
         <motion.p initial={PAGE_FROM} animate={PAGE_TO} transition={page} className="text-center text-body text-muted-foreground">
           {AUDIENCE_LINE[audience]}
         </motion.p>
 
         <AnimatePresence>
-          {stub && ticket && (
-            <motion.div exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <Ticket
-                variant={stub.kind}
-                serial={stub.serial ?? undefined}
-                title={ticket.title}
-                meta={[ticket.line, meta].filter(Boolean).join(" · ")}
-                count={stub.kind === "finish" && pursuit && pursuit.total > 0 ? { done: pursuit.done, total: pursuit.total } : undefined}
-                color={color}
-                reveal
-                layoutId={LOG_PHOTO_LAYOUT_ID}
-              />
+          {stub && !revealing && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={pop} className="flex justify-center">
+              <StubArt face={stub} width={200} interactive shimmer={stub.kind === "drop" || stub.kind === "finish"} />
             </motion.div>
           )}
         </AnimatePresence>

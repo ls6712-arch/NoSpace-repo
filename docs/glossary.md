@@ -176,6 +176,34 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 | You can only confirm people who said they were going. | Error for someone with no "I’m going" |
 | That’s too many people at once. | Error above 500 people |
 
+### The four Stubs (founder, Oct 31, 2026)
+
+Replaces the Stub types in the row above (silver, ticket, with someone, session, gold, plain). A Stub is one of four kinds, and nothing else earns one. "Stub" stays the only product noun; the four names below are labels on a Stub, written in sentence case, never capitalized as nouns in running text.
+
+| Term | Meaning |
+|---|---|
+| Finisher | The Stub for a Pursuit you finished: its goal was met, or with no goal you logged on 3 different days. Printed with the Pursuit's cover |
+| Drop | The Stub for finishing a Soosh drop inside its window. Limited, numbered in finishing order. "Drop" names the Stub and the limited Pursuit Soosh releases; posts are always Moments |
+| Was there | The Stub a host gives you by confirming you came to their event |
+| Regular | The Stub for logging Moments in one Corner on 10 different days in one month |
+| No. 042 | A drop Stub's edition: your place in finishing order, three digits at least |
+| of 318 | After a drop closes: how many people finished it |
+| Still open | On a drop Stub while its window is open, in place of "of N" |
+| Admit one | Small line at the top of a Was there Stub |
+| Finished | The ink stamp on a Finisher |
+| Confirmed by {host} | Line on a Was there Stub, with the host's first name |
+| {n} days | On a Regular, with `plural()` |
+| Pursuit finished | Line under a Finisher on the Posted screen and the Stubs list |
+| 10 days in {month} | Line under a Regular on the Posted screen and the Stubs list |
+| {Space} confirmed you were there. | Notification when a host confirms you (kind `stub_earned`) |
+| You’re No. {edition} | Title on the reveal after you finish a drop |
+| You kept a Stub | Title on the reveal for the other three kinds |
+| Put in front row / Take down | Pin a Stub to the top of your Shelf / unpin it (3 at most) |
+| In your front row | The reveal's button once you've pinned the Stub you just earned |
+| Soosh drop | Small line at the top of a drop Stub |
+| Your front row is full. Take one down first. | Error on a 4th pin |
+| That one has closed. / That one is full. | Errors when joining a drop after it closes / at its cap |
+
 ## Pursuits
 
 | Term | Meaning |

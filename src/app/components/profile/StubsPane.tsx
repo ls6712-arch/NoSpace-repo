@@ -1,4 +1,9 @@
+import { useEffect, useState } from "react";
 import { fetchStubs, type StubItem } from "../../lib/profileApi";
+import { highestId, readSeen, stubToReveal, writeSeen } from "../../lib/stubSeen";
+import { faceFromItem } from "../../lib/stubFace";
+import { pinStub } from "../../lib/stubs";
+import { StubReveal } from "../stub/StubReveal";
 import { cornerName } from "../../lib/homeItems";
 import { editionLabel } from "../../lib/stubs";
 import { formatMonth } from "../../lib/dates";
@@ -29,6 +34,18 @@ function stubLine(s: StubItem): string | null {
 
 export function StubsPane({ profileId, owner }: { profileId: string; owner: boolean }) {
   const { state, reload } = useSection(() => fetchStubs(profileId), profileId);
+  const [reveal, setReveal] = useState<StubItem | null>(null);
+
+  // A host confirmed you came while you were away: celebrate it once, here.
+  useEffect(() => {
+    if (!owner || state.status !== "ready") return;
+    const items = state.value;
+    const next = stubToReveal(items, readSeen(profileId));
+    writeSeen(profileId, highestId(items));
+    if (next) setReveal(next);
+  }, [owner, profileId, state]);
+
+  const revealing = reveal && <StubReveal face={faceFromItem(reveal)} onDone={() => setReveal(null)} onPin={() => pinStub(reveal.id, true)} />;
   if (state.status === "loading") return <ListSkeleton />;
   if (state.status === "error") return <ErrorNotice onRetry={reload} />;
   if (state.value.length === 0) {
@@ -39,6 +56,8 @@ export function StubsPane({ profileId, owner }: { profileId: string; owner: bool
     );
   }
   return (
+    <>
+    {revealing}
     <ul className="flex flex-col gap-3">
       {state.value.map((s) => {
         const b = stubBlock(s);
@@ -56,5 +75,6 @@ export function StubsPane({ profileId, owner }: { profileId: string; owner: bool
         );
       })}
     </ul>
+    </>
   );
 }
