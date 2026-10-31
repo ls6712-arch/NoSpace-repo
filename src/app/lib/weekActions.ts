@@ -26,7 +26,8 @@ export async function bringSomeone(plan: WeekPlanDetail, owner: Owner): Promise<
     where: plan.place,
     reason: "",
   };
-  const r = await tearOffHalf(asPlan, owner, plan.mine ? plan.pursuitId : undefined);
+  // Bring someone on a listing makes a one-off plan: it is not one of the person's Pursuits.
+  const r = await tearOffHalf(asPlan, owner, plan.mine ? plan.pursuitId : undefined, { asPlan: true });
   if (!r.half) return { ok: false, error: r.error ?? ERROR_LINE };
   return shareUrl(plan.title, r.half.url);
 }
