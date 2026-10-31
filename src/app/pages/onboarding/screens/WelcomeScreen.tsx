@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
+import { PillButton } from "../../../components/ui/PillButton";
 import { PersonAvatar } from "../../CreatePursuit";
 import { useOnboarding } from "../OnboardingContext";
 import { StepStubby } from "../StepStubby";
@@ -31,19 +31,20 @@ export function WelcomeScreen() {
             <PersonAvatar name={arrival.name} src={arrival.avatar ?? undefined} size="size-14" />
           </div>
         }
-        footer={<TransferButton onClick={() => next()}>Take my half</TransferButton>}
+        footer={<PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => next()}>Take my half</PillButton>}
       />
     );
   }
 
   return (
     <ScreenFrame
+      display
       title="Stop saying you’ll do it."
       hero={<StepStubby size={260} followPointer />}
       footer={
         <>
-          <TransferButton onClick={() => next()}>Get started</TransferButton>
-          <button type="button" className="transfer-link self-center" onClick={() => navigate("/login?mode=signin")}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => next()}>Get started</PillButton>
+          <button type="button" className="ob-link self-center" onClick={() => navigate("/login?mode=signin")}>
             I already have an account
           </button>
         </>

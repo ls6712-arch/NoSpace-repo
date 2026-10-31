@@ -1,6 +1,6 @@
 # Build: Log in, matched to the Soosh onboarding (add to PR 2, #227)
 
-Founder request, Oct 29, 2026: "change the current login to match this." The returning-user door should look, sound and behave like the new onboarding (Transfer tokens, Stubby). Builds on `claude-code-brief-onboarding-stubby.md`; same rules (tokens only, sentence case, no em dashes, glossary).
+Founder request, Oct 29, 2026: "change the current login to match this." The returning-user door should look, sound and behave like the new onboarding (Transfer tokens, Stubby). **Oct 30, 2026: the Transfer look is retired.** Login now uses the app tokens, type scale and `PillButton` like every other screen, and follows the theme (one-skin brief, PR 3). Where this brief says Transfer tokens, `.soosh-transfer` or `TransferButton`, read the app equivalents. Builds on `claude-code-brief-onboarding-stubby.md`; same rules (tokens only, sentence case, no em dashes, glossary).
 
 **Revised Oct 29 (after #227 review):**
 1. **Unknown emails no longer get "No Soosh account for that email yet."** That told anyone whether a person is on Soosh, a safety risk on an app where people meet in person. See §3.

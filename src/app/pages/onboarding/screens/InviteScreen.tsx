@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { HalfTicket } from "../../../components/onboarding/HalfTicket";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
+import { PillButton } from "../../../components/ui/PillButton";
 import { useAuth } from "../../../context/AuthContext";
 import { downloadIcs } from "../../../lib/calendarFile";
 import { clearHalf, readHalf } from "../../../lib/firstPlanHandoff";
@@ -78,11 +78,11 @@ export function InviteScreen() {
         title="Sent. Now it’s a plan."
         hero={<StepStubby size={150} />}
         intro={copied ? "Link copied" : undefined}
-        footer={<TransferButton onClick={leave}>See my week</TransferButton>}
+        footer={<PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={leave}>See my week</PillButton>}
       >
         <HalfTicket from={from} title={half.title} when={half.when} />
         {half.startsAt !== null && (
-          <button type="button" className="transfer-link self-center" onClick={() => downloadIcs({ title: half.title, startsAt: half.startsAt as number, where: half.where })}>
+          <button type="button" className="ob-link self-center" onClick={() => downloadIcs({ title: half.title, startsAt: half.startsAt as number, where: half.where })}>
             Add to calendar
           </button>
         )}
@@ -97,16 +97,16 @@ export function InviteScreen() {
       footer={
         <>
           {error && (
-            <p role="alert" className="transfer-label text-small">
+            <p role="alert" className="ob-label text-small">
               {error}
             </p>
           )}
-          <TransferButton onClick={() => void send()} disabled={!half}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void send()} disabled={!half}>
             {half ? "Send" : "Nothing to send"}
-          </TransferButton>
-          <TransferButton variant="plain" onClick={leave}>
+          </PillButton>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={leave}>
             Skip for now
-          </TransferButton>
+          </PillButton>
         </>
       }
     >

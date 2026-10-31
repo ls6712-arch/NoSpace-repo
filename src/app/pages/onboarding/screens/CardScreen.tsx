@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AvatarPicker } from "../../../components/AvatarPicker";
 import { MemberCard } from "../../../components/onboarding/MemberCard";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
+import { PillButton } from "../../../components/ui/PillButton";
 import { supabase } from "../../../../lib/supabase";
 import { useAuth } from "../../../context/AuthContext";
 import { formatMonthYear } from "../../../lib/dates";
@@ -56,12 +56,12 @@ export function CardScreen() {
       hero={<StepStubby size={110} />}
       footer={
         <>
-          <TransferButton onClick={() => (photo ? next() : openPicker.current?.())} onDark>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => (photo ? next() : openPicker.current?.())}>
             {photo ? "Next" : "Add a photo"}
-          </TransferButton>
-          <TransferButton variant="plain" onClick={() => next()} onDark>
+          </PillButton>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={() => next()}>
             Later
-          </TransferButton>
+          </PillButton>
         </>
       }
     >

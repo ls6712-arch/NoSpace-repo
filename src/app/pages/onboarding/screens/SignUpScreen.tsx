@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { TermsCheckbox } from "../../../components/TermsCheckbox";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
-import { TransferField } from "../../../components/onboarding/TransferField";
+import { PillButton } from "../../../components/ui/PillButton";
+import { OnboardingField } from "../../../components/onboarding/OnboardingField";
 import { appleSignInEnabled } from "../../../config";
 import { codeWaitLine, TOO_MANY_CODES_SIGNUP_LINE } from "../../../lib/authCopy";
 import { useAuth } from "../../../context/AuthContext";
@@ -95,7 +95,7 @@ export function SignUpScreen() {
               void sendCode();
             }}
           >
-            <TransferField
+            <OnboardingField
               label="Email"
               type="email"
               inputMode="email"
@@ -110,25 +110,25 @@ export function SignUpScreen() {
               error={error}
               hint={notice ?? undefined}
             />
-            <TransferButton type="submit" disabled={busy || !agreed || !email.trim()}>
+            <PillButton data-variant="primary" className="ob-button w-full min-h-14" type="submit" disabled={busy || !agreed || !email.trim()}>
               {!email.trim() ? "Add your email" : "Continue"}
-            </TransferButton>
+            </PillButton>
           </form>
         ) : (
           <>
-            <TransferButton variant="plain" disabled={busy || !agreed} onClick={() => void viaProvider(signInWithGoogle)}>
+            <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" disabled={busy || !agreed} onClick={() => void viaProvider(signInWithGoogle)}>
               Continue with Google
-            </TransferButton>
+            </PillButton>
             {appleSignInEnabled && (
-              <TransferButton variant="plain" disabled={busy || !agreed} onClick={() => void viaProvider(signInWithApple)}>
+              <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" disabled={busy || !agreed} onClick={() => void viaProvider(signInWithApple)}>
                 Continue with Apple
-              </TransferButton>
+              </PillButton>
             )}
-            <TransferButton disabled={busy || !agreed} onClick={() => setEmailOpen(true)}>
+            <PillButton data-variant="primary" className="ob-button w-full min-h-14" disabled={busy || !agreed} onClick={() => setEmailOpen(true)}>
               Continue with email
-            </TransferButton>
+            </PillButton>
             {error && (
-              <p role="alert" className="transfer-label text-small">
+              <p role="alert" className="ob-label text-small">
                 {error}
               </p>
             )}

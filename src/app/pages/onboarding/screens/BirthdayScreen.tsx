@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
-import { TransferField } from "../../../components/onboarding/TransferField";
+import { PillButton } from "../../../components/ui/PillButton";
+import { OnboardingField } from "../../../components/onboarding/OnboardingField";
 import { useAuth } from "../../../context/AuthContext";
 import { MIN_AGE, checkBirthdate } from "../../../lib/age";
 import { removeUnderageAccount, savePrivate } from "../../../lib/onboardingRemote";
@@ -80,7 +80,7 @@ export function BirthdayScreen() {
       <ScreenFrame
         title={`Soosh is for people ${MIN_AGE} and over for now.`}
         hero={<StepStubby size={160} />}
-        footer={<TransferButton onClick={() => void leave()}>Log out</TransferButton>}
+        footer={<PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void leave()}>Log out</PillButton>}
       />
     );
   }
@@ -92,13 +92,13 @@ export function BirthdayScreen() {
       footer={
         <>
           {error && (
-            <p role="alert" className="transfer-label text-small">
+            <p role="alert" className="ob-label text-small">
               {error}
             </p>
           )}
-          <TransferButton onClick={() => void save()} disabled={saving || !birthdate}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void save()} disabled={saving || !birthdate}>
             {birthdate ? "Next" : "Add your birthday"}
-          </TransferButton>
+          </PillButton>
         </>
       }
     >
@@ -108,7 +108,7 @@ export function BirthdayScreen() {
           void save();
         }}
       >
-        <TransferField
+        <OnboardingField
           label="Date of birth"
           type="date"
           autoComplete="bday"

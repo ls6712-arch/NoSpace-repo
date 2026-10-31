@@ -61,3 +61,8 @@ Hide Spaces with no member Moments, later, once there is enough content. Partner
 
 Deferred, not applied: `supabase/deferred/20261102000000_space_events_listing.sql` section 2 (`spaces_with_member_moments()`). On Oct 30, 2026 live had one active Space and it had no member Moments, so hiding would have emptied Discover, Corner pages and Search. The app already shows every Space when the function does not exist (`src/app/lib/spaceMoments.ts`). When this comes back, make it a new migration, add the partner exemption to the function, and re-check how many live Spaces it would hide first.
 
+
+
+## Palette (decided Oct 30, 2026)
+
+Decided: there is one skin. The Transfer palette (cobalt, signal yellow, navy, Archivo) is retired on onboarding and login, including Stubby's yellow; Stubby is coral with an ink face. See the one-skin brief (PR 3). In the onboarding brief's references, sections 3.1 and 3.2 are replaced by that PR.

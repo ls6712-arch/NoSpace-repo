@@ -3,8 +3,8 @@ import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowLeft } from "lucide-react";
 import { CodeEntry } from "../../components/onboarding/CodeEntry";
-import { TransferButton } from "../../components/onboarding/TransferButton";
-import { TransferField } from "../../components/onboarding/TransferField";
+import { PillButton } from "../../components/ui/PillButton";
+import { OnboardingField } from "../../components/onboarding/OnboardingField";
 import { Stubby, type StubbyState } from "../../components/stubby/Stubby";
 import { APP_NAME, appleSignInEnabled } from "../../config";
 import { useAuth } from "../../context/AuthContext";
@@ -247,7 +247,7 @@ export function LoginV2() {
   const getStartedHref = `/onboarding?step=signup&email=${encodeURIComponent(email.trim())}&redirect=${encodeURIComponent(redirectTo)}`;
 
   const emailField = (autoFocus: boolean) => (
-    <TransferField
+    <OnboardingField
       label="Email"
       type="email"
       inputMode="email"
@@ -273,21 +273,21 @@ export function LoginV2() {
             title="Welcome back."
             footer={
               <>
-                <TransferButton variant="plain" disabled={busy} onClick={() => void viaProvider(signInWithGoogle)}>
+                <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" disabled={busy} onClick={() => void viaProvider(signInWithGoogle)}>
                   Continue with Google
-                </TransferButton>
+                </PillButton>
                 {appleSignInEnabled && (
-                  <TransferButton variant="plain" disabled={busy} onClick={() => void viaProvider(signInWithApple)}>
+                  <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" disabled={busy} onClick={() => void viaProvider(signInWithApple)}>
                     Continue with Apple
-                  </TransferButton>
+                  </PillButton>
                 )}
-                <TransferButton disabled={busy} onClick={() => go("email")}>
+                <PillButton data-variant="primary" className="ob-button w-full min-h-14" disabled={busy} onClick={() => go("email")}>
                   Continue with email
-                </TransferButton>
-                <p aria-live="polite" className={error ? "transfer-label text-small" : "sr-only"}>
+                </PillButton>
+                <p aria-live="polite" className={error ? "ob-label text-small" : "sr-only"}>
                   {error}
                 </p>
-                <button type="button" className="transfer-link self-center" onClick={() => navigate("/onboarding")}>
+                <button type="button" className="ob-link self-center" onClick={() => navigate("/onboarding")}>
                   New here? Get started
                 </button>
               </>
@@ -296,14 +296,14 @@ export function LoginV2() {
         );
       case "email": {
         const codeButton = (
-          <TransferButton key="code" variant="plain" disabled={busy || !!needEmail} onClick={() => void sendCode()}>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" key="code" variant="outline" disabled={busy || !!needEmail} onClick={() => void sendCode()}>
             Send me a code
-          </TransferButton>
+          </PillButton>
         );
         const passwordButton = (
-          <TransferButton key="password" variant="plain" disabled={busy || !!needEmail || !password} onClick={() => void logInWithPassword()}>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" key="password" variant="outline" disabled={busy || !!needEmail || !password} onClick={() => void logInWithPassword()}>
             Log in with password
-          </TransferButton>
+          </PillButton>
         );
         return (
           <ScreenFrame
@@ -323,7 +323,7 @@ export function LoginV2() {
             >
               {emailField(!focusPassword)}
               <div>
-                <TransferField
+                <OnboardingField
                   label="Password (if you have one)"
                   type="password"
                   autoComplete="current-password"
@@ -335,7 +335,7 @@ export function LoginV2() {
                     setPasswordError(null);
                   }}
                 />
-                <button type="button" className="transfer-link mt-1" onClick={() => go("reset")}>
+                <button type="button" className="ob-link mt-1" onClick={() => go("reset")}>
                   Forgot your password?
                 </button>
               </div>
@@ -358,7 +358,7 @@ export function LoginV2() {
               go("email");
             }}
             footer={
-              <button type="button" className="transfer-link self-center" onClick={() => navigate(getStartedHref)}>
+              <button type="button" className="ob-link self-center" onClick={() => navigate(getStartedHref)}>
                 New to Soosh? Get started
               </button>
             }
@@ -378,9 +378,9 @@ export function LoginV2() {
           <ScreenFrame
             title="Reset your password"
             footer={
-              <TransferButton disabled={busy || !!needEmail} onClick={() => void sendReset()}>
+              <PillButton data-variant="primary" className="ob-button w-full min-h-14" disabled={busy || !!needEmail} onClick={() => void sendReset()}>
                 {needEmail ?? "Send reset link"}
-              </TransferButton>
+              </PillButton>
             }
           >
             <form
@@ -398,7 +398,7 @@ export function LoginV2() {
           <ScreenFrame
             title="Check your email"
             intro={resetSentLine(email.trim())}
-            footer={<TransferButton onClick={() => go("email")}>Log in</TransferButton>}
+            footer={<PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => go("email")}>Log in</PillButton>}
           />
         );
       case "signingin":
@@ -408,8 +408,8 @@ export function LoginV2() {
 
   if (!isConfigured) {
     return (
-      <div className="soosh-transfer min-h-viewport" data-tone="platform">
-        <div className="transfer-column flex min-h-viewport flex-col px-4">
+      <div className="min-h-viewport">
+        <div className="ob-column flex min-h-viewport flex-col px-4">
           <ScreenFrame
             title="Accounts aren’t set up on this build"
             intro={`This copy of ${APP_NAME} isn’t connected to a database yet, so there’s no real sign-up here. Everything still works in local demo mode.`}
@@ -420,10 +420,10 @@ export function LoginV2() {
   }
 
   return (
-    <div className="soosh-transfer min-h-viewport" data-tone="platform" onPointerDownCapture={() => setAwake(true)} onFocusCapture={() => setAwake(true)}>
-      <div className="transfer-column flex min-h-viewport flex-col px-4">
+    <div className="min-h-viewport" onPointerDownCapture={() => setAwake(true)} onFocusCapture={() => setAwake(true)}>
+      <div className="ob-column flex min-h-viewport flex-col px-4">
         {back ? (
-          <button type="button" className="transfer-icon-button -ml-2 mt-4" aria-label="Back" onClick={back}>
+          <button type="button" className="ob-icon-button -ml-2 mt-4" aria-label="Back" onClick={back}>
             <ArrowLeft className="size-6" strokeWidth={2.5} aria-hidden="true" />
           </button>
         ) : (

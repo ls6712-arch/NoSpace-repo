@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { downloadIcs } from "../../../lib/calendarFile";
 import { PlanTicket } from "../../../components/onboarding/PlanTicket";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
+import { PillButton } from "../../../components/ui/PillButton";
 import { useAuth } from "../../../context/AuthContext";
 import { useCorners } from "../../../context/CornersContext";
 import { CURATED_CORNERS } from "../../../data/curatedCorners";
@@ -132,9 +132,9 @@ export function PlanScreen() {
         hero={<StepStubby size={150} />}
         intro="Have a look at Discover."
         footer={
-          <TransferButton onClick={() => finish("/discover")} onDark>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => finish("/discover")}>
             Go to Discover
-          </TransferButton>
+          </PillButton>
         }
       />
     );
@@ -150,23 +150,23 @@ export function PlanScreen() {
       intro={outside ? "Soosh plans in your city are coming. For now, here’s one you can do anywhere." : undefined}
       footer={
         went ? (
-          <TransferButton onClick={() => finish("/")} onDark>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => finish("/")}>
             See my week
-          </TransferButton>
+          </PillButton>
         ) : (
           <>
             {error && (
-              <p role="alert" className="transfer-label text-small">
+              <p role="alert" className="ob-label text-small">
                 {error}
               </p>
             )}
-            <TransferButton onClick={() => void going(true)} disabled={busy} onDark>
+            <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void going(true)} disabled={busy}>
               Tear off half for a friend
-            </TransferButton>
-            <TransferButton variant="plain" onClick={() => void going(false)} disabled={busy} onDark>
+            </PillButton>
+            <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={() => void going(false)} disabled={busy}>
               I’m going solo
-            </TransferButton>
-            <button type="button" className="transfer-link self-center" disabled={busy} onClick={another}>
+            </PillButton>
+            <button type="button" className="ob-link self-center" disabled={busy} onClick={another}>
               {last ? "Show me Discover" : "Show me something else"}
             </button>
           </>
@@ -177,7 +177,7 @@ export function PlanScreen() {
         {went && plan.startsAt !== null && (
           <button
             type="button"
-            className="transfer-link"
+            className="ob-link"
             onClick={() => downloadIcs({ title: plan.title, startsAt: plan.startsAt as number, where: plan.where, note: plan.step })}
           >
             Add to calendar

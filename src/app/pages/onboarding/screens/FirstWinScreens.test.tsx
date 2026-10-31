@@ -9,6 +9,7 @@ vi.mock("motion/react", async () => {
 });
 
 const flow = vi.hoisted(() => ({ next: vi.fn(), finish: vi.fn(), react: vi.fn(), setStubby: vi.fn(), redirectTo: "/" }));
+vi.mock("../../../context/ThemeContext", () => ({ useTheme: () => ({ resolvedTheme: "light" }) }));
 vi.mock("../OnboardingContext", () => ({ useOnboarding: () => flow }));
 vi.mock("../StepStubby", () => ({ StepStubby: () => <div data-testid="stubby" /> }));
 vi.mock("../../../components/stubby/Stubby", () => ({ Stubby: () => <span data-testid="eyes" /> }));
@@ -85,7 +86,7 @@ describe("the member card (screen 10)", () => {
     expect(screen.getByText("Mia")).toBeTruthy();
     expect(screen.queryByText("Chen")).toBeNull();
     expect(screen.getByText("Joined October 2026")).toBeTruthy();
-    const add = screen.getAllByRole("button", { name: "Add a photo" }).find((b) => b.classList.contains("transfer-button")) as HTMLButtonElement;
+    const add = screen.getAllByRole("button", { name: "Add a photo" }).find((b) => b.classList.contains("ob-button")) as HTMLButtonElement;
     expect(add.disabled).toBe(false);
     const later = screen.getByRole("button", { name: "Later" });
     expect(add.getAttribute("data-variant")).toBe("primary");
@@ -258,7 +259,7 @@ describe("tear off half (screen 12)", () => {
     // Send and Skip are gone.
     expect(screen.queryByRole("button", { name: "Send" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Skip for now" })).toBeNull();
-    const buttons = screen.getAllByRole("button").filter((b) => b.classList.contains("transfer-button"));
+    const buttons = screen.getAllByRole("button").filter((b) => b.classList.contains("ob-button"));
     expect(buttons.map((b) => b.textContent)).toEqual(["See my week"]);
     fireEvent.click(screen.getByRole("button", { name: "Add to calendar" }));
     expect(cal.downloadIcs).toHaveBeenCalledWith(expect.objectContaining({ title: "Bouldering night", startsAt: half.startsAt }));

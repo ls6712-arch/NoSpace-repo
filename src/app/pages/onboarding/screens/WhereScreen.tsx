@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
-import { TransferField } from "../../../components/onboarding/TransferField";
+import { PillButton } from "../../../components/ui/PillButton";
+import { OnboardingField } from "../../../components/onboarding/OnboardingField";
 import { useAuth } from "../../../context/AuthContext";
 import { useInterests } from "../../../lib/interests";
 import { nearestNeighborhood, placeFromTyped, suggestNeighborhoods } from "../../../lib/neighborhood";
@@ -83,13 +83,13 @@ export function WhereScreen() {
       footer={
         <>
           {error && (
-            <p role="alert" className="transfer-label text-small">
+            <p role="alert" className="ob-label text-small">
               {error}
             </p>
           )}
-          <TransferButton onClick={() => void save()} disabled={saving || !place}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void save()} disabled={saving || !place}>
             {place ? "Next" : "Add a neighborhood"}
-          </TransferButton>
+          </PillButton>
         </>
       }
     >
@@ -100,7 +100,7 @@ export function WhereScreen() {
           void save();
         }}
       >
-        <TransferField
+        <OnboardingField
           label="Neighborhood or city"
           autoComplete="off"
           maxLength={80}
@@ -116,14 +116,14 @@ export function WhereScreen() {
           <ul className="flex flex-wrap gap-2" aria-label="Neighborhoods">
             {suggestions.map((n) => (
               <li key={n.name}>
-                <button type="button" className="transfer-suggestion" onClick={() => setTyped(n.name)}>
+                <button type="button" className="ob-suggestion" onClick={() => setTyped(n.name)}>
                   {n.name}
                 </button>
               </li>
             ))}
           </ul>
         )}
-        <button type="button" className="transfer-link self-start" disabled={locating} onClick={() => void locate()}>
+        <button type="button" className="ob-link self-start" disabled={locating} onClick={() => void locate()}>
           Use my location
         </button>
       </form>
