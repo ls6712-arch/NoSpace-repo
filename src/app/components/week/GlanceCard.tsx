@@ -52,7 +52,7 @@ export function GlanceCard({
           </ul>
         </div>
       )}
-      <div className="flex flex-col gap-1 p-4">
+      <div className="flex max-w-[560px] flex-col gap-1 p-4">
         <BudgetSlider value={budget} onCommit={onBudget} describedBy={lineId} />
         <p id={lineId} className="text-small text-muted-foreground">
           {budgetLine(budget, spend)}

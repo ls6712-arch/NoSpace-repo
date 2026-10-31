@@ -92,7 +92,12 @@ export function Week() {
               {WEEK_VIEW.findSomething}
             </Link>
           ) : (
-            contents.map((c) => <DaySection key={c.day.offset} content={c} now={data.now} passes={data.passes} onBring={(p) => void onBring(p)} />)
+            // Days stay in one column, in date order: a second column would read across, out of order.
+            <div className={`flex flex-col gap-6 ${SPAN_GRID}`}>
+              {contents.map((c) => (
+                <DaySection key={c.day.offset} content={c} now={data.now} passes={data.passes} onBring={(p) => void onBring(p)} />
+              ))}
+            </div>
           )}
           <section className={`flex flex-col gap-1 rounded-card border border-border bg-card p-4 ${SPAN_GRID}`}>
             <h2 className="text-lead">{WEEK_VIEW.flipTitle}</h2>

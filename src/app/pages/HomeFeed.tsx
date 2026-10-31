@@ -7,7 +7,6 @@ import { useFeedInputs } from "../lib/useFeedInputs";
 import type { Post } from "../data/posts";
 import { buildFeed } from "../lib/homeFeed";
 import { FeedCard } from "../components/home/FeedCard";
-import { HomeHeader } from "../components/home/HomeHeader";
 import { LIST_GRID, PAGE_GRID, PageShell, SPAN_GRID } from "../components/layout/PageShell";
 import { YourWeekCard } from "../components/home/YourWeekCard";
 import { BestFitCard, type CardState } from "../components/home/BestFitCard";
@@ -143,7 +142,6 @@ export function HomeFeed() {
           >
             {refreshing ? "Refreshing…" : pull >= PULL_THRESHOLD ? "Let go to refresh" : "Pull to refresh"}
           </motion.div>
-          <HomeHeader />
         </>
       }
     >

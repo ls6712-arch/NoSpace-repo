@@ -69,14 +69,14 @@ export function SettingsShell({
                     className={
                       "flex min-h-11 items-center gap-2.5 rounded-control px-3 py-2 text-small transition-colors " +
                       (isActive
-                        ? "bg-accent/10 text-foreground"
+                        ? "bg-foreground text-background"
                         : "text-muted-foreground hover:bg-surface-muted hover:text-foreground")
                     }
                   >
                     <span
                       className="ns-section-kicker w-4 shrink-0"
                       aria-hidden="true"
-                      style={{ color: isActive ? "var(--accent)" : undefined }}
+                      style={undefined}
                     >
                       {s.n}
                     </span>

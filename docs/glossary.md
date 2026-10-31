@@ -221,6 +221,7 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 | Make together / Explore together | Invites that open a chat |
 | Chat / Chats | A conversation in Messages (never "thread") |
 | Message requests / Seen / Unsend | Messaging |
+| Chats · Your chats and message requests. | The Chats page title and its one-line subtitle (approved by the founder, Oct 31, 2026) |
 | Block / Report | Safety (keep safety words plain) |
 
 ## Joining Soosh

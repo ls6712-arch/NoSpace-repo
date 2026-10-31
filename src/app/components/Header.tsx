@@ -182,7 +182,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   return (
-    <header className={`ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)] ${pathname === "/my-space" ? "hidden" : hideWithRail ? "rail:hidden" : ""}`}>
+    <header className={`ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)] ${hideWithRail ? "rail:hidden" : ""}`}>
       <div className={`${framed ? PAGE_X : "container mx-auto px-4"} flex h-16 items-center justify-between gap-4`}>
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries

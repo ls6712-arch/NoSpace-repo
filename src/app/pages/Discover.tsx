@@ -306,17 +306,32 @@ export function Discover() {
   return (
     <div className="min-h-viewport">
       <PageShell
-        kicker={city ? "What’s out there in" : undefined}
-        title={
-          <button
-            type="button"
-            onClick={() => needAccount(() => setCityOpen(true))}
-            className="flex min-h-11 items-center gap-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {city || "Discover"}
-            <ChevronDown className="size-6 shrink-0 text-accent-text" strokeWidth={2.5} aria-hidden="true" />
-          </button>
+        // The title is always Discover (28px/800); the city is the tappable part of the line above it.
+        kicker={
+          city ? (
+            <span>
+              What’s out there in{" "}
+              <button
+                type="button"
+                onClick={() => needAccount(() => setCityOpen(true))}
+                className="inline-flex items-center gap-1 align-middle font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {city}
+                <ChevronDown className="size-4 shrink-0 text-accent-text" strokeWidth={2.5} aria-hidden="true" />
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              aria-label="Your city"
+              onClick={() => needAccount(() => setCityOpen(true))}
+              className="inline-flex items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <ChevronDown className="size-5 shrink-0 text-accent-text" strokeWidth={2.5} aria-hidden="true" />
+            </button>
+          )
         }
+        title="Discover"
       >
         <div className="flex flex-col gap-8">
 

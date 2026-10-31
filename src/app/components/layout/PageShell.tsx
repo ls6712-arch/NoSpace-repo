@@ -43,7 +43,7 @@ export function PageShell({
   kicker?: ReactNode;
   subtitle?: ReactNode;
   action?: ReactNode;
-  /** A bar above the header that only some screens have (Home's wordmark row on a phone). */
+  /** A bar above the header that only some screens have (Home's pull-to-refresh line). */
   topBar?: ReactNode;
   children?: ReactNode;
 } & Omit<HTMLAttributes<HTMLDivElement>, "title">) {
@@ -51,13 +51,16 @@ export function PageShell({
     <div className="w-full px-4 pb-10 pt-4 tab:px-6 desk:px-8 max-desk:pt-[calc(var(--safe-top)+1rem)]" {...rest}>
       <div className="mx-auto w-full max-w-[1040px]">
         {topBar}
-        <header className="mb-6 flex min-h-11 items-start justify-between gap-4">
-          <div className="min-w-0">
-            {kicker && <p className="text-body text-muted-foreground">{kicker}</p>}
-            <h1 className="text-title">{title}</h1>
-            {subtitle && <p className="mt-1 text-small text-muted-foreground">{subtitle}</p>}
+        <header className="mb-6">
+          <div className="flex min-h-11 items-start justify-between gap-4">
+            <div className="min-w-0">
+              {kicker && <p className="text-body text-muted-foreground">{kicker}</p>}
+              <h1 className="text-title">{title}</h1>
+            </div>
+            {action && <div className="shrink-0">{action}</div>}
           </div>
-          {action && <div className="shrink-0">{action}</div>}
+          {/* Under the whole row, so the action never squeezes it onto a second line. */}
+          {subtitle && <p className="mt-1 text-small text-muted-foreground">{subtitle}</p>}
         </header>
         {children}
       </div>

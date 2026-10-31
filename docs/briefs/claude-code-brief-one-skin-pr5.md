@@ -32,6 +32,12 @@ Every tab page uses one `PageShell`. Build it once and use it on Home, Discover,
 ## Done when
 Screenshots of every tab page side by side at 390, 744, 1128 and 1440px, in light and dark, show the same title size and position, the same content width and the same gutters. No hard-clipped rows, no cream, no "Be the first", one coral fill per screen. `npm test`, lint and tsc pass. Don't merge.
 
-## Choices the build made (to confirm)
-* Single-purpose cards **span both columns** at `desk` (`SPAN_GRID`).
-* `PageShell` takes one extra optional line, `kicker`, above the title, only for Discover's "What's out there in" over the city.
+## Review changes (Oct 31, 2026)
+Both choices below were approved, with these changes.
+* Single-purpose cards **span both columns** at `desk` (`SPAN_GRID`), with their inner text capped at about 600px, their buttons sized to content (Start is not full width) and the budget slider capped at about 560px.
+* `PageShell` has one extra optional line, `kicker`, above the title. Discover shows "What's out there in {city}" as the kicker (the city is the tappable part) and then "Discover" in `text-title`. The dropdown is never the title.
+* Phone Home uses the same app header as the other seven pages, magnifier included.
+* Week's days stay in one column, in date order.
+* Settings at `desk`: the selected item uses the selected-chip style (`--foreground` fill).
+* Chats subtitle is one line: "Your chats and message requests."
+* `scripts/visual/page-shell.ts` (`npm run visual:pages`) measures the visible title (the element holding the text, not just the h1), the header's top, the title's left and the content width on every page, counts coral fills, sideways scroll, subtitle lines and hard-clipped rows, and exits 1 on any miss. `npm run visual:pages:selftest` proves the clip and size checks can fail.

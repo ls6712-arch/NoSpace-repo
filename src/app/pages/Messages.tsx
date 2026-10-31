@@ -847,7 +847,7 @@ export function Messages() {
   return (
     <PageShell
       title="Chats"
-      subtitle="People who accepted making or exploring something together, and anyone who’s sent or received a direct message."
+      subtitle="Your chats and message requests."
       action={
         <Button variant="outline" onClick={openPicker}>
           New message

@@ -13,6 +13,8 @@
     "lint:tokens": "bash scripts/check-design-tokens.sh && bash scripts/check-design-tokens.selftest.sh >/dev/null",
     "visual": "node scripts/visual/run.ts",
     "visual:selftest": "node scripts/visual/run.ts --selftest",
+    "visual:pages": "node scripts/visual/page-shell.ts --out docs/qa/one-skin/pr5",
+    "visual:pages:selftest": "node scripts/visual/page-shell.ts --selftest",
     "build:app": "vite build",
     "landing:screens": "node scripts/landing-screens/capture.mjs"
   },
