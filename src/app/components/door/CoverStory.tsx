@@ -1,7 +1,7 @@
 import { cornerPath } from "../../lib/cornerPath";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { GeneratedArt } from "../GeneratedArt";
-import { PressLink } from "../afterhours/PressLink";
+import { PressLink } from "../common/PressLink";
 import { GoingButton, TicketFrame, eventTime, spaceAndPlace, ticketPath } from "./EventParts";
 import type { Post } from "../../data/posts";
 import type { MoodCard } from "../../data/moodCards";

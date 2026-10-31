@@ -165,7 +165,7 @@ function SheetShell({ children, bare }: { children: React.ReactNode; bare?: bool
       initial={{ y: "100%" }}
       animate={{ y: 0 }}
       transition={sheetSpring}
-      className="ns-afterhours fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
     >
       <div className="mx-auto min-h-full max-w-md px-4 pb-32">{children}</div>
     </motion.div>
@@ -1265,7 +1265,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             </span>
           </span>
 
-          <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             {anySaveError ? "Not saved" : "Saved"}
           </h1>
           <p className="mt-1 text-small text-muted-foreground">
@@ -1288,7 +1288,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             transition={ENTER}
             className={
               savedTileSettled
-                ? "w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
+                ? "w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--surface)]"
                 : "w-40 overflow-hidden rounded-card border border-border"
             }
           >
@@ -1452,7 +1452,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               Cancel
             </button>
           )}
-          <h1 className="text-body font-semibold">Log a Moment</h1>
+          <h1 className="text-body">Log a Moment</h1>
           <span />
         </header>
 

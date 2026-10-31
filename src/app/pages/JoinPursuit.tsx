@@ -88,7 +88,7 @@ export function JoinPursuit() {
         <p className="mt-4 text-small text-muted-foreground">
           {preview.ownerName} invited you to pursue this together
         </p>
-        <h1 className="mt-2 text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="mt-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>
           {preview.title}
         </h1>
 

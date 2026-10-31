@@ -91,12 +91,12 @@
   --muted-foreground: #6B635B;
   --border: rgba(14, 13, 12, 0.10);
   --accent: var(--theme-light-accent);
-  /* After hours (spec v1): the accent is coral in both themes with dark text on
+  /* Visual spec v1: the accent is coral in both themes with dark text on
      it (white on coral fails contrast). --accent-text is the accent as TEXT. */
   --accent-foreground: #0E0D0C;
   --accent-text: #C2391B;
-  /* The paper of a Moment card (PaperStamp): the same warm white in both themes. */
-  --moment-paper: #F4EFE8;
+  /* The paper of a Moment card (PaperStamp): white in both themes. */
+  --moment-paper: #FFFFFF;
   --ink: #0E0D0C;
   --surface-raised: #FFFFFF;
   --gold: #B08D4A;
@@ -116,9 +116,7 @@
 
   /* MomentCard's rotating text-only tile (docs/moment-card-and-reactions-
      spec.md §2.1: "accent, a moss/green token, an ink token"). Global, not
-     paper-theme-scoped — a Moment card needs to look identical on My Space
-     and Discover (the void/plum world) as on You (.ns-paper-theme), and
-     .ns-paper-theme's own --moss/--ink only exist inside that scope. The
+     scoped — a Moment card looks identical wherever it appears. The
      accent leg of the rotation reuses --accent/--accent-foreground directly;
      these two are the moss and ink legs. */
   --moment-tile-moss: #5B6B4E;
@@ -132,11 +130,9 @@
      still earn a place as selective illustration accents. */
   --sky-deep: #2F76A8;
   --forest: #0E4D3A;
-  --forest-ink: #0B3E2E;
   --coral: #FF6B4A;
   --yellow: #F5C542;
   --mustard: var(--yellow);
-  --cream: #F8F4EB;
   --plum: #5B3454;
   --peach: #F4B892;
   --error: #FF5470;
@@ -144,7 +140,7 @@
   --success: #4ADE80;
   --warning: var(--yellow);
 
-  /* ── After hours (spec v1, Oct 22, 2026) ─────────────────────────────────
+  /* ── Category colours (spec v1, Oct 22, 2026) ─────────────────────────────────
      Category colours (v1.1: calmer and even, OKLCH L 0.74, C 0.13, so none
      outshouts another): the same in both themes. Text on them is always
      --ink (6:1 or better at full strength). A category and its Corners share
@@ -352,185 +348,6 @@
   --gen-art-cream: #6B5C45;
 }
 
-/* ── The paper world — the Shelf, the click-to-feed overlay, the cover
-   editor, and the paginated studio view ──────────────────────────────────
-   A deliberate, scoped exception to the app's dark-void atmosphere above,
-   the same reasoning WorkGrid's own cream cards already established: the
-   portfolio/profile experience reads as a warm, physical object (paper,
-   ink, a shelf) rather than a dashboard. Nothing outside .ns-paper-theme
-   reads these — the rest of the app (Header, nav, Discover) stays
-   on the void/plum system untouched. Accent is the app's own existing
-   chosen color (--accent), not a new one — "exaggerated," not
-   "different." */
-.ns-paper-theme {
-  --paper: #EFE7D8;
-  --paper-raised: #F8F2E5;
-  --ink: #2A241D;
-  --ink-soft: #726657;
-  --ink-faint: #A79A86;
-  --line: #DCD0B8;
-  --moss: #5B6B4E;
-
-  /* Re-point the semantic layer (not the raw palette) at the paper world,
-     so every existing component that already reads --surface/--foreground/
-     --border/etc. — instead of a raw dark-purple hex — adapts here for
-     free, with no per-component rewrite. Only things that hardcode a raw
-     token (--yellow, --plum, ...) need their own override below. */
-  --background: var(--paper);
-  --surface: var(--paper-raised);
-  --surface-elevated: #FFFFFF;
-  --surface-muted: color-mix(in srgb, var(--paper) 55%, var(--paper-raised));
-  --foreground: var(--ink);
-  --foreground-muted: var(--ink-soft);
-  --muted-foreground: var(--ink-soft);
-  --border: var(--line);
-  --hairline: var(--line);
-  --card: var(--paper-raised);
-  --card-foreground: var(--ink);
-  --popover: var(--paper-raised);
-  --popover-foreground: var(--ink);
-  --cream: var(--paper-raised);
-  --input-border: #967D4A; /* ≥3:1 vs --paper-raised, same hue/sat family as --line */
-  --input: var(--input-border);
-  --input-background: var(--paper-raised);
-
-  color: var(--ink);
-  background: var(--paper);
-  font-family: var(--font-body);
-}
-
-/* Live-test fix (Sep 27): .ns-paper-theme's own raw palette above had no
-   dark-mode counterpart at all, so You/Studio/PublicProfile/the cover
-   editor stayed on their light cream-and-ink values even with the rest of
-   the app (including this same Header) switched to dark — "only the
-   header turns dark". Same warm-charcoal identity as the app-wide .dark
-   block above (same literal hex values, scoped here rather than a new
-   palette this page would need its own design pass for), reached the same
-   way that block reaches :root: only the raw tokens need restating, since
-   every semantic one above (--background, --surface, --foreground, …) is
-   already declared as `var(--paper)`/`var(--ink)`/etc. and re-resolves on
-   its own once those raw values change under this more specific selector.
-   .ns-space-theme has its own dark block below. */
-.dark .ns-paper-theme {
-  --paper: #1C1816;
-  --paper-raised: #26211D;
-  --ink: #EFE8DA;
-  --ink-soft: #A39885;
-  --ink-faint: color-mix(in srgb, #A39885 55%, transparent);
-  --line: #3A332B;
-  --surface-elevated: #2E2822;
-  --input-border: #847462;
-}
-
-/* ── The Space page's own editorial-paper world ───────────────────────────
-   Same scoped-exception pattern as .ns-paper-theme above (You/Studio), a
-   distinct palette that only applies inside this one class, never touching
-   :root or any other screen. Warmer and more saturated than .ns-paper-theme
-   — a Space reads as a place with real texture (bark, clay, moss), not just
-   paper and ink.
-
-   Raw palette first, named exactly as given (cream/paper/sand/line/ink/
-   muted/clay/clay-dark/clay-soft/bark/moss/moss-soft) — several of these
-   names already exist elsewhere (--cream in :root, --ink/--line/--moss
-   inside .ns-paper-theme) with different values; that's fine, custom
-   properties are scoped by DOM nesting, not by name collision, so this
-   block's values only ever apply to elements actually nested inside
-   .ns-space-theme — EXCEPT --muted, deliberately left out of this raw
-   list. --muted (unscoped, --muted: var(--surface-muted)) is a
-   *background* alias shadcn's own TabsList already reads directly
-   (bg-muted text-muted-foreground on the tab bar itself) — overriding it
-   here to the warm-brown "muted text" hex the same way the other raw
-   tokens are declared silently turned the tab bar's own background dark
-   brown, with muted-foreground text (also repointed) on top of it,
-   rendering every inactive tab invisible (caught by actually rendering
-   the page, not just reasoning about the cascade). The muted *text*
-   concept below is set directly on --muted-foreground instead, which is
-   what every part of this app already reads for muted text — no bare
-   "muted" token needed to get that value used. */
-.ns-space-theme {
-  --cream: #F4EEE4;
-  --paper: #FBF8F2;
-  --sand: #EADFCF;
-  --line: #E0D4C3;
-  --ink: #2B211C;
-  --clay: #A44A23;
-  --clay-dark: #93411F;
-  --clay-soft: #F3E0D3;
-  --bark: #5E3B28;
-  --moss: #56613F;
-  --moss-soft: #E4E6D6;
-  --ink-muted: #6E5E52;
-  /* Text/icons on a filled --bark panel or --clay fill. Their own tokens
-     rather than --paper: in dark, --paper turns dark while those fills
-     need light (bark) or dark (clay) text, not paper's. */
-  --on-bark: var(--paper);
-  --on-clay: var(--paper);
-
-  /* Re-point the semantic layer, same as .ns-paper-theme — every existing
-     component that already reads --surface/--foreground/--border/--card/
-     --accent (Button, Badge, Tabs, Dialog, Avatar...) adapts here for free,
-     no per-component rewrite. Page background is --cream (a hair warmer/
-     more tinted); cards and surfaces sit on --paper (lighter, so they lift
-     off the page); --sand is the secondary/muted surface — --muted itself
-     (the shadcn bg-muted/text-muted alias) is left alone, so it keeps
-     resolving through --surface-muted to --sand, a light surface, not the
-     dark "muted text" color. */
-  --background: var(--cream);
-  --surface: var(--paper);
-  --surface-elevated: var(--paper);
-  --surface-muted: var(--sand);
-  --foreground: var(--ink);
-  --foreground-muted: var(--ink-muted);
-  --muted-foreground: var(--ink-muted);
-  --border: var(--line);
-  --hairline: var(--line);
-  --card: var(--paper);
-  --card-foreground: var(--ink);
-  --popover: var(--paper);
-  --popover-foreground: var(--ink);
-  --accent: var(--clay);
-  --accent-foreground: var(--on-clay);
-  --primary: var(--clay);
-  --primary-foreground: var(--on-clay);
-  --input-border: var(--clay-dark);
-  --input: var(--input-border);
-  --input-background: var(--paper);
-  --destructive: var(--clay-dark);
-  --destructive-foreground: var(--on-clay);
-  --ring: var(--clay);
-
-
-  color: var(--ink);
-  background: var(--cream);
-}
-
-/* The Space page in dark mode — same warm charcoal as the app-wide .dark
-   block, a touch warmer to keep the Space's own bark/clay character. Only
-   the raw palette is restated; the semantic layer above re-resolves on its
-   own. Clay and clay-dark get lighter (they're text and fills on a dark
-   page now), so --on-clay flips to dark text; bark stays a deep brown
-   panel with light --on-bark text.
-   Contrast (WCAG AA): ink/cream 14.3, ink/paper 13.0, ink-muted/paper 6.1,
-   ink-muted/sand 5.2, clay/paper 5.3, clay/cream 5.8, on-clay/clay 5.8,
-   clay-dark/clay-soft 6.1, clay-dark/paper 7.4 (input boundary ≥3),
-   on-bark/bark 9.9 (4.7 at /60). */
-.dark .ns-space-theme {
-  --cream: #1E1915;
-  --paper: #28211C;
-  --sand: #352C25;
-  --line: #43382E;
-  --ink: #F1E7DA;
-  --ink-muted: #AD9E8B;
-  --clay: #DB7C55;
-  --clay-dark: #E9A07F;
-  --clay-soft: #47291D;
-  --bark: #4A3124;
-  --moss: #A8B488;
-  --moss-soft: #2E3325;
-  --on-bark: #F3E8DB;
-  --on-clay: #1E1915;
-}
-
 /* `dark:` follows the in-app theme (the .dark class ThemeContext puts on
    <html>), not the OS setting — Tailwind v4's default is the media query. */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -572,21 +389,25 @@
   --radius-card: 16px;
   --radius-control: 12px;
 
-  /* Type, in rem so the reader's text-size setting scales all of it.
-     Nothing below 12px. text-body is also the size of every form field
-     (iOS zooms the page on focus below 16px). */
+  /* Type, in rem so the reader's text-size setting scales all of it. One scale
+     for the whole app (spec v1): 12 caption, 14 small, 16 body, 20 lead, 28
+     title and display (36, then 56 from desk). Nothing below 12px. text-body
+     is also the size of every form field (iOS zooms the page on focus below
+     16px). Weights: 400 for body and meta, 600 for labels and buttons
+     (explicit font-semibold), 800 in the display face for display, title and
+     lead (set in the base layer below). */
   --text-caption: 0.75rem;
-  --text-caption--line-height: 1.4;
+  --text-caption--line-height: 1.3;
   --text-small: 0.875rem;
-  --text-small--line-height: 1.45;
+  --text-small--line-height: 1.4;
   --text-body: 1rem;
   --text-body--line-height: 1.5;
-  --text-lead: 1.125rem;
-  --text-lead--line-height: 1.4;
-  --text-title: 1.375rem;
-  --text-title--line-height: 1.3;
-  --text-display: clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem);
-  --text-display--line-height: 1.2;
+  --text-lead: 1.25rem;
+  --text-lead--line-height: 1.2;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.15;
+  --text-display: 2.25rem;
+  --text-display--line-height: 1;
   /* Marketing landing page (Home.tsx) only — the one exception to the scale
      above; scripts/design-audit.py flags it anywhere else. */
   --text-hero: clamp(2.5rem, 1.5rem + 4vw, 4.75rem);
@@ -655,26 +476,10 @@
   --color-sky-deep: var(--sky-deep);
   --color-forest: var(--forest);
   --color-mustard: var(--mustard);
-  --color-cream: var(--cream);
-  /* Space page palette (.ns-space-theme) — these have no meaningful value
-     outside that scope, same as --color-cream above already didn't before
-     it was scoped there too; only used on Space-page markup. */
-  --color-paper: var(--paper);
-  --color-sand: var(--sand);
-  --color-line: var(--line);
   --color-ink: var(--ink);
-  --color-clay: var(--clay);
-  --color-clay-dark: var(--clay-dark);
-  --color-clay-soft: var(--clay-soft);
-  --color-bark: var(--bark);
-  --color-moss: var(--moss);
-  --color-moss-soft: var(--moss-soft);
-  --color-on-bark: var(--on-bark);
-  --color-on-clay: var(--on-clay);
   --color-yellow: var(--yellow);
   --color-plum: var(--plum);
   --color-peach: var(--peach);
-  --color-forest-ink: var(--forest-ink);
   --color-error: var(--error);
   --color-error-deep: var(--error-deep);
   --color-success: var(--success);
@@ -1191,18 +996,18 @@
     display: inline-flex;
     align-items: center;
     border-radius: var(--radius-control);
-    border: 1px solid var(--line, var(--hairline));
-    background: var(--paper-raised, var(--cream));
+    border: 1px solid var(--border);
+    background: var(--surface);
     padding: 0.32rem 0.75rem;
     font-size: var(--text-caption);
     font-family: var(--font-serif);
-    color: var(--ink, var(--forest-ink));
+    color: var(--foreground);
     transition: border-color var(--duration-fast) var(--ease-standard);
   }
 
   @media (hover: hover) {
     .ns-you-tags--pills .ns-pill:hover {
-      border-color: color-mix(in srgb, var(--accent-text) 45%, var(--line, var(--hairline)));
+      border-color: color-mix(in srgb, var(--accent-text) 45%, var(--border));
     }
   }
 
@@ -1519,46 +1324,6 @@ summary:focus-visible,
 /* ── Signed-out landing page (src/app/landing) ────────────────────────────
    The page has its own warm palette and looks the same in light and dark mode,
    because the gradient behind it does. Layout lives in landing.css. */
-.lp {
-  --lp-ink: #2A1510;
-  --lp-ink-soft: #5A3A30;
-  --lp-cta: #A93E22;
-  --lp-cta-text: #FFFFFF;
-  --lp-peach: #F3A98C;
-  --lp-lilac: #C9B8E8;
-  --lp-sun: #F2D58A;
-  --lp-fade: 600ms;
-  --lp-base: #F3C9B2;
-  --lp-cream: #FFF4EB;
-  --lp-blush: #FCE3D3;
-  --lp-rose: #F8D9E0;
-  --lp-white: #FFFFFF;
-  --lp-frame: #1B0F0B;
-  --lp-nav-fill: rgba(255, 244, 235, 0.72);
-  --lp-nav-line: rgba(169, 62, 34, 0.12);
-  --lp-card-fill: rgba(255, 255, 255, 0.88);
-  --lp-shadow-sm: rgba(60, 20, 10, 0.14);
-  --lp-shadow-md: rgba(60, 20, 10, 0.18);
-  --lp-shadow-lg: rgba(60, 20, 10, 0.28);
-}
-
-/* The sign-up card on the landing page reads the app's theme tokens; pin them to the light set. */
-.lp-light {
-  color-scheme: light;
-  --foreground: #2B2622;
-  --muted-foreground: #5C534B;
-  --background: #FFFFFF;
-  --card: #FFFFFF;
-  --border: #DDD3C0;
-  --input: #8A7447;
-  --input-border: #8A7447;
-  --accent: #A93E22;
-  --accent-foreground: #FFFFFF;
-  --surface-muted: #F6F1E7;
-  --destructive: #A13A2E;
-  color: var(--foreground);
-}
-
 /* View transitions (a Discover tile growing into its page's header, Step 7).
    Same duration and curve as every other enter; a browser without view
    transitions never runs this, and links only ask for one when the person has
@@ -1570,70 +1335,30 @@ summary:focus-visible,
   }
 }
 
-/* ── After hours type (spec v1) ──────────────────────────────────────────────
-   Discover, Corner and category pages carry this class on their root. It
-   re-points the seven size tokens at the spec's scale (mobile, then lg), and
-   sets the display face on the three headline sizes. Scoped on purpose: the
-   other pages keep their own type until they are moved over, so a serif
-   heading elsewhere is never given a sans weight it was not drawn for.
-   Nothing here is italic, monospace or uppercase, and nothing is under 12px. */
-.ns-afterhours {
-  /* Six sizes: 12 caption, 14 small (meta), 16 body, 20 lead, 28 title, and display.
-     Weights: 400 for body and meta, 600 for labels and buttons (explicit
-     font-semibold), 800 for the display face (display, title, lead). */
-  --text-display: 2.25rem;
-  --text-display--line-height: 1;
-  --text-display--letter-spacing: -0.02em;
-  --text-display--font-weight: 800;
-  --text-title: 1.75rem;
-  --text-title--line-height: 1.15;
-  --text-title--letter-spacing: -0.01em;
-  --text-title--font-weight: 800;
-  --text-lead: 1.25rem;
-  --text-lead--line-height: 1.2;
-  --text-lead--letter-spacing: -0.01em;
-  --text-lead--font-weight: 800;
-  --text-body: 1rem;
-  --text-body--line-height: 1.5;
-  --text-body--letter-spacing: 0;
-  --text-body--font-weight: 400;
-  --text-small: 0.875rem;
-  --text-small--line-height: 1.4;
-  --text-small--letter-spacing: 0;
-  --text-small--font-weight: 400;
-  --text-caption: 0.75rem;
-  --text-caption--line-height: 1.3;
-  --text-caption--letter-spacing: 0.01em;
-  --text-caption--font-weight: 400;
-  font-style: normal;
-}
-
+/* ── Type scale (spec v1) ────────────────────────────────────────────────────
+   The sizes live in @theme above; display grows from 36px to 56px at desk.
+   The display face goes on the three headline sizes, and Tailwind's text-*
+   utilities do not read the --text-*--font-weight tokens, so weight and
+   tracking are set here. In the base layer, so an explicit font-semibold (and
+   every other utility) still wins. Nothing is italic, monospace or uppercase. */
 @media (min-width: 1128px) {
-  .ns-afterhours {
+  :root {
     --text-display: 3.5rem;
   }
 }
 
-.ns-afterhours :is(.text-display, .text-title, .text-lead) {
-  font-family: var(--font-display);
-}
-
-/* Weight and tracking per size. Tailwind's text-* utilities do not read the
-   --text-*--font-weight tokens above, so they are set here. In the base layer,
-   so an explicit font-semibold (and every other utility) still wins. */
 @layer base {
-  .ns-afterhours .text-display { font-weight: 800; letter-spacing: -0.02em; }
-  .ns-afterhours .text-title { font-weight: 800; letter-spacing: -0.01em; }
-  .ns-afterhours .text-lead { font-weight: 800; letter-spacing: -0.01em; }
-  .ns-afterhours .text-body { font-weight: 400; }
-  .ns-afterhours .text-small { font-weight: 400; }
-  .ns-afterhours .text-caption { font-weight: 400; letter-spacing: 0.01em; }
-}
+  .text-display, .text-title, .text-lead { font-family: var(--font-display); }
+  .text-display { font-weight: 800; letter-spacing: -0.02em; }
+  .text-title { font-weight: 800; letter-spacing: -0.01em; }
+  .text-lead { font-weight: 800; letter-spacing: -0.01em; }
+  .text-body { font-weight: 400; }
+  .text-small { font-weight: 400; }
+  .text-caption { font-weight: 400; letter-spacing: 0.01em; }
 
-/* A form field stays 16px on a phone even here: below that, iOS zooms the page
-   when the field is focused. */
-.ns-afterhours :is(input, textarea, select) {
-  font-size: 1rem;
+  /* A form field stays 16px on a phone: below that, iOS zooms the page when
+     the field is focused. */
+  :is(input, textarea, select) { font-size: 1rem; }
 }
 
 /* The "Admit one" sticker on the cover story: a gentle wobble, off for reduced motion. */

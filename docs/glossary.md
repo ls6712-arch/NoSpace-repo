@@ -21,7 +21,6 @@ read it from `APP_NAME` in `src/app/config.ts`; never hardcode the name in copy.
 | You | Your profile, in the nav (desktop and mobile) |
 | Messages / Inbox | Chats / notifications and requests |
 | Search Moments, people, Spaces | The nav search box placeholder (searches all three) |
-| Search Corners and Moments / Search Spaces / Search people | Discover's box, by open tab: it searches what that tab lists |
 | See all | Opens the full list when a list shows only some: Discover's Spotlight, the group tiles on Discover's Corners tab (which show the first 8), and a group's row on the Corners home (opens that group's page), and Start here on Discover (opens every Corner for the chosen mood) |
 
 ## Door list
@@ -657,7 +656,7 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 | Where | String |
 |---|---|
 | Header line | What’s out there in |
-| Search placeholder | Search Corners, Spaces, people |
+| Search | Discover has no search box of its own (Oct 31, 2026). Search is the nav one: the header icon on a phone, the rail's Search panel from 744px ("Search Moments, people, Spaces") |
 | Jump chips | Ideas / Corners / Spaces / Moments |
 | Ideas heading / subline | What could you do? / Ideas for what you’ve got. Tap a pill to change it. |
 | Time pill | An hour / Tonight / Weekend (each includes the ones before it) |

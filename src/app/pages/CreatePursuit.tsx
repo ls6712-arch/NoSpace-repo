@@ -194,7 +194,7 @@ export function CreatePursuit() {
 
   const heading = (text: string, sub?: string) => (
     <>
-      <h1 className="text-display leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+      <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
         {text}
       </h1>
       {sub && <p className="mt-1 text-small text-muted-foreground">{sub}</p>}

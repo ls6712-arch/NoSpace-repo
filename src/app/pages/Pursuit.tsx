@@ -376,7 +376,7 @@ export function Pursuit() {
         <p className="mb-1 text-small text-muted-foreground">
           {["Pursuit", cornerLabel, endsAtMs ? `ends ${formatDate(endsAtMs)}` : ""].filter(Boolean).join(" · ")}
         </p>
-        <h1 className="mb-2 break-words text-display" style={{ fontFamily: "var(--font-serif)", viewTransitionName: "pursuit-title" }}>
+        <h1 className="mb-2 break-words text-title" style={{ fontFamily: "var(--font-serif)", viewTransitionName: "pursuit-title" }}>
           {view.title}
         </h1>
 

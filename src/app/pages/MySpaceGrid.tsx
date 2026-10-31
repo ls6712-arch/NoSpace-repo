@@ -219,7 +219,7 @@ export function MySpaceGrid() {
                 (any place gold is used as text, not decoration). */}
             <p className="ns-section-kicker text-gold-text">{dateEyebrow}</p>
             <h1
-              className="mt-1 text-display leading-tight"
+              className="mt-1 text-title"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {greeting(profile?.display_name ?? "there")}

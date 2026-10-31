@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 import { forwardRef } from "react";
 import { HorizontalRow } from "../HorizontalRow";
-import { PressLink } from "../afterhours/PressLink";
-import { Reveal } from "../afterhours/Reveal";
+import { PressLink } from "../common/PressLink";
+import { Reveal } from "../common/Reveal";
 import type { MoodCard } from "../../data/moodCards";
 import type { EventTicket } from "../../lib/eventTicket";
 import { GoingButton, TicketFrame, eventTime, spaceAndPlace, ticketPath } from "./EventParts";

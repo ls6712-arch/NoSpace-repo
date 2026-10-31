@@ -142,14 +142,14 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
   if (saved) {
     return (
       <div className="space-y-3">
-        <div className="flex h-11 items-center justify-between rounded-control border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 text-small">
+        <div className="flex h-11 items-center justify-between rounded-control border border-[var(--border)] bg-[var(--surface)] px-3.5 text-small">
           <span>Your first Moment is in.</span>
           <button type="button" onClick={undo} className="text-[var(--accent-text)] hover:opacity-80">
             Undo
           </button>
         </div>
         {saved.post && (
-          <p className="text-caption text-[var(--ink-soft)]">
+          <p className="text-caption text-[var(--muted-foreground)]">
             {audience === "followers" ? "Your followers" : audience === "public" ? "Anyone" : "Only you"} will
             see it{audience === "followers" ? " first" : ""}.
           </p>
@@ -188,7 +188,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
 
   if (confirmingEveryone) {
     return (
-      <div className="rounded-card border border-[var(--line)] bg-[var(--paper-raised)] p-4">
+      <div className="rounded-card border border-[var(--border)] bg-[var(--surface)] p-4">
         <EveryoneShareConfirm
           name={profile?.display_name?.trim() || "You"}
           cornerLabel="Uncategorized"
@@ -201,7 +201,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
           type="button"
           onClick={() => setConfirmingEveryone(false)}
           disabled={saving}
-          className="mt-2 w-full text-center text-caption text-[var(--ink-soft)] hover:text-[var(--ink)]"
+          className="mt-2 w-full text-center text-caption text-[var(--muted-foreground)] hover:text-foreground"
         >
           Back
         </button>
@@ -211,10 +211,10 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
 
   return (
     <>
-      <h1 className="mb-1 text-title tab:text-display" style={{ fontFamily: "var(--font-serif)" }}>
+      <h1 className="mb-1 text-title " style={{ fontFamily: "var(--font-serif)" }}>
         Add your first Moment
       </h1>
-      <p className="mb-6 text-small text-[var(--ink-soft)]">
+      <p className="mb-6 text-small text-[var(--muted-foreground)]">
         Anything you’re making, practising or learning. Half-done counts.
       </p>
 
@@ -230,7 +230,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         <button
           type="button"
           onClick={() => libraryInputRef.current?.click()}
-          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card border border-dashed border-[var(--line)] text-[var(--ink-soft)] transition-colors hover:border-[var(--accent-text)] hover:text-[var(--ink)]"
+          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card border border-dashed border-[var(--border)] text-[var(--muted-foreground)] transition-colors hover:border-[var(--accent-text)] hover:text-foreground"
         >
           <Images className="size-6" />
           <span className="text-small font-medium">Choose a photo</span>
@@ -259,7 +259,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
       />
 
       {preview && (
-        <div className="relative mt-3 overflow-hidden rounded-card border border-[var(--line)]">
+        <div className="relative mt-3 overflow-hidden rounded-card border border-[var(--border)]">
           <ImageWithFallback src={preview} alt="" className="aspect-[4/3] w-full" />
           <button
             type="button"
@@ -271,17 +271,17 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         </div>
       )}
 
-      <p className="mt-4 mb-1.5 text-caption text-[var(--ink-soft)]">Or just write a line</p>
+      <p className="mt-4 mb-1.5 text-caption text-[var(--muted-foreground)]">Or just write a line</p>
       <input
         value={line}
         onChange={(e) => setLine(e.target.value.slice(0, 200))}
         onKeyDown={(e) => e.key === "Enter" && requestSave()}
         placeholder="What are you making, practising or learning?"
-        className="w-full rounded-control border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 py-2.5 text-body text-[var(--ink)] outline-none placeholder:text-[var(--ink-soft)]"
+        className="w-full rounded-control border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-body text-foreground outline-none placeholder:text-[var(--muted-foreground)]"
       />
 
       <div className="mt-4 flex items-center gap-1.5">
-        <span className="text-caption text-[var(--ink-soft)]">Who sees it:</span>
+        <span className="text-caption text-[var(--muted-foreground)]">Who sees it:</span>
         {(["private", "followers", "public"] as const).map((a) => (
           <button
             key={a}
@@ -290,8 +290,8 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
             aria-pressed={audience === a}
             className={`rounded-control border px-2.5 py-1 text-caption transition-colors ${
               audience === a
-                ? "border-[var(--accent-text)] text-[var(--ink)]"
-                : "border-[var(--line)] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+                ? "border-[var(--accent-text)] text-foreground"
+                : "border-[var(--border)] text-[var(--muted-foreground)] hover:text-foreground"
             }`}
           >
             {AUDIENCE_LABEL[a]}

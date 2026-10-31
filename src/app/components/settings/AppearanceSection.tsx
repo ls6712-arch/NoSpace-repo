@@ -25,13 +25,13 @@ const APPEARANCE_OPTIONS: {
   {
     value: "light",
     label: "Light",
-    sublabel: "Warm paper",
+    sublabel: "",
     swatch: { bg: "var(--theme-light-bg)", card: "var(--theme-light-card)", ink: "var(--theme-light-accent)" },
   },
   {
     value: "dark",
     label: "Dark",
-    sublabel: "Warm charcoal",
+    sublabel: "",
     swatch: { bg: "var(--theme-dark-bg)", card: "var(--theme-dark-card)", ink: "var(--theme-dark-accent)" },
   },
 ];
@@ -43,7 +43,7 @@ export function AppearanceSection() {
     <section>
       <SectionHeader n={1} eyebrow="APPEARANCE" title="Appearance" />
       <p className="mb-4 text-small text-muted-foreground">
-        Light is warm paper, dark is warm charcoal. Same identity in either.
+        Light, dark, or match your device.
       </p>
       <RadioGroup
         value={preference}
@@ -72,9 +72,7 @@ export function AppearanceSection() {
                 <span className="block" style={{ fontFamily: "var(--font-serif)" }}>
                   {opt.label}
                 </span>
-                <span className="ns-section-kicker block text-muted-foreground">
-                  {opt.sublabel}
-                </span>
+                {opt.sublabel && <span className="block text-small text-muted-foreground">{opt.sublabel}</span>}
               </span>
               {/* The radio's own indicator IS the accent dot the spec asks
                   for as the selected-state marker. */}

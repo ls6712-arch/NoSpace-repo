@@ -42,13 +42,20 @@ function readStoredPreference(): ThemePreference {
   } catch {
     // Private mode / blocked storage — fall through to the default.
   }
-  return "system";
+  return "light";
 }
 
-/** Dark is the default look (after hours spec v1): "system" opens dark whatever
- * the phone's own theme is; only an explicit Light is light. */
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+/** Light is the default look (visual spec 1.1, Oct 30, 2026). Nothing stored
+ * means light, whatever the phone's own theme is. Dark only when the person
+ * picks Dark; "system" follows the device, and only when picked on this device. */
 function resolve(pref: ThemePreference): ResolvedTheme {
-  return pref === "light" ? "light" : "dark";
+  if (pref === "dark") return "dark";
+  if (pref === "system" && typeof window !== "undefined" && typeof window.matchMedia === "function") {
+    return window.matchMedia(DARK_QUERY).matches ? "dark" : "light";
+  }
+  return "light";
 }
 
 function prefersReducedMotion(): boolean {
@@ -91,10 +98,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     isFirstApply.current = false;
   }, [preference]);
 
+  // "System" follows the device, live.
+  useEffect(() => {
+    if (preference !== "system" || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia(DARK_QUERY);
+    const on = () => {
+      const next = resolve("system");
+      setResolvedTheme(next);
+      applyToDom(next, true);
+    };
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, [preference]);
+
   useEffect(() => {
     if (tookServerPreference.current) return;
     const server = profile?.theme_preference;
-    if (server !== "system" && server !== "light" && server !== "dark") return;
+    // The column's default is "system", so "system" on the server cannot tell
+    // "never chose" from "chose System": only an explicit Light or Dark is
+    // taken from it, and System counts only when picked on this device.
+    if (server !== "light" && server !== "dark") return;
     tookServerPreference.current = true;
     try {
       localStorage.setItem(STORAGE_KEY, server);

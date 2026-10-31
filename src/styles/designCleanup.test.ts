@@ -26,6 +26,10 @@ describe("one-skin cleanup", () => {
     expect(offenders(/--coral-deep|--coral-text|--violet|--void|--ink-on-violet|--plum-night/)).toEqual([]);
   });
 
+  it("has no Paper, Space or After hours scope left", () => {
+    expect(offenders(/ns-paper-theme|ns-space-theme|ns-afterhours|afterhours|soosh-paper|--lp-cream|--lp-peach/)).toEqual([]);
+  });
+
   it("uses only the tab, desk and wide breakpoints", () => {
     expect(offenders(/(^|[^A-Za-z0-9_-])(max-)?(sm|md|lg|xl|2xl):[a-z[!-]/)).toEqual([]);
     expect(theme).toMatch(/--breakpoint-\*:\s*initial/);

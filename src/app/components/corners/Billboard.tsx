@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ImageWithFallback } from "../ImageWithFallback";
-import { PressLink } from "../afterhours/PressLink";
+import { PressLink } from "../common/PressLink";
 import { cornerAbout, cornerMeta, type CuratedCorner } from "../../data/curatedCorners";
 import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
 import { formatStarts } from "../../lib/dates";
-import { displayStyle } from "../../lib/doorList";
 import type { LiveEvent } from "../../lib/cornersLive";
 import { usePrefersReducedMotion } from "../../lib/useReducedMotion";
 
@@ -88,7 +87,7 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
               <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
               <div className="absolute inset-0 mx-auto flex w-full max-w-[1264px] flex-col items-start justify-end gap-3 px-4 pb-28 tab:px-8 tab:pb-24">
                 {i === 0 && <p className="text-small font-semibold text-on-media/90">Corner of the week</p>}
-                <h2 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
+                <h2 className="max-w-2xl text-display">
                   {corner.name}
                 </h2>
                 <p className="text-body text-on-media/90">{cornerMeta(corner)}</p>

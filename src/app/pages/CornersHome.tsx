@@ -213,7 +213,7 @@ export function CornersHome() {
   }, [latest, ranker]);
 
   return (
-    <div className="ns-afterhours min-h-viewport pb-24">
+    <div className="min-h-viewport pb-24">
       {/* Discover's tabs, with Corners selected: /corners is the Corners tab of Discover. */}
       <div className={`${PAGE_X} pt-2 desk:pt-6`}>
         <DiscoverTabsBar />

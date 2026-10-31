@@ -1,4 +1,4 @@
-import { PressLink } from "../afterhours/PressLink";
+import { PressLink } from "../common/PressLink";
 import type { LiveEvent, LiveSpace } from "../../lib/cornersLive";
 import { formatStarts } from "../../lib/dates";
 

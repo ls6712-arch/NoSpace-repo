@@ -72,7 +72,7 @@ export function Week() {
             <ArrowLeft className="size-6" strokeWidth={1.75} aria-hidden="true" />
           </Link>
         </div>
-        <h1 className="text-display font-extrabold leading-tight" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
           {WEEK_VIEW.title}
         </h1>
         <p className="text-body text-muted-foreground">

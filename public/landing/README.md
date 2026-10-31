@@ -1,6 +1,6 @@
 # Landing page screens
 
-The signed-out landing page shows real screens from the live app. Drop a file
+The signed-out landing page shows real screens from the live app. **Only the hero (the current Discover) is committed.** The six other screens were removed because they showed the retired UI; their sections show as text only (no phone) until they are regenerated from the current app, which needs the example photos listed in `landing-preview/README.md` (maya-sourdough, maya-film, maya-bouldering, nick-bouldering and theo-wheel; maya-running is also on Maya's Shelf). Drop a file
 in this folder and rebuild: no code change. Any section whose file is missing
 is hidden, so nothing on the page is ever a stand-in.
 
@@ -10,7 +10,7 @@ posts. Keep each file under 300 KB.
 
 | File | Screen to capture | Section it controls | If missing |
 |---|---|---|---|
-| `hero-shelf.webp` | The founder's Shelf, with one item marked "In progress" and one marked "Finished" visible | Hero phone | The hero still shows its text, gradient and button, without the phone |
+| `hero-discover@1x.webp`, `hero-discover@2x.webp` | The current Discover in light mode at 390px wide, 390 x 844 and 780 x 1688 (taken from the app build, not the generator below) | Hero phone | The hero still shows its text and button, without the phone |
 | `step-save.webp` | A post with the Save button | Save it. Try it. Share it. (screen 1) | The whole section is hidden |
 | `step-try.webp` | A Shelf item marked "In progress" | Save it. Try it. Share it. (screen 2) | The whole section is hidden |
 | `step-share.webp` | The same item marked "Finished" | Save it. Try it. Share it. (screen 3) | The whole section is hidden |
