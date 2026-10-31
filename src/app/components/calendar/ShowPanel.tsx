@@ -1,19 +1,23 @@
 import { Check } from "lucide-react";
 import { AVAILABLE_FILTERS, FILTER_ROWS, type FilterKey, type Filters } from "../../lib/calendarView";
 import { cn } from "../ui/utils";
-import { DASHED } from "./CalendarChips";
+
 
 /** The little square beside each row: the same look the thing has on the calendar. */
 const SWATCH: Record<FilterKey, string> = {
   plans: "bg-[var(--cat-blue)]",
   sessions: "bg-[var(--cat-amber)]",
   picks: "border-[1.5px] border-dashed border-accent-text",
-  free: DASHED,
+  // A 14px swatch needs a stronger edge and tint than the big block on the grid to read as the same thing.
+  free: "border-2 border-dashed border-[color:color-mix(in_oklab,var(--foreground)_60%,transparent)] bg-[color-mix(in_oklab,var(--foreground)_12%,transparent)]",
   friends: "border border-border bg-card",
   stubs: "bg-[var(--cat-violet)]",
-  blocks: "border border-border bg-muted",
+  blocks: "border border-[color:color-mix(in_oklab,var(--foreground)_55%,transparent)]",
   busy: "bg-muted",
 };
+
+/** The blocks hatch, tighter and darker so it shows at swatch size. */
+const SWATCH_HATCH = { backgroundImage: "repeating-linear-gradient(135deg, color-mix(in oklab, var(--foreground) 55%, transparent) 0 1.5px, transparent 1.5px 4px)" } as const;
 
 /** "Show": a checkbox for each kind of thing on the calendar. Only the kinds that exist today are listed. */
 export function ShowPanel({ filters, onChange, className }: { filters: Filters; onChange: (key: FilterKey, on: boolean) => void; className?: string }) {
@@ -34,7 +38,7 @@ export function ShowPanel({ filters, onChange, className }: { filters: Filters; 
               >
                 {filters[r.key] && <Check strokeWidth={1.75} className="size-3.5" />}
               </span>
-              <span aria-hidden="true" className={cn("size-3.5 shrink-0 rounded-control", SWATCH[r.key])} />
+              <span aria-hidden="true" style={r.key === "blocks" ? SWATCH_HATCH : undefined} className={cn("size-3.5 shrink-0 rounded-control", SWATCH[r.key])} />
               <span className="flex min-w-0 flex-col">
                 <span className="font-semibold">{r.label}</span>
                 {r.hint && <span className="text-caption text-muted-foreground">{r.hint}</span>}

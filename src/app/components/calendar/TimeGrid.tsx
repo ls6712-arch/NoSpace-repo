@@ -1,5 +1,4 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
-import { Link } from "react-router";
 import { catStyle } from "../../lib/categoryStyle";
 import { dragRange, isDraggable, snapMs, tapRange, timeAtRow } from "../../lib/calendarActions";
 import { SHEET } from "../../lib/calendarCopy";
@@ -20,10 +19,9 @@ import {
 import { formatWeekday } from "../../lib/dates";
 import { HOME_TZ, nyTimeToMs } from "../../lib/homeWeek";
 import { track } from "../../lib/analytics";
-import { WEEK_VIEW } from "../../lib/homeCopy";
 import type { StubCard } from "../../lib/stubs";
 import type { Pass } from "../../lib/tasteModel";
-import { FREE_LABEL, findSomethingPath, goingLine, placeLine, planSpan, type WeekPlanDetail } from "../../lib/weekView";
+import { FREE_LABEL, goingLine, placeLine, planSpan, type WeekPlanDetail } from "../../lib/weekView";
 import { cn } from "../ui/utils";
 import { DASHED, HATCH_STYLE, StubChip } from "./CalendarChips";
 import { PickCard } from "./PickCard";
@@ -109,8 +107,8 @@ interface Drag {
 
 /**
  * Week and Day as a time grid: one column a day, hours down the side. Plans and
- * Pursuit sessions are blocks in the Corner's colour; free time is a dashed
- * block behind them with its Find something link; your blocks are hatched; Stubs
+ * Pursuit sessions are blocks in the Corner's colour; free time is a tinted,
+ * dashed block behind them (tap it for its sheet); your blocks are hatched; Stubs
  * sit in a row above the hours. The line marks now in today's column.
  *
  * With a mouse: click or drag across empty hours to start a plan, free time or a
@@ -328,20 +326,10 @@ function DayColumn({
                 track({ name: "calendar_slot_tapped", kind: "free" });
                 handlers.onFree(f);
               }}
-              className="min-h-6 text-left text-caption text-muted-foreground"
+              className="min-h-6 text-left text-caption font-medium text-muted-foreground"
             >
               {FREE_LABEL[f.part]}
             </button>
-            {!(filters.picks && f.pick) && (
-              <Link
-                data-hit
-                to={findSomethingPath(f)}
-                onClick={() => track({ name: "week_find_something", window: f.keys[0] })}
-                className="inline-flex min-h-6 items-center text-caption font-semibold text-accent-text underline-offset-4 hover:underline"
-              >
-                {WEEK_VIEW.findSomething}
-              </Link>
-            )}
           </div>
         );
       })}

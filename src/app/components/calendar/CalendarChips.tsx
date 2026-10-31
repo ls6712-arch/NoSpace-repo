@@ -16,7 +16,8 @@ import { cn } from "../ui/utils";
  */
 const CHIP = "flex min-h-6 w-full min-w-0 items-center gap-1 rounded-control px-2 py-0.5 text-left text-caption font-semibold leading-tight";
 const COLOURED = "bg-[var(--cat)] text-[var(--ink)]";
-export const DASHED = "border-[1.5px] border-dashed border-[color-mix(in_oklab,var(--foreground)_28%,transparent)]";
+/** Free time: a light tint plus a dashed edge dark enough to see on both themes (the 28% edge alone disappeared). */
+export const DASHED = "border-[1.5px] border-dashed border-[color:color-mix(in_oklab,var(--foreground)_45%,transparent)] bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)]";
 /** A grey hatch for your blocks (and, later, busy times from Google). */
 export const HATCH_STYLE = { backgroundImage: "repeating-linear-gradient(135deg, color-mix(in oklab, var(--foreground) 14%, transparent) 0 2px, transparent 2px 7px)" } as const;
 
