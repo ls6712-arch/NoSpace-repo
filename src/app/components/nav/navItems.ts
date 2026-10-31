@@ -1,11 +1,12 @@
-import { CalendarDays, Compass, House, Plus, UserRound, type LucideIcon } from "lucide-react";
+import { CalendarDays, House, Plus, Search, UserRound, type LucideIcon } from "lucide-react";
 
 /**
  * The destinations every signed-in screen offers, in one place: the bottom
  * bar (phones) and the left rail (tablet and up) both read this list, so the
  * icons, labels and the rule for which one is "current" can never drift apart.
- * Chats, Notifications and Search are not routes of their own in the same way;
- * the rail adds them, the phone's top bar already has them.
+ * Chats and Notifications are not routes of their own in the same way; the
+ * rail adds them, the phone's top bar already has them. Search lives in
+ * Discover, which is why Discover wears the magnifier.
  */
 export interface Destination {
   to: string;
@@ -23,7 +24,7 @@ export const HOME: Destination = { to: "/my-space", label: "Home", icon: House, 
 export const DISCOVER: Destination = {
   to: "/discover",
   label: "Discover",
-  icon: Compass,
+  icon: Search,
   match: (p) =>
     p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/browse") || p.startsWith("/space") || p.startsWith("/people"),
 };

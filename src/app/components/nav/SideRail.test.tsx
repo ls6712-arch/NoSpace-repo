@@ -44,7 +44,8 @@ describe("the left rail", () => {
     expect(names).toEqual(["Soosh", "Home", "Discover", "Log a Moment", "Week", "Chats", "You"]);
     expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/my-space", "/my-space", "/discover", "/create", "/week", "/messages", "/you"]);
     // The things that open something are buttons.
-    expect(within(nav).getByRole("button", { name: "Search" })).toBeTruthy();
+    // Search lives in Discover, not on the rail.
+    expect(within(nav).queryByRole("button", { name: "Search" })).toBeNull();
     expect(within(nav).getByRole("button", { name: "Notifications (3 unread)" })).toBeTruthy();
     expect(within(nav).getByRole("button", { name: "More" })).toBeTruthy();
   });
@@ -52,7 +53,7 @@ describe("the left rail", () => {
   it("puts words on every item for the 1280px layout and a tooltip for the icon-only one", () => {
     at("/my-space");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    for (const word of ["Home", "Discover", "Search", "Log", "Week", "Chats", "You", "More"]) {
+    for (const word of ["Home", "Discover", "Log", "Week", "Chats", "You", "More"]) {
       // One copy as the visible label (wide), one as the tooltip (narrower).
       expect(within(nav).getAllByText(word).length).toBeGreaterThanOrEqual(2);
     }
@@ -96,9 +97,13 @@ describe("the left rail", () => {
     expect(screen.queryAllByRole("link", { name: "You" })).toHaveLength(1);
   });
 
-  it("opens Search beside the rail and closes it with Escape; only one panel is open", () => {
+  it("opens Search with Cmd+K, Ctrl+K or / and closes it with Escape; only one panel is open", () => {
     at("/my-space");
-    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    fireEvent.keyDown(document, { key: "/" });
+    expect(screen.getByRole("textbox", { name: "Search Moments, people, Spaces" })).toBeTruthy();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("textbox")).toBeNull();
+    fireEvent.keyDown(document, { key: "k", ctrlKey: true });
     expect(screen.getByRole("textbox", { name: "Search Moments, people, Spaces" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "More" }));
     expect(screen.queryByRole("textbox")).toBeNull();
