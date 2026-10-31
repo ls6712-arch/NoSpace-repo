@@ -203,7 +203,7 @@ export function CreatePursuit() {
 
   return (
     <div className="min-h-viewport bg-surface pb-44 desk:pb-28">
-      <div className="container mx-auto max-w-md px-5 pt-6">
+      <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 pt-6">
         <div className="mb-5 flex items-center justify-between">
           <button type="button" onClick={back} aria-label="Back" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="size-5" />
@@ -554,7 +554,7 @@ export function CreatePursuit() {
       </div>
 
       <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-40 border-t border-border bg-surface/95 px-5 pb-3 pt-3 backdrop-blur desk:bottom-0 desk:pb-[calc(var(--safe-bottom)+1rem)]">
-        <div className="mx-auto max-w-md">
+        <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8">
           {screen < 5 ? (
             <Button variant="coral" className="h-11 w-full rounded-control" disabled={!canContinue} onClick={next}>
               Continue <ArrowRight className="size-4" />

@@ -184,7 +184,7 @@ export function AdminSpaces() {
 
   return (
     <div className="min-h-viewport bg-surface py-8 tab:py-12">
-      <div className="container mx-auto max-w-3xl px-4">
+      <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8">
         <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
           Spaces
         </h1>

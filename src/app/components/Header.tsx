@@ -14,10 +14,6 @@ import { APP_NAME } from "../config";
 import { isDismissKey } from "../lib/menuDismiss";
 import { PAGE_X } from "../lib/pageGrid";
 
-/** Pages on the page frame share one page frame (PAGE_X), so the wordmark lines up with their content. */
-const FRAMED_PATHS = ["/discover", "/corners", "/corner", "/browse"];
-const isFramed = (pathname: string) => FRAMED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-
 function initials(name: string) {
   return name
     .split(" ")
@@ -178,12 +174,11 @@ const PRIMARY_NAV = [
 export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
   const { openCart, cartCount } = useCart();
   const { pathname } = useLocation();
-  const framed = isFramed(pathname);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   return (
     <header className={`ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)] ${hideWithRail ? "rail:hidden" : ""}`}>
-      <div className={`${framed ? PAGE_X : "container mx-auto px-4"} flex h-16 items-center justify-between gap-4`}>
+      <div className={`${PAGE_X} flex h-16 items-center justify-between gap-4`}>
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries
               below — it’s this wordmark — so it carries the same active

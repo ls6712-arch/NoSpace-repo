@@ -317,7 +317,7 @@ export function Studio() {
 
   return (
     <div className="min-h-viewport bg-[var(--background)]">
-      <div className="mx-auto max-w-6xl px-6 py-6 tab:px-10">
+      <div className="mx-auto w-full max-w-[calc(1040px+2rem)] tab:max-w-[calc(1040px+3rem)] desk:max-w-[calc(1040px+4rem)] px-4 tab:px-6 desk:px-8 py-6">
         <div className="mb-6 flex items-center justify-between gap-4">
           <button
             type="button"
