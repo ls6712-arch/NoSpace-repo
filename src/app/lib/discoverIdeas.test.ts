@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultPills, loosenSpend, nextSpend, nextTime, nextWho, parsePassCorners, passTagFor } from "./discoverIdeas";
+import { WHO_ORDER, defaultPills, loosenSpend, parsePassCorners, passTagFor } from "./discoverIdeas";
 import { nyTimeToMs } from "./homeWeek";
 
 // Thursday Oct 29, 2026, noon in New York.
@@ -25,11 +25,9 @@ describe("defaultPills", () => {
   });
 });
 
-describe("pill taps", () => {
-  it("cycle through their values and wrap", () => {
-    expect([nextTime("hour"), nextTime("tonight"), nextTime("weekend")]).toEqual(["tonight", "weekend", "hour"]);
-    expect([nextSpend("free"), nextSpend("under25"), nextSpend("treat")]).toEqual(["under25", "treat", "free"]);
-    expect([nextWho("solo"), nextWho("friend"), nextWho("new")]).toEqual(["friend", "new", "solo"]);
+describe("pill values", () => {
+  it("lists Who in the order of the dropdown", () => {
+    expect(WHO_ORDER).toEqual(["solo", "friend", "new"]);
   });
 
   it("loosens Spend to Treat me and nothing else", () => {
