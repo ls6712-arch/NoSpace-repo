@@ -44,7 +44,7 @@ const plan = (over: Partial<WeekPlanDetail> = {}): WeekPlanDetail => ({
   ...over,
 });
 
-const stub = (over: Partial<StubCard> = {}): StubCard => ({ id: 1, kind: "session", serial: 1, title: "Pottery #2", meta: "", issuedAt: ny(10, 3, 15), ...over });
+const stub = (over: Partial<StubCard> = {}): StubCard => ({ id: 1, kind: "regular", serial: 1, title: "Pottery #2", meta: "", issuedAt: ny(10, 3, 15), ...over });
 
 const memory = (initial: Record<string, string> = {}) => {
   const data = { ...initial };

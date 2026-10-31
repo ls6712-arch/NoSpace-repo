@@ -7,14 +7,14 @@ import { PillButton } from "../ui/PillButton";
 import { Chip } from "../ui/Chip";
 import type { CornerSuggestion } from "../../lib/cornerSuggestions";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { fetchLovers, fetchStubForPost, type StubRow } from "../../lib/stubs";
+import { editionLabel, fetchLovers, fetchStubForPost, type StubRow } from "../../lib/stubs";
 import { fetchNextSession, fetchOpenPursuits } from "../../lib/openPursuits";
 import { profilesById } from "../../lib/pursuitsRemote";
 import { relatedCorner } from "../../lib/relatedCorner";
 import { cornerPath } from "../../lib/cornerPath";
 import { curatedBySlug, cornerMeta } from "../../data/curatedCorners";
 import { categoryColor, cornerColor } from "../../lib/categoryStyle";
-import { formatDate, formatDateTime } from "../../lib/dates";
+import { formatDate, formatDateTime, formatMonth } from "../../lib/dates";
 import { plural } from "../../lib/plural";
 import { withLine } from "../../lib/withLine";
 import { haptic, PAGE_FROM, PAGE_TO, page, PRESS_SCALE, shared } from "../../lib/motionTokens";
@@ -33,12 +33,28 @@ const AUDIENCE_LINE: Record<PostedAudience, string> = {
 export const LOG_PHOTO_LAYOUT_ID = "log-photo";
 
 /**
- * Posted (screen 7): "Posted to your group", the stub ticket (it grows out of
- * the photo you just posted, then the perforation draws and the count rolls
- * up), a card when someone loves the Moment while you are here, three rows for
- * what to do next, and a way home. The ticket only shows for a Moment that
- * counts toward a Pursuit; one with none earns no Stub.
+ * Posted (screen 7): "Posted to your group", the Stub this Moment earned if it
+ * earned one (it grows out of the photo you just posted, then the perforation
+ * draws), a card when someone loves the Moment while you are here, three rows
+ * for what to do next, and a way home. A Moment earns a Stub only when it
+ * finishes a Pursuit or a drop, or is a Corner's 10th day this month
+ * (20261115000000); most Moments earn none, and then no ticket shows.
  */
+/** The words on the Stub a Moment just earned. */
+function ticketFor(stub: StubRow, cornerName?: string): { title: string; line: string } {
+  const name = cornerName ?? "Your Corner";
+  switch (stub.kind) {
+    case "drop":
+      return { title: name, line: stub.edition ? editionLabel(stub.edition) : "" };
+    case "regular":
+      return { title: name, line: stub.period ? `10 days in ${formatMonth(`${stub.period}T12:00:00`)}` : "10 days this month" };
+    case "event":
+      return { title: name, line: "" };
+    default:
+      return { title: name, line: "Pursuit finished" };
+  }
+}
+
 export function PostedScreen({
   postId,
   audience,
@@ -63,26 +79,23 @@ export function PostedScreen({
 }) {
   const [cornerState, setCornerState] = useState<"offer" | "skipped" | { added: string } | "failed">("offer");
   const [stub, setStub] = useState<StubRow | null>(null);
-  const [stubSettled, setStubSettled] = useState(!pursuit);
   const [lover, setLover] = useState<{ name: string; avatarUrl?: string } | null>(null);
   const [nextSession, setNextSession] = useState<number | null>(null);
   const [group, setGroup] = useState<string | null>(null);
 
   const related = useMemo(() => (corner ? relatedCorner(corner.spaceSlug, corner.slug) : undefined), [corner]);
 
-  // The Stub is issued by the database a moment after the Moment is saved.
+  // The database issues any Stub in the same transaction as the Moment.
   useEffect(() => {
-    if (!pursuit || postId == null) return;
+    if (postId == null) return;
     let live = true;
     void fetchStubForPost(postId).then((s) => {
-      if (!live) return;
-      setStub(s);
-      setStubSettled(true);
+      if (live) setStub(s);
     });
     return () => {
       live = false;
     };
-  }, [pursuit, postId]);
+  }, [postId]);
 
   // Someone may love it while you are still here: look every few seconds for a couple of minutes.
   useEffect(() => {
@@ -132,7 +145,7 @@ export function PostedScreen({
 
   const color = corner ? `var(--cat-${cornerColor(corner.spaceSlug, corner.slug)})` : `var(--cat-${categoryColor("food-drink")})`;
   const meta = [place, formatDate(Date.now()), pursuit ? withLine(pursuit.otherNames).toLowerCase() : ""].filter(Boolean).join(" · ");
-  const showTicket = !!pursuit && (stub !== null || !stubSettled);
+  const ticket = stub ? ticketFor(stub, corner?.name) : null;
 
   const rows: { key: string; to: string; title: string; line: string }[] = [];
   if (pursuit && corner) {
@@ -164,14 +177,14 @@ export function PostedScreen({
         </motion.p>
 
         <AnimatePresence>
-          {showTicket && pursuit && (
+          {stub && ticket && (
             <motion.div exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
               <Ticket
-                variant="session"
-                serial={stub?.serial ?? undefined}
-                title={corner ? `${corner.name} #${pursuit.done}` : `#${pursuit.done}`}
-                meta={meta}
-                count={pursuit.total > 0 ? { done: pursuit.done, total: pursuit.total } : undefined}
+                variant={stub.kind}
+                serial={stub.serial ?? undefined}
+                title={ticket.title}
+                meta={[ticket.line, meta].filter(Boolean).join(" · ")}
+                count={stub.kind === "finish" && pursuit && pursuit.total > 0 ? { done: pursuit.done, total: pursuit.total } : undefined}
                 color={color}
                 reveal
                 layoutId={LOG_PHOTO_LAYOUT_ID}

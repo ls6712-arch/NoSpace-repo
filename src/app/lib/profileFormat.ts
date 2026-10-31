@@ -35,8 +35,8 @@ export function visibleAtLabel(visibleAt: string): string {
 }
 
 /** The month and day block on a Stub card. */
-export function stubBlock(stub: { date: string | null; day: string }): { month: string; day: string } {
-  const d = stub.date ? new Date(stub.date) : dayToDate(stub.day);
+export function stubBlock(stub: { day: string }): { month: string; day: string } {
+  const d = dayToDate(stub.day);
   return { month: formatDate(d, { year: false }).split(" ")[0], day: String(d.getDate()) };
 }
 

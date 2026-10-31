@@ -197,7 +197,7 @@ export function DevKit() {
         <div className="flex flex-col gap-3">
           <Ticket serial={14} title="Pasta" meta="Session 2 of 5" count={{ done: 2, total: 5 }} color="var(--cat-amber)" />
           <Ticket variant="event" serial={9} title="Clay Corner open night" meta="Confirmed by the host" count={{ done: 1, total: 1 }} color="var(--cat-orange)" />
-          <Ticket variant="gold" serial={21} title="You baked 10 loaves" meta="With Priya and Sneha" count={{ done: 10, total: 10 }} />
+          <Ticket variant="finish" serial={21} title="You baked 10 loaves" meta="With Priya and Sneha" count={{ done: 10, total: 10 }} />
         </div>
         <div className="flex flex-col gap-3">
           <PillButton variant="outline" className="self-start" onClick={() => setRevealKey((k) => k + 1)}>

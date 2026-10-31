@@ -55,7 +55,7 @@ const NOW = ny(10, 30, 12);
 const plan = (over: Partial<WeekPlanDetail> = {}): WeekPlanDetail => ({
   id: "session-5", kind: "session", title: "Bouldering night", startsAt: ny(10, 31, 19), color: "teal", mine: true, pursuitId: "p1", going: { friends: [], total: 1 }, cornerKey: "sports/climbing", ...over,
 });
-const stub: StubCard = { id: 1, kind: "session", serial: 3, title: "Pottery #2", meta: "Oct 3", issuedAt: ny(10, 3, 15), corner: { spaceSlug: "crafts", slug: "pottery" } };
+const stub: StubCard = { id: 1, kind: "regular", serial: 3, title: "Pottery #2", meta: "Oct 3", issuedAt: ny(10, 3, 15), corner: { spaceSlug: "crafts", slug: "pottery" } };
 const data = (over: Partial<WeekData> = {}): WeekData => {
   const windows = over.windows ?? ["sat-day", "sat-eve"];
   return { status: "ready", now: NOW, windows, left: windowsLeft(windows, NOW), budget: 50, passes: [], plans: [], picks: [], goodHours: 0, reload: vi.fn(), saveBudget: vi.fn(async () => true), ...over };

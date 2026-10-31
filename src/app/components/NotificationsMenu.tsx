@@ -17,6 +17,7 @@ import {
   UserPlus,
   Users,
   X,
+  Ticket,
 } from "lucide-react";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
@@ -63,6 +64,7 @@ const ICON: Record<string, typeof Bell> = {
   first_moment: Sprout,
   love: Heart,
   save: Bookmark,
+  stub_earned: Ticket,
 };
 
 const initials = (name: string) =>

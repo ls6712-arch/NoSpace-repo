@@ -1,8 +1,31 @@
-import { fetchStubs } from "../../lib/profileApi";
+import { fetchStubs, type StubItem } from "../../lib/profileApi";
+import { cornerName } from "../../lib/homeItems";
+import { editionLabel } from "../../lib/stubs";
+import { formatMonth } from "../../lib/dates";
 import { stubBlock } from "../../lib/profileFormat";
 import { ErrorNotice } from "../StateViews";
 import { ListSkeleton } from "./Skeletons";
 import { useSection } from "./useSection";
+
+const corner = (s: StubItem) => (s.cornerKey ? cornerName(s.cornerKey) : null);
+
+/** Interim rows until the Shelf PR: the title, and one quiet line for the kind. */
+function stubTitle(s: StubItem): string {
+  if (s.kind === "regular") return corner(s) ?? "Stub";
+  return s.title ?? corner(s) ?? "Stub";
+}
+function stubLine(s: StubItem): string | null {
+  switch (s.kind) {
+    case "drop":
+      return s.drop ? editionLabel(s.drop.edition) : null;
+    case "regular":
+      return s.period ? `10 days in ${formatMonth(`${s.period}-01T12:00:00`)}` : null;
+    case "event":
+      return s.event?.full ? s.event.spaceName : corner(s);
+    default:
+      return "Pursuit finished";
+  }
+}
 
 export function StubsPane({ profileId, owner }: { profileId: string; owner: boolean }) {
   const { state, reload } = useSection(() => fetchStubs(profileId), profileId);
@@ -11,7 +34,7 @@ export function StubsPane({ profileId, owner }: { profileId: string; owner: bool
   if (state.value.length === 0) {
     return (
       <p className="py-6 text-small text-muted-foreground">
-        {owner ? "No Stubs yet. Log a Moment toward a Pursuit to earn one." : "No Stubs yet"}
+        {owner ? "No Stubs yet. Finish a Pursuit or go to an event to earn one." : "No Stubs yet"}
       </p>
     );
   }
@@ -26,8 +49,8 @@ export function StubsPane({ profileId, owner }: { profileId: string; owner: bool
               <span className="text-lead font-bold leading-none">{b.day}</span>
             </div>
             <div className="min-w-0">
-              <p className="truncate text-body font-semibold">{s.title ?? s.category ?? "Moment"}</p>
-              {s.category && <p className="truncate text-small text-muted-foreground">{s.category}</p>}
+              <p className="truncate text-body font-semibold">{stubTitle(s)}</p>
+              {stubLine(s) && <p className="truncate text-small text-muted-foreground">{stubLine(s)}</p>}
             </div>
           </li>
         );
