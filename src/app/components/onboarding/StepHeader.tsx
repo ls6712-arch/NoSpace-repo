@@ -12,7 +12,7 @@ export function StepHeader({ step, onBack }: { step: OnboardingStep; onBack: (()
   return (
     <header className="flex items-center gap-3 pt-4">
       {onBack ? (
-        <button type="button" className="transfer-icon-button -ml-2" aria-label="Back" onClick={onBack}>
+        <button type="button" className="ob-icon-button -ml-2" aria-label="Back" onClick={onBack}>
           <ArrowLeft className="size-6" strokeWidth={2.5} aria-hidden="true" />
         </button>
       ) : (
@@ -20,10 +20,10 @@ export function StepHeader({ step, onBack }: { step: OnboardingStep; onBack: (()
       )}
       <div className="flex gap-1.5" aria-hidden="true">
         {COUNTED_STEPS.map((s, i) => (
-          <span key={s} className="transfer-bar" data-filled={i < position} />
+          <span key={s} className="ob-bar" data-filled={i < position} />
         ))}
       </div>
-      <p className="transfer-label ml-auto text-small transfer-muted">{`${position} of ${total}`}</p>
+      <p className="ob-label ml-auto text-small ob-muted">{`${position} of ${total}`}</p>
     </header>
   );
 }

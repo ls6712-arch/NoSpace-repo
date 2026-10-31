@@ -1,10 +1,9 @@
 import { createContext, useContext } from "react";
 import type { StubbyState } from "../../components/stubby/Stubby";
-import type { OnboardingStep, Tone } from "./steps";
+import type { OnboardingStep } from "./steps";
 
 export type OnboardingApi = {
   step: OnboardingStep;
-  tone: Tone;
   /** Where the flow will land when it ends (`?redirect=`). */
   redirectTo: string;
   /** Signed in with an account (false before the code is accepted). */

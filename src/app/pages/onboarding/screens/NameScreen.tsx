@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { TermsCheckbox } from "../../../components/TermsCheckbox";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
-import { TransferField } from "../../../components/onboarding/TransferField";
+import { PillButton } from "../../../components/ui/PillButton";
+import { OnboardingField } from "../../../components/onboarding/OnboardingField";
 import { useAuth } from "../../../context/AuthContext";
 import { DISPLAY_NAME_MAX, isEmailPrefixName, validateDisplayName } from "../../../lib/displayName";
 import { firstNameOf, isValidUsername, setUsername, suggestUsername, USERNAME_MAX, usernameFromName } from "../../../lib/onboardingRemote";
@@ -148,13 +148,13 @@ export function NameScreen() {
       footer={
         <>
           {error && (
-            <p role="alert" className="transfer-label text-small">
+            <p role="alert" className="ob-label text-small">
               {error}
             </p>
           )}
-          <TransferButton onClick={() => void save()} disabled={saving || !ready}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void save()} disabled={saving || !ready}>
             {!nameOk ? "Add your first name" : "Next"}
-          </TransferButton>
+          </PillButton>
         </>
       }
     >
@@ -165,7 +165,7 @@ export function NameScreen() {
           void save();
         }}
       >
-        <TransferField
+        <OnboardingField
           label="First name"
           autoComplete="given-name"
           autoFocus
@@ -177,7 +177,7 @@ export function NameScreen() {
             setError(null);
           }}
         />
-        <TransferField
+        <OnboardingField
           label="Username"
           prefix="@"
           autoComplete="username"
@@ -197,7 +197,7 @@ export function NameScreen() {
         {availability.state === "taken" && availability.suggestion && (
           <button
             type="button"
-            className="transfer-suggestion self-start"
+            className="ob-suggestion self-start"
             onClick={() => {
               setUsernameTouched(true);
               setUsernameValue(availability.suggestion ?? "");

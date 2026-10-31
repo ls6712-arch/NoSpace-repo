@@ -24,7 +24,7 @@ All CLAUDE.md rules still apply: one PR, never merge, copy rules, no member coun
 | `--border` | `rgba(255,255,255,0.08)` | `rgba(14,13,12,0.10)` | Hairlines only |
 | `--foreground` | `#F4EFE8` | `#0E0D0C` | Text |
 | `--muted-foreground` | `#A39A90` | `#6B635B` | Secondary text |
-| `--accent` | `#FF6B4A` | `#FF6B4A` | Primary buttons and the active tab only |
+| `--accent` | `#FF6B4A` | `#FF6B4A` | Coral fills are for the one primary action per screen, the active tab, and Stubby (Oct 30, 2026). Nothing else is filled coral |
 | `--accent-foreground` | `#0E0D0C` | `#0E0D0C` | Text on accent. Never white: white on coral fails contrast |
 | `--accent-text` | `#FF6B4A` | `#C2391B` | Accent-coloured text links. Check that light is ≥ 4.5:1 and darken if not |
 | `--ink` | `#0E0D0C` | `#0E0D0C` | Text on category colours, both themes |

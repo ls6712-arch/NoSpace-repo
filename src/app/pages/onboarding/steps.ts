@@ -34,23 +34,6 @@ export const isPreAuth = (step: OnboardingStep) => PRE_AUTH.includes(step);
 export const COUNTED_STEPS: readonly OnboardingStep[] = ["picks", "free", "yours"];
 export const isCounted = (step: OnboardingStep) => COUNTED_STEPS.includes(step);
 
-/** Where the page behind the 430px column sits: cobalt, platform grey or navy. */
-export type Tone = "cobalt" | "platform" | "navy";
-export const STEP_TONE: Record<OnboardingStep, Tone> = {
-  welcome: "cobalt",
-  signup: "platform",
-  code: "platform",
-  name: "platform",
-  birthday: "platform",
-  where: "platform",
-  picks: "platform",
-  free: "platform",
-  yours: "platform",
-  card: "navy",
-  plan: "navy",
-  invite: "platform",
-};
-
 /** Stubby's resting state when a screen opens. Screens react from there. */
 export const STEP_STUBBY: Record<OnboardingStep, StubbyState> = {
   welcome: "cool",

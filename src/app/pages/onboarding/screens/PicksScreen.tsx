@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChoiceChip } from "../../../components/onboarding/ChoiceChip";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
-import { TransferField } from "../../../components/onboarding/TransferField";
+import { PillButton } from "../../../components/ui/PillButton";
+import { OnboardingField } from "../../../components/onboarding/OnboardingField";
 import { useAuth } from "../../../context/AuthContext";
 import { isDiscoverable, matchCorners, useCorners } from "../../../context/CornersContext";
 import { CURATED_CORNERS } from "../../../data/curatedCorners";
@@ -119,13 +119,13 @@ export function PicksScreen() {
       footer={
         <>
           {error && (
-            <p role="alert" className="transfer-label text-small">
+            <p role="alert" className="ob-label text-small">
               {error}
             </p>
           )}
-          <TransferButton onClick={() => void save()} disabled={saving || !enough}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void save()} disabled={saving || !enough}>
             {enough ? "Next" : picksMissingLine(selected.length)}
-          </TransferButton>
+          </PillButton>
         </>
       }
     >
@@ -139,12 +139,12 @@ export function PicksScreen() {
         ))}
       </ul>
       {!searching ? (
-        <button type="button" className="transfer-link self-start" onClick={() => setSearching(true)}>
+        <button type="button" className="ob-link self-start" onClick={() => setSearching(true)}>
           + Something else
         </button>
       ) : (
         <div className="flex flex-col gap-3">
-          <TransferField label="Find a Corner" autoComplete="off" maxLength={60} value={query} onChange={(e) => setQuery(e.target.value)} />
+          <OnboardingField label="Find a Corner" autoComplete="off" maxLength={60} value={query} onChange={(e) => setQuery(e.target.value)} />
           {found.length > 0 && (
             <ul className="flex flex-col gap-2" aria-label="Matching Corners">
               {found.map((c) => {
@@ -159,7 +159,7 @@ export function PicksScreen() {
               })}
             </ul>
           )}
-          {query.trim() && found.length === 0 && <p className="text-small transfer-muted">No Corner by that name.</p>}
+          {query.trim() && found.length === 0 && <p className="text-small ob-muted">No Corner by that name.</p>}
         </div>
       )}
     </ScreenFrame>

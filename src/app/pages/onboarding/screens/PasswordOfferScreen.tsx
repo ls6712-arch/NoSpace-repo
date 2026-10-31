@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useReducedMotion } from "motion/react";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
-import { TransferField } from "../../../components/onboarding/TransferField";
+import { PillButton } from "../../../components/ui/PillButton";
+import { OnboardingField } from "../../../components/onboarding/OnboardingField";
 import { useAuth } from "../../../context/AuthContext";
 import { useOnboarding } from "../OnboardingContext";
 import { StepStubby } from "../StepStubby";
@@ -51,12 +51,12 @@ export function PasswordOfferScreen({ onDone }: { onDone: () => void }) {
       hero={<StepStubby size={140} />}
       footer={
         <>
-          <TransferButton variant="plain" disabled={saving} onClick={() => void add()}>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" disabled={saving} onClick={() => void add()}>
             Add a password
-          </TransferButton>
-          <TransferButton variant="plain" disabled={saving} onClick={onDone}>
+          </PillButton>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" disabled={saving} onClick={onDone}>
             Skip for now
-          </TransferButton>
+          </PillButton>
         </>
       }
     >
@@ -66,7 +66,7 @@ export function PasswordOfferScreen({ onDone }: { onDone: () => void }) {
           void add();
         }}
       >
-        <TransferField
+        <OnboardingField
           label="Password"
           type="password"
           autoComplete="new-password"

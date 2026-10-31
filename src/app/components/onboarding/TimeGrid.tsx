@@ -11,14 +11,14 @@ export function TimeGrid({ windows, onToggle }: { windows: readonly string[]; on
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-7 justify-items-center" aria-hidden="true">
         {DAYS.map((d) => (
-          <span key={d.key} className="transfer-label text-small transfer-muted">
+          <span key={d.key} className="ob-label text-small ob-muted">
             {d.short}
           </span>
         ))}
       </div>
       {SLOTS.map((slot) => (
         <div key={slot.key} role="group" aria-label={slot.heading}>
-          <p className="transfer-label mb-2 text-small">{slot.heading}</p>
+          <p className="ob-label mb-2 text-small">{slot.heading}</p>
           <div className="grid grid-cols-7 justify-items-center">
             {DAYS.map((d) => {
               const key = windowKey(d.key, slot.key);
@@ -27,7 +27,7 @@ export function TimeGrid({ windows, onToggle }: { windows: readonly string[]; on
                 <button
                   key={key}
                   type="button"
-                  className="transfer-cell"
+                  className="ob-cell"
                   aria-pressed={on}
                   aria-label={`${windowLabel(d.key, slot.key)}, ${on ? "on" : "off"}`}
                   onClick={() => onToggle(key)}

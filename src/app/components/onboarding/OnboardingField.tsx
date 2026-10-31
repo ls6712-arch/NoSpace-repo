@@ -1,7 +1,7 @@
 import { useId, type InputHTMLAttributes, type ReactNode, type Ref } from "react";
 
-/** A labelled text field in the Transfer look, with an optional hint and error under it. */
-export function TransferField({
+/** A labelled text field, with an optional hint and error under it. */
+export function OnboardingField({
   label,
   hint,
   error,
@@ -22,19 +22,19 @@ export function TransferField({
   const note = error ?? hint;
   return (
     <div>
-      <label htmlFor={id} className="transfer-label mb-2 block text-small">
+      <label htmlFor={id} className="ob-label mb-2 block text-small">
         {label}
       </label>
       <div className="relative">
         {prefix && (
-          <span className="transfer-label pointer-events-none absolute inset-y-0 left-4 flex items-center text-body transfer-muted" aria-hidden="true">
+          <span className="ob-label pointer-events-none absolute inset-y-0 left-4 flex items-center text-body ob-muted" aria-hidden="true">
             {prefix}
           </span>
         )}
         <input
           id={id}
           ref={inputRef}
-          className="transfer-field"
+          className="ob-field"
           style={prefix ? { paddingLeft: "2.25rem" } : undefined}
           aria-invalid={!!error}
           aria-describedby={note ? noteId : undefined}
@@ -45,7 +45,7 @@ export function TransferField({
       <p
         id={note ? noteId : undefined}
         aria-live="polite"
-        className={note ? (error ? "transfer-label mt-2 text-small" : "mt-2 text-small transfer-muted") : "sr-only"}
+        className={note ? (error ? "ob-label mt-2 text-small" : "mt-2 text-small ob-muted") : "sr-only"}
       >
         {note}
       </p>

@@ -1378,324 +1378,244 @@ summary:focus-visible,
 }
 
 /* ── Stubby (the ticket with a face) ─────────────────────────────────────────
-   Stubby reads only these, so a palette change never touches Stubby.tsx. The
-   values are the same in light and dark: Stubby is yellow on every screen. */
-:root,
+   Stubby reads only these, so a palette change never touches Stubby.tsx. Every
+   value is an app token, so Stubby follows the theme: coral with an ink face in
+   both modes. The tab is the surface in light; in dark the surface is too dark
+   for the ink stamp and "Admit one", so the tab takes --foreground there. */
+:root {
+  --stubby-body: var(--accent);
+  --stubby-tab: var(--surface);
+  --stubby-ink: var(--ink);
+  --stubby-stamp: var(--ink);
+  --stubby-slot: var(--muted-foreground);
+  --stubby-hole: var(--background);
+  --stubby-line-on-dark: var(--foreground);
+  --stubby-tongue: var(--cat-rose);
+}
 .dark {
-  --stubby-body: #FFD23F;
-  --stubby-tab: #FFFFFF;
-  --stubby-ink: #0E1A4F;
-  --stubby-stamp: #1F3FD1;
-  --stubby-slot: #B7BED6;
-  --stubby-hole: #EEF0F6;
-  --stubby-line-on-dark: #FFFFFF;
-  --stubby-tongue: #F2708A;
+  --stubby-tab: var(--foreground);
 }
 
-/* ── Soosh onboarding: the Transfer palette (Oct 29, 2026) ───────────────────
-   Applied on the onboarding route root only. The palette is not final: the
-   values live here and nowhere else, so changing them is a one-place edit.
-   The app-wide re-skin is a separate brief. */
-.soosh-transfer {
-  --transfer-cobalt: #1F3FD1;
-  --transfer-signal: #FFD23F;
-  --transfer-navy: #0E1A4F;
-  --transfer-platform: #EEF0F6;
-  --transfer-line: #C9CFE3;
-  --transfer-muted: #3A4470;
-  --transfer-white: #FFFFFF;
-  --transfer-display: 'Archivo Black', 'Archivo', var(--font-body);
-  --transfer-label: 'Archivo', var(--font-body);
-  font-family: var(--font-body);
-  color: var(--transfer-navy);
-}
-
-/* The page behind the 430px column: each step picks cobalt, platform or navy. */
-.soosh-transfer[data-tone="cobalt"] { background: var(--transfer-cobalt); color: var(--transfer-white); }
-.soosh-transfer[data-tone="platform"] { background: var(--transfer-platform); }
-.soosh-transfer[data-tone="navy"] { background: var(--transfer-navy); color: var(--transfer-white); }
-
-.soosh-transfer .transfer-column {
+/* ── Onboarding and login ────────────────────────────────────────────────────
+   Same tokens, type scale and components as the rest of the app, in either
+   theme. These classes only lay things out: a 430px column, the step bars, the
+   choice chips and the free-window grid, and the member card and plan ticket
+   as app cards with a dashed perforation. */
+.ob-column {
   margin-inline: auto;
   width: 100%;
   max-width: 430px;
 }
 
-.soosh-transfer .transfer-headline {
-  font-family: var(--transfer-display);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  line-height: 1.05;
-}
-.soosh-transfer .transfer-label {
-  font-family: var(--transfer-label);
-  font-weight: 700;
-}
-.soosh-transfer .transfer-muted { color: var(--transfer-muted); }
-.soosh-transfer[data-tone="cobalt"] .transfer-muted,
-.soosh-transfer[data-tone="navy"] .transfer-muted { color: var(--transfer-line); }
+.ob-label { font-family: var(--font-body); font-weight: 500; }
+.ob-muted { color: var(--muted-foreground); }
 
-/* Primary button: 56px, signal fill, navy 3px border, 4px navy drop. The press
-   drops the shadow to 1px (the 3px travel itself is the motion library's). */
-.soosh-transfer .transfer-button {
-  display: inline-flex;
-  min-height: 56px;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid var(--transfer-navy);
-  border-radius: 14px;
-  background: var(--transfer-signal);
-  box-shadow: 0 4px 0 var(--transfer-navy);
-  color: var(--transfer-navy);
-  font-family: var(--transfer-display);
-  font-size: 18px;
-  line-height: 1.1;
-  padding-inline: 20px;
-  cursor: pointer;
-}
-.soosh-transfer .transfer-button:active:not(:disabled) { box-shadow: 0 1px 0 var(--transfer-navy); }
-.soosh-transfer .transfer-button:disabled { cursor: default; opacity: 0.6; }
-
-
-.soosh-transfer .transfer-icon-button {
+.ob-icon-button {
   display: inline-flex;
   width: 44px;
   height: 44px;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   color: inherit;
   cursor: pointer;
 }
 
-/* Step header bars: 34 by 6, filled up to the current step. */
-.soosh-transfer .transfer-bar {
+/* Step header bars: 34 by 6, filled up to the current step. The empty bar is a
+   mix of the text colour, not --border, which would vanish (3:1 for non-text). */
+.ob-bar {
   width: 34px;
   height: 6px;
   border-radius: 3px;
-  background: var(--transfer-line);
+  background: color-mix(in srgb, var(--foreground) 50%, var(--background));
 }
-.soosh-transfer .transfer-bar[data-filled="true"] { background: var(--transfer-cobalt); }
+.ob-bar[data-filled="true"] { background: var(--foreground); }
 
-/* On a dark screen (navy) the button's navy border and drop vanish, so it
-   takes a white border and a cobalt drop instead (founder, Oct 30, 2026). */
-.soosh-transfer .transfer-button[data-on-dark="true"] {
-  border-color: var(--transfer-white);
-  box-shadow: 0 4px 0 var(--transfer-cobalt);
-}
-.soosh-transfer .transfer-button[data-on-dark="true"]:active:not(:disabled) { box-shadow: 0 1px 0 var(--transfer-cobalt); }
-
-/* The quieter button: white fill (Google, Apple, a second choice). */
-.soosh-transfer .transfer-button[data-variant="plain"] { background: var(--transfer-white); }
-
-/* A text field: 56px, 2px line border, cobalt when focused. */
-.soosh-transfer .transfer-field {
+/* A text field: 56px, the input boundary token, coral outline when focused. */
+.ob-field {
   width: 100%;
   min-height: 56px;
-  border: 2px solid var(--transfer-line);
-  border-radius: 12px;
-  background: var(--transfer-white);
-  color: var(--transfer-navy);
-  font-family: var(--transfer-label);
-  font-size: 18px;
-  font-weight: 600;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: 500;
   padding-inline: 16px;
 }
-.soosh-transfer .transfer-field::placeholder { color: var(--transfer-muted); font-weight: 400; }
-.soosh-transfer .transfer-field[aria-invalid="true"] { border-color: var(--transfer-navy); border-width: 3px; }
-.soosh-transfer .transfer-field[data-code="true"] {
+.ob-field::placeholder { color: var(--muted-foreground); font-weight: 400; }
+.ob-field[aria-invalid="true"] { border-color: var(--destructive); border-width: 2px; }
+.ob-field[data-code="true"] {
   text-align: center;
-  font-family: var(--transfer-display);
-  font-size: 32px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-title);
   letter-spacing: 0.4em;
   padding-inline: 8px;
 }
 
-/* A small tappable choice (a suggestion under a field): 44px, line border. */
-.soosh-transfer .transfer-suggestion {
+/* A small tappable choice (a suggestion under a field): 44px, surface with a border. */
+.ob-suggestion {
   min-height: 44px;
-  border: 2px solid var(--transfer-line);
-  border-radius: 12px;
-  background: var(--transfer-white);
-  color: var(--transfer-navy);
-  font-family: var(--transfer-label);
-  font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-weight: 500;
   padding-inline: 14px;
   cursor: pointer;
 }
 
 /* A text button: underlined, 44px tall. */
-.soosh-transfer .transfer-link {
+.ob-link {
   min-height: 44px;
-  font-family: var(--transfer-label);
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 3px;
   color: inherit;
   cursor: pointer;
 }
-.soosh-transfer .transfer-link:disabled { cursor: default; text-decoration: none; opacity: 0.8; }
+.ob-link:disabled { cursor: default; text-decoration: none; opacity: 0.8; }
 
-
-/* Taste screens (7 to 9). A choice chip: 50px, radius 12. Off is white with a 2px line
-   border and an empty dot; on is cobalt with white text and a signal dot in a navy ring. */
-.soosh-transfer .transfer-chip {
+/* Taste screens. A choice chip: 50px, control radius. Off is the surface with a
+   border and an empty ring; on is the text colour as fill with the page colour
+   as text, and a check mark, so the state does not rest on colour. */
+.ob-chip {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
   min-height: 50px;
   padding: 8px 14px;
-  border: 2px solid var(--transfer-line);
-  border-radius: 12px;
-  background: var(--transfer-white);
-  color: var(--transfer-navy);
-  font-family: var(--transfer-label);
-  font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 }
-.soosh-transfer .transfer-chip[aria-pressed="true"] {
-  border-color: var(--transfer-cobalt);
-  background: var(--transfer-cobalt);
-  color: var(--transfer-white);
+.ob-chip[aria-pressed="true"] {
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
 }
-.soosh-transfer .transfer-chip-dot {
+.ob-chip-dot {
   flex: none;
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--transfer-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--input-border);
   border-radius: 9999px;
-  background: transparent;
 }
-.soosh-transfer .transfer-chip[aria-pressed="true"] .transfer-chip-dot {
-  border-color: var(--transfer-navy);
-  background: var(--transfer-signal);
-  box-shadow: 0 0 0 2px var(--transfer-navy);
-}
-.soosh-transfer .transfer-chip-sub { display: block; font-weight: 400; font-size: 13px; line-height: 1.2; }
-.soosh-transfer .transfer-chip[aria-pressed="true"] .transfer-chip-sub { color: var(--transfer-line); }
+.ob-chip[aria-pressed="true"] .ob-chip-dot { border-color: var(--background); }
+.ob-chip-sub { display: block; font-weight: 400; font-size: var(--text-caption); line-height: 1.3; }
+.ob-chip[aria-pressed="true"] .ob-chip-sub { color: color-mix(in srgb, var(--background) 75%, transparent); }
 
-/* One free window: 40px, dashed when off, cobalt with a signal check when on. */
-.soosh-transfer .transfer-cell {
+/* One free window: 40px, dashed when off, the text colour with a check when on. */
+.ob-cell {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: 2px dashed var(--transfer-line);
+  border: 2px dashed var(--input-border);
   border-radius: 10px;
-  background: transparent;
-  color: var(--transfer-signal);
+  background: var(--surface);
+  color: var(--background);
   cursor: pointer;
 }
-.soosh-transfer .transfer-cell[aria-pressed="true"] {
+.ob-cell[aria-pressed="true"] {
   border-style: solid;
-  border-color: var(--transfer-cobalt);
-  background: var(--transfer-cobalt);
+  border-color: var(--foreground);
+  background: var(--foreground);
 }
 
 /* The Next and Skip row stays on screen over the long list of Corners. */
-.soosh-transfer .transfer-sticky-footer {
+.ob-sticky-footer {
   position: sticky;
   bottom: 0;
   margin-inline: -16px;
   padding-inline: 16px;
   padding-bottom: 16px;
-  background: var(--transfer-platform);
+  background: var(--background);
 }
 
-/* Member card (screen 10): signal card, tilted, cobalt drop, the number big, a dashed rule, then name and joined. */
-.soosh-transfer .transfer-card {
+/* Member card: an app card, no tilt, no shadow; the number big, a dashed rule, then name and joined. */
+.ob-card {
   position: relative;
   padding: 20px;
-  border: 3px solid var(--transfer-navy);
-  border-radius: 18px;
-  background: var(--transfer-signal);
-  color: var(--transfer-navy);
-  box-shadow: 0 8px 0 var(--transfer-cobalt);
-  transform: rotate(-2deg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--foreground);
 }
-.soosh-transfer .transfer-card-number {
-  font-family: var(--transfer-display);
-  font-size: 64px;
-  line-height: 1;
-}
-.soosh-transfer .transfer-card-rule { margin-block: 16px; border: 0; border-top: 3px dashed var(--transfer-navy); }
-.soosh-transfer .transfer-card-photo {
+.ob-card-rule { margin-block: 16px; border: 0; border-top: 2px dashed var(--border); }
+.ob-card-photo {
   width: 64px;
   height: 64px;
-  border: 3px solid var(--transfer-navy);
+  border: 1px solid var(--border);
   border-radius: 9999px;
-  background: var(--transfer-white);
+  background: var(--surface-muted);
   overflow: hidden;
   padding: 0;
-  color: var(--transfer-navy);
+  color: var(--foreground);
 }
-.soosh-transfer button.transfer-card-photo { cursor: pointer; }
+button.ob-card-photo { cursor: pointer; }
 
-/* Plan ticket (screen 11): signal body, a white 58px tab behind a dashed perforation, Stubby's eyes peeking over the top. */
-.soosh-transfer .transfer-ticket {
+/* Plan ticket: an app card, a tab behind a dashed perforation, Stubby's eyes over the top. */
+.ob-ticket {
   position: relative;
   display: flex;
-  border: 3px solid var(--transfer-navy);
-  border-radius: 16px;
-  background: var(--transfer-signal);
-  color: var(--transfer-navy);
-  box-shadow: 0 6px 0 var(--transfer-cobalt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--foreground);
 }
-.soosh-transfer .transfer-ticket-body { flex: 1; min-width: 0; padding: 20px 16px 20px 20px; }
-.soosh-transfer .transfer-ticket-tab {
+.ob-ticket-body { flex: 1; min-width: 0; padding: 20px 16px 20px 20px; }
+.ob-ticket-tab {
   flex: none;
   width: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-left: 3px dashed var(--transfer-navy);
-  border-radius: 0 13px 13px 0;
-  background: var(--transfer-white);
-  font-family: var(--transfer-display);
+  border-left: 2px dashed var(--border);
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--foreground);
   writing-mode: vertical-rl;
   text-orientation: mixed;
   letter-spacing: 0.08em;
 }
-.soosh-transfer .transfer-ticket-eyes { position: absolute; top: -18px; right: 74px; }
+.ob-ticket-eyes { position: absolute; top: -18px; right: 74px; }
 
-/* The half a friend receives (screen 12): the white tab, torn along a dashed edge, with Stubby's star stamp. */
-.soosh-transfer .transfer-half {
+/* The half a friend receives: the tab torn along a dashed edge, with Stubby's star stamp. */
+.ob-half {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 18px 18px 18px 22px;
-  border: 3px solid var(--transfer-navy);
-  border-left: 5px dashed var(--transfer-navy);
-  border-radius: 6px 16px 16px 6px;
-  background: var(--transfer-white);
-  color: var(--transfer-navy);
-  box-shadow: 0 6px 0 var(--transfer-cobalt);
+  border: 1px solid var(--border);
+  border-left: 3px dashed var(--border);
+  border-radius: 6px var(--radius-card) var(--radius-card) 6px;
+  background: var(--surface);
+  color: var(--foreground);
 }
-.soosh-transfer .transfer-half-stamp {
+.ob-half-stamp {
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 52px;
   height: 52px;
-  border: 3px solid var(--transfer-navy);
+  border: 2px solid var(--ink);
   border-radius: 9999px;
-  background: var(--transfer-signal);
+  background: var(--accent);
   transform: rotate(-12deg);
-}
-
-/* Keyboard focus. The app-wide ring is !important, so the Transfer ring has to be
-   as well: cobalt on light screens, white on cobalt and navy. */
-.soosh-transfer :is(a, button, input, select, textarea, [tabindex]):focus-visible,
-.soosh-transfer .transfer-field:focus {
-  outline: 3px solid var(--transfer-cobalt) !important;
-  outline-offset: 3px !important;
-}
-.soosh-transfer[data-tone="cobalt"] :is(a, button, input, select, textarea, [tabindex]):focus-visible,
-.soosh-transfer[data-tone="navy"] :is(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline-color: var(--transfer-white) !important;
 }
