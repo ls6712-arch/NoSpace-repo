@@ -1,5 +1,6 @@
 import { supabase } from "../../lib/supabase";
 import { suggestionLoggingEnabled } from "../config";
+import { parsePassCorners, type PassCorners } from "./discoverIdeas";
 
 /**
  * What Discover v2 reads and logs: `discover_moments()`, `discover_corners()` and
@@ -188,4 +189,69 @@ export async function logDiscoverEvent(e: DiscoverLog): Promise<void> {
   } catch {
     // Offline or not deployed yet.
   }
+}
+
+// ---------- Small reads the page needs ----------
+
+/** `my_corner_affinity()` as Corner key to how much it is the person's (0 to 1). Empty on any failure. */
+export async function fetchCornerAffinity(): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (!supabase) return out;
+  try {
+    const { data, error } = await supabase.rpc("my_corner_affinity");
+    if (error || !Array.isArray(data)) return out;
+    for (const r of data as { hobby_slug?: unknown; corner?: unknown; mine?: unknown }[]) {
+      const space = text(r.hobby_slug);
+      const corner = text(r.corner);
+      const mine = Number(r.mine);
+      if (space && corner && Number.isFinite(mine)) out.set(`${space}/${corner}`, mine);
+    }
+  } catch {
+    // Not deployed or offline: no affinity, the row is ordered by picks and then by key.
+  }
+  return out;
+}
+
+/** Home's pass-to-Corner map, read from app_config 'home_ranking_v1' (publicly readable), not copied. */
+export async function fetchPassCornerMap(): Promise<PassCorners> {
+  if (!supabase) return {};
+  try {
+    const { data, error } = await supabase.from("app_config").select("value").eq("key", "home_ranking_v1").maybeSingle();
+    if (error || !data) return {};
+    return parsePassCorners((data as { value: unknown }).value);
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * For a signed-out visitor, who has no city and no taste: Open and Closed Spaces
+ * as they are listed publicly, newest first. Read-only, like the rest of the page.
+ */
+export async function fetchPublicSpaces(limit = 10): Promise<DiscoverSpace[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("spaces")
+      .select("id, slug, name, neighborhood, access")
+      .eq("status", "active")
+      .in("access", ["open", "closed"])
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error || !Array.isArray(data)) return [];
+    return (data as SpaceRow[]).flatMap((r) => {
+      const s = mapSpaceRow({ ...r, space_id: (r as { id?: unknown }).id });
+      return s ? [s] : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** How long a section may wait before it is hidden like any other failure, so one slow request never holds a skeleton forever. */
+export const SECTION_TIMEOUT_MS = 10_000;
+
+/** The list, or an empty one if it takes longer than `ms`. */
+export function orEmpty<T>(list: Promise<T[]>, ms = SECTION_TIMEOUT_MS): Promise<T[]> {
+  return Promise.race([list, new Promise<T[]>((resolve) => setTimeout(() => resolve([]), ms))]);
 }

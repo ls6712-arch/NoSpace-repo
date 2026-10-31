@@ -18,6 +18,12 @@ export interface ReasonInput {
   passKind: string | null;
 }
 
+/** "Your museum pass": the one wording for a pass, on Home and on Discover. Null for a kind we do not know. */
+export function passLine(passKind: string | null): string | null {
+  const kind = PASS_KINDS.find((k) => k.kind === passKind);
+  return kind ? `Your ${kind.label.toLowerCase()} pass` : null;
+}
+
 function oneReason(code: ReasonCode, input: ReasonInput): string | null {
   switch (code) {
     case "fits_window": {
@@ -28,10 +34,8 @@ function oneReason(code: ReasonCode, input: ReasonInput): string | null {
       return "One of your picks";
     case "friend_going":
       return input.friendName ? `${input.friendName}’s going` : null;
-    case "pass": {
-      const kind = PASS_KINDS.find((k) => k.kind === input.passKind);
-      return kind ? `Your ${kind.label.toLowerCase()} pass` : null;
-    }
+    case "pass":
+      return passLine(input.passKind);
     case "affinity":
       return "You might like this";
     case "nearby":

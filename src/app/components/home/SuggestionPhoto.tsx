@@ -11,8 +11,23 @@ import type { HomeItem } from "../../lib/homeItems";
  * colour with the category's icon. Never a flat box. `priority` is for the one
  * above the fold; everything else loads lazily.
  */
-export function SuggestionPhoto({ item, className, width, priority = false, children }: { item: HomeItem; className: string; width: number; priority?: boolean; children?: ReactNode }) {
-  const { spaceSlug, slug } = item.corner;
+export function SuggestionPhoto({
+  item,
+  corner,
+  className,
+  width,
+  priority = false,
+  children,
+}: {
+  /** A Home suggestion, or `corner` for anything else that has a Corner (Discover's ideas and Corner cards). */
+  item?: HomeItem;
+  corner?: { spaceSlug: string; slug: string };
+  className: string;
+  width: number;
+  priority?: boolean;
+  children?: ReactNode;
+}) {
+  const { spaceSlug, slug } = (item?.corner ?? corner)!;
   const Icon = (categoryOfCorner(spaceSlug, slug) && CATEGORY_ICON[categoryOfCorner(spaceSlug, slug)!.slug]) || Sparkles;
   return (
     <div className={`relative overflow-hidden ${className}`} style={cornerStyle(spaceSlug, slug)}>

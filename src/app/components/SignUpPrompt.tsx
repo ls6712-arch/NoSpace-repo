@@ -14,10 +14,13 @@ export function SignUpPrompt({
   title,
   body,
   cta = "Create an account",
+  onKeepLooking,
 }: {
   title: string;
   body: string;
   cta?: string;
+  /** When the prompt is laid over a page (Discover), "Keep looking around" closes it instead of navigating. */
+  onKeepLooking?: () => void;
 }) {
   const { pathname, search } = useLocation();
   const redirect = encodeURIComponent(`${pathname}${search}`);
@@ -35,11 +38,17 @@ export function SignUpPrompt({
               {cta}
             </Button>
           </Link>
-          <Link to="/discover">
-            <Button variant="outline" className="w-full">
+          {onKeepLooking ? (
+            <Button variant="outline" className="w-full" onClick={onKeepLooking}>
               Keep looking around
             </Button>
-          </Link>
+          ) : (
+            <Link to="/discover">
+              <Button variant="outline" className="w-full">
+                Keep looking around
+              </Button>
+            </Link>
+          )}
         </div>
         <p className="mt-5 text-caption text-muted-foreground/70">
           Browsing stays free. An account is only for keeping what you make.

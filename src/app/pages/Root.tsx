@@ -55,6 +55,9 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   IS_CORNERS_PATH(pathname) ||
   pathname === "/you" ||
   pathname.startsWith("/you/") ||
+  // Discover v2 shows a signed-out visitor its Ideas, Corners and Spaces read only, and
+  // opens the sign-up prompt on any action.
+  pathname === "/discover" ||
   // Week shows its own sign-up prompt, like You.
   pathname === "/week" ||
   pathname.startsWith("/week/") ||

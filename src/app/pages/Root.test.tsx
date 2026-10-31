@@ -80,6 +80,12 @@ describe("the left rail", () => {
     expect(main.className).toContain("railwide:pl-[240px]");
   });
 
+  it("lets a signed-out visitor see Discover instead of sending them to the landing page", () => {
+    auth.value = { user: null, profile: null, loading: false, isConfigured: true };
+    at("/discover");
+    expect(screen.getByText("Discover")).toBeTruthy();
+  });
+
   it("is not offered to a signed-out visitor, who keeps the top header and the bottom bar as before", () => {
     auth.value = { user: null, profile: null, loading: false, isConfigured: true };
     at("/corners");

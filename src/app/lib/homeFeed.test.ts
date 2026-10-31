@@ -63,3 +63,26 @@ describe("buildFeed", () => {
     expect(out.map((i) => i.post.id)).toEqual([2, 1]);
   });
 });
+
+describe("what Home can carry (Discover leaves all of it out)", () => {
+  const inputs = { meId: "me", followingIds: ["pal"], spacePostIds: new Set([3]), followedCorners: new Set(["knitting"]) };
+  const all = [
+    post(1, { userId: "pal" }), // someone you follow
+    post(2, { userId: "stranger" }), // a stranger, no Space, no Corner you follow
+    post(3, { userId: "stranger2" }), // a stranger's Moment in a Space you joined
+    post(4, { userId: "stranger3", subHobby: "knitting" }), // a stranger's Moment in a Corner you follow
+    post(5, { userId: "me" }), // yours
+  ];
+
+  it("only ever carries followed people, joined Spaces' Moments and followed Corners' Moments", () => {
+    const { friends, spaces } = classifyFeed(all, inputs);
+    expect(friends.map((i) => i.post.id)).toEqual([1]);
+    expect(spaces.map((i) => i.post.id).sort()).toEqual([3, 4]);
+  });
+
+  it("never carries a stranger's Moment that is in none of them, or your own", () => {
+    const ids = [...classifyFeed(all, inputs).friends, ...classifyFeed(all, inputs).spaces].map((i) => i.post.id);
+    expect(ids).not.toContain(2);
+    expect(ids).not.toContain(5);
+  });
+});
