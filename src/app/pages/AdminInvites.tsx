@@ -184,7 +184,7 @@ export function AdminInvites() {
   };
 
   return (
-    <div className="min-h-viewport bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 tab:py-12">
       <div className="container mx-auto max-w-3xl px-4">
         <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Invites
@@ -249,7 +249,7 @@ export function AdminInvites() {
                             className={`rounded-control border px-2.5 py-1 text-caption ${
                               status.done
                                 ? "border-border text-muted-foreground"
-                                : "border-[var(--coral-deep)]/40 text-[var(--coral-deep)]"
+                                : "border-[var(--accent-text)]/40 text-[var(--accent-text)]"
                             }`}
                           >
                             {status.label}

@@ -29,7 +29,7 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
   };
 
   return (
-    <div className="rounded-card border border-[var(--coral-deep)]/40 bg-card p-4">
+    <div className="rounded-card border border-[var(--accent-text)]/40 bg-card p-4">
       <p className="text-small">
         <Link to={`/pursuit/${pursuit.id}`} className="inline-flex min-h-11 items-center hover:text-accent" style={{ fontFamily: "var(--font-serif)" }}>
           {pursuit.title}
@@ -41,21 +41,21 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
         <div className="mt-3 flex flex-wrap gap-2 text-caption">
           <Link
             to={`/create?pursuit=${pursuit.id}`}
-            className="rounded-control border border-[var(--coral-deep)] px-3 py-1.5 text-foreground hover:bg-[color-mix(in_srgb,var(--coral)_14%,transparent)]"
+            className="rounded-control border border-[var(--accent-text)] px-3 py-1.5 text-foreground hover:bg-[color-mix(in_srgb,var(--coral)_14%,transparent)]"
           >
             Log a Moment
           </Link>
           <button
             type="button"
             onClick={() => mirror(pauseProject(pursuit.id))}
-            className="rounded-control border border-border px-3 py-1.5 text-foreground hover:border-[var(--coral-deep)]"
+            className="rounded-control border border-border px-3 py-1.5 text-foreground hover:border-[var(--accent-text)]"
           >
             Pause
           </button>
           <button
             type="button"
             onClick={() => setEnding(true)}
-            className="rounded-control border border-border px-3 py-1.5 text-foreground hover:border-[var(--coral-deep)]"
+            className="rounded-control border border-border px-3 py-1.5 text-foreground hover:border-[var(--accent-text)]"
           >
             Finish
           </button>

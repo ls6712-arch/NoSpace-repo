@@ -80,12 +80,12 @@ export function SpacesBrowser({ query }: { query: string }) {
           />
         )
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 tab:grid-cols-4 desk:grid-cols-5">
           {matching.map((s) => (
             <Link
               key={s.id}
               to={`/space/${s.slug}`}
-              className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-base ease-standard hover:-translate-y-1 hover:border-[var(--coral-deep)] hover:shadow-card"
+              className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-[transform,border-color,box-shadow] duration-base ease-standard hover:-translate-y-1 hover:border-[var(--accent-text)] hover:shadow-card"
             >
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
                 <ImageWithFallback src={s.cover_image} alt="" className="size-full" imgClassName="transition-transform duration-base ease-standard group-hover:scale-110" />

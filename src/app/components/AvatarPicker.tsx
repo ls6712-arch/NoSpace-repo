@@ -29,7 +29,7 @@ export function AvatarPicker({
   url,
   onChange,
   compact = false,
-  size = "size-20 sm:size-24",
+  size = "size-20 tab:size-24",
   headless = false,
   openRef,
 }: {
@@ -154,7 +154,7 @@ export function AvatarPicker({
         </div>
         <input ref={libraryRef} type="file" accept="image/*" className="hidden" onChange={upload} />
         <input ref={cameraRef} type="file" accept="image/*" capture="user" className="hidden" onChange={upload} />
-        {error && <p className="text-center text-caption text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="text-center text-caption text-[var(--accent-text)]">{error}</p>}
       </div>
     );
   }
@@ -214,7 +214,7 @@ export function AvatarPicker({
         <p className="mt-2 text-caption text-muted-foreground">
           {busy ? "Working…" : url ? "Shown wherever you appear." : `Showing your initials, ${initials(name)}.`}
         </p>
-        {error && <p className="mt-1 text-caption text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="mt-1 text-caption text-[var(--accent-text)]">{error}</p>}
       </div>
     </div>
   );

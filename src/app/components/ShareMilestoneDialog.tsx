@@ -47,16 +47,16 @@ export function ShareMilestoneDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
+      <DialogContent className="tab:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
         <DialogTitle className="sr-only">Share this milestone</DialogTitle>
         <div className="rounded-card p-[1.5px] [background-image:var(--gradient-brand)]">
           <div className="rounded-card bg-[var(--surface)] p-7 text-center">
             <span
               className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full"
               style={{
-                backgroundColor: "color-mix(in srgb, var(--coral-deep) 46%, var(--surface-elevated))",
-                border: "1px solid color-mix(in srgb, var(--coral-deep) 62%, transparent)",
-                color: "var(--offwhite)",
+                backgroundColor: "color-mix(in srgb, var(--accent) 46%, var(--surface-elevated))",
+                border: "1px solid color-mix(in srgb, var(--accent-text) 62%, transparent)",
+                color: "var(--foreground)",
               }}
             >
               <Icon className="size-7" strokeWidth={1.6} />

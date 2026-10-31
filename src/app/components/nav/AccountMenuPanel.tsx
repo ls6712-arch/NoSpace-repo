@@ -61,7 +61,7 @@ export function AccountMenuPanel({ onNavigate, includeYou = true }: { onNavigate
           Reports
           {!!openReportCount && (
             <span
-              className="ml-auto flex size-5 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand tabular-nums"
+              className="ml-auto flex size-5 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums"
               aria-label={`${openReportCount} open`}
             >
               {formatBadgeCount(openReportCount)}

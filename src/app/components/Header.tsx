@@ -42,7 +42,7 @@ function MessagesLink() {
         <MessagesSquare className="size-5" />
         {badgeCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand tabular-nums"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums"
             aria-hidden="true"
           >
             {formatBadgeCount(badgeCount)}
@@ -163,10 +163,10 @@ function AccountMenu() {
  * the same places in the same order rather than two different apps.
  */
 const PRIMARY_NAV = [
-  { to: "/discover", label: "Discover", hint: "Spaces, people and Pursuits",
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/browse") || p.startsWith("/space") || p.startsWith("/people") },
   { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you’re part of",
     match: (p: string) => p.startsWith("/my-space") },
+  { to: "/discover", label: "Discover", hint: "Spaces, people and Pursuits",
+    match: (p: string) => p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/browse") || p.startsWith("/space") || p.startsWith("/people") },
   { to: "/create", label: "Log a Moment", hint: "Share a Moment or start a Pursuit.", accent: true,
     match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
 ];
@@ -229,14 +229,14 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
             {pathname === "/" && (
               <span
                 className="absolute -bottom-0.5 left-0 right-0 h-px"
-                style={{ backgroundColor: "var(--violet-electric)" }}
+                style={{ backgroundColor: "var(--accent)" }}
                 aria-hidden="true"
               />
             )}
           </Link>
           {/* Three destinations, generously spaced. Individual hobby spaces
               are reached through Discover rather than crowding the bar. */}
-          <nav className="hidden lg:flex items-center gap-8" aria-label="Primary">
+          <nav className="hidden desk:flex items-center gap-8" aria-label="Primary">
             {PRIMARY_NAV.map((item) => {
               const active = item.match(pathname);
               // Step 3: "Log a Moment" opens the same two-tap sheet the
@@ -278,7 +278,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
                   {active && !item.accent && (
                     <span
                       className="absolute -bottom-0.5 left-0 right-0 h-px"
-                      style={{ backgroundColor: "var(--violet-electric)" }}
+                      style={{ backgroundColor: "var(--accent)" }}
                       aria-hidden="true"
                     />
                   )}
@@ -289,13 +289,13 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="hidden w-80 md:block lg:w-72 xl:w-80">
+          <div className="hidden w-80 tab:block desk:w-72 wide:w-80">
             <GlobalSearchBox />
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="tab:hidden"
             aria-label="Search"
             onClick={() => setMobileSearchOpen((v) => !v)}
           >
@@ -306,7 +306,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
           {cartCount > 0 && (
             <Button variant="ghost" size="icon" onClick={openCart} className="relative" aria-label={`Cart (${cartCount})`}>
               <ShoppingBag className="size-5" />
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand tabular-nums">
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums">
                 {cartCount}
               </span>
             </Button>
@@ -316,7 +316,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
       </div>
 
       {mobileSearchOpen && (
-        <div className="border-t border-[var(--hairline)] px-4 py-3 md:hidden">
+        <div className="border-t border-[var(--hairline)] px-4 py-3 tab:hidden">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input

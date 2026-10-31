@@ -103,7 +103,7 @@ export const hobbies: Hobby[] = [
       sub("Home brewing"), sub("Kombucha"), sub("Cocktail-making"), sub("Supper clubs"),
       sub("Coffee"), sub("BBQ"), sub("Pasta"), sub("Food tours"),
     ],
-    gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
+    gradient: "from-[var(--accent)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
@@ -158,7 +158,7 @@ export const hobbies: Hobby[] = [
       sub("Calligraphy"), sub("Theater"), sub("Illustration"), sub("Sculpture"), sub("Improv"), sub("Life drawing"),
       sub("Open mics"), sub("Indian classical dance"),
     ],
-    gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
+    gradient: "from-[var(--yellow)] to-[var(--accent)]",
     coverImage:
       "https://images.unsplash.com/photo-1513364776144-60967b0f800f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
@@ -209,7 +209,7 @@ export const hobbies: Hobby[] = [
       sub("Books"), sub("Book clubs"), sub("Language learning"), sub("Reading"),
       sub("Creative writing"), sub("Letter writing"),
     ],
-    gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
+    gradient: "from-[var(--accent)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1512820790803-83ca734da794?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
@@ -258,7 +258,7 @@ export const hobbies: Hobby[] = [
       sub("Vegetable gardens"), sub("Native plants"), sub("Composting"), sub("Indoor growing"),
       sub("Interior design"), sub("DIY"),
     ],
-    gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
+    gradient: "from-[var(--yellow)] to-[var(--accent)]",
     coverImage:
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
@@ -306,7 +306,7 @@ export const hobbies: Hobby[] = [
       sub("DJing"), sub("Make a beat"), sub("Karaoke"), sub("Live music"), sub("Choir and singing", "choir"),
       sub("Indian classical music"), sub("Piano and keys", "piano"),
     ],
-    gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
+    gradient: "from-[var(--accent)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
@@ -352,7 +352,7 @@ export const hobbies: Hobby[] = [
       sub("Yoga"), sub("Pilates"), sub("Meditation"), sub("Mindfulness"),
       sub("Breathwork"), sub("Sauna & cold plunge"), sub("Sound baths"),
     ],
-    gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
+    gradient: "from-[var(--yellow)] to-[var(--accent)]",
     coverImage:
       "https://images.unsplash.com/photo-1506126613408-eca07ce68773?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
@@ -399,7 +399,7 @@ export const hobbies: Hobby[] = [
       sub("Creative coding"), sub("Web design"), sub("Game development"), sub("Data visualization"),
       sub("AR/VR projects"), sub("Smart-home projects"), sub("Cybersecurity learning"), sub("AI projects"),
     ],
-    gradient: "from-[var(--coral-deep)] to-[var(--forest)]",
+    gradient: "from-[var(--accent)] to-[var(--forest)]",
     coverImage:
       "https://images.unsplash.com/photo-1553406830-ef2513450d76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
@@ -447,7 +447,7 @@ export const hobbies: Hobby[] = [
       sub("Travel"), sub("Road trips"), sub("Backpacking"), sub("Skiing"),
       sub("Exploration"), sub("Volunteering"), sub("City walks"), sub("Rafting"),
     ],
-    gradient: "from-[var(--yellow)] to-[var(--coral-deep)]",
+    gradient: "from-[var(--yellow)] to-[var(--accent)]",
     coverImage:
       "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     creatorCount: "-",
@@ -508,7 +508,7 @@ const BUILTIN_SLUGS = new Set(BUILTIN_HOBBIES.map((h) => h.slug));
 
 const CUSTOM_GRADIENTS = [
   "from-[var(--sky-deep)] to-[var(--forest)]",
-  "from-[var(--coral-deep)] to-[var(--yellow)]",
+  "from-[var(--accent)] to-[var(--yellow)]",
   "from-[var(--forest)] to-[var(--yellow)]",
 ];
 

@@ -65,7 +65,7 @@ export function Week() {
   const hasPlans = contents.some((c) => c.plans.length > 0);
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 pb-8 pt-4 max-lg:pt-[calc(var(--safe-top)+1rem)]">
+    <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 pb-8 pt-4 max-desk:pt-[calc(var(--safe-top)+1rem)]">
       <header className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <Link to="/my-space" aria-label={WEEK_VIEW.backToHome} className="-ml-2 inline-flex size-11 items-center justify-center rounded-full text-foreground">

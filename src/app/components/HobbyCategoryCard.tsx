@@ -34,7 +34,7 @@ export function HobbyCategoryCard({
     <div>
       <Link
         to={`/space/${hobby.slug}`}
-        className="group block outline-none focus-visible:ring-2 focus-visible:ring-[var(--coral-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+        className="group block outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-text)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
       >
         <div title={`${hobby.shortName}: ${hobby.tagline}`} className="ns-space-card relative aspect-[4/5] overflow-hidden border border-border">
           {photo ? (

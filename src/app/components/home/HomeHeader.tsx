@@ -36,11 +36,11 @@ export function HomeHeader() {
       <nav aria-label="Inbox and profile" className="flex items-center">
         <Link to="/messages" aria-label={chatsWaiting ? "Chats, new" : "Chats"} className={ICON_LINK}>
           <MessagesSquare className="size-[22px]" strokeWidth={1.75} aria-hidden="true" />
-          {chatsWaiting && <span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-background [background-color:var(--coral-deep)]" aria-hidden="true" />}
+          {chatsWaiting && <span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-background [background-color:var(--accent-text)]" aria-hidden="true" />}
         </Link>
         <Link to="/inbox" aria-label={badgeCount > 0 ? "Notifications, new" : "Notifications"} className={ICON_LINK}>
           <Bell className="size-[22px]" strokeWidth={1.75} aria-hidden="true" />
-          {badgeCount > 0 && <span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-background [background-color:var(--coral-deep)]" aria-hidden="true" />}
+          {badgeCount > 0 && <span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-background [background-color:var(--accent-text)]" aria-hidden="true" />}
         </Link>
         <Link to="/you" aria-label="You" className="flex size-11 items-center justify-center">
           <Avatar className="size-[34px]">

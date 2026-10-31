@@ -8,10 +8,10 @@ import { SETTINGS_SECTIONS } from "./sections";
 /**
  * The one shell every Settings route renders through. lg and up: a sticky
  * left sub-nav plus one section's content on the right (max 680px). Below
- * lg: /settings alone is an index list (chevron + one-line summary per
+ * desk: /settings alone is an index list (chevron + one-line summary per
  * section); every other Settings route shows just that section with a
  * Back link. Both trees always render — which one shows is pure CSS
- * (hidden/lg:hidden) — so resizing across the breakpoint never loses
+ * (hidden/desk:hidden) — so resizing across the breakpoint never loses
  * in-progress state.
  */
 export function SettingsShell({
@@ -40,9 +40,9 @@ export function SettingsShell({
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-5xl px-4 py-8 tab:py-12">
       {/* Desktop / lg+ */}
-      <div className="hidden lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
+      <div className="hidden desk:grid desk:grid-cols-[220px_1fr] desk:gap-12">
         <nav aria-label="Settings sections" className="sticky top-24 self-start">
           <h1 className="mb-5 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             Settings
@@ -80,7 +80,7 @@ export function SettingsShell({
       </div>
 
       {/* Mobile / below lg */}
-      <div className="lg:hidden">
+      <div className="desk:hidden">
         {isIndexRoute ? (
           <>
             <h1 className="mb-6 text-title" style={{ fontFamily: "var(--font-serif)" }}>

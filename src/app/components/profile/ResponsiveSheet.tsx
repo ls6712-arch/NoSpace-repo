@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { BottomSheet } from "../ui/BottomSheet";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 
-const QUERY = "(min-width: 768px)";
+const QUERY = "(min-width: 744px)";
 
 function useIsDesktop(): boolean {
   const [desktop, setDesktop] = useState(() => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(QUERY).matches);
@@ -42,7 +42,7 @@ export function ResponsiveSheet({
             <DialogDescription className="sr-only">{title}</DialogDescription>
           </DialogHeader>
           {children}
-          {footer && <DialogFooter className="flex-col sm:flex-col">{footer}</DialogFooter>}
+          {footer && <DialogFooter className="flex-col tab:flex-col">{footer}</DialogFooter>}
         </DialogContent>
       </Dialog>
     );

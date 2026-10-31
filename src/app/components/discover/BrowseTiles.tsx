@@ -15,7 +15,7 @@ export function BrowseTiles() {
       <h2 id="browse-tiles" className="font-[family-name:var(--font-display)] text-title font-bold">
         Browse
       </h2>
-      <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-3 tab:grid-cols-3 desk:grid-cols-4">
         {CORNER_CATEGORIES.map((cat, i) => (
           <li key={cat.slug}>
             <Reveal index={i}>

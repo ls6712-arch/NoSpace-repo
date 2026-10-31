@@ -158,7 +158,7 @@ export function GoalDialog({
                   type="button"
                   onClick={() => setShape(s.value)}
                   className={`flex items-start gap-3 rounded-card border px-3.5 py-3 text-left transition-colors ${
-                    active ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
+                    active ? "border-[var(--accent-text)] bg-surface-muted" : "border-border hover:border-foreground/30"
                   }`}
                 >
                   <Icon className="mt-0.5 size-4 shrink-0 text-foreground" strokeWidth={1.7} />
@@ -245,7 +245,7 @@ export function GoalDialog({
                   <span
                     className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
                       hasDeadline
-                        ? "justify-end [background-color:var(--violet-electric)]"
+                        ? "justify-end [background-color:var(--accent)]"
                         : "justify-start bg-surface-muted"
                     }`}
                   >

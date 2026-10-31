@@ -100,7 +100,7 @@ export function PlanTogetherSheet({
             </Button>
           )}
           <p className="text-center text-caption text-muted-foreground">{firstName} sees the plan, not who suggested which time.</p>
-          {sendError && <p role="alert" className="text-center text-small text-[var(--coral-text)]">{sendError}</p>}
+          {sendError && <p role="alert" className="text-center text-small text-[var(--accent-text)]">{sendError}</p>}
         </div>
       }
     >

@@ -71,16 +71,16 @@ function SpacePageSkeleton() {
       skeleton={
         <>
           <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-            <Skeleton className="aspect-[21/9] max-h-56 w-full rounded-card sm:aspect-[3/1]" />
+            <Skeleton className="aspect-[21/9] max-h-56 w-full rounded-card tab:aspect-[3/1]" />
           </div>
           <div className="mx-auto w-full max-w-3xl px-4 pt-5">
             <Skeleton className="h-3 w-28 rounded-full" />
-            <div className="mt-1 flex h-[44px] items-center sm:h-[50px] lg:h-[80px]">
-              <Skeleton className="h-9 w-2/3 rounded-full lg:h-14" />
+            <div className="mt-1 flex h-[44px] items-center tab:h-[50px] desk:h-[80px]">
+              <Skeleton className="h-9 w-2/3 rounded-full desk:h-14" />
             </div>
             <Skeleton className="mt-3 h-3 w-1/2 rounded-full" />
             <Skeleton className="mt-5 h-3 w-40 rounded-full" />
-            <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+            <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3">
               {[0, 1, 2].map((i) => (
                 <MomentCardSkeleton key={i} />
               ))}

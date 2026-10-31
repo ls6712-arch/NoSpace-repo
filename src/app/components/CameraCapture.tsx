@@ -328,7 +328,7 @@ export function CameraCapture({
                       ? "scale-50 rounded-card bg-[var(--coral)]"
                       : captureMode === "video"
                         ? "rounded-full bg-[var(--coral)]"
-                        : "rounded-full bg-coral-deep"
+                        : "rounded-full bg-accent"
                   }`}
                 />
               </button>
@@ -359,7 +359,7 @@ export function CameraCapture({
           </div>
 
           {heicWarning && (
-            <p className="mt-3 rounded-control bg-[var(--coral-deep)]/90 px-3 py-1.5 text-center text-caption text-on-brand">
+            <p className="mt-3 rounded-control bg-[var(--accent)]/90 px-3 py-1.5 text-center text-caption text-accent-foreground">
               {heicWarning}
             </p>
           )}

@@ -27,7 +27,7 @@ export function SignUpPrompt({
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
-      <div className="glass-panel shadow-card w-full max-w-md rounded-card p-8 text-center sm:p-10">
+      <div className="glass-panel shadow-card w-full max-w-md rounded-card p-8 text-center tab:p-10">
         <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
           {title}
         </h2>

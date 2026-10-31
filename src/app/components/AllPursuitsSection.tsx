@@ -50,14 +50,14 @@ function AllPursuitsRow({ pursuit: p, last }: { pursuit: Project; last: number |
           setShareOpen(true);
         }}
         aria-label={`Share ${p.title}`}
-        className="flex shrink-0 items-center justify-center rounded-full border border-border p-1.5 text-foreground hover:border-[var(--coral-deep)]"
+        className="flex shrink-0 items-center justify-center rounded-full border border-border p-1.5 text-foreground hover:border-[var(--accent-text)]"
       >
         <Share2 className="size-3" />
       </button>
       <Link
         to={`/create?pursuit=${p.id}`}
         aria-label={`Log a Moment on ${p.title}`}
-        className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground hover:border-[var(--coral-deep)]"
+        className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground hover:border-[var(--accent-text)]"
       >
         <Plus className="size-3" /> Add
       </Link>
@@ -194,7 +194,7 @@ export function AllPursuitsSection({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search your Pursuits"
           aria-label="Search your Pursuits"
-          className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-9 text-body outline-none focus:border-[var(--coral-deep)]"
+          className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-9 text-body outline-none focus:border-[var(--accent-text)]"
         />
         {query && (
           <button

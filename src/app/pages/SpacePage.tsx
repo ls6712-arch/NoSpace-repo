@@ -225,7 +225,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
     <div className="ns-space-theme min-h-viewport bg-background pb-24 text-foreground">
       {/* Inset, compact cover — not edge-to-edge */}
       <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-card bg-surface-muted sm:aspect-[3/1]">
+        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-card bg-surface-muted tab:aspect-[3/1]">
           <ImageWithFallback src={space.cover_image} alt="" className="size-full" />
         </div>
       </div>

@@ -144,7 +144,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
       <div className="space-y-3">
         <div className="flex h-11 items-center justify-between rounded-control border border-[var(--line)] bg-[var(--paper-raised)] px-3.5 text-small">
           <span>Your first Moment is in.</span>
-          <button type="button" onClick={undo} className="text-[var(--coral-text,var(--coral-deep))] hover:opacity-80">
+          <button type="button" onClick={undo} className="text-[var(--accent-text)] hover:opacity-80">
             Undo
           </button>
         </div>
@@ -165,7 +165,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
-              className="text-caption text-[var(--coral-text,var(--coral-deep))] hover:underline"
+              className="text-caption text-[var(--accent-text)] hover:underline"
             >
               Add details
             </button>
@@ -211,7 +211,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
 
   return (
     <>
-      <h1 className="mb-1 text-title sm:text-display" style={{ fontFamily: "var(--font-serif)" }}>
+      <h1 className="mb-1 text-title tab:text-display" style={{ fontFamily: "var(--font-serif)" }}>
         Add your first Moment
       </h1>
       <p className="mb-6 text-small text-[var(--ink-soft)]">
@@ -222,7 +222,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
-          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card bg-[var(--coral-deep)] text-on-brand transition-opacity hover:opacity-90"
+          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card bg-[var(--accent)] text-accent-foreground transition-opacity hover:opacity-90"
         >
           <Camera className="size-6" />
           <span className="text-small font-medium">Take a photo</span>
@@ -230,7 +230,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         <button
           type="button"
           onClick={() => libraryInputRef.current?.click()}
-          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card border border-dashed border-[var(--line)] text-[var(--ink-soft)] transition-colors hover:border-[var(--coral-deep)] hover:text-[var(--ink)]"
+          className="flex h-32 flex-col items-center justify-center gap-2 rounded-card border border-dashed border-[var(--line)] text-[var(--ink-soft)] transition-colors hover:border-[var(--accent-text)] hover:text-[var(--ink)]"
         >
           <Images className="size-6" />
           <span className="text-small font-medium">Choose a photo</span>
@@ -290,7 +290,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
             aria-pressed={audience === a}
             className={`rounded-control border px-2.5 py-1 text-caption transition-colors ${
               audience === a
-                ? "border-[var(--coral-deep)] text-[var(--ink)]"
+                ? "border-[var(--accent-text)] text-[var(--ink)]"
                 : "border-[var(--line)] text-[var(--ink-soft)] hover:text-[var(--ink)]"
             }`}
           >
@@ -299,7 +299,7 @@ export function FirstMomentStep({ onContinue }: { onContinue: () => void }) {
         ))}
       </div>
 
-      {error && <p className="mt-2 text-caption text-[var(--coral-text,var(--coral-deep))]">{error}</p>}
+      {error && <p className="mt-2 text-caption text-[var(--accent-text)]">{error}</p>}
 
       <div className="mt-6 flex justify-end">
         <Button variant="coral" disabled={!canSave} onClick={requestSave}>

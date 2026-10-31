@@ -183,7 +183,7 @@ export function AdminSpaces() {
   const moveTargets = (slug: string) => spaces.filter((s) => s.slug !== slug);
 
   return (
-    <div className="min-h-viewport bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 tab:py-12">
       <div className="container mx-auto max-w-3xl px-4">
         <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
           Spaces
@@ -194,7 +194,7 @@ export function AdminSpaces() {
         </p>
 
         {error && (
-          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-small">
+          <p className="mb-5 rounded-card border border-[var(--accent-text)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-small">
             {error}
           </p>
         )}
@@ -233,7 +233,7 @@ export function AdminSpaces() {
                         {builtIn ? "Built-in" : "Yours"}
                       </span>
                       {h.hidden && (
-                        <span className="rounded-control bg-[var(--coral-deep)]/15 px-2 py-0.5 text-caption">
+                        <span className="rounded-control bg-[var(--accent)]/15 px-2 py-0.5 text-caption">
                           Hidden
                         </span>
                       )}

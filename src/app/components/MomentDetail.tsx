@@ -258,7 +258,7 @@ export function MomentDetail({
             </Link>
             <Link
               to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
-              className="-my-3 truncate py-3 text-body transition-colors hover:text-[var(--coral-text)]"
+              className="-my-3 truncate py-3 text-body transition-colors hover:text-[var(--accent-text)]"
               style={{ fontFamily: "var(--font-serif)" }}
              title={post.creator}>
               {post.creator}
@@ -587,8 +587,8 @@ export function MomentDetail({
           <p className="-mt-1 text-caption text-muted-foreground">Only you Moments can’t be shared.</p>
         )}
 
-        {saveError && <p className="text-caption text-[var(--coral-text)]">{saveError}</p>}
-        {deleteError && <p className="text-caption text-[var(--coral-text)]">{deleteError}</p>}
+        {saveError && <p className="text-caption text-[var(--accent-text)]">{saveError}</p>}
+        {deleteError && <p className="text-caption text-[var(--accent-text)]">{deleteError}</p>}
 
         {/* Actions */}
         {owned && !editing && (

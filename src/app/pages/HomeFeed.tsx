@@ -118,7 +118,7 @@ export function HomeFeed() {
 
   return (
     <div
-      className="mx-auto w-full max-w-md px-4 pb-8 pt-4 max-lg:pt-[calc(var(--safe-top)+1rem)]"
+      className="mx-auto w-full max-w-md px-4 pb-8 pt-4 max-desk:pt-[calc(var(--safe-top)+1rem)]"
       onTouchStart={(e) => {
         touchStart.current = window.scrollY <= 0 ? e.touches[0].clientY : null;
       }}

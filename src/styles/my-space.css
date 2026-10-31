@@ -40,10 +40,10 @@
   order: -1;
 }
 
-/* md (768–1023): tablet. Single column, whole page scrolls — same as every
+/* tab (744–1127): tablet. Single column, whole page scrolls — same as every
    other size; nothing here ever carves out its own independently-scrolling
    region. Rail becomes a 2-column grid: [Shelf] | [Pursuits]. */
-@media (min-width: 768px) {
+@media (min-width: 744px) {
   .myspace-rail {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -75,7 +75,7 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1128px) {
   /* Used to cap .myspace-shell to the viewport height and hand scrolling to
      .myspace-feed/.myspace-rail independently (each its own overflow-y:
      auto region) at this breakpoint and up, while the window itself barely
@@ -128,7 +128,7 @@
   
 }
 
-@media (min-width: 1536px) {
+@media (min-width: 1280px) {
   .myspace-shell {
     max-width: 1600px;
     margin-inline: auto;

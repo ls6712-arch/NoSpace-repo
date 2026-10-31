@@ -163,7 +163,7 @@ export function Thoughts({
             </div>
           )}
           {failed && (
-            <p className="mt-2 text-caption text-[var(--coral-text)]">
+            <p className="mt-2 text-caption text-[var(--accent-text)]">
               That didn’t send. Your words are still here. Try again.
             </p>
           )}
@@ -200,7 +200,7 @@ export function Thoughts({
               className="rounded-card border border-[var(--hairline)] bg-surface px-3.5 py-3"
             >
               {t.prompt && (
-                <div className="mb-1.5 flex items-center gap-1.5 text-caption tracking-wide text-[var(--coral-text)]">
+                <div className="mb-1.5 flex items-center gap-1.5 text-caption tracking-wide text-[var(--accent-text)]">
                   <MessageCircleQuestion className="size-3" />
                   {t.prompt}
                 </div>
@@ -227,7 +227,7 @@ export function Thoughts({
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteId(t.id)}
-                    className="ml-auto text-muted-foreground transition-colors hover:text-[var(--coral-text)]"
+                    className="ml-auto text-muted-foreground transition-colors hover:text-[var(--accent-text)]"
                     aria-label="Delete this thought"
                   >
                     <Trash2 className="size-3.5" />

@@ -56,7 +56,7 @@ export function ProfileMenu({
               Unfollow
             </button>
           )}
-          <button type="button" role="menuitem" className={`${item} text-[var(--coral-text)]`} onClick={choose(() => setBlockOpen(true))}>
+          <button type="button" role="menuitem" className={`${item} text-[var(--accent-text)]`} onClick={choose(() => setBlockOpen(true))}>
             Block
           </button>
           <button type="button" role="menuitem" className={item} onClick={choose(() => setReportOpen(true))}>

@@ -86,7 +86,7 @@ export function EditableTextRow({
       <SettingsRow label={label} description={description}>
         <div className="flex items-center justify-end gap-3">
           {saved && <SavedFlash show />}
-          <span className="max-w-[16rem] truncate text-small text-muted-foreground sm:max-w-xs" title={value.trim() || emptyLabel}>
+          <span className="max-w-[16rem] truncate text-small text-muted-foreground tab:max-w-xs" title={value.trim() || emptyLabel}>
             {value.trim() || <span className="italic">{emptyLabel}</span>}
           </span>
           <Button variant="outline" size="sm" onClick={startEdit}>
@@ -98,7 +98,7 @@ export function EditableTextRow({
   }
 
   return (
-    <div className="px-4 py-4 sm:px-5">
+    <div className="px-4 py-4 tab:px-5">
       <div className="mb-2">
         <div className="text-small">{label}</div>
         {description && (

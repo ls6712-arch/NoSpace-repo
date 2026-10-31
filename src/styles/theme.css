@@ -113,33 +113,6 @@
   --hairline: var(--border);
   --primary: var(--accent);
   --primary-foreground: var(--accent-foreground);
-  --on-forest: var(--foreground);
-  --on-forest-muted: var(--muted-foreground);
-
-  /* ── Legacy void/violet aliases ───────────────────────────────────────────
-     Every name below drove the retired dark-purple theme directly. Pointing
-     them at the new tokens means every screen that still reads them (all of
-     Task B's remaining work) already renders in the new palette without a
-     per-component edit; Task B replaces each direct reference with the
-     semantic name itself and these aliases get deleted once nothing points
-     at them anymore. */
-  --void: var(--background);
-  --void-deep: var(--background);
-  --night-purple: var(--surface);
-  --night-purple-2: var(--surface-muted);
-  --plum-night: var(--surface);
-  --plum-night-2: var(--surface-elevated);
-  --night-green: var(--surface);
-  --night-wine: var(--surface);
-  --violet-soft: var(--accent);
-  --violet-electric: var(--accent);
-  --violet-electric-bright: var(--accent);
-  --violet-electric-mid: var(--accent);
-  --violet-electric-deep: var(--accent);
-  --ink-on-violet: var(--accent-foreground);
-  --offwhite: var(--foreground);
-  --lavender-muted: var(--muted-foreground);
-  --lavender-faint: var(--muted-foreground);
 
   /* MomentCard's rotating text-only tile (docs/moment-card-and-reactions-
      spec.md §2.1: "accent, a moss/green token, an ink token"). Global, not
@@ -157,20 +130,14 @@
      be glow/gradient ingredients (atmo-*, gradient-brand, etc.) screen by
      screen; the rest (coral, yellow/gold's sibling accents, forest) may
      still earn a place as selective illustration accents. */
-  --sky: #5DA8D8;
   --sky-deep: #2F76A8;
   --forest: #0E4D3A;
   --forest-ink: #0B3E2E;
   --coral: #FF6B4A;
-  --coral-deep: #C43F22;
-  /* Coral as text. Light mode needs the deeper shade (#FF8B6E was 1.9-2.2:1
-     on cream); .dark restores the bright one. */
-  --coral-text: #B83A1F;
   --yellow: #F5C542;
   --mustard: var(--yellow);
   --cream: #F8F4EB;
   --plum: #5B3454;
-  --plum-deep: #40243C;
   --peach: #F4B892;
   --error: #FF5470;
   --error-deep: #C22F4F;
@@ -243,7 +210,7 @@
      underneath doesn't change with the theme — and always sits on a
      bg-scrim layer, never bare on an image. */
   --on-media: #FFFFFF;
-  /* Text and icons on --coral-deep or --gradient-brand fills. Those fills
+  /* Text and icons on --gradient-brand fills. Those fills
      keep their color in both modes, so this does too (deliberately not
      --accent-foreground, which goes dark in dark mode). */
   --on-brand: #FFFFFF;
@@ -315,37 +282,11 @@
      narrow band of the violet range (deep → mid, not all the way to
      electric) — white only clears AA up to ~8A55E0; past that the button
      would need ink-on-violet instead, like the plain primary button does. */
-  --gradient-brand: linear-gradient(120deg, var(--violet-electric-deep) 0%, var(--violet-electric-mid) 100%);
+  --gradient-brand: linear-gradient(120deg, var(--accent) 0%, var(--accent) 100%);
   --gradient-brand-soft: linear-gradient(120deg, rgba(166,108,255,0.16) 0%, rgba(255,107,74,0.10) 55%, rgba(74,159,216,0.10) 100%);
   /* For gradient *text*, which needs to stay legible on the dark ground. */
-  --gradient-ink: linear-gradient(105deg, var(--violet-electric-bright) 0%, var(--offwhite) 72%);
+  --gradient-ink: linear-gradient(105deg, var(--accent) 0%, var(--foreground) 72%);
 
-  /* Atmospheric backgrounds — layered radial glows rather than flat fills,
-     so a dark section reads as an environment. Each is a distinct "world"
-     within the same system: purple, near-black, plum, and (sparingly) a
-     very dark green, per the brand brief's "moves through different
-     worlds" instruction. Sized/positioned to feel like light falling into
-     a room, not a spotlight aimed at the viewer. */
-  --atmo-purple:
-    radial-gradient(ellipse 70% 55% at 18% -10%, color-mix(in srgb, var(--violet-electric) 22%, transparent), transparent),
-    radial-gradient(ellipse 60% 50% at 92% 100%, color-mix(in srgb, var(--violet-electric-deep) 26%, transparent), transparent),
-    var(--night-purple);
-  --atmo-void:
-    radial-gradient(ellipse 55% 45% at 85% 0%, color-mix(in srgb, var(--violet-electric) 14%, transparent), transparent),
-    radial-gradient(ellipse 50% 40% at 8% 100%, color-mix(in srgb, var(--coral) 8%, transparent), transparent),
-    var(--void);
-  --atmo-plum:
-    radial-gradient(ellipse 65% 55% at 12% 0%, color-mix(in srgb, var(--violet-electric-bright) 16%, transparent), transparent),
-    radial-gradient(ellipse 55% 45% at 95% 100%, color-mix(in srgb, var(--plum) 55%, transparent), transparent),
-    var(--plum-night);
-  --atmo-green:
-    radial-gradient(ellipse 60% 50% at 15% 0%, color-mix(in srgb, var(--success) 10%, transparent), transparent),
-    radial-gradient(ellipse 55% 45% at 90% 100%, color-mix(in srgb, var(--violet-electric) 14%, transparent), transparent),
-    var(--night-green);
-  --atmo-wine:
-    radial-gradient(ellipse 65% 55% at 85% -5%, color-mix(in srgb, var(--coral) 10%, transparent), transparent),
-    radial-gradient(ellipse 55% 45% at 10% 100%, color-mix(in srgb, var(--violet-electric) 16%, transparent), transparent),
-    var(--night-wine);
 }
 
 /* ── Dark theme — warm charcoal, never purple or blue-black ──────────────
@@ -363,7 +304,6 @@
   --accent-foreground: #0E0D0C;
   --accent-text: #FF6B4A;
   --surface-raised: #201D1B;
-  --coral-text: #FF8B6E;
   /* Brand-gradient fills carry white --on-brand text and keep their colour in
      both modes, so dark uses the light accent (6.17:1 under white) rather
      than the lighter dark --accent (3.4:1). */
@@ -420,7 +360,7 @@
    ink, a shelf) rather than a dashboard. Nothing outside .ns-paper-theme
    reads these — the rest of the app (Header, nav, Discover) stays
    on the void/plum system untouched. Accent is the app's own existing
-   chosen color (--coral-deep), not a new one — "exaggerated," not
+   chosen color (--accent), not a new one — "exaggerated," not
    "different." */
 .ns-paper-theme {
   --paper: #EFE7D8;
@@ -435,7 +375,7 @@
      so every existing component that already reads --surface/--foreground/
      --border/etc. — instead of a raw dark-purple hex — adapts here for
      free, with no per-component rewrite. Only things that hardcode a raw
-     token (--yellow, --plum-night, ...) need their own override below. */
+     token (--yellow, --plum, ...) need their own override below. */
   --background: var(--paper);
   --surface: var(--paper-raised);
   --surface-elevated: #FFFFFF;
@@ -609,9 +549,14 @@
   /* Breakpoints set by what the layouts need, not by device names (Oct 30, 2026):
      tab = one column and the rail, desk = a side panel appears, wide = the rail
      shows words. Used only for the layouts in the responsive brief. */
+  --breakpoint-*: initial;
   --breakpoint-tab: 744px;
   --breakpoint-desk: 1128px;
   --breakpoint-wide: 1280px;
+  /* Small-phone guard: the one width outside the three above, for layouts that
+     break at 375px (iPhone SE). CSS media queries can't read this variable, so
+     landing.css repeats the number and points back here. */
+  --breakpoint-narrow: 380px;
 
   /* Lock the scale. Tailwind's own text, radius and shadow steps are removed,
      so an off-scale class (text-sm, rounded-xl, shadow-lg, ...) no longer
@@ -707,9 +652,6 @@
   --color-foreground-muted: var(--foreground-muted);
   --color-hairline: var(--hairline);
   --color-coral: var(--coral);
-  --color-coral-deep: var(--coral-deep);
-  --color-coral-text: var(--coral-text);
-  --color-sky: var(--sky);
   --color-sky-deep: var(--sky-deep);
   --color-forest: var(--forest);
   --color-mustard: var(--mustard);
@@ -731,24 +673,8 @@
   --color-on-clay: var(--on-clay);
   --color-yellow: var(--yellow);
   --color-plum: var(--plum);
-  --color-plum-deep: var(--plum-deep);
   --color-peach: var(--peach);
   --color-forest-ink: var(--forest-ink);
-  --color-on-forest: var(--on-forest);
-  --color-on-forest-muted: var(--on-forest-muted);
-  --color-void: var(--void);
-  --color-void-deep: var(--void-deep);
-  --color-night-purple: var(--night-purple);
-  --color-night-green: var(--night-green);
-  --color-night-wine: var(--night-wine);
-  --color-violet-soft: var(--violet-soft);
-  --color-violet-electric: var(--violet-electric);
-  --color-violet-electric-bright: var(--violet-electric-bright);
-  --color-violet-electric-deep: var(--violet-electric-deep);
-  --color-ink-on-violet: var(--ink-on-violet);
-  --color-offwhite: var(--offwhite);
-  --color-lavender-muted: var(--lavender-muted);
-  --color-lavender-faint: var(--lavender-faint);
   --color-error: var(--error);
   --color-error-deep: var(--error-deep);
   --color-success: var(--success);
@@ -938,7 +864,10 @@
   /* ── Touch targets ────────────────────────────────────────────────────────
      On touch devices every tappable element gets an invisible hit area of at
      least 44×44px, centred on it, so a 20px icon stays 20px to the eye and
-     still takes a thumb. Only (pointer: coarse); a mouse sees none of this.
+     still takes a thumb. On (pointer: coarse) and on any window narrower than
+     the tablet breakpoint (744px, so a phone-width window driven by a mouse,
+     an audit, or a desktop browser resized to 390px gets it too); a mouse on
+     a wide window sees none of this.
      The element itself is never enlarged: the area is an ::after that is
      max(100%, 44px), so anything already big enough is untouched.
      :where() keeps specificity at zero, so absolute / fixed / sticky from a
@@ -947,7 +876,7 @@
      own hit area, inline text links inside a paragraph are left alone (44px
      around a line of prose would cover the lines above and below), and text
      inputs can't have pseudo-elements so they get a 44px min-height. */
-  @media (pointer: coarse) {
+  @media (pointer: coarse), (max-width: 743px) {
     :where(button, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="option"],
         [role="checkbox"], [role="switch"], [role="radio"], summary, a[href]:not(:where(p, label) > a)) {
       position: relative;
@@ -1090,7 +1019,7 @@
     gap: 0.4rem;
     border-bottom: 1px solid currentColor;
     padding-bottom: 0.16rem;
-    color: var(--violet-electric-bright);
+    color: var(--accent-text);
     font-size: var(--text-small);
     font-weight: 500;
     transition: color var(--duration-fast) var(--ease-standard), gap var(--duration-fast) var(--ease-standard);
@@ -1098,7 +1027,7 @@
 
   @media (hover: hover) {
     .ns-text-link:hover {
-   gap: 0.65rem; color: var(--offwhite); 
+   gap: 0.65rem; color: var(--foreground); 
     }
   }
 
@@ -1106,7 +1035,7 @@
     position: relative;
     border: 1px solid var(--border);
     background-color: var(--surface-elevated);
-    background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, color-mix(in srgb, var(--violet-electric) 5%, transparent) 28px);
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, color-mix(in srgb, var(--accent) 5%, transparent) 28px);
     box-shadow: var(--shadow-card);
   }
 
@@ -1146,9 +1075,9 @@
     top: 1rem;
     left: 1rem;
     border: 1px solid var(--hairline);
-    background: color-mix(in srgb, var(--void) 78%, transparent);
+    background: color-mix(in srgb, var(--background) 78%, transparent);
     padding: 0.28rem 0.4rem;
-    color: var(--offwhite);
+    color: var(--foreground);
     font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 600;
@@ -1156,9 +1085,9 @@
   }
 
   .ns-public-profile {
-    background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--violet-electric) 22%, transparent) 0 1px, transparent 1.5px);
+    background-image: radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--accent) 22%, transparent) 0 1px, transparent 1.5px);
     background-size: 24px 24px;
-    background-color: var(--void);
+    background-color: var(--background);
   }
 
   .ns-profile-cta {
@@ -1168,8 +1097,8 @@
   }
 
   .ns-discover-search {
-    border-bottom: 2px solid var(--violet-electric);
-    background: color-mix(in srgb, var(--void) 45%, transparent);
+    border-bottom: 2px solid var(--accent);
+    background: color-mix(in srgb, var(--background) 45%, transparent);
   }
 
   .ns-discover-space-card {
@@ -1182,7 +1111,7 @@
 
   .ns-discover-open {
     flex-shrink: 0;
-    color: var(--violet-electric-bright);
+    color: var(--accent-text);
     font-family: var(--font-mono);
     font-size: var(--text-caption);
     letter-spacing: 0.02em;
@@ -1199,9 +1128,9 @@
      coral, so there's a single unambiguous "this is selected/active" color
      across the whole app (see also Header's nav underline). */
   .ns-discover-filters button[aria-pressed="true"] {
-    border-color: var(--violet-electric);
-    background: var(--violet-electric);
-    color: var(--ink-on-violet);
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-foreground);
   }
 
   .ns-you-avatar-compact {
@@ -1253,7 +1182,7 @@
 
   /* One neutral pill style, not a per-tag rainbow — a tag is a fact about
      the Moment, not a category with its own color to defend. The single
-     accent (--coral-deep) is reserved for the one pill actually narrowing
+     accent (--accent) is reserved for the one pill actually narrowing
      the grid right now (.ns-pill--active below), so it still means
      something when it shows up. Scoped under the modifier class (not a
      bare .ns-pill) so this beats the plain `.ns-you-tags a` rule above on
@@ -1273,7 +1202,7 @@
 
   @media (hover: hover) {
     .ns-you-tags--pills .ns-pill:hover {
-      border-color: color-mix(in srgb, var(--coral-deep) 45%, var(--line, var(--hairline)));
+      border-color: color-mix(in srgb, var(--accent-text) 45%, var(--line, var(--hairline)));
     }
   }
 
@@ -1282,9 +1211,9 @@
   /* The tag currently narrowing Your Moments below — the one place this
      row spends the single accent. */
   .ns-you-tags--pills .ns-pill.ns-pill--active {
-    background: var(--coral-deep);
-    border-color: var(--coral-deep);
-    color: white;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-foreground);
   }
 
   .ns-you-links-row {
@@ -1313,17 +1242,12 @@
   .ns-you-links-row button {
     flex-shrink: 0;
     font-size: var(--text-caption);
-    color: var(--coral-text);
+    color: var(--accent-text);
   }
 
-  @media (max-width: 639px) {
-    
-    
-    
-  }
 
   .ns-site-header {
-    background-color: color-mix(in srgb, var(--void) 86%, transparent);
+    background-color: color-mix(in srgb, var(--background) 86%, transparent);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
@@ -1332,14 +1256,14 @@
     display: inline-block;
     width: 0.75rem;
     height: 0.75rem;
-    border: 2px solid var(--coral-deep);
+    border: 2px solid var(--accent);
     border-radius: 50% 45% 50% 40%;
     transform: rotate(-12deg);
   }
 
   @media (hover: hover) {
     .ns-wordmark:hover .ns-wordmark-mark {
-   background: var(--coral-deep); 
+   background: var(--accent);
     }
   }
 
@@ -1526,7 +1450,7 @@ select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--violet-electric) !important;
+  outline: 2px solid var(--accent) !important;
   outline-offset: 2px !important;
 }
 
@@ -1684,7 +1608,7 @@ summary:focus-visible,
   font-style: normal;
 }
 
-@media (min-width: 64rem) {
+@media (min-width: 1128px) {
   .ns-afterhours {
     --text-display: 3.5rem;
   }

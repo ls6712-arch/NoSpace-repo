@@ -88,7 +88,7 @@ export const MOMENT_MEDIA = "aspect-square w-full rounded-card";
 /** The grid every Moment list uses: 2 columns on phones, 3 from large
  * screens up. Import this instead of writing a grid class at a call site,
  * so no page drifts out of step again. */
-export const MOMENT_GRID = "grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-3";
+export const MOMENT_GRID = "grid grid-cols-2 gap-x-3 gap-y-8 tab:gap-x-5 desk:grid-cols-3";
 
 /** Caption set into a text-only Moment's colored tile. Clamps so a long
  * note never changes the tile's shape. It was fluid (15-26px by tile width);
@@ -171,7 +171,7 @@ function VisibilityDialog({
           {MOMENT_VISIBILITY_OPTIONS.map((opt) => (
             <label
               key={opt.value}
-              className="flex min-h-11 items-center gap-3 rounded-control border border-border px-3 py-2.5 text-small has-[[data-state=checked]]:border-[var(--coral-deep)]"
+              className="flex min-h-11 items-center gap-3 rounded-control border border-border px-3 py-2.5 text-small has-[[data-state=checked]]:border-[var(--accent-text)]"
             >
               <RadioGroupItem value={opt.value} id={`vis-${opt.value}`} />
               <opt.icon className="size-4 shrink-0 text-muted-foreground" />
@@ -223,7 +223,7 @@ export function BookmarkOverlay({
         aria-label={saved ? "Saved. Tap again to remove it" : "Save"}
         title={saved ? "Saved" : "Save"}
         onClick={onClick}
-        className="flex size-11 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+        className="flex size-11 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--accent-text)] motion-reduce:transition-none"
       >
         <Bookmark
           className={`size-[22px] ${CORNER_ICON_SCRIM}`}
@@ -238,7 +238,7 @@ export function BookmarkOverlay({
 
 
 const ICON_BTN =
-  "flex h-11 shrink-0 min-w-11 items-center justify-center gap-1 rounded-control px-2 text-small transition-[color,background-color,scale] active:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)]";
+  "flex h-11 shrink-0 min-w-11 items-center justify-center gap-1 rounded-control px-2 text-small transition-[color,background-color,scale] active:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-text)]";
 
 /**
  * The one reaction row — used by every MomentCard and by MomentDetail, so
@@ -318,7 +318,7 @@ export function MomentActions({
             aria-label={`Love this, ${love}${loved ? ", pressed" : ""}`}
             title="Love this"
             onClick={() => press("love", loved)}
-            className={`${ICON_BTN} hover:bg-surface-muted ${loved ? "text-[var(--coral-deep)]" : "text-foreground"}`}
+            className={`${ICON_BTN} hover:bg-surface-muted ${loved ? "text-[var(--accent-text)]" : "text-foreground"}`}
           >
             <Heart
               className={`size-[18px] shrink-0 ${justPressed === "love" ? "ns-react" : ""}`}
@@ -551,7 +551,7 @@ export function MomentCard({
                 >
                   <Heart
                     className="size-20 icon-halo"
-                    style={{ color: "var(--coral-deep)" }}
+                    style={{ color: "var(--accent-text)" }}
                     fill="currentColor"
                     strokeWidth={0}
                     aria-hidden="true"
@@ -629,7 +629,7 @@ export function MomentCard({
             onClick={() => setVisibilityOpen(true)}
             aria-label={`Who sees this: ${visibilityWord(post)}. Change it`}
             title="Who sees this"
-            className="absolute right-1 top-1 z-[1] flex size-11 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--coral-deep)] motion-reduce:transition-none"
+            className="absolute right-1 top-1 z-[1] flex size-11 items-center justify-center rounded-control transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-text)] motion-reduce:transition-none"
           >
             {onlyYou ? (
               <Lock
@@ -660,7 +660,7 @@ export function MomentCard({
             <span className="ns-section-kicker min-w-0 truncate text-muted-foreground" title={[corner, post.city].filter(Boolean).join(" · ")}>{[corner, post.city].filter(Boolean).join(" · ")}</span>
             <span className="ns-section-kicker flex shrink-0 items-center gap-1.5 text-muted-foreground">
               {onlyYou && <Lock className="size-3" aria-hidden="true" />}
-              <span className="hidden sm:inline">{visibilityWord(post)} · </span>
+              <span className="hidden tab:inline">{visibilityWord(post)} · </span>
               <Time value={post.createdAt} />
             </span>
           </div>
@@ -674,7 +674,7 @@ export function MomentCard({
             <span className="min-w-0">
               <Link
                 to={post.userId ? `/u/${encodeURIComponent(post.userId)}` : "#"}
-                className="-my-3 block truncate py-3 text-body leading-tight transition-colors hover:text-[var(--coral-text)]"
+                className="-my-3 block truncate py-3 text-body leading-tight transition-colors hover:text-[var(--accent-text)]"
                 style={{ fontFamily: "var(--font-serif)" }}
                title={post.creator}>
                 {post.creator}

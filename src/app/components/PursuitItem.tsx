@@ -106,7 +106,7 @@ export function PursuitItem({
           type="button"
           onClick={() => setCoverOpen(true)}
           aria-label={`Change the cover photo for ${pursuit.title}`}
-          className="absolute right-2.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 [@media(hover:none)]:opacity-100 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-2.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 [@media(hover:none)]:opacity-100 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-text)] group-hover:opacity-100 group-focus-within:opacity-100"
         >
           <ImagePlus className="size-3.5" strokeWidth={1.9} />
         </button>
@@ -115,7 +115,7 @@ export function PursuitItem({
           type="button"
           onClick={() => setGoalOpen(true)}
           aria-label={`Edit the goal for ${pursuit.title}`}
-          className="absolute right-11 [@media(hover:none)]:right-13.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 [@media(hover:none)]:opacity-100 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-11 [@media(hover:none)]:right-13.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 [@media(hover:none)]:opacity-100 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-text)] group-hover:opacity-100 group-focus-within:opacity-100"
         >
           <Target className="size-3.5" strokeWidth={1.9} />
         </button>
@@ -127,7 +127,7 @@ export function PursuitItem({
             setShareOpen(true);
           }}
           aria-label={`Share ${pursuit.title}`}
-          className="absolute right-[4.875rem] [@media(hover:none)]:right-24.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 [@media(hover:none)]:opacity-100 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)] group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-[4.875rem] [@media(hover:none)]:right-24.5 top-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-scrim-solid/55 text-on-media opacity-0 [@media(hover:none)]:opacity-100 backdrop-blur-md transition-opacity duration-fast hover:bg-scrim-solid/75 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-text)] group-hover:opacity-100 group-focus-within:opacity-100"
         >
           <Share2 className="size-3.5" strokeWidth={1.9} />
         </button>
@@ -137,8 +137,8 @@ export function PursuitItem({
             to={`/create?pursuit=${pursuit.id}`}
             onClick={() => track({ name: "pursuits_in_progress_item_tapped", pursuitId: pursuit.id })}
             aria-label={`Log a Moment on ${pursuit.title}`}
-            className="flex size-9 items-center justify-center rounded-full text-on-brand shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--coral-deep)]"
-            style={{ backgroundColor: "var(--coral-deep)" }}
+            className="flex size-9 items-center justify-center rounded-full text-accent-foreground shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-text)]"
+            style={{ backgroundColor: "var(--accent)" }}
           >
             <Plus className="size-4" strokeWidth={2.2} />
           </Link>
@@ -156,7 +156,7 @@ export function PursuitItem({
             className="flex size-6 items-center justify-center rounded-full"
             style={{
               backgroundColor: "color-mix(in srgb, var(--coral) 16%, var(--surface-muted))",
-              color: "var(--coral-deep)",
+              color: "var(--accent-text)",
             }}
           >
             <Sparkle className="size-3.5" strokeWidth={1.8} />

@@ -29,7 +29,7 @@ export function HeroCard({ card, ticket }: { card: MoodCard; ticket: EventTicket
       <Link
         to={cornerPath(card.spaceSlug, card.cornerSlug)}
         viewTransition={viewTransitionAllowed()}
-        className="relative block aspect-[4/5] overflow-hidden rounded-card bg-[var(--cat)] text-[var(--photo-text)] sm:aspect-[16/9] lg:aspect-[21/9]"
+        className="relative block aspect-[4/5] overflow-hidden rounded-card bg-[var(--cat)] text-[var(--photo-text)] tab:aspect-[16/9] desk:aspect-[21/9]"
       >
         <div className="absolute inset-0" style={{ viewTransitionName: cornerPhotoTransitionName(card.cornerSlug) }}>
           <ImageWithFallback src={src} alt={cornerPhotoAlt(card.cornerSlug) || card.label} width={1200} priority className="absolute inset-0 size-full" />

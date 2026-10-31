@@ -114,7 +114,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={60}
-              className="mb-4 w-full rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-lead text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-lead text-[var(--ink)] outline-none focus:border-[var(--accent-text)]"
               style={{ fontFamily: "var(--font-serif)" }}
             />
 
@@ -127,7 +127,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               onChange={(e) => setTagline(e.target.value)}
               rows={2}
               maxLength={160}
-              className="mb-4 w-full resize-none rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-body italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full resize-none rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-body italic text-[var(--ink)] outline-none focus:border-[var(--accent-text)]"
               style={{ fontFamily: "var(--font-body)" }}
             />
 
@@ -145,7 +145,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
                     onClick={() => setPostId(post.id)}
                     className="h-16 w-[90px] shrink-0 overflow-hidden rounded-control"
                     style={{
-                      border: postId === post.id ? "2px solid var(--coral-deep)" : "1px solid var(--line)",
+                      border: postId === post.id ? "2px solid var(--accent-text)" : "1px solid var(--line)",
                     }}
                     aria-label={`Use ${post.caption || "this photo"} as the cover`}
                     aria-pressed={postId === post.id}

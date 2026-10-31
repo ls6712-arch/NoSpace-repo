@@ -417,7 +417,7 @@ export function SpaceHomeTab({
     <div className="space-y-8 py-6">
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
-        <div className="-mx-4 rounded-card bg-bark px-5 py-5 text-on-bark sm:mx-0">
+        <div className="-mx-4 rounded-card bg-bark px-5 py-5 text-on-bark tab:mx-0">
           <p className="text-caption tracking-wide text-on-bark/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
           <p className="mt-1 line-clamp-2 break-words text-title" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
           <p className="mt-1 text-small text-on-bark/80 tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
@@ -464,7 +464,7 @@ export function SpaceHomeTab({
       {isActiveMember && !todayEvent && nextEvent && nextWithinWeek && (
         <Link
           to={`/space/${space.slug}?tab=events`}
-          className="-mx-4 flex items-center justify-between gap-3 rounded-card bg-bark px-5 py-3 text-small text-on-bark sm:mx-0"
+          className="-mx-4 flex items-center justify-between gap-3 rounded-card bg-bark px-5 py-3 text-small text-on-bark tab:mx-0"
         >
           <span className="truncate" title={`Next: ${fmtDay(nextEvent.starts_at)} · ${nextEvent.title}`}>
             Next: {fmtDay(nextEvent.starts_at)} · {nextEvent.title}
@@ -538,7 +538,7 @@ export function SpaceHomeTab({
         <Loadable
           loading={moments === "loading"}
           skeleton={
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3">
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="overflow-hidden rounded-card border border-line bg-paper">
                   <MomentCardSkeleton />
@@ -560,7 +560,7 @@ export function SpaceHomeTab({
             {pinnedMoments.length > 0 && (
               <p className="mt-4 ns-section-kicker text-muted-foreground">Host picks</p>
             )}
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3">
               {pinnedMoments.map((post, i) => (
                 <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
                   {isHost && (
@@ -585,7 +585,7 @@ export function SpaceHomeTab({
                 {pinnedMoments.length > 0 && (
                   <p className="mt-8 ns-section-kicker text-muted-foreground">Latest</p>
                 )}
-                <div className={`grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 ${pinnedMoments.length > 0 ? "mt-3" : "mt-3"}`}>
+                <div className={`grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3 ${pinnedMoments.length > 0 ? "mt-3" : "mt-3"}`}>
                   {restMoments.map((post, i) => (
                     <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
                       {isHost && (

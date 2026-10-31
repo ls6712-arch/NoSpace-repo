@@ -48,7 +48,7 @@ export function RailItem({
         {leading ?? (Icon && <Icon className="size-6" strokeWidth={accent ? 2.4 : 1.75} aria-hidden="true" />)}
         {badge > 0 && (
           <span
-            className="absolute -right-2 -top-1.5 flex min-w-4 items-center justify-center rounded-full px-1 text-caption leading-4 text-on-brand tabular-nums [background-color:var(--coral-deep)]"
+            className="absolute -right-2 -top-1.5 flex min-w-4 items-center justify-center rounded-full px-1 text-caption leading-4 text-on-brand tabular-nums [background-color:var(--accent-text)]"
             aria-hidden="true"
           >
             {formatBadgeCount(badge)}

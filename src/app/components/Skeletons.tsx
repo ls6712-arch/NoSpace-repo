@@ -78,7 +78,7 @@ export function SpaceCardSkeleton() {
 
 export function SpaceGridSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 tab:grid-cols-4 desk:grid-cols-5">
       {Array.from({ length: count }, (_, i) => (
         <SpaceCardSkeleton key={i} />
       ))}
@@ -120,7 +120,7 @@ export function PersonRowSkeleton({ variant = "card" }: { variant?: "card" | "ro
 
 export function PersonListSkeleton({ count = 4, variant = "row" }: { count?: number; variant?: "card" | "row" }) {
   return (
-    <div className={variant === "card" ? "grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3" : "space-y-1"}>
+    <div className={variant === "card" ? "grid gap-2.5 tab:grid-cols-2 desk:grid-cols-3" : "space-y-1"}>
       {Array.from({ length: count }, (_, i) => (
         <PersonRowSkeleton key={i} variant={variant} />
       ))}
@@ -131,12 +131,12 @@ export function PersonListSkeleton({ count = 4, variant = "row" }: { count?: num
 /** Twin of the profile header on a Shelf (PublicProfile). */
 export function ProfileHeaderSkeleton() {
   return (
-    <div className="mb-8 flex items-start gap-5 sm:gap-6">
-      <Skeleton className="size-20 shrink-0 rounded-full sm:size-28" />
+    <div className="mb-8 flex items-start gap-5 tab:gap-6">
+      <Skeleton className="size-20 shrink-0 rounded-full tab:size-28" />
       <div className="min-w-0 flex-1">
-        {/* h1: text-4xl/5xl leading-tight */}
-        <div className="flex h-[2.8125rem] items-center sm:h-[3.75rem]">
-          <Line className="h-7 w-56 max-w-full sm:h-9" />
+        {/* h1: text-title, so the box is one title line tall */}
+        <div className="flex min-h-[calc(var(--text-title)*1.3)] items-center text-title">
+          <Line className="h-5 w-56 max-w-full" />
         </div>
         <div className="mt-1.5 flex h-7 items-center">
           <Line className="h-3.5 w-72 max-w-full" />
@@ -195,8 +195,8 @@ export function PursuitHeaderSkeleton() {
         <Skeleton className="size-7 rounded-full" />
         <Line className="h-3 w-24" />
       </div>
-      <div className="mb-2 flex h-9 items-center sm:h-10">
-        <Line className="h-7 w-3/4 sm:h-8" />
+      <div className="mb-2 flex h-9 items-center tab:h-10">
+        <Line className="h-7 w-3/4 tab:h-8" />
       </div>
       <div className="mb-5 flex h-5 items-center">
         <Line className="h-3 w-56" />

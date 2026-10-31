@@ -14,7 +14,7 @@ const tabClass = (active: boolean) =>
  */
 export function DiscoverTabsBar() {
   return (
-    <nav aria-label="Discover" className="-mx-4 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Discover" className="-mx-4 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] tab:mx-0 tab:overflow-visible tab:px-0 [&::-webkit-scrollbar]:hidden">
       <ul className="inline-flex w-max items-center gap-6">
         <li>
           <PressLink to="/corners" aria-current="page" className={tabClass(true)}>

@@ -217,7 +217,7 @@ export function NotificationsMenu({
           <Bell className="size-5" />
           {badgeCount > 0 && (
             <span
-              className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand tabular-nums"
+              className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums"
               aria-hidden="true"
             >
               {formatBadgeCount(badgeCount)}
@@ -233,7 +233,7 @@ export function NotificationsMenu({
           className={
             variant === "rail"
               ? "fixed left-[80px] top-3 z-50 max-h-[calc(100dvh-1.5rem)] w-96 overflow-y-auto rounded-card border border-border bg-popover shadow-overlay wide:left-[248px]"
-              : "absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-popover shadow-overlay max-sm:fixed max-sm:inset-x-3 max-sm:top-[calc(var(--safe-top)+4.5rem)] max-sm:mt-0 max-sm:w-auto"
+              : "absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-popover shadow-overlay max-tab:fixed max-tab:inset-x-3 max-tab:top-[calc(var(--safe-top)+4.5rem)] max-tab:mt-0 max-tab:w-auto"
           }
         >
           <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3 text-small">

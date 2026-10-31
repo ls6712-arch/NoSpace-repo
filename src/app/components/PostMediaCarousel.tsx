@@ -68,7 +68,7 @@ export function PostMediaCarousel({
         playsInline
         preload="metadata"
         onError={() => markFailed(url)}
-        className={`${className ?? ""} object-cover [background-color:var(--void)]`}
+        className={`${className ?? ""} object-cover [background-color:var(--background)]`}
       />
     );
   }
@@ -150,7 +150,7 @@ function PhotoTrack({
         onScroll={handleScroll}
         tabIndex={0}
         aria-label={label}
-        className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain outline-none [-ms-overflow-style:none] [scrollbar-width:none] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--coral-deep)] [&::-webkit-scrollbar]:hidden"
+        className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain outline-none [-ms-overflow-style:none] [scrollbar-width:none] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-text)] [&::-webkit-scrollbar]:hidden"
       >
         {urls.map((url, i) => (
           <div key={url + i} role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${urls.length}`} className="size-full shrink-0 snap-center snap-always">

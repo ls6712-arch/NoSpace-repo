@@ -155,7 +155,7 @@ export function AdminCityPicks() {
           </>
             )}
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 tab:grid-cols-2">
             <Field label="Starts" hint="New York time">
             {(id) => (
               <>

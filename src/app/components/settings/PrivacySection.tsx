@@ -22,7 +22,7 @@ function BlockedPeopleSection() {
 
   if (social.blockedPeople.length === 0) {
     return (
-      <p className="px-4 py-4 text-caption leading-relaxed text-muted-foreground sm:px-5">
+      <p className="px-4 py-4 text-caption leading-relaxed text-muted-foreground tab:px-5">
         You haven’t blocked anyone.
       </p>
     );
@@ -31,7 +31,7 @@ function BlockedPeopleSection() {
   return (
     <ul className="divide-y divide-[var(--hairline)]">
       {social.blockedPeople.map((p) => (
-        <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+        <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 tab:px-5">
           <span className="flex min-w-0 items-center gap-2.5">
             <Avatar className="size-8 shrink-0">
               {p.avatarUrl && <AvatarImage src={p.avatarUrl} alt="" />}
@@ -62,7 +62,7 @@ function DefaultVisibilityRow() {
   const { saved, flash } = useSavedFlash();
 
   return (
-    <div className="px-4 py-4 sm:px-5">
+    <div className="px-4 py-4 tab:px-5">
       <div className="mb-0.5 text-small">Default visibility for new Moments</div>
       <p className="mb-3 text-caption leading-relaxed text-muted-foreground">
         What a new Moment starts as in the composer. You can always change it there before sharing.

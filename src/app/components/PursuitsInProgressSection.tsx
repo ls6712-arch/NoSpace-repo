@@ -112,7 +112,7 @@ export function PursuitsInProgressSection({
         />
       ) : (
         <div
-          className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"
+          className="mt-3 grid grid-cols-2 gap-3 tab:grid-cols-3 tab:gap-4 desk:grid-cols-4"
           role="list"
           aria-label="Pursuits in progress"
         >
@@ -133,7 +133,7 @@ export function PursuitsInProgressSection({
             transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(active.length, 7) * 0.05 }}
             whileHover={reduceMotion ? undefined : { y: -4 }}
             whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-border text-caption text-muted-foreground transition-colors hover:border-[var(--coral-deep)] hover:text-foreground"
+            className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-border text-caption text-muted-foreground transition-colors hover:border-[var(--accent-text)] hover:text-foreground"
           >
             <ArrowRight className="size-4" />
             See all

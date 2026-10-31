@@ -20,7 +20,7 @@ export function TermsCheckbox({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         required
-        className="mt-0.5 size-5 shrink-0 accent-[var(--coral-deep)]"
+        className="mt-0.5 size-5 shrink-0 accent-[var(--accent-text)]"
       />
       <label htmlFor={id} className="min-h-6 text-small leading-snug">
         I’m 18 or older and agree to the{" "}

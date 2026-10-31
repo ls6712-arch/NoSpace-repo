@@ -124,7 +124,7 @@ function EditSheet({ prefs, open, onOpenChange, onSaved }: { prefs: PlanningPref
             <Switch id="plan-share" checked={share} onCheckedChange={setShare} />
           </div>
         </div>
-        {error && <p role="alert" className="text-small text-[var(--coral-text)]">{error}</p>}
+        {error && <p role="alert" className="text-small text-[var(--accent-text)]">{error}</p>}
       </div>
     </ResponsiveSheet>
   );

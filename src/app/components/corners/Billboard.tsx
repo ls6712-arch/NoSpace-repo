@@ -86,13 +86,13 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
               />
               <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
               <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
-              <div className="absolute inset-0 mx-auto flex w-full max-w-[1264px] flex-col items-start justify-end gap-3 px-4 pb-28 md:px-8 md:pb-24">
+              <div className="absolute inset-0 mx-auto flex w-full max-w-[1264px] flex-col items-start justify-end gap-3 px-4 pb-28 tab:px-8 tab:pb-24">
                 {i === 0 && <p className="text-small font-semibold text-on-media/90">Corner of the week</p>}
                 <h2 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
                   {corner.name}
                 </h2>
                 <p className="text-body text-on-media/90">{cornerMeta(corner)}</p>
-                {about && <p className="max-w-lg text-lead text-on-media/90 max-md:hidden">{about}</p>}
+                {about && <p className="max-w-lg text-lead text-on-media/90 max-tab:hidden">{about}</p>}
                 {next && (
                   <p className="text-small font-semibold text-on-media">
                     {next.title}
@@ -119,7 +119,7 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
         })}
       </ul>
       {slides.length > 1 && (
-        <div className="absolute inset-x-0 bottom-10 flex justify-center md:inset-x-auto md:bottom-12 md:right-8">
+        <div className="absolute inset-x-0 bottom-10 flex justify-center tab:inset-x-auto tab:bottom-12 tab:right-8">
           {slides.map((s, i) => (
             <button
               key={s.corner.slug}

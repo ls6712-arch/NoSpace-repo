@@ -11,7 +11,7 @@ export function ChipGroup<T extends string | number>({
   onChange: (next: T | null) => void;
 }) {
   return (
-    <div role="group" aria-label={label} className="-mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div role="group" aria-label={label} className="-mx-4 flex gap-2 overflow-x-auto px-4 tab:mx-0 tab:flex-wrap tab:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {options.map((o) => {
         const on = value === o.id;
         return (

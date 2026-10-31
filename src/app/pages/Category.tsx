@@ -130,7 +130,7 @@ export function CategoryPage() {
         <div className="pointer-events-none absolute inset-0 bg-scrim-solid/25" aria-hidden="true" />
         <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
-        <div className={`${PAGE_X} relative flex flex-1 flex-col pb-10 pt-6 md:pb-14`}>
+        <div className={`${PAGE_X} relative flex flex-1 flex-col pb-10 pt-6 tab:pb-14`}>
           <Link to="/corners" className="inline-flex min-h-11 items-center text-small hover:underline">
             ← Back to Corners
           </Link>
@@ -180,7 +180,7 @@ export function CategoryPage() {
           {shown.length === 0 ? (
             <EmptyState line="No Corners match those choices." hint="Clear a choice to see more." action={{ label: "Clear choices", onClick: () => setSearchParams(new URLSearchParams()) }} />
           ) : (
-            <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-3 tab:grid-cols-3 tab:gap-4 desk:grid-cols-4">
               {shown.map((c) => (
                 <CornerCard key={cornerKey(c)} corner={c} subline={c.curated ? cornerMeta(c.curated) : ""} fluid />
               ))}
@@ -194,7 +194,7 @@ export function CategoryPage() {
               Recent Moments
             </h2>
             {tabs.length > 1 && (
-              <ul role="tablist" aria-label="Corners" className="-mx-4 mb-6 flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0">
+              <ul role="tablist" aria-label="Corners" className="-mx-4 mb-6 flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] tab:mx-0 tab:px-0">
                 {[{ slug: "all", name: "Everything" }, ...tabs].map((c) => {
                   const active = activeTab === c.slug;
                   return (
@@ -218,25 +218,25 @@ export function CategoryPage() {
                 })}
               </ul>
             )}
-            <div className="space-y-10 md:space-y-12">
+            <div className="space-y-10 tab:space-y-12">
               <Reveal>
-                <MomentTile post={lead} priority width={1200} aspect="aspect-[4/5] md:aspect-[16/9]" onOpen={() => setOpenPost(lead)} />
+                <MomentTile post={lead} priority width={1200} aspect="aspect-[4/5] tab:aspect-[16/9]" onOpen={() => setOpenPost(lead)} />
               </Reveal>
               {shownRest.length > 0 && (
                 <div>
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                  <div className="grid grid-cols-2 gap-3 tab:grid-cols-4 tab:gap-4">
                     {shownRest.map((post, i) => (
                       <Reveal
                         key={post.id}
                         index={i % 8}
-                        className={`${i >= narrowCount ? "max-md:hidden" : ""} ${i >= wideCount ? "md:hidden" : ""}`}
+                        className={`${i >= narrowCount ? "max-tab:hidden" : ""} ${i >= wideCount ? "tab:hidden" : ""}`}
                       >
                         <MomentTile post={post} onOpen={() => setOpenPost(post)} />
                       </Reveal>
                     ))}
                   </div>
                   {(hiddenWide || hiddenNarrow) && (
-                    <div className={`mt-10 border-t border-border pt-4 ${hiddenNarrow ? "" : "max-md:hidden"} ${hiddenWide ? "" : "md:hidden"}`}>
+                    <div className={`mt-10 border-t border-border pt-4 ${hiddenNarrow ? "" : "max-tab:hidden"} ${hiddenWide ? "" : "tab:hidden"}`}>
                       <Button variant="outline" onClick={() => setMorePages((m) => m + 1)}>
                         Show more
                       </Button>

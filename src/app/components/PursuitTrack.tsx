@@ -177,7 +177,7 @@ export function PursuitTrack({
           <Link
             to={`/create?pursuit=${pursuit.id}`}
             aria-label={`Log a Moment on ${pursuit.title}`}
-            className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground transition-colors hover:border-[var(--coral-deep)]"
+            className="flex shrink-0 items-center gap-1 rounded-control border border-border px-2.5 py-1 text-caption text-foreground transition-colors hover:border-[var(--accent-text)]"
           >
             <Plus className="size-3" />
             Moment

@@ -12,7 +12,7 @@ export function BrowseByChips() {
       <p className="text-small font-semibold text-foreground" aria-hidden="true">
         Browse by
       </p>
-      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
+      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] tab:mx-0 tab:px-0 [&::-webkit-scrollbar]:hidden">
         {CORNER_CATEGORIES.map((cat) => (
           <li key={cat.slug} className="shrink-0">
             <Link

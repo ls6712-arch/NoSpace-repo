@@ -324,7 +324,7 @@ function ConversationPanel({
   };
 
   return (
-    <div className="flex h-[26rem] flex-col rounded-card border border-border bg-card md:h-[36rem]">
+    <div className="flex h-[26rem] flex-col rounded-card border border-border bg-card tab:h-[36rem]">
       <div className="flex items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <Avatar className="size-9 shrink-0">
@@ -407,9 +407,9 @@ function ConversationPanel({
                       <div
                         className={`rounded-card px-3.5 py-2 text-small ${
                           m.status === "failed"
-                            ? "border border-dashed border-[var(--coral-text)] bg-surface-muted text-foreground"
+                            ? "border border-dashed border-[var(--accent-text)] bg-surface-muted text-foreground"
                             : mine
-                              ? `text-on-brand [background-color:var(--coral-deep)] ${m.status === "sending" ? "opacity-60" : ""}`
+                              ? `text-on-brand [background-color:var(--accent-text)] ${m.status === "sending" ? "opacity-60" : ""}`
                               : "bg-surface-muted"
                         }`}
                       >
@@ -431,7 +431,7 @@ function ConversationPanel({
                     <button
                       type="button"
                       onClick={() => onRetry(m.clientId!)}
-                      className="mt-0.5 block text-caption text-[var(--coral-text)] underline-offset-2 hover:underline"
+                      className="mt-0.5 block text-caption text-[var(--accent-text)] underline-offset-2 hover:underline"
                     >
                       Not sent · tap to retry
                     </button>
@@ -452,7 +452,7 @@ function ConversationPanel({
           <button
             type="button"
             onClick={scrollToBottom}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--coral-deep)] px-3.5 py-1.5 text-caption text-on-brand"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-control bg-[var(--accent)] px-3.5 py-1.5 text-caption text-accent-foreground"
           >
             {pluralWord(newMessageCount, "New message", "New messages")}
           </button>
@@ -510,10 +510,10 @@ function ConversationPanel({
         </Button>
       </div>
       {heicWarning && (
-        <p className="border-t border-[var(--hairline)] px-4 py-2 text-caption text-[var(--coral-text)]">{heicWarning}</p>
+        <p className="border-t border-[var(--hairline)] px-4 py-2 text-caption text-[var(--accent-text)]">{heicWarning}</p>
       )}
       {sendError && (
-        <p className="border-t border-[var(--hairline)] px-4 py-2 text-caption text-[var(--coral-text)]">
+        <p className="border-t border-[var(--hairline)] px-4 py-2 text-caption text-[var(--accent-text)]">
           {sendError}
         </p>
       )}
@@ -832,7 +832,7 @@ export function Messages() {
               ))}
             </ul>
           )}
-          {startError && <p className="text-caption text-[var(--coral-text)]">{startError}</p>}
+          {startError && <p className="text-caption text-[var(--accent-text)]">{startError}</p>}
         </div>
       </DialogContent>
     </Dialog>
@@ -841,7 +841,7 @@ export function Messages() {
   const requestCount = requests.length;
 
   return (
-    <div className="min-h-viewport bg-surface py-10 sm:py-14">
+    <div className="min-h-viewport bg-surface py-10 tab:py-14">
       <div className="container mx-auto max-w-4xl px-4">
         <div className="mb-1 flex items-center justify-between gap-3">
           <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
@@ -879,7 +879,7 @@ export function Messages() {
                 action={{ label: "New message", onClick: openPicker }}
               />
             ) : (
-              <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
+              <div className="grid gap-4 tab:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
                 <ul className="min-w-0 space-y-2">
                   {chatThreads.map((t) => {
                     const name = user && t.fromUser === user.id ? t.toName ?? "Them" : t.fromName;
@@ -908,7 +908,7 @@ export function Messages() {
                             setActiveId(t.id);
                           }}
                           className={`flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors ${
-                            on ? "border-[var(--coral-deep)] bg-card" : "border-border bg-card hover:border-[var(--foreground)]/30"
+                            on ? "border-[var(--accent-text)] bg-card" : "border-border bg-card hover:border-[var(--foreground)]/30"
                           }`}
                         >
                           <Avatar className="size-10 shrink-0">
@@ -936,7 +936,7 @@ export function Messages() {
                           </span>
                           {unread > 0 && (
                             <span
-                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--coral-deep)] text-caption text-on-brand"
+                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand"
                               aria-label={`${unread} unread`}
                             >
                               {formatBadgeCount(unread)}

@@ -128,7 +128,7 @@ export function HobbyArchive() {
   }
 
   return (
-    <div className="min-h-viewport bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 tab:py-12">
       <div className="container mx-auto max-w-3xl px-4">
         <Link
           to="/you"
@@ -167,7 +167,7 @@ export function HobbyArchive() {
               onClick={() => setTab(id)}
               className={`-mb-px border-b-2 px-3 py-2 text-small capitalize transition-colors ${
                 tab === id
-                  ? "border-[var(--coral-deep)] text-foreground"
+                  ? "border-[var(--accent-text)] text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -187,7 +187,7 @@ export function HobbyArchive() {
                     onClick={() => setFilter(f.id)}
                     className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
                       filter === f.id
-                        ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
+                        ? "border-transparent text-on-brand [background-color:var(--accent-text)]"
                         : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
                     }`}
                   >
@@ -245,7 +245,7 @@ export function HobbyArchive() {
                 action={{ label: "Start a Pursuit", to: "/pursuits/new" }}
               />
             ) : (
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid gap-3 tab:grid-cols-2">
                 {projects.map((project) => {
                   const updates = moments.filter(
                     (m) => journal.entryProject[String(m.id)] === project.id,
@@ -325,7 +325,7 @@ export function HobbyArchive() {
               </h2>
               <Link
                 to={`/space/${target.hobbySlug}${target.subSlug ? `?hobby=${target.subSlug}` : ""}`}
-                className="text-small text-[var(--coral-text)] hover:underline"
+                className="text-small text-[var(--accent-text)] hover:underline"
               >
                 Open {target.label} in {space.shortName} →
               </Link>

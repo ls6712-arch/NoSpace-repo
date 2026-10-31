@@ -72,7 +72,7 @@ export function OnboardingInviteCard({
   return (
     <div>
       <Heading
-        className={variant === "page" ? "mb-1 text-title sm:text-display" : "mb-1 text-title"}
+        className={variant === "page" ? "mb-1 text-title tab:text-display" : "mb-1 text-title"}
         style={{ fontFamily: "var(--font-serif)" }}
       >
         Invite someone?

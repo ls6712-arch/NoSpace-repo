@@ -75,7 +75,7 @@ export function BottomSheet({
                 }}
                 className={cn(
                   "fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full flex-col bg-card text-foreground outline-none",
-                  full ? "top-0 sm:max-w-md" : "max-h-[92dvh] rounded-t-card sm:max-w-md",
+                  full ? "top-0 tab:max-w-md" : "max-h-[92dvh] rounded-t-card tab:max-w-md",
                   className,
                 )}
               >

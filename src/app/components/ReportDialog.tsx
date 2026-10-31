@@ -154,7 +154,7 @@ export function ReportDialog({
               <span>Also block {personName}</span>
               <Switch checked={alsoBlock} onCheckedChange={setAlsoBlock} />
             </label>
-            {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
+            {error && <p className="text-caption text-[var(--accent-text)]">{error}</p>}
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={busy}>
                 Cancel

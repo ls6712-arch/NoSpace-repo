@@ -87,7 +87,7 @@ export function GoalProgressTap({
         onPointerUp={stopHold}
         onPointerLeave={stopHold}
         disabled={atTarget}
-        className={`flex items-center justify-center gap-1.5 rounded-control border border-[var(--coral-deep)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] font-medium text-foreground transition-colors hover:border-[var(--coral-deep)] disabled:cursor-default disabled:opacity-50 ${
+        className={`flex items-center justify-center gap-1.5 rounded-control border border-[var(--accent-text)]/50 bg-[color-mix(in_srgb,var(--coral)_14%,var(--surface-elevated))] font-medium text-foreground transition-colors hover:border-[var(--accent-text)] disabled:cursor-default disabled:opacity-50 ${
           fullWidth ? "flex-1 py-3.5 text-body" : "px-3.5 py-1.5 text-small"
         }`}
       >

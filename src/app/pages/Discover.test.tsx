@@ -88,12 +88,12 @@ afterEach(() => {
 });
 
 describe("Discover layout", () => {
-  it("shows the header, search, jump chips and the sections in order", async () => {
+  it("shows the header, jump chips and the sections in order", async () => {
     show();
     await settle();
     expect(screen.getByText("What’s out there in")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 1, name: /New York/ })).toBeTruthy();
-    expect(screen.getByPlaceholderText("Search Corners, Spaces, people")).toBeTruthy();
+    
     const nav = screen.getByRole("navigation", { name: "Sections" });
     expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Spaces", "Moments"]);
     const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
