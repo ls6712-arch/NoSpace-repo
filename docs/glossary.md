@@ -522,6 +522,8 @@ Put a face on your card, Tonight’s yours., Tomorrow’s yours., This weekend�
 | Reset your password | Heading of the forgot-password screen |
 | Send reset link | Button on it. Check your email follows, with the line above and a Log in button |
 | Signing you in… | While the session is made (Stubby thinks) |
+| New password · Save password | The one field and the one button on /reset-password, where a reset link lands. Saving goes Home (founder, Oct 31, 2026) |
+| This link has expired. · Send a new link | /reset-password when the link is past its time, already used, or missing. The button sends a new link to the address last asked for on this device (the line above follows), or opens the log in screen's reset step when there is none. Wording proposed by the build, to confirm |
 
 ### The code screen, in stages (log in brief revision 3, Oct 30, 2026)
 
