@@ -165,7 +165,7 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
                   onClick={() => setHobbyParam(on ? "" : h.slug)}
                   className={`rounded-control border px-3.5 py-1.5 text-caption font-medium transition-colors ${
                     on
-                      ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
+                      ? "border-transparent text-on-brand [background-color:var(--accent-text)]"
                       : "border-border bg-card text-foreground hover:border-[var(--foreground)]/35"
                   }`}
                 >
@@ -213,10 +213,10 @@ export function PeopleBrowser({ query: externalQuery }: { query?: string } = {})
 export function People() {
   return (
     <div className="min-h-viewport">
-      <section className="relative overflow-hidden py-12 sm:py-12">
+      <section className="relative overflow-hidden py-12 tab:py-12">
         <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
         <div className="container mx-auto max-w-5xl px-4 relative">
-          <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             People
           </h1>
           <p className="mb-6 mt-2 max-w-2xl text-lead text-foreground">

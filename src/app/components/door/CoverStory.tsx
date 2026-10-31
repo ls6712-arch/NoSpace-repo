@@ -1,7 +1,7 @@
 import { cornerPath } from "../../lib/cornerPath";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { GeneratedArt } from "../GeneratedArt";
-import { PressLink } from "../afterhours/PressLink";
+import { PressLink } from "../common/PressLink";
 import { GoingButton, TicketFrame, eventTime, spaceAndPlace, ticketPath } from "./EventParts";
 import type { Post } from "../../data/posts";
 import type { MoodCard } from "../../data/moodCards";
@@ -41,7 +41,7 @@ export function CoverStory({
 }) {
   const src = photo ? (photo.mediaUrls?.[0] ?? photo.media) : cornerPhoto(card.spaceSlug, card.cornerSlug, 1200);
   const alt = photo ? momentAlt(photo, card.label) : cornerPhotoAlt(card.cornerSlug) || card.label;
-  const frame = `relative block overflow-hidden rounded-card bg-[var(--cat)] text-[var(--photo-text)] ${ticket ? "aspect-[4/3] sm:aspect-[16/10]" : "aspect-[16/10]"}`;
+  const frame = `relative block overflow-hidden rounded-card bg-[var(--cat)] text-[var(--photo-text)] ${ticket ? "aspect-[4/3] tab:aspect-[16/10]" : "aspect-[16/10]"}`;
   const art = (
     <>
       <ImageWithFallback
@@ -64,7 +64,7 @@ export function CoverStory({
   );
   return (
     <section
-      className={`mb-1 transition-opacity duration-fast md:mb-12 lg:col-span-7 ${fading ? "opacity-0" : "opacity-100"}`}
+      className={`mb-1 transition-opacity duration-fast tab:mb-12 desk:col-span-7 ${fading ? "opacity-0" : "opacity-100"}`}
       aria-label="Cover story"
       style={cornerStyle(card.spaceSlug, card.cornerSlug)}
     >
@@ -73,7 +73,7 @@ export function CoverStory({
           {art}
           <div className="pointer-events-none absolute inset-x-5 bottom-5 flex flex-col items-start gap-2">
             <span className="text-small font-semibold">{`Cover story · ${card.label}`}</span>
-            <span className="line-clamp-2 break-words text-title lg:text-display">{ticket.event.title}</span>
+            <span className="line-clamp-2 break-words text-title desk:text-display">{ticket.event.title}</span>
             <span className="text-body tabular-nums">
               <time dateTime={ticket.event.startsAt}>{eventTime(ticket)}</time>
               {` · ${spaceAndPlace(ticket)}`}
@@ -82,7 +82,7 @@ export function CoverStory({
           </div>
           {/* The sticker is decoration over the card's own link, so tapping it opens the ticket too. */}
           <span
-            className="door-wobble pointer-events-none absolute right-3 top-3 flex size-14 items-center justify-center rounded-full bg-[var(--accent)] text-center text-caption font-semibold text-[var(--accent-foreground)] lg:right-4 lg:top-4 lg:size-[92px] lg:text-lead"
+            className="door-wobble pointer-events-none absolute right-3 top-3 flex size-14 items-center justify-center rounded-full bg-[var(--accent)] text-center text-caption font-semibold text-[var(--accent-foreground)] desk:right-4 desk:top-4 desk:size-[92px] desk:text-lead"
             aria-hidden="true"
           >
             Admit one
@@ -94,7 +94,7 @@ export function CoverStory({
           <div className="absolute inset-x-5 bottom-5 flex flex-col gap-2">
             <span className="text-small font-semibold">{`Cover story · ${card.label}`}</span>
             <span className="text-small font-semibold">How to start</span>
-            <span className="text-title lg:text-display">{tieNumbers(card.guide.step)}</span>
+            <span className="text-title desk:text-display">{tieNumbers(card.guide.step)}</span>
           </div>
         </PressLink>
       )}

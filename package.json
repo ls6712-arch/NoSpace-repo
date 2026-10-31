@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --config vite.gradient.config.ts",
+    "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "npm run lint:tokens",
@@ -14,7 +14,6 @@
     "visual": "node scripts/visual/run.ts",
     "visual:selftest": "node scripts/visual/run.ts --selftest",
     "build:app": "vite build",
-    "build:gradient": "vite build --config vite.gradient.config.ts",
     "landing:screens": "node scripts/landing-screens/capture.mjs"
   },
   "dependencies": {

@@ -22,7 +22,7 @@ export function Shop() {
     <div className="min-h-viewport bg-surface py-14">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h1 className="text-display mb-3">The marketplace</h1>
+          <h1 className="text-title mb-3">The marketplace</h1>
           <p className="text-muted-foreground text-lead">
             Physical goods, digital guides, and courses, all made by real creators.
           </p>
@@ -58,7 +58,7 @@ export function Shop() {
           {plural(filtered.length, "listing")}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 tab:grid-cols-2 desk:grid-cols-3 wide:grid-cols-4 gap-6">
           {filtered.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

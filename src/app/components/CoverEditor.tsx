@@ -91,7 +91,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
             onCloseAutoFocus={(e) => {
               if (restoreFocus(opener.current)) e.preventDefault();
             }}
-            className="ns-paper-theme fixed top-1/2 left-1/2 z-[80] max-h-[90vh] w-[calc(100%-2rem)] max-w-[620px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-control border border-[var(--line)] bg-[var(--paper-raised)] p-8 ease-standard data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-fast"
+            className="fixed top-1/2 left-1/2 z-[80] max-h-[90vh] w-[calc(100%-2rem)] max-w-[620px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-control border border-[var(--border)] bg-[var(--surface)] p-8 ease-standard data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-base data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-fast"
           >
             <div className="mb-5 flex items-center justify-between">
               <DialogPrimitive.Title className="text-lead" style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>
@@ -100,13 +100,13 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               <DialogPrimitive.Close
                 disabled={saving}
                 aria-label="Close"
-                className="text-[var(--ink-soft)] transition-colors hover:text-[var(--ink)]"
+                className="text-[var(--muted-foreground)] transition-colors hover:text-foreground"
               >
                 <X className="size-4" />
               </DialogPrimitive.Close>
             </div>
 
-            <label className="mb-1 block text-caption text-[var(--ink-soft)]" htmlFor="cover-title">
+            <label className="mb-1 block text-caption text-[var(--muted-foreground)]" htmlFor="cover-title">
               Title
             </label>
             <input
@@ -114,11 +114,11 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={60}
-              className="mb-4 w-full rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-lead text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full rounded-control border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-lead text-foreground outline-none focus:border-[var(--accent-text)]"
               style={{ fontFamily: "var(--font-serif)" }}
             />
 
-            <label className="mb-1 block text-caption text-[var(--ink-soft)]" htmlFor="cover-tagline">
+            <label className="mb-1 block text-caption text-[var(--muted-foreground)]" htmlFor="cover-tagline">
               Tagline
             </label>
             <textarea
@@ -127,13 +127,13 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
               onChange={(e) => setTagline(e.target.value)}
               rows={2}
               maxLength={160}
-              className="mb-4 w-full resize-none rounded-control border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-body italic text-[var(--ink)] outline-none focus:border-[var(--coral-deep)]"
+              className="mb-4 w-full resize-none rounded-control border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-body italic text-foreground outline-none focus:border-[var(--accent-text)]"
               style={{ fontFamily: "var(--font-body)" }}
             />
 
-            <p className="mb-1.5 text-caption text-[var(--ink-soft)]">Cover photo</p>
+            <p className="mb-1.5 text-caption text-[var(--muted-foreground)]">Cover photo</p>
             {candidates.length === 0 ? (
-              <p className="mb-4 text-caption text-[var(--ink-faint)]">
+              <p className="mb-4 text-caption text-[var(--muted-foreground)]">
                 Pin a Moment with a photo first. That’s what shows up here.
               </p>
             ) : (
@@ -145,7 +145,7 @@ export function CoverEditor({ posts }: { posts: Post[] }) {
                     onClick={() => setPostId(post.id)}
                     className="h-16 w-[90px] shrink-0 overflow-hidden rounded-control"
                     style={{
-                      border: postId === post.id ? "2px solid var(--coral-deep)" : "1px solid var(--line)",
+                      border: postId === post.id ? "2px solid var(--accent-text)" : "1px solid var(--border)",
                     }}
                     aria-label={`Use ${post.caption || "this photo"} as the cover`}
                     aria-pressed={postId === post.id}

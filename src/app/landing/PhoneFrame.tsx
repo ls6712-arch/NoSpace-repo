@@ -1,4 +1,4 @@
-import { landingImageUrl, SCREEN_H, SCREEN_W, type LandingImageKey } from "./images";
+import { HERO_SRCSET, landingImageUrl, SCREEN_H, SCREEN_W, type LandingImageKey } from "./images";
 
 /** One real screen in the page's one phone frame, with an optional caption under it. */
 export function PhoneFrame({
@@ -20,6 +20,7 @@ export function PhoneFrame({
         {/* design-token-ignore: real screens from public/landing, hidden when missing so no fallback art */}
         <img
           src={landingImageUrl(image)}
+          {...(image === "hero" ? { srcSet: HERO_SRCSET } : {})}
           alt={alt}
           width={SCREEN_W}
           height={SCREEN_H}

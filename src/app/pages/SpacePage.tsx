@@ -222,17 +222,17 @@ export function SpacePage({ space }: { space: SpaceRow }) {
   const primaryCorner = corners.find((c) => c.isPrimary) ?? corners[0];
 
   return (
-    <div className="ns-space-theme min-h-viewport bg-background pb-24 text-foreground">
+    <div className="min-h-viewport bg-background pb-24 text-foreground">
       {/* Inset, compact cover — not edge-to-edge */}
       <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-card bg-surface-muted sm:aspect-[3/1]">
+        <div className="relative aspect-[21/9] w-full max-h-56 overflow-hidden rounded-card bg-surface-muted tab:aspect-[3/1]">
           <ImageWithFallback src={space.cover_image} alt="" className="size-full" />
         </div>
       </div>
 
       <div className="mx-auto w-full max-w-3xl px-4 pt-5">
         {space.status === "read_only" && (
-          <div className="mb-4 rounded-card border border-clay/30 bg-clay-soft px-4 py-3 text-small">
+          <div className="mb-4 rounded-card border border-accent/30 bg-surface-muted px-4 py-3 text-small">
             This Space is read-only right now. No new members, requests, or events until it’s reactivated.
           </div>
         )}
@@ -244,18 +244,18 @@ export function SpacePage({ space }: { space: SpaceRow }) {
 
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="ns-section-kicker text-clay">
+            <p className="ns-section-kicker text-accent-text">
               Space{primaryCorner ? ` · ${primaryCorner.name}` : ""}
             </p>
             <h1
-              className="mt-1 break-words text-display"
+              className="mt-1 break-words text-title"
               style={{ fontFamily: "var(--font-display)" }}
             >
               {space.name}
             </h1>
             <p className="mt-2 text-small text-muted-foreground">{space.description}</p>
           </div>
-          <span className="shrink-0 rounded-control border border-line px-2.5 py-1 text-caption text-muted-foreground">
+          <span className="shrink-0 rounded-control border border-border px-2.5 py-1 text-caption text-muted-foreground">
             {space.access === "open" ? "Open" : "Closed"}
           </span>
         </div>
@@ -286,7 +286,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
             </span>
           )}
           {isActiveMember && (
-            <span className="rounded-control bg-clay-soft px-2 py-0.5 text-caption font-medium text-clay-dark">
+            <span className="rounded-control bg-surface-muted px-2 py-0.5 text-caption font-medium text-accent-text">
               {isHost ? "Host" : "Member"}
             </span>
           )}
@@ -298,7 +298,7 @@ export function SpacePage({ space }: { space: SpaceRow }) {
 
         {spaceAddress && (
           <p className="mt-1.5 flex items-center gap-1 text-caption">
-            <MapPin className="size-3.5 text-clay" />
+            <MapPin className="size-3.5 text-accent-text" />
             {spaceAddress}
           </p>
         )}
@@ -306,9 +306,9 @@ export function SpacePage({ space }: { space: SpaceRow }) {
         {featuredEvent && (
           <Link
             to={`/space/${space.slug}?tab=events`}
-            className="mt-4 flex items-center gap-3 rounded-card border border-clay/40 bg-clay-soft px-4 py-3 hover:border-clay"
+            className="mt-4 flex items-center gap-3 rounded-card border border-accent/40 bg-surface-muted px-4 py-3 hover:border-accent"
           >
-            <Star className="size-4 shrink-0 fill-current text-clay" />
+            <Star className="size-4 shrink-0 fill-current text-accent-text" />
             <div className="min-w-0">
               <p className="truncate text-small font-medium" title={featuredEvent.title}>{featuredEvent.title}</p>
               <p className="text-caption text-muted-foreground"><Time value={featuredEvent.starts_at} format="datetime" timeZone={featuredEvent.timezone} /></p>

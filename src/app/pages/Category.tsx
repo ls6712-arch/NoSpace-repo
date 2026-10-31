@@ -12,8 +12,8 @@ import { Button } from "../components/ui/button";
 import { EmptyState } from "../components/StateViews";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { ImageWithFallback } from "../components/ImageWithFallback";
-import { Reveal } from "../components/afterhours/Reveal";
-import { MomentTile } from "../components/afterhours/MomentTile";
+import { Reveal } from "../components/common/Reveal";
+import { MomentTile } from "../components/common/MomentTile";
 import { ChipGroup } from "../components/corners/ChipGroup";
 import { CornerCard } from "../components/corners/CornerCard";
 import { WeekEventCard } from "../components/corners/WeekEventCard";
@@ -23,7 +23,6 @@ import { isInCorner } from "../lib/cornerAlias";
 import { NO_PICK, SETTING_OPTIONS, hasPick, matches, paramsFromPicker, pickerFromParams } from "../lib/cornerFilters";
 import { cornerPhoto, cornerPhotoAlt } from "../lib/cornerPhoto";
 import { fetchCornersLive, thisWeek, type CornerLive, type LiveEvent, type LiveSpace } from "../lib/cornersLive";
-import { displayStyle } from "../lib/doorList";
 import { fillRows } from "../lib/fillRows";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
@@ -114,7 +113,7 @@ export function CategoryPage() {
   const hiddenNarrow = n > narrowCount;
 
   return (
-    <div className="ns-afterhours min-h-viewport" style={categoryStyle(category.slug)}>
+    <div className="min-h-viewport" style={categoryStyle(category.slug)}>
       {/* Hero: the category's photo, with its name and what is in it bottom left. */}
       <header className="relative flex min-h-[48svh] flex-col overflow-hidden bg-[var(--cat)] text-on-media">
         {hero && (
@@ -130,12 +129,12 @@ export function CategoryPage() {
         <div className="pointer-events-none absolute inset-0 bg-scrim-solid/25" aria-hidden="true" />
         <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
-        <div className={`${PAGE_X} relative flex flex-1 flex-col pb-10 pt-6 md:pb-14`}>
+        <div className={`${PAGE_X} relative flex flex-1 flex-col pb-10 pt-6 tab:pb-14`}>
           <Link to="/corners" className="inline-flex min-h-11 items-center text-small hover:underline">
             ← Back to Corners
           </Link>
           <div className="mt-auto flex flex-col items-start gap-3 pt-16">
-            <h1 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
+            <h1 className="max-w-2xl text-display">
               {category.name}
             </h1>
             <p className="max-w-xl text-body text-on-media/90">{category.about}</p>
@@ -162,7 +161,7 @@ export function CategoryPage() {
 
         {weekEvents.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="week-title">
-            <h2 id="week-title" className="mb-4" style={displayStyle(26, { lineHeight: 1.1 })}>
+            <h2 id="week-title" className="mb-4 text-title">
               Happening this week
             </h2>
             <HorizontalRow name={`browse.${slug}.week`} label="Happening this week" contentKey={weekEvents.map((e) => e.id).join(",")}>
@@ -180,7 +179,7 @@ export function CategoryPage() {
           {shown.length === 0 ? (
             <EmptyState line="No Corners match those choices." hint="Clear a choice to see more." action={{ label: "Clear choices", onClick: () => setSearchParams(new URLSearchParams()) }} />
           ) : (
-            <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-3 tab:grid-cols-3 tab:gap-4 desk:grid-cols-4">
               {shown.map((c) => (
                 <CornerCard key={cornerKey(c)} corner={c} subline={c.curated ? cornerMeta(c.curated) : ""} fluid />
               ))}
@@ -190,11 +189,11 @@ export function CategoryPage() {
 
         {lead && (
           <section className={SECTION_GAP} aria-labelledby="moments-title">
-            <h2 id="moments-title" className="mb-4" style={displayStyle(26, { lineHeight: 1.1 })}>
+            <h2 id="moments-title" className="mb-4 text-title">
               Recent Moments
             </h2>
             {tabs.length > 1 && (
-              <ul role="tablist" aria-label="Corners" className="-mx-4 mb-6 flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0">
+              <ul role="tablist" aria-label="Corners" className="-mx-4 mb-6 flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] tab:mx-0 tab:px-0">
                 {[{ slug: "all", name: "Everything" }, ...tabs].map((c) => {
                   const active = activeTab === c.slug;
                   return (
@@ -218,25 +217,25 @@ export function CategoryPage() {
                 })}
               </ul>
             )}
-            <div className="space-y-10 md:space-y-12">
+            <div className="space-y-10 tab:space-y-12">
               <Reveal>
-                <MomentTile post={lead} priority width={1200} aspect="aspect-[4/5] md:aspect-[16/9]" onOpen={() => setOpenPost(lead)} />
+                <MomentTile post={lead} priority width={1200} aspect="aspect-[4/5] tab:aspect-[16/9]" onOpen={() => setOpenPost(lead)} />
               </Reveal>
               {shownRest.length > 0 && (
                 <div>
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                  <div className="grid grid-cols-2 gap-3 tab:grid-cols-4 tab:gap-4">
                     {shownRest.map((post, i) => (
                       <Reveal
                         key={post.id}
                         index={i % 8}
-                        className={`${i >= narrowCount ? "max-md:hidden" : ""} ${i >= wideCount ? "md:hidden" : ""}`}
+                        className={`${i >= narrowCount ? "max-tab:hidden" : ""} ${i >= wideCount ? "tab:hidden" : ""}`}
                       >
                         <MomentTile post={post} onOpen={() => setOpenPost(post)} />
                       </Reveal>
                     ))}
                   </div>
                   {(hiddenWide || hiddenNarrow) && (
-                    <div className={`mt-10 border-t border-border pt-4 ${hiddenNarrow ? "" : "max-md:hidden"} ${hiddenWide ? "" : "md:hidden"}`}>
+                    <div className={`mt-10 border-t border-border pt-4 ${hiddenNarrow ? "" : "max-tab:hidden"} ${hiddenWide ? "" : "tab:hidden"}`}>
                       <Button variant="outline" onClick={() => setMorePages((m) => m + 1)}>
                         Show more
                       </Button>

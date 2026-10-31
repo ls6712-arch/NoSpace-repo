@@ -157,7 +157,7 @@ export function PostedScreen({
   }
 
   return (
-    <div className="ns-afterhours flex min-h-viewport flex-col bg-background">
+    <div className="flex min-h-viewport flex-col bg-background">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-10 pb-40">
         <motion.p initial={PAGE_FROM} animate={PAGE_TO} transition={page} className="text-center text-body text-muted-foreground">
           {AUDIENCE_LINE[audience]}

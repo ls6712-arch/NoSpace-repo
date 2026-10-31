@@ -38,15 +38,15 @@ export function BadgeUnlockToast() {
         <span
           className="flex size-10 shrink-0 items-center justify-center rounded-full"
           style={{
-            backgroundColor: "color-mix(in srgb, var(--coral-deep) 46%, var(--surface-elevated))",
-            border: "1px solid color-mix(in srgb, var(--coral-deep) 62%, transparent)",
-            color: "var(--offwhite)",
+            backgroundColor: "color-mix(in srgb, var(--accent) 46%, var(--surface-elevated))",
+            border: "1px solid color-mix(in srgb, var(--accent-text) 62%, transparent)",
+            color: "var(--foreground)",
           }}
         >
           <Icon className="size-5" />
         </span>
         <div className="flex-1">
-          <div className="text-caption tracking-wide text-[var(--coral-text)] mb-0.5">
+          <div className="text-caption tracking-wide text-[var(--accent-text)] mb-0.5">
             Milestone reached
           </div>
           <div className="text-small font-medium">{badgeName(badge, hobbySlug, hobbyLabel)}</div>
@@ -57,7 +57,7 @@ export function BadgeUnlockToast() {
             <button
               type="button"
               onClick={() => setShareOpen(true)}
-              className="inline-flex items-center gap-1 text-caption text-[var(--coral-text)] hover:underline"
+              className="inline-flex items-center gap-1 text-caption text-[var(--accent-text)] hover:underline"
             >
               <Icons.Share2 className="size-3" />
               Share

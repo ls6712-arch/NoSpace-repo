@@ -111,7 +111,7 @@ export function NamePromptDialog({ enabled = true }: { enabled?: boolean } = {})
               }}
               autoComplete="name"
             />
-            {error && <p className="mt-2 text-caption text-[var(--coral-text)]">{error}</p>}
+            {error && <p className="mt-2 text-caption text-[var(--accent-text)]">{error}</p>}
           </div>
           <Button busy={saving} type="submit" variant="coral" className="w-full" disabled={saving}>
             Save name

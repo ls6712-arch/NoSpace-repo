@@ -37,7 +37,7 @@ export function BottomTabBar({ railEligible = false }: { railEligible?: boolean 
   const { user } = useAuth();
   const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
   const waiting = incomingFollows.length > 0;
-  const hideClass = railEligible ? "rail:hidden" : "lg:hidden";
+  const hideClass = railEligible ? "rail:hidden" : "desk:hidden";
 
   return (
     <>
@@ -81,7 +81,7 @@ export function BottomTabBar({ railEligible = false }: { railEligible?: boolean 
                   <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
                   {/* A dot, not a number: something is waiting, not how much. */}
                   {tab.to === "/you" && waiting && (
-                    <span className="absolute -right-1 -top-0.5 size-2 rounded-full" style={{ backgroundColor: "var(--coral-deep)" }} aria-hidden="true" />
+                    <span className="absolute -right-1 -top-0.5 size-2 rounded-full" style={{ backgroundColor: "var(--accent)" }} aria-hidden="true" />
                   )}
                 </span>
                 <span className={`text-caption ${active ? "font-bold" : "font-medium"}`}>{tab.label}</span>

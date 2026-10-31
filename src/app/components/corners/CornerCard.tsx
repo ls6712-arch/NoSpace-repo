@@ -1,4 +1,4 @@
-import { PressLink } from "../afterhours/PressLink";
+import { PressLink } from "../common/PressLink";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { cornerPath } from "../../lib/cornerPath";
 import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
@@ -26,7 +26,7 @@ export function CornerCard({
 }) {
   const about = cornerAbout(corner.spaceSlug, corner.slug);
   return (
-    <li className={fluid ? "w-full" : "w-60 shrink-0 snap-start md:w-72"} style={cornerStyle(corner.spaceSlug, corner.slug)}>
+    <li className={fluid ? "w-full" : "w-60 shrink-0 snap-start tab:w-72"} style={cornerStyle(corner.spaceSlug, corner.slug)}>
       <PressLink
         to={cornerPath(corner.spaceSlug, corner.slug)}
         className="group relative block aspect-video overflow-hidden rounded-card bg-[var(--cat)] text-on-media shadow-card transition-shadow duration-base hover:z-10 hover:shadow-glow focus-visible:shadow-glow"

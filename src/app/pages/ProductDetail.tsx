@@ -43,7 +43,7 @@ export function ProductDetail() {
           Back
         </Button>
 
-        <div className="grid md:grid-cols-2 gap-10 mb-16">
+        <div className="grid tab:grid-cols-2 gap-10 mb-16">
           <div className="relative aspect-square rounded-card overflow-hidden border border-border">
             <GeneratedArt
               hobbySlug={product.hobbySlug}
@@ -54,7 +54,7 @@ export function ProductDetail() {
               size="icon"
               variant="ghost"
               className={`absolute top-5 right-5 rounded-control backdrop-blur-md ${
-                inWishlist ? "bg-[var(--coral-deep)] text-on-brand" : "bg-scrim-solid/40 text-on-media"
+                inWishlist ? "bg-[var(--accent)] text-accent-foreground" : "bg-scrim-solid/40 text-on-media"
               }`}
               onClick={() => toggleWishlist(product.id)}
             >
@@ -64,11 +64,11 @@ export function ProductDetail() {
 
           <div className="glass-panel rounded-card p-8">
             {hobby && (
-              <Link to={`/space/${hobby.slug}`} className="text-small text-[var(--coral-text)] mb-2 inline-block">
+              <Link to={`/space/${hobby.slug}`} className="text-small text-[var(--accent-text)] mb-2 inline-block">
                 {hobby.name}
               </Link>
             )}
-            <h1 className="text-display mb-2">{product.name}</h1>
+            <h1 className="text-title mb-2">{product.name}</h1>
             <div className="text-small text-muted-foreground mb-4">by {product.creator}</div>
 
             <div className="flex items-center gap-4 mb-6">
@@ -87,7 +87,7 @@ export function ProductDetail() {
               </span>
             </div>
 
-            <div className="text-display mb-6 text-[var(--coral-text)]">${product.price.toFixed(2)}</div>
+            <div className="text-display mb-6 text-[var(--accent-text)]">${product.price.toFixed(2)}</div>
 
             <p className="text-muted-foreground mb-8 leading-relaxed">{product.description}</p>
 
@@ -152,7 +152,7 @@ export function ProductDetail() {
         {related.length > 0 && (
           <div>
             <h2 className="text-display mb-6 text-center">More from {hobby?.shortName}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 tab:grid-cols-2 desk:grid-cols-4 gap-6">
               {related.map((item) => (
                 <Link key={item.id} to={`/product/${item.id}`}>
                   <div className="group rounded-card overflow-hidden border border-border hover:border-border transition-colors">
@@ -165,7 +165,7 @@ export function ProductDetail() {
                     </div>
                     <div className="p-4">
                       <h3 className="mb-1 line-clamp-1 text-small" title={item.name}>{item.name}</h3>
-                      <div className="text-[var(--coral-text)]">${item.price.toFixed(2)}</div>
+                      <div className="text-[var(--accent-text)]">${item.price.toFixed(2)}</div>
                     </div>
                   </div>
                 </Link>

@@ -69,7 +69,7 @@ export function NextSessionCard({
   const thisWeek = project.timesPerWeek ? sessionsThisWeek(myMomentTimes) : undefined;
 
   return (
-    <section aria-labelledby="next-session-title" className="mb-6 rounded-card border border-border bg-card p-4 sm:p-5">
+    <section aria-labelledby="next-session-title" className="mb-6 rounded-card border border-border bg-card p-4 tab:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2
           id="next-session-title"

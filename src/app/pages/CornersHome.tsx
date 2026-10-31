@@ -213,9 +213,9 @@ export function CornersHome() {
   }, [latest, ranker]);
 
   return (
-    <div className="ns-afterhours min-h-viewport pb-24">
+    <div className="min-h-viewport pb-24">
       {/* Discover's tabs, with Corners selected: /corners is the Corners tab of Discover. */}
-      <div className={`${PAGE_X} pt-2 lg:pt-6`}>
+      <div className={`${PAGE_X} pt-2 desk:pt-6`}>
         <DiscoverTabsBar />
       </div>
       {/* The billboard runs edge to edge. The space is held while the week's events load, so nothing jumps. */}
@@ -252,7 +252,7 @@ export function CornersHome() {
         ) : (
           <section className={SECTION_GAP} aria-labelledby="results-title">
             <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 id="results-title" className="text-lead font-semibold md:text-title">
+              <h2 id="results-title" className="text-lead font-semibold tab:text-title">
                 {plural(shown.length, "Corner")}
               </h2>
               <button
@@ -263,7 +263,7 @@ export function CornersHome() {
                 Clear
               </button>
             </div>
-            <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-3 tab:grid-cols-3 tab:gap-4 desk:grid-cols-4">
               {shown.map((c) => (
                 <CornerCard key={cornerKey(c)} corner={c} subline={cornerSubline(c, live?.get(cornerKey(c)))} fluid />
               ))}
@@ -274,7 +274,7 @@ export function CornersHome() {
         <>
           {week.length > 0 && (
             <section className={SECTION_GAP} aria-labelledby="row-week">
-              <h2 id="row-week" className="mb-3 text-lead font-semibold md:text-title">
+              <h2 id="row-week" className="mb-3 text-lead font-semibold tab:text-title">
                 Happening this week
               </h2>
               <HorizontalRow name="corners.row.week" label="Happening this week" contentKey={week.map(cornerKey).join(",")}>
@@ -287,7 +287,7 @@ export function CornersHome() {
           {groupRows.map(({ cat, corners }) => (
             <section key={cat.slug} className={SECTION_GAP} aria-labelledby={`row-${cat.slug}`}>
               <div className="mb-3 flex items-baseline justify-between gap-4">
-                <h2 id={`row-${cat.slug}`} className="text-lead font-semibold md:text-title">
+                <h2 id={`row-${cat.slug}`} className="text-lead font-semibold tab:text-title">
                   <Link to={`/browse/${cat.slug}`} className="hover:underline">
                     {cat.name}
                   </Link>

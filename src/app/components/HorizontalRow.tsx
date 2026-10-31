@@ -9,7 +9,9 @@ import { usePrefersReducedMotion } from "../lib/useReducedMotion";
  * and cards have a fixed width, so the last one is cut off to show there is
  * more. From md, with a mouse, round arrows appear at each end on hover or
  * focus and move the row by most of its width; an arrow hides when the row is
- * already at that end. Touch and trackpads just scroll.
+ * already at that end. Touch and trackpads just scroll. From md the edge that
+ * still has cards beyond it fades out, so a row that stops at the page frame
+ * on a wide screen reads as scrollable rather than cut off.
  */
 export function HorizontalRow({
   name,
@@ -64,11 +66,20 @@ export function HorizontalRow({
     if (node) node.scrollBy({ left: dir * node.clientWidth * 0.8, behavior: reduced ? "auto" : "smooth" });
   };
 
+  const fade =
+    !ends.start && !ends.end
+      ? "tab:[-webkit-mask-image:linear-gradient(to_right,transparent,black_3rem,black_calc(100%-3rem),transparent)] tab:[mask-image:linear-gradient(to_right,transparent,black_3rem,black_calc(100%-3rem),transparent)]"
+      : !ends.end
+        ? "tab:[-webkit-mask-image:linear-gradient(to_right,black_calc(100%-3rem),transparent)] tab:[mask-image:linear-gradient(to_right,black_calc(100%-3rem),transparent)]"
+        : !ends.start
+          ? "tab:[-webkit-mask-image:linear-gradient(to_right,transparent,black_3rem)] tab:[mask-image:linear-gradient(to_right,transparent,black_3rem)]"
+          : "";
+
   const arrow =
-    "absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/95 text-foreground shadow-card transition-opacity duration-fast focus-visible:opacity-100 md:flex [@media(hover:none)]:hidden";
+    "absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/95 text-foreground shadow-card transition-opacity duration-fast focus-visible:opacity-100 tab:flex [@media(hover:none)]:hidden";
 
   return (
-    <div className="group/row relative -mx-4 md:-mx-8">
+    <div className="group/row relative -mx-4 tab:-mx-8">
       <ul
         ref={setRefs}
         onScroll={() => {
@@ -76,7 +87,7 @@ export function HorizontalRow({
           measure();
         }}
         aria-label={label}
-        className="flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:scroll-px-8 md:gap-4 md:px-8 [&::-webkit-scrollbar]:hidden"
+        className={`flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] tab:scroll-px-8 tab:gap-4 tab:px-8 [&::-webkit-scrollbar]:hidden ${fade}`}
       >
         {children}
       </ul>

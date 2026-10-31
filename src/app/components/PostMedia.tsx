@@ -56,7 +56,7 @@ export function PostMedia({
         playsInline
         preload="metadata"
         onError={() => setFailedUrl(media)}
-        className={`${className ?? ""} object-cover [background-color:var(--void)]`}
+        className={`${className ?? ""} object-cover [background-color:var(--background)]`}
       />
     );
   }

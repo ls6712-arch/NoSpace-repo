@@ -18,17 +18,17 @@ export function MoodGrid({
   greeting: string;
 }) {
   return (
-    <section className={`${SECTION_GAP} lg:col-span-5`} aria-labelledby="mood-title">
-      <h2 id="mood-title" className="text-lead lg:text-title">
+    <section className={`${SECTION_GAP} desk:col-span-5`} aria-labelledby="mood-title">
+      <h2 id="mood-title" className="text-lead desk:text-title">
         What are you in the mood for?
       </h2>
       <p className="mb-3 mt-1 text-body text-muted-foreground">{greeting}</p>
-      <ul className="grid grid-cols-2 gap-2 lg:grid-cols-3" aria-label="Moods">
+      <ul className="grid grid-cols-2 gap-2 desk:grid-cols-3" aria-label="Moods">
         {MOOD_CHIPS.map((m, i) => {
           const on = m.id === value;
           return (
             // 9 doors: 2 columns on a phone (the last takes the whole row), 3 by 3 from lg.
-            <li key={m.id} className={i === MOOD_CHIPS.length - 1 && MOOD_CHIPS.length % 2 === 1 ? "col-span-2 lg:col-span-1" : ""}>
+            <li key={m.id} className={i === MOOD_CHIPS.length - 1 && MOOD_CHIPS.length % 2 === 1 ? "col-span-2 desk:col-span-1" : ""}>
               <motion.button
                 type="button"
                 aria-pressed={on}

@@ -62,7 +62,7 @@ export function HobbyTile({
 
   const className = `group block rounded-card border p-1.5 text-left transition-colors ${
     active
-      ? "border-[var(--coral-text)] bg-surface-muted"
+      ? "border-[var(--accent-text)] bg-surface-muted"
       : "border-border hover:border-foreground/30 hover:bg-surface-muted"
   }`;
 

@@ -58,7 +58,7 @@ function greeting(name: string): string {
  * scrollToElement.ts) — real in-page navigation now, not each opening its
  * own copy of the same grouped list in a dialog.
  *
- * Nav below lg: this app already has a working "reach every section on a
+ * Nav below desk: this app already has a working "reach every section on a
  * small screen" answer — the global BottomTabBar (Root.tsx, every page) —
  * so this doesn't also build the spec's hamburger-menu nav on top of it;
  * flagged as a deliberate deviation rather than doubling up on navigation
@@ -207,7 +207,7 @@ export function MySpaceGrid() {
   };
 
   return (
-    <div className="myspace-shell px-4 py-6 sm:px-5 lg:px-8">
+    <div className="myspace-shell px-4 py-6 tab:px-5 desk:px-8">
       <WelcomeBanner />
       <header className="myspace-header mb-6 border-b border-hairline pb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -219,7 +219,7 @@ export function MySpaceGrid() {
                 (any place gold is used as text, not decoration). */}
             <p className="ns-section-kicker text-gold-text">{dateEyebrow}</p>
             <h1
-              className="mt-1 text-display leading-tight"
+              className="mt-1 text-title"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               {greeting(profile?.display_name ?? "there")}
@@ -232,7 +232,7 @@ export function MySpaceGrid() {
               section 1 explicitly overrides the mockup’s warmer-looking
               numeral. lg+ only here; below lg it moves under the subtitle
               on one line instead (just below). */}
-          <div className="hidden text-right text-foreground lg:block">
+          <div className="hidden text-right text-foreground desk:block">
             <p className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
               {numeral}
             </p>
@@ -240,7 +240,7 @@ export function MySpaceGrid() {
           </div>
         </div>
         {extraConceptsEnabled && (
-          <p className="ns-section-kicker mt-2 text-foreground lg:hidden">
+          <p className="ns-section-kicker mt-2 text-foreground desk:hidden">
           {numeral} · Today’s sheet
         </p>
         )}
@@ -326,7 +326,7 @@ export function MySpaceGrid() {
             had; docs/my-space-deviations.md already flags that same
             DOM/visual gap once, for tab order — this doesn’t add a second,
             visible instance of it. */}
-        <div className="myspace-rail mt-8 lg:mt-0">
+        <div className="myspace-rail mt-8 desk:mt-0">
           <div className="myspace-rail-shelf">
             <ShelfRail />
           </div>

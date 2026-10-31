@@ -55,7 +55,7 @@ export function TermsGateDialog({ open, onAccepted }: { open: boolean; onAccepte
           }}
         >
           <TermsCheckbox checked={agreed} onChange={setAgreed} id="gate-terms" />
-          {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
+          {error && <p className="text-caption text-[var(--accent-text)]">{error}</p>}
           <Button busy={saving} type="submit" variant="coral" className="w-full" disabled={!agreed || saving}>
             Continue
           </Button>

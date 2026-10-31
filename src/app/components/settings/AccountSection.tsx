@@ -87,9 +87,9 @@ export function PasswordChangeRow() {
   }
 
   return (
-    <div className="px-4 py-4 sm:px-5">
+    <div className="px-4 py-4 tab:px-5">
       <div className="mb-3 text-small">Password</div>
-      <div className="grid gap-3 sm:max-w-sm">
+      <div className="grid gap-3 tab:max-w-sm">
         {!adding && (
           <div>
             <Label htmlFor="pw-current" className="mb-1.5 block text-caption">
@@ -150,7 +150,7 @@ function AdminLinkRow({ to, label, badge }: { to: string; label: string; badge?:
   return (
     <Link
       to={to}
-      className="flex min-h-11 items-center justify-between gap-3 px-4 py-4 text-small transition-colors hover:bg-surface-muted sm:px-5"
+      className="flex min-h-11 items-center justify-between gap-3 px-4 py-4 text-small transition-colors hover:bg-surface-muted tab:px-5"
     >
       <span>
         {label}

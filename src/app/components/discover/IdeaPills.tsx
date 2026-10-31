@@ -25,7 +25,7 @@ function Pill<T extends string>({
     <Select value={value} onValueChange={(v) => onPick(v as T)}>
       <SelectTrigger
         aria-label={`${group}: ${labels[value]}`}
-        className="h-auto min-h-11 min-w-0 flex-1 justify-center gap-1.5 rounded-full border-2 border-foreground bg-transparent px-3 py-0 text-small font-semibold data-[size=default]:h-auto [&_svg]:opacity-100"
+        className="h-auto min-h-11 shrink-0 justify-center gap-1.5 rounded-full border-2 border-foreground bg-transparent px-3 py-0 text-small font-semibold data-[size=default]:h-auto [&_svg]:opacity-100"
       >
         <SelectValue />
       </SelectTrigger>
@@ -47,7 +47,7 @@ function Pill<T extends string>({
  */
 export function IdeaPills({ pills, onChange }: { pills: Pills; onChange: (next: Pills) => void }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Pill group="Time" value={pills.time} options={TIME_ORDER} labels={TIME_LABEL} onPick={(time) => onChange({ ...pills, time })} />
       <Pill group="Spend" value={pills.spend} options={SPEND_ORDER} labels={SPEND_LABEL} onPick={(spend) => onChange({ ...pills, spend })} />
       <Pill group="Who" value={pills.who} options={WHO_ORDER} labels={WHO_LABEL} onPick={(who) => onChange({ ...pills, who })} />

@@ -431,7 +431,7 @@ export function BePart({
                       </div>
 
                       {error && (
-                        <p className="rounded-card bg-surface-muted px-4 py-2.5 text-caption text-[var(--coral-text)]">
+                        <p className="rounded-card bg-surface-muted px-4 py-2.5 text-caption text-[var(--accent-text)]">
                           {error}
                         </p>
                       )}

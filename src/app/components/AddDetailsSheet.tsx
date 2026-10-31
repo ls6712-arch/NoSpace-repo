@@ -123,7 +123,7 @@ export function AddDetailsSheet({
                     aria-pressed={locationPrivacy === o.value}
                     className={`rounded-control border px-2.5 py-1 text-caption transition-colors ${
                       locationPrivacy === o.value
-                        ? "border-[var(--coral-deep,var(--accent))] text-foreground"
+                        ? "border-[var(--accent-text)] text-foreground"
                         : "border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -150,7 +150,7 @@ export function AddDetailsSheet({
                     onClick={() => setAudience(o.value)}
                     aria-pressed={active}
                     className={`flex flex-col items-center gap-1 rounded-control border px-2 py-2 text-caption transition-colors ${
-                      active ? "border-[var(--coral-deep,var(--accent))] text-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                      active ? "border-[var(--accent-text)] text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Icon className="size-4" />

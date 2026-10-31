@@ -80,7 +80,7 @@ export function InterestField({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onChange(closeMatch.label)}
-                className="text-[var(--coral-text)] underline decoration-dotted underline-offset-2"
+                className="text-[var(--accent-text)] underline decoration-dotted underline-offset-2"
               >
                 use that instead
               </button>
@@ -119,7 +119,7 @@ export function InterestField({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setFocused(false)}
-                className="text-left text-caption text-[var(--coral-text)]"
+                className="text-left text-caption text-[var(--accent-text)]"
               >
                 Use “{value.trim()}” as your own
               </button>

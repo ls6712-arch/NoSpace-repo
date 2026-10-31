@@ -152,8 +152,8 @@ export function Profile() {
   }
   if (load.status === "missing") return <NotFound />;
 
-  const shell = "mx-auto w-full max-w-[640px] px-5 pb-24 pt-4 lg:max-w-[1120px]";
-  const grid = "flex flex-col gap-6 lg:grid lg:grid-cols-[360px_1fr] lg:gap-x-10";
+  const shell = "mx-auto w-full max-w-[640px] px-5 pb-24 pt-4 desk:max-w-[1120px]";
+  const grid = "flex flex-col gap-6 desk:grid desk:grid-cols-[360px_1fr] desk:gap-x-10";
 
   if (load.status === "loading") {
     return (
@@ -273,7 +273,7 @@ export function Profile() {
       )}
 
       <div className={grid}>
-        <div className="flex flex-col gap-5 lg:col-start-1">
+        <div className="flex flex-col gap-5 desk:col-start-1">
           <Identity name={name} avatarUrl={p.avatarUrl} neighborhood={p.neighborhood} bio={p.bio} addDetailsLink={owner} />
           {friend && <MutualLine profile={friend} />}
           {p.role === "follower" && p.mutualFriendCount > 0 && (
@@ -322,12 +322,12 @@ export function Profile() {
           )}
         </div>
 
-        <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <div className="desk:col-start-2 desk:row-span-2 desk:row-start-1">
           <Tabs profile={p} owner={owner} rev={rev} onPursuitsChanged={() => void fetchIt(true)} />
         </div>
 
         {owner && (
-          <div className="lg:col-start-1">
+          <div className="desk:col-start-1">
             <PlanningCard />
           </div>
         )}

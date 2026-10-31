@@ -131,7 +131,7 @@ export function Inbox() {
   if (isConfigured && !user) {
     return (
       <div className="mx-auto w-full max-w-md px-4 py-10">
-        <h1 className="mb-2 text-title font-semibold">Notifications</h1>
+        <h1 className="mb-2 text-title">Notifications</h1>
         <p className="mb-6 text-small text-muted-foreground">Requests and activity live here once you have an account.</p>
         <Link to="/login?next=/inbox" className="inline-flex min-h-11 items-center rounded-full bg-accent px-6 text-body font-semibold text-accent-foreground">
           Log in
@@ -150,7 +150,7 @@ export function Inbox() {
       <Link to="/my-space" className="inline-flex min-h-11 items-center text-body text-muted-foreground hover:text-foreground">
         ← Home
       </Link>
-      <h1 className="mb-5 text-title font-semibold">Notifications</h1>
+      <h1 className="mb-5 text-title">Notifications</h1>
 
       <Loadable loading={followRequestsOrNull === null && !social.loaded} skeleton={<ListSkeleton count={4} />}>
         {needsCount > 0 && (
@@ -168,7 +168,7 @@ export function Inbox() {
                       <PillButton variant="ink" disabled={busy === `event:${e.session.id}`} onClick={() => void answerEvent(e, true)}>
                         I’m going
                       </PillButton>
-                      <PillButton variant="outline" className="border-[var(--ink)] text-[var(--ink)]" onClick={() => void answerEvent(e, false)}>
+                      <PillButton variant="outline" className="border-foreground text-foreground" onClick={() => void answerEvent(e, false)}>
                         Can’t make it
                       </PillButton>
                     </div>

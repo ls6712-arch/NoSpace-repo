@@ -11,7 +11,7 @@ export function HandwrittenNote({
   className?: string;
 }) {
   return (
-    <div className={`hidden -rotate-2 text-right sm:block ${className}`} aria-hidden="true">
+    <div className={`hidden -rotate-2 text-right tab:block ${className}`} aria-hidden="true">
       <p
         className="text-title leading-tight text-foreground"
         style={{ fontFamily: "var(--font-hand)" }}
@@ -22,7 +22,7 @@ export function HandwrittenNote({
         width="72"
         height="10"
         viewBox="0 0 72 10"
-        className="ml-auto mt-0.5 text-[var(--coral-deep)]"
+        className="ml-auto mt-0.5 text-[var(--accent-text)]"
         fill="none"
       >
         <path

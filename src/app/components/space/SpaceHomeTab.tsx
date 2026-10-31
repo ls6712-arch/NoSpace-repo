@@ -53,13 +53,13 @@ function AvatarRow({ people, max = 4 }: { people: Attendee[]; max?: number }) {
   return (
     <div className="flex items-center">
       {shown.map((p, i) => (
-        <Avatar key={p.userId} className={`size-7 border-2 border-paper ${i > 0 ? "-ml-2" : ""}`}>
+        <Avatar key={p.userId} className={`size-7 border-2 border-background ${i > 0 ? "-ml-2" : ""}`}>
           {p.avatarUrl && <AvatarImage src={p.avatarUrl} alt="" />}
           <AvatarFallback className="text-caption">{initials(p.name)}</AvatarFallback>
         </Avatar>
       ))}
       {extra > 0 && (
-        <span className="-ml-2 flex size-7 items-center justify-center rounded-full border-2 border-paper bg-sand text-caption text-muted-foreground">
+        <span className="-ml-2 flex size-7 items-center justify-center rounded-full border-2 border-background bg-surface-muted text-caption text-muted-foreground">
           +{extra}
         </span>
       )}
@@ -417,19 +417,19 @@ export function SpaceHomeTab({
     <div className="space-y-8 py-6">
       {/* ── Event band ─────────────────────────────────────────────────── */}
       {isActiveMember && todayEvent && (
-        <div className="-mx-4 rounded-card bg-bark px-5 py-5 text-on-bark sm:mx-0">
-          <p className="text-caption tracking-wide text-on-bark/70 tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
+        <div className="-mx-4 rounded-card border border-border bg-card px-5 py-5 text-foreground tab:mx-0">
+          <p className="text-caption tracking-wide text-muted-foreground tabular-nums">Starts in {hoursUntil(todayEvent.starts_at)}h</p>
           <p className="mt-1 line-clamp-2 break-words text-title" style={{ fontFamily: "var(--font-display)" }}>{todayEvent.title}</p>
-          <p className="mt-1 text-small text-on-bark/80 tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
+          <p className="mt-1 text-small text-muted-foreground tabular-nums">{fmtTime(todayEvent.starts_at, todayEvent.timezone)}</p>
           {(todayEvent.neighborhood || todayEvent.city || todayAddress) && (
-            <p className="mt-1 flex items-center gap-1 text-small text-on-bark/80">
+            <p className="mt-1 flex items-center gap-1 text-small text-muted-foreground">
               <MapPin className="size-3.5" />
               {todayAddress || [todayEvent.neighborhood, todayEvent.city].filter(Boolean).join(", ")}
             </p>
           )}
           <div className="mt-3 flex items-center gap-3">
             <AvatarRow people={todayAttendees} max={4} />
-            {todayGoing > 0 && <span className="text-caption text-on-bark/70 tabular-nums">{todayGoing} going</span>}
+            {todayGoing > 0 && <span className="text-caption text-muted-foreground tabular-nums">{todayGoing} going</span>}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button
@@ -442,16 +442,16 @@ export function SpaceHomeTab({
               {myRsvps.has(todayEvent.id) && <Check aria-hidden="true" />}
               I’m going
             </Button>
-            <Link to={`/space/${space.slug}?tab=events`} className="text-caption text-on-bark/70 underline">
+            <Link to={`/space/${space.slug}?tab=events`} className="text-caption text-muted-foreground underline">
               See all events
             </Link>
           </div>
           {laterThisWeek.length > 0 && (
-            <div className="mt-4 border-t border-on-bark/20 pt-3">
-              <p className="text-caption tracking-wide text-on-bark/60">Later this week</p>
+            <div className="mt-4 border-t border-border pt-3">
+              <p className="text-caption tracking-wide text-muted-foreground">Later this week</p>
               <ul className="mt-1.5 space-y-1">
                 {laterThisWeek.map((e) => (
-                  <li key={e.id} className="text-small text-on-bark/85">
+                  <li key={e.id} className="text-small text-muted-foreground">
                     {fmtDay(e.starts_at)} · {e.title}
                   </li>
                 ))}
@@ -464,7 +464,7 @@ export function SpaceHomeTab({
       {isActiveMember && !todayEvent && nextEvent && nextWithinWeek && (
         <Link
           to={`/space/${space.slug}?tab=events`}
-          className="-mx-4 flex items-center justify-between gap-3 rounded-card bg-bark px-5 py-3 text-small text-on-bark sm:mx-0"
+          className="-mx-4 flex items-center justify-between gap-3 rounded-card border border-border bg-card px-5 py-3 text-small text-foreground tab:mx-0"
         >
           <span className="truncate" title={`Next: ${fmtDay(nextEvent.starts_at)} · ${nextEvent.title}`}>
             Next: {fmtDay(nextEvent.starts_at)} · {nextEvent.title}
@@ -475,7 +475,7 @@ export function SpaceHomeTab({
 
       {/* ── Settling in / Set up your Space ───────────────────────────── */}
       {isActiveMember && checklistReady && !checklistComplete && !dismissed && (
-        <div className="relative rounded-card border border-line bg-paper p-5">
+        <div className="relative rounded-card border border-border bg-card p-5">
           <button
             type="button"
             onClick={dismiss}
@@ -490,7 +490,7 @@ export function SpaceHomeTab({
               <li key={c.key} className="flex items-center gap-2 text-small">
                 <span
                   className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                    c.done ? "border-clay bg-clay text-on-clay" : "border-line text-transparent"
+                    c.done ? "border-accent bg-accent text-accent-foreground" : "border-border text-transparent"
                   }`}
                 >
                   <Check className="size-2.5" strokeWidth={3} aria-hidden="true" />
@@ -527,7 +527,7 @@ export function SpaceHomeTab({
           <div className="mt-4 space-y-2">
             <p className="ns-section-kicker text-muted-foreground">Waiting for a host to approve</p>
             {myPendingMoments.map((post) => (
-              <div key={post.id} className="flex items-center gap-3 rounded-card border border-line bg-paper px-3 py-2">
+              <div key={post.id} className="flex items-center gap-3 rounded-card border border-border bg-card px-3 py-2">
                 {post.media && <ImageWithFallback src={post.media} alt="" className="size-10 shrink-0 rounded-control" />}
                 <p className="line-clamp-1 flex-1 text-small" title={post.caption || `Moment #${post.id}`}>{post.caption || `Moment #${post.id}`}</p>
               </div>
@@ -538,9 +538,9 @@ export function SpaceHomeTab({
         <Loadable
           loading={moments === "loading"}
           skeleton={
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3">
               {[0, 1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="overflow-hidden rounded-card border border-line bg-paper">
+                <div key={i} className="overflow-hidden rounded-card border border-border bg-card">
                   <MomentCardSkeleton />
                 </div>
               ))}
@@ -560,7 +560,7 @@ export function SpaceHomeTab({
             {pinnedMoments.length > 0 && (
               <p className="mt-4 ns-section-kicker text-muted-foreground">Host picks</p>
             )}
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3">
               {pinnedMoments.map((post, i) => (
                 <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
                   {isHost && (
@@ -568,13 +568,13 @@ export function SpaceHomeTab({
                       type="button"
                       disabled={pinBusyId === post.id}
                       onClick={() => togglePin(post)}
-                      className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-control border border-line bg-paper/90 px-2 py-1 text-caption text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                      className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-control border border-border bg-card/90 px-2 py-1 text-caption text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
                     >
                       <PinOff className="size-3" />
                       Remove from host picks
                     </button>
                   )}
-                  <div className="overflow-hidden rounded-card border border-line bg-paper shadow-card">
+                  <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
                     <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
                   </div>
                 </div>
@@ -585,7 +585,7 @@ export function SpaceHomeTab({
                 {pinnedMoments.length > 0 && (
                   <p className="mt-8 ns-section-kicker text-muted-foreground">Latest</p>
                 )}
-                <div className={`grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 ${pinnedMoments.length > 0 ? "mt-3" : "mt-3"}`}>
+                <div className={`grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3 ${pinnedMoments.length > 0 ? "mt-3" : "mt-3"}`}>
                   {restMoments.map((post, i) => (
                     <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
                       {isHost && (
@@ -593,13 +593,13 @@ export function SpaceHomeTab({
                           type="button"
                           disabled={pinBusyId === post.id}
                           onClick={() => togglePin(post)}
-                          className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-control border border-line bg-paper/90 px-2 py-1 text-caption text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                          className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-control border border-border bg-card/90 px-2 py-1 text-caption text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
                         >
                           <Pin className="size-3" />
                           Add to host picks
                         </button>
                       )}
-                      <div className="overflow-hidden rounded-card border border-line bg-paper shadow-card">
+                      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
                         <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
                       </div>
                     </div>
@@ -620,14 +620,14 @@ export function SpaceHomeTab({
             {hosts.map((h) => (
               <span
                 key={h.id}
-                className="flex items-center gap-1.5 rounded-control border border-line bg-paper px-2.5 py-1 text-caption"
+                className="flex items-center gap-1.5 rounded-control border border-border bg-card px-2.5 py-1 text-caption"
               >
                 <Avatar className="size-5">
                   {h.avatarUrl && <AvatarImage src={h.avatarUrl} alt="" />}
                   <AvatarFallback className="text-caption">{initials(h.name)}</AvatarFallback>
                 </Avatar>
                 {h.name}
-                <Star className="size-2.5 fill-current text-clay" />
+                <Star className="size-2.5 fill-current text-accent-text" />
               </span>
             ))}
           </div>

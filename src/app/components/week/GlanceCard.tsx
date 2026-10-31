@@ -29,8 +29,7 @@ export function GlanceCard({
     <section className="divide-y divide-border rounded-card border border-border bg-card" aria-label="At a glance">
       {goodHours > 0 && (
         <p className="flex items-baseline gap-3 p-4">
-          {/* design-token-ignore: the big number is 44px by the Week view brief; the type scale stops at 36px */}
-          <span className="text-[44px] font-extrabold leading-none" style={{ fontFamily: "var(--font-display)" }}>
+          <span className="text-display font-extrabold leading-none" style={{ fontFamily: "var(--font-display)" }}>
             {goodHours}
           </span>
           <span className="text-body text-muted-foreground">{goodPlanHoursLabel(goodHours)}</span>

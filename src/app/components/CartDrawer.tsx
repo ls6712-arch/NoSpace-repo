@@ -29,7 +29,7 @@ export function CartDrawer() {
 
   return (
     <Sheet open={isCartOpen} onOpenChange={closeCart}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col">
+      <SheetContent className="w-full tab:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-title">Your cart ({cartItems.length})</SheetTitle>
         </SheetHeader>
@@ -89,7 +89,7 @@ export function CartDrawer() {
                       >
                         <Plus className="size-3" />
                       </Button>
-                      <span className="ml-auto text-small text-[var(--coral-text)]">
+                      <span className="ml-auto text-small text-[var(--accent-text)]">
                         ${(item.price * item.quantity).toFixed(2)}
                       </span>
                       <Button
@@ -112,7 +112,7 @@ export function CartDrawer() {
           <div className="border-t border-border p-4 space-y-3">
             <div className="flex justify-between text-lead">
               <span>Total</span>
-              <span className="text-[var(--coral-text)]">${cartTotal.toFixed(2)}</span>
+              <span className="text-[var(--accent-text)]">${cartTotal.toFixed(2)}</span>
             </div>
             <Button
               variant="outline"

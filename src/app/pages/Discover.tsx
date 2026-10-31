@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Search } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { cornerFollowKey } from "../context/CornersContext";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { MomentDetail } from "../components/MomentDetail";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { Skeleton } from "../components/ui/skeleton";
@@ -20,7 +18,6 @@ import { CityFeed } from "../components/discover/CityFeed";
 import { SectionBoundary } from "../components/discover/SectionBoundary";
 import { InterestsSheet } from "../components/discover/InterestsSheet";
 import { useInterests } from "../lib/interests";
-import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { fetchPasses, fetchTaste, type Taste } from "../lib/tasteRemote";
 import type { Pass } from "../lib/tasteModel";
 import { fetchHomeSuggestions } from "../lib/homeSuggestions";
@@ -49,8 +46,6 @@ import { useFeedInputs } from "../lib/useFeedInputs";
 import { PAGE_X } from "../lib/pageGrid";
 import type { Post } from "../data/posts";
 
-const SEARCH_GROUPS: SearchGroup[] = ["corner", "space", "person"];
-const SEARCH_TITLES: Record<string, string> = { corner: "Corners", space: "Spaces", person: "People" };
 const FEED_PAGE = 20;
 const CORNER_SHOWN = 3;
 const CORNER_FETCHED = 6;
@@ -83,31 +78,11 @@ function SectionSkeleton({ cards }: { cards: number }) {
   );
 }
 
-const initials = (name: string) => name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
-
-function SearchRow({ hit }: { hit: SearchHit }) {
-  return (
-    <li>
-      <Link to={hit.to} className="flex min-h-14 items-center gap-3 rounded-card bg-card p-3">
-        <Avatar className="size-10 shrink-0">
-          {hit.avatarUrl && <AvatarImage src={hit.avatarUrl} alt="" />}
-          <AvatarFallback className="text-small">{initials(hit.label)}</AvatarFallback>
-        </Avatar>
-        <span className="min-w-0">
-          <span className="block truncate text-body font-semibold">{hit.label}</span>
-          {hit.sub && <span className="block truncate text-small text-muted-foreground">{hit.sub}</span>}
-        </span>
-      </Link>
-    </li>
-  );
-}
-
 /**
  * Discover v2: the world, not your world. Home is what is yours (dated plans,
  * people you follow, Spaces you joined); this is what is not yet: undated ideas,
  * Corners new to you, Spaces near you, and Moments from people you do not follow.
- * One scrolling page: a header with the city, search over Corners, Spaces and
- * people, jump chips, then the four sections. Every section loads and fails on
+ * One scrolling page: a header with the city, jump chips, then the four sections. Every section loads and fails on
  * its own, and a Moment, Corner or Space is never on both Home and Discover.
  * Signed out, everything is read only and any action opens the sign up prompt.
  */
@@ -119,9 +94,6 @@ export function Discover() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [cityOpen, setCityOpen] = useState(false);
   const [prompt, setPrompt] = useState(false);
-  const [query, setQuery] = useState("");
-  const q = query.trim();
-  const { groups, loading: searching } = useUnifiedSearch(q);
   const { inputs: feedInputs, loaded: feedInputsLoaded } = useFeedInputs();
 
   /** Runs `act` for a signed-in person, and opens the sign up prompt for a visitor. */
@@ -332,124 +304,91 @@ export function Discover() {
   const spacesLoading = spaces === null;
 
   return (
-    <div className="ns-afterhours min-h-viewport">
+    <div className="min-h-viewport">
       <div className={`${PAGE_X} flex flex-col gap-8 pb-16 pt-6`}>
         <DiscoverHeader city={city} onEdit={() => needAccount(() => setCityOpen(true))} />
 
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <input
-            type="search"
-            aria-label="Search Corners, Spaces, people"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Corners, Spaces, people"
-            className="min-h-12 w-full rounded-full border border-border bg-card py-3 pl-11 pr-4 text-body text-foreground outline-none focus-visible:border-accent"
-          />
-        </div>
+        <JumpChips withMoments={!!user} />
 
-        {q ? (
-          <div className="flex flex-col gap-6" aria-busy={searching}>
-            {SEARCH_GROUPS.map((group) =>
-              groups[group].length > 0 ? (
-                <section key={group} aria-labelledby={`search-${group}`}>
-                  <h2 id={`search-${group}`} className="mb-2 text-small font-semibold text-muted-foreground">
-                    {SEARCH_TITLES[group]}
-                  </h2>
-                  <ul className="flex flex-col gap-2">
-                    {groups[group].slice(0, 8).map((hit) => (
-                      <SearchRow key={hit.key} hit={hit} />
-                    ))}
-                  </ul>
-                </section>
-              ) : null,
-            )}
-          </div>
-        ) : (
-          <>
-            <JumpChips withMoments={!!user} />
+        <SectionBoundary>
+          <section id="discover-ideas" aria-labelledby="ideas-title" className="scroll-mt-24">
+            <SectionHeading id="ideas-title" title="What could you do?" sub="Ideas for what you’ve got. Tap a pill to change it." />
+            <div className="mb-4">
+              <IdeaPills pills={pills} onChange={changePills} />
+            </div>
+            <IdeasRow
+              ideas={ideas}
+              passTagFor={(key) => passTagFor(key, passes, passCorners)}
+              onShown={(key, i) => log("idea", key, i, "shown", key)}
+              onOpen={(key, i) => log("idea", key, i, "opened", key)}
+              onLoosen={() => changePills(loosenSpend(pills))}
+            />
+          </section>
+        </SectionBoundary>
 
-            <SectionBoundary>
-              <section id="discover-ideas" aria-labelledby="ideas-title" className="scroll-mt-24">
-                <SectionHeading id="ideas-title" title="What could you do?" sub="Ideas for what you’ve got. Tap a pill to change it." />
-                <div className="mb-4">
-                  <IdeaPills pills={pills} onChange={changePills} />
-                </div>
-                <IdeasRow
-                  ideas={ideas}
-                  passTagFor={(key) => passTagFor(key, passes, passCorners)}
-                  onShown={(key, i) => log("idea", key, i, "shown", key)}
-                  onOpen={(key, i) => log("idea", key, i, "opened", key)}
-                  onLoosen={() => changePills(loosenSpend(pills))}
-                />
-              </section>
-            </SectionBoundary>
-
-            <SectionBoundary>
-              {cornersLoading ? (
-                <section id="discover-corners" className="scroll-mt-24" aria-hidden="true">
-                  <Skeleton className="h-64 w-full rounded-card" />
-                </section>
-              ) : cornerCards.length > 0 ? (
-                <section id="discover-corners" aria-labelledby="corners-title" className="scroll-mt-24">
-                  <SectionHeading id="corners-title" title="Corners new to you" sub="Three ways into each one" action={{ label: "See all", to: "/corners" }} />
-                  <ul className="flex flex-col gap-3">
-                    {cornerCards.map((m, i) => (
-                      <CornerTearCard
-                        key={m.key}
-                        model={m}
-                        position={i}
-                        onFollow={followCorner}
-                        onShown={(c, pos) => log("corner", c.key, pos, "shown", c.key)}
-                        onOpen={(c, pos) => log("corner", c.key, pos, "opened", c.key)}
-                      />
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
-            </SectionBoundary>
-
-            <SectionBoundary>
-              {spacesLoading ? (
-                <section id="discover-spaces" className="scroll-mt-24" aria-hidden="true">
-                  <SectionSkeleton cards={2} />
-                </section>
-              ) : visibleSpaces.length > 0 ? (
-                <section id="discover-spaces" aria-labelledby="spaces-title" className="scroll-mt-24">
-                  <SectionHeading id="spaces-title" title="Spaces near you" sub="Studios, cafés and groups that host things" />
-                  <SpacesRow
-                    spaces={visibleSpaces}
-                    homeEventKeys={homeEventKeys}
-                    onJoin={joinSpace}
-                    onShown={(s, i) => log("space", s.id, i, "shown", s.cornerKey)}
-                    onOpen={(s, i) => log("space", s.id, i, "opened", s.cornerKey)}
+        <SectionBoundary>
+          {cornersLoading ? (
+            <section id="discover-corners" className="scroll-mt-24" aria-hidden="true">
+              <Skeleton className="h-64 w-full rounded-card" />
+            </section>
+          ) : cornerCards.length > 0 ? (
+            <section id="discover-corners" aria-labelledby="corners-title" className="scroll-mt-24">
+              <SectionHeading id="corners-title" title="Corners new to you" sub="Three ways into each one" action={{ label: "See all", to: "/corners" }} />
+              <ul className="flex flex-col gap-3">
+                {cornerCards.map((m, i) => (
+                  <CornerTearCard
+                    key={m.key}
+                    model={m}
+                    position={i}
+                    onFollow={followCorner}
+                    onShown={(c, pos) => log("corner", c.key, pos, "shown", c.key)}
+                    onOpen={(c, pos) => log("corner", c.key, pos, "opened", c.key)}
                   />
-                </section>
-              ) : null}
-            </SectionBoundary>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </SectionBoundary>
 
-            {user && (
-              <SectionBoundary>
-                <section id="discover-moments" aria-labelledby="moments-title" className="scroll-mt-24">
-                  <SectionHeading id="moments-title" title={city ? `What ${city} is making` : "What people are making"} sub="From people you don’t follow yet" />
-                  <CityFeed
-                    posts={posts}
-                    chips={chips}
-                    corner={corner}
-                    onCorner={setCorner}
-                    loading={momentsLoading || !feedInputsLoaded}
-                    hasMore={!momentsDone}
-                    onMore={() => void loadMoments(false)}
-                    followed={followed}
-                    onFollow={followAuthor}
-                    onOpen={(post) => setOpen(post.id)}
-                    onTry={(post, i) => log("moment", String(post.id), i, "tried", postCornerKey(post))}
-                    onShown={(post, i) => log("moment", String(post.id), i, "shown", postCornerKey(post))}
-                  />
-                </section>
-              </SectionBoundary>
-            )}
-          </>
+        <SectionBoundary>
+          {spacesLoading ? (
+            <section id="discover-spaces" className="scroll-mt-24" aria-hidden="true">
+              <SectionSkeleton cards={2} />
+            </section>
+          ) : visibleSpaces.length > 0 ? (
+            <section id="discover-spaces" aria-labelledby="spaces-title" className="scroll-mt-24">
+              <SectionHeading id="spaces-title" title="Spaces near you" sub="Studios, cafés and groups that host things" />
+              <SpacesRow
+                spaces={visibleSpaces}
+                homeEventKeys={homeEventKeys}
+                onJoin={joinSpace}
+                onShown={(s, i) => log("space", s.id, i, "shown", s.cornerKey)}
+                onOpen={(s, i) => log("space", s.id, i, "opened", s.cornerKey)}
+              />
+            </section>
+          ) : null}
+        </SectionBoundary>
+
+        {user && (
+          <SectionBoundary>
+            <section id="discover-moments" aria-labelledby="moments-title" className="scroll-mt-24">
+              <SectionHeading id="moments-title" title={city ? `What ${city} is making` : "What people are making"} sub="From people you don’t follow yet" />
+              <CityFeed
+                posts={posts}
+                chips={chips}
+                corner={corner}
+                onCorner={setCorner}
+                loading={momentsLoading || !feedInputsLoaded}
+                hasMore={!momentsDone}
+                onMore={() => void loadMoments(false)}
+                followed={followed}
+                onFollow={followAuthor}
+                onOpen={(post) => setOpen(post.id)}
+                onTry={(post, i) => log("moment", String(post.id), i, "tried", postCornerKey(post))}
+                onShown={(post, i) => log("moment", String(post.id), i, "shown", postCornerKey(post))}
+              />
+            </section>
+          </SectionBoundary>
         )}
       </div>
 

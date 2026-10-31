@@ -122,7 +122,7 @@ export function CornerTagField({
               onClick={() => pick(active ? "" : c.slug, c.name, c.spaceSlug)}
               className={`rounded-control border px-3 py-1 text-caption transition-colors ${
                 active
-                  ? "border-transparent text-on-brand [background-color:var(--coral-deep)]"
+                  ? "border-transparent text-on-brand [background-color:var(--accent-text)]"
                   : "border-border text-muted-foreground hover:border-foreground/30"
               }`}
             >
@@ -147,7 +147,7 @@ export function CornerTagField({
           placeholder="Type a Corner, e.g. Pasta Making"
         />
 
-        {blockedMessage && <p className="mt-1.5 text-caption text-[var(--coral-text)]">{blockedMessage}</p>}
+        {blockedMessage && <p className="mt-1.5 text-caption text-[var(--accent-text)]">{blockedMessage}</p>}
 
         {focused && q && (
           <ul className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-56 overflow-y-auto rounded-card border border-border bg-popover py-1 shadow-overlay">
@@ -173,7 +173,7 @@ export function CornerTagField({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={createNew}
                   disabled={creating}
-                  className="flex items-center gap-1.5 text-left text-caption text-[var(--coral-text)]"
+                  className="flex items-center gap-1.5 text-left text-caption text-[var(--accent-text)]"
                 >
                   <Plus className="size-3" />
                   {creating ? "Creating…" : `Create “${q}” as a new Corner`}
@@ -204,7 +204,7 @@ export function CornerTagField({
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={createNew}
                     disabled={creating}
-                    className="rounded-control border border-transparent bg-[var(--coral-deep)] px-2.5 py-1 text-caption text-on-brand"
+                    className="rounded-control border border-transparent bg-[var(--accent)] px-2.5 py-1 text-caption text-accent-foreground"
                   >
                     {creating ? "Creating…" : "Create anyway"}
                   </button>

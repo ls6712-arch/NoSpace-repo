@@ -92,7 +92,7 @@ export function CoverImageDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="tab:max-w-sm">
         <DialogHeader>
           <DialogTitle style={{ fontFamily: "var(--font-serif)" }}>Cover photo</DialogTitle>
           <DialogDescription>For “{project.title}”. Optional. Skip anytime.</DialogDescription>
@@ -113,7 +113,7 @@ export function CoverImageDialog({
                 onClick={() => setPreference("first")}
                 className={`rounded-card border px-3 py-2 text-left text-caption transition-colors ${
                   preference === "first"
-                    ? "border-[var(--coral-deep)] bg-surface-muted"
+                    ? "border-[var(--accent-text)] bg-surface-muted"
                     : "border-border hover:border-foreground/30"
                 }`}
               >
@@ -125,7 +125,7 @@ export function CoverImageDialog({
                 onClick={() => setPreference("last")}
                 className={`rounded-card border px-3 py-2 text-left text-caption transition-colors ${
                   preference === "last"
-                    ? "border-[var(--coral-deep)] bg-surface-muted"
+                    ? "border-[var(--accent-text)] bg-surface-muted"
                     : "border-border hover:border-foreground/30"
                 }`}
               >

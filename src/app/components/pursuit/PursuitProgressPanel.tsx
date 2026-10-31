@@ -216,7 +216,7 @@ function MilestoneList({ names, reached }: { names: string[]; reached: number })
         <li key={i} className="flex items-center gap-2.5 text-small">
           <span
             className={`flex size-5 items-center justify-center rounded-full border text-caption ${
-              i < reached ? "border-[var(--coral-deep)] bg-[var(--coral-deep)] text-on-brand" : "border-border text-muted-foreground"
+              i < reached ? "border-[var(--accent-text)] bg-[var(--accent)] text-accent-foreground" : "border-border text-muted-foreground"
             }`}
           >
             {i < reached ? <Check className="size-3" /> : i + 1}
@@ -267,7 +267,7 @@ function Journey({
             <div key={m.at} className="relative z-10 flex w-16 flex-col items-center text-center">
               <span
                 className={`flex size-6 items-center justify-center rounded-full border ${
-                  reached ? "border-[var(--coral-deep)] bg-[var(--coral-deep)] text-on-brand" : "border-border bg-card"
+                  reached ? "border-[var(--accent-text)] bg-[var(--accent)] text-accent-foreground" : "border-border bg-card"
                 }`}
               >
                 {reached && <Check className="size-3.5" />}
@@ -431,7 +431,7 @@ export function InviteDialog({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search people by name"
             autoFocus
-            className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-3 text-body outline-none focus:border-[var(--coral-deep)]"
+            className="h-11 w-full rounded-control border border-border bg-card pl-9 pr-3 text-body outline-none focus:border-[var(--accent-text)]"
           />
         </div>
         <ul className="max-h-60 overflow-y-auto">

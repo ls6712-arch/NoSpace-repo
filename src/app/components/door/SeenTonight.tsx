@@ -93,7 +93,7 @@ export function SeenTonight({ posts, onOpen }: { posts: Post[]; onOpen: (post: P
           See all
         </a>
       </div>
-      <div className="grid gap-3 md:grid-cols-2 md:gap-4">
+      <div className="grid gap-3 tab:grid-cols-2 tab:gap-4">
         {tall && (
           <div className="flex gap-3">
             <div className="min-w-0 flex-1">

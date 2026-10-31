@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { HorizontalRow } from "../HorizontalRow";
-import { Reveal } from "../afterhours/Reveal";
+import { Reveal } from "../common/Reveal";
 import { PRESS_SCALE, pop, press } from "../../lib/motionTokens";
 import { cn } from "./utils";
 
@@ -19,7 +19,7 @@ export function SnapCarousel<T>({
   label,
   name,
   dots = false,
-  itemClassName = "w-[calc(100%-2.5rem)] md:w-[22rem]",
+  itemClassName = "w-[calc(100%-2.5rem)] tab:w-[22rem]",
 }: {
   items: readonly T[];
   getKey: (item: T, index: number) => string;

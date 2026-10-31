@@ -83,7 +83,7 @@ function DetailSheet({
               <Button variant="outline" className="min-h-11 w-full" onClick={() => onArchive(pursuit)}>
                 {pursuit.archived ? "Unarchive" : "Archive"}
               </Button>
-              <Button variant="ghost" className="min-h-11 w-full text-[var(--coral-text)]" onClick={() => setConfirming(true)}>
+              <Button variant="ghost" className="min-h-11 w-full text-[var(--accent-text)]" onClick={() => setConfirming(true)}>
                 Delete
               </Button>
             </div>
@@ -193,7 +193,7 @@ function CreateSheet({ open, onOpenChange, onCreated }: { open: boolean; onOpenC
           <Label htmlFor="pursuit-target">Number of Moments (optional)</Label>
           <Input id="pursuit-target" inputMode="numeric" value={target} onChange={(e) => setTarget(e.target.value.replace(/\D/g, ""))} className="mt-1 min-h-11" />
         </div>
-        {error && <p role="alert" className="text-small text-[var(--coral-text)]">{error}</p>}
+        {error && <p role="alert" className="text-small text-[var(--accent-text)]">{error}</p>}
       </div>
     </ResponsiveSheet>
   );

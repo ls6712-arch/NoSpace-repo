@@ -1,4 +1,4 @@
-# Soosh visual spec v1: "After hours" (for Claude Code)
+# Soosh visual spec v1 (for Claude Code)
 
 Approved by the founder on Oct 22, 2026. **This replaces every visual decision in `#179` and `#181` on Discover**, and sets the look for the rest of the app. Follow it exactly. Do not interpret, soften or add your own touches. If something here is impossible, stop and ask; do not substitute.
 
@@ -11,12 +11,12 @@ All CLAUDE.md rules still apply: one PR, never merge, copy rules, no member coun
 ## 1. Global
 
 ### 1.1 Theme
-- **Dark is the default for the whole app** whenever the person's preference is "system". Remove the per-page `setDarkByDefault` from #179, so the app never flips between pages.
-- Light stays as an explicit choice in Settings, using the light values below.
+- **Light is the default for the whole app** (changed Oct 30, 2026, one-skin brief). A person with no saved preference sees light, whatever their device is set to. Dark is an explicit choice in Settings. "System default" follows the device, but only when it was picked on that device (the server's default value of "system" is not a choice). Every page follows the one setting, so the app never flips between pages.
+- The Appearance setting works on every screen. There is one skin: no Paper, Space, After hours or Transfer scope.
 
 ### 1.2 Colour tokens (put in `src/styles/theme.css`, replace the old values)
 
-| Token | Dark (default) | Light | Use |
+| Token | Dark | Light (default) | Use |
 |---|---|---|---|
 | `--background` | `#0E0D0C` | `#F7F5F2` | Page |
 | `--surface` (`--card`) | `#171514` | `#FFFFFF` | Cards, sheets, inputs |

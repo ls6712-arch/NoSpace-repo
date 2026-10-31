@@ -147,7 +147,7 @@ function Shell({ children, bare }: { children: React.ReactNode; bare?: boolean }
   // bare: inside onboarding, whose own page already provides the frame.
   if (bare) return <>{children}</>;
   return (
-    <div className="min-h-viewport bg-surface py-10 sm:py-14">
+    <div className="min-h-viewport bg-surface py-10 tab:py-14">
       <div className="container mx-auto max-w-lg px-4">{children}</div>
     </div>
   );
@@ -165,7 +165,7 @@ function SheetShell({ children, bare }: { children: React.ReactNode; bare?: bool
       initial={{ y: "100%" }}
       animate={{ y: 0 }}
       transition={sheetSpring}
-      className="ns-afterhours fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
     >
       <div className="mx-auto min-h-full max-w-md px-4 pb-32">{children}</div>
     </motion.div>
@@ -1205,7 +1205,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="max-w-md rounded-card border border-border bg-card p-10 text-center">
-          <span className="mb-5 inline-flex size-14 items-center justify-center rounded-full text-on-brand [background-color:var(--coral-deep)]">
+          <span className="mb-5 inline-flex size-14 items-center justify-center rounded-full text-on-brand [background-color:var(--accent-text)]">
             <NotebookPen className="size-7" />
           </span>
           <h2 className="mb-2 text-title">Log in to keep your Moments</h2>
@@ -1265,7 +1265,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             </span>
           </span>
 
-          <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             {anySaveError ? "Not saved" : "Saved"}
           </h1>
           <p className="mt-1 text-small text-muted-foreground">
@@ -1288,7 +1288,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             transition={ENTER}
             className={
               savedTileSettled
-                ? "w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--cream)]"
+                ? "w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--surface)]"
                 : "w-40 overflow-hidden rounded-card border border-border"
             }
           >
@@ -1311,14 +1311,14 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
           {/* An honest failure beats a cheerful lie: the post is on screen but
               only in this tab, and it will be gone after a reload. */}
           {anySaveError && (
-            <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
+            <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--accent-text)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
               {anySaveError} Nothing you wrote is lost yet. Try again before you
               close this tab.
             </p>
           )}
 
           {mediaError && (
-            <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
+            <p className="mx-auto mb-5 max-w-xs rounded-card border border-[var(--accent-text)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
               {mediaError}
             </p>
           )}
@@ -1333,7 +1333,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
                 type="button"
                 disabled={undoing}
                 onClick={() => void undoSave()}
-                className="min-h-11 px-2 text-[var(--coral-text)] hover:opacity-80 disabled:opacity-50"
+                className="min-h-11 px-2 text-[var(--accent-text)] hover:opacity-80 disabled:opacity-50"
               >
                 Undo
               </button>
@@ -1452,7 +1452,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               Cancel
             </button>
           )}
-          <h1 className="text-body font-semibold">Log a Moment</h1>
+          <h1 className="text-body">Log a Moment</h1>
           <span />
         </header>
 
@@ -1522,7 +1522,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         />
 
         {heicWarning && (
-          <p className="mb-4 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
+          <p className="mb-4 rounded-card border border-[var(--accent-text)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
             {heicWarning}
           </p>
         )}
@@ -1731,7 +1731,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
                   <span className="block text-small">This is something happening</span>
                   <span className="block text-caption text-muted-foreground">A walk, a workshop, a meetup, a challenge: people can join in</span>
                 </span>
-                <span className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${isActivity ? "justify-end [background-color:var(--violet-electric)]" : "justify-start bg-surface-muted"}`}>
+                <span className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${isActivity ? "justify-end [background-color:var(--accent)]" : "justify-start bg-surface-muted"}`}>
                   <span className="size-5 rounded-full bg-background" />
                 </span>
               </button>

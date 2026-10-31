@@ -1,20 +1,11 @@
-import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { APP_NAME, CONTACT_EMAIL, INSTAGRAM_URL, TIKTOK_URL } from "../config";
 import { useScrollReveal } from "../lib/useScrollReveal";
 import { LANDING_ALT, LANDING_COPY as COPY } from "./copy";
 import { hasLandingImage } from "./images";
 import { PhoneFrame } from "./PhoneFrame";
-import { useLiveGradient } from "./useLiveGradient";
 import { usePublicShelves } from "../lib/publicShelves";
-import gradientStatic from "./gradient-static.webp";
 import "./landing.css";
-
-const HEADING_FONT_URL =
-  "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap";
-
-const reducedMotion = () =>
-  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function Reveal({ as: Tag = "div", className = "", children }: { as?: "div" | "section"; className?: string; children: React.ReactNode }) {
   const ref = useScrollReveal<HTMLDivElement>();
@@ -53,16 +44,17 @@ function Nav() {
 
 function Steps() {
   const shots = ["save", "try", "share"] as const;
-  if (!shots.every(hasLandingImage)) return null;
+  // The screens come back when all three are committed; until then the three steps stand as text.
+  const withScreens = shots.every(hasLandingImage);
   return (
     <section className="lp-section lp-surface">
       <div className="lp-wide">
         <Reveal>
           <h2 className="lp-h2 lp-center">{COPY.stepsHeading}</h2>
-          <div className="lp-steps">
+          <div className={`lp-steps ${withScreens ? "" : "lp-steps-text"}`}>
             {COPY.steps.map((step, i) => (
               <div key={step.label} className="lp-step">
-                <PhoneFrame image={shots[i]} alt={LANDING_ALT[shots[i]]} caption={COPY.exampleCaption} className="lp-phone-md" />
+                {withScreens && <PhoneFrame image={shots[i]} alt={LANDING_ALT[shots[i]]} caption={COPY.exampleCaption} className="lp-phone-md" />}
                 <h3 className="lp-step-label">{step.label}</h3>
                 <p>{step.line}</p>
               </div>
@@ -90,16 +82,17 @@ function Split({
   flip?: boolean;
   tone: "lp-surface" | "lp-surface-alt";
 }) {
-  if (!hasLandingImage(image)) return null;
+  // Without its screen the section is its text, centred.
+  const withScreen = hasLandingImage(image);
   return (
     <section className={`lp-section ${tone}`}>
       <div className="lp-wide">
-        <Reveal className={`lp-split ${flip ? "lp-split-flip" : ""}`}>
+        <Reveal className={`lp-split ${flip ? "lp-split-flip" : ""} ${withScreen ? "" : "lp-split-text-only"}`}>
           <div className="lp-split-text">
             {heading && <h2 className="lp-h2">{heading}</h2>}
             <p className={heading ? undefined : "lp-statement"}>{line}</p>
           </div>
-          <PhoneFrame image={image} alt={alt} caption={COPY.exampleScreenCaption} className="lp-phone-md" />
+          {withScreen && <PhoneFrame image={image} alt={alt} caption={COPY.exampleScreenCaption} className="lp-phone-md" />}
         </Reveal>
       </div>
     </section>
@@ -161,30 +154,15 @@ function Footer() {
 
 /** The signed-out home page. Rendered by Home.tsx; it brings its own nav. */
 export function Landing() {
-  const heroRef = useRef<HTMLElement>(null);
-  const inviteRef = useRef<HTMLElement>(null);
-  const liveRef = useRef<HTMLDivElement>(null);
-  const [reduced] = useState(reducedMotion);
-  const live = useLiveGradient(liveRef, [heroRef, inviteRef], !reduced);
   const lineRef = useScrollReveal<HTMLDivElement>();
   const heroShot = hasLandingImage("hero");
 
   return (
     <div className="lp">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link rel="stylesheet" href={HEADING_FONT_URL} />
-
-      <div className="lp-backdrop" aria-hidden="true">
-        {/* design-token-ignore: bundled static gradient, needs fetchPriority */}
-        <img className="lp-backdrop-img" src={gradientStatic} alt="" fetchPriority="high" decoding="async" />
-        <div ref={liveRef} className={`lp-backdrop-live ${live ? "is-ready" : ""}`} />
-      </div>
-
       <div className="lp-body">
         <Nav />
         <main>
-          <section ref={heroRef} className={`lp-hero ${heroShot ? "" : "lp-hero-solo"}`}>
+          <section className={`lp-hero ${heroShot ? "" : "lp-hero-solo"}`}>
             <div className="lp-hero-text">
               <h1>{COPY.heroHeadline}</h1>
               <p className="lp-hero-sub">{COPY.heroSub}</p>
@@ -192,7 +170,7 @@ export function Landing() {
             </div>
             {heroShot && (
               <div className="lp-hero-phone">
-                <PhoneFrame image="hero" alt={LANDING_ALT.hero} caption={COPY.exampleCaption} priority />
+                <PhoneFrame image="hero" alt={LANDING_ALT.hero} caption={COPY.exampleScreenCaption} priority />
               </div>
             )}
           </section>
@@ -224,13 +202,13 @@ export function Landing() {
 
           <RealShelves />
 
-          <section id="invite" ref={inviteRef} className="lp-section lp-invite lp-center">
+          <section id="invite" className="lp-section lp-invite lp-center">
             <Reveal>
               <div className="lp-copy">
                 <h2 className="lp-h2">{COPY.joinHeading}</h2>
                 <p style={{ margin: 0 }}>{COPY.joinLine}</p>
               </div>
-              <div className="lp-invite-card lp-light">
+              <div className="lp-invite-card">
                 <SignUpButton large />
               </div>
             </Reveal>

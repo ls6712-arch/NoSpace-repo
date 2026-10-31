@@ -5,7 +5,7 @@ import { TOAST } from "../../lib/stateCopy";
 /**
  * The one row pattern every setting in the redesigned /settings uses:
  * label + muted description on the left, a value or control on the right —
- * stacked below 640px (sm:), side by side at sm: and up. Rows live inside a
+ * stacked below 744px (tab:), side by side at tab: and up. Rows live inside a
  * SettingsPanel, which supplies the hairline separators between them.
  */
 export function SettingsRow({
@@ -18,14 +18,14 @@ export function SettingsRow({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5">
+    <div className="flex flex-col gap-3 px-4 py-4 tab:flex-row tab:items-center tab:justify-between tab:gap-6 tab:px-5">
       <div className="min-w-0">
         <div className="text-small">{label}</div>
         {description && (
           <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground">{description}</p>
         )}
       </div>
-      <div className="min-w-0 sm:shrink-0 sm:text-right">{children}</div>
+      <div className="min-w-0 tab:shrink-0 tab:text-right">{children}</div>
     </div>
   );
 }

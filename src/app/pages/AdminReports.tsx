@@ -150,7 +150,7 @@ export function AdminReports() {
           <p>
             <strong style={{ fontFamily: "var(--font-serif)", fontWeight: 500 }}>{r.reporterName}</strong>{" "}
             reported{" "}
-            <Link to={targetHref(r)} className="text-[var(--coral-text)] hover:underline">
+            <Link to={targetHref(r)} className="text-[var(--accent-text)] hover:underline">
               {targetLabel(r)}
             </Link>{" "}
             of{" "}
@@ -183,9 +183,9 @@ export function AdminReports() {
   );
 
   return (
-    <div className="min-h-viewport bg-surface py-8 sm:py-12">
+    <div className="min-h-viewport bg-surface py-8 tab:py-12">
       <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
           Reports
         </h1>
         <p className="mb-8 mt-2 text-small text-muted-foreground">
@@ -193,7 +193,7 @@ export function AdminReports() {
         </p>
 
         {error && (
-          <p className="mb-5 rounded-card border border-[var(--coral-deep)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-small">
+          <p className="mb-5 rounded-card border border-[var(--accent-text)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-small">
             {error}
           </p>
         )}

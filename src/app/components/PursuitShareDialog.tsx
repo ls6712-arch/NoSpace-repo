@@ -116,7 +116,7 @@ export function PursuitShareDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
+        <DialogContent className="tab:max-w-sm p-0 overflow-hidden border-none bg-transparent shadow-none">
           <DialogTitle className="sr-only">Share {project.title}</DialogTitle>
 
           <div className="rounded-card p-[1.5px] [background-image:var(--gradient-brand)]">

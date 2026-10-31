@@ -83,7 +83,7 @@ export function ProfileSection() {
 
       {showEmailPrefixPrompt && <EmailPrefixPrompt userId={user.id} emailPrefix={emailPrefix} />}
 
-      <div className="mb-4 rounded-control border border-border bg-card p-4 sm:p-5">
+      <div className="mb-4 rounded-control border border-border bg-card p-4 tab:p-5">
         <AvatarPicker
           name={displayName || "You"}
           url={avatar ?? profile.avatar_url}
@@ -136,7 +136,7 @@ export function ProfileSection() {
             return { error: r.ok ? null : r.message };
           }}
         />
-        <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+        <div className="flex items-center justify-between gap-4 px-4 py-3 tab:px-5">
           <div>
             <Label htmlFor="private-profile" className="text-small font-medium">Private profile</Label>
             <p className="text-caption text-muted-foreground">People who don’t follow you see only your name and level.</p>

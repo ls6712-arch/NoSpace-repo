@@ -235,7 +235,7 @@ export function Studio() {
 
   if (!opened) {
     return (
-      <div className="ns-paper-theme relative min-h-viewport overflow-hidden bg-media-base text-on-media">
+      <div className="relative min-h-viewport overflow-hidden bg-media-base text-on-media">
         <div className="absolute inset-0">
           {coverPost && (
             <PostMedia
@@ -269,25 +269,25 @@ export function Studio() {
         </span>
 
         {isMe && (
-          <div className="absolute right-6 top-16 sm:right-8">
+          <div className="absolute right-6 top-16 tab:right-8">
             <CoverEditor posts={loaded.posts} />
           </div>
         )}
 
-        <div className="absolute inset-x-0 bottom-0 p-8 sm:p-16">
+        <div className="absolute inset-x-0 bottom-0 p-8 tab:p-16">
           <p className="mb-2 text-caption tracking-[0.16em] text-on-media/90">
             {plural(loaded.posts.length, "Moment")}
             {sinceLabel ? ` since ${sinceLabel}` : ""}
           </p>
           <h1
-            className="max-w-xl text-display leading-tight text-on-media"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+            className="max-w-xl text-title text-on-media"
+            style={{ fontFamily: "var(--font-serif)" }}
           >
             {coverTitle}
           </h1>
           {coverTagline && (
             <p
-              className="mt-3 max-w-md text-lead italic text-on-media/90 sm:text-title"
+              className="mt-3 max-w-md text-lead italic text-on-media/90 tab:text-title"
               style={{ fontFamily: "var(--font-body)" }}
             >
               {coverTagline}
@@ -300,8 +300,8 @@ export function Studio() {
               setPageIndex(0);
             }}
             disabled={spreads.length === 0}
-            className="mt-7 inline-flex items-center gap-2 rounded-control px-6 py-3 text-small text-on-brand transition-opacity disabled:opacity-40"
-            style={{ backgroundColor: "var(--coral-deep)" }}
+            className="mt-7 inline-flex items-center gap-2 rounded-control px-6 py-3 text-small text-accent-foreground transition-opacity disabled:opacity-40"
+            style={{ backgroundColor: "var(--accent)" }}
           >
             Open the Scrapbook
             <ArrowRight className="size-4" />
@@ -316,19 +316,19 @@ export function Studio() {
   const rest = spread?.items.slice(1, 7) ?? [];
 
   return (
-    <div className="ns-paper-theme min-h-viewport bg-[var(--paper)]">
-      <div className="mx-auto max-w-6xl px-6 py-6 sm:px-10">
+    <div className="min-h-viewport bg-[var(--background)]">
+      <div className="mx-auto max-w-6xl px-6 py-6 tab:px-10">
         <div className="mb-6 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => setOpened(false)}
-            className="flex size-9 items-center justify-center rounded-control border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] transition-colors hover:border-[var(--coral-deep)]"
+            className="flex size-9 items-center justify-center rounded-control border border-[var(--border)] bg-[var(--surface)] text-foreground transition-colors hover:border-[var(--accent-text)]"
             aria-label="Back to cover"
           >
             <ArrowLeft className="size-4" />
           </button>
 
-          <div className="flex gap-1 rounded-control border border-[var(--line)] p-0.5 text-caption">
+          <div className="flex gap-1 rounded-control border border-[var(--border)] p-0.5 text-caption">
             {(["chronological", "tag"] as Grouping[]).map((g) => (
               <button
                 key={g}
@@ -339,7 +339,7 @@ export function Studio() {
                   setDirection(1);
                 }}
                 className={`rounded-control px-3.5 py-1.5 transition-colors ${
-                  grouping === g ? "bg-[var(--coral-deep)] text-on-brand" : "text-[var(--ink-soft)]"
+                  grouping === g ? "bg-[var(--accent)] text-accent-foreground" : "text-[var(--muted-foreground)]"
                 }`}
               >
                 {g === "chronological" ? "Chronological" : "By tag"}
@@ -348,7 +348,7 @@ export function Studio() {
           </div>
 
           <span
-            className="text-small italic text-[var(--ink-soft)]"
+            className="text-small italic text-[var(--muted-foreground)]"
             style={{ fontFamily: "var(--font-body)" }}
           >
             {spreads.length === 0 ? "0 / 0" : `${clampedIndex + 1} / ${spreads.length}`}
@@ -377,10 +377,10 @@ export function Studio() {
                 transformStyle: "preserve-3d",
                 transformOrigin: direction > 0 ? "left center" : "right center",
               }}
-              className="grid grid-cols-1 gap-3 md:grid-cols-[1.2fr_1fr]"
+              className="grid grid-cols-1 gap-3 tab:grid-cols-[1.2fr_1fr]"
             >
               {hero && (
-                <div className="relative aspect-[4/5] overflow-hidden rounded-card border border-[var(--line)] md:aspect-auto md:h-[560px]">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-card border border-[var(--border)] tab:aspect-auto tab:h-[560px]">
                   <PostMedia
                     media={hero.media}
                     type={hero.type}
@@ -392,16 +392,16 @@ export function Studio() {
                   />
                   <div className="pointer-events-none absolute inset-0 bg-scrim" />
                   <p
-                    className="absolute inset-x-0 bottom-0 p-5 text-lead italic text-on-media sm:text-title"
+                    className="absolute inset-x-0 bottom-0 p-5 text-lead italic text-on-media tab:text-title"
                     style={{ fontFamily: "var(--font-body)" }}
                   >
                     {hero.caption}
                   </p>
                 </div>
               )}
-              <div className="grid grid-cols-2 grid-rows-3 gap-2 md:h-[560px]">
+              <div className="grid grid-cols-2 grid-rows-3 gap-2 tab:h-[560px]">
                 {rest.map((post) => (
-                  <div key={post.id} className="relative overflow-hidden rounded-card border border-[var(--line)]">
+                  <div key={post.id} className="relative overflow-hidden rounded-card border border-[var(--border)]">
                     <PostMedia
                       media={post.media}
                       type={post.type}

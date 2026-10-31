@@ -15,10 +15,6 @@ export function issueNumber(now: number = Date.now()): number {
   return Math.max(1, Math.floor((now - LAUNCH) / WEEK) + 1);
 }
 
-/** The display face (Bricolage Grotesque 800) at an exact size, for sizes the type scale doesn't have. */
-export function displayStyle(px: number, extra: CSSProperties = {}): CSSProperties {
-  return { fontFamily: "var(--font-display)", fontWeight: 800, fontSize: `${px}px`, letterSpacing: "-0.02em", ...extra };
-}
 
 export interface Door {
   greeting: string;

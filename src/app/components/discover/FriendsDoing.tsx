@@ -16,7 +16,7 @@ export function FriendsDoing({ pursuits }: { pursuits: readonly FriendPursuit[] 
         label="Your friends are doing"
         items={pursuits}
         getKey={(p) => p.id}
-        itemClassName="w-[calc(100%-3.5rem)] sm:w-64"
+        itemClassName="w-[calc(100%-3.5rem)] tab:w-64"
         renderItem={(p) => (
           <Link to={`/pursuit/${p.id}`} className="flex h-full flex-col gap-3 rounded-card bg-card p-4">
             <PersonAvatar name={p.ownerName} src={p.ownerAvatar} size="size-10" />

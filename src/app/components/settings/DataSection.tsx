@@ -23,7 +23,7 @@ export function DataSection() {
         What’s kept here, and only here.
       </p>
 
-      <div className="rounded-control border border-border bg-card p-4 sm:p-5">
+      <div className="rounded-control border border-border bg-card p-4 tab:p-5">
         <div className="mb-2 flex items-center gap-2 text-small">
           <Lock className="size-4 text-muted-foreground" />
           “Only you” Moments

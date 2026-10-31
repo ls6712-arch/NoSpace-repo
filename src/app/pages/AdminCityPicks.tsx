@@ -128,7 +128,7 @@ export function AdminCityPicks() {
         <Link to="/you" aria-label="Back" className="-ml-2 inline-flex size-11 items-center justify-center rounded-full">
           <ArrowLeft className="size-6" strokeWidth={1.75} aria-hidden="true" />
         </Link>
-        <h1 className="text-display font-extrabold" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
           {ADMIN_PICKS.title}
         </h1>
         <p className="text-body text-muted-foreground">{ADMIN_PICKS.line}</p>
@@ -155,7 +155,7 @@ export function AdminCityPicks() {
           </>
             )}
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 tab:grid-cols-2">
             <Field label="Starts" hint="New York time">
             {(id) => (
               <>

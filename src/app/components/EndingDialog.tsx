@@ -66,7 +66,7 @@ export function EndingDialog({
           rows={4}
           autoFocus
         />
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="gap-2 tab:gap-2">
           {mode === "finish" && (
             <Button variant="outline" onClick={() => save(false)}>
               Skip and finish

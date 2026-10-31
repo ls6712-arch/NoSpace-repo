@@ -155,7 +155,7 @@ export function InlineError({
 }) {
   if (!message) return null;
   return (
-    <p role="alert" className={cn("text-caption text-[var(--coral-text)]", className)}>
+    <p role="alert" className={cn("text-caption text-[var(--accent-text)]", className)}>
       {message}
       {onRetry && (
         <>

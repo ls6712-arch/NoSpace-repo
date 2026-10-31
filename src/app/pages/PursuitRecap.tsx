@@ -167,7 +167,7 @@ export function PursuitRecap() {
   ];
 
   return (
-    <div className="ns-afterhours min-h-viewport bg-background pb-24">
+    <div className="min-h-viewport bg-background pb-24">
       <Confetti />
       <div className="mx-auto flex max-w-md flex-col gap-8 px-4 pt-10">
         <header className="text-center">

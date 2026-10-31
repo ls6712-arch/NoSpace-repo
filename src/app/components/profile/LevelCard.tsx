@@ -10,8 +10,8 @@ function Emblem({ index, dashed, size = "lg" }: { index: number; dashed?: boolea
     <span
       aria-hidden="true"
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full border-2 font-bold text-coral-deep",
-        "bg-[color-mix(in_srgb,var(--coral-deep)_12%,transparent)] border-coral-deep",
+        "flex shrink-0 items-center justify-center rounded-full border-2 font-bold text-accent-text",
+        "bg-[color-mix(in_srgb,var(--accent-text)_12%,transparent)] border-accent-text",
         dashed && "border-dashed bg-transparent",
         size === "lg" ? "size-14 text-lead" : "size-10 text-small",
       )}

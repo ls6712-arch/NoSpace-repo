@@ -118,7 +118,7 @@ export function HomeFeed() {
 
   return (
     <div
-      className="mx-auto w-full max-w-md px-4 pb-8 pt-4 max-lg:pt-[calc(var(--safe-top)+1rem)]"
+      className="mx-auto w-full max-w-md px-4 pb-8 pt-4 max-desk:pt-[calc(var(--safe-top)+1rem)]"
       onTouchStart={(e) => {
         touchStart.current = window.scrollY <= 0 ? e.touches[0].clientY : null;
       }}
@@ -144,7 +144,7 @@ export function HomeFeed() {
       <HomeHeader />
 
       <div className="flex flex-col gap-1 pb-5 pt-3">
-        <h1 className="text-display font-extrabold leading-tight" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
           {greetingName ? `Hi ${greetingName}` : GREETING_NO_NAME}
         </h1>
         <p className="text-small text-muted-foreground">{subline}</p>

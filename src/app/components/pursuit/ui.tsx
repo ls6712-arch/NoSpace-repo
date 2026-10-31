@@ -141,9 +141,9 @@ export function StepDots({ steps, current }: { steps: string[]; current: number 
             <span
               className={`relative z-10 flex size-7 items-center justify-center rounded-full border text-caption ${
                 active
-                  ? "border-[var(--coral-deep)] bg-[var(--coral-deep)] text-on-brand"
+                  ? "border-[var(--accent-text)] bg-[var(--accent)] text-accent-foreground"
                   : done
-                    ? "border-[var(--coral)] bg-card text-[var(--coral-deep)]"
+                    ? "border-[var(--coral)] bg-card text-[var(--accent-text)]"
                     : "border-border bg-card text-muted-foreground"
               }`}
               aria-current={active ? "step" : undefined}
@@ -187,7 +187,7 @@ export function AmountStepper({
       <button
         type="button"
         onClick={() => onChange(round(value - step))}
-        className="flex size-9 items-center justify-center rounded-control border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
+        className="flex size-9 items-center justify-center rounded-control border border-border bg-card text-foreground hover:border-[var(--accent-text)]"
         aria-label="Less"
       >
         <Minus className="size-4" />
@@ -204,13 +204,13 @@ export function AmountStepper({
           if (Number.isFinite(v)) onChange(round(v));
         }}
         onBlur={() => setText(String(value))}
-        className="h-9 w-20 rounded-control border border-border bg-card text-center text-body text-foreground outline-none focus:border-[var(--coral-deep)]"
+        className="h-9 w-20 rounded-control border border-border bg-card text-center text-body text-foreground outline-none focus:border-[var(--accent-text)]"
         aria-label="Amount"
       />
       <button
         type="button"
         onClick={() => onChange(round(value + step))}
-        className="flex size-9 items-center justify-center rounded-control border border-border bg-card text-foreground hover:border-[var(--coral-deep)]"
+        className="flex size-9 items-center justify-center rounded-control border border-border bg-card text-foreground hover:border-[var(--accent-text)]"
         aria-label="More"
       >
         <Plus className="size-4" />

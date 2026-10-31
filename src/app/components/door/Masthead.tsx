@@ -1,6 +1,6 @@
 import { APP_NAME } from "../../config";
 import { formatDate, formatWeekday } from "../../lib/dates";
-import { displayStyle, issueNumber } from "../../lib/doorList";
+import { issueNumber } from "../../lib/doorList";
 
 /**
  * The top of Discover's Door list: the issue line, the name set huge with a
@@ -10,13 +10,13 @@ import { displayStyle, issueNumber } from "../../lib/doorList";
 export function Masthead() {
   const now = Date.now();
   return (
-    <header className="mb-5 md:mb-8">
+    <header className="mb-5 tab:mb-8">
       <p className="mb-1 flex items-center justify-between gap-4 text-small text-muted-foreground">
         <span>{`Issue ${issueNumber(now)} · ${formatWeekday(now)} ${formatDate(now)}`}</span>
       </p>
       <h1
-        style={displayStyle(72, { fontSize: "clamp(48px, 14vw, 72px)", letterSpacing: "-0.04em", lineHeight: 0.9 })}
-        className="text-foreground"
+        style={{ fontFamily: "var(--font-display)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 0.9 }}
+        className="text-display text-foreground"
       >
         {APP_NAME}
         <span className="text-[var(--accent)]">.</span>

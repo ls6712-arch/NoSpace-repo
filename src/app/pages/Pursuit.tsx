@@ -355,7 +355,7 @@ export function Pursuit() {
     : undefined;
 
   return (
-    <div className="min-h-viewport bg-surface pb-44 lg:pb-24">
+    <div className="min-h-viewport bg-surface pb-44 desk:pb-24">
       <div className="container mx-auto max-w-2xl px-4 pt-8">
         <Link
           to={owner ? "/my-space" : "/discover"}
@@ -376,7 +376,7 @@ export function Pursuit() {
         <p className="mb-1 text-small text-muted-foreground">
           {["Pursuit", cornerLabel, endsAtMs ? `ends ${formatDate(endsAtMs)}` : ""].filter(Boolean).join(" · ")}
         </p>
-        <h1 className="mb-2 break-words text-display" style={{ fontFamily: "var(--font-serif)", viewTransitionName: "pursuit-title" }}>
+        <h1 className="mb-2 break-words text-title" style={{ fontFamily: "var(--font-serif)", viewTransitionName: "pursuit-title" }}>
           {view.title}
         </h1>
 
@@ -466,7 +466,7 @@ export function Pursuit() {
         {goal && !(ownProject && hasMeasure(ownProject)) && (
           <div className="mb-4 rounded-card border border-border bg-card p-4">
             <p className="flex items-center gap-2 text-small">
-              <Target className={`size-4 shrink-0 ${goalReached ? "text-[var(--violet-electric-bright)]" : "text-muted-foreground"}`} />
+              <Target className={`size-4 shrink-0 ${goalReached ? "text-[var(--accent-text)]" : "text-muted-foreground"}`} />
               {goalReached ? (
                 <span>
                   Goal reached: <span className="text-muted-foreground">{goal.label}</span>
@@ -501,7 +501,7 @@ export function Pursuit() {
             already uses whichever Moment has the first photo, so the only
             thing worth keeping is the nudge to make that one a photo. */}
         {owner && ownProject && moments.length === 0 && (
-          <div className={`mb-6 rounded-card border p-4 ${isNew ? "border-[var(--coral-deep)]" : "border-dashed border-border"}`}>
+          <div className={`mb-6 rounded-card border p-4 ${isNew ? "border-[var(--accent-text)]" : "border-dashed border-border"}`}>
             <p className="text-body" style={{ fontFamily: "var(--font-serif)" }}>
               Add your first Moment
             </p>
@@ -581,7 +581,7 @@ export function Pursuit() {
                       aria-pressed={current === o.days}
                       onClick={() => mirror(setCheckInDays(ownProject.id, o.days))}
                       className={`rounded-control border px-2.5 py-1 transition-colors ${
-                        current === o.days ? "border-[var(--coral-deep)] text-foreground" : "border-border hover:text-foreground"
+                        current === o.days ? "border-[var(--accent-text)] text-foreground" : "border-border hover:text-foreground"
                       }`}
                     >
                       {o.label}
@@ -668,7 +668,7 @@ export function Pursuit() {
 
       {/* The one action on a Pursuit you take part in: log the next one. Above the tab bar on a phone. */}
       {ownProject && status === "active" && (
-        <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background lg:bottom-0">
+        <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background desk:bottom-0">
           <div className="mx-auto max-w-md px-4 py-3">
             <Link to={`/create?pursuit=${ownProject.id}`} className="block">
               <PillButton variant="light" className="w-full">
@@ -715,7 +715,7 @@ function ComparePhotos({
 }) {
   return (
     <figure className="mb-6">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 tab:gap-3">
         <PhotoTile moment={first} caption={`Day one · ${shortDate(first.createdAt)}`} />
         <ArrowRight className="size-4 text-muted-foreground" aria-hidden="true" />
         {latest ? (

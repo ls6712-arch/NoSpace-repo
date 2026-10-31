@@ -96,7 +96,7 @@ function CornerField({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onChange(closeMatch.label)}
-            className="text-[var(--coral-text)] underline decoration-dotted underline-offset-2"
+            className="text-[var(--accent-text)] underline decoration-dotted underline-offset-2"
           >
             use that instead
           </button>
@@ -317,7 +317,7 @@ export function PursuitDialog({
                     type="button"
                     onClick={() => setGoalShape("number")}
                     className={`flex items-center justify-center gap-1.5 rounded-control border px-3 py-2 text-caption transition-colors ${
-                      goalShape === "number" ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
+                      goalShape === "number" ? "border-[var(--accent-text)] bg-surface-muted" : "border-border hover:border-foreground/30"
                     }`}
                   >
                     <Hash className="size-3.5" /> A number of sessions
@@ -326,7 +326,7 @@ export function PursuitDialog({
                     type="button"
                     onClick={() => setGoalShape("date")}
                     className={`flex items-center justify-center gap-1.5 rounded-control border px-3 py-2 text-caption transition-colors ${
-                      goalShape === "date" ? "border-[var(--coral-deep)] bg-surface-muted" : "border-border hover:border-foreground/30"
+                      goalShape === "date" ? "border-[var(--accent-text)] bg-surface-muted" : "border-border hover:border-foreground/30"
                     }`}
                   >
                     <CalendarDays className="size-3.5" /> A target date
@@ -385,7 +385,7 @@ export function PursuitDialog({
                   aria-checked={checkIn === o.days}
                   onClick={() => setCheckIn(o.days)}
                   className={`rounded-control border px-2 py-1.5 text-caption transition-colors ${
-                    checkIn === o.days ? "border-[var(--coral-deep)] bg-surface-muted text-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                    checkIn === o.days ? "border-[var(--accent-text)] bg-surface-muted text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {o.label}

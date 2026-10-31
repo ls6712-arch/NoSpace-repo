@@ -130,7 +130,7 @@ export function SendToChatDialog({
             })}
           </ul>
         )}
-        {error && <p className="text-caption text-[var(--coral-text)]">{error}</p>}
+        {error && <p className="text-caption text-[var(--accent-text)]">{error}</p>}
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={close}>
             Done

@@ -86,7 +86,7 @@ export function TagsField({
     <div className="relative">
       <div
         className={`flex min-h-11 flex-wrap items-center gap-1.5 rounded-control border border-border bg-surface px-3 py-2 transition-colors ${
-          focused ? "border-[var(--coral-deep)]" : ""
+          focused ? "border-[var(--accent-text)]" : ""
         }`}
       >
         {value.map((tag) => {
@@ -165,7 +165,7 @@ export function TagsField({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => addTag(closeMatch.label)}
-                className="text-[var(--coral-text)] underline decoration-dotted underline-offset-2"
+                className="text-[var(--accent-text)] underline decoration-dotted underline-offset-2"
               >
                 use that instead
               </button>

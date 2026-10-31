@@ -68,7 +68,7 @@ export function NewSpacesRail() {
                 <span
                   aria-hidden="true"
                   className="h-8 w-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: "var(--coral-deep)" }}
+                  style={{ backgroundColor: "var(--accent)" }}
                 />
                 <div className="min-w-0 flex-1">
                   <span className="block truncate text-small" style={{ fontFamily: "var(--font-serif)" }} title={s.name}>

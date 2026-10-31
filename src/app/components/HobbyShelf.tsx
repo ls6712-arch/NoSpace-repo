@@ -25,7 +25,7 @@ const TAG_TINTS = [
   "color-mix(in srgb, var(--yellow) 78%, black)",
   "var(--sky-deep)",
   "var(--forest)",
-  "var(--coral-deep)",
+  "var(--accent-text)",
   "var(--plum)",
 ];
 const TAG_TINT_OVERRIDES: Record<string, string> = {
@@ -197,7 +197,7 @@ function CornerTile({
   return (
     <Link
       to={linkTo ? linkTo(item) : `/you/work/${archiveKey(item)}`}
-      className="group flex min-w-0 flex-col rounded-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--coral-deep)]"
+      className="group flex min-w-0 flex-col rounded-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent-text)]"
     >
       <div className={`relative overflow-hidden ${MOMENT_MEDIA}`}>
         {item.lastMediaUrl ? (
@@ -236,7 +236,7 @@ function CornerTile({
         </span>
       </div>
       <p
-        className="mt-3 truncate text-lead leading-snug transition-colors group-hover:text-[var(--coral-text)]"
+        className="mt-3 truncate text-lead leading-snug transition-colors group-hover:text-[var(--accent-text)]"
         style={{ fontFamily: "var(--font-body)" }}
         title={item.label}
       >
