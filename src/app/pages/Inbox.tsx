@@ -240,6 +240,7 @@ export function Inbox() {
               {earlier.map((n) => (
                 <li key={n.id} className="flex items-center gap-3">
                   <Avatar className="size-10 shrink-0">
+                    {n.actorAvatar && <AvatarImage src={n.actorAvatar} alt="" className="object-cover" />}
                     <AvatarFallback className="text-small">{initials(n.actorName ?? "Someone")}</AvatarFallback>
                   </Avatar>
                   <p className={`min-w-0 text-body ${n.read ? "text-muted-foreground" : ""}`}>

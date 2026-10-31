@@ -1,4 +1,4 @@
-import { CalendarDays, House, Plus, Search, UserRound, type LucideIcon } from "lucide-react";
+import { CalendarDays, Compass, House, Plus, UserRound, type LucideIcon } from "lucide-react";
 
 /**
  * The destinations every signed-in screen offers, in one place: the bottom
@@ -23,7 +23,7 @@ export const HOME: Destination = { to: "/my-space", label: "Home", icon: House, 
 export const DISCOVER: Destination = {
   to: "/discover",
   label: "Discover",
-  icon: Search,
+  icon: Compass,
   match: (p) =>
     p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/browse") || p.startsWith("/space") || p.startsWith("/people"),
 };

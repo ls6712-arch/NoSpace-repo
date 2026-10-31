@@ -26,6 +26,7 @@ import { useNotificationBadge } from "../lib/useNotificationBadge";
 import { RailItem } from "./nav/RailItem";
 import { isDismissKey } from "../lib/menuDismiss";
 import { Button } from "./ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { APP_NAME } from "../config";
 import { Time } from "./ui/time";
 import { EmptyState } from "./StateViews";
@@ -64,6 +65,59 @@ const ICON: Record<string, typeof Bell> = {
   save: Bookmark,
 };
 
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+/** One person's photo, initials when they have none. */
+function Face({ name, src, className }: { name: string; src?: string; className: string }) {
+  return (
+    <Avatar className={`${className} ring-2 ring-[var(--popover)]`}>
+      {src && <AvatarImage src={src} alt="" className="object-cover" />}
+      <AvatarFallback className="text-caption">{initials(name) || "·"}</AvatarFallback>
+    </Avatar>
+  );
+}
+
+/**
+ * Who a notification is from, at a glance: their photo (two overlapping when
+ * several people did the same thing), with what happened as a small icon on
+ * the corner. A line with nobody behind it (a Space update, a save count)
+ * shows the icon on its own.
+ */
+function NotificationFace({ actors, icon: Icon }: { actors: Array<{ name: string; avatar?: string }>; icon?: typeof Bell }) {
+  const badge = Icon && (
+    <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-popover" aria-hidden="true">
+      <span className="flex size-4 items-center justify-center rounded-full [background-color:var(--accent)] text-[var(--accent-foreground)]">
+        <Icon className="size-2.5" strokeWidth={2.6} />
+      </span>
+    </span>
+  );
+  if (actors.length === 0) {
+    return (
+      <span className="relative flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted" aria-hidden="true">
+        {Icon ? <Icon className="size-5 text-muted-foreground" /> : <Bell className="size-5 text-muted-foreground" />}
+      </span>
+    );
+  }
+  return (
+    <span className="relative block size-11 shrink-0" aria-hidden="true">
+      {actors.length > 1 ? (
+        <>
+          <Face name={actors[1].name} src={actors[1].avatar} className="absolute right-0 top-0 size-8" />
+          <Face name={actors[0].name} src={actors[0].avatar} className="absolute bottom-0 left-0 size-8" />
+        </>
+      ) : (
+        <Face name={actors[0].name} src={actors[0].avatar} className="size-11" />
+      )}
+      {badge}
+    </span>
+  );
+}
 
 /**
  * The bell and its panel. `variant="rail"` is the same menu opened from the
@@ -93,19 +147,25 @@ export function NotificationsMenu({
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const { groups, groupedUnread, incoming, incomingFollows, badgeCount } = useNotificationBadge(followRefreshKey);
 
+  // Only while this panel is the open one. On the rail, `setOpen(false)` tells
+  // the rail "close the panel", so listening while closed shut the More menu
+  // on the first press inside it, before the tap could reach Settings or a
+  // Theme button. Pointer events, not mouse events: a tap on an empty spot
+  // fires no mousedown on iOS, so the panel never closed on an iPad.
   useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
+    if (!open) return;
+    function onPointerOutside(e: PointerEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
+    document.addEventListener("pointerdown", onPointerOutside);
+    return () => document.removeEventListener("pointerdown", onPointerOutside);
+  }, [open]);
 
   // Navigating away while this is open (a header link, browser back/
   // forward) used to leave it hanging open over the new page — a group's
   // own click already closes it via openGroup, but nothing else did.
   useEffect(() => {
-    setOpen(false);
+    if (open) setOpen(false);
   }, [location.pathname]);
 
   // Escape closes it and returns focus to the bell, same as any other
@@ -192,7 +252,9 @@ export function NotificationsMenu({
           {incoming.length > 0 && (
             <ul className="border-b border-[var(--hairline)]">
               {incoming.map((p) => (
-                <li key={p.id} className="px-4 py-3">
+                <li key={p.id} className="flex gap-3 px-4 py-3">
+                  <NotificationFace actors={[{ name: p.fromName, avatar: p.fromAvatar }]} icon={p.kind === "make_together" ? Handshake : MessagesSquare} />
+                  <div className="min-w-0 flex-1">
                   <p className="text-small">
                     <strong className="font-normal" style={{ fontFamily: "var(--font-serif)" }}>
                       {p.fromName}
@@ -213,6 +275,7 @@ export function NotificationsMenu({
                       Not now
                     </Button>
                   </div>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -221,7 +284,9 @@ export function NotificationsMenu({
           {incomingFollows.length > 0 && (
             <ul className="border-b border-[var(--hairline)]">
               {incomingFollows.map((r) => (
-                <li key={r.followerId} className="px-4 py-3">
+                <li key={r.followerId} className="flex gap-3 px-4 py-3">
+                  <NotificationFace actors={[{ name: r.displayName, avatar: r.avatarUrl }]} icon={UserPlus} />
+                  <div className="min-w-0 flex-1">
                   <p className="text-small">
                     <strong className="font-normal" style={{ fontFamily: "var(--font-serif)" }}>
                       {r.displayName}
@@ -248,6 +313,7 @@ export function NotificationsMenu({
                       Decline
                     </Button>
                   </div>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -266,8 +332,8 @@ export function NotificationsMenu({
               {groups.map((g) => {
                 const Icon = ICON[g.kind] ?? Bell;
                 const body = (
-                  <span className="flex items-start gap-3 px-4 py-2.5">
-                    <Icon className="mt-0.5 size-4 shrink-0 text-[var(--violet-electric-bright)]" />
+                  <span className="flex items-center gap-3 px-4 py-2.5">
+                    <NotificationFace actors={g.actors} icon={Icon} />
                     <span className="min-w-0">
                       <span className="block text-small leading-snug">{notificationBodyText(g.kind, g.body)}</span>
                       <span className="block text-caption text-muted-foreground">
@@ -290,7 +356,7 @@ export function NotificationsMenu({
                     {/* Step 4: someone you invited added their first moment.
                         One tap opens it with the reply box ready. */}
                     {g.kind === "first_moment" && g.href && (
-                      <div className="px-4 pb-2.5 pl-11">
+                      <div className="px-4 pb-2.5 pl-[4.5rem]">
                         <Button asChild variant="coral" size="sm">
                           <Link
                             to={`${g.href}?reply=1`}

@@ -88,6 +88,9 @@ export interface Notification {
    * notifications client-side; new ones from them are already refused at
    * insert time. */
   actorId?: string;
+  /** Their profile photo, from the same batched `profiles` select as every
+   * other name and avatar in this context, so the bell can show a face. */
+  actorAvatar?: string;
   read: boolean;
   createdAt: number;
 }
@@ -548,6 +551,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     }
     for (const t of thoughts.data ?? []) ids.add(t.user_id);
     for (const b of blocks.data ?? []) ids.add(b.blocked_id);
+    for (const n of notes.data ?? []) if (n.actor_id) ids.add(n.actor_id);
     const { data: people, error: peopleError } = ids.size
       ? await supabase.from("profiles").select("id, display_name, avatar_url").in("id", [...ids])
       : { data: [] as any[], error: null };
@@ -664,6 +668,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         href: n.href ?? undefined,
         actorName: n.actor_name ?? undefined,
         actorId: n.actor_id ?? undefined,
+        actorAvatar: avatarOf(n.actor_id ?? undefined),
         read: n.read,
         createdAt: new Date(n.created_at).getTime(),
       })),

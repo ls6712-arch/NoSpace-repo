@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { MessagesSquare, ScanSearch, Ellipsis } from "lucide-react";
+import { Menu, MessagesSquare, Search } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { APP_NAME } from "../../config";
 import { isDismissKey } from "../../lib/menuDismiss";
@@ -12,8 +12,8 @@ import { RailItem } from "./RailItem";
 import { DISCOVER, HOME, LOG, WEEK, YOU } from "./navItems";
 import { useChatsBadge } from "./useChatsBadge";
 
-/** Discover keeps the plain magnifier, so the rail's Search item has a different shape (founder's pick, Oct 30, 2026). */
-const SEARCH_ICON = ScanSearch;
+/** Search gets the plain magnifier; Discover moved to the compass so the two never share a shape (founder, Oct 30, 2026). */
+const SEARCH_ICON = Search;
 
 type Panel = "search" | "notifications" | "more" | null;
 
@@ -48,16 +48,17 @@ export function SideRail() {
   useEffect(() => {
     if (!panel) return;
     const onKey = (e: KeyboardEvent) => isDismissKey(e.key) && setPanel(null);
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       const target = e.target as Node;
       if (panel === "more" && moreRef.current && !moreRef.current.contains(target)) setPanel(null);
       if (panel === "search" && searchRef.current && !searchRef.current.contains(target)) setPanel(null);
     };
     document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onDown);
+    // Pointer events so a tap outside closes it on touch screens too.
+    document.addEventListener("pointerdown", onDown);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
     };
   }, [panel]);
 
@@ -121,7 +122,7 @@ export function SideRail() {
           />
         </li>
         <li ref={moreRef} className="relative">
-          <RailItem icon={Ellipsis} label="More" expanded={panel === "more"} onClick={() => toggle("more")} />
+          <RailItem icon={Menu} label="More" expanded={panel === "more"} onClick={() => toggle("more")} />
           {panel === "more" && (
             <div className="fixed bottom-3 left-[80px] z-50 w-56 rounded-control border border-border bg-popover shadow-overlay wide:left-[248px]">
               <AccountMenuPanel includeYou={false} onNavigate={() => setPanel(null)} />

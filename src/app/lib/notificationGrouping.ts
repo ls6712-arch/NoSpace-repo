@@ -90,6 +90,10 @@ export interface NotificationGroup {
   /** Every notification id folded into this line, newest first — the
    * caller marks all of these read together when the group is opened. */
   memberIds: Array<number | string>;
+  /** The people behind this line, newest first, one entry per distinct
+   * person, at most two (the bell stacks two faces, never more). Empty when
+   * nobody is named, such as a Space update or a "N people want to try" line. */
+  actors: Array<{ name: string; avatar?: string }>;
 }
 
 const DEDUPE_WINDOW_MS = 5_000;
@@ -134,6 +138,8 @@ interface Builder {
   memberIds: Array<number | string>;
   /** One entry per merged member, newest first, not yet deduped. */
   actorNames: string[];
+  /** One entry per merged member, same order as actorNames. */
+  actorAvatars: Array<string | undefined>;
   /** The newest member's own body — used verbatim whenever the group
    * never grows past one distinct actor. */
   newestBody: string;
@@ -153,6 +159,13 @@ function finalize(b: Builder): NotificationGroup {
     const noun = target ? targetNoun(target.entity) : "";
     body = `${lead} ${others}${verbPhrase(b.kind)} ${noun}.`.replace(/\s+/g, " ");
   }
+  const actors: NotificationGroup["actors"] = [];
+  const seenActor = new Set<string>();
+  b.actorNames.forEach((name, i) => {
+    if (!name || seenActor.has(name) || actors.length >= 2) return;
+    seenActor.add(name);
+    actors.push({ name, avatar: b.actorAvatars[i] });
+  });
   return {
     id: String(b.memberIds[0]),
     kind: b.kind,
@@ -161,6 +174,7 @@ function finalize(b: Builder): NotificationGroup {
     read: b.read,
     createdAt: b.createdAt,
     memberIds: b.memberIds,
+    actors,
   };
 }
 
@@ -191,6 +205,7 @@ export function groupNotifications(notifications: Notification[]): NotificationG
     if (run && withinWindow) {
       run.memberIds.push(n.id);
       run.actorNames.push(n.actorName ?? "");
+      run.actorAvatars.push(n.actorAvatar);
       if (!n.read) run.read = false;
       run.oldestSoFar = n.createdAt;
       continue;
@@ -203,6 +218,7 @@ export function groupNotifications(notifications: Notification[]): NotificationG
       createdAt: n.createdAt,
       memberIds: [n.id],
       actorNames: [n.actorName ?? ""],
+      actorAvatars: [n.actorAvatar],
       newestBody: n.body,
       oldestSoFar: n.createdAt,
     };
