@@ -754,6 +754,25 @@ The wording of `/calendar`, from the founder's calendar brief (`claude-code-brie
 | Nothing planned in the next 30 days. | List empty state, with Find something. Approved Oct 31, 2026 |
 | Your plans, Stubs and free time, in one place. | Title of the sign-up prompt when signed out. Approved Oct 31, 2026 |
 
+### Calendar, PR 2: adding, blocking, removing (brief of Oct 31, 2026)
+
+The terms below the first group come from the brief's section 8 and the founder's PR 1 review (Oct 31, 2026). The ones marked "to confirm" are the plain words the toasts and sheets needed that the brief does not spell out.
+
+| Term | Use |
+|---|---|
+| Make a plan | Opens the plan sheet: Corner (yours first, then a search), a day, Daytime or Evening with an optional exact time, an optional friend. Button: Make the plan (to confirm) |
+| Make a plan at {time} | The first choice in the time sheet. Opens the plan sheet with the time filled in |
+| I'm free then | Adds free time. Choice: Just this {Tuesday} · Every {Tuesday} |
+| Block this time | Adds a block. A note is optional (up to 80 characters, "Only you see this."), then Just this once · Every week. Label of the note field: Note (to confirm; "private note" is dropped language) |
+| Your block | What a block without a note says |
+| Cancel this plan | Plan only you are in. Also: Change the time · Bring someone |
+| Leave this plan | Plan with others, or a host's listing. A host's listing cannot be moved: "A host runs this one, so its time is theirs. You can leave it." (to confirm). Plan with others that is yours also: Change my time |
+| Move this session · Skip this session | A session of a longer Pursuit. Skip is only yours to send if it is your Pursuit, else it takes only you out. Open Pursuit links to it (to confirm) |
+| Change the times · Not free this {Tuesday} · Remove from my usual week | Free time. Change the times opens the usual week screen for the usual week, or two time fields for a stretch you added. Remove free time takes away a stretch you added (to confirm) |
+| Change · Remove block | A block |
+| Plan made · Plan removed · You left the plan · Session skipped · Time changed · Free time added · Free time removed · Marked not free · Block added · Block removed · Block changed · Removed from your usual week | The toasts, each with Undo for 6 seconds (to confirm, except "Plan removed", which is the brief's own example) |
+| Undo | Nothing on the calendar asks "are you sure". Cancelling or leaving a plan is sent to others only after the 6 seconds are up |
+
 ## Retired terms
 
 Never use these in UI copy.

@@ -72,6 +72,24 @@ async function main() {
         if (m.small.length) fails.push(`${name}: text under 12px: ${m.small.slice(0, 3).join(", ")}`);
         await p.close();
       }
+      // The Make a plan sheet, and the time sheet from a tap on empty hours (a click on the grid from 744px, a tap on a day on a phone).
+      const sheets = await ctx.newPage();
+      await sheets.goto(`http://localhost:${port}/#/calendar?view=week`);
+      await sheets.waitForSelector("main h1", { timeout: 15000 });
+      await sheets.waitForTimeout(800);
+      await sheets.getByRole("button", { name: "Make a plan", exact: true }).first().click();
+      await sheets.waitForTimeout(800);
+      const planShot = `make-a-plan-${w}-${th}`;
+      await sheets.screenshot({ path: path.join(OUT, `${planShot}.png`) });
+      lines.push(`| make a plan sheet | ${w} | ${th} | ${(await sheets.getByRole("dialog").first().textContent())?.slice(0, 24) ?? ""} | no | n/a | n/a |`);
+      await sheets.keyboard.press("Escape");
+      if (w >= 744) {
+        await sheets.waitForTimeout(400);
+        await sheets.locator(".cursor-cell").first().click({ position: { x: 20, y: 300 } });
+        await sheets.waitForTimeout(800);
+        await sheets.screenshot({ path: path.join(OUT, `time-sheet-${w}-${th}.png`) });
+      }
+      await sheets.close();
       await ctx.close();
     }
   } finally {

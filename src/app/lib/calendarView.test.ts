@@ -195,7 +195,8 @@ describe("what each day holds", () => {
     const oct31 = c.find((x) => x.day.m === 10 && x.day.d === 31)!;
     const oct3 = c.find((x) => x.day.m === 10 && x.day.d === 3)!;
     expect(oct31.plans.map((p) => p.id)).toEqual(["event-1"]);
-    expect(oct31.free).toHaveLength(0);
+    // The plan takes 7 to 10 PM out of the evening; the hour before it and the hours after stay free.
+    expect(oct31.free.map((f) => [f.startMs, f.endMs])).toEqual([[ny(10, 31, 18), ny(10, 31, 19)], [ny(10, 31, 22), ny(11, 1, 0)]]);
     expect(oct3.plans.map((p) => p.id)).toEqual(["event-9"]);
     expect(oct3.stubs.map((s) => s.title)).toEqual(["Pottery #2"]);
     expect(c.find((x) => x.day.m === 11 && x.day.d === 7)!.free.map((f) => f.part)).toEqual(["eve"]);
@@ -243,7 +244,7 @@ describe("the Show filters", () => {
   });
 
   it("splits plans from Pursuit sessions", () => {
-    const c = { plans: [plan(), plan({ id: "session-2", kind: "session" })] };
+    const c = { plans: [plan(), plan({ id: "session-2", kind: "session", session: { n: 2, total: 5 } })] };
     expect(visiblePlans(c, { ...defaultFilters("week"), sessions: false }).map((p) => p.id)).toEqual(["event-1"]);
     expect(visiblePlans(c, { ...defaultFilters("week"), plans: false }).map((p) => p.id)).toEqual(["session-2"]);
     expect(visiblePlans(c, { ...defaultFilters("week"), plans: false, sessions: false })).toEqual([]);
@@ -266,7 +267,9 @@ describe("labels", () => {
 
   it("describes a plan for a screen reader", () => {
     expect(describePlan(plan())).toBe("Plan, 7 PM, Village Halloween Parade, You, Sam and Maya");
-    expect(describePlan(plan({ kind: "session", going: { friends: [], total: 1 } }))).toBe("Pursuit session, 7 PM, Village Halloween Parade");
+    expect(describePlan(plan({ kind: "session", session: { n: 2, total: 5 }, going: { friends: [], total: 1 } }))).toBe("Pursuit session, 7 PM, Village Halloween Parade");
+    // A plan someone made for one day is a plan, not a Pursuit session.
+    expect(describePlan(plan({ kind: "session", session: { n: 1, total: 1 }, going: { friends: [], total: 1 } }))).toBe("Plan, 7 PM, Village Halloween Parade");
   });
 
   it("describes free time in words, not only a dashed look", () => {

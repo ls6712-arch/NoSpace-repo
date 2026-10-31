@@ -1,6 +1,5 @@
-import { Link } from "react-router";
 import { catStyle } from "../../lib/categoryStyle";
-import { dayListDate, dayListHeading, inMonth, makePlanFor, sameDay, stubColor, visiblePlans, type CalendarDay, type Filters } from "../../lib/calendarView";
+import { dayListDate, dayListHeading, inMonth, makePlanFor, sameDay, stubColor, visiblePlans, type CalendarDay, type CalendarFreeSlot, type Filters } from "../../lib/calendarView";
 import { formatWeekday } from "../../lib/dates";
 import { HOME_TZ } from "../../lib/homeWeek";
 import { plural } from "../../lib/plural";
@@ -8,16 +7,16 @@ import type { Pass } from "../../lib/tasteModel";
 import { FREE_LABEL, type WeekPlanDetail } from "../../lib/weekView";
 import { DaySection } from "../week/DaySection";
 import { cn } from "../ui/utils";
-import { FreeChip, PlanChip, StubChip } from "./CalendarChips";
-import { StubRows } from "./StubRows";
+import { BlockChip, FreeChip, PlanChip, StubChip } from "./CalendarChips";
+import type { Openers } from "./openers";
+import { BlockRows, StubRows } from "./StubRows";
 
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6].map((i) => formatWeekday(Date.UTC(2026, 10, 1 + i, 12), "short", "UTC"));
 const MAX_CHIPS = 3;
-const MAKE_PLAN_PATH = "/discover";
 
 /** What a day shows after the Show filters: its plans, free slots and Stubs. */
 function shown(c: CalendarDay, f: Filters) {
-  return { plans: visiblePlans(c, f), free: f.free ? c.free : [], stubs: f.stubs ? c.stubs : [] };
+  return { plans: visiblePlans(c, f), free: f.free ? c.free : [], stubs: f.stubs ? c.stubs : [], blocks: f.blocks ? c.blocks : [] };
 }
 
 /**
@@ -37,6 +36,7 @@ export function MonthView({
   onSelect,
   onOpenDay,
   onBring,
+  open,
 }: {
   days: readonly CalendarDay[];
   anchor: number;
@@ -48,15 +48,16 @@ export function MonthView({
   onSelect: (ms: number) => void;
   onOpenDay: (ms: number) => void;
   onBring: (plan: WeekPlanDetail) => void;
+  open: Openers;
 }) {
   return wide ? (
-    <MonthWide days={days} anchor={anchor} now={now} filters={filters} onOpenDay={onOpenDay} />
+    <MonthWide days={days} anchor={anchor} now={now} filters={filters} onOpenDay={onOpenDay} open={open} />
   ) : (
-    <MonthPhone days={days} anchor={anchor} now={now} filters={filters} selected={selected} passes={passes} onSelect={onSelect} onBring={onBring} />
+    <MonthPhone days={days} anchor={anchor} now={now} filters={filters} selected={selected} passes={passes} onSelect={onSelect} onBring={onBring} open={open} />
   );
 }
 
-function MonthWide({ days, anchor, now, filters, onOpenDay }: { days: readonly CalendarDay[]; anchor: number; now: number; filters: Filters; onOpenDay: (ms: number) => void }) {
+function MonthWide({ days, anchor, now, filters, onOpenDay, open }: { days: readonly CalendarDay[]; anchor: number; now: number; filters: Filters; onOpenDay: (ms: number) => void; open: Openers }) {
   return (
     <div className="overflow-hidden rounded-card border border-border bg-card">
       <div aria-hidden="true" className="grid grid-cols-7 border-b border-border">
@@ -70,9 +71,10 @@ function MonthWide({ days, anchor, now, filters, onOpenDay }: { days: readonly C
         {days.map((c) => {
           const s = shown(c, filters);
           const chips = [
-            ...s.plans.map((p) => ({ key: p.id, node: <PlanChip plan={p} /> })),
-            ...s.stubs.map((st) => ({ key: `stub-${st.id}`, node: <StubChip stub={st} /> })),
-            ...s.free.map((f) => ({ key: f.keys.join("+"), node: <FreeChip slot={f} /> })),
+            ...s.plans.map((p) => ({ key: p.id, node: <PlanChip plan={p} onOpen={open.plan} /> })),
+            ...s.blocks.map((b) => ({ key: `block-${b.entry.id}-${b.startMs}`, node: <BlockChip block={b} onOpen={open.block} /> })),
+            ...s.stubs.map((st) => ({ key: `stub-${st.id}`, node: <StubChip stub={st} onOpen={open.stub} /> })),
+            ...s.free.map((f) => ({ key: f.keys.join("+") + f.startMs, node: <FreeChip slot={f} onOpen={open.free} /> })),
           ];
           const extra = Math.max(0, chips.length - MAX_CHIPS);
           const shownChips = extra > 0 ? chips.slice(0, MAX_CHIPS - 1) : chips;
@@ -118,6 +120,7 @@ function MonthPhone({
   passes,
   onSelect,
   onBring,
+  open,
 }: {
   days: readonly CalendarDay[];
   anchor: number;
@@ -127,6 +130,7 @@ function MonthPhone({
   passes: readonly Pass[];
   onSelect: (ms: number) => void;
   onBring: (plan: WeekPlanDetail) => void;
+  open: Openers;
 }) {
   const current = days.find((c) => sameDay(c.day, selected)) ?? days.find((c) => sameDay(c.day, now)) ?? days[0];
   const s = shown(current, filters);
@@ -149,6 +153,7 @@ function MonthPhone({
             const parts = [`${formatWeekday(c.day.noonMs, "long", HOME_TZ)} ${dayListDate(c.day, now)}`];
             if (x.stubs.length > 0) parts.push(plural(x.stubs.length, "Stub"));
             if (x.plans.length > 0) parts.push(plural(x.plans.length, "plan"));
+            if (x.blocks.length > 0) parts.push(plural(x.blocks.length, "block"));
             if (x.free.length > 0) parts.push(FREE_LABEL[x.free[0].part].toLowerCase());
             return (
               <button
@@ -186,14 +191,24 @@ function MonthPhone({
         </span>
       </p>
       <section aria-live="polite" className="flex flex-col gap-3">
-        <DaySection content={{ day: current.day, plans: s.plans, free: s.free }} now={now} passes={passes} onBring={onBring} heading={{ title: dayListHeading(current.day, now), date: dayListDate(current.day, now) }} />
-        <StubRows stubs={s.stubs} />
-        <Link
-          to={MAKE_PLAN_PATH}
+        <DaySection
+          content={{ day: current.day, plans: s.plans, free: s.free }}
+          now={now}
+          passes={passes}
+          onBring={onBring}
+          onOpenPlan={open.plan}
+          onOpenFree={(f) => open.free(f as CalendarFreeSlot)}
+          heading={{ title: dayListHeading(current.day, now), date: dayListDate(current.day, now) }}
+        />
+        <BlockRows blocks={s.blocks} onOpen={open.block} />
+        <StubRows stubs={s.stubs} onOpen={open.stub} />
+        <button
+          type="button"
+          onClick={() => open.makePlan(current.day.noonMs)}
           className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-card px-6 text-body font-semibold text-foreground"
         >
           {makePlanFor(current.day, now)}
-        </Link>
+        </button>
       </section>
     </div>
   );

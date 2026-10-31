@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { PageShell } from "../components/layout/PageShell";
 import { useAuth } from "../context/AuthContext";
@@ -11,9 +11,12 @@ import { CalendarToolbar } from "../components/calendar/CalendarToolbar";
 import { ListView } from "../components/calendar/ListView";
 import { MonthView } from "../components/calendar/MonthView";
 import { ShowPanel } from "../components/calendar/ShowPanel";
-import { StubRows } from "../components/calendar/StubRows";
+import { BlockRows, StubRows } from "../components/calendar/StubRows";
 import { TimeGrid } from "../components/calendar/TimeGrid";
 import { WeekExtras } from "../components/calendar/WeekExtras";
+import { CalendarSheets, type SheetState } from "../components/calendar/CalendarSheets";
+import type { Openers } from "../components/calendar/openers";
+import type { GridHandlers } from "../components/calendar/TimeGrid";
 import { DaySection } from "../components/week/DaySection";
 import { DayStrip } from "../components/week/DayStrip";
 import { track } from "../lib/analytics";
@@ -38,6 +41,7 @@ import {
   viewTitle,
   visiblePlans,
   type CalendarView,
+  type CalendarFreeSlot,
   type FilterKey,
   type Filters,
 } from "../lib/calendarView";
@@ -45,13 +49,12 @@ import type { Owner } from "../lib/firstPlanRemote";
 import { CALENDAR_SIGNED_OUT, WEEK_VIEW } from "../lib/homeCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import type { Budget } from "../lib/tasteModel";
+import { useCalendarActions } from "../lib/useCalendarActions";
 import { useCalendarData } from "../lib/useCalendarData";
 import { useMediaQuery, useWide } from "../lib/useMediaQuery";
 import { useWeekData } from "../lib/useWeekData";
 import { bringSomeone } from "../lib/weekActions";
 import { monthSpend, weekDays, type WeekPlanDetail } from "../lib/weekView";
-
-const MAKE_PLAN_PATH = "/discover";
 
 /**
  * The calendar at /calendar: Day, Week, Month and List, in New York time. It
@@ -71,6 +74,7 @@ export function Calendar() {
   const [filtersByView, setFiltersByView] = useState<Partial<Record<CalendarView, Filters>>>({});
   const [showOpen, setShowOpen] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
+  const [sheet, setSheet] = useState<SheetState | null>(null);
 
   const now = data.now;
   const view = parseView(params.get("view"));
@@ -93,14 +97,23 @@ export function Calendar() {
   const fetchFrom = days[0].startMs;
   const fetchTo = days[days.length - 1].endMs;
   const extra = useCalendarData(userId, fetchFrom, fetchTo, attempt);
+  const owner: Owner | null = user
+    ? { id: user.id, username: profile?.username ?? null, displayName: profile?.display_name?.trim() || "", avatarUrl: profile?.avatar_url ?? undefined }
+    : null;
+  // A change reloads the range's plans only, never the whole screen.
+  const reloadPlans = useCallback(() => setAttempt((n) => n + 1), []);
+  const actions = useCalendarActions({ owner, usualWindows: data.windows, reloadPlans });
 
   const plans = useMemo(() => {
     const byId = new Map<string, WeekPlanDetail>();
     for (const p of [...data.plans, ...extra.plans]) byId.set(p.id, p);
-    return [...byId.values()].sort((a, b) => a.startsAt - b.startsAt);
-  }, [data.plans, extra.plans]);
-  const calDays = useMemo(() => calendarDays(days, plans, extra.stubs, data.windows, now), [days, plans, extra.stubs, data.windows, now]);
-  const stripDays = useMemo(() => (view === "day" ? calendarDays(weekDays(addDays(anchor, -3), 7), plans, extra.stubs, data.windows, now) : []), [view, anchor, plans, extra.stubs, data.windows, now]);
+    return actions.applyToPlans([...byId.values()]).sort((a, b) => a.startsAt - b.startsAt);
+  }, [data.plans, extra.plans, actions.applyToPlans]); // eslint-disable-line react-hooks/exhaustive-deps
+  const calDays = useMemo(() => calendarDays(days, plans, extra.stubs, actions.windows, now, actions.entries), [days, plans, extra.stubs, actions.windows, now, actions.entries]);
+  const stripDays = useMemo(
+    () => (view === "day" ? calendarDays(weekDays(addDays(anchor, -3), 7), plans, extra.stubs, actions.windows, now, actions.entries) : []),
+    [view, anchor, plans, extra.stubs, actions.windows, now, actions.entries],
+  );
   const spend = useMemo(() => monthSpend(data.plans, data.passes, now), [data.plans, data.passes, now]);
 
   const filters = filtersByView[view] ?? loadFilters(view);
@@ -108,10 +121,6 @@ export function Calendar() {
   if (isConfigured && !user) {
     return <SignUpPrompt title={CALENDAR_SIGNED_OUT.title} body={CALENDAR_SIGNED_OUT.body} cta={CALENDAR_SIGNED_OUT.cta} />;
   }
-
-  const owner: Owner | null = user
-    ? { id: user.id, username: profile?.username ?? null, displayName: profile?.display_name?.trim() || "", avatarUrl: profile?.avatar_url ?? undefined }
-    : null;
 
   const go = (next: { view?: CalendarView; anchor?: number }) => {
     const v = next.view ?? view;
@@ -147,6 +156,28 @@ export function Calendar() {
     setAttempt((n) => n + 1);
   };
 
+  const open: Openers = {
+    plan: (plan) => setSheet({ type: "plan", plan }),
+    stub: (stub) => setSheet({ type: "stub", stub }),
+    free: (slot: CalendarFreeSlot) => setSheet({ type: "free", slot }),
+    block: (occurrence) => setSheet({ type: "block", occurrence }),
+    makePlan: (dayMs) => setSheet({ type: "plan-form", dayMs }),
+  };
+  const handlers: GridHandlers = {
+    onEmpty: (range) => setSheet({ type: "slot", ...range }),
+    onPlan: open.plan,
+    onFree: open.free,
+    onBlock: open.block,
+    onStub: open.stub,
+    onMovePlan: (plan, startsAt) => void actions.changePlanTime(plan, startsAt),
+    onChangeBlock: (b, startMs, endMs) => {
+      const startsAt = b.entry.startsAt + (startMs - b.startMs);
+      void actions.changeEntry(b.entry, { startsAt, endsAt: startsAt + (endMs - startMs) });
+    },
+    onDeletePlan: actions.cancelPlan,
+    onDeleteBlock: (b) => actions.removeBlock(b.entry),
+  };
+
   const span = viewSpan(view, anchor);
   const inSpan = (ms: number) => ms >= span.startMs && ms < span.endMs;
   const subline = viewSubline(view, {
@@ -170,17 +201,18 @@ export function Calendar() {
           onSelect={setPicked}
           onOpenDay={(ms) => go({ view: "day", anchor: ms })}
           onBring={(p) => void onBring(p)}
+          open={open}
         />
       );
     }
-    if (view === "list") return <ListView days={calDays} now={now} filters={filters} passes={data.passes} onBring={(p) => void onBring(p)} />;
+    if (view === "list") return <ListView days={calDays} now={now} filters={filters} passes={data.passes} onBring={(p) => void onBring(p)} open={open} />;
     if (view === "day" || wide) {
       return (
         <div className="flex flex-col gap-4">
           {view === "day" && (
             <DayStrip days={stripDays.map((c) => ({ ...c, plans: visiblePlans(c, filters), free: filters.free ? c.free : [] }))} selected={3} now={now} onSelect={(i) => go({ anchor: addDays(anchor, i - 3) })} />
           )}
-          <TimeGrid days={calDays} now={now} filters={filters} passes={data.passes} />
+          <TimeGrid days={calDays} now={now} filters={filters} passes={data.passes} handlers={handlers} />
         </div>
       );
     }
@@ -210,8 +242,9 @@ export function Calendar() {
         <div className="flex flex-col gap-6">
           {contents.map((c) => (
             <div key={c.day.offset} className="flex flex-col gap-3">
-              <DaySection content={c} now={now} passes={data.passes} onBring={(p) => void onBring(p)} />
-              {filters.stubs && <StubRows stubs={c.stubs} />}
+              <DaySection content={c} now={now} passes={data.passes} onBring={(p) => void onBring(p)} onOpenPlan={open.plan} onOpenFree={(f) => open.free(f as CalendarFreeSlot)} />
+              {filters.blocks && <BlockRows blocks={c.blocks} onOpen={open.block} />}
+              {filters.stubs && <StubRows stubs={c.stubs} onOpen={open.stub} />}
             </div>
           ))}
         </div>
@@ -231,7 +264,7 @@ export function Calendar() {
         onStep={(dir) => go({ anchor: stepAnchor(view, anchor, dir) })}
         onView={onView}
         onShow={() => setShowOpen(true)}
-        makePlanTo={MAKE_PLAN_PATH}
+        onMakePlan={() => open.makePlan()}
       />
       {data.status === "loading" && <CalendarSkeleton />}
       {data.status === "error" && <ErrorNotice onRetry={retry} />}
@@ -251,6 +284,7 @@ export function Calendar() {
           </div>
         </div>
       )}
+      {sheet && <CalendarSheets sheet={sheet} onClose={() => setSheet(null)} now={now} actions={actions} passes={data.passes} onBring={(p) => void onBring(p)} />}
       {!panel && (
         <BottomSheet open={showOpen} onOpenChange={setShowOpen} title="Show">
           <ShowPanel filters={filters} onChange={onFilter} className="border-0 p-0" />

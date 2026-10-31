@@ -11,7 +11,7 @@ const SWATCH: Record<FilterKey, string> = {
   free: DASHED,
   friends: "border border-border bg-card",
   stubs: "bg-[var(--cat-violet)]",
-  blocks: "bg-muted",
+  blocks: "border border-border bg-muted",
   busy: "bg-muted",
 };
 
