@@ -2,7 +2,7 @@ import type { IdeaSpend, IdeaTime, IdeaWho } from "../data/cornerIdeas";
 import type { Taste } from "./tasteRemote";
 import { windowsLeft } from "./homeWeek";
 import { passLine } from "./homeReasons";
-import { SPEND_ORDER, TIME_ORDER, type IdeaPills } from "./ideaMatch";
+import type { IdeaPills } from "./ideaMatch";
 import { isPassKind, type Pass, type PassKind } from "./tasteModel";
 
 /**
@@ -30,16 +30,7 @@ export function defaultPills(taste: Pick<Taste, "windows" | "budget"> | null, no
   return { time, spend, who: "friend" };
 }
 
-/** Tapping a pill moves it to its next value and wraps round. */
-export function nextValue<T extends string>(order: readonly T[], current: T): T {
-  return order[(order.indexOf(current) + 1) % order.length];
-}
-
-export const nextTime = (t: IdeaTime) => nextValue(TIME_ORDER, t);
-export const nextSpend = (s: IdeaSpend) => nextValue(SPEND_ORDER, s);
-export const nextWho = (w: IdeaWho) => nextValue(WHO_ORDER, w);
-
-/** "Nothing fits that mix yet" offers this: the same pills with Spend at Treat me. */
+/** "Nothing fits that mix yet" offers this (the link Show more ideas): the same pills with Spend at Treat me. */
 export const loosenSpend = (p: IdeaPills): IdeaPills => ({ ...p, spend: "treat" });
 
 /**

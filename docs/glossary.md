@@ -651,7 +651,7 @@ From 744px wide (and 480px tall) a signed-in person gets a left rail in place of
 
 ## Discover v2 (Oct 30, 2026)
 
-The Discover page, as drawn on the Discover v2 artboard (founder approved the screen Oct 30, 2026). Discover is the world, not your world: undated ideas, Corners new to you, Spaces near you and Moments from people you do not follow yet. No member or follower counts anywhere. Only the spend pill mentions money.
+The Discover page, as drawn on the Discover v2 artboard (founder approved the screen Oct 30, 2026). Discover is the world, not your world: undated ideas, Corners new to you, Spaces near you and Moments from people you do not follow yet. No member or follower counts anywhere. Only the spend pill mentions money. Each of the three pills is a dropdown that lists its values, smallest first, with the current one marked.
 
 | Where | String |
 |---|---|
