@@ -786,6 +786,20 @@ One pick at most in each free stretch of the next 7 days, made in the browser. N
 | Find something | What a free stretch says when nothing fits: never filler |
 | You said Tuesday evenings work, and you picked Climbing. | The reason line. It names the usual week only when the pick falls in it. Otherwise: "You picked Climbing." (approved Nov 1, 2026). A pass adds " You have a climbing pass." |
 
+### Calendar, PR 4: the subscribe link (brief of Oct 31, 2026)
+
+A private link that puts your plans and Pursuit sessions in Google, Apple or Outlook. It is in the Show panel's "Your calendars" section (a sheet below 1128px) and in Settings, Your data. Out of sight until the link can be made.
+
+| Term | Use |
+|---|---|
+| Your calendars | Heading of the section. Google's busy times join it later (calendar PR 5) |
+| Soosh in your calendar | Title of the row. Under it: "Your plans appear in Google, Apple or Outlook." (from the design) |
+| Copy subscribe link | Makes the link the first time, then copies it. Toast: Link copied |
+| Reset link | Makes a new link. Under it: "Your old link will stop working, including in any calendar using it." (approved Nov 1, 2026) |
+| This device doesn’t have your link. Reset it to get a new one here. | On a device that did not make the link: the link is only kept where it was made (the database holds only its hash, because the feed shows where someone will be), so only Reset link is offered (approved Nov 1, 2026) |
+
+What the feed holds, and never holds: the next 60 days of your plans and Pursuit sessions, each as its title, place, time and a link to that day on your calendar. Never blocks, free time, budget, notes or other people's names.
+
 ## Retired terms
 
 Never use these in UI copy.

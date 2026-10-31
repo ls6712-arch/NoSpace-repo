@@ -29,6 +29,7 @@ export const LOCAL_KEYS = [
   "sushii.momentDefaults.v1", // last-used Pursuit/Corner/audience per account, for two-tap logging
   "soosh.calendar.show.v1", // which kinds of things the calendar shows, per view
   "soosh.calendar.notthis.v1", // Stubby's picks you said Not this to (never sent anywhere)
+  "soosh.calendar.feed.v1", // the private subscribe link's token (a secret: the database only has its hash)
   "soosh.calendar.pending.v1", // calendar changes waiting out their 6 seconds (cancelled plans and so on)
 ] as const;
 

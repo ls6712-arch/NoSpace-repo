@@ -3,6 +3,9 @@ import { Lock } from "lucide-react";
 import { usePrivateLogs } from "../../context/PrivateLogsContext";
 import { useRewards } from "../../context/RewardsContext";
 import { SectionHeader } from "../ui/section-header";
+import { SubscribeActions, useSubscribeLink } from "../calendar/SubscribeLink";
+import { SettingsPanel, SettingsRow } from "./SettingsRow";
+import { SUBSCRIBE } from "../../lib/calendarCopy";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { plural } from "../../lib/plural";
 import { Time } from "../ui/time";
@@ -10,6 +13,19 @@ import { EmptyState } from "../StateViews";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { withFirstFrame } from "../../lib/mediaUrl";
 
+
+/** The subscribe link, in Settings as well as on the calendar. Out of sight until it can be made. */
+function CalendarLinkRow() {
+  const link = useSubscribeLink();
+  if (!link.visible) return null;
+  return (
+    <SettingsPanel>
+      <SettingsRow label={SUBSCRIBE.title} description={SUBSCRIBE.hint}>
+        <SubscribeActions link={link} />
+      </SettingsRow>
+    </SettingsPanel>
+  );
+}
 
 export function DataSection() {
   const { logs, remove } = usePrivateLogs();
@@ -22,6 +38,10 @@ export function DataSection() {
       <p className="mb-4 text-small text-muted-foreground">
         What’s kept here, and only here.
       </p>
+
+      <div className="mb-4">
+        <CalendarLinkRow />
+      </div>
 
       <div className="rounded-control border border-border bg-card p-4 tab:p-5">
         <div className="mb-2 flex items-center gap-2 text-small">

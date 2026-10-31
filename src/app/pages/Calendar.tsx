@@ -11,6 +11,7 @@ import { CalendarToolbar } from "../components/calendar/CalendarToolbar";
 import { ListView } from "../components/calendar/ListView";
 import { MonthView } from "../components/calendar/MonthView";
 import { ShowPanel } from "../components/calendar/ShowPanel";
+import { SubscribeCard } from "../components/calendar/SubscribeLink";
 import { PickCard } from "../components/calendar/PickCard";
 import { BlockRows, StubRows } from "../components/calendar/StubRows";
 import { TimeGrid } from "../components/calendar/TimeGrid";
@@ -341,6 +342,7 @@ export function Calendar() {
           {panel && (
             <aside className="flex shrink-0 flex-col gap-4 desk:w-60">
               <ShowPanel filters={filters} onChange={onFilter} />
+              <SubscribeCard />
             </aside>
           )}
           <div className="min-w-0 flex-1">
@@ -355,6 +357,7 @@ export function Calendar() {
       {!panel && (
         <BottomSheet open={showOpen} onOpenChange={setShowOpen} title="Show">
           <ShowPanel filters={filters} onChange={onFilter} className="border-0 p-0" />
+          <SubscribeCard className="mt-4" />
         </BottomSheet>
       )}
     </PageShell>

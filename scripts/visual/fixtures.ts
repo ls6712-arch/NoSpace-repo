@@ -197,7 +197,7 @@ export function buildFixtures(now = new Date(), opts: FixtureOptions = {}): Fixt
   const qa = opts.calendarQa ? calendarQaRows(now) : null;
   const base = {
     ...empties,
-    ...({ pursuit_sessions, pursuit_session_rsvps: [], stubs, profile_private: [{ user_id: ME, city: "New York" }] } as unknown as Fixtures),
+    ...({ pursuit_sessions, pursuit_session_rsvps: [], stubs, profile_private: [{ user_id: ME, city: "New York" }], calendar_feed_tokens: [] } as unknown as Fixtures),
     profile_follows, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events,
     event_rsvps, participations, messages, notifications, profile_settings, app_config, categories,
   } as unknown as Fixtures;

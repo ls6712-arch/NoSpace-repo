@@ -19,7 +19,7 @@ describe("calendar file", () => {
   });
   it("escapes text and folds long lines", () => {
     const ics = buildIcs({ title: "A; B, C", startsAt: start, note: `x${"y".repeat(200)}\nz` });
-    expect(ics).toContain("SUMMARY:A\; B\\, C");
+    expect(ics).toContain("SUMMARY:A\\; B\\, C");
     expect(ics.split("\r\n").every((l) => l.length <= 75)).toBe(true);
     expect(ics).toContain("\\nz");
   });
