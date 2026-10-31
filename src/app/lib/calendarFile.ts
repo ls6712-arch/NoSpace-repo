@@ -1,8 +1,11 @@
 /**
  * "Add to calendar": a one-event .ics file with an alarm an hour before. It
  * is a download, so it needs no account, no server and no permission, and it
- * opens in whichever calendar the phone or computer uses.
+ * opens in whichever calendar the phone or computer uses. The format itself
+ * (`supabase/functions/_shared/ics.ts`) is shared with the subscribe feed.
  */
+
+import { utc, vcalendar } from "../../../supabase/functions/_shared/ics.ts";
 
 export interface CalendarPlan {
   title: string;
@@ -13,48 +16,12 @@ export interface CalendarPlan {
   note?: string;
 }
 
-/** 20261031T190000Z */
-const utc = (ms: number) => new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-
-/** RFC 5545 text: backslash, semicolon, comma and newline are escaped. */
-const esc = (text: string) => text.replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
-
-/** Lines longer than 75 octets are folded onto a continuation line that starts with a space. */
-function fold(line: string): string {
-  const out: string[] = [];
-  let rest = line;
-  while (rest.length > 74) {
-    out.push(rest.slice(0, 74));
-    rest = ` ${rest.slice(74)}`;
-  }
-  out.push(rest);
-  return out.join("\r\n");
-}
-
 export function buildIcs(plan: CalendarPlan, now = Date.now()): string {
   const end = plan.startsAt + (plan.minutes ?? 60) * 60_000;
-  const lines = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Soosh//First plan//EN",
-    "CALSCALE:GREGORIAN",
-    "BEGIN:VEVENT",
-    `UID:${utc(plan.startsAt)}-${Math.abs(hash(plan.title))}@soosh`,
-    `DTSTAMP:${utc(now)}`,
-    `DTSTART:${utc(plan.startsAt)}`,
-    `DTEND:${utc(end)}`,
-    `SUMMARY:${esc(plan.title)}`,
-    ...(plan.where ? [`LOCATION:${esc(plan.where)}`] : []),
-    ...(plan.note ? [`DESCRIPTION:${esc(plan.note)}`] : []),
-    "BEGIN:VALARM",
-    "ACTION:DISPLAY",
-    `DESCRIPTION:${esc(plan.title)}`,
-    "TRIGGER:-PT1H",
-    "END:VALARM",
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ];
-  return `${lines.map(fold).join("\r\n")}\r\n`;
+  return vcalendar(
+    [{ uid: `${utc(plan.startsAt)}-${Math.abs(hash(plan.title))}@soosh`, startsAt: plan.startsAt, endsAt: end, title: plan.title, where: plan.where, note: plan.note, alarmMinutes: 60 }],
+    { prodid: "-//Soosh//First plan//EN", now },
+  );
 }
 
 function hash(text: string): number {

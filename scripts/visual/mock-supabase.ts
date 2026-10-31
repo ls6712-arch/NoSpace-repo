@@ -53,6 +53,8 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
         return [...byP].map(([participation_id, ms]) => { const last = [...ms].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).at(-1)!; return { participation_id, last_message_id: last.id, last_message_body: last.body, last_message_created_at: last.created_at, last_message_from_user: last.from_user, message_count: ms.length, unread_count: ms.filter((m) => m.from_user !== ME).length ? 1 : 0 }; });
       }
       case "you_inspired_this_month": return 0;
+      // The subscribe link: the hash is acknowledged and nothing is stored.
+      case "set_calendar_feed_token": return new Date().toISOString();
       // Spaces where members (not only the host) have shared a Moment: the one fixture Space has.
       case "spaces_with_member_moments": return ((fixtures.spaces ?? []) as AnyRow[]).map((s) => s.id).filter((id) => ((args.p_space_ids as string[]) ?? []).includes(id as string));
       // An open group for the Make it a Pursuit sheet on the Pasta Corner.
