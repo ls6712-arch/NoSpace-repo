@@ -7,7 +7,8 @@ import { fetchTaste } from "./tasteRemote";
 import { fetchWeekDetail } from "./weekPlans";
 import { fetchCityPicks, type CityPick } from "./cityPicks";
 import { candidateSpans, freeSpans, goodPlanHours, type WeekPlanDetail } from "./weekView";
-import type { LiveEventInput, LivePursuitInput } from "./firstPlan";
+import type { LiveEventInput, LivePursuitInput, PlanInput } from "./firstPlan";
+import { subHobbyLabel, titleCaseSlug } from "../data/hobbies";
 
 const DAY = 86_400_000;
 
@@ -25,12 +26,26 @@ export interface WeekData {
   picks: CityPick[];
   /** Hours of the person's free time that something they could go to covers. 0 hides the line. */
   goodHours: number;
+  /** What Stubby's picks are made from. Left out when it could not be read. */
+  stubby?: { picks: PlanInput["picks"]; events: readonly LiveEventInput[]; pursuits: readonly LivePursuitInput[]; area: string };
   reload: () => void;
   /** Saves on its own; the screen keeps showing the new amount either way. Returns whether it saved. */
   saveBudget: (b: Budget) => Promise<boolean>;
 }
 
-const EMPTY: { events: readonly LiveEventInput[]; pursuits: readonly LivePursuitInput[] } = { events: [], pursuits: [] };
+interface Candidates {
+  events: readonly LiveEventInput[];
+  pursuits: readonly LivePursuitInput[];
+  picks: PlanInput["picks"];
+  area: string;
+}
+const EMPTY: Candidates = { events: [], pursuits: [], picks: [], area: "" };
+
+/** A Corner's name from its key ("crafts/pottery" is "Pottery"). */
+const cornerName = (key: string) => {
+  const slug = key.split("/")[1] ?? key;
+  return subHobbyLabel(slug) ?? titleCaseSlug(slug);
+};
 
 /**
  * Everything the Week view reads, in one go. The person's own plans are the
@@ -39,7 +54,7 @@ const EMPTY: { events: readonly LiveEventInput[]; pursuits: readonly LivePursuit
  * means no free slots or no "good plan hours" line.
  */
 export function useWeekData(userId: string | undefined): WeekData {
-  const [state, setState] = useState<Omit<WeekData, "reload" | "saveBudget" | "goodHours" | "left">>({
+  const [state, setState] = useState<Omit<WeekData, "reload" | "saveBudget" | "goodHours" | "left" | "stubby">>({
     status: "loading",
     now: Date.now(),
     windows: [],
@@ -64,12 +79,12 @@ export function useWeekData(userId: string | undefined): WeekData {
       const [taste, plans, picks] = await Promise.all([fetchTaste(userId), fetchWeekDetail(userId, from, to), fetchCityPicks(now, now + 7 * DAY)]);
       let input: Awaited<ReturnType<typeof loadPlanInput>> | null = null;
       try {
-        input = await loadPlanInput({ userId, names: new Map(taste.picks.map((k) => [k, k])), redirectTo: "" }, now);
+        input = await loadPlanInput({ userId, names: new Map(taste.picks.map((k) => [k, cornerName(k)])), redirectTo: "" }, now);
       } catch {
         input = null;
       }
       if (!live) return;
-      setCandidates(input ? { events: input.events, pursuits: input.pursuits } : EMPTY);
+      setCandidates(input ? { events: input.events, pursuits: input.pursuits, picks: input.picks, area: input.area } : EMPTY);
       setState({ status: "ready", now, windows: taste.windows, budget: taste.budget, passes: input?.passes ?? [], plans, picks });
     })().catch(() => live && setState((s) => ({ ...s, status: "error" })));
     return () => {
@@ -93,5 +108,7 @@ export function useWeekData(userId: string | undefined): WeekData {
     [userId],
   );
 
-  return { ...state, left, goodHours, reload, saveBudget };
+  const stubby = useMemo(() => (candidates === EMPTY ? undefined : { picks: candidates.picks, events: candidates.events, pursuits: candidates.pursuits, area: candidates.area }), [candidates]);
+
+  return { ...state, left, goodHours, stubby, reload, saveBudget };
 }

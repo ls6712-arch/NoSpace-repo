@@ -56,6 +56,8 @@ export interface LivePursuitInput {
   /** The Pursuit's next session. One with no session has no time and is not offered. */
   startsAt: number;
   hostName: string;
+  /** Joining sends a request the host answers (more than half the spots are taken). Left out when it joins at once. */
+  needsApproval?: boolean;
 }
 
 export interface InviteInput {
@@ -202,7 +204,7 @@ const windowPhrase = (key: string) => {
   return `${day} ${SLOT_PLURAL[s] ?? ""}`.trim();
 };
 
-function reasonLine(opts: { windowKey?: string | null; cornerName: string; pass?: Pass | null }): string {
+export function reasonLine(opts: { windowKey?: string | null; cornerName: string; pass?: Pass | null }): string {
   const picked = `you picked ${opts.cornerName}`;
   const base = opts.windowKey ? `You said ${windowPhrase(opts.windowKey)} work, and ${picked}.` : `${picked[0].toUpperCase()}${picked.slice(1)}.`;
   return opts.pass ? `${base} You have a ${opts.pass.label.toLowerCase()} pass.` : base;

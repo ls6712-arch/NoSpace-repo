@@ -4,6 +4,7 @@ import { blockOccurrences, effectiveFreeTime, MIN_FREE_MS, occurrences, type Cal
 import { plural } from "./plural";
 import { cornerColor, type CatColor } from "./categoryStyle";
 import type { StubCard } from "./stubs";
+import type { PickSlot, StubbyPick } from "./stubbyPicks";
 import { dayContents, daysFromToday, windowsAcross, FREE_LABEL, goingLine, planSpan, weekDays, type DayContent, type FreePart, type FreeSlot, type Span, type WeekDay, type WeekPlanDetail } from "./weekView";
 
 /**
@@ -188,6 +189,10 @@ export interface CalendarFreeSlot extends FreeSlot {
   usualKeys: string[];
   /** The free entries it overlaps. */
   entryIds: number[];
+  /** Stable for the stretch ("2026-11-03:tue-eve"): what Not this is counted against. */
+  slotKey: string;
+  /** Stubby's pick for it, when one fits (filled in by `withPicks`). */
+  pick?: StubbyPick;
 }
 
 export interface CalendarDay extends DayContent {
@@ -224,6 +229,7 @@ function slotsOfDay(day: WeekDay, spans: readonly Span[], windows: readonly stri
         endMs: s.endMs,
         usualKeys: used.filter((w) => overlaps(w, s)).map((w) => w.key),
         entryIds: free.filter((e) => occurrences(e, s.startMs, s.endMs).length > 0).map((e) => e.id),
+        slotKey: `${dateParam(day.noonMs)}:${keys[0] ?? `${day.dayKey}-day`}`,
       };
     });
 }
@@ -254,6 +260,17 @@ export function calendarDays(
   }));
 }
 
+/** Every free stretch in view, as what Stubby's picks are matched against. */
+export const pickSlots = (days: readonly CalendarDay[]): PickSlot[] => days.flatMap((c) => c.free.map((f) => ({ key: f.slotKey, startMs: f.startMs, endMs: f.endMs })));
+
+/** The days with each stretch's pick filled in. A stretch with none keeps `pick` empty, and the screen says Find something. */
+export const withPicks = (days: readonly CalendarDay[], picks: ReadonlyMap<string, StubbyPick>): CalendarDay[] =>
+  days.map((c) => ({ ...c, free: c.free.map((f) => ({ ...f, pick: picks.get(f.slotKey) })) }));
+
+/** The ids of everything already on the calendar, in the form picks use, so nothing is picked twice. */
+export const takenIds = (plans: readonly WeekPlanDetail[]): Set<string> =>
+  new Set(plans.flatMap((p) => [p.id.startsWith("event-") ? `event:${p.id.slice(6)}` : "", p.pursuitId ? `pursuit:${p.pursuitId}` : ""].filter(Boolean)));
+
 /** How many plans are still to go from now on. */
 export const plansToGo = (plans: readonly WeekPlanDetail[], now: number) => plans.filter((p) => planSpan(p.startsAt, p.endsAt).endMs > now).length;
 
@@ -277,7 +294,7 @@ export const FILTER_ROWS: readonly { key: FilterKey; label: string; hint?: strin
 ];
 
 /** The rows that have something behind them today. The rest arrive with their own PRs and stay out of the panel until then. */
-export const AVAILABLE_FILTERS: readonly FilterKey[] = ["plans", "sessions", "free", "stubs", "blocks"];
+export const AVAILABLE_FILTERS: readonly FilterKey[] = ["plans", "sessions", "picks", "free", "stubs", "blocks"];
 
 export type Filters = Record<FilterKey, boolean>;
 
@@ -381,6 +398,9 @@ export const describeFree = (f: FreeSlot) => `${FREE_LABEL[f.part]}, ${timeRange
 
 /** "Block, 9 AM to 5 PM, dentist". */
 export const describeBlock = (b: Occurrence) => ["Block", timeRange(b.startMs, b.endMs), b.entry.note].filter(Boolean).join(", ");
+
+/** "Stubby’s pick, 7 to 9 PM, Climbing, Gowanus". */
+export const describePick = (p: StubbyPick) => ["Stubby’s pick", timeRange(p.startsAt, p.endsAt), p.title, p.where].filter(Boolean).join(", ");
 
 export const describeStub = (s: StubCard) => `Stub, ${s.title}`;
 

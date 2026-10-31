@@ -773,6 +773,19 @@ Terms from the brief's section 8 and the founder's reviews. Approved Nov 1, 2026
 | Toasts: {What happened} · Undo | Plan made · Plan cancelled · You left the plan · Session skipped · Time changed · Free time added · Free time removed · Marked not free · Block added · Block removed · Block changed · Removed from your usual week. Each shows Undo for 6 seconds. The "{What happened} · Undo" form and every toast in it are approved (Nov 1, 2026) |
 | Undo | Nothing on the calendar asks "are you sure". Cancelling or leaving a plan is sent to others only after the 6 seconds are up, or when the tab is closed or put away |
 
+### Calendar, PR 3: Stubby's picks (brief of Oct 31, 2026)
+
+One pick at most in each free stretch of the next 7 days, made in the browser. Nothing about a pick, a Keep or a Not this is sent to the server (until the Privacy Policy line on suggestion logging is published).
+
+| Term | Use |
+|---|---|
+| Stubby’s pick | The label on a pick: white, a dashed border in the accent text colour. Row in Show: Stubby’s picks, "Ideas for your free time" |
+| Keep | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo |
+| Ask to join | The button instead of Keep when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
+| Not this | Swaps in the next match. After 3 on one stretch the stretch goes back to Find something. Kept in this browser only |
+| Find something | What a free stretch says when nothing fits: never filler |
+| You said Tuesday evenings work, and you picked Climbing. | The reason line. It names the usual week only when the pick falls in it. Otherwise: "You picked Climbing." (approved Nov 1, 2026). A pass adds " You have a climbing pass." |
+
 ## Retired terms
 
 Never use these in UI copy.

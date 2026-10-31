@@ -26,7 +26,8 @@ export type SheetState =
   | { type: "plan"; plan: WeekPlanDetail }
   | { type: "free"; slot: CalendarFreeSlot }
   | { type: "block"; occurrence: Occurrence }
-  | { type: "stub"; stub: StubCard };
+  | { type: "stub"; stub: StubCard }
+  | { type: "pick"; slot: CalendarFreeSlot };
 
 const ROW = "flex min-h-12 w-full items-center rounded-control border border-border bg-card px-4 text-left text-body font-semibold text-foreground";
 const PRIMARY = "flex min-h-12 w-full items-center justify-center rounded-full bg-accent px-6 text-body font-semibold text-accent-foreground disabled:opacity-50";
@@ -50,6 +51,8 @@ export function CalendarSheets({
   actions,
   passes,
   onBring,
+  onKeep,
+  onNotThis,
 }: {
   sheet: SheetState | null;
   onClose: () => void;
@@ -57,6 +60,9 @@ export function CalendarSheets({
   actions: CalendarActions;
   passes: readonly Pass[];
   onBring: (plan: WeekPlanDetail) => void;
+  /** Stubby's pick: Keep makes it a plan, Not this swaps in the next match. */
+  onKeep: (slot: CalendarFreeSlot) => void;
+  onNotThis: (slot: CalendarFreeSlot) => void;
 }) {
   if (!sheet) return null;
   const close = onClose;
@@ -73,6 +79,8 @@ export function CalendarSheets({
       return <BlockSheet occurrence={sheet.occurrence} actions={actions} onClose={close} />;
     case "stub":
       return <StubSheet stub={sheet.stub} onClose={close} />;
+    case "pick":
+      return <PickSheet slot={sheet.slot} onKeep={onKeep} onNotThis={onNotThis} onClose={close} />;
   }
 }
 
@@ -552,6 +560,47 @@ function StubSheet({ stub, onClose }: { stub: StubCard; onClose: () => void }) {
         count={stub.count}
         color={`var(--cat-${stubColor(stub)})`}
       />
+    </ResponsiveSheet>
+  );
+}
+
+// ---------- Stubby's pick you tap ----------
+
+function PickSheet({ slot, onKeep, onNotThis, onClose }: { slot: CalendarFreeSlot; onKeep: (slot: CalendarFreeSlot) => void; onNotThis: (slot: CalendarFreeSlot) => void; onClose: () => void }) {
+  const pick = slot.pick;
+  if (!pick) return null;
+  return (
+    <ResponsiveSheet open onOpenChange={(o) => !o && onClose()} title={pick.title}>
+      <div className="mb-4 flex flex-col gap-0.5">
+        <span className="text-caption font-semibold text-accent-text">{SHEET.stubbysPick}</span>
+        <span className="text-body font-semibold">{`${slotTitle(pick.startsAt)} to ${shortTime(pick.endsAt)}`}</span>
+        {pick.where && <span className="text-small text-muted-foreground">{pick.where}</span>}
+        {pick.cost && <span className="text-small text-muted-foreground">{pick.cost}</span>}
+        {pick.hostName && <span className="text-small text-muted-foreground">{`With ${pick.hostName}`}</span>}
+        <span className="mt-2 text-small">{pick.reason}</span>
+      </div>
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          className={PRIMARY}
+          onClick={() => {
+            onKeep(slot);
+            onClose();
+          }}
+        >
+          {pick.needsApproval ? SHEET.askToJoin : SHEET.keep}
+        </button>
+        <button
+          type="button"
+          className={ROW}
+          onClick={() => {
+            onNotThis(slot);
+            onClose();
+          }}
+        >
+          {SHEET.notThis}
+        </button>
+      </div>
     </ResponsiveSheet>
   );
 }

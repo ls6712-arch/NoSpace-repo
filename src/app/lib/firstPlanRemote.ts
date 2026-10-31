@@ -3,7 +3,7 @@ import { DEFAULT_CHECK_IN_DAYS, addJoinedProject, newProject, startProject, type
 import { fetchCornersLive } from "./cornersLive";
 import { eventPlace } from "./eventTicket";
 import { joinTokenFrom } from "./joinToken";
-import { fetchNextSession, fetchOpenPursuits, joinOpenPursuit, mirrorPursuitOpen, saveSession } from "./openPursuits";
+import { fetchNextSession, fetchOpenPursuits, joinOpenPursuit, joinsInstantly, mirrorPursuitOpen, saveSession } from "./openPursuits";
 import { endsAtFor } from "./pursuitGoal";
 import { defaultMeasure } from "./pursuitProgress";
 import {
@@ -42,6 +42,8 @@ export interface LoadedPlanInput extends PlanInput {
   passes: Pass[];
   /** Their city, as saved. Empty when they never gave one. */
   city: string;
+  /** Their area, as saved. Empty when they never gave one. */
+  area: string;
 }
 
 export async function privatePlace(userId: string): Promise<{ city: string; area: string }> {
@@ -115,12 +117,12 @@ export async function loadPlanInput(ctx: PlanContext, now = Date.now()): Promise
     for (const g of groups) {
       for (const p of g.list) {
         if (!p.session || p.session.startsAt <= now || p.taken >= p.capacity || p.mine === "joined" || p.mine === "declined") continue;
-        pursuits.push({ cornerKey: g.key, pursuitId: p.pursuitId, title: p.title, startsAt: p.session.startsAt, hostName: p.ownerName });
+        pursuits.push({ cornerKey: g.key, pursuitId: p.pursuitId, title: p.title, startsAt: p.session.startsAt, hostName: p.ownerName, needsApproval: !joinsInstantly(p.taken, p.capacity) || undefined });
       }
     }
   }
 
-  return { now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city };
+  return { now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city, area: place.area };
 }
 
 // ── "I'm going" ───────────────────────────────────────────────────────────

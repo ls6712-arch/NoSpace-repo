@@ -9,6 +9,9 @@ export interface Openers {
   stub: (stub: StubCard) => void;
   free: (slot: CalendarFreeSlot) => void;
   block: (block: Occurrence) => void;
+  /** Stubby's pick for a free stretch: open it, or Keep it. */
+  pick: (slot: CalendarFreeSlot) => void;
+  keep: (slot: CalendarFreeSlot) => void;
   /** Make a plan, from a day when the view knows one. */
   makePlan: (dayMs?: number) => void;
 }

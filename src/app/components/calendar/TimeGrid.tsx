@@ -26,6 +26,7 @@ import type { Pass } from "../../lib/tasteModel";
 import { FREE_LABEL, findSomethingPath, goingLine, placeLine, planSpan, type WeekPlanDetail } from "../../lib/weekView";
 import { cn } from "../ui/utils";
 import { DASHED, HATCH_STYLE, StubChip } from "./CalendarChips";
+import { PickCard } from "./PickCard";
 
 /** The grid runs 7 AM to midnight, 48px an hour. Anything earlier is held at the top edge. */
 export const GRID_START_HOUR = 7;
@@ -35,6 +36,8 @@ const HOUR_MS = 3_600_000;
 const LABEL_PX = 56;
 const HEIGHT = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX;
 const MIN_BLOCK_PX = 24;
+/** A pick card needs room for its label, its title, its time and its button. */
+const PICK_MIN_PX = 150;
 /** A pointer that moves less than this is a click, not a drag. */
 const DRAG_PX = 6;
 
@@ -82,6 +85,8 @@ export interface GridHandlers {
   onFree: (slot: CalendarFreeSlot) => void;
   onBlock: (block: Occurrence) => void;
   onStub: (stub: StubCard) => void;
+  onPick: (slot: CalendarFreeSlot) => void;
+  onKeep: (slot: CalendarFreeSlot) => void;
   /** Dragged to a new start. Only a plan only you are in is ever dragged. */
   onMovePlan: (plan: WeekPlanDetail, startsAt: number) => void;
   /** Dragged to a new place (moves) or by its bottom edge (changes the end). */
@@ -327,17 +332,31 @@ function DayColumn({
             >
               {FREE_LABEL[f.part]}
             </button>
-            <Link
-              data-hit
-              to={findSomethingPath(f)}
-              onClick={() => track({ name: "week_find_something", window: f.keys[0] })}
-              className="inline-flex min-h-6 items-center text-caption font-semibold text-accent-text underline-offset-4 hover:underline"
-            >
-              {WEEK_VIEW.findSomething}
-            </Link>
+            {!(filters.picks && f.pick) && (
+              <Link
+                data-hit
+                to={findSomethingPath(f)}
+                onClick={() => track({ name: "week_find_something", window: f.keys[0] })}
+                className="inline-flex min-h-6 items-center text-caption font-semibold text-accent-text underline-offset-4 hover:underline"
+              >
+                {WEEK_VIEW.findSomething}
+              </Link>
+            )}
           </div>
         );
       })}
+      {filters.picks &&
+        free.map((f) => {
+          if (!f.pick) return null;
+          // Where the thing is, inside the stretch: tall enough for its card even when it is short.
+          const box = blockBox(day, f.pick.startsAt, f.pick.endsAt);
+          const height = Math.max(box.height, PICK_MIN_PX);
+          return (
+            <div key={`pick-${f.slotKey}`} className="absolute inset-x-1 z-[1]" style={{ top: Math.min(box.top, HEIGHT - height), height }}>
+              <PickCard slot={f} onOpen={handlers.onPick} onKeep={handlers.onKeep} className="h-full w-full" />
+            </div>
+          );
+        })}
       {blocks.map((b) => {
         const box = blockBox(day, b.startMs, b.endMs);
         const id = `block-${b.entry.id}-${b.startMs}`;
