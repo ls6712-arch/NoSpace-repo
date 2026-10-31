@@ -44,16 +44,17 @@ function Nav() {
 
 function Steps() {
   const shots = ["save", "try", "share"] as const;
-  if (!shots.every(hasLandingImage)) return null;
+  // The screens come back when all three are committed; until then the three steps stand as text.
+  const withScreens = shots.every(hasLandingImage);
   return (
     <section className="lp-section lp-surface">
       <div className="lp-wide">
         <Reveal>
           <h2 className="lp-h2 lp-center">{COPY.stepsHeading}</h2>
-          <div className="lp-steps">
+          <div className={`lp-steps ${withScreens ? "" : "lp-steps-text"}`}>
             {COPY.steps.map((step, i) => (
               <div key={step.label} className="lp-step">
-                <PhoneFrame image={shots[i]} alt={LANDING_ALT[shots[i]]} caption={COPY.exampleCaption} className="lp-phone-md" />
+                {withScreens && <PhoneFrame image={shots[i]} alt={LANDING_ALT[shots[i]]} caption={COPY.exampleCaption} className="lp-phone-md" />}
                 <h3 className="lp-step-label">{step.label}</h3>
                 <p>{step.line}</p>
               </div>
@@ -81,16 +82,17 @@ function Split({
   flip?: boolean;
   tone: "lp-surface" | "lp-surface-alt";
 }) {
-  if (!hasLandingImage(image)) return null;
+  // Without its screen the section is its text, centred.
+  const withScreen = hasLandingImage(image);
   return (
     <section className={`lp-section ${tone}`}>
       <div className="lp-wide">
-        <Reveal className={`lp-split ${flip ? "lp-split-flip" : ""}`}>
+        <Reveal className={`lp-split ${flip ? "lp-split-flip" : ""} ${withScreen ? "" : "lp-split-text-only"}`}>
           <div className="lp-split-text">
             {heading && <h2 className="lp-h2">{heading}</h2>}
             <p className={heading ? undefined : "lp-statement"}>{line}</p>
           </div>
-          <PhoneFrame image={image} alt={alt} caption={COPY.exampleScreenCaption} className="lp-phone-md" />
+          {withScreen && <PhoneFrame image={image} alt={alt} caption={COPY.exampleScreenCaption} className="lp-phone-md" />}
         </Reveal>
       </div>
     </section>

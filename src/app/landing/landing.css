@@ -197,6 +197,9 @@
   .lp-steps { grid-template-columns: repeat(3, 1fr); gap: 40px; }
 }
 .lp-step { text-align: center; }
+/* Without the phone screens the three steps are three short blocks: no big gap above the label. */
+.lp-steps-text { margin-top: 32px; gap: 32px; }
+.lp-steps-text .lp-step-label { margin-top: 0; }
 .lp-step-label {
   margin: 28px 0 8px;
   font-family: var(--font-display);
@@ -212,6 +215,10 @@
   .lp-split { grid-template-columns: 1fr 1fr; gap: 80px; }
   .lp-split-flip .lp-split-text { order: 2; }
 }
+/* Text only: one centred column, whatever the width. */
+.lp-split-text-only { grid-template-columns: 1fr !important; }
+.lp-split-text-only .lp-split-text { text-align: center; }
+.lp-split-text-only .lp-split-text p { margin: 0 auto; }
 .lp-split-text .lp-h2 { margin-bottom: 16px; }
 .lp-split-text p { margin: 0; max-width: 520px; }
 .lp-split-text .lp-statement {

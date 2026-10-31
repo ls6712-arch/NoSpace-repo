@@ -1,6 +1,6 @@
 # Landing page screens
 
-The signed-out landing page shows real screens from the live app. **Only the hero (the current Discover) is committed.** The six other screens were removed because they showed the retired UI; their sections stay hidden until they are regenerated from the current app, which needs the example photos listed in `landing-preview/README.md` (maya-sourdough, maya-film, maya-bouldering, nick-bouldering and theo-wheel; maya-running is also on Maya's Shelf). Drop a file
+The signed-out landing page shows real screens from the live app. **Only the hero (the current Discover) is committed.** The six other screens were removed because they showed the retired UI; their sections show as text only (no phone) until they are regenerated from the current app, which needs the example photos listed in `landing-preview/README.md` (maya-sourdough, maya-film, maya-bouldering, nick-bouldering and theo-wheel; maya-running is also on Maya's Shelf). Drop a file
 in this folder and rebuild: no code change. Any section whose file is missing
 is hidden, so nothing on the page is ever a stand-in.
 
