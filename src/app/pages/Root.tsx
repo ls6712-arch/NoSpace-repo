@@ -17,6 +17,7 @@ import { isTypingTarget, SEARCH_SHORTCUT_EVENT } from "../lib/searchShortcut";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 import { reconcileSaves } from "../lib/bookmarksRemote";
+import { resumeCalendarChanges } from "../lib/calendarPending";
 import { sooshOnboardingEnabled } from "../config";
 
 // Only the landing page, the login/signup screen, and the two legal pages
@@ -108,6 +109,11 @@ export function Root() {
   const userId = user?.id;
   useEffect(() => {
     if (userId) void reconcileSaves(userId);
+  }, [userId]);
+
+  // A calendar change an earlier page left waiting (a cancelled plan) goes once its 6 seconds are up.
+  useEffect(() => {
+    if (userId) resumeCalendarChanges(userId);
   }, [userId]);
 
   // Still waits for the initial session check, so a signed-in visitor isn't

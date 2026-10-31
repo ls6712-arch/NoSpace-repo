@@ -763,14 +763,14 @@ Terms from the brief's section 8 and the founder's reviews. Approved Nov 1, 2026
 | Make a plan | Opens the plan sheet: Corner (yours first, then a search), a day, Daytime or Evening with an optional exact time, an optional friend. Button: Make the plan (approved) |
 | Make a plan at {time} | The first choice in the time sheet. Opens the plan sheet with the time filled in |
 | I'm free then | Adds free time. Choice: Just this {Tuesday} · Every {Tuesday} |
-| Block this time | Adds a block. Field: Note (approved), with the helper text "Only you see this." (period kept, full-sentence helper text, style guide rule 3), then Just this once · Every week |
-| Your block | What a block without a note says (to confirm) |
-| Cancel this plan | A plan only you are in. Also: Change the time · Bring someone. Cancelling also removes the one-session Pursuit it is stored under when no one else is in it |
+| Block this time | Adds a block. Field: Note (approved), with the helper text "Only you see this." (the period is approved, Nov 1, 2026), then Just this once · Every week |
+| Your block | What a block without a note says |
+| Cancel this plan | A plan only you are in. Also: Change the time · Bring someone. Cancelling also removes the one-session Pursuit it is stored under when no one else is in it. A one-off plan is never in Your Pursuits or any list of your own Pursuits: it lives on the calendar and in Your week only |
 | Leave this plan | A plan with others, or a host's listing. A host's listing cannot be moved: "The host sets this time." (approved). A plan with others that is yours also: Change my time |
 | Move this session · Skip this session | A session of a longer Pursuit. Skip removes only that session if it is your Pursuit, else it takes only you out. Open Pursuit (approved) links to it |
 | Change the times · Not free this {Tuesday} · Remove from my usual week | Free time. Change the times opens the usual week screen for the usual week, or two time fields for a stretch you added. Remove free time (approved) takes away a stretch you added |
 | Change · Remove block | A block |
-| Toasts: {What happened} · Undo | Plan made · Plan cancelled · You left the plan · Session skipped · Time changed · Free time added · Free time removed · Marked not free · Block added · Block removed · Block changed · Removed from your usual week. Each shows Undo for 6 seconds. The form is approved; "Plan made", "You left the plan", "Session skipped", "Time changed", "Free time removed", "Marked not free", "Block changed" and "Removed from your usual week" are to confirm |
+| Toasts: {What happened} · Undo | Plan made · Plan cancelled · You left the plan · Session skipped · Time changed · Free time added · Free time removed · Marked not free · Block added · Block removed · Block changed · Removed from your usual week. Each shows Undo for 6 seconds. The "{What happened} · Undo" form and every toast in it are approved (Nov 1, 2026) |
 | Undo | Nothing on the calendar asks "are you sure". Cancelling or leaving a plan is sent to others only after the 6 seconds are up, or when the tab is closed or put away |
 
 ## Retired terms

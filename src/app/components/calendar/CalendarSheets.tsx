@@ -6,7 +6,7 @@ import { SHEET } from "../../lib/calendarCopy";
 import { clockOf, DEFAULT_HOUR, parseClock, partOf, planActions, planStartsAt, rangeText, slotTitle, weekdayName, type DayPart, type PlanAction } from "../../lib/calendarActions";
 import type { CalendarEntry, EntryRepeat, Occurrence } from "../../lib/calendarEntries";
 import { NOTE_MAX } from "../../lib/calendarEntries";
-import { dateParam, dayListDate, dayListHeading, parseDateParam, shortTime, stubColor, type CalendarFreeSlot } from "../../lib/calendarView";
+import { dateParam, dayListDate, dayListHeading, isPursuitSession, parseDateParam, shortTime, stubColor, type CalendarFreeSlot } from "../../lib/calendarView";
 import { formatWeekday } from "../../lib/dates";
 import { HOME_TZ, nyTimeToMs } from "../../lib/homeWeek";
 import { fetchConnections, type Connection } from "../../lib/planEdits";
@@ -360,7 +360,7 @@ function PlanSheet({ plan, actions, passes, onBring, onClose }: { plan: WeekPlan
         />
       ) : (
         <div className="flex flex-col gap-2">
-          {plan.pursuitId && (
+          {plan.pursuitId && isPursuitSession(plan) && (
             <Link to={`/pursuit/${plan.pursuitId}`} className={ROW}>
               {SHEET.openPursuit}
             </Link>

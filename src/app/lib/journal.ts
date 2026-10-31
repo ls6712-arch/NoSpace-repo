@@ -130,6 +130,12 @@ export interface ProgressEntry {
 export interface Project {
   id: string;
   title: string;
+  /**
+   * A one-off plan made from the calendar, stored as a small Pursuit (see
+   * planEdits.createPlan). It lives on the calendar and in Your week only: it is
+   * never in this journal, so no list of the person's Pursuits ever shows it.
+   */
+  plan?: boolean;
   hobbySlug?: string;
   subHobby?: string;
   /** Free-text interest, e.g. "Bookbinding" — not required to match a real sub-hobby. */
@@ -282,6 +288,9 @@ if (typeof window !== "undefined") {
   });
 }
 
+/** The journal as it is now, for code that is not a component (and for tests). */
+export const getJournal = (): JournalState => state;
+
 /** Reads the whole journal. Components pick what they need off it. */
 export function useJournal() {
   return useSyncExternalStore(subscribe, snapshot, serverSnapshot);
@@ -298,6 +307,11 @@ export function useJournalSlice<T>(select: (s: JournalState) => T): T {
 
 const id = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
+/** A Project as `startProject` makes it, without putting it in the journal. */
+export function newProject(input: Omit<Project, "id" | "startedAt">): Project {
+  return { id: id(), startedAt: Date.now(), ...input };
+}
+
 export function startProject(input: {
   title: string;
   hobbySlug?: string;
@@ -311,7 +325,7 @@ export function startProject(input: {
   members?: PursuitMember[];
   checkInDays?: number;
 }): Project {
-  const project: Project = { id: id(), startedAt: Date.now(), ...input };
+  const project = newProject(input);
   commit({ ...state, projects: [project, ...state.projects] });
   return project;
 }
@@ -668,7 +682,9 @@ export function checkInDue(p: Project, lastMomentAt: number | undefined, now = D
  * locally is left exactly as it is, since that copy might hold an edit made
  * in this tab that hasn't been mirrored yet.
  */
-export function mergeRemoteProjects(remote: Project[]) {
+export function mergeRemoteProjects(allRemote: Project[]) {
+  // A one-off plan never comes into the journal, wherever it was read from.
+  const remote = allRemote.filter((p) => !p.plan);
   const knownIds = new Set(state.projects.map((p) => p.id));
   const toAdd = remote.filter((p) => !knownIds.has(p.id));
   // Fields added after a Pursuit was first restored (resting, check-in
@@ -813,6 +829,7 @@ export function removeProgress(entryId: string) {
 
 /** Adds a joined Pursuit (someone else's) to this browser's journal. */
 export function addJoinedProject(project: Project) {
+  if (project.plan) return;
   if (state.projects.some((p) => p.id === project.id)) {
     commit({ ...state, projects: state.projects.map((p) => (p.id === project.id ? { ...p, ...project } : p)) });
     return;
