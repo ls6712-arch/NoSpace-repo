@@ -216,7 +216,7 @@ export function People() {
       <section className="relative overflow-hidden py-12 tab:py-12">
         <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
         <div className="container mx-auto max-w-5xl px-4 relative">
-          <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             People
           </h1>
           <p className="mb-6 mt-2 max-w-2xl text-lead text-foreground">

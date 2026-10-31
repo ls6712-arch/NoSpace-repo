@@ -1,5 +1,5 @@
 /**
- * The page frame for the after hours pages (spec v1): content at most 1200px wide (the 1264px box is that plus 32px of padding each side),
+ * The page frame for the app pages (spec v1): content at most 1200px wide (the 1264px box is that plus 32px of padding each side),
  * centred, 16px each side on a phone and 32px from md. Sections are 40px apart
  * on a phone and 48px from md; a section's title sits 16px above its content.
  */

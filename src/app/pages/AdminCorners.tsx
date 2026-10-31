@@ -175,7 +175,7 @@ export function AdminCorners() {
   return (
     <div className="min-h-viewport bg-surface py-8 tab:py-12">
       <div className="container mx-auto max-w-3xl px-4">
-        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
           Corners
         </h1>
         <p className="mb-8 mt-2 text-small text-muted-foreground">

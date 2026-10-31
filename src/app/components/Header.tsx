@@ -16,7 +16,7 @@ import { APP_NAME } from "../config";
 import { isDismissKey } from "../lib/menuDismiss";
 import { PAGE_X } from "../lib/pageGrid";
 
-/** Pages in the after hours look share one page frame (PAGE_X), so the wordmark lines up with their content. */
+/** Pages on the page frame share one page frame (PAGE_X), so the wordmark lines up with their content. */
 const FRAMED_PATHS = ["/discover", "/corners", "/corner", "/browse"];
 const isFramed = (pathname: string) => FRAMED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 

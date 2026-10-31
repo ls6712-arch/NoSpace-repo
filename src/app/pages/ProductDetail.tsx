@@ -68,7 +68,7 @@ export function ProductDetail() {
                 {hobby.name}
               </Link>
             )}
-            <h1 className="text-display mb-2">{product.name}</h1>
+            <h1 className="text-title mb-2">{product.name}</h1>
             <div className="text-small text-muted-foreground mb-4">by {product.creator}</div>
 
             <div className="flex items-center gap-4 mb-6">

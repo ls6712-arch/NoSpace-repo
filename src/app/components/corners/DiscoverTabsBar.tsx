@@ -1,5 +1,5 @@
 import { Compass, LayoutGrid, ShoppingBag, UserRound } from "lucide-react";
-import { PressLink } from "../afterhours/PressLink";
+import { PressLink } from "../common/PressLink";
 import { marketplaceEnabled } from "../../config";
 
 const tabClass = (active: boolean) =>

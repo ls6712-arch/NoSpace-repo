@@ -1,4 +1,4 @@
-import { PressLink } from "../afterhours/PressLink";
+import { PressLink } from "../common/PressLink";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { cornerPath } from "../../lib/cornerPath";
 import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";

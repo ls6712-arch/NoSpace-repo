@@ -1,20 +1,11 @@
-import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { APP_NAME, CONTACT_EMAIL, INSTAGRAM_URL, TIKTOK_URL } from "../config";
 import { useScrollReveal } from "../lib/useScrollReveal";
 import { LANDING_ALT, LANDING_COPY as COPY } from "./copy";
 import { hasLandingImage } from "./images";
 import { PhoneFrame } from "./PhoneFrame";
-import { useLiveGradient } from "./useLiveGradient";
 import { usePublicShelves } from "../lib/publicShelves";
-import gradientStatic from "./gradient-static.webp";
 import "./landing.css";
-
-const HEADING_FONT_URL =
-  "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap";
-
-const reducedMotion = () =>
-  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function Reveal({ as: Tag = "div", className = "", children }: { as?: "div" | "section"; className?: string; children: React.ReactNode }) {
   const ref = useScrollReveal<HTMLDivElement>();
@@ -161,30 +152,15 @@ function Footer() {
 
 /** The signed-out home page. Rendered by Home.tsx; it brings its own nav. */
 export function Landing() {
-  const heroRef = useRef<HTMLElement>(null);
-  const inviteRef = useRef<HTMLElement>(null);
-  const liveRef = useRef<HTMLDivElement>(null);
-  const [reduced] = useState(reducedMotion);
-  const live = useLiveGradient(liveRef, [heroRef, inviteRef], !reduced);
   const lineRef = useScrollReveal<HTMLDivElement>();
   const heroShot = hasLandingImage("hero");
 
   return (
     <div className="lp">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link rel="stylesheet" href={HEADING_FONT_URL} />
-
-      <div className="lp-backdrop" aria-hidden="true">
-        {/* design-token-ignore: bundled static gradient, needs fetchPriority */}
-        <img className="lp-backdrop-img" src={gradientStatic} alt="" fetchPriority="high" decoding="async" />
-        <div ref={liveRef} className={`lp-backdrop-live ${live ? "is-ready" : ""}`} />
-      </div>
-
       <div className="lp-body">
         <Nav />
         <main>
-          <section ref={heroRef} className={`lp-hero ${heroShot ? "" : "lp-hero-solo"}`}>
+          <section className={`lp-hero ${heroShot ? "" : "lp-hero-solo"}`}>
             <div className="lp-hero-text">
               <h1>{COPY.heroHeadline}</h1>
               <p className="lp-hero-sub">{COPY.heroSub}</p>
@@ -192,7 +168,7 @@ export function Landing() {
             </div>
             {heroShot && (
               <div className="lp-hero-phone">
-                <PhoneFrame image="hero" alt={LANDING_ALT.hero} caption={COPY.exampleCaption} priority />
+                <PhoneFrame image="hero" alt={LANDING_ALT.hero} caption={COPY.exampleScreenCaption} priority />
               </div>
             )}
           </section>
@@ -224,13 +200,13 @@ export function Landing() {
 
           <RealShelves />
 
-          <section id="invite" ref={inviteRef} className="lp-section lp-invite lp-center">
+          <section id="invite" className="lp-section lp-invite lp-center">
             <Reveal>
               <div className="lp-copy">
                 <h2 className="lp-h2">{COPY.joinHeading}</h2>
                 <p style={{ margin: 0 }}>{COPY.joinLine}</p>
               </div>
-              <div className="lp-invite-card lp-light">
+              <div className="lp-invite-card">
                 <SignUpButton large />
               </div>
             </Reveal>

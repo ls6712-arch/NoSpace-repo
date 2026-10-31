@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Reveal } from "../afterhours/Reveal";
+import { Reveal } from "../common/Reveal";
 import { TiltedIcon } from "../ui/TiltedIcon";
 import { CORNER_CATEGORIES } from "../../data/cornerCategories";
 import { CATEGORY_ICON, categoryColor, catStyle } from "../../lib/categoryStyle";

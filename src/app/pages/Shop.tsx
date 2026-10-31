@@ -22,7 +22,7 @@ export function Shop() {
     <div className="min-h-viewport bg-surface py-14">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h1 className="text-display mb-3">The marketplace</h1>
+          <h1 className="text-title mb-3">The marketplace</h1>
           <p className="text-muted-foreground text-lead">
             Physical goods, digital guides, and courses, all made by real creators.
           </p>

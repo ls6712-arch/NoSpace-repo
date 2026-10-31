@@ -138,7 +138,7 @@ export function HobbyArchive() {
           Your Shelf
         </Link>
 
-        <h1 className="text-display" style={{ fontFamily: "var(--font-serif)" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
           {target.label}
         </h1>
         <p className="mt-1 text-muted-foreground">{space.name}</p>

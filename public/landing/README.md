@@ -10,7 +10,7 @@ posts. Keep each file under 300 KB.
 
 | File | Screen to capture | Section it controls | If missing |
 |---|---|---|---|
-| `hero-shelf.webp` | The founder's Shelf, with one item marked "In progress" and one marked "Finished" visible | Hero phone | The hero still shows its text, gradient and button, without the phone |
+| `hero-discover@1x.webp`, `hero-discover@2x.webp` | The current Discover in light mode at 390px wide, 390 x 844 and 780 x 1688 (taken from the app build, not the generator below) | Hero phone | The hero still shows its text and button, without the phone |
 | `step-save.webp` | A post with the Save button | Save it. Try it. Share it. (screen 1) | The whole section is hidden |
 | `step-try.webp` | A Shelf item marked "In progress" | Save it. Try it. Share it. (screen 2) | The whole section is hidden |
 | `step-share.webp` | The same item marked "Finished" | Save it. Try it. Share it. (screen 3) | The whole section is hidden |

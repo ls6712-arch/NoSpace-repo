@@ -27,7 +27,7 @@ export const LANDING_COPY = {
 
 /** Alt text for each real screen. */
 export const LANDING_ALT = {
-  hero: "A Shelf with one item in progress and one finished.",
+  hero: "Discover: ideas for what you could do, and Corners new to you.",
   save: "A friend’s post with the Save button.",
   try: "A Shelf item marked in progress.",
   share: "The same item on the Shelf, marked finished.",

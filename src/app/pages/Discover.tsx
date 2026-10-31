@@ -304,7 +304,7 @@ export function Discover() {
   const spacesLoading = spaces === null;
 
   return (
-    <div className="ns-afterhours min-h-viewport">
+    <div className="min-h-viewport">
       <div className={`${PAGE_X} flex flex-col gap-8 pb-16 pt-6`}>
         <DiscoverHeader city={city} onEdit={() => needAccount(() => setCityOpen(true))} />
 

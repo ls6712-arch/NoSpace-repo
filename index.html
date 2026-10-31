@@ -20,9 +20,9 @@
               stored = legacy;
             }
           }
-          var pref = stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
-          // Dark is the default: only an explicit Light choice is light.
-          var dark = pref !== "light";
+          var pref = stored === "light" || stored === "dark" || stored === "system" ? stored : "light";
+          // Light is the default: dark only when Dark is picked, or System on a dark device.
+          var dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.classList.toggle("dark", dark);
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}

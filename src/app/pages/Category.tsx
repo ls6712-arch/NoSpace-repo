@@ -12,8 +12,8 @@ import { Button } from "../components/ui/button";
 import { EmptyState } from "../components/StateViews";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { ImageWithFallback } from "../components/ImageWithFallback";
-import { Reveal } from "../components/afterhours/Reveal";
-import { MomentTile } from "../components/afterhours/MomentTile";
+import { Reveal } from "../components/common/Reveal";
+import { MomentTile } from "../components/common/MomentTile";
 import { ChipGroup } from "../components/corners/ChipGroup";
 import { CornerCard } from "../components/corners/CornerCard";
 import { WeekEventCard } from "../components/corners/WeekEventCard";
@@ -23,7 +23,6 @@ import { isInCorner } from "../lib/cornerAlias";
 import { NO_PICK, SETTING_OPTIONS, hasPick, matches, paramsFromPicker, pickerFromParams } from "../lib/cornerFilters";
 import { cornerPhoto, cornerPhotoAlt } from "../lib/cornerPhoto";
 import { fetchCornersLive, thisWeek, type CornerLive, type LiveEvent, type LiveSpace } from "../lib/cornersLive";
-import { displayStyle } from "../lib/doorList";
 import { fillRows } from "../lib/fillRows";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
@@ -114,7 +113,7 @@ export function CategoryPage() {
   const hiddenNarrow = n > narrowCount;
 
   return (
-    <div className="ns-afterhours min-h-viewport" style={categoryStyle(category.slug)}>
+    <div className="min-h-viewport" style={categoryStyle(category.slug)}>
       {/* Hero: the category's photo, with its name and what is in it bottom left. */}
       <header className="relative flex min-h-[48svh] flex-col overflow-hidden bg-[var(--cat)] text-on-media">
         {hero && (
@@ -135,7 +134,7 @@ export function CategoryPage() {
             ← Back to Corners
           </Link>
           <div className="mt-auto flex flex-col items-start gap-3 pt-16">
-            <h1 className="max-w-2xl text-display" style={displayStyle(72, { lineHeight: 0.95 })}>
+            <h1 className="max-w-2xl text-display">
               {category.name}
             </h1>
             <p className="max-w-xl text-body text-on-media/90">{category.about}</p>
@@ -162,7 +161,7 @@ export function CategoryPage() {
 
         {weekEvents.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="week-title">
-            <h2 id="week-title" className="mb-4" style={displayStyle(26, { lineHeight: 1.1 })}>
+            <h2 id="week-title" className="mb-4 text-title">
               Happening this week
             </h2>
             <HorizontalRow name={`browse.${slug}.week`} label="Happening this week" contentKey={weekEvents.map((e) => e.id).join(",")}>
@@ -190,7 +189,7 @@ export function CategoryPage() {
 
         {lead && (
           <section className={SECTION_GAP} aria-labelledby="moments-title">
-            <h2 id="moments-title" className="mb-4" style={displayStyle(26, { lineHeight: 1.1 })}>
+            <h2 id="moments-title" className="mb-4 text-title">
               Recent Moments
             </h2>
             {tabs.length > 1 && (

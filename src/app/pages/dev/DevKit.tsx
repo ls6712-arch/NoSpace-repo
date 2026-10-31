@@ -10,7 +10,7 @@ import { RollNumber } from "../../components/ui/RollNumber";
 import { Segmented } from "../../components/ui/Segmented";
 import { SnapCarousel } from "../../components/ui/SnapCarousel";
 import { Stubby, type StubbyState } from "../../components/stubby/Stubby";
-import { Reveal } from "../../components/afterhours/Reveal";
+import { Reveal } from "../../components/common/Reveal";
 import { GroupRows } from "../../components/pursuit/GroupRows";
 import { NextTogetherCard } from "../../components/pursuit/NextTogetherCard";
 import { MakeItAPursuitSheet } from "../../components/pursuit/MakeItAPursuitSheet";

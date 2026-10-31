@@ -28,7 +28,7 @@ export function Identity({
         {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
         <AvatarFallback className="text-title font-bold">{initials(name)}</AvatarFallback>
       </Avatar>
-      <h1 className="font-[family-name:var(--font-display)] text-title font-bold">{name}</h1>
+      <h1 className="font-[family-name:var(--font-display)] text-title">{name}</h1>
       {neighborhood && (
         <p className="flex items-center gap-1 text-small text-muted-foreground">
           <MapPin className="size-4" aria-hidden="true" />

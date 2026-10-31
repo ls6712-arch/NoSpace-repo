@@ -144,7 +144,7 @@ export function HomeFeed() {
       <HomeHeader />
 
       <div className="flex flex-col gap-1 pb-5 pt-3">
-        <h1 className="text-display font-extrabold leading-tight" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
+        <h1 className="text-title" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
           {greetingName ? `Hi ${greetingName}` : GREETING_NO_NAME}
         </h1>
         <p className="text-small text-muted-foreground">{subline}</p>

@@ -12,9 +12,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
-import { PressLink } from "../components/afterhours/PressLink";
-import { Reveal } from "../components/afterhours/Reveal";
-import { MomentTile } from "../components/afterhours/MomentTile";
+import { PressLink } from "../components/common/PressLink";
+import { Reveal } from "../components/common/Reveal";
+import { MomentTile } from "../components/common/MomentTile";
 import { MomentDetail } from "../components/MomentDetail";
 import { type Post } from "../data/posts";
 import { isInCorner } from "../lib/cornerAlias";
@@ -37,7 +37,6 @@ import { cornerPhoto, cornerPhotoAlt, cornerPhotoCredit } from "../lib/cornerPho
 import { cornerSubline } from "../lib/cornerSubline";
 import { fetchCornersLive, thisWeek, type CornerLive, type LiveEvent, type LiveSpace } from "../lib/cornersLive";
 import { formatStarts } from "../lib/dates";
-import { displayStyle } from "../lib/doorList";
 import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
 import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
@@ -66,7 +65,7 @@ type Membership = { role: string; status: string };
 
 function SectionTitle({ id, children }: { id: string; children: string }) {
   return (
-    <h2 id={id} className="mb-4" style={displayStyle(26, { lineHeight: 1.1 })}>
+    <h2 id={id} className="mb-4 text-title">
       {children}
     </h2>
   );
@@ -316,7 +315,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   const createHref = user ? "/create-space" : `/login?redirect=${encodeURIComponent("/create-space")}`;
 
   return (
-    <div className="ns-afterhours min-h-viewport">
+    <div className="min-h-viewport">
       {/* Hero: 280px of the Corner's photo, the way back to its group, the name and one meta line. The photo grows in from Discover's hero card. */}
       <header className="relative flex h-[280px] flex-col overflow-hidden bg-[var(--cat)] text-on-media" style={cornerStyle(corner.spaceSlug, corner.slug)}>
         <div className="absolute inset-0" style={{ viewTransitionName: cornerPhotoTransitionName(corner.slug) }}>
@@ -336,7 +335,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
             {category ? `← ${category.name}` : "← Corners"}
           </Link>
           <div className="mt-auto flex flex-col items-start gap-1">
-            <h1 className="max-w-2xl text-display font-extrabold" style={displayStyle(48, { lineHeight: 1 })}>
+            <h1 className="max-w-2xl text-display">
               {corner.name}
             </h1>
             {metaLine && <p className="text-body text-on-media/90">{metaLine}</p>}
@@ -565,7 +564,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         {more.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="more-title">
             <div className="mb-4 flex items-baseline justify-between gap-4">
-              <h2 id="more-title" style={displayStyle(26, { lineHeight: 1.1 })}>
+              <h2 id="more-title" className="text-title">
                 More Corners like this
               </h2>
               {category && (

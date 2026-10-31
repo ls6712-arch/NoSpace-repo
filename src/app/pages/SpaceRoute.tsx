@@ -67,7 +67,7 @@ function SpacePageSkeleton() {
   return (
     <Loadable
       loading
-      className="ns-space-theme min-h-viewport bg-background pb-24"
+      className="min-h-viewport bg-background pb-24"
       skeleton={
         <>
           <div className="mx-auto w-full max-w-3xl px-4 pt-4">

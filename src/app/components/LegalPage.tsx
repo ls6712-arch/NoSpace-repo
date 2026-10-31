@@ -19,7 +19,7 @@ export function LegalPage({
 }) {
   return (
     <div className="mx-auto w-full max-w-[720px] px-5 py-12">
-      <h1 className="mb-2 text-display" style={{ fontFamily: "var(--font-serif)" }}>
+      <h1 className="mb-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>
         {title}
       </h1>
       <p className="mb-10 text-caption text-muted-foreground">Last updated {lastUpdated}</p>
