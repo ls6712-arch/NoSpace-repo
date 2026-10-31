@@ -92,7 +92,8 @@ describe("Discover layout", () => {
     show();
     await settle();
     expect(screen.getByText("What’s out there in")).toBeTruthy();
-    expect(screen.getByRole("heading", { level: 1, name: /New York/ })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "Discover" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /New York/ })).toBeTruthy();
     
     const nav = screen.getByRole("navigation", { name: "Sections" });
     expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Spaces", "Moments"]);

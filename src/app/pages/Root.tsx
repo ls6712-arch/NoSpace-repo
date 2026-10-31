@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, Outlet, useLocation } from "react-router";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
 import { SideRail } from "../components/nav/SideRail";
@@ -12,6 +12,7 @@ import { BottomTabBar } from "../components/BottomTabBar";
 import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
 import { AccountStatusBanner } from "../components/AccountStatusBanner";
+import { hasRecoveryKind } from "../lib/recoveryLink";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 import { reconcileSaves } from "../lib/bookmarksRemote";
@@ -23,7 +24,7 @@ import { sooshOnboardingEnabled } from "../config";
 // checked before any of it renders. Terms/Privacy Policy need to be open:
 // the landing page's waitlist consent line and footer link to them while
 // signed out (landing page spec §2.5).
-const PUBLIC_PATHS = new Set(["/", "/login", "/terms", "/privacy-policy"]);
+const PUBLIC_PATHS = new Set(["/", "/login", "/reset-password", "/terms", "/privacy-policy"]);
 
 // You.tsx and HobbyArchive.tsx (its "you/work/:hobbyKey" sub-page) already
 // render their own friendly SignUpPrompt ("Your shelf lives here...") when
@@ -80,6 +81,13 @@ export function Root() {
   const location = useLocation();
   useTruncationReveal();
   useScrollMemory();
+
+  // A password reset link just opened in this tab (recoveryLink.ts noted it
+  // before the router started): its own screen, whatever page the address said.
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (hasRecoveryKind() && location.pathname !== "/reset-password") navigate("/reset-password", { replace: true });
+  }, [location.pathname, navigate]);
 
   // Once a signed-in person is in, bring their saves in line with the database
   // (and send any that only this phone knows about, once). See bookmarksRemote.ts.
@@ -154,7 +162,7 @@ export function Root() {
   // The signed-out landing page has its own nav (Home.tsx renders it), and a
   // visitor never sees the member nav, tab bar or prompts.
   // Onboarding and a Pursuit's recap are one focused screen each: no top bar or tab bar around them.
-  if ((!user && location.pathname === "/") || location.pathname === "/onboarding" || (sooshOnboardingEnabled && location.pathname === "/login") || /^\/pursuit\/[^/]+\/recap$/.test(location.pathname)) {
+  if ((!user && location.pathname === "/") || location.pathname === "/onboarding" || location.pathname === "/reset-password" || (sooshOnboardingEnabled && location.pathname === "/login") || /^\/pursuit\/[^/]+\/recap$/.test(location.pathname)) {
     return (
       <div className="min-h-viewport">
         <PreviewBanner />

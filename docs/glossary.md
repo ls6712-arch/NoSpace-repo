@@ -221,6 +221,7 @@ New (Oct 26, 2026). **Every row below is a new string for approval.**
 | Make together / Explore together | Invites that open a chat |
 | Chat / Chats | A conversation in Messages (never "thread") |
 | Message requests / Seen / Unsend | Messaging |
+| Chats · Your chats and message requests. | The Chats page title and its one-line subtitle (approved by the founder, Oct 31, 2026) |
 | Block / Report | Safety (keep safety words plain) |
 
 ## Joining Soosh
@@ -522,6 +523,8 @@ Put a face on your card, Tonight’s yours., Tomorrow’s yours., This weekend�
 | Reset your password | Heading of the forgot-password screen |
 | Send reset link | Button on it. Check your email follows, with the line above and a Log in button |
 | Signing you in… | While the session is made (Stubby thinks) |
+| New password · Save password | The one field and the one button on /reset-password, where a reset link lands. Saving goes Home (founder, Oct 31, 2026) |
+| This link has expired. · Send a new link | /reset-password when the link is past its time, already used, or missing (approved by the founder, Oct 31, 2026). The button always opens the log in screen's reset step; no address is kept on the device |
 
 ### The code screen, in stages (log in brief revision 3, Oct 30, 2026)
 
@@ -655,7 +658,7 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 
 | Where | String |
 |---|---|
-| Header line | What’s out there in |
+| Header line | What’s out there in {city} ▾ above the title Discover. The city is the tappable part and opens the city sheet (title is always Discover, 28px/800) |
 | Search | Discover has no search box of its own (Oct 31, 2026). Search is the nav one: the header icon on a phone, the rail's Search panel from 744px ("Search Moments, people, Spaces") |
 | Jump chips | Ideas / Corners / Spaces / Moments |
 | Ideas heading / subline | What could you do? / Ideas for what you’ve got. Tap a pill to change it. |
@@ -680,11 +683,11 @@ Words around the page, approved Oct 31, 2026:
 | Corner card, At home tab | The idea's title, a short thing to do (for example Start a sourdough starter) |
 | Corner card, With people tab | The title of the soonest open Pursuit for that Corner; with no name, Find people to go with |
 | Corner card, At a place tab | The name of the nearest Space for that Corner (same neighborhood, then same city); with no name, Find a place near you |
-| A tab with nothing behind it | Be the first (opens Create a Pursuit from With people, Create a Space from At a place) |
+| A tab with nothing behind it | Left out. The card shows only the tabs that have something (Oct 31, 2026, replaces "Be the first") |
 | Ideas, nothing fits | Nothing fits that mix yet, with the link Show more ideas (it loosens Spend to Treat me) |
 | Feed, nothing new | Nothing new nearby yet, with the link Log a Moment |
 | Feed heading with no city saved | What people are making |
-| Header with no city saved | Discover |
+| Header with no city saved | Discover. The line above it reads "Near you" (founder, Oct 31, 2026) and opens the city sheet |
 | After you ask to follow an author | Requested (the button stays, disabled) |
 | Signed out, on Follow, Join, Ask to join or the city | Title: Make an account to do that. Body: Browsing stays open. An account is for following, joining and keeping what you make. Buttons: the existing Create an account and Keep looking around |
 | Pill accessible labels | Time: Tonight, Spend: Free, Who: A friend (the group, then the current value) |

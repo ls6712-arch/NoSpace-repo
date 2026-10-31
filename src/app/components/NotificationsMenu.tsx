@@ -343,7 +343,8 @@ export function NotificationsMenu({
                   </span>
                 );
                 return (
-                  <li key={g.id} className={g.read ? "" : "bg-[color-mix(in_srgb,var(--yellow)_10%,transparent)]"}>
+                  <li key={g.id} className={`relative ${g.read ? "" : "bg-surface-raised"}`}>
+                    {!g.read && <span className="absolute left-1.5 top-1/2 size-2 -translate-y-1/2 rounded-full [background-color:var(--accent-text)]" aria-hidden="true" />}
                     {g.href ? (
                       <Link to={g.href} onClick={() => openGroup(g.memberIds, g.read)} className="block hover:bg-surface-muted">
                         {body}
@@ -357,7 +358,7 @@ export function NotificationsMenu({
                         One tap opens it with the reply box ready. */}
                     {g.kind === "first_moment" && g.href && (
                       <div className="px-4 pb-2.5 pl-[4.5rem]">
-                        <Button asChild variant="coral" size="sm">
+                        <Button asChild variant="outline" size="sm">
                           <Link
                             to={`${g.href}?reply=1`}
                             onClick={() => openGroup(g.memberIds, g.read)}

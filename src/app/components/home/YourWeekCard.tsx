@@ -23,12 +23,12 @@ export function YourWeekCard({ windows, left, plans, now }: { windows: readonly 
         </span>
       </span>
       {none ? (
-        <span className="text-body text-muted-foreground">{ADD_FREE_TIME_COPY}</span>
+        <span className="max-w-[600px] text-body text-muted-foreground">{ADD_FREE_TIME_COPY}</span>
       ) : (
         <>
-          <span className="text-body text-muted-foreground">{weekLine(left.length, plans.length)}</span>
+          <span className="max-w-[600px] text-body text-muted-foreground">{weekLine(left.length, plans.length)}</span>
           {chips.length > 0 && (
-            <ul className="grid gap-2" style={{ gridTemplateColumns: `repeat(${chips.length}, minmax(0, 1fr))` }}>
+            <ul className="grid max-w-[600px] gap-2" style={{ gridTemplateColumns: `repeat(${chips.length}, minmax(0, 1fr))` }}>
               {chips.map((c) => (
                 <li
                   key={c.heading}

@@ -390,7 +390,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}${window.location.pathname}#/you`,
+        redirectTo: `${window.location.origin}${window.location.pathname}#/reset-password`,
       });
       return { error: error ? error.message : null };
     } catch {

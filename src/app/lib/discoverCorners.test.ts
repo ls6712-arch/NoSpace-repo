@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BE_THE_FIRST, PEOPLE_FALLBACK, PLACE_FALLBACK, cornerCandidates, cornerCardModel, visitorCorners } from "./discoverCorners";
+import { PEOPLE_FALLBACK, PLACE_FALLBACK, cornerCandidates, cornerCardModel, visitorCorners } from "./discoverCorners";
 import { CORNER_IDEAS } from "../data/cornerIdeas";
 
 describe("cornerCandidates", () => {
@@ -22,7 +22,6 @@ describe("cornerCardModel", () => {
       "/corners/pottery?section=people",
       "/corners/pottery?section=place",
     ]);
-    expect(m.tabs.every((t) => t.supplied)).toBe(true);
     expect(m.hook.length).toBeGreaterThan(0);
     expect(m.tabs[0].line).toBe("Take a beginner wheel class");
   });
@@ -39,15 +38,15 @@ describe("cornerCardModel", () => {
     expect(PLACE_FALLBACK).toBe("Find a place near you");
   });
 
-  it("says Be the first where nothing is there and opens Create a Pursuit or Create a Space", () => {
+  it("leaves out a tab with nothing behind it", () => {
     const m = cornerCardModel({ cornerKey: "crafts-making/pottery", hasHome: true, hasGroup: false, hasPlace: false });
     // Names only ever go on a tab that has something behind it.
     const withNames = cornerCardModel({ cornerKey: "crafts-making/pottery", hasHome: true, hasGroup: false, hasPlace: false }, { people: "X", place: "Y" });
-    expect(withNames.tabs[1].line).toBe(BE_THE_FIRST);
-    expect(withNames.tabs[2].line).toBe(BE_THE_FIRST);
-    expect(m.tabs[1]).toMatchObject({ line: BE_THE_FIRST, supplied: false, to: "/pursuits/new?hobby=crafts-making&sub=pottery&together=1" });
-    expect(m.tabs[2]).toMatchObject({ line: BE_THE_FIRST, supplied: false, to: "/create-space" });
-    expect(m.tabs[0].supplied).toBe(true);
+    expect(withNames.tabs.map((t) => t.id)).toEqual(["home"]);
+    expect(m.tabs.map((t) => t.id)).toEqual(["home"]);
+    expect(JSON.stringify(m)).not.toContain("Be the first");
+    const none = cornerCardModel({ cornerKey: "crafts-making/pottery", hasHome: false, hasGroup: false, hasPlace: false });
+    expect(none.tabs).toEqual([]);
   });
 });
 

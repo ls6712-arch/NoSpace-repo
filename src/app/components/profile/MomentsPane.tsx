@@ -37,7 +37,7 @@ function NewOwnerGrid() {
         <li>
           <Link
             to="/create"
-            className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-control bg-accent text-small font-semibold text-accent-foreground focus-visible:ring-[3px] focus-visible:outline-1"
+            className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-control border border-border bg-card text-small font-semibold text-foreground focus-visible:ring-[3px] focus-visible:outline-1"
           >
             <Plus className="size-5" aria-hidden="true" />
             Log a Moment

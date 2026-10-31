@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { LIST_GRID } from "../layout/PageShell";
 import { PillButton } from "../ui/PillButton";
 import { SuggestionPhoto } from "./SuggestionPhoto";
 import { PRIMARY_LABEL, type CardState } from "./BestFitCard";
@@ -54,7 +55,7 @@ export function MoreWaysList({
 }) {
   if (items.length === 0) return null;
   return (
-    <section aria-labelledby="home-more-ways" className="flex flex-col gap-2.5">
+    <section aria-labelledby="home-more-ways" className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
         <h2 id="home-more-ways" className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
           More ways this week
@@ -63,7 +64,7 @@ export function MoreWaysList({
           See all
         </Link>
       </div>
-      <ul className="flex flex-col gap-2.5">
+      <ul className={LIST_GRID}>
         {items.map((item, i) => (
           <Row
             key={item.id}

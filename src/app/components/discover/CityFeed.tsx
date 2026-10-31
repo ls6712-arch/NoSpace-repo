@@ -77,7 +77,7 @@ export function CityFeed({
   return (
     <div className="flex flex-col gap-4">
       {chips.length > 0 && (
-        <div role="group" aria-label="Corners" className="-mx-4 flex gap-2 overflow-x-auto px-4 tab:-mx-8 tab:px-8 [scrollbar-width:none]">
+        <div role="group" aria-label="Corners" className="-mx-4 flex gap-2 overflow-x-auto px-4 tab:-mx-6 tab:px-6 desk:-mx-8 desk:px-8 [scrollbar-width:none]">
           <Chip selected={corner === null} className="shrink-0" onClick={() => onCorner(null)}>
             All
           </Chip>
