@@ -342,3 +342,21 @@ describe("groupNotifications: save notifications", () => {
     expect(groups[0].href).toBe("/moment/15");
   });
 });
+
+describe("groupNotifications: faces", () => {
+  it("keeps the newest two distinct people and their photos for a merged line", () => {
+    const now = Date.now();
+    const groups = groupNotifications([
+      notif({ kind: "love", href: "/moment/7", actorName: "Nani", actorAvatar: "nani.jpg", createdAt: now }),
+      notif({ kind: "love", href: "/moment/7", actorName: "Nani", actorAvatar: "nani.jpg", createdAt: now - HOUR }),
+      notif({ kind: "love", href: "/moment/7", actorName: "Reo", createdAt: now - 2 * HOUR }),
+      notif({ kind: "love", href: "/moment/7", actorName: "Kai", actorAvatar: "kai.jpg", createdAt: now - 3 * HOUR }),
+    ]);
+    expect(groups[0].actors).toEqual([{ name: "Nani", avatar: "nani.jpg" }, { name: "Reo", avatar: undefined }]);
+  });
+
+  it("names nobody when the row has no person behind it", () => {
+    const groups = groupNotifications([notif({ kind: "save", actorName: undefined, createdAt: Date.now() })]);
+    expect(groups[0].actors).toEqual([]);
+  });
+});
