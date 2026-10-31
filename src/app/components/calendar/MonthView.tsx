@@ -9,6 +9,7 @@ import { DaySection } from "../week/DaySection";
 import { cn } from "../ui/utils";
 import { BlockChip, FreeChip, PlanChip, StubChip } from "./CalendarChips";
 import type { Openers } from "./openers";
+import { PickCard, PickChip } from "./PickCard";
 import { BlockRows, StubRows } from "./StubRows";
 
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6].map((i) => formatWeekday(Date.UTC(2026, 10, 1 + i, 12), "short", "UTC"));
@@ -74,7 +75,7 @@ function MonthWide({ days, anchor, now, filters, onOpenDay, open }: { days: read
             ...s.plans.map((p) => ({ key: p.id, node: <PlanChip plan={p} onOpen={open.plan} /> })),
             ...s.blocks.map((b) => ({ key: `block-${b.entry.id}-${b.startMs}`, node: <BlockChip block={b} onOpen={open.block} /> })),
             ...s.stubs.map((st) => ({ key: `stub-${st.id}`, node: <StubChip stub={st} onOpen={open.stub} /> })),
-            ...s.free.map((f) => ({ key: f.keys.join("+") + f.startMs, node: <FreeChip slot={f} onOpen={open.free} /> })),
+            ...s.free.map((f) => ({ key: f.keys.join("+") + f.startMs, node: filters.picks && f.pick ? <PickChip slot={f} onOpen={open.pick} /> : <FreeChip slot={f} onOpen={open.free} /> })),
           ];
           const extra = Math.max(0, chips.length - MAX_CHIPS);
           const shownChips = extra > 0 ? chips.slice(0, MAX_CHIPS - 1) : chips;
@@ -198,6 +199,7 @@ function MonthPhone({
           onBring={onBring}
           onOpenPlan={open.plan}
           onOpenFree={(f) => open.free(f as CalendarFreeSlot)}
+          renderPick={(f) => (filters.picks && (f as CalendarFreeSlot).pick ? <PickCard slot={f as CalendarFreeSlot} onOpen={open.pick} onKeep={open.keep} className="w-full" /> : null)}
           heading={{ title: dayListHeading(current.day, now), date: dayListDate(current.day, now) }}
         />
         <BlockRows blocks={s.blocks} onOpen={open.block} />

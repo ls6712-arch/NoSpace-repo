@@ -41,6 +41,8 @@ export interface LoadedPlanInput extends PlanInput {
   passes: Pass[];
   /** Their city, as saved. Empty when they never gave one. */
   city: string;
+  /** Their area, as saved. Empty when they never gave one. */
+  area: string;
 }
 
 export async function privatePlace(userId: string): Promise<{ city: string; area: string }> {
@@ -119,7 +121,7 @@ export async function loadPlanInput(ctx: PlanContext, now = Date.now()): Promise
     }
   }
 
-  return { now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city };
+  return { now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city, area: place.area };
 }
 
 // ── "I'm going" ───────────────────────────────────────────────────────────

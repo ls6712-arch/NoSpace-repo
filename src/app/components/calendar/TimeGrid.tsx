@@ -26,6 +26,7 @@ import type { Pass } from "../../lib/tasteModel";
 import { FREE_LABEL, findSomethingPath, goingLine, placeLine, planSpan, type WeekPlanDetail } from "../../lib/weekView";
 import { cn } from "../ui/utils";
 import { DASHED, HATCH_STYLE, StubChip } from "./CalendarChips";
+import { PickCard } from "./PickCard";
 
 /** The grid runs 7 AM to midnight, 48px an hour. Anything earlier is held at the top edge. */
 export const GRID_START_HOUR = 7;
@@ -82,6 +83,8 @@ export interface GridHandlers {
   onFree: (slot: CalendarFreeSlot) => void;
   onBlock: (block: Occurrence) => void;
   onStub: (stub: StubCard) => void;
+  onPick: (slot: CalendarFreeSlot) => void;
+  onKeep: (slot: CalendarFreeSlot) => void;
   /** Dragged to a new start. Only a plan only you are in is ever dragged. */
   onMovePlan: (plan: WeekPlanDetail, startsAt: number) => void;
   /** Dragged to a new place (moves) or by its bottom edge (changes the end). */
@@ -327,14 +330,18 @@ function DayColumn({
             >
               {FREE_LABEL[f.part]}
             </button>
-            <Link
-              data-hit
-              to={findSomethingPath(f)}
-              onClick={() => track({ name: "week_find_something", window: f.keys[0] })}
-              className="inline-flex min-h-6 items-center text-caption font-semibold text-accent-text underline-offset-4 hover:underline"
-            >
-              {WEEK_VIEW.findSomething}
-            </Link>
+            {filters.picks && f.pick ? (
+              <PickCard slot={f} onOpen={handlers.onPick} onKeep={handlers.onKeep} className="w-full" />
+            ) : (
+              <Link
+                data-hit
+                to={findSomethingPath(f)}
+                onClick={() => track({ name: "week_find_something", window: f.keys[0] })}
+                className="inline-flex min-h-6 items-center text-caption font-semibold text-accent-text underline-offset-4 hover:underline"
+              >
+                {WEEK_VIEW.findSomething}
+              </Link>
+            )}
           </div>
         );
       })}

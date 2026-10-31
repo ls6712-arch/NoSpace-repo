@@ -28,6 +28,7 @@ export const LOCAL_KEYS = [
   "sushii.cornerNotes.v1", // your own private note per Corner, shown on its Moments tile
   "sushii.momentDefaults.v1", // last-used Pursuit/Corner/audience per account, for two-tap logging
   "soosh.calendar.show.v1", // which kinds of things the calendar shows, per view
+  "soosh.calendar.notthis.v1", // Stubby's picks you said Not this to (never sent anywhere)
 ] as const;
 
 /**

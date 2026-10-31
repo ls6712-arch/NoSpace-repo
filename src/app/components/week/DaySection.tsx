@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { track } from "../../lib/analytics";
 import { WEEK_VIEW } from "../../lib/homeCopy";
@@ -19,6 +20,7 @@ export function DaySection({
   heading,
   onOpenPlan,
   onOpenFree,
+  renderPick,
 }: {
   content: DayContent;
   now: number;
@@ -29,6 +31,8 @@ export function DaySection({
   /** The calendar opens a plan's or a free slot's sheet. */
   onOpenPlan?: (plan: WeekPlanDetail) => void;
   onOpenFree?: (slot: FreeSlot) => void;
+  /** Stubby's pick for a free slot, when it has one: shown in place of Find something. */
+  renderPick?: (slot: FreeSlot) => ReactNode;
 }) {
   const { day, plans, free } = content;
   const id = `week-day-${day.offset}`;
@@ -55,8 +59,8 @@ export function DaySection({
             <PlanTicketRow key={it.plan.id} plan={it.plan} passes={passes} canBring={canBring(it.plan)} onBring={onBring} onOpen={onOpenPlan} />
           ) : (
             <li
-              key={it.slot.keys.join("+")}
-              className="flex min-h-14 items-center justify-between gap-3 rounded-card border-[1.5px] border-dashed border-border px-4"
+              key={it.slot.keys.join("+") + it.slot.startMs}
+              className="flex min-h-14 flex-wrap items-center justify-between gap-3 rounded-card border-[1.5px] border-dashed border-border px-4 py-2"
             >
               {onOpenFree ? (
                 <button type="button" onClick={() => onOpenFree(it.slot)} className="min-h-11 text-left text-body font-semibold">
@@ -65,13 +69,15 @@ export function DaySection({
               ) : (
                 <span className="text-body font-semibold">{FREE_LABEL[it.slot.part]}</span>
               )}
-              <Link
-                to={findSomethingPath(it.slot)}
-                onClick={() => track({ name: "week_find_something", window: it.slot.keys[0] })}
-                className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline-offset-4 hover:underline"
-              >
-                {WEEK_VIEW.findSomething}
-              </Link>
+              {renderPick?.(it.slot) ?? (
+                <Link
+                  to={findSomethingPath(it.slot)}
+                  onClick={() => track({ name: "week_find_something", window: it.slot.keys[0] })}
+                  className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline-offset-4 hover:underline"
+                >
+                  {WEEK_VIEW.findSomething}
+                </Link>
+              )}
             </li>
           ),
         )}

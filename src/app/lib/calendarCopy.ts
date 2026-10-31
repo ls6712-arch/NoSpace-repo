@@ -43,6 +43,10 @@ export const SHEET = {
   removeBlock: "Remove block",
   removeFree: "Remove free time",
   yourBlock: "Your block",
+  stubbysPick: "Stubby’s pick",
+  keep: "Keep",
+  notThis: "Not this",
+  findSomething: "Find something",
   stub: "Stub",
   hostedLine: "The host sets this time.",
   start: "Start",
@@ -62,4 +66,6 @@ export const CHANGED = {
   blockRemoved: "Block removed",
   blockChanged: "Block changed",
   usualRemoved: "Removed from your usual week",
+  kept: "Plan made",
+  requested: "Request sent",
 } as const;

@@ -8,6 +8,7 @@ import { findSomethingPath, FREE_LABEL, type WeekPlanDetail } from "../../lib/we
 import { PlanTicketRow } from "../week/PlanTicketRow";
 import { DASHED } from "./CalendarChips";
 import type { Openers } from "./openers";
+import { PickCard } from "./PickCard";
 import { BlockRows, StubRows } from "./StubRows";
 import { cn } from "../ui/utils";
 
@@ -59,17 +60,21 @@ export function ListView({
                 it.plan ? (
                   <PlanTicketRow key={it.plan.id} plan={it.plan} passes={passes} canBring={canBring(it.plan)} onBring={onBring} onOpen={open.plan} />
                 ) : (
-                  <li key={it.slot.keys.join("+")} className={cn("flex min-h-14 items-center justify-between gap-3 rounded-card px-4", DASHED)}>
+                  <li key={it.slot.keys.join("+")} className={cn("flex min-h-14 flex-wrap items-center justify-between gap-3 rounded-card px-4 py-2", DASHED)}>
                     <button type="button" onClick={() => open.free(it.slot as CalendarFreeSlot)} className="min-h-11 text-left text-body font-semibold">
                       {FREE_LABEL[it.slot.part]}
                     </button>
-                    <Link
-                      to={findSomethingPath(it.slot)}
-                      onClick={() => track({ name: "week_find_something", window: it.slot.keys[0] })}
-                      className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline-offset-4 hover:underline"
-                    >
-                      {WEEK_VIEW.findSomething}
-                    </Link>
+                    {filters.picks && (it.slot as CalendarFreeSlot).pick ? (
+                      <PickCard slot={it.slot as CalendarFreeSlot} onOpen={open.pick} onKeep={open.keep} />
+                    ) : (
+                      <Link
+                        to={findSomethingPath(it.slot)}
+                        onClick={() => track({ name: "week_find_something", window: it.slot.keys[0] })}
+                        className="inline-flex min-h-11 items-center text-small font-semibold text-accent-text underline-offset-4 hover:underline"
+                      >
+                        {WEEK_VIEW.findSomething}
+                      </Link>
+                    )}
                   </li>
                 ),
               )}

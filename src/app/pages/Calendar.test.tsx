@@ -400,7 +400,7 @@ describe("Calendar, the four views", () => {
 
     it("only lists the kinds that exist today", () => {
       at("/calendar");
-      expect(screen.getAllByRole("checkbox").map((c) => c.closest("label")?.textContent)).toEqual(["Plans", "Pursuit sessions", "Free time", "Stubs you collected", "Your blocks"]);
+      expect(screen.getAllByRole("checkbox").map((c) => c.closest("label")?.textContent)).toEqual(["Plans", "Pursuit sessions", "Stubby’s picksIdeas for your free time", "Free time", "Stubs you collected", "Your blocks"]);
     });
 
     it("hides free time when it is turned off", () => {
