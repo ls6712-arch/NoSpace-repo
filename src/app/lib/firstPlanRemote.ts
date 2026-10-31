@@ -1,9 +1,9 @@
 import { supabase } from "../../lib/supabase";
-import { DEFAULT_CHECK_IN_DAYS, addJoinedProject, startProject, type PursuitMember } from "./journal";
+import { DEFAULT_CHECK_IN_DAYS, addJoinedProject, newProject, startProject, type PursuitMember } from "./journal";
 import { fetchCornersLive } from "./cornersLive";
 import { eventPlace } from "./eventTicket";
 import { joinTokenFrom } from "./joinToken";
-import { fetchNextSession, fetchOpenPursuits, joinOpenPursuit, mirrorPursuitOpen, saveSession } from "./openPursuits";
+import { fetchNextSession, fetchOpenPursuits, joinOpenPursuit, joinsInstantly, mirrorPursuitOpen, saveSession } from "./openPursuits";
 import { endsAtFor } from "./pursuitGoal";
 import { defaultMeasure } from "./pursuitProgress";
 import {
@@ -12,6 +12,7 @@ import {
   getOrCreateInviteLink,
   inviteUrl,
   joinViaLink,
+  markAsPlan,
   mirrorPursuit,
   mirrorPursuitMeasure,
 } from "./pursuitsRemote";
@@ -41,6 +42,8 @@ export interface LoadedPlanInput extends PlanInput {
   passes: Pass[];
   /** Their city, as saved. Empty when they never gave one. */
   city: string;
+  /** Their area, as saved. Empty when they never gave one. */
+  area: string;
 }
 
 export async function privatePlace(userId: string): Promise<{ city: string; area: string }> {
@@ -114,12 +117,12 @@ export async function loadPlanInput(ctx: PlanContext, now = Date.now()): Promise
     for (const g of groups) {
       for (const p of g.list) {
         if (!p.session || p.session.startsAt <= now || p.taken >= p.capacity || p.mine === "joined" || p.mine === "declined") continue;
-        pursuits.push({ cornerKey: g.key, pursuitId: p.pursuitId, title: p.title, startsAt: p.session.startsAt, hostName: p.ownerName });
+        pursuits.push({ cornerKey: g.key, pursuitId: p.pursuitId, title: p.title, startsAt: p.session.startsAt, hostName: p.ownerName, needsApproval: !joinsInstantly(p.taken, p.capacity) || undefined });
       }
     }
   }
 
-  return { now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city };
+  return { now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city, area: place.area };
 }
 
 // ── "I'm going" ───────────────────────────────────────────────────────────
@@ -136,7 +139,7 @@ export interface Owner {
  * with the plan's day and time as its next session, so a friend who takes the
  * other half has something real to join.
  */
-export async function startSmallPursuit(plan: Plan, owner: Owner, now = Date.now()): Promise<{ pursuitId?: string; error?: string }> {
+export async function startSmallPursuit(plan: Plan, owner: Owner, now = Date.now(), opts: { asPlan?: boolean } = {}): Promise<{ pursuitId?: string; error?: string }> {
   try {
     const endsAt = endsAtFor(1, new Date(now));
     const member: PursuitMember = {
@@ -147,7 +150,9 @@ export async function startSmallPursuit(plan: Plan, owner: Owner, now = Date.now
       status: "joined",
       role: "owner",
     };
-    const project = startProject({
+    // A one-off plan (Bring someone on a listing) is made but never put in the journal, so it is not one of the person's Pursuits.
+    const make = opts.asPlan ? (input: Parameters<typeof startProject>[0]) => newProject({ ...input, plan: true }) : startProject;
+    const project = make({
       title: plan.title,
       hobbySlug: plan.corner.spaceSlug,
       subHobby: plan.corner.slug,
@@ -160,6 +165,7 @@ export async function startSmallPursuit(plan: Plan, owner: Owner, now = Date.now
     await mirrorPursuit(owner.id, project);
     await mirrorPursuitMeasure(project.id, "together", project.measure);
     await mirrorPursuitOpen(project.id, { visibility: "friends", endsAt });
+    if (opts.asPlan) await markAsPlan(project.id);
     if (plan.startsAt) {
       await saveSession(project.id, owner.id, { startsAt: plan.startsAt, place: plan.where, note: plan.kind === "at-home" ? plan.step : plan.title });
     }
@@ -216,10 +222,10 @@ export interface SharedHalf {
  * (links can only be made by an owner): the one just made for an at-home
  * plan, else a small one made now for this plan.
  */
-export async function tearOffHalf(plan: Plan, owner: Owner, ownPursuitId?: string): Promise<{ half?: SharedHalf; ownPursuitId?: string; error?: string }> {
+export async function tearOffHalf(plan: Plan, owner: Owner, ownPursuitId?: string, opts: { asPlan?: boolean } = {}): Promise<{ half?: SharedHalf; ownPursuitId?: string; error?: string }> {
   let pursuitId = ownPursuitId;
   if (!pursuitId) {
-    const r = await startSmallPursuit(plan, owner);
+    const r = await startSmallPursuit(plan, owner, Date.now(), opts);
     if (!r.pursuitId) return { error: r.error ?? ERROR_LINE };
     pursuitId = r.pursuitId;
   }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { PageShell } from "../components/layout/PageShell";
 import { useAuth } from "../context/AuthContext";
@@ -11,9 +11,13 @@ import { CalendarToolbar } from "../components/calendar/CalendarToolbar";
 import { ListView } from "../components/calendar/ListView";
 import { MonthView } from "../components/calendar/MonthView";
 import { ShowPanel } from "../components/calendar/ShowPanel";
-import { StubRows } from "../components/calendar/StubRows";
+import { PickCard } from "../components/calendar/PickCard";
+import { BlockRows, StubRows } from "../components/calendar/StubRows";
 import { TimeGrid } from "../components/calendar/TimeGrid";
 import { WeekExtras } from "../components/calendar/WeekExtras";
+import { CalendarSheets, type SheetState } from "../components/calendar/CalendarSheets";
+import type { Openers } from "../components/calendar/openers";
+import type { GridHandlers } from "../components/calendar/TimeGrid";
 import { DaySection } from "../components/week/DaySection";
 import { DayStrip } from "../components/week/DayStrip";
 import { track } from "../lib/analytics";
@@ -27,6 +31,9 @@ import {
   loadFilters,
   monthGridDays,
   noonOf,
+  pickSlots,
+  takenIds,
+  withPicks,
   parseDateParam,
   parseView,
   plansToGo,
@@ -38,6 +45,7 @@ import {
   viewTitle,
   visiblePlans,
   type CalendarView,
+  type CalendarFreeSlot,
   type FilterKey,
   type Filters,
 } from "../lib/calendarView";
@@ -45,13 +53,17 @@ import type { Owner } from "../lib/firstPlanRemote";
 import { CALENDAR_SIGNED_OUT, WEEK_VIEW } from "../lib/homeCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import type { Budget } from "../lib/tasteModel";
+import { useCalendarActions } from "../lib/useCalendarActions";
+import { keepPick, undoKeep } from "../lib/pickActions";
+import { usePickDeclines } from "../lib/pickDeclines";
+import { stubbyPicks } from "../lib/stubbyPicks";
+import { announceChange } from "../lib/undo";
+import { CHANGED } from "../lib/calendarCopy";
 import { useCalendarData } from "../lib/useCalendarData";
 import { useMediaQuery, useWide } from "../lib/useMediaQuery";
 import { useWeekData } from "../lib/useWeekData";
 import { bringSomeone } from "../lib/weekActions";
 import { monthSpend, weekDays, type WeekPlanDetail } from "../lib/weekView";
-
-const MAKE_PLAN_PATH = "/discover";
 
 /**
  * The calendar at /calendar: Day, Week, Month and List, in New York time. It
@@ -71,6 +83,8 @@ export function Calendar() {
   const [filtersByView, setFiltersByView] = useState<Partial<Record<CalendarView, Filters>>>({});
   const [showOpen, setShowOpen] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
+  const [sheet, setSheet] = useState<SheetState | null>(null);
+  const [kept, setKept] = useState<ReadonlySet<string>>(new Set());
 
   const now = data.now;
   const view = parseView(params.get("view"));
@@ -93,14 +107,45 @@ export function Calendar() {
   const fetchFrom = days[0].startMs;
   const fetchTo = days[days.length - 1].endMs;
   const extra = useCalendarData(userId, fetchFrom, fetchTo, attempt);
+  const owner: Owner | null = user
+    ? { id: user.id, username: profile?.username ?? null, displayName: profile?.display_name?.trim() || "", avatarUrl: profile?.avatar_url ?? undefined }
+    : null;
+  // A change reloads the range's plans only, never the whole screen.
+  const reloadPlans = useCallback(() => setAttempt((n) => n + 1), []);
+  const actions = useCalendarActions({ owner, usualWindows: data.windows, reloadPlans });
 
   const plans = useMemo(() => {
     const byId = new Map<string, WeekPlanDetail>();
     for (const p of [...data.plans, ...extra.plans]) byId.set(p.id, p);
-    return [...byId.values()].sort((a, b) => a.startsAt - b.startsAt);
-  }, [data.plans, extra.plans]);
-  const calDays = useMemo(() => calendarDays(days, plans, extra.stubs, data.windows, now), [days, plans, extra.stubs, data.windows, now]);
-  const stripDays = useMemo(() => (view === "day" ? calendarDays(weekDays(addDays(anchor, -3), 7), plans, extra.stubs, data.windows, now) : []), [view, anchor, plans, extra.stubs, data.windows, now]);
+    return actions.applyToPlans([...byId.values()]).sort((a, b) => a.startsAt - b.startsAt);
+  }, [data.plans, extra.plans, actions.applyToPlans]); // eslint-disable-line react-hooks/exhaustive-deps
+  const baseDays = useMemo(() => calendarDays(days, plans, extra.stubs, actions.windows, now, actions.entries), [days, plans, extra.stubs, actions.windows, now, actions.entries]);
+  // Stubby's picks: made here from what is on screen, and run again whenever anything changes. Nothing about them leaves the browser.
+  const { declines, notThis } = usePickDeclines(dateParam(now));
+  const pickMap = useMemo(
+    () =>
+      data.stubby
+        ? stubbyPicks({
+            now,
+            slots: pickSlots(baseDays),
+            picks: data.stubby.picks,
+            events: data.stubby.events,
+            pursuits: data.stubby.pursuits,
+            area: data.stubby.area,
+            windows: actions.windows,
+            budget: data.budget,
+            passes: data.passes,
+            declined: declines,
+            taken: new Set([...takenIds(plans), ...kept]),
+          })
+        : new Map(),
+    [data.stubby, data.budget, data.passes, baseDays, now, actions.windows, declines, plans, kept],
+  );
+  const calDays = useMemo(() => withPicks(baseDays, pickMap), [baseDays, pickMap]);
+  const stripDays = useMemo(
+    () => (view === "day" ? calendarDays(weekDays(addDays(anchor, -3), 7), plans, extra.stubs, actions.windows, now, actions.entries) : []),
+    [view, anchor, plans, extra.stubs, actions.windows, now, actions.entries],
+  );
   const spend = useMemo(() => monthSpend(data.plans, data.passes, now), [data.plans, data.passes, now]);
 
   const filters = filtersByView[view] ?? loadFilters(view);
@@ -108,10 +153,6 @@ export function Calendar() {
   if (isConfigured && !user) {
     return <SignUpPrompt title={CALENDAR_SIGNED_OUT.title} body={CALENDAR_SIGNED_OUT.body} cta={CALENDAR_SIGNED_OUT.cta} />;
   }
-
-  const owner: Owner | null = user
-    ? { id: user.id, username: profile?.username ?? null, displayName: profile?.display_name?.trim() || "", avatarUrl: profile?.avatar_url ?? undefined }
-    : null;
 
   const go = (next: { view?: CalendarView; anchor?: number }) => {
     const v = next.view ?? view;
@@ -147,6 +188,63 @@ export function Calendar() {
     setAttempt((n) => n + 1);
   };
 
+  const keep = async (slot: CalendarFreeSlot) => {
+    const pick = slot.pick;
+    if (!pick || !owner) return;
+    setKept((s) => new Set(s).add(pick.id));
+    const r = await keepPick(pick, owner);
+    if (r.error) {
+      setKept((s) => {
+        const next = new Set(s);
+        next.delete(pick.id);
+        return next;
+      });
+      notifyError(r.error);
+      return;
+    }
+    reloadPlans();
+    announceChange(r.requested ? CHANGED.requested : CHANGED.kept, {
+      undo: () => {
+        setKept((s) => {
+          const next = new Set(s);
+          next.delete(pick.id);
+          return next;
+        });
+        void undoKeep(pick, owner.id).then((e) => {
+          if (e) notifyError(e);
+          reloadPlans();
+        });
+      },
+    });
+  };
+  const declinePick = (slot: CalendarFreeSlot) => slot.pick && notThis(slot.slotKey, slot.pick.id);
+
+  const open: Openers = {
+    plan: (plan) => setSheet({ type: "plan", plan }),
+    stub: (stub) => setSheet({ type: "stub", stub }),
+    free: (slot: CalendarFreeSlot) => setSheet({ type: "free", slot }),
+    block: (occurrence) => setSheet({ type: "block", occurrence }),
+    makePlan: (dayMs) => setSheet({ type: "plan-form", dayMs }),
+    pick: (slot) => setSheet({ type: "pick", slot }),
+    keep: (slot) => void keep(slot),
+  };
+  const handlers: GridHandlers = {
+    onEmpty: (range) => setSheet({ type: "slot", ...range }),
+    onPlan: open.plan,
+    onFree: open.free,
+    onBlock: open.block,
+    onStub: open.stub,
+    onPick: open.pick,
+    onKeep: open.keep,
+    onMovePlan: (plan, startsAt) => void actions.changePlanTime(plan, startsAt),
+    onChangeBlock: (b, startMs, endMs) => {
+      const startsAt = b.entry.startsAt + (startMs - b.startMs);
+      void actions.changeEntry(b.entry, { startsAt, endsAt: startsAt + (endMs - startMs) });
+    },
+    onDeletePlan: actions.cancelPlan,
+    onDeleteBlock: (b) => actions.removeBlock(b.entry),
+  };
+
   const span = viewSpan(view, anchor);
   const inSpan = (ms: number) => ms >= span.startMs && ms < span.endMs;
   const subline = viewSubline(view, {
@@ -170,17 +268,18 @@ export function Calendar() {
           onSelect={setPicked}
           onOpenDay={(ms) => go({ view: "day", anchor: ms })}
           onBring={(p) => void onBring(p)}
+          open={open}
         />
       );
     }
-    if (view === "list") return <ListView days={calDays} now={now} filters={filters} passes={data.passes} onBring={(p) => void onBring(p)} />;
+    if (view === "list") return <ListView days={calDays} now={now} filters={filters} passes={data.passes} onBring={(p) => void onBring(p)} open={open} />;
     if (view === "day" || wide) {
       return (
         <div className="flex flex-col gap-4">
           {view === "day" && (
             <DayStrip days={stripDays.map((c) => ({ ...c, plans: visiblePlans(c, filters), free: filters.free ? c.free : [] }))} selected={3} now={now} onSelect={(i) => go({ anchor: addDays(anchor, i - 3) })} />
           )}
-          <TimeGrid days={calDays} now={now} filters={filters} passes={data.passes} />
+          <TimeGrid days={calDays} now={now} filters={filters} passes={data.passes} handlers={handlers} />
         </div>
       );
     }
@@ -210,8 +309,9 @@ export function Calendar() {
         <div className="flex flex-col gap-6">
           {contents.map((c) => (
             <div key={c.day.offset} className="flex flex-col gap-3">
-              <DaySection content={c} now={now} passes={data.passes} onBring={(p) => void onBring(p)} />
-              {filters.stubs && <StubRows stubs={c.stubs} />}
+              <DaySection content={c} now={now} passes={data.passes} onBring={(p) => void onBring(p)} onOpenPlan={open.plan} onOpenFree={(f) => open.free(f as CalendarFreeSlot)} renderPick={(f) => (filters.picks && (f as CalendarFreeSlot).pick ? <PickCard slot={f as CalendarFreeSlot} onOpen={open.pick} onKeep={open.keep} className="w-full" /> : null)} />
+              {filters.blocks && <BlockRows blocks={c.blocks} onOpen={open.block} />}
+              {filters.stubs && <StubRows stubs={c.stubs} onOpen={open.stub} />}
             </div>
           ))}
         </div>
@@ -231,7 +331,7 @@ export function Calendar() {
         onStep={(dir) => go({ anchor: stepAnchor(view, anchor, dir) })}
         onView={onView}
         onShow={() => setShowOpen(true)}
-        makePlanTo={MAKE_PLAN_PATH}
+        onMakePlan={() => open.makePlan()}
       />
       {data.status === "loading" && <CalendarSkeleton />}
       {data.status === "error" && <ErrorNotice onRetry={retry} />}
@@ -251,6 +351,7 @@ export function Calendar() {
           </div>
         </div>
       )}
+      {sheet && <CalendarSheets sheet={sheet} onClose={() => setSheet(null)} now={now} actions={actions} passes={data.passes} onBring={(p) => void onBring(p)} onKeep={(slot) => void keep(slot)} onNotThis={declinePick} />}
       {!panel && (
         <BottomSheet open={showOpen} onOpenChange={setShowOpen} title="Show">
           <ShowPanel filters={filters} onChange={onFilter} className="border-0 p-0" />

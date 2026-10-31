@@ -754,6 +754,38 @@ The wording of `/calendar`, from the founder's calendar brief (`claude-code-brie
 | Nothing planned in the next 30 days. | List empty state, with Find something. Approved Oct 31, 2026 |
 | Your plans, Stubs and free time, in one place. | Title of the sign-up prompt when signed out. Approved Oct 31, 2026 |
 
+### Calendar, PR 2: adding, blocking, removing (brief of Oct 31, 2026)
+
+Terms from the brief's section 8 and the founder's reviews. Approved Nov 1, 2026 unless marked "to confirm".
+
+| Term | Use |
+|---|---|
+| Make a plan | Opens the plan sheet: Corner (yours first, then a search), a day, Daytime or Evening with an optional exact time, an optional friend. Button: Make the plan (approved) |
+| Make a plan at {time} | The first choice in the time sheet. Opens the plan sheet with the time filled in |
+| I'm free then | Adds free time. Choice: Just this {Tuesday} · Every {Tuesday} |
+| Block this time | Adds a block. Field: Note (approved), with the helper text "Only you see this." (the period is approved, Nov 1, 2026), then Just this once · Every week |
+| Your block | What a block without a note says |
+| Cancel this plan | A plan only you are in. Also: Change the time · Bring someone. Cancelling also removes the one-session Pursuit it is stored under when no one else is in it. A one-off plan is never in Your Pursuits or any list of your own Pursuits: it lives on the calendar and in Your week only |
+| Leave this plan | A plan with others, or a host's listing. A host's listing cannot be moved: "The host sets this time." (approved). A plan with others that is yours also: Change my time |
+| Move this session · Skip this session | A session of a longer Pursuit. Skip removes only that session if it is your Pursuit, else it takes only you out. Open Pursuit (approved) links to it |
+| Change the times · Not free this {Tuesday} · Remove from my usual week | Free time. Change the times opens the usual week screen for the usual week, or two time fields for a stretch you added. Remove free time (approved) takes away a stretch you added |
+| Change · Remove block | A block |
+| Toasts: {What happened} · Undo | Plan made · Plan cancelled · You left the plan · Session skipped · Time changed · Free time added · Free time removed · Marked not free · Block added · Block removed · Block changed · Removed from your usual week. Each shows Undo for 6 seconds. The "{What happened} · Undo" form and every toast in it are approved (Nov 1, 2026) |
+| Undo | Nothing on the calendar asks "are you sure". Cancelling or leaving a plan is sent to others only after the 6 seconds are up, or when the tab is closed or put away |
+
+### Calendar, PR 3: Stubby's picks (brief of Oct 31, 2026)
+
+One pick at most in each free stretch of the next 7 days, made in the browser. Nothing about a pick, a Keep or a Not this is sent to the server (until the Privacy Policy line on suggestion logging is published).
+
+| Term | Use |
+|---|---|
+| Stubby’s pick | The label on a pick: white, a dashed border in the accent text colour. Row in Show: Stubby’s picks, "Ideas for your free time" |
+| Keep | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo |
+| Ask to join | The button instead of Keep when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
+| Not this | Swaps in the next match. After 3 on one stretch the stretch goes back to Find something. Kept in this browser only |
+| Find something | What a free stretch says when nothing fits: never filler |
+| You said Tuesday evenings work, and you picked Climbing. | The reason line. It names the usual week only when the pick falls in it. Otherwise: "You picked Climbing." (approved Nov 1, 2026). A pass adds " You have a climbing pass." |
+
 ## Retired terms
 
 Never use these in UI copy.

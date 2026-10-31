@@ -1,7 +1,7 @@
 import { formatDate, formatWeekday } from "./dates";
 import { HOME_TZ, nyParts, nyTimeToMs, type WeekPlan, type WeekWindow } from "./homeWeek";
 import { plural } from "./plural";
-import { BUDGETS, DAYS, type Budget, type DayKey, type Pass } from "./tasteModel";
+import { BUDGETS, DAYS, SLOTS, windowKey, type Budget, type DayKey, type Pass } from "./tasteModel";
 import type { CatColor } from "./categoryStyle";
 import { affordable, parsePrice, passFor, type LiveEventInput, type LivePursuitInput } from "./firstPlan";
 
@@ -118,6 +118,23 @@ export const dayDate = (day: WeekDay, now: number) => formatDate(day.noonMs, { t
 export const tileParts = (day: WeekDay) => ({ weekday: formatWeekday(day.noonMs, "short", HOME_TZ), date: String(day.d) });
 
 // ---------- free slots and what each day holds ----------
+
+/** The person's free windows over the given days that have not ended yet. `offset` is the day's index in `days`, so `dayContents` can match them. */
+export function windowsAcross(windows: readonly string[], days: readonly WeekDay[], now: number): WeekWindow[] {
+  if (windows.length === 0) return [];
+  const out: WeekWindow[] = [];
+  for (const day of days) {
+    for (const slot of SLOTS) {
+      const key = windowKey(day.dayKey, slot.key);
+      if (!windows.includes(key)) continue;
+      const startMs = nyTimeToMs(day.y, day.m, day.d, slot.key === "day" ? 6 : 18);
+      const endMs = slot.key === "day" ? nyTimeToMs(day.y, day.m, day.d, 18) : day.endMs;
+      if (endMs > now) out.push({ key, day: day.dayKey, slot: slot.key, offset: day.offset, startMs, endMs });
+    }
+  }
+  return out.sort((a, b) => a.startMs - b.startMs);
+}
+
 
 export type FreePart = "day" | "eve" | "all";
 

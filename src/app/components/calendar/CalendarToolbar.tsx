@@ -1,5 +1,4 @@
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
-import { Link } from "react-router";
 import { STEP_LABEL, VIEWS, VIEW_LABEL, type CalendarView } from "../../lib/calendarView";
 import { cn } from "../ui/utils";
 
@@ -20,7 +19,7 @@ export function CalendarToolbar({
   onStep,
   onView,
   onShow,
-  makePlanTo,
+  onMakePlan,
 }: {
   view: CalendarView;
   /** Below 1128px the Show panel is a sheet, opened from here. */
@@ -31,7 +30,7 @@ export function CalendarToolbar({
   onStep: (dir: -1 | 1) => void;
   onView: (view: CalendarView) => void;
   onShow: () => void;
-  makePlanTo: string;
+  onMakePlan: () => void;
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-3">
@@ -69,9 +68,9 @@ export function CalendarToolbar({
             Show
           </button>
         )}
-        <Link to={makePlanTo} className="inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-small font-semibold text-accent-foreground">
+        <button type="button" onClick={onMakePlan} className="inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-small font-semibold text-accent-foreground">
           Make a plan
-        </Link>
+        </button>
       </div>
     </div>
   );

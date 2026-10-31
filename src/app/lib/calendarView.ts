@@ -1,10 +1,11 @@
 import { formatDate, formatMonthYear, formatTime, formatWeekday } from "./dates";
-import { HOME_TZ, nyParts, nyTimeToMs, type WeekWindow } from "./homeWeek";
+import { HOME_TZ, nyParts, nyTimeToMs } from "./homeWeek";
+import { blockOccurrences, effectiveFreeTime, MIN_FREE_MS, occurrences, type CalendarEntry, type Occurrence } from "./calendarEntries";
 import { plural } from "./plural";
-import { SLOTS, windowKey } from "./tasteModel";
 import { cornerColor, type CatColor } from "./categoryStyle";
 import type { StubCard } from "./stubs";
-import { dayContents, daysFromToday, FREE_LABEL, goingLine, planSpan, weekDays, type DayContent, type FreeSlot, type WeekDay, type WeekPlanDetail } from "./weekView";
+import type { PickSlot, StubbyPick } from "./stubbyPicks";
+import { dayContents, daysFromToday, windowsAcross, FREE_LABEL, goingLine, planSpan, weekDays, type DayContent, type FreePart, type FreeSlot, type Span, type WeekDay, type WeekPlanDetail } from "./weekView";
 
 /**
  * The calendar (/calendar) as pure functions: which view and date the URL
@@ -180,41 +181,95 @@ export const sameDay = (day: WeekDay, ms: number) => {
 
 // ---------- what each day holds ----------
 
-/** The person's free windows over the given days that have not ended yet. `offset` is the day's index in `days`, so `dayContents` can match them. */
-export function windowsAcross(windows: readonly string[], days: readonly WeekDay[], now: number): WeekWindow[] {
-  if (windows.length === 0) return [];
-  const out: WeekWindow[] = [];
-  for (const day of days) {
-    for (const slot of SLOTS) {
-      const key = windowKey(day.dayKey, slot.key);
-      if (!windows.includes(key)) continue;
-      const startMs = nyTimeToMs(day.y, day.m, day.d, slot.key === "day" ? 6 : 18);
-      const endMs = slot.key === "day" ? nyTimeToMs(day.y, day.m, day.d, 18) : day.endMs;
-      if (endMs > now) out.push({ key, day: day.dayKey, slot: slot.key, offset: day.offset, startMs, endMs });
-    }
-  }
-  return out.sort((a, b) => a.startMs - b.startMs);
+export { windowsAcross };
+
+/** A free slot with where it comes from, so tapping it can offer the right changes. */
+export interface CalendarFreeSlot extends FreeSlot {
+  /** The usual week's windows it overlaps: "sat-eve". */
+  usualKeys: string[];
+  /** The free entries it overlaps. */
+  entryIds: number[];
+  /** Stable for the stretch ("2026-11-03:tue-eve"): what Not this is counted against. */
+  slotKey: string;
+  /** Stubby's pick for it, when one fits (filled in by `withPicks`). */
+  pick?: StubbyPick;
 }
 
 export interface CalendarDay extends DayContent {
+  free: CalendarFreeSlot[];
   /** Stubs issued on this day, newest first. */
   stubs: StubCard[];
+  /** The person's blocks that touch this day (a weekly one shows each week). */
+  blocks: Occurrence[];
 }
 
-/** Each day's plans, free slots and Stubs. Plans already over stay (the calendar shows the past); free time is only the part still ahead. */
+const overlaps = (a: Span, b: Span) => a.startMs < b.endMs && a.endMs > b.startMs;
+
+/** The free time of one day, as the slots the screens draw: daytime, evening or all day, and never under an hour. */
+function slotsOfDay(day: WeekDay, spans: readonly Span[], windows: readonly string[], entries: readonly CalendarEntry[]): CalendarFreeSlot[] {
+  const dayRange = { startMs: day.startMs, endMs: day.endMs };
+  const sixPm = nyTimeToMs(day.y, day.m, day.d, 18);
+  const sixAm = nyTimeToMs(day.y, day.m, day.d, 6);
+  const used = windowsAcross(windows, [day], 0);
+  const free = entries.filter((e) => e.kind === "free");
+  return spans
+    .filter((s) => overlaps(s, dayRange))
+    .map((s) => ({ startMs: Math.max(s.startMs, day.startMs), endMs: Math.min(s.endMs, day.endMs) }))
+    .filter((s) => s.endMs - s.startMs >= MIN_FREE_MS)
+    .map((s) => {
+      const part: FreePart = s.endMs <= sixPm ? "day" : s.startMs >= sixPm ? "eve" : "all";
+      const keys = [
+        ...(s.startMs < sixPm && s.endMs > sixAm ? [`${day.dayKey}-day`] : []),
+        ...(s.endMs > sixPm ? [`${day.dayKey}-eve`] : []),
+      ];
+      return {
+        part,
+        keys: keys.length > 0 ? keys : [`${day.dayKey}-day`],
+        startMs: s.startMs,
+        endMs: s.endMs,
+        usualKeys: used.filter((w) => overlaps(w, s)).map((w) => w.key),
+        entryIds: free.filter((e) => occurrences(e, s.startMs, s.endMs).length > 0).map((e) => e.id),
+        slotKey: `${dateParam(day.noonMs)}:${keys[0] ?? `${day.dayKey}-day`}`,
+      };
+    });
+}
+
+/**
+ * Each day's plans, free slots, blocks and Stubs. Plans already over stay (the
+ * calendar shows the past); free time is only the part still ahead, from the
+ * usual week and free entries, minus busy entries, blocks and plans.
+ */
 export function calendarDays(
   days: readonly WeekDay[],
   plans: readonly WeekPlanDetail[],
   stubs: readonly StubCard[],
   windows: readonly string[],
   now: number,
+  entries: readonly CalendarEntry[] = [],
 ): CalendarDay[] {
-  const contents = dayContents(days, plans, windowsAcross(windows, days, now), 0);
+  const contents = dayContents(days, plans, [], 0);
+  const first = days[0];
+  const last = days[days.length - 1];
+  const spans = first && last ? effectiveFreeTime({ windows, entries, plans, fromMs: Math.max(first.startMs, now), toMs: last.endMs }) : [];
+  const blocks = first && last ? blockOccurrences(entries, first.startMs, last.endMs) : [];
   return contents.map((c) => ({
     ...c,
+    free: slotsOfDay(c.day, spans, windows, entries),
     stubs: stubs.filter((s) => s.issuedAt >= c.day.startMs && s.issuedAt < c.day.endMs),
+    blocks: blocks.filter((b) => overlaps(b, { startMs: c.day.startMs, endMs: c.day.endMs })),
   }));
 }
+
+/** Every free stretch in view, as what Stubby's picks are matched against. */
+export const pickSlots = (days: readonly CalendarDay[]): PickSlot[] => days.flatMap((c) => c.free.map((f) => ({ key: f.slotKey, startMs: f.startMs, endMs: f.endMs })));
+
+/** The days with each stretch's pick filled in. A stretch with none keeps `pick` empty, and the screen says Find something. */
+export const withPicks = (days: readonly CalendarDay[], picks: ReadonlyMap<string, StubbyPick>): CalendarDay[] =>
+  days.map((c) => ({ ...c, free: c.free.map((f) => ({ ...f, pick: picks.get(f.slotKey) })) }));
+
+/** The ids of everything already on the calendar, in the form picks use, so nothing is picked twice. */
+export const takenIds = (plans: readonly WeekPlanDetail[]): Set<string> =>
+  new Set(plans.flatMap((p) => [p.id.startsWith("event-") ? `event:${p.id.slice(6)}` : "", p.pursuitId ? `pursuit:${p.pursuitId}` : ""].filter(Boolean)));
 
 /** How many plans are still to go from now on. */
 export const plansToGo = (plans: readonly WeekPlanDetail[], now: number) => plans.filter((p) => planSpan(p.startsAt, p.endsAt).endMs > now).length;
@@ -239,7 +294,7 @@ export const FILTER_ROWS: readonly { key: FilterKey; label: string; hint?: strin
 ];
 
 /** The rows that have something behind them today. The rest arrive with their own PRs and stay out of the panel until then. */
-export const AVAILABLE_FILTERS: readonly FilterKey[] = ["plans", "sessions", "free", "stubs"];
+export const AVAILABLE_FILTERS: readonly FilterKey[] = ["plans", "sessions", "picks", "free", "stubs", "blocks"];
 
 export type Filters = Record<FilterKey, boolean>;
 
@@ -292,13 +347,16 @@ function safeStore(): Storage | null {
   }
 }
 
+/** A session of a longer Pursuit. A plan someone made for one day is a small Pursuit with one session, but it is a plan. */
+export const isPursuitSession = (p: Pick<WeekPlanDetail, "kind" | "session">): boolean => p.kind === "session" && !!p.session && p.session.total > 1;
+
 /** A day's plans after the Plans and Pursuit sessions filters. */
 export const visiblePlans = (c: Pick<DayContent, "plans">, filters: Filters): WeekPlanDetail[] =>
-  c.plans.filter((p) => (p.kind === "session" ? filters.sessions : filters.plans));
+  c.plans.filter((p) => (isPursuitSession(p) ? filters.sessions : filters.plans));
 
 /** The list view: the days that have something to show, in date order. */
 export const agendaDays = (days: readonly CalendarDay[], filters: Filters): CalendarDay[] =>
-  days.filter((c) => visiblePlans(c, filters).length > 0 || (filters.free && c.free.length > 0) || (filters.stubs && c.stubs.length > 0));
+  days.filter((c) => visiblePlans(c, filters).length > 0 || (filters.free && c.free.length > 0) || (filters.stubs && c.stubs.length > 0) || (filters.blocks && c.blocks.length > 0));
 
 // ---------- labels ----------
 
@@ -332,11 +390,17 @@ export const dayListDate = (day: WeekDay, now: number) => short(day.noonMs, now)
 /** "Plan, 7 PM, Village Halloween Parade, You, Sam and Maya". Pursuit sessions say so. */
 export function describePlan(p: WeekPlanDetail): string {
   const who = goingLine(p.going);
-  return [p.kind === "session" ? "Pursuit session" : "Plan", shortTime(p.startsAt), p.title, who].filter(Boolean).join(", ");
+  return [isPursuitSession(p) ? "Pursuit session" : "Plan", shortTime(p.startsAt), p.title, who].filter(Boolean).join(", ");
 }
 
 /** "Free evening, 6 PM to midnight": the text label that goes with the dashed look. */
 export const describeFree = (f: FreeSlot) => `${FREE_LABEL[f.part]}, ${timeRange(f.startMs, f.endMs).replace("to 12 AM", "to midnight")}`;
+
+/** "Block, 9 AM to 5 PM, dentist". */
+export const describeBlock = (b: Occurrence) => ["Block", timeRange(b.startMs, b.endMs), b.entry.note].filter(Boolean).join(", ");
+
+/** "Stubby’s pick, 7 to 9 PM, Climbing, Gowanus". */
+export const describePick = (p: StubbyPick) => ["Stubby’s pick", timeRange(p.startsAt, p.endsAt), p.title, p.where].filter(Boolean).join(", ");
 
 export const describeStub = (s: StubCard) => `Stub, ${s.title}`;
 

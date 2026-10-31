@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { catStyle } from "../../lib/categoryStyle";
+import { describePlan } from "../../lib/calendarView";
 import { WEEK_VIEW } from "../../lib/homeCopy";
 import type { Pass } from "../../lib/tasteModel";
 import { goingLine, isJustYou, kindLine, placeLine, ticketTime, type WeekPlanDetail } from "../../lib/weekView";
@@ -16,11 +17,14 @@ export function PlanTicketRow({
   passes,
   canBring,
   onBring,
+  onOpen,
 }: {
   plan: WeekPlanDetail;
   passes: readonly Pass[];
   canBring: boolean;
   onBring: (plan: WeekPlanDetail) => void;
+  /** The calendar opens the plan's sheet from the title. Without it the title links to its Pursuit, as the Week view always did. */
+  onOpen?: (plan: WeekPlanDetail) => void;
 }) {
   const time = ticketTime(plan.startsAt);
   const kind = kindLine(plan);
@@ -45,7 +49,11 @@ export function PlanTicketRow({
       <span aria-hidden="true" className="absolute inset-y-3 left-[72px] border-l-2 border-dashed border-border" />
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-3 pl-4">
         {kind && <span className="text-caption font-semibold text-muted-foreground">{kind}</span>}
-        {plan.pursuitId ? (
+        {onOpen ? (
+          <button type="button" onClick={() => onOpen(plan)} aria-label={describePlan(plan)} className="min-h-11 self-start text-left text-foreground">
+            {title}
+          </button>
+        ) : plan.pursuitId ? (
           <Link to={`/pursuit/${plan.pursuitId}`} className="text-foreground">
             {title}
           </Link>
