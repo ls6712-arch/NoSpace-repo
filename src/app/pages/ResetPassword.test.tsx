@@ -6,7 +6,6 @@ const auth = vi.hoisted(() => ({
   user: null as { id: string } | null,
   loading: false,
   updatePassword: vi.fn(),
-  resetPassword: vi.fn(),
 }));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock("react-router", () => ({ useNavigate: () => navigate }));
@@ -27,7 +26,6 @@ beforeEach(() => {
   auth.user = null;
   auth.loading = false;
   auth.updatePassword = vi.fn(async () => ({ error: null }));
-  auth.resetPassword = vi.fn(async () => ({ error: null }));
   navigate.mockClear();
 });
 afterEach(cleanup);
@@ -74,20 +72,12 @@ describe("reset password screen", () => {
     expect(screen.getByText(EXPIRED_LINE)).toBeTruthy();
   });
 
-  it("sends the new link to the address it was last asked for", async () => {
-    localStorage.setItem("soosh.reset.email", JSON.stringify({ email: "maya@example.com", at: Date.now() }));
-    render(<ResetPassword />);
-    fireEvent.click(screen.getByRole("button", { name: "Send a new link" }));
-    await waitFor(() => expect(auth.resetPassword).toHaveBeenCalledWith("maya@example.com"));
-    expect(await screen.findByText("If there’s an account for maya@example.com, we’ve sent a link.")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Send a new link" })).toBeNull();
-  });
-
-  it("goes to the log in screen's reset step when no address is kept", () => {
+  it("opens the log in screen's reset step for a new link, and keeps no address", () => {
     render(<ResetPassword />);
     fireEvent.click(screen.getByRole("button", { name: "Send a new link" }));
     expect(navigate).toHaveBeenCalledWith("/login?mode=signin&view=reset", { replace: true });
-    expect(auth.resetPassword).not.toHaveBeenCalled();
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
   });
 
   it("waits for the session before choosing", () => {

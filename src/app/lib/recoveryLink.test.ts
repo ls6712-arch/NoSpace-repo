@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from "vitest";
-import { forgetResetEmail, readRecoveryHash, readResetEmail, rememberResetEmail } from "./recoveryLink";
+import { describe, expect, it } from "vitest";
+import { readRecoveryHash } from "./recoveryLink";
 
 describe("readRecoveryHash", () => {
   it("knows a good reset link", () => {
@@ -28,22 +28,5 @@ describe("readRecoveryHash", () => {
 
   it("does not take a sign-in token for a reset", () => {
     expect(readRecoveryHash("#access_token=abc&type=magiclink").kind).toBeNull();
-  });
-});
-
-describe("the address a reset link was asked for", () => {
-  beforeEach(() => localStorage.clear());
-
-  it("is kept, then forgotten", () => {
-    expect(readResetEmail()).toBeNull();
-    rememberResetEmail("maya@example.com");
-    expect(readResetEmail()).toBe("maya@example.com");
-    forgetResetEmail();
-    expect(readResetEmail()).toBeNull();
-  });
-
-  it("is dropped after an hour", () => {
-    localStorage.setItem("soosh.reset.email", JSON.stringify({ email: "maya@example.com", at: Date.now() - 61 * 60 * 1000 }));
-    expect(readResetEmail()).toBeNull();
   });
 });

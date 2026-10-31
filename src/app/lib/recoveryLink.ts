@@ -11,8 +11,6 @@
  * person to /reset-password.
  */
 const KEY = "soosh.recovery";
-const EMAIL_KEY = "soosh.reset.email";
-const EMAIL_TTL_MS = 60 * 60 * 1000;
 
 export type RecoveryKind = "ready" | "expired";
 
@@ -52,33 +50,6 @@ export function hasRecoveryKind(): boolean {
 export function clearRecoveryKind(): void {
   try {
     sessionStorage.removeItem(KEY);
-  } catch {
-    // Nothing to clear.
-  }
-}
-
-/** The address a reset link was last asked for, kept on this device for an hour so an expired link can be replaced in one tap. */
-export function rememberResetEmail(email: string): void {
-  try {
-    localStorage.setItem(EMAIL_KEY, JSON.stringify({ email, at: Date.now() }));
-  } catch {
-    // The expired screen then sends people back to the log in screen to ask again.
-  }
-}
-
-export function readResetEmail(): string | null {
-  try {
-    const v = JSON.parse(localStorage.getItem(EMAIL_KEY) ?? "null") as { email?: string; at?: number } | null;
-    if (v?.email && typeof v.at === "number" && Date.now() - v.at < EMAIL_TTL_MS) return v.email;
-  } catch {
-    // Unreadable: treat as not kept.
-  }
-  return null;
-}
-
-export function forgetResetEmail(): void {
-  try {
-    localStorage.removeItem(EMAIL_KEY);
   } catch {
     // Nothing to clear.
   }

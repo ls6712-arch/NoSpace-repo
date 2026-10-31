@@ -17,7 +17,6 @@ import { friendlyError } from "../lib/friendlyError";
 import { isNoAccountError, isRateLimited, retryAfterSeconds } from "../lib/authErrors";
 import { recordSendMs, waitForTypicalSend } from "../lib/sendTiming";
 import { flushTermsAcceptance } from "../lib/termsAcceptance";
-import { rememberResetEmail } from "../lib/recoveryLink";
 import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
 
 export interface Profile {
@@ -393,7 +392,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}${window.location.pathname}#/reset-password`,
       });
-      if (!error) rememberResetEmail(email.trim());
       return { error: error ? error.message : null };
     } catch {
       return { error: OFFLINE_LINE };
