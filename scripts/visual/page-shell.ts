@@ -6,8 +6,8 @@
 //
 // Checks, per page / width / theme:
 //   - the visible title: the element that actually holds the title's text (not just the <h1>) is 28px / 800
-//   - the header's top, the title's left and the content width are the same on every page at a given width
-//     (a kicker line, Discover's, only moves its title down by its own height)
+//   - the rendered title text (its height, left and top) and the header row (left and right edge) agree between
+//     every page to within 1px at each width and theme
 //   - at most one coral fill inside the page (the rail's Log sits outside it)
 //   - no sideways page scroll
 //   - no hard-clipped row: a sideways scroller with more to see must bleed to the screen edge on a phone, and fade
@@ -49,6 +49,21 @@ function measure() {
     for (let n = w.nextNode(); n; n = w.nextNode()) if ((n.textContent ?? "").trim()) { holder = n.parentElement; break; }
   }
   const hs = holder ? getComputedStyle(holder) : null;
+  // The rendered text itself (what the eye sees), not a box that could be taller than its words.
+  let text = { left: -1, top: -1, height: -1 };
+  if (h1) {
+    const w2 = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT);
+    for (let n = w2.nextNode(); n; n = w2.nextNode()) {
+      if (!(n.textContent ?? "").trim()) continue;
+      const rg = document.createRange();
+      rg.selectNodeContents(n);
+      const rr = rg.getBoundingClientRect();
+      text = { left: Math.round(rr.left * 10) / 10, top: Math.round(rr.top * 10) / 10, height: Math.round(rr.height * 10) / 10 };
+      break;
+    }
+  }
+  const row = h1?.closest("header")?.firstElementChild as HTMLElement | null;
+  const rowRect = row?.getBoundingClientRect();
   const inner = h1?.closest("header")?.parentElement as HTMLElement | null;
   const coral = [...document.querySelectorAll("main *")].filter((e) => {
     const b = e.getBoundingClientRect();
@@ -91,6 +106,11 @@ function measure() {
     headerTop: Math.round(header?.getBoundingClientRect().top ?? -1),
     kickerH,
     subLines,
+    textLeft: text.left,
+    textTop: text.top,
+    textH: text.height,
+    rowLeft: Math.round((rowRect?.left ?? -1) * 10) / 10,
+    rowRight: Math.round((rowRect?.right ?? -1) * 10) / 10,
     title: h1?.textContent?.trim().slice(0, 28) ?? "-",
     h1Size: h1 ? getComputedStyle(h1).fontSize : "-",
     size: hs?.fontSize ?? "-",
@@ -105,8 +125,8 @@ function measure() {
 }
 
 /**
- * --selftest: prove the checks can fail. Strips the edge fade from every row and shrinks the titles, on Week and
- * Discover at 1440, and fails unless the clip and the size checks both fire.
+ * --selftest: prove the checks can fail. Strips the edge fade from every row, shrinks the titles and pushes one
+ * title down 6px, on Week and Discover at 1440, and fails unless the clip, size and position checks all fire.
  */
 const selftest = async () => {
   const dist = path.resolve(opt("dist") ?? path.join(OUT, ".dist"));
@@ -116,6 +136,7 @@ const selftest = async () => {
   const port = (server.address() as { port: number }).port;
   const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM });
   let clips = 0, sizes = 0;
+  const tops: number[] = [];
   for (const [, route] of PAGES.filter(([n]) => n === "week" || n === "discover")) {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: "light", reducedMotion: "reduce" });
     await installSupabaseMock(ctx, buildFixtures(), path.join(HERE, "database.types.ts"));
@@ -124,15 +145,19 @@ const selftest = async () => {
     await p.goto(`http://localhost:${port}/#${route}`);
     await p.waitForTimeout(2200);
     await p.addStyleTag({ content: "main * { mask-image: none !important; -webkit-mask-image: none !important } main h1, main h1 * { font-size: 22px !important }" });
+    // The second page also gets its title pushed down 6px: the equality check must see that.
+    if (tops.length === 1) await p.evaluate(() => { const h = document.querySelector("main h1") as HTMLElement; h.style.position = "relative"; h.style.top = "6px"; });
     const m = await p.evaluate(measure);
     clips += m.clips.length;
     if (m.size !== "28px") sizes++;
+    tops.push(m.textTop);
     await ctx.close();
   }
   await browser.close();
   server.close();
-  console.log(`selftest: ${clips} clip finding(s), ${sizes} size finding(s)`);
-  process.exit(clips > 0 && sizes > 0 ? 0 : 1);
+  const offset = tops.length === 2 && Math.abs(tops[0] - tops[1]) > 1;
+  console.log(`selftest: ${clips} clip finding(s), ${sizes} size finding(s), title offset ${offset ? "seen" : "NOT seen"}`);
+  process.exit(clips > 0 && sizes > 0 && offset ? 0 : 1);
 };
 
 const main = async () => {
@@ -171,19 +196,19 @@ const main = async () => {
     if (r.over !== 0) fails.push(`${id}: sideways scroll of ${r.over}px`);
     for (const c of r.clips) fails.push(`${id}: clipped: ${c}`);
   }
+  // Every page's title, as rendered, must agree to within 1px at each width and theme: the height of its text, and
+  // the left and top of the text and the left and right of the header row it sits in.
+  const TOL = 1;
   for (const w of WIDTHS) for (const th of THEMES) {
     const sub = rows.filter((r) => r.w === w && r.th === th);
-    // The header starts at the same place on every page. A page with a kicker line (Discover) has its title that much lower, and no more.
-    const lowered = sub.filter((r) => Math.abs(r.top - r.headerTop - r.kickerH) > 1);
-    for (const r of lowered) fails.push(`@${w} ${th}: ${r.page} title is ${r.top - r.headerTop}px below its header, its kicker is ${r.kickerH}px`);
-    for (const k of ["left", "width", "headerTop"] as const) {
-      const vals = new Set(sub.map((r) => r[k]));
-      if (vals.size > 1) fails.push(`@${w} ${th}: title ${k} differs: ${sub.map((r) => `${r.page}=${r[k]}`).join(", ")}`);
+    for (const k of ["textH", "textLeft", "textTop", "rowLeft", "rowRight", "headerTop", "width"] as const) {
+      const vals = sub.map((r) => r[k]);
+      if (Math.max(...vals) - Math.min(...vals) > TOL) fails.push(`@${w} ${th}: title ${k} differs by more than ${TOL}px: ${sub.map((r) => `${r.page}=${r[k]}`).join(", ")}`);
     }
   }
 
-  const md = ["# One skin, PR 5: measurements", "", "Measured in the browser against the fixture build. `Size / weight` is that of the element holding the title text, not only the h1. `Coral` counts coral fills inside the page (the rail's Log is outside it). `Clips` counts hard-clipped rows or boxes. The subtitle must be one line.", "", "| Width | Theme | Page | Title | Size / weight | Left | Header top | Title top | Kicker | Content | Coral | Sideways | Clips |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
-    ...rows.map((r) => `| ${r.w} | ${r.th} | ${r.page} | ${r.title} | ${r.size} / ${r.weight} | ${r.left} | ${r.headerTop} | ${r.top} | ${r.kickerH} | ${r.width} | ${r.coral} | ${r.over} | ${r.clips.length} |`), "", fails.length ? `## Failures (${fails.length})\n\n${fails.map((f) => `- ${f}`).join("\n")}` : "## Result\n\nAll checks pass."];
+  const md = ["# One skin, PR 5: measurements", "", "Measured in the browser against the fixture build. `Size / weight` is that of the element holding the title text, not only the h1. `Text height`, `Text left` and `Text top` are the rendered words (a DOM range), and `Row left` / `Row right` the header row; the check fails if any page differs from another by more than 1px. `Coral` counts coral fills inside the page (the rail's Log is outside it). `Clips` counts hard-clipped rows or boxes. The subtitle must be one line.", "", "| Width | Theme | Page | Title | Size / weight | Text height | Text left | Text top | Row left | Row right | Header top | Content | Coral | Sideways | Clips |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...rows.map((r) => `| ${r.w} | ${r.th} | ${r.page} | ${r.title} | ${r.size} / ${r.weight} | ${r.textH} | ${r.textLeft} | ${r.textTop} | ${r.rowLeft} | ${r.rowRight} | ${r.headerTop} | ${r.width} | ${r.coral} | ${r.over} | ${r.clips.length} |`), "", fails.length ? `## Failures (${fails.length})\n\n${fails.map((f) => `- ${f}`).join("\n")}` : "## Result\n\nAll checks pass."];
   fs.writeFileSync(path.join(OUT, "measurements.md"), md.join("\n") + "\n");
 
   const has = spawnSync("which", ["montage"]).status === 0;

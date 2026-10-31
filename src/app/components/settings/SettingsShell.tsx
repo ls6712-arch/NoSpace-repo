@@ -87,7 +87,7 @@ export function SettingsShell({
             })}
           </ul>
         </nav>
-        <div className="max-w-[680px]">{children}</div>
+        <div className="min-w-0">{children}</div>
       </div>
 
       {/* Mobile / below lg */}

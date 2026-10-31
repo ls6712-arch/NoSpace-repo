@@ -10,8 +10,8 @@ import type { HTMLAttributes, ReactNode } from "react";
  * - Header: the same top offset everywhere; the title in `text-title`
  *   (28px/800 Bricolage), an optional one-line subtitle in the muted colour, an
  *   optional action on the right. No back arrow: tab pages are not drilled into.
- *   `kicker` is the one extra line, above the title, for Discover's "What's out
- *   there in" over the city.
+ *   `kicker` is the one extra line, above the title (Discover's city picker). Its
+ *   row is reserved on every page, so no title is lower than another.
  * - Grids: lists are `PAGE_GRID` (one column, two from `desk`). A single-purpose
  *   card (Your week, Best fit for you, the glance card) spans both columns:
  *   `SPAN_GRID`. That is the one rule for those cards, on every page.
@@ -24,7 +24,7 @@ export const LIST_GRID = "grid gap-3 desk:grid-cols-2 desk:gap-4";
 /** The container alone, for a page you drill into (another person's profile) that keeps its own back bar. */
 export function PageContainer({ children, ...rest }: { children?: ReactNode } & HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className="w-full px-4 pb-10 pt-4 tab:px-6 desk:px-8 max-desk:pt-[calc(var(--safe-top)+1rem)]" {...rest}>
+    <div className="w-full px-4 pb-10 pt-2 tab:px-6 desk:px-8 max-desk:pt-[calc(var(--safe-top)+0.5rem)]" {...rest}>
       <div className="mx-auto w-full max-w-[1040px]">{children}</div>
     </div>
   );
@@ -48,13 +48,14 @@ export function PageShell({
   children?: ReactNode;
 } & Omit<HTMLAttributes<HTMLDivElement>, "title">) {
   return (
-    <div className="w-full px-4 pb-10 pt-4 tab:px-6 desk:px-8 max-desk:pt-[calc(var(--safe-top)+1rem)]" {...rest}>
+    <div className="w-full px-4 pb-10 pt-2 tab:px-6 desk:px-8 max-desk:pt-[calc(var(--safe-top)+0.5rem)]" {...rest}>
       <div className="mx-auto w-full max-w-[1040px]">
         {topBar}
         <header className="mb-6">
           <div className="flex min-h-11 items-start justify-between gap-4">
-            <div className="min-w-0">
-              {kicker && <p className="text-body text-muted-foreground">{kicker}</p>}
+            <div className="min-w-0 flex-1">
+              {/* The kicker row is on every page, empty or not, so every title sits at the same height. */}
+              <p className="h-6 whitespace-nowrap text-body text-muted-foreground">{kicker}</p>
               <h1 className="text-title">{title}</h1>
             </div>
             {action && <div className="shrink-0">{action}</div>}

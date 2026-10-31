@@ -323,11 +323,11 @@ export function Discover() {
           ) : (
             <button
               type="button"
-              aria-label="Your city"
               onClick={() => needAccount(() => setCityOpen(true))}
-              className="inline-flex items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex items-center gap-1 align-middle font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <ChevronDown className="size-5 shrink-0 text-accent-text" strokeWidth={2.5} aria-hidden="true" />
+              Near you
+              <ChevronDown className="size-4 shrink-0 text-accent-text" strokeWidth={2.5} aria-hidden="true" />
             </button>
           )
         }

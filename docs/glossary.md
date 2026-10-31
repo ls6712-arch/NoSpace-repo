@@ -658,7 +658,7 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 
 | Where | String |
 |---|---|
-| Header line | What’s out there in |
+| Header line | What’s out there in {city} ▾ above the title Discover. The city is the tappable part and opens the city sheet (title is always Discover, 28px/800) |
 | Search | Discover has no search box of its own (Oct 31, 2026). Search is the nav one: the header icon on a phone, the rail's Search panel from 744px ("Search Moments, people, Spaces") |
 | Jump chips | Ideas / Corners / Spaces / Moments |
 | Ideas heading / subline | What could you do? / Ideas for what you’ve got. Tap a pill to change it. |
@@ -687,7 +687,7 @@ Words around the page, approved Oct 31, 2026:
 | Ideas, nothing fits | Nothing fits that mix yet, with the link Show more ideas (it loosens Spend to Treat me) |
 | Feed, nothing new | Nothing new nearby yet, with the link Log a Moment |
 | Feed heading with no city saved | What people are making |
-| Header with no city saved | Discover |
+| Header with no city saved | Discover. The line above it reads "Near you" (founder, Oct 31, 2026) and opens the city sheet |
 | After you ask to follow an author | Requested (the button stays, disabled) |
 | Signed out, on Follow, Join, Ask to join or the city | Title: Make an account to do that. Body: Browsing stays open. An account is for following, joining and keeping what you make. Buttons: the existing Create an account and Keep looking around |
 | Pill accessible labels | Time: Tonight, Spend: Free, Who: A friend (the group, then the current value) |

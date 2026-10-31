@@ -36,7 +36,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
       <h2 id={id} className="mb-2 text-small font-semibold text-muted-foreground">
         {title}
       </h2>
-      <ul className="grid gap-2 desk:grid-cols-2 desk:gap-3">{children}</ul>
+      <ul className="flex flex-col gap-2">{children}</ul>
     </section>
   );
 }
