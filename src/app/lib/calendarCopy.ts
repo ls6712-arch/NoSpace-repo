@@ -70,3 +70,14 @@ export const CHANGED = {
   kept: "Plan made",
   requested: "Request sent",
 } as const;
+
+/** The subscribe link: the design's "Your calendars" section, and the same link in Settings. */
+export const SUBSCRIBE = {
+  heading: "Your calendars",
+  title: "Soosh in your calendar",
+  hint: "Your plans appear in Google, Apple or Outlook.",
+  copy: "Copy subscribe link",
+  reset: "Reset link",
+  resetHint: "Your old link will stop working, including in any calendar using it.",
+  elsewhere: "This device doesn’t have your link. Reset it to get a new one here.",
+} as const;
