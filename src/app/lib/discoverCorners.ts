@@ -4,13 +4,15 @@ import { cornerIdea } from "../data/cornerIdeas";
 import { isBrowsableCorner, subHobbyLabel, titleCaseSlug } from "../data/hobbies";
 import { cornerPath } from "./cornerPath";
 import type { DiscoverCorner } from "./discover";
+import type { CornerNames } from "./discoverCornerNames";
 
 /**
  * "Corners new to you": the Corners the app offers the server to pick from, and the
- * words and links on each tear-off card. The card's lines are PROPOSED copy (the
- * founder approves them; see docs/discover-v2-ui-copy.md): the hook is the guide's
- * own description, the At home line is the idea's title (a short thing to do), and the other
- * two tabs say what is there or "Be the first".
+ * words and links on each tear-off card (copy approved Oct 31, 2026): the hook is the
+ * guide's own description, the At home line is the idea's title (a short thing to do),
+ * With people names the soonest open Pursuit and At a place the nearest Space (or says
+ * "Find people to go with" / "Find a place near you" when there is no name), and a tab
+ * with nothing there says "Be the first".
  */
 
 /** Corners with an idea (so a guide), not hidden from browsing, not 21 and over. */
@@ -60,16 +62,17 @@ export interface CornerCardModel {
 }
 
 export const TAB_LABELS: Record<CornerTabId, string> = { home: "At home", people: "With people", place: "At a place" };
-/** Proposed, not approved. */
+/** Approved Oct 31, 2026 (docs/glossary.md, Discover v2). */
 export const BE_THE_FIRST = "Be the first";
-export const PEOPLE_LINE = "Open Pursuits with room";
-export const PLACE_LINE = "Spaces and events near you";
+/** What a tab says when there is something there but no name to show for it. */
+export const PEOPLE_FALLBACK = "Find people to go with";
+export const PLACE_FALLBACK = "Find a place near you";
 
 export function cornerName(slug: string): string {
   return subHobbyLabel(slug) ?? titleCaseSlug(slug);
 }
 
-export function cornerCardModel(c: DiscoverCorner): CornerCardModel {
+export function cornerCardModel(c: DiscoverCorner, names?: CornerNames): CornerCardModel {
   const [spaceSlug, slug] = c.cornerKey.split("/");
   const guide = cornerGuide(spaceSlug, slug);
   const idea = cornerIdea(spaceSlug, slug);
@@ -84,10 +87,10 @@ export function cornerCardModel(c: DiscoverCorner): CornerCardModel {
     tabs: [
       { id: "home", label: TAB_LABELS.home, line: idea?.ideaTitle ?? guide?.step ?? BE_THE_FIRST, supplied: c.hasHome && !!guide, to: `${page}?section=home` },
       c.hasGroup
-        ? { id: "people", label: TAB_LABELS.people, line: PEOPLE_LINE, supplied: true, to: `${page}?section=people` }
+        ? { id: "people", label: TAB_LABELS.people, line: names?.people ?? PEOPLE_FALLBACK, supplied: true, to: `${page}?section=people` }
         : { id: "people", label: TAB_LABELS.people, line: BE_THE_FIRST, supplied: false, to: `/pursuits/new?${create}&together=1` },
       c.hasPlace
-        ? { id: "place", label: TAB_LABELS.place, line: PLACE_LINE, supplied: true, to: `${page}?section=place` }
+        ? { id: "place", label: TAB_LABELS.place, line: names?.place ?? PLACE_FALLBACK, supplied: true, to: `${page}?section=place` }
         : { id: "place", label: TAB_LABELS.place, line: BE_THE_FIRST, supplied: false, to: "/create-space" },
     ],
   };

@@ -16,8 +16,16 @@ export interface FeedInputs {
   followingIds: readonly string[];
   /** Posts approved into a Space you are an active member of. */
   spacePostIds: ReadonlySet<number>;
-  /** Corners you follow (Post.subHobby). */
+  /**
+   * Corners you follow: `space:slug` keys (cornerFollowKey, what following a Corner
+   * writes today) and bare Corner slugs from older follows.
+   */
   followedCorners: ReadonlySet<string>;
+}
+
+/** True when the Moment is in a Corner the person follows, by `space:slug` key or by an older bare slug. */
+export function inFollowedCorner(post: Pick<Post, "hobbySlug" | "subHobby" | "corner">, followed: ReadonlySet<string>): boolean {
+  return [post.subHobby, post.corner].some((c) => !!c && (followed.has(c) || (!!post.hobbySlug && followed.has(`${post.hobbySlug}:${c}`))));
 }
 
 /**
@@ -34,7 +42,7 @@ export function classifyFeed(posts: readonly Post[], inputs: FeedInputs): { frie
     if (post.userId && post.userId === inputs.meId) continue;
     if (post.userId && following.has(post.userId)) {
       friends.push({ post, source: "friend" });
-    } else if ((post.subHobby && inputs.followedCorners.has(post.subHobby)) || inputs.spacePostIds.has(post.id)) {
+    } else if (inFollowedCorner(post, inputs.followedCorners) || inputs.spacePostIds.has(post.id)) {
       spaces.push({ post, source: "space" });
     }
   }

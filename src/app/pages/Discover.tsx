@@ -44,6 +44,7 @@ import {
   type DiscoverMoment,
   type DiscoverSpace,
 } from "../lib/discover";
+import { fetchCornerNames, fetchMyArea, type CornerNames } from "../lib/discoverCornerNames";
 import { useFeedInputs } from "../lib/useFeedInputs";
 import { PAGE_X } from "../lib/pageGrid";
 import type { Post } from "../data/posts";
@@ -189,19 +190,35 @@ export function Discover() {
       live = false;
     };
   }, [user?.id]);
+  const shownCorners = useMemo(() => (corners ?? []).filter((c) => !hiddenCorners.has(c.cornerKey)).slice(0, CORNER_SHOWN + 1), [corners, hiddenCorners]);
+  // The soonest open Pursuit and nearest Space named on the tabs. Until they arrive, the tabs show their fallback lines.
+  const [cornerNames, setCornerNames] = useState<Map<string, CornerNames>>(new Map());
+  const shownKeys = shownCorners.map((c) => c.cornerKey).join("|");
+  useEffect(() => {
+    if (!shownKeys) return;
+    let live = true;
+    void (async () => {
+      const area = user ? await fetchMyArea(user.id) : "";
+      const names = await fetchCornerNames(shownKeys.split("|"), { area, city: interests.city });
+      if (live) setCornerNames((prev) => new Map([...prev, ...names]));
+    })();
+    return () => {
+      live = false;
+    };
+  }, [shownKeys, user?.id, interests.city]);
   const cornerCards = useMemo(
     () =>
       (corners ?? [])
         .filter((c) => !hiddenCorners.has(c.cornerKey))
         .flatMap((c) => {
           try {
-            return [cornerCardModel(c)];
+            return [cornerCardModel(c, cornerNames.get(c.cornerKey))];
           } catch {
             return []; // a Corner the app cannot describe is left out, not the section
           }
         })
         .slice(0, CORNER_SHOWN),
-    [corners, hiddenCorners],
+    [corners, hiddenCorners, cornerNames],
   );
 
   const followCorner = (m: CornerCardModel, position: number) =>
@@ -414,7 +431,7 @@ export function Discover() {
             {user && (
               <SectionBoundary>
                 <section id="discover-moments" aria-labelledby="moments-title" className="scroll-mt-24">
-                  <SectionHeading id="moments-title" title={city ? `What ${city} is making` : "What your city is making"} sub="From people you don’t follow yet" />
+                  <SectionHeading id="moments-title" title={city ? `What ${city} is making` : "What people are making"} sub="From people you don’t follow yet" />
                   <CityFeed
                     posts={posts}
                     chips={chips}

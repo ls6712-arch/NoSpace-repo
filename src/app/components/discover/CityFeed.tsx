@@ -9,7 +9,7 @@ import { postCornerKey } from "../../lib/discoverFeed";
 import { useLoadMore } from "../../lib/useLoadMore";
 import { useShownOnce } from "../../lib/useShownOnce";
 
-/** Proposed copy (docs/discover-v2-ui-copy.md), not approved. */
+/** Approved Oct 31, 2026 (docs/glossary.md, Discover v2). */
 export const CITY_FEED_EMPTY_LINE = "Nothing new nearby yet";
 
 /** "Try pottery", but "Try D&D" and "Try 3D printing": the first letter drops to lower case only for an ordinary word. */

@@ -75,3 +75,33 @@ describe("feedCornerChips", () => {
     expect(feedCornerChips(ps, NOW)).toEqual(["crafts-making/pottery", "gaming-tabletop/chess", "health-wellness/yoga"]);
   });
 });
+
+describe("the loop: follow a Corner on Discover, its Moments leave Discover and appear on Home", () => {
+  // Three people I follow give Home its friend cards (Home only promotes after the third), plus a stranger's pottery Moment.
+  const friends = [101, 102, 103].map((id) => post(id, "pal", { subHobby: "knitting", hobbySlug: "crafts-making" }));
+  const pottery = post(50, "stranger", { subHobby: "pottery", hobbySlug: "crafts-making" });
+  const all = [...friends, pottery];
+  const before: FeedInputs = { meId: "me", followingIds: ["pal"], spacePostIds: new Set(), followedCorners: new Set() };
+  // What following the Corner from a Corner card does: it adds the `space:slug` key, as cornerFollowKey writes it.
+  const after: FeedInputs = { ...before, followedCorners: new Set(["crafts-making:pottery"]) };
+
+  it("before the follow the Moment is on Discover and not on Home", () => {
+    expect(discoverFeed([moment(pottery)], all, before).map((p) => p.id)).toEqual([50]);
+    expect(buildFeed(all, before).map((i) => i.post.id)).not.toContain(50);
+  });
+
+  it("after the follow it has left Discover and is on Home", () => {
+    expect(discoverFeed([moment(pottery)], all, after)).toEqual([]);
+    const home = buildFeed(all, after);
+    expect(home.map((i) => i.post.id)).toContain(50);
+    expect(home.find((i) => i.post.id === 50)?.source).toBe("space");
+  });
+
+  it("is never on both, before or after", () => {
+    for (const inputs of [before, after]) {
+      const onDiscover = discoverFeed(all.map(moment), all, inputs).map((p) => p.id);
+      const onHome = buildFeed(all, inputs).map((i) => i.post.id);
+      expect(onDiscover.filter((id) => onHome.includes(id))).toEqual([]);
+    }
+  });
+});

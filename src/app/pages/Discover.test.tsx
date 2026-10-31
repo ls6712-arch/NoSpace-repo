@@ -13,7 +13,13 @@ vi.mock("../context/SocialContext", () => ({ useSocial: () => ({ toggleHobbyFoll
 vi.mock("../lib/useFeedInputs", () => ({
   useFeedInputs: () => ({ inputs: { meId: "u1", followingIds: [], spacePostIds: new Set<number>(), followedCorners: new Set<string>() }, loaded: true }),
 }));
-vi.mock("../lib/interests", () => ({ useInterests: () => ({ city: "New York", moods: [] }) }));
+const city = vi.hoisted(() => ({ value: "New York" }));
+vi.mock("../lib/interests", () => ({ useInterests: () => ({ city: city.value, moods: [] }) }));
+const names = vi.hoisted(() => ({ value: new Map<string, { people?: string; place?: string }>() }));
+vi.mock("../lib/discoverCornerNames", () => ({
+  fetchCornerNames: vi.fn(async () => names.value),
+  fetchMyArea: vi.fn(async () => "Greenpoint"),
+}));
 vi.mock("../lib/search", async (orig) => ({
   ...(await orig<typeof import("../lib/search")>()),
   useUnifiedSearch: () => ({ groups: { space: [], corner: [], person: [], pursuit: [], moment: [], product: [] }, all: [], loading: false }),
@@ -67,6 +73,8 @@ beforeEach(() => {
   window.matchMedia = ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
   auth.value = { user: { id: "u1" }, profile: { display_name: "Alex" }, isConfigured: true };
   taste.value = { picks: [], windows: [], budget: null };
+  city.value = "New York";
+  names.value = new Map();
   for (const f of Object.values(fetchers)) f.mockClear();
   toggleHobbyFollow.mockClear();
   requestOrJoin.mockClear();
@@ -204,6 +212,37 @@ describe("Discover fails one section at a time", () => {
     await settle();
     expect(screen.getByText("Nothing new nearby yet.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Log a Moment" }).getAttribute("href")).toBe("/create");
+  });
+});
+
+describe("Discover Corner tabs and headings", () => {
+  it("names the soonest open Pursuit and nearest Space on the tabs, and falls back to the approved lines", async () => {
+    names.value = new Map([["crafts-making/pottery", { people: "Wheel night", place: "Kiln House" }]]);
+    fetchers.corners.mockResolvedValue([corner("crafts-making/pottery", { hasGroup: true }), corner("music/piano", { hasGroup: true }), corner("sports-fitness/dance", { hasGroup: true })]);
+    show();
+    await settle();
+    const section = screen.getByRole("heading", { name: "Corners new to you" }).closest("section")!;
+    await waitFor(() => expect(within(section).getByText("Wheel night")).toBeTruthy());
+    expect(within(section).getByText("Kiln House")).toBeTruthy();
+    // The other Corners have something behind the tab but no name yet.
+    expect(within(section).getAllByText("Find a place near you").length).toBeGreaterThan(0);
+    expect(within(section).getAllByText("Find people to go with").length).toBeGreaterThan(0);
+  });
+
+  it("keeps a Corner hook to one line", async () => {
+    show();
+    await settle();
+    const section = screen.getByRole("heading", { name: "Corners new to you" }).closest("section")!;
+    const hook = within(section).getByText(/Making|Hands|clay|wheel|pottery/i, { selector: "p" });
+    expect(hook.className).toContain("truncate");
+    expect(hook.className).not.toContain("line-clamp");
+  });
+
+  it("calls the feed What people are making when no city is saved", async () => {
+    city.value = "";
+    show();
+    await settle();
+    expect(screen.getByRole("heading", { name: "What people are making" })).toBeTruthy();
   });
 });
 

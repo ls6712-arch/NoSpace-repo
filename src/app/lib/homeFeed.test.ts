@@ -86,3 +86,27 @@ describe("what Home can carry (Discover leaves all of it out)", () => {
     expect(ids).not.toContain(5);
   });
 });
+
+describe("Corners you follow, by space:slug key", () => {
+  const base = { meId: "me", followingIds: [] as string[], spacePostIds: new Set<number>() };
+
+  it("matches a Corner followed the way following writes it (space:slug)", () => {
+    const p = post(1, { userId: "stranger", hobbySlug: "crafts-making", subHobby: "pottery" });
+    expect(classifyFeed([p], { ...base, followedCorners: new Set(["crafts-making:pottery"]) }).spaces.map((i) => i.post.id)).toEqual([1]);
+  });
+
+  it("still matches a bare Corner slug from an older follow", () => {
+    const p = post(1, { userId: "stranger", hobbySlug: "crafts-making", subHobby: "pottery" });
+    expect(classifyFeed([p], { ...base, followedCorners: new Set(["pottery"]) }).spaces).toHaveLength(1);
+  });
+
+  it("does not match another Corner, the same slug in another Space, or a Space level follow", () => {
+    const p = post(1, { userId: "stranger", hobbySlug: "crafts-making", subHobby: "pottery" });
+    expect(classifyFeed([p], { ...base, followedCorners: new Set(["crafts-making:knitting", "other-space:pottery", "space:crafts-making"]) }).spaces).toEqual([]);
+  });
+
+  it("reads the Moment's Corner from corner as well as subHobby", () => {
+    const p = post(1, { userId: "stranger", hobbySlug: "crafts-making", subHobby: undefined, corner: "pottery" });
+    expect(classifyFeed([p], { ...base, followedCorners: new Set(["crafts-making:pottery"]) }).spaces).toHaveLength(1);
+  });
+});
