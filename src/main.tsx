@@ -1,3 +1,5 @@
+// First, so it reads a password reset link before the Supabase client and the router do.
+import "./app/lib/recoveryLink";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles/index.css";

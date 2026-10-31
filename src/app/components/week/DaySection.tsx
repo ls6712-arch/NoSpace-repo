@@ -38,7 +38,7 @@ export function DaySection({
   return (
     <section id={id} aria-labelledby={`${id}-h`} className="flex scroll-mt-4 flex-col gap-3">
       <h2 id={`${id}-h`} className="flex items-baseline gap-2">
-        <span className="text-title font-bold" style={{ fontFamily: "var(--font-display)" }}>
+        <span className="text-lead">
           {dayHeading(day, now)}
         </span>
         <span className="text-small font-normal text-muted-foreground">{dayDate(day, now)}</span>

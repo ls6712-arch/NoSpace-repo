@@ -8,7 +8,8 @@ import { MomentDetail } from "../components/MomentDetail";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { Skeleton } from "../components/ui/skeleton";
 import { notifyError } from "../components/ui/toaster";
-import { DiscoverHeader } from "../components/discover/DiscoverHeader";
+import { ChevronDown } from "lucide-react";
+import { LIST_GRID, PageShell } from "../components/layout/PageShell";
 import { JumpChips } from "../components/discover/JumpChips";
 import { IdeaPills } from "../components/discover/IdeaPills";
 import { IdeasRow } from "../components/discover/IdeasRow";
@@ -43,7 +44,6 @@ import {
 } from "../lib/discover";
 import { fetchCornerNames, fetchMyArea, type CornerNames } from "../lib/discoverCornerNames";
 import { useFeedInputs } from "../lib/useFeedInputs";
-import { PAGE_X } from "../lib/pageGrid";
 import type { Post } from "../data/posts";
 
 const FEED_PAGE = 20;
@@ -54,7 +54,7 @@ function SectionHeading({ id, title, sub, action }: { id: string; title: string;
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div className="min-w-0">
-        <h2 id={id} className="font-[family-name:var(--font-display)] text-title font-bold">
+        <h2 id={id} className="text-lead">
           {title}
         </h2>
         {sub && <p className="text-small text-muted-foreground">{sub}</p>}
@@ -305,8 +305,35 @@ export function Discover() {
 
   return (
     <div className="min-h-viewport">
-      <div className={`${PAGE_X} flex flex-col gap-8 pb-16 pt-6`}>
-        <DiscoverHeader city={city} onEdit={() => needAccount(() => setCityOpen(true))} />
+      <PageShell
+        // The title is always Discover (28px/800); the city is the tappable part of the line above it.
+        kicker={
+          city ? (
+            <span>
+              What’s out there in{" "}
+              <button
+                type="button"
+                onClick={() => needAccount(() => setCityOpen(true))}
+                className="inline-flex items-center gap-1 align-middle font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {city}
+                <ChevronDown className="size-4 shrink-0 text-accent-text" strokeWidth={2.5} aria-hidden="true" />
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => needAccount(() => setCityOpen(true))}
+              className="inline-flex items-center gap-1 align-middle font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Near you
+              <ChevronDown className="size-4 shrink-0 text-accent-text" strokeWidth={2.5} aria-hidden="true" />
+            </button>
+          )
+        }
+        title="Discover"
+      >
+        <div className="flex flex-col gap-8">
 
         <JumpChips withMoments={!!user} />
 
@@ -334,7 +361,7 @@ export function Discover() {
           ) : cornerCards.length > 0 ? (
             <section id="discover-corners" aria-labelledby="corners-title" className="scroll-mt-24">
               <SectionHeading id="corners-title" title="Corners new to you" sub="Three ways into each one" action={{ label: "See all", to: "/corners" }} />
-              <ul className="flex flex-col gap-3">
+              <ul className={LIST_GRID}>
                 {cornerCards.map((m, i) => (
                   <CornerTearCard
                     key={m.key}
@@ -390,7 +417,8 @@ export function Discover() {
             </section>
           </SectionBoundary>
         )}
-      </div>
+        </div>
+      </PageShell>
 
       <InterestsSheet open={cityOpen} onOpenChange={setCityOpen} />
       <MomentDetail post={openPost} owned={false} onOpenChange={(o) => !o && setOpen(null)} />

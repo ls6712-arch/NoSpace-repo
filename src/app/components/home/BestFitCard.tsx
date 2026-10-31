@@ -45,7 +45,7 @@ export function BestFitCard({
           {atHome && <span className="absolute left-3.5 top-3.5 rounded-full bg-card px-2.5 py-1 text-caption font-semibold text-foreground">At home</span>}
         </SuggestionPhoto>
       </Link>
-      <div className="flex flex-col gap-1.5 p-4">
+      <div className="flex max-w-[600px] flex-col gap-1.5 p-4">
         <h2 className="text-title font-extrabold leading-tight" style={{ fontFamily: "var(--font-display)" }}>
           <Link to={openPathFor(item)} onClick={onOpen} className="min-h-11 text-foreground">
             {item.title}
@@ -64,7 +64,7 @@ export function BestFitCard({
             disabled={state === "busy" || done}
             done={done}
             doneLabel={state === "requested" ? "Requested" : PRIMARY_LABEL[item.kind]}
-            className="min-h-12 flex-1"
+            className="min-h-12 px-8"
           >
             {PRIMARY_LABEL[item.kind]}
           </PillButton>

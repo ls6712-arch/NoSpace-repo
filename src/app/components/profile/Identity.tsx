@@ -13,6 +13,7 @@ export function Identity({
   neighborhood,
   bio,
   addDetailsLink,
+  heading: Heading = "h1",
 }: {
   name: string;
   avatarUrl: string | null;
@@ -20,6 +21,8 @@ export function Identity({
   bio?: string | null;
   /** Owner with no neighborhood and no bio gets one link to fill them in. */
   addDetailsLink?: boolean;
+  /** h2 on your own page, where the page title (You) is the h1. */
+  heading?: "h1" | "h2";
 }) {
   const empty = !neighborhood && !bio;
   return (
@@ -28,7 +31,7 @@ export function Identity({
         {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
         <AvatarFallback className="text-title font-bold">{initials(name)}</AvatarFallback>
       </Avatar>
-      <h1 className="font-[family-name:var(--font-display)] text-title">{name}</h1>
+      <Heading className="text-lead">{name}</Heading>
       {neighborhood && (
         <p className="flex items-center gap-1 text-small text-muted-foreground">
           <MapPin className="size-4" aria-hidden="true" />

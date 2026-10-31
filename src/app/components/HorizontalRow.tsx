@@ -79,7 +79,7 @@ export function HorizontalRow({
     "absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/95 text-foreground shadow-card transition-opacity duration-fast focus-visible:opacity-100 tab:flex [@media(hover:none)]:hidden";
 
   return (
-    <div className="group/row relative -mx-4 tab:-mx-8">
+    <div className="group/row relative -mx-4 tab:-mx-6 desk:-mx-8">
       <ul
         ref={setRefs}
         onScroll={() => {
@@ -87,7 +87,7 @@ export function HorizontalRow({
           measure();
         }}
         aria-label={label}
-        className={`flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] tab:scroll-px-8 tab:gap-4 tab:px-8 [&::-webkit-scrollbar]:hidden ${fade}`}
+        className={`flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] tab:scroll-px-6 desk:scroll-px-8 tab:gap-4 tab:px-6 desk:px-8 [&::-webkit-scrollbar]:hidden ${fade}`}
       >
         {children}
       </ul>

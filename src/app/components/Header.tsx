@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { MessagesSquare, Plus, Search, ShoppingBag, UserRound, ChevronDown } from "lucide-react";
-import { useUnifiedSearch, type SearchHit } from "../lib/search";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { NotificationsMenu } from "./NotificationsMenu";
 import { AccountMenuPanel } from "./nav/AccountMenuPanel";
@@ -179,40 +177,12 @@ const PRIMARY_NAV = [
  */
 export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
   const { openCart, cartCount } = useCart();
-  const navigate = useNavigate();
   const { pathname } = useLocation();
   const framed = isFramed(pathname);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const { all: results } = useUnifiedSearch(query);
-
-  function goToResult(result: SearchHit) {
-    navigate(result.to);
-    setQuery("");
-  }
-
-  function goToResults(q: string) {
-    navigate(`/search?q=${encodeURIComponent(q)}`);
-    setQuery("");
-    setMobileSearchOpen(false);
-  }
-
-  function onSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Escape") {
-      setQuery("");
-        (e.target as HTMLInputElement).blur();
-    } else if (e.key === "Enter" && query.trim()) {
-      // Submitting used to jump straight into whatever happened to be
-      // first in the preview list — often an unrelated product, since the
-      // old search barely covered anything but Space names and products.
-      // Enter now always goes to the full grouped results page; picking
-      // one specific item from the dropdown is still just a click away.
-      goToResults(query.trim());
-    }
-  }
 
   return (
-    <header className={`ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)] ${pathname === "/my-space" ? "hidden" : hideWithRail ? "rail:hidden" : ""}`}>
+    <header className={`ns-site-header sticky top-0 z-50 w-full pt-[var(--safe-top)] border-b border-[var(--hairline)] ${hideWithRail ? "rail:hidden" : ""}`}>
       <div className={`${framed ? PAGE_X : "container mx-auto px-4"} flex h-16 items-center justify-between gap-4`}>
         <div className="flex min-w-0 items-center gap-6">
           {/* The landing page ("/") isn't one of PRIMARY_NAV's own entries
@@ -317,44 +287,8 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
 
       {mobileSearchOpen && (
         <div className="border-t border-[var(--hairline)] px-4 py-3 tab:hidden">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              autoFocus
-              aria-label="Search Moments, people, Spaces"
-              placeholder="Search Moments, people, Spaces"
-              className="w-full rounded-none border-x-0 border-t-0 border-b-[var(--border)] bg-transparent pl-9 focus-visible:ring-0"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={onSearchKeyDown}
-            />
-          </div>
-          {query.trim() && (
-            <ul className="mt-2 max-h-64 overflow-y-auto rounded-card border border-border bg-popover">
-              {results.length === 0 ? (
-                <li className="px-4 py-3 text-small text-muted-foreground">No matches for “{query}”</li>
-              ) : (
-                results.map((result) => (
-                  <li key={result.key}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        goToResult(result);
-                        setMobileSearchOpen(false);
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-muted"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-small" title={result.label}>{result.label}</span>
-                        <span className="block truncate text-caption text-muted-foreground" title={result.sub}>{result.sub}</span>
-                      </span>
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
+          {/* The same box the rail and the desktop header use: one search, one scope. */}
+          <GlobalSearchBox autoFocus inline onDone={() => setMobileSearchOpen(false)} />
         </div>
       )}
     </header>

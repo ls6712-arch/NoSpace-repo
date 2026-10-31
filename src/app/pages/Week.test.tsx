@@ -52,6 +52,8 @@ const data = (over: Partial<WeekData> = {}): WeekData => {
 };
 
 beforeEach(() => {
+  // jsdom has no matchMedia (the shared HorizontalRow reads it for reduced motion).
+  window.matchMedia = ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
   auth.value = { user: { id: "u1" }, profile: { display_name: "Alex" }, isConfigured: true };
   hook.value = data();
   saveBudget.mockClear();
@@ -67,11 +69,11 @@ describe("Week", () => {
     expect(screen.getByRole("heading", { name: WEEK_SIGNED_OUT.title })).toBeTruthy();
   });
 
-  it("has the title, the range in New York and a way back to Home", () => {
+  it("has the title and the range in New York, and no back arrow on a tab page", () => {
     show();
     expect(screen.getByRole("heading", { level: 1, name: "Your week" })).toBeTruthy();
     expect(screen.getByText("Fri Oct 30 to Thu Nov 5 · New York")).toBeTruthy();
-    expect(screen.getByRole("link", { name: WEEK_VIEW.backToHome }).getAttribute("href")).toBe("/my-space");
+    expect(screen.queryByRole("link", { name: "Back to Home" })).toBeNull();
   });
 
   it("shows blocks the size of the real ones while loading", () => {

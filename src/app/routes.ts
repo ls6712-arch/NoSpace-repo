@@ -45,6 +45,7 @@ import { JoinPursuit } from "./pages/JoinPursuit";
 import { Shop } from "./pages/Shop";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Login } from "./pages/Login";
+import { ResetPassword } from "./pages/ResetPassword";
 import { InviteArrival } from "./pages/InviteArrival";
 import { Welcome } from "./pages/Welcome";
 import { Terms } from "./pages/Terms";
@@ -186,6 +187,7 @@ export const router = createHashRouter([
       },
       { path: "studio", loader: () => (extraConceptsEnabled ? null : redirect("/you")), Component: Studio },
       { path: "login", Component: Login },
+      { path: "reset-password", Component: ResetPassword },
       // Landing page spec §2.5. Not /privacy — that path already renders
       // the signed-in Settings > Privacy page (PrivacySettingsPage above).
       { path: "terms", Component: Terms },
