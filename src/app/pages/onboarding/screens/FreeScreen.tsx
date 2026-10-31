@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { TimeGrid } from "../../../components/onboarding/TimeGrid";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
+import { PillButton } from "../../../components/ui/PillButton";
 import { useAuth } from "../../../context/AuthContext";
 import { savePrivate } from "../../../lib/onboardingRemote";
 import { ERROR_LINE } from "../../../lib/stateCopy";
@@ -60,28 +60,28 @@ export function FreeScreen() {
       footer={
         <>
           {error && (
-            <p role="alert" className="transfer-label text-small">
+            <p role="alert" className="ob-label text-small">
               {error}
             </p>
           )}
-          <TransferButton onClick={() => void done(windows)} disabled={saving || windows.length === 0}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void done(windows)} disabled={saving || windows.length === 0}>
             {windows.length === 0 ? "Pick a time" : "Next"}
-          </TransferButton>
-          <TransferButton variant="plain" onClick={() => void done(null, "shrug")} disabled={saving}>
+          </PillButton>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={() => void done(null, "shrug")} disabled={saving}>
             Skip for now
-          </TransferButton>
+          </PillButton>
         </>
       }
     >
       <TimeGrid windows={windows} onToggle={toggle} />
-      <p aria-live="polite" className="transfer-label text-body">
+      <p aria-live="polite" className="ob-label text-body">
         {windowCountLine(windows.length)}
       </p>
-      <button type="button" className="transfer-chip" disabled aria-disabled="true" style={{ opacity: 0.7, cursor: "default" }}>
-        <span className="transfer-chip-dot" aria-hidden="true" />
+      <button type="button" className="ob-chip" disabled aria-disabled="true" style={{ opacity: 0.7, cursor: "default" }}>
+        <span className="ob-chip-dot" aria-hidden="true" />
         <span>
           Connect a calendar
-          <span className="transfer-chip-sub">Coming soon</span>
+          <span className="ob-chip-sub">Coming soon</span>
         </span>
       </button>
     </ScreenFrame>

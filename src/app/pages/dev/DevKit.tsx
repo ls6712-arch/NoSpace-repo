@@ -61,12 +61,12 @@ function StubbyKit() {
           { value: "navy", label: "Navy" },
         ]}
       />
-      <div className="soosh-transfer flex flex-col items-center gap-6 rounded-card p-6" data-tone={tone}>
+      <div className="flex flex-col items-center gap-6 rounded-card p-6">
         <Stubby state={state} size={360} onDark={dark} followPointer label="Stubby" onPoke={() => setPokes((n) => n + 1)} />
         <div className="flex items-end gap-6">
           <Stubby size={44} onDark={dark} />
           <Stubby size={28} onDark={dark} />
-          <p className="text-small transfer-muted">{`Poked ${plural(pokes, "time")}`}</p>
+          <p className="text-small ob-muted">{`Poked ${plural(pokes, "time")}`}</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">

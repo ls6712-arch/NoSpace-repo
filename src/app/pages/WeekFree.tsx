@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { TimeGrid } from "../components/onboarding/TimeGrid";
-import { TransferButton } from "../components/onboarding/TransferButton";
+import { PillButton } from "../components/ui/PillButton";
 import { savePrivate } from "../lib/onboardingRemote";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ALL_WINDOWS, windowCountLine } from "../lib/tasteModel";
@@ -63,28 +63,28 @@ export function WeekFree() {
   };
 
   return (
-    <div className="soosh-transfer min-h-viewport" data-tone="platform">
-      <div className="transfer-column flex min-h-viewport flex-col px-4">
-        <Link to={back} className="transfer-icon-button -ml-2 mt-4" aria-label="Back">
+    <div className="min-h-viewport">
+      <div className="ob-column flex min-h-viewport flex-col px-4">
+        <Link to={back} className="ob-icon-button -ml-2 mt-4" aria-label="Back">
           <ArrowLeft className="size-6" strokeWidth={2.5} aria-hidden="true" />
         </Link>
         <section className="flex flex-1 flex-col pb-6">
-          <h1 className="transfer-headline mt-8 break-words text-display">When are you usually free?</h1>
+          <h1 className="mt-8 break-words text-title">When are you usually free?</h1>
           <div className="mt-6 flex flex-col gap-4">
             <TimeGrid windows={windows} onToggle={toggle} />
-            <p aria-live="polite" className="transfer-label text-body">
+            <p aria-live="polite" className="ob-label text-body">
               {windowCountLine(windows.length)}
             </p>
           </div>
           <div className="mt-auto flex flex-col gap-3 pt-8">
             {error && (
-              <p role="alert" className="transfer-label text-small">
+              <p role="alert" className="ob-label text-small">
                 {error}
               </p>
             )}
-            <TransferButton onClick={() => void save()} disabled={saving}>
+            <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void save()} disabled={saving}>
               Save
-            </TransferButton>
+            </PillButton>
           </div>
         </section>
       </div>

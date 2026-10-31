@@ -7,13 +7,13 @@ import { Star } from "lucide-react";
  */
 export function HalfTicket({ from, title, when }: { from: string; title: string; when: string | null }) {
   return (
-    <article className="transfer-half" aria-label={`${from} saved you a spot`}>
-      <div className="transfer-half-stamp" aria-hidden="true">
-        <Star className="size-7" strokeWidth={2.5} fill="var(--transfer-cobalt)" color="var(--transfer-navy)" />
+    <article className="ob-half" aria-label={`${from} saved you a spot`}>
+      <div className="ob-half-stamp" aria-hidden="true">
+        <Star className="size-7" strokeWidth={2.5} fill="var(--ink)" color="var(--ink)" />
       </div>
       <div className="min-w-0">
-        <p className="transfer-headline break-words text-title">{`${from} saved you a spot`}</p>
-        <p className="transfer-label mt-2 break-words text-body">{title}</p>
+        <p className="break-words text-title">{`${from} saved you a spot`}</p>
+        <p className="ob-label mt-2 break-words text-body">{title}</p>
         {when && <p className="mt-1 text-small">{when}</p>}
       </div>
     </article>

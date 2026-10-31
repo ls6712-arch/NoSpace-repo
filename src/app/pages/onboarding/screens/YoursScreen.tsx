@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChoiceChip } from "../../../components/onboarding/ChoiceChip";
-import { TransferButton } from "../../../components/onboarding/TransferButton";
-import { TransferField } from "../../../components/onboarding/TransferField";
+import { PillButton } from "../../../components/ui/PillButton";
+import { OnboardingField } from "../../../components/onboarding/OnboardingField";
 import { useAuth } from "../../../context/AuthContext";
 import { savePrivate } from "../../../lib/onboardingRemote";
 import { ERROR_LINE } from "../../../lib/stateCopy";
@@ -103,18 +103,18 @@ export function YoursScreen() {
       footer={
         <>
           {error && (
-            <p role="alert" className="transfer-label text-small">
+            <p role="alert" className="ob-label text-small">
               {error}
             </p>
           )}
-          <TransferButton onClick={() => void save()} disabled={saving}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void save()} disabled={saving}>
             Next
-          </TransferButton>
+          </PillButton>
         </>
       }
     >
       <fieldset className="flex flex-col gap-2">
-        <legend className="transfer-label mb-2 text-small">Passes and gear</legend>
+        <legend className="ob-label mb-2 text-small">Passes and gear</legend>
         <ul className="grid grid-cols-2 gap-2">
           {PASS_KINDS.map((k) => (
             <li key={k.kind}>
@@ -126,7 +126,7 @@ export function YoursScreen() {
         </ul>
       </fieldset>
       {passes.map((p) => (
-        <TransferField
+        <OnboardingField
           key={p.id}
           label={`${p.label} place (optional)`}
           autoComplete="off"
@@ -136,8 +136,8 @@ export function YoursScreen() {
         />
       ))}
       <fieldset className="flex flex-col gap-2">
-        <legend className="transfer-label text-body">A month for doing things</legend>
-        <p className="mb-1 text-small transfer-muted">Only you see this.</p>
+        <legend className="ob-label text-body">A month for doing things</legend>
+        <p className="mb-1 text-small ob-muted">Only you see this.</p>
         <ul className="grid grid-cols-2 gap-2">
           {BUDGETS.map((b) => (
             <li key={b}>
@@ -152,7 +152,7 @@ export function YoursScreen() {
             </ChoiceChip>
           </li>
         </ul>
-        <p aria-live="polite" className={skipped ? "text-small transfer-muted" : "sr-only"}>
+        <p aria-live="polite" className={skipped ? "text-small ob-muted" : "sr-only"}>
           {skipped ? "Your first plan will use free things and what your passes cover." : ""}
         </p>
       </fieldset>

@@ -1,4 +1,4 @@
-import { TransferButton } from "../../components/onboarding/TransferButton";
+import { PillButton } from "../../components/ui/PillButton";
 import { useOnboarding } from "./OnboardingContext";
 import { StepStubby } from "./StepStubby";
 import { isCounted, type OnboardingStep } from "./steps";
@@ -24,7 +24,7 @@ const HEADLINE: Record<OnboardingStep, string> = {
 };
 
 export function PlaceholderScreen() {
-  const { step, tone, next, finishing, finishError } = useOnboarding();
+  const { step, next, finishing, finishError } = useOnboarding();
   const hero = step === "welcome";
   return (
     <section className="flex flex-1 flex-col pb-6">
@@ -34,16 +34,16 @@ export function PlaceholderScreen() {
           <StepStubby size={hero ? 260 : 140} followPointer={hero} />
         </div>
       )}
-      <h1 className="transfer-headline mt-8 text-display">{HEADLINE[step]}</h1>
+      <h1 className="mt-8 text-title">{HEADLINE[step]}</h1>
       <div className="mt-auto flex flex-col gap-3 pt-8">
         {finishError && (
           <p role="alert" className="text-small">
             {finishError}
           </p>
         )}
-        <TransferButton onClick={() => next()} disabled={finishing} onDark={tone === "navy"}>
+        <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => next()} disabled={finishing}>
           {step === "welcome" ? "Get started" : "Next"}
-        </TransferButton>
+        </PillButton>
       </div>
     </section>
   );

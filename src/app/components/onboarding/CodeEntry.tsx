@@ -3,8 +3,8 @@ import { ScreenFrame } from "../../pages/onboarding/screens/ScreenFrame";
 import { useAuth } from "../../context/AuthContext";
 import { codeWaitLine, TOO_MANY_CODES_LINE, TOO_MANY_CODES_SIGNUP_LINE } from "../../lib/authCopy";
 import { formatCountdown } from "../../lib/countdown";
-import { TransferButton } from "./TransferButton";
-import { TransferField } from "./TransferField";
+import { PillButton } from "../ui/PillButton";
+import { OnboardingField } from "./OnboardingField";
 
 export const CODE_LENGTH = 6;
 /** Seconds before a new code can be asked for, and before the screen offers other ways in. */
@@ -152,7 +152,7 @@ export function CodeEntry({
       hero={hero}
       footer={footer}
     >
-      <TransferField
+      <OnboardingField
         label="Code"
         data-code="true"
         inputMode="numeric"
@@ -177,23 +177,23 @@ export function CodeEntry({
         hint={limitWait > 0 || tooMany ? limitLine : sentNew ? "New code sent." : undefined}
       />
       {/* Announced once when the second stage starts; the ticking countdown is outside it on purpose. */}
-      <div aria-live="polite">{late && <p className="text-body transfer-muted">Still nothing? Check your spam folder.</p>}</div>
+      <div aria-live="polite">{late && <p className="text-body ob-muted">Still nothing? Check your spam folder.</p>}</div>
       {late ? (
         <div className="flex flex-col gap-3">
-          <TransferButton variant="plain" disabled={sending || limitWait > 0} onClick={() => void sendNew()}>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" disabled={sending || limitWait > 0} onClick={() => void sendNew()}>
             Send a new code
-          </TransferButton>
+          </PillButton>
           {onPassword && (
-            <TransferButton variant="plain" onClick={onPassword}>
+            <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={onPassword}>
               Log in with password
-            </TransferButton>
+            </PillButton>
           )}
-          <TransferButton variant="plain" onClick={onDifferentEmail}>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={onDifferentEmail}>
             Use a different email
-          </TransferButton>
+          </PillButton>
         </div>
       ) : (
-        <p className="text-small transfer-muted">{`Send a new code in ${formatCountdown(wait)}`}</p>
+        <p className="text-small ob-muted">{`Send a new code in ${formatCountdown(wait)}`}</p>
       )}
     </ScreenFrame>
   );

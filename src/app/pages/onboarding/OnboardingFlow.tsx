@@ -24,7 +24,6 @@ import { StepStubby } from "./StepStubby";
 import { screenFor } from "./screens";
 import {
   STEP_STUBBY,
-  STEP_TONE,
   backTarget,
   isCounted,
   nextStep,
@@ -198,10 +197,8 @@ export function OnboardingFlow() {
     return () => (pushed > 0 ? navigate(-1) : navigate(hrefFor(backTo), { replace: true, state: { n: 0 } }));
   }, [backTo, pushed, navigate, hrefFor]);
 
-  const tone = STEP_TONE[step];
   const api: OnboardingApi = {
     step,
-    tone,
     redirectTo,
     signedIn,
     inviteCode,
@@ -217,8 +214,8 @@ export function OnboardingFlow() {
 
   if (waiting) {
     return (
-      <div className="soosh-transfer flex min-h-viewport items-center justify-center" data-tone="platform">
-        <span className="size-8 animate-spin rounded-full border-2 border-[var(--transfer-line)] border-t-[var(--transfer-cobalt)]" role="status" aria-label="Loading" />
+      <div className="flex min-h-viewport items-center justify-center">
+        <span className="size-8 animate-spin rounded-full border-2 border-border border-t-foreground" role="status" aria-label="Loading" />
       </div>
     );
   }
@@ -226,8 +223,8 @@ export function OnboardingFlow() {
   const Screen = screenFor(step) ?? PlaceholderScreen;
   return (
     <OnboardingContext.Provider value={api}>
-      <div className="soosh-transfer min-h-viewport" data-tone={tone}>
-        <div className="transfer-column flex min-h-viewport flex-col px-4">
+      <div className="min-h-viewport">
+        <div className="ob-column flex min-h-viewport flex-col px-4">
           {isCounted(step) && (
             <>
               <StepHeader step={step} onBack={back} />
@@ -238,7 +235,7 @@ export function OnboardingFlow() {
             </>
           )}
           {!isCounted(step) && back && (
-            <button type="button" className="transfer-icon-button -ml-2 mt-4" aria-label="Back" onClick={back}>
+            <button type="button" className="ob-icon-button -ml-2 mt-4" aria-label="Back" onClick={back}>
               <ArrowLeft className="size-6" strokeWidth={2.5} aria-hidden="true" />
             </button>
           )}
