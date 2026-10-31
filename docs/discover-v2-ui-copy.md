@@ -1,38 +1,25 @@
-# Discover v2: copy that still needs approval
+# Discover v2: copy
 
-Status: **proposed, waiting for founder approval.** The strings drawn on the artboard (section 7.1 of the
-brief) are approved and are in `docs/glossary.md` under "Discover v2". Everything below is a placeholder in
-the code until you approve or change it.
+Status: **approved by the founder on Oct 31, 2026, with these changes**, all applied and recorded in
+`docs/glossary.md` under "Discover v2":
 
-## The brief's 7.2 list
+1. Ideas empty-state link: **Show more ideas** (still loosens Spend to Treat me).
+2. **With people** and **At a place** tab lines show the name of the soonest open Pursuit or the nearest Space for
+   that Corner. Fallbacks: **Find people to go with** / **Find a place near you**.
+3. The Corner hook line is capped at one line with an ellipsis.
+4. Feed heading with no city: **What people are making**.
+5. Category browse chips: not built. See all on Spaces near you: skipped for now.
 
-| Where | Proposed | Where it is in the code |
-|---|---|---|
-| A Corner tab with no supply | Be the first (opens Create a Pursuit for With people, Create a Space for At a place) | `BE_THE_FIRST` in `lib/discoverCorners.ts` |
-| Ideas empty state | Nothing fits that mix yet, with the link Try Treat me (loosens Spend to Treat me) | `IDEAS_EMPTY_LINE`, `IDEAS_LOOSEN_LINK` in `components/discover/IdeasRow.tsx` |
-| City feed empty state | Nothing new nearby yet, with the link Log a Moment | `CITY_FEED_EMPTY_LINE` in `components/discover/CityFeed.tsx` |
-| Each Corner card's hook line | The guide's own description (`cornerGuides.ts` `about`), unchanged | `cornerCardModel()` |
-| At home tab line | The idea's title, a short thing to do (for example Start a sourdough starter) | `cornerCardModel()` |
-| With people tab line | Open Pursuits with room | `PEOPLE_LINE` |
-| At a place tab line | Spaces and events near you | `PLACE_LINE` |
-| Each idea's title and how line | The 143 in `docs/discover-v2-idea-proposals.md` | `data/cornerIdeas.ts` |
-| Category browse chips | **Not built** (see below) | |
+Where the words live in the code: `lib/discoverCorners.ts` (Be the first, the two fallbacks, the tab lines),
+`lib/discoverCornerNames.ts` (which Pursuit and which Space are named), `components/discover/IdeasRow.tsx`,
+`components/discover/CityFeed.tsx` and `pages/Discover.tsx`.
 
-## Other words I had to put somewhere
-
-| Where | Proposed | Why it is needed |
-|---|---|---|
-| Sign up prompt title, body | Make an account to do that / Browsing stays open. An account is for following, joining and keeping what you make. | The prompt a signed-out visitor sees on Follow, Join, Ask to join and the city picker. The button labels are the existing ones |
-| Feed heading with no city saved | What your city is making | The heading needs a name when the person has not set a city |
-| Header with no city saved | Discover (the existing word) | Same |
-| Pill accessible labels | Time: Tonight, Spend: Free, Who: A friend (the label names the current value) | The pills are buttons, so a screen reader needs the value |
-| Section label for the jump chips | Sections | Accessible name of the chip row |
-| Label for the Corner chips above the feed | Corners | Accessible name of that row |
-| After asking to follow an author | Requested (the existing word, disabled) | A follow is a request until accepted |
+How the names are picked: the Pursuit is the open Pursuit with room whose next session is soonest (one with no
+upcoming session comes last); the Space is the Corner's Space in the person's own neighborhood, else in their city,
+else the first listed. Both come from the same reads the Corner page uses (`open_pursuits_for_corner` and the
+Corner's live Spaces), so there is no new database function.
 
 ## Category browse chips
 
-The artboard shows chips like "Make with your hands" under Corners new to you. **They are not built.**
-Categories stay internal after the Spaces rework (the word is never shown, and the 18 groups appear only on
-Discover's old Browse tiles, on /corners and on category pages). If you want them back, say so and decide where
-they go and what they open; the 18 group names already exist in `data/cornerCategories.ts`.
+Not built. Categories stay internal after the Spaces rework. If you want them back, say where they go and what they
+open; the 18 group names already exist in `data/cornerCategories.ts`.

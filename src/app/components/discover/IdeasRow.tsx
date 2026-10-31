@@ -5,9 +5,9 @@ import { cornerPath } from "../../lib/cornerPath";
 import { useShownOnce } from "../../lib/useShownOnce";
 import type { MatchedIdea } from "../../lib/ideaMatch";
 
-/** Proposed copy (docs/discover-v2-ui-copy.md), not approved. */
+/** Approved Oct 31, 2026 (docs/glossary.md, Discover v2). */
 export const IDEAS_EMPTY_LINE = "Nothing fits that mix yet";
-export const IDEAS_LOOSEN_LINK = "Try Treat me";
+export const IDEAS_LOOSEN_LINK = "Show more ideas";
 
 function IdeaCard({
   match,

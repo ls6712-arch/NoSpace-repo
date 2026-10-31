@@ -673,6 +673,27 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 | Feed heading / subline | What {city} is making / From people you don’t follow yet |
 | Feed actions | Follow / Love this / Try {corner} (the Corner’s name drops to lower case unless it is a name like D&D) |
 
+Words around the page, approved Oct 31, 2026:
+
+| Where | String |
+|---|---|
+| Corner card, hook line | The Corner guide's own description, on one line with an ellipsis |
+| Corner card, At home tab | The idea's title, a short thing to do (for example Start a sourdough starter) |
+| Corner card, With people tab | The title of the soonest open Pursuit for that Corner; with no name, Find people to go with |
+| Corner card, At a place tab | The name of the nearest Space for that Corner (same neighborhood, then same city); with no name, Find a place near you |
+| A tab with nothing behind it | Be the first (opens Create a Pursuit from With people, Create a Space from At a place) |
+| Ideas, nothing fits | Nothing fits that mix yet, with the link Show more ideas (it loosens Spend to Treat me) |
+| Feed, nothing new | Nothing new nearby yet, with the link Log a Moment |
+| Feed heading with no city saved | What people are making |
+| Header with no city saved | Discover |
+| After you ask to follow an author | Requested (the button stays, disabled) |
+| Signed out, on Follow, Join, Ask to join or the city | Title: Make an account to do that. Body: Browsing stays open. An account is for following, joining and keeping what you make. Buttons: the existing Create an account and Keep looking around |
+| Pill accessible labels | Time: Tonight, Spend: Free, Who: A friend (the group, then the current value) |
+| Other accessible labels | Sections (the jump chips), Corners (the chips above the feed) |
+| Idea titles and how lines | The 143 in `docs/discover-v2-idea-proposals.md` (a short verb phrase, and the time plus where, ending in a full stop) |
+
+Not built: the category browse chips on the artboard, and See all on Spaces near you.
+
 The Moment city, from PR 1 (approved Oct 30, 2026).
 
 | Where | String |

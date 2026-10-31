@@ -35,7 +35,7 @@ export function CornerTearCard({
           <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} className="block truncate font-[family-name:var(--font-display)] text-lead leading-tight font-extrabold outline-none focus-visible:ring-2 focus-visible:ring-ring">
             {model.name}
           </Link>
-          {model.hook && <p className="line-clamp-2 text-small text-muted-foreground">{model.hook}</p>}
+          {model.hook && <p className="truncate text-small text-muted-foreground">{model.hook}</p>}
         </div>
         <PillButton variant="outline" className="shrink-0" onClick={() => onFollow(model, position)}>
           Follow
