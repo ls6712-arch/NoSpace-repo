@@ -42,7 +42,7 @@ import {
   type Filters,
 } from "../lib/calendarView";
 import type { Owner } from "../lib/firstPlanRemote";
-import { WEEK_SIGNED_OUT, WEEK_VIEW } from "../lib/homeCopy";
+import { CALENDAR_SIGNED_OUT, WEEK_VIEW } from "../lib/homeCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import type { Budget } from "../lib/tasteModel";
 import { useCalendarData } from "../lib/useCalendarData";
@@ -106,7 +106,7 @@ export function Calendar() {
   const filters = filtersByView[view] ?? loadFilters(view);
 
   if (isConfigured && !user) {
-    return <SignUpPrompt title={WEEK_SIGNED_OUT.title} body={WEEK_SIGNED_OUT.body} cta={WEEK_SIGNED_OUT.cta} />;
+    return <SignUpPrompt title={CALENDAR_SIGNED_OUT.title} body={CALENDAR_SIGNED_OUT.body} cta={CALENDAR_SIGNED_OUT.cta} />;
   }
 
   const owner: Owner | null = user
@@ -224,7 +224,6 @@ export function Calendar() {
     <PageShell title={viewTitle(view, anchor, now)} subtitle={subline}>
       <CalendarToolbar
         view={view}
-        wide={wide}
         showButton={!panel}
         canPrev={canStep(view, anchor, -1, range)}
         canNext={canStep(view, anchor, 1, range)}

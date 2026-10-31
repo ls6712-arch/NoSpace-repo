@@ -28,7 +28,7 @@ export function ListView({
   if (shown.length === 0) {
     return (
       <div className="flex flex-col gap-2 rounded-card border border-border bg-card p-4">
-        <p className="text-body font-semibold">Nothing in the next 30 days.</p>
+        <p className="text-body font-semibold">Nothing planned in the next 30 days.</p>
         <Link to="/discover" className="inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline">
           {WEEK_VIEW.findSomething}
         </Link>

@@ -190,7 +190,7 @@ function MonthPhone({
         <StubRows stubs={s.stubs} />
         <Link
           to={MAKE_PLAN_PATH}
-          className="inline-flex min-h-12 items-center justify-center rounded-full bg-accent px-6 text-body font-semibold text-accent-foreground"
+          className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-card px-6 text-body font-semibold text-foreground"
         >
           {makePlanFor(current.day, now)}
         </Link>

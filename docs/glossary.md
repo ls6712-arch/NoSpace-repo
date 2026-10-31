@@ -739,19 +739,20 @@ The wording of `/calendar`, from the founder's calendar brief (`claude-code-brie
 
 | Term | Use |
 |---|---|
-| Calendar | The rail item, the bottom bar tab and the page. It replaced "Week" |
+| Calendar | The rail item and the page. It replaced "Week". Not a phone tab: it opens from Home's Your week card |
 | Today · Previous {day, week, month, 30 days} · Next {day, week, month, 30 days} | The header buttons. The arrows are icons; the names are for screen readers and say which period they move by |
 | Day · Week · Month · List | The view switch. The chosen one is filled in the foreground colour |
 | October 2026 · Oct 31 to Nov 6 · Tue Nov 3 · Oct 31 to Nov 29 | Titles of Month, Week, Day and List. Week is the next 7 days, today first. List is the next 30 days |
 | {n} Stubs · {m} plans to go · New York | Month subline. A part that is 0 is left out |
 | Next 7 days · {n} plans · New York | Week subline ("7 days" when the week does not start today). Day: "{n} plans · New York". List: "Next 30 days · New York" |
 | Show | The panel (from 1128px) or the sheet (below it) that picks what the calendar shows. Rows today: Plans · Pursuit sessions · Free time · Stubs you collected. Stubby's picks, Friends' plans, Your blocks and Busy times join as they are built |
-| Make a plan | Header button (from 744px), the screen's one coral fill. Opens Discover until the plan sheet exists |
+| Make a plan | Header button on every view and screen size, the screen's one coral fill. Opens Discover until the plan sheet exists |
 | Make a plan for {tonight · today · tomorrow · Sat 31} | The phone's button under a day's list in Month |
 | {k} more | A Month cell with more than 3 things. Opens that day |
 | Free daytime · Free evening · Free all day · Find something | As in the Week view above. Free time is a dashed shape and always has its words |
-| Stub you collected · Plan | The phone Month's key. To confirm with the founder |
-| Nothing in the next 30 days. | List empty state, with Find something. To confirm with the founder |
+| Stub you collected · Plan | The phone Month's key. Approved Oct 31, 2026 |
+| Nothing planned in the next 30 days. | List empty state, with Find something. Approved Oct 31, 2026 |
+| Your plans, Stubs and free time, in one place. | Title of the sign-up prompt when signed out. Approved Oct 31, 2026 |
 
 ## Retired terms
 

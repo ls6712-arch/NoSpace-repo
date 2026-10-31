@@ -8,12 +8,11 @@ const ROUND = "inline-flex size-11 items-center justify-center rounded-full bord
 /**
  * The row under the title: Today, previous and next (44px, named for the period
  * they move by), the Day, Week, Month, List switch (the chosen one in the
- * foreground fill), and then Make a plan, the one coral fill on a wide screen.
- * On a phone Make a plan moves under the day list. Below 1128px a Show button opens the Show panel as a sheet.
+ * foreground fill), and then Make a plan, the one coral fill on every screen size.
+ * Below 1128px a Show button opens the Show panel as a sheet.
  */
 export function CalendarToolbar({
   view,
-  wide,
   showButton,
   canPrev,
   canNext,
@@ -24,8 +23,6 @@ export function CalendarToolbar({
   makePlanTo,
 }: {
   view: CalendarView;
-  /** From 744px: Make a plan sits in the header. */
-  wide: boolean;
   /** Below 1128px the Show panel is a sheet, opened from here. */
   showButton: boolean;
   canPrev: boolean;
@@ -72,11 +69,9 @@ export function CalendarToolbar({
             Show
           </button>
         )}
-        {wide && (
-          <Link to={makePlanTo} className="inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-small font-semibold text-accent-foreground">
-            Make a plan
-          </Link>
-        )}
+        <Link to={makePlanTo} className="inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-small font-semibold text-accent-foreground">
+          Make a plan
+        </Link>
       </div>
     </div>
   );

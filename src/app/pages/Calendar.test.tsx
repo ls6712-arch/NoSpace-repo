@@ -16,7 +16,7 @@ const bring = vi.hoisted(() => vi.fn(async () => ({ ok: true })));
 vi.mock("../lib/weekActions", async (orig) => ({ ...(await orig<typeof import("../lib/weekActions")>()), bringSomeone: bring }));
 
 import { Calendar } from "./Calendar";
-import { WEEK_SIGNED_OUT, WEEK_VIEW } from "../lib/homeCopy";
+import { CALENDAR_SIGNED_OUT, WEEK_VIEW } from "../lib/homeCopy";
 
 const ny = (m: number, d: number, h: number) => nyTimeToMs(2026, m, d, h);
 const NOW = ny(10, 30, 12);
@@ -69,7 +69,7 @@ describe("Calendar, Week view on a phone", () => {
   it("asks someone who is signed out to make an account", () => {
     auth.value = { user: null, isConfigured: true };
     show();
-    expect(screen.getByRole("heading", { name: WEEK_SIGNED_OUT.title })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: CALENDAR_SIGNED_OUT.title })).toBeTruthy();
   });
 
   it("has the title and the range in New York, and no back arrow on a tab page", () => {
@@ -429,9 +429,9 @@ describe("Calendar, the four views", () => {
       expect(within(list).getByText("Pottery #2")).toBeTruthy();
     });
 
-    it("opens a Show sheet instead of a side panel, and has no Make a plan in the header", () => {
+    it("opens a Show sheet instead of a side panel, and has Make a plan in the header", () => {
       at("/calendar");
-      expect(screen.queryByRole("link", { name: "Make a plan" })).toBeNull();
+      expect(screen.getByRole("link", { name: "Make a plan" }).getAttribute("href")).toBe("/discover");
       fireEvent.click(screen.getByRole("button", { name: "Show" }));
       expect(screen.getByRole("checkbox", { name: /Plans/ })).toBeTruthy();
     });
@@ -447,7 +447,7 @@ describe("Calendar, the four views", () => {
       hook.value = data({ plans: [], windows: [] });
       extra.value = { plans: [], stubs: [], failed: false };
       at("/calendar?view=list");
-      expect(screen.getByText("Nothing in the next 30 days.")).toBeTruthy();
+      expect(screen.getByText("Nothing planned in the next 30 days.")).toBeTruthy();
       expect(screen.getByRole("link", { name: "Find something" }).getAttribute("href")).toBe("/discover");
     });
 
