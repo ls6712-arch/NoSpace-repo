@@ -48,4 +48,11 @@ export function flushPendingChanges(): void {
   for (const commit of [...waiting]) commit();
 }
 
-if (typeof window !== "undefined") window.addEventListener("pagehide", flushPendingChanges);
+// Closing the tab sends what is waiting. `pagehide` covers a tab or window closing and a page being left; `visibilitychange` covers a phone
+// putting the page away, where `pagehide` can be skipped. Sending twice is harmless: a change is only sent once.
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", flushPendingChanges);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushPendingChanges();
+  });
+}

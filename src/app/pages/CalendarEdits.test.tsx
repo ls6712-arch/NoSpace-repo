@@ -26,6 +26,7 @@ vi.mock("sonner", () => ({
 const remote = vi.hoisted(() => ({
   createPlan: vi.fn(async (_plan: unknown, _owner: unknown) => ({ sessionId: 41, pursuitId: "p-new" })),
   deleteSession: vi.fn(async () => null as string | null),
+  cancelOwnPlan: vi.fn(async (_sessionId: number, _pursuitId: string | undefined) => null as string | null),
   moveSession: vi.fn(async () => null as string | null),
   leavePlan: vi.fn(async () => null as string | null),
   fetchConnections: vi.fn(async () => [] as { id: string; name: string }[]),
@@ -35,7 +36,7 @@ const remote = vi.hoisted(() => ({
   fetchEntries: vi.fn(async () => [] as unknown[]),
   savePrivate: vi.fn(async () => ({ error: null as string | null })),
 }));
-vi.mock("../lib/planEdits", async (orig) => ({ ...(await orig<typeof import("../lib/planEdits")>()), createPlan: remote.createPlan, deleteSession: remote.deleteSession, moveSession: remote.moveSession, leavePlan: remote.leavePlan, fetchConnections: remote.fetchConnections }));
+vi.mock("../lib/planEdits", async (orig) => ({ ...(await orig<typeof import("../lib/planEdits")>()), createPlan: remote.createPlan, deleteSession: remote.deleteSession, cancelOwnPlan: remote.cancelOwnPlan, moveSession: remote.moveSession, leavePlan: remote.leavePlan, fetchConnections: remote.fetchConnections }));
 vi.mock("../lib/calendarEntries", async (orig) => ({ ...(await orig<typeof import("../lib/calendarEntries")>()), addEntry: remote.addEntry, removeEntry: remote.removeEntry, updateEntry: remote.updateEntry, fetchEntries: remote.fetchEntries }));
 vi.mock("../lib/onboardingRemote", async (orig) => ({ ...(await orig<typeof import("../lib/onboardingRemote")>()), savePrivate: remote.savePrivate }));
 vi.mock("../lib/tasteRemote", async (orig) => ({ ...(await orig<typeof import("../lib/tasteRemote")>()), fetchTaste: async () => ({ picks: ["crafts/pottery"], windows: [], budget: null }) }));
@@ -114,7 +115,7 @@ describe("Make a plan", () => {
     expect(lastToast().message).toBe("Plan made");
     lastToast().undo();
     await flush();
-    expect(remote.deleteSession).toHaveBeenCalledWith(41);
+    expect(remote.cancelOwnPlan).toHaveBeenCalledWith(41, "p-new");
   });
 
   it("uses an exact time when one is typed, and refuses a time that has passed", async () => {
@@ -250,13 +251,13 @@ describe("tapping a plan", () => {
   it("cancels at once on screen, sends nothing for 6 seconds, then deletes it", async () => {
     openPlan();
     fireEvent.click(screen.getByRole("button", { name: "Cancel this plan" }));
-    expect(lastToast().message).toBe("Plan removed");
+    expect(lastToast().message).toBe("Plan cancelled");
     expect(screen.queryByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeNull();
-    expect(remote.deleteSession).not.toHaveBeenCalled();
+    expect(remote.cancelOwnPlan).not.toHaveBeenCalled();
     await act(async () => void vi.advanceTimersByTime(5900));
-    expect(remote.deleteSession).not.toHaveBeenCalled();
+    expect(remote.cancelOwnPlan).not.toHaveBeenCalled();
     await act(async () => void vi.advanceTimersByTime(200));
-    expect(remote.deleteSession).toHaveBeenCalledWith(5);
+    expect(remote.cancelOwnPlan).toHaveBeenCalledWith(5, "p1");
   });
 
   it("brings the plan back and sends nothing when Undo is tapped", async () => {
@@ -264,7 +265,7 @@ describe("tapping a plan", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel this plan" }));
     act(() => lastToast().undo());
     await act(async () => void vi.advanceTimersByTime(7000));
-    expect(remote.deleteSession).not.toHaveBeenCalled();
+    expect(remote.cancelOwnPlan).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
     expect(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
   });
@@ -300,8 +301,20 @@ describe("tapping a plan", () => {
     expect(remote.moveSession).toHaveBeenLastCalledWith(5, ny(10, 31, 19));
   });
 
+  it("skips one session of a longer Pursuit by removing only that session", async () => {
+    hook.value = data({ plans: [plan({ session: { n: 2, total: 5 } })] });
+    show("/calendar");
+    fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Pursuit session, 7 PM, Bouldering night" }));
+    fireEvent.click(screen.getByRole("button", { name: "Skip this session" }));
+    expect(lastToast().message).toBe("Session skipped");
+    await act(async () => void vi.advanceTimersByTime(6100));
+    expect(remote.deleteSession).toHaveBeenCalledWith(5);
+    expect(remote.cancelOwnPlan).not.toHaveBeenCalled();
+  });
+
   it("puts the plan back and says so when the send fails", async () => {
-    remote.deleteSession.mockResolvedValueOnce("Something went wrong. Try again.");
+    remote.cancelOwnPlan.mockResolvedValueOnce("Something went wrong. Try again.");
     openPlan();
     fireEvent.click(screen.getByRole("button", { name: "Cancel this plan" }));
     await act(async () => void vi.advanceTimersByTime(6100));
@@ -391,7 +404,7 @@ describe("dragging with a mouse", () => {
     hook.value = data({ plans: [plan()] });
     show("/calendar?view=week");
     fireEvent.keyDown(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" }), { key: "Delete" });
-    expect(lastToast().message).toBe("Plan removed");
+    expect(lastToast().message).toBe("Plan cancelled");
     expect(screen.queryByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeNull();
   });
 

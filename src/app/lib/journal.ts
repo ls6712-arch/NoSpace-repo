@@ -427,6 +427,14 @@ export function removeProjectGoal(projectId: string) {
   });
 }
 
+/**
+ * Takes a Pursuit out of this browser's journal. Only for a one-off plan that
+ * was cancelled (see planEdits.cancelOwnPlan), after its row is gone remotely.
+ */
+export function dropProject(projectId: string) {
+  commit({ ...state, projects: state.projects.filter((p) => p.id !== projectId) });
+}
+
 /** "Reached it" — the one completion verb, no pass/fail framing. */
 export function markGoalReached(projectId: string) {
   commit({

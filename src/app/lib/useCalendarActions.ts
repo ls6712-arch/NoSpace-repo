@@ -6,7 +6,7 @@ import { CHANGED } from "./calendarCopy";
 import type { CalendarFreeSlot } from "./calendarView";
 import type { Owner } from "./firstPlanRemote";
 import { savePrivate } from "./onboardingRemote";
-import { createPlan, deleteSession, leavePlan, moveSession, planNumber, type NewPlan } from "./planEdits";
+import { cancelOwnPlan, createPlan, deleteSession, leavePlan, moveSession, planNumber, type NewPlan } from "./planEdits";
 import { ERROR_LINE } from "./stateCopy";
 import { announceChange, flushPendingChanges } from "./undo";
 import type { WeekPlanDetail } from "./weekView";
@@ -68,7 +68,7 @@ export function useCalendarActions({ owner, usualWindows, reloadPlans }: { owner
         announceChange(CHANGED.planMade, {
           undo: () => {
             hide(`session-${sessionId}`, true);
-            void deleteSession(sessionId).then((e) => e && notifyError(e));
+            void cancelOwnPlan(sessionId, r.pursuitId).then((e) => e && notifyError(e));
           },
         });
       }
@@ -96,7 +96,7 @@ export function useCalendarActions({ owner, usualWindows, reloadPlans }: { owner
   const cancelPlan = useCallback((plan: WeekPlanDetail) => {
     const id = planNumber(plan.id, "session");
     if (id === null) return;
-    removeLater(plan, CHANGED.planRemoved, () => deleteSession(id), () => track({ name: "plan_cancelled" }));
+    removeLater(plan, CHANGED.planRemoved, () => cancelOwnPlan(id, plan.pursuitId), () => track({ name: "plan_cancelled" }));
   }, []);
 
   const leave = useCallback(

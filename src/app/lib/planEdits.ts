@@ -1,6 +1,6 @@
 import { supabase } from "../../lib/supabase";
 import { friendlyError } from "./friendlyError";
-import { DEFAULT_CHECK_IN_DAYS, startProject, type PursuitMember } from "./journal";
+import { DEFAULT_CHECK_IN_DAYS, dropProject, startProject, type PursuitMember } from "./journal";
 import { mirrorPursuitOpen, setImIn } from "./openPursuits";
 import { endsAtFor } from "./pursuitGoal";
 import { defaultMeasure } from "./pursuitProgress";
@@ -77,6 +77,45 @@ export async function deleteSession(sessionId: number): Promise<string | null> {
   } catch (e) {
     return friendlyError(e);
   }
+}
+
+/**
+ * Cancels a one-off plan the person made. The plan is a Pursuit with one session,
+ * so once the session is gone the Pursuit goes too, but only when it is plainly
+ * nothing else: no other session, nobody else in it, no progress logged and no
+ * Stub issued. Anything less and the Pursuit stays as it was; only the session goes.
+ */
+export async function cancelOwnPlan(sessionId: number, pursuitId: string | undefined): Promise<string | null> {
+  const error = await deleteSession(sessionId);
+  if (error || !pursuitId || !supabase) return error;
+  try {
+    if (!(await isEmptyShell(pursuitId))) return null;
+    const { error: gone } = await supabase.from("pursuits").delete().eq("id", pursuitId);
+    // The plan itself is cancelled either way; a Pursuit that could not be removed just stays.
+    if (!gone) dropProject(pursuitId);
+  } catch {
+    // Same: the plan is cancelled.
+  }
+  return null;
+}
+
+/** True when nothing but the owner and an empty plan is left in the Pursuit. Any doubt (a failed read) counts as not empty. */
+async function isEmptyShell(pursuitId: string): Promise<boolean> {
+  const client = supabase;
+  if (!client) return false;
+  const empty = async (table: string, narrow: (q: any) => any = (q) => q) => {
+    const { count, error } = await narrow(client.from(table).select("pursuit_id", { count: "exact", head: true }).eq("pursuit_id", pursuitId));
+    return !error && count === 0;
+  };
+  const checks = await Promise.all([
+    empty("pursuit_sessions"),
+    // Anyone besides the owner who is in, invited or asking to join.
+    empty("pursuit_members", (q) => q.neq("role", "owner").neq("status", "declined")),
+    empty("pursuit_progress"),
+    empty("stubs"),
+    empty("posts"),
+  ]);
+  return checks.every(Boolean);
 }
 
 /** Moves a session the person owns. */

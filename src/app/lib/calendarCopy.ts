@@ -44,14 +44,14 @@ export const SHEET = {
   removeFree: "Remove free time",
   yourBlock: "Your block",
   stub: "Stub",
-  hostedLine: "A host runs this one, so its time is theirs. You can leave it.",
+  hostedLine: "The host sets this time.",
   start: "Start",
   end: "End",
 } as const;
 
 export const CHANGED = {
   planMade: "Plan made",
-  planRemoved: "Plan removed",
+  planRemoved: "Plan cancelled",
   planLeft: "You left the plan",
   sessionSkipped: "Session skipped",
   timeChanged: "Time changed",
