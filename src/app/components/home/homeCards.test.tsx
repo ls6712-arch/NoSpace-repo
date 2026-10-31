@@ -126,12 +126,12 @@ describe("Your week card", () => {
     { key: "fri-eve", day: "fri", slot: "eve", offset: 1, startMs: NOW, endMs: NOW + 3_600_000 },
   ];
 
-  it("shows the count line and the next days, and opens the Week page", () => {
+  it("shows the count line and the next days, and opens the calendar's Week view", () => {
     wrap(<YourWeekCard windows={["thu-eve", "fri-eve"]} left={left} plans={[{ title: "Bouldering night", startsAt: Date.parse("2026-11-06T00:00:00Z") }]} now={NOW} />);
     expect(screen.getByText("2 free windows left · 1 plan")).toBeTruthy();
     expect(screen.getByText("Bouldering night 7 PM")).toBeTruthy();
     expect(screen.getByText("Free evening")).toBeTruthy();
-    expect(screen.getByRole("link").getAttribute("href")).toBe("/week");
+    expect(screen.getByRole("link").getAttribute("href")).toBe("/calendar?view=week");
   });
 
   it("asks for free time when none is saved, and opens the screen that saves it", () => {

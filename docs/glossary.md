@@ -709,7 +709,7 @@ The Moment city, from PR 1 (approved Oct 30, 2026).
 
 ## Week view (brief of Oct 30, 2026)
 
-The wording of `/week`, taken from the founder's Week view brief. Opens from Home's Your week card; it is not a tab.
+The wording of the Week view, taken from the founder's Week view brief. It is now the Week view of the calendar (`/calendar?view=week`); `/week` redirects there. Opens from Home's Your week card and the Calendar item.
 
 | Term | Use |
 |---|---|
@@ -732,6 +732,27 @@ The wording of `/week`, taken from the founder's Week view brief. Opens from Hom
 | Sat 31 · 7 PM · free | The pill on a pick: day, time, then the editor's own price words. No price, no price part |
 | City picks | Admin page (Site admin list in Settings) for the picks. Add a pick · Edit pick · Published or Draft · Publish · Unpublish · Edit · Delete (with a confirm: "This removes the pick for good.") · Save changes · Cancel. Empty: "No picks yet." / "Add a pick, then publish it." |
 | Something went wrong. Try again. | The existing error line, as a toast, when the budget does not save |
+
+## Calendar (brief of Oct 31, 2026)
+
+The wording of `/calendar`, from the founder's calendar brief (`claude-code-brief-calendar.md`) and the "Soosh Calendar" canvas. It replaces the Week view's page: `/week` now opens the calendar's Week view, and the Week view's glance card, "This week in New York" and the rest of the Week view table above live in it. Only PR 1 (the four views and Show) is listed here; each later PR adds its own terms.
+
+| Term | Use |
+|---|---|
+| Calendar | The rail item and the page. It replaced "Week". Not a phone tab: it opens from Home's Your week card |
+| Today · Previous {day, week, month, 30 days} · Next {day, week, month, 30 days} | The header buttons. The arrows are icons; the names are for screen readers and say which period they move by |
+| Day · Week · Month · List | The view switch. The chosen one is filled in the foreground colour |
+| October 2026 · Oct 31 to Nov 6 · Tue Nov 3 · Oct 31 to Nov 29 | Titles of Month, Week, Day and List. Week is the next 7 days, today first. List is the next 30 days |
+| {n} Stubs · {m} plans to go · New York | Month subline. A part that is 0 is left out |
+| Next 7 days · {n} plans · New York | Week subline ("7 days" when the week does not start today). Day: "{n} plans · New York". List: "Next 30 days · New York" |
+| Show | The panel (from 1128px) or the sheet (below it) that picks what the calendar shows. Rows today: Plans · Pursuit sessions · Free time · Stubs you collected. Stubby's picks, Friends' plans, Your blocks and Busy times join as they are built |
+| Make a plan | Header button on every view and screen size, the screen's one coral fill. Opens Discover until the plan sheet exists |
+| Make a plan for {tonight · today · tomorrow · Sat 31} | The phone's button under a day's list in Month |
+| {k} more | A Month cell with more than 3 things. Opens that day |
+| Free daytime · Free evening · Free all day · Find something | As in the Week view above. Free time is a dashed shape and always has its words |
+| Stub you collected · Plan | The phone Month's key. Approved Oct 31, 2026 |
+| Nothing planned in the next 30 days. | List empty state, with Find something. Approved Oct 31, 2026 |
+| Your plans, Stubs and free time, in one place. | Title of the sign-up prompt when signed out. Approved Oct 31, 2026 |
 
 ## Retired terms
 

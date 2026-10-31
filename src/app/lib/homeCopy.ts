@@ -32,6 +32,13 @@ export const WEEK_SIGNED_OUT = {
   cta: "Create an account",
 };
 
+/** The calendar for someone not signed in. Title approved Oct 31, 2026; body and button are the Week page's. */
+export const CALENDAR_SIGNED_OUT = {
+  title: "Your plans, Stubs and free time, in one place.",
+  body: WEEK_SIGNED_OUT.body,
+  cta: WEEK_SIGNED_OUT.cta,
+};
+
 /** Home's greeting when the person has no name on record. */
 export const GREETING_NO_NAME = "Welcome back";
 

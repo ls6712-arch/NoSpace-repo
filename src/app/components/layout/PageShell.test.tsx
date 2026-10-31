@@ -33,7 +33,7 @@ describe("PageShell", () => {
 
 describe("tab pages", () => {
   const read = (f: string) => fs.readFileSync(path.resolve(__dirname, "../..", f), "utf8");
-  const PAGES = ["pages/HomeFeed.tsx", "pages/Discover.tsx", "pages/SearchResults.tsx", "pages/Week.tsx", "pages/Messages.tsx", "pages/Inbox.tsx", "pages/Profile.tsx", "components/settings/SettingsShell.tsx"];
+  const PAGES = ["pages/HomeFeed.tsx", "pages/Discover.tsx", "pages/SearchResults.tsx", "pages/Calendar.tsx", "pages/Messages.tsx", "pages/Inbox.tsx", "pages/Profile.tsx", "components/settings/SettingsShell.tsx"];
 
   it.each(PAGES)("%s uses PageShell and sets no width of its own", (f) => {
     const src = read(f);

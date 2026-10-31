@@ -10,7 +10,7 @@ import { AccountMenuPanel } from "./AccountMenuPanel";
 import { GlobalSearchBox } from "./GlobalSearchBox";
 import { SEARCH_SHORTCUT_EVENT } from "../../lib/searchShortcut";
 import { RailItem } from "./RailItem";
-import { DISCOVER, HOME, LOG, WEEK, YOU } from "./navItems";
+import { CALENDAR, DISCOVER, HOME, LOG, YOU } from "./navItems";
 import { useChatsBadge } from "./useChatsBadge";
 
 /** Search gets the plain magnifier; Discover moved to the compass so the two never share a shape (founder, Oct 30, 2026). */
@@ -29,7 +29,7 @@ const initials = (name: string) =>
 /**
  * The left rail: every destination on one fixed column, from 744px wide.
  * Icons only from 744px (72px wide), icons and words from 1280px (240px wide).
- * Home, Discover, Search, Log a Moment, Week, Chats and Notifications on top;
+ * Home, Discover, Search, Log a Moment, Calendar, Chats and Notifications on top;
  * You and More pinned to the bottom. It reads the same destination list as
  * the phone's bottom bar. Search and Notifications open a panel beside the
  * rail, More opens the account menu; one panel at a time, Escape closes it.
@@ -108,7 +108,7 @@ export function SideRail() {
           )}
         </li>
         {dest(LOG)}
-        {dest(WEEK)}
+        {dest(CALENDAR)}
         <li>
           <RailItem to="/messages" icon={MessagesSquare} label="Chats" aria={chats > 0 ? `Chats (${chats} unread)` : "Chats"} badge={chats} active={pathname.startsWith("/messages")} />
         </li>

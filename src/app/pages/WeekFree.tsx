@@ -21,7 +21,7 @@ export function WeekFree() {
   const { user, isConfigured } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const back = params.get("from") === "week" ? "/week" : "/my-space";
+  const back = params.get("from") === "week" ? "/calendar?view=week" : "/my-space";
   const [windows, setWindows] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

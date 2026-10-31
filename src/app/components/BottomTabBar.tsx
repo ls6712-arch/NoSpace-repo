@@ -6,7 +6,7 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 import { TAB_DESTINATIONS, type Destination } from "./nav/navItems";
 
 /**
- * Phone and tablet navigation: Home, Discover, Log, Week and You. Each tab is a
+ * Phone and tablet navigation: Home, Discover, Log and You. Each tab is a
  * line icon over a short label, so it reads the same as the desktop top nav's
  * destinations in the same order (Profile hangs off the avatar there). The
  * desktop button reads "Log a Moment"; this tab says "Log" (the glossary's
@@ -49,7 +49,7 @@ export function BottomTabBar({ railEligible = false }: { railEligible?: boolean 
         style={{ paddingBottom: "var(--safe-bottom)", paddingLeft: "var(--safe-left)", paddingRight: "var(--safe-right)" }}
         aria-label="Main"
       >
-        <div className="mx-auto grid max-w-md grid-cols-5 items-end px-1 pb-1.5 pt-1.5">
+        <div className="mx-auto grid max-w-md grid-cols-4 items-end px-1 pb-1.5 pt-1.5">
           {TABS.map((tab) => {
             const active = tab.match(pathname);
             const Icon = tab.icon;

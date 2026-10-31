@@ -8,7 +8,7 @@ import { cn } from "../ui/utils";
  * free time, nothing otherwise. Tapping a tile highlights it and the screen
  * scrolls to that day.
  */
-export function DayStrip({ days, selected, onSelect }: { days: readonly DayContent[]; selected: number; onSelect: (offset: number) => void }) {
+export function DayStrip({ days, selected, now, onSelect }: { days: readonly DayContent[]; selected: number; now: number; onSelect: (offset: number) => void }) {
   return (
     <div className="flex flex-col gap-2">
       <ul className="grid grid-cols-7 gap-1.5">
@@ -20,7 +20,7 @@ export function DayStrip({ days, selected, onSelect }: { days: readonly DayConte
             <li key={c.day.offset}>
               <button
                 type="button"
-                aria-label={tileLabel(c)}
+                aria-label={tileLabel(c, now)}
                 aria-pressed={on}
                 onClick={() => onSelect(c.day.offset)}
                 className={cn(

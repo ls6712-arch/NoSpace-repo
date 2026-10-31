@@ -12,7 +12,7 @@ export function YourWeekCard({ windows, left, plans, now }: { windows: readonly 
   const chips = weekChips(windows, plans, now);
   const none = windows.length === 0;
   return (
-    <Link to={none ? "/week/free" : "/week"} className="flex min-h-11 flex-col gap-3 rounded-card border border-border bg-card p-4 text-foreground">
+    <Link to={none ? "/week/free" : "/calendar?view=week"} className="flex min-h-11 flex-col gap-3 rounded-card border border-border bg-card p-4 text-foreground">
       <span className="flex items-baseline justify-between">
         <span className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
           Your week

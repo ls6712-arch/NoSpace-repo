@@ -18,31 +18,32 @@ const at = (path: string) =>
   );
 
 describe("bottom tab bar", () => {
-  it("reads Home, Discover, Log, Week, You, in that order", () => {
-    expect(TABS.map((t) => t.label)).toEqual(["Home", "Discover", "Log", "Week", "You"]);
+  it("reads Home, Discover, Log, You, in that order (Calendar is not a tab)", () => {
+    expect(TABS.map((t) => t.label)).toEqual(["Home", "Discover", "Log", "You"]);
     at("/my-space");
     const nav = screen.getByRole("navigation", { name: "Main" });
     const names = within(nav).getAllByRole("link").map((a) => a.getAttribute("aria-label") ?? a.textContent);
-    expect(names).toEqual(["Home", "Discover", "Log a Moment", "Week", "You"]);
-    expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/my-space", "/discover", "/create", "/week", "/you"]);
+    expect(names).toEqual(["Home", "Discover", "Log a Moment", "You"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/my-space", "/discover", "/create", "/you"]);
   });
 
   it("marks the tab for the page you are on", () => {
-    at("/week");
+    at("/discover");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    expect(within(nav).getByText("Week").closest("a")?.getAttribute("aria-current")).toBe("page");
+    expect(within(nav).getByText("Discover").closest("a")?.getAttribute("aria-current")).toBe("page");
     expect(within(nav).getByText("Home").closest("a")?.getAttribute("aria-current")).toBeNull();
   });
 
-  it("keeps Week active on the free time screen", () => {
-    at("/week/free");
+  it("has no tab for the calendar and marks none on it", () => {
+    at("/calendar");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    expect(within(nav).getByText("Week").closest("a")?.getAttribute("aria-current")).toBe("page");
+    expect(within(nav).queryByText("Calendar")).toBeNull();
+    expect(within(nav).getAllByRole("link").filter((a) => a.getAttribute("aria-current") === "page")).toHaveLength(0);
   });
 
   it("gives every tab an icon", () => {
     at("/my-space");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    expect(nav.querySelectorAll("a svg").length).toBe(5);
+    expect(nav.querySelectorAll("a svg").length).toBe(4);
   });
 });

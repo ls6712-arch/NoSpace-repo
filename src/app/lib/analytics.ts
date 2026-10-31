@@ -20,7 +20,9 @@ export type AnalyticsEvent =
   | { name: "home_suggestion_going"; kind: string; position: number }
   | { name: "home_suggestion_invite"; kind: string; position: number }
   | { name: "home_suggestion_dismissed"; kind: string; position: number }
-  | { name: "week_opened" }
+  | { name: "calendar_opened"; view: "day" | "week" | "month" | "list" }
+  | { name: "calendar_view_changed"; view: "day" | "week" | "month" | "list" }
+  | { name: "calendar_filter_changed"; row: string; on: boolean }
   | { name: "week_day_tapped"; offset: number }
   | { name: "week_find_something"; window: string }
   | { name: "week_budget_changed" }
