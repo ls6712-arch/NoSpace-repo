@@ -24,6 +24,7 @@ import {
   fetchDiscoverSpaces,
   logDiscoverEvent,
   mapCornerRow,
+  orEmpty,
   mapMomentRow,
   mapSpaceRow,
 } from "./discover";
@@ -112,5 +113,12 @@ describe("logDiscoverEvent", () => {
   it("swallows a failure", async () => {
     rpc.throws = true;
     await expect(logDiscoverEvent({ kind: "idea", refId: "a/b", position: 0, action: "shown" })).resolves.toBeUndefined();
+  });
+});
+
+describe("orEmpty", () => {
+  it("gives the list when it arrives in time and an empty one when it does not", async () => {
+    expect(await orEmpty(Promise.resolve([1, 2]), 50)).toEqual([1, 2]);
+    expect(await orEmpty(new Promise<number[]>(() => {}), 20)).toEqual([]);
   });
 });

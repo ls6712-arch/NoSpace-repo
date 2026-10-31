@@ -33,8 +33,12 @@ export function fitsPills(idea: CornerIdea, pills: IdeaPills): boolean {
 /**
  * The ideas that fit, the person's picks first, then by Corner affinity (0 to 1, higher
  * first), then by key so the order is steady. Adults-only ideas and Corners hidden from
- * browsing never appear.
+ * browsing never appear. The row never holds more than `MAX_PER_CATEGORY` ideas from one
+ * internal category (the old group in front of the slash in the key, never shown).
  */
+export const MAX_PER_CATEGORY = 2;
+export const ROW_SIZE = 6;
+
 export function ideasFor(
   pills: IdeaPills,
   opts: { picks?: readonly string[]; affinity?: ReadonlyMap<string, number>; limit?: number } = {},
@@ -54,5 +58,16 @@ export function ideasFor(
       (affinity.get(b.key) ?? 0) - (affinity.get(a.key) ?? 0) ||
       a.key.localeCompare(b.key),
   );
-  return matched.slice(0, opts.limit ?? 6);
+  const limit = opts.limit ?? ROW_SIZE;
+  const perCategory = new Map<string, number>();
+  const row: MatchedIdea[] = [];
+  for (const m of matched) {
+    if (row.length >= limit) break;
+    const category = m.key.split("/")[0];
+    const taken = perCategory.get(category) ?? 0;
+    if (taken >= MAX_PER_CATEGORY) continue;
+    perCategory.set(category, taken + 1);
+    row.push(m);
+  }
+  return row;
 }

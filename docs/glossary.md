@@ -652,7 +652,28 @@ From 744px wide (and 480px tall) a signed-in person gets a left rail in place of
 
 ## Discover v2 (Oct 30, 2026)
 
-The Moment city, from PR 1 (approved Oct 30, 2026). The Discover page strings come with PR 2.
+The Discover page, as drawn on the Discover v2 artboard (founder approved the screen Oct 30, 2026). Discover is the world, not your world: undated ideas, Corners new to you, Spaces near you and Moments from people you do not follow yet. No member or follower counts anywhere. Only the spend pill mentions money.
+
+| Where | String |
+|---|---|
+| Header line | What’s out there in |
+| Search placeholder | Search Corners, Spaces, people |
+| Jump chips | Ideas / Corners / Spaces / Moments |
+| Ideas heading / subline | What could you do? / Ideas for what you’ve got. Tap a pill to change it. |
+| Time pill | An hour / Tonight / Weekend (each includes the ones before it) |
+| Spend pill | Free / Under $25 / Treat me (each includes the ones before it) |
+| Who pill | Solo / A friend / New people |
+| Pass tag | Your {pass kind} pass |
+| Corners heading / subline / link | Corners new to you / Three ways into each one / See all |
+| Corner tabs | At home / With people / At a place |
+| Corner button | Follow |
+| Spaces heading / subline | Spaces near you / Studios, cafés and groups that host things |
+| Space buttons | Join / Ask to join |
+| Space activity | {N} Moments this month |
+| Feed heading / subline | What {city} is making / From people you don’t follow yet |
+| Feed actions | Follow / Love this / Try {corner} (the Corner’s name drops to lower case unless it is a name like D&D) |
+
+The Moment city, from PR 1 (approved Oct 30, 2026).
 
 | Where | String |
 |---|---|

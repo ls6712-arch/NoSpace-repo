@@ -67,16 +67,29 @@ function LoveThis({ post }: { post: Post }) {
  * One Moment on Home: who and where, the photo (a snap carousel for several),
  * the caption, then Love this and one action that fits the Moment.
  */
+/** What Discover adds to a card: a Follow button on the author row and a "Try {corner}" pill next to Love this. */
+export interface FeedCardDiscover {
+  /** "requested" once the person has asked to follow this author from here. */
+  following: "none" | "requested";
+  onFollow: () => void;
+  /** The Corner's name as it reads in "Try {corner}", and where it goes. */
+  tryName: string;
+  tryTo: string;
+  onTry: () => void;
+}
+
 export function FeedCard({
   post,
   source,
   onOpen,
   priority,
+  discover,
 }: {
   post: Post;
-  source: FeedSource;
+  source: FeedSource | "discover";
   onOpen: (post: Post) => void;
   priority?: boolean;
+  discover?: FeedCardDiscover;
 }) {
   const corner = post.corner ?? post.subHobby;
   const cornerName = (post.interest || (corner ? subHobbyLabel(corner) : undefined)) ?? "";
@@ -93,10 +106,15 @@ export function FeedCard({
         <Avatar className="size-10 shrink-0">
           <AvatarFallback className="text-small">{initials(post.creator)}</AvatarFallback>
         </Avatar>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-body font-semibold">{post.creator}</p>
           <p className="truncate text-small text-muted-foreground">{meta}</p>
         </div>
+        {discover && post.userId && (
+          <PillButton variant="outline" className="shrink-0" disabled={discover.following === "requested"} onClick={discover.onFollow}>
+            {discover.following === "requested" ? "Requested" : "Follow"}
+          </PillButton>
+        )}
       </div>
 
       {hasPhoto &&
@@ -128,7 +146,15 @@ export function FeedCard({
 
       <div className="mt-3 flex flex-wrap gap-2">
         <LoveThis post={post} />
-        {upcoming ? (
+        {discover ? (
+          <Link
+            to={discover.tryTo}
+            onClick={discover.onTry}
+            className="inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-body font-semibold text-accent-foreground"
+          >
+            Try {discover.tryName}
+          </Link>
+        ) : upcoming ? (
           <PillButton variant="primary" done={going} doneLabel="You’re in" onClick={() => toggle("in")}>
             Count me in
           </PillButton>

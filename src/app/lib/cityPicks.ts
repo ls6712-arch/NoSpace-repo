@@ -8,7 +8,7 @@ import { ticketTime } from "./weekView";
 
 /**
  * "This week in New York": a few hand-picked things the founder or an admin
- * adds each week (migration 20261111000000). Signed-in people read the
+ * adds each week (migration 20261112000000). Signed-in people read the
  * published ones; admins read and write all of them. Reads are best effort:
  * before the migration is live, or on any failure, there are no picks and the
  * Week view simply hides the row.

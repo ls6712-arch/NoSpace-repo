@@ -127,6 +127,27 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   const [searchParams] = useSearchParams();
   const hostFlow = searchParams.get("host") === "1" && !restricted;
   const [sheetOpen, setSheetOpen] = useState(hostFlow);
+  // Discover's Corner cards open this page on a section: ?section=home, people or place.
+  const section = searchParams.get("section");
+  useEffect(() => {
+    const targets: Record<string, string[]> = { home: ["section-home"], people: ["section-people", "section-people-into"], place: ["spaces-section"] };
+    const ids = section ? (targets[section] ?? []) : [];
+    if (ids.length === 0) return;
+    // Some sections arrive after the Corner's live data loads, so look again a couple of times.
+    let found = false;
+    const look = () => {
+      if (found) return;
+      const el = ids.map((id) => document.getElementById(id)).find(Boolean);
+      if (el) {
+        found = true;
+        el.scrollIntoView({ block: "start" });
+      }
+    };
+    const timers = [0, 300, 900].map((ms) => window.setTimeout(look, ms));
+    return () => timers.forEach((t) => window.clearTimeout(t));
+    // Runs when the section asked for changes; later renders must not pull the page back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section]);
   const doWithPeople = () => (restricted ? navigate(`/login?redirect=${here}`) : setSheetOpen(true));
   const goTo = (path: string) => (restricted ? navigate(`/login?redirect=${encodeURIComponent(path)}`) : navigate(path));
 
@@ -367,7 +388,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         {(corner.steps.length > 0 || corner.about || corner.worth.length > 0) && (
           <div className={`${SECTION_GAP} grid gap-10 md:gap-8 ${corner.worth.length > 0 ? "md:grid-cols-2" : ""}`}>
             {(corner.steps.length > 0 || corner.about) && (
-              <section aria-labelledby="start-title">
+              <section id="section-home" className="scroll-mt-24" aria-labelledby="start-title">
                 <SectionTitle id="start-title">Your first time</SectionTitle>
                 {corner.about && <p className="mb-4 text-body text-muted-foreground">{corner.about}</p>}
                 {corner.steps.length > 0 && (
@@ -434,7 +455,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         )}
 
         {week.length > 0 && (
-          <section className={SECTION_GAP} aria-labelledby="week-title">
+          <section id="section-people" className={`${SECTION_GAP} scroll-mt-24`} aria-labelledby="week-title">
             <SectionTitle id="week-title">Happening this week</SectionTitle>
             <HorizontalRow name={`corner.${corner.slug}.week`} label="Happening this week">
               {week.map((e) => (
@@ -467,7 +488,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         )}
 
         {!restricted && ranked.length > 0 && (
-          <section className={SECTION_GAP} aria-labelledby="people-title">
+          <section id="section-people-into" className={`${SECTION_GAP} scroll-mt-24`} aria-labelledby="people-title">
             <SectionTitle id="people-title">{`People into ${corner.name}`}</SectionTitle>
             <HorizontalRow name={`corner.${corner.slug}.people`} label={`People into ${corner.name}`}>
               {ranked.map((r) => {

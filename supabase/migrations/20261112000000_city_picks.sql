@@ -9,7 +9,7 @@
 -- pick: it is a card with a link out, nothing is collected here.
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
--- Rollback: rollback_20261111000000_city_picks.sql.
+-- Rollback: rollback_20261112000000_city_picks.sql.
 
 create table public.city_picks (
   id bigint generated always as identity primary key,

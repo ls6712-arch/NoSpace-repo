@@ -1,46 +1,96 @@
-# Discover v2: proposed idea values and copy
+# Discover v2: idea values and copy
 
-Status: **proposed, waiting for founder approval.** Source of truth: `src/app/data/cornerIdeas.ts`
-(this table is generated from it). Matching: `src/app/lib/ideaMatch.ts`. Nothing on the Discover
-page reads these yet (that is PR 2).
+Status: **values approved by the founder on Oct 31, 2026, with the changes below, all applied.** The
+titles and how lines are proposals until the founder signs off the copy. Source of truth:
+`src/app/data/cornerIdeas.ts` (this doc is generated from it). Matching: `src/app/lib/ideaMatch.ts`.
 
-## How the pills work now
+## How the pills work
 
 The Time and Spend pills are **ceilings**: An hour is inside Tonight is inside Weekend, and Free is
 inside Under $25 is inside Treat me. Each idea stores its **smallest time** and **smallest spend**,
 and matches a pill when both are at or below it. Who is an exact pill (an idea lists every Who it fits).
 
-Tests: every one of the 27 pill combinations returns at least 3 ideas for a person with no picks
-(in fact the row fills all 6 everywhere), and widening a pill never removes an idea.
+- **Time** follows the how line (approved as is, nothing moves to Weekend).
+- **Treat me** is any idea that means booking a paid class, session, tour or room. Drop-ins and open
+  play stay Under $25.
+- **Who** comes from the idea, not the guide. Solo means you can do it on your own (every idea done
+  alone at home has it), A friend means with someone you know, New people means the idea itself puts
+  you with people you do not know.
+- **Row of 6:** the person's picks first, then Corner affinity, then the rest, with **at most 2 ideas
+  from the same internal category**. The category is internal and never shown.
+- **21 and over** ideas stay in the data and are hidden from the row (approved).
+- Titles are short verb phrases with no full stop. How lines are time plus where and end in a full stop.
+  No prices. US spelling.
 
-How many ideas each combination matches (Solo / A friend / New people), before the row is capped at 6:
+Tests: all 27 pill combinations return at least 3 ideas for a person with no picks, with the category
+cap applied; the cap holds in every combination even when a person's picks are all in one category;
+widening a pill never removes an idea.
+
+How many ideas each combination matches (Solo / A friend / New people), before the row is capped:
 
 | Time \ Spend | Free | Under $25 | Treat me |
 |---|---|---|---|
-| An hour | 33 / 37 / 8 | 82 / 86 / 24 | 82 / 87 / 25 |
-| Tonight | 37 / 42 / 12 | 89 / 105 / 39 | 90 / 108 / 41 |
-| Weekend | 37 / 43 / 13 | 95 / 113 / 42 | 97 / 117 / 44 |
+| An hour | 36 / 35 / 4 | 89 / 82 / 8 | 89 / 86 / 12 |
+| Tonight | 41 / 40 / 7 | 97 / 97 / 17 | 98 / 107 / 25 |
+| Weekend | 41 / 41 / 8 | 101 / 101 / 18 | 105 / 116 / 27 |
 
-## The rules behind the values
+## Rows changed in this round
 
-- **Time** comes from the how line: 60 minutes or less is An hour, up to a few hours is Tonight,
-  and a full day or something that needs daylight or a booking is Weekend. Weekend by hand:
-  film photography, surfing, kayaking, volunteering, furniture flipping, robotics, travel, road trips,
-  rafting and wild swimming.
-- **Spend:** if you can start with what you have, Free. Otherwise Under $25. Treat me is only for the four
-  you named.
-- **Who:** from the guide. A solo Corner is Solo, a together Corner is A friend and New people, and
-  the rest are Solo and A friend.
-- **Titles** are short verb phrases (no more than nine words, no full stop). **How lines** are the time plus
-  where, and end in a full stop. Neither mentions a price. US spelling throughout.
-- **21 and over** (home brewing, cocktail making): kept in the table but never shown in the idea row,
-  like the rest of general browsing, until age checks exist.
+### Treat me (was Under $25 or Free)
 
-## Changes you asked for (all applied)
+| Corner | Was | Now |
+|---|---|---|
+| sports-fitness/martial-arts | Free | Treat me |
+| sports-fitness/boxing | Under $25 | Treat me |
+| nature-outdoors/kayaking | Under $25 | Treat me |
+| music/karaoke | Under $25 | Treat me |
+| art-creative/improv | Under $25 | Treat me |
+| health-wellness/sauna-cold-plunge | Under $25 | Treat me |
+| travel-adventure/travel | Under $25 | Treat me |
+| travel-adventure/road-trips | Under $25 | Treat me |
+| sports-fitness/dance | Under $25 | Treat me |
+| travel-adventure/rafting | Under $25 | Treat me |
+| health-wellness/sound-baths | Under $25 | Treat me |
 
-1. **Ceilings** and the 27 combination test, above.
-2. **Titles and how lines** rewritten for every idea, in the table.
-3. **Duplicates dropped.** One idea kept per group; the guides stay, they just get no idea:
+The rule caught one beyond your list: **martial arts** ("Take a trial class"). Everything else you named is
+here too. Pottery, climbing, surfing and padel were already Treat me.
+
+### Who
+
+| Corner | Was | Now |
+|---|---|---|
+| food-cooking/supper-clubs | A friend, New people | A friend |
+| sports-fitness/tennis | A friend, New people | Solo, A friend |
+| art-creative/theater | A friend, New people | Solo, A friend |
+| nature-outdoors/foraging | A friend, New people | Solo, A friend |
+| nature-outdoors/camping | A friend, New people | Solo, A friend |
+| gaming-tabletop/board-games | A friend, New people | A friend |
+| gaming-tabletop/chess | Solo, A friend | A friend, New people |
+| gaming-tabletop/video-games | A friend, New people | A friend |
+| photography-film/filmmaking | A friend, New people | Solo, A friend |
+| travel-adventure/backpacking | A friend, New people | Solo, A friend |
+| travel-adventure/skiing | A friend, New people | Solo |
+| music/karaoke | A friend, New people | A friend |
+| travel-adventure/road-trips | A friend, New people | A friend |
+| gaming-tabletop/mahjong | A friend, New people | Solo, A friend |
+| sports-fitness/hyrox | A friend, New people | Solo, A friend |
+| sports-fitness/badminton | A friend, New people | A friend |
+| sports-fitness/ultimate-frisbee | A friend, New people | A friend |
+| gaming-tabletop/carrom | A friend, New people | A friend |
+| sports-fitness/table-tennis | A friend, New people | A friend |
+
+### Reworded
+
+| Corner | Was | Now |
+|---|---|---|
+| gaming-tabletop/chess | Play one game of chess (20 minutes, a board or a chess app.) | Play chess at a park table (20 minutes, a park with chess tables.) |
+| gaming-tabletop/video-games | Schedule a co-op session (1 hour, a co-op game and a friend.) | Plan a co-op game night (1 hour, a co-op game and a friend.) |
+
+"Plan a co-op game night" was reworded only so it no longer reads like a paid session. Chess was reworded
+and now fits New people, because with the category cap "An hour, Free, New people" otherwise had only
+three ideas, all from sports. Say if you would rather change a different idea.
+
+## Dropped as duplicates (the guide stays, it just gets no idea)
 
 | Dropped | Kept |
 |---|---|
@@ -50,24 +100,6 @@ How many ideas each combination matches (Solo / A friend / New people), before t
 | books-writing/books | books-writing/reading |
 | books-writing/creative-writing | books-writing/writing |
 | collecting-fandom/trading-cards | gaming-tabletop/trading-cards |
-4. **Value fixes.** Breathwork, exploration, backpacking and skiing are Free. Breathwork, exploration and
-   skiing are An hour (5, 15 and 15 minutes); backpacking is Tonight. Pottery, climbing, surfing and padel
-   are Treat me, and surfing is Weekend.
-5. **Full stops** on every how line and **US spelling** throughout, both enforced by tests.
-
-## Calls I made that you should check
-
-- **Time now follows the how line**, so some values moved from what you saw before. For example, live music,
-  karaoke, open mics, sauna and sound baths are Tonight (they are evening things), and most 30 and 60 minute
-  ideas are An hour. Say if any should be Weekend.
-- **Treat me is only the four you named.** Others that are paid, booked or guided and are still Under $25:
-  kayaking, rafting, boxing, sauna and cold plunge, sound baths, karaoke, live music, dance, improv, hyrox,
-  skating, film photography, travel, road trips, drones and 3D printing. Tell me which to move.
-- **Who comes from the guide, not the idea.** A few are odd: skiing is "A friend, New people" although the idea is
-  a drill at home, and foraging is the same. Tell me if you want any changed.
-- **Near overlaps I did not touch** (not in your list): video and filmmaking, web design and coding,
-  exploration and city walks, gardening and vegetable gardens, camping and backpacking, singing and choir.
-- Trading cards: I kept the Gaming and tabletop one and dropped the Collecting one.
 
 ## All ideas
 
@@ -81,22 +113,22 @@ How many ideas each combination matches (Solo / A friend / New people), before t
 | food-cooking/home-brewing (21 and over) | An hour | Under $25 | Solo, A friend | Steep a cup of specialty malt | 30 minutes, your kitchen and crushed malt. |
 | food-cooking/kombucha | An hour | Under $25 | Solo | Brew a jar of kombucha | 20 minutes, a jar, sweet tea and a SCOBY. |
 | food-cooking/cocktail-making (21 and over) | An hour | Under $25 | Solo, A friend | Mix a classic sour | 15 minutes, your kitchen, a lemon and sugar. |
-| food-cooking/supper-clubs | Tonight | Under $25 | A friend, New people | Host dinner for one guest | 2 hours, your home and one dish. |
+| food-cooking/supper-clubs | Tonight | Under $25 | A friend | Host dinner for one guest | 2 hours, your home and one dish. |
 | food-cooking/coffee | An hour | Under $25 | Solo | Make a pour-over | 10 minutes, your kitchen and a pour-over setup. |
 | sports-fitness/running | An hour | Free | Solo, A friend | Run-walk for 15 minutes | 15 minutes, any road or path outside. |
 | sports-fitness/run-clubs | An hour | Free | A friend, New people | Go to a run club | 1 hour, a local run club's meetup spot. |
 | sports-fitness/cycling | An hour | Under $25 | Solo, A friend | Ride a bike-share bike | 30 minutes, a bike dock and a quiet route. |
 | sports-fitness/pickleball | An hour | Under $25 | A friend, New people | Join open play at a court | 1 hour, a public court. |
 | sports-fitness/padel | An hour | Treat me | A friend, New people | Book a beginner padel session | 1 hour, a padel court and three others. |
-| sports-fitness/tennis | An hour | Under $25 | A friend, New people | Hit against a wall | 15 minutes, a practice wall and a racket. |
+| sports-fitness/tennis | An hour | Under $25 | Solo, A friend | Hit against a wall | 15 minutes, a practice wall and a racket. |
 | sports-fitness/swimming | An hour | Under $25 | Solo, A friend | Swim ten laps | 45 minutes, a public pool. |
-| sports-fitness/martial-arts | An hour | Free | A friend, New people | Take a trial class | 1 hour, a local gym. |
+| sports-fitness/martial-arts | An hour | Treat me | A friend, New people | Take a trial class | 1 hour, a local gym. |
 | sports-fitness/strength-training | An hour | Under $25 | Solo, A friend | Learn the goblet squat | 20 minutes, one dumbbell at home or the gym. |
 | sports-fitness/volleyball | An hour | Free | A friend, New people | Join a drop-in game | 1 hour, a park or gym. |
 | art-creative/drawing | An hour | Free | Solo, A friend | Draw your coffee mug | 10 minutes, paper and a pencil. |
 | art-creative/watercolor | An hour | Under $25 | Solo, A friend | Paint a color chart and a leaf | 30 minutes, a small watercolor set and paper. |
 | art-creative/calligraphy | An hour | Under $25 | Solo, A friend | Practice basic brush pen strokes | 10 minutes, a brush pen and paper. |
-| art-creative/theater | An hour | Free | A friend, New people | Perform a monologue three times | 20 minutes, a quiet room and your phone to record. |
+| art-creative/theater | An hour | Free | Solo, A friend | Perform a monologue three times | 20 minutes, a quiet room and your phone to record. |
 | crafts-making/knitting | An hour | Under $25 | Solo, A friend | Cast on and knit a few rows | 30 minutes, needles and a ball of yarn. |
 | crafts-making/crochet | An hour | Under $25 | Solo, A friend | Learn a chain and single crochet | 30 minutes, a hook and one ball of yarn. |
 | crafts-making/embroidery | An hour | Under $25 | Solo, A friend | Stitch your initial | 30 minutes, a hoop, thread and a scrap of cotton. |
@@ -115,25 +147,25 @@ How many ideas each combination matches (Solo / A friend / New people), before t
 | books-writing/reading | An hour | Free | Solo, A friend | Read 20 pages of a book | 30 minutes, a comfortable seat and a book. |
 | nature-outdoors/hiking | Tonight | Free | Solo, A friend | Walk a trail under three miles | 2 hours, a trail near home. |
 | nature-outdoors/birdwatching | An hour | Free | Solo, A friend | Listen for birds in a park | 15 minutes, a park and a bird ID app. |
-| nature-outdoors/foraging | An hour | Free | A friend, New people | Learn to spot one common edible plant | 1 hour, a local park or trail and a field guide. |
-| nature-outdoors/camping | An hour | Under $25 | A friend, New people | Pitch a tent | 30 minutes, a park or your living room. |
+| nature-outdoors/foraging | An hour | Free | Solo, A friend | Learn to spot one common edible plant | 1 hour, a local park or trail and a field guide. |
+| nature-outdoors/camping | An hour | Under $25 | Solo, A friend | Pitch a tent | 30 minutes, a park or your living room. |
 | nature-outdoors/fishing | An hour | Under $25 | Solo, A friend | Practice casting | 30 minutes, an open park and a practice plug. |
 | home-garden/gardening | An hour | Under $25 | Solo, A friend | Plant an herb in a pot | 15 minutes, a pot, soil and a sunny sill. |
 | home-garden/houseplants | An hour | Under $25 | Solo | Propagate a cutting in water | 10 minutes, a glass of water and a cutting. |
 | home-garden/vegetable-gardens | An hour | Under $25 | Solo, A friend | Sow lettuce seeds in a container | 20 minutes, a container, soil and seeds. |
 | home-garden/diy | An hour | Under $25 | Solo | Fix one small thing | 30 minutes, a how-to video and basic tools. |
-| gaming-tabletop/board-games | An hour | Under $25 | A friend, New people | Teach friends a 30 minute game | 1 hour, a table and a board game. |
-| gaming-tabletop/chess | An hour | Free | Solo, A friend | Play one game of chess | 20 minutes, a board or a chess app. |
+| gaming-tabletop/board-games | An hour | Under $25 | A friend | Teach friends a 30 minute game | 1 hour, a table and a board game. |
+| gaming-tabletop/chess | An hour | Free | A friend, New people | Play chess at a park table | 20 minutes, a park with chess tables. |
 | gaming-tabletop/puzzles | An hour | Under $25 | Solo, A friend | Start a 500 piece puzzle | 1 hour, a table and a puzzle. |
 | gaming-tabletop/d-d | Tonight | Free | A friend, New people | Join a beginner one-shot | 3 hours, a local game store. |
-| gaming-tabletop/video-games | An hour | Under $25 | A friend, New people | Schedule a co-op session | 1 hour, a co-op game and a friend. |
+| gaming-tabletop/video-games | An hour | Under $25 | A friend | Plan a co-op game night | 1 hour, a co-op game and a friend. |
 | music/music-production | An hour | Free | Solo | Make a four bar loop | 20 minutes, a music app. |
 | music/singing | An hour | Free | Solo, A friend | Warm up and sing a song | 15 minutes, a quiet room. |
 | music/guitar | An hour | Under $25 | Solo, A friend | Learn the G, C and D chords | 30 minutes, a guitar. |
 | music/songwriting | An hour | Free | Solo, A friend | Write a four line chorus | 15 minutes, paper and a pen. |
 | music/djing | An hour | Free | Solo, A friend | Practice a beatmatched transition | 20 minutes, a DJ app. |
 | photography-film/photography | An hour | Free | Solo, A friend | Shoot one subject from 20 angles | 30 minutes, your phone or a camera. |
-| photography-film/filmmaking | An hour | Free | A friend, New people | Shoot a 30 second film in three shots | 1 hour, your phone and a friend. |
+| photography-film/filmmaking | An hour | Free | Solo, A friend | Shoot a 30 second film in three shots | 1 hour, your phone and a friend. |
 | photography-film/film-photography | Weekend | Under $25 | Solo, A friend | Shoot a roll on a disposable camera | A few evenings, a disposable film camera. |
 | photography-film/video | An hour | Free | Solo, A friend | Film ten clips and cut a 30 second edit | 45 minutes, your phone and an editing app. |
 | health-wellness/yoga | An hour | Free | Solo, A friend | Do a 15 minute beginner flow | 15 minutes, a mat and a video. |
@@ -152,26 +184,26 @@ How many ideas each combination matches (Solo / A friend / New people), before t
 | tech-building/ai-projects | An hour | Free | Solo, A friend | Plan something real with an AI tool | 20 minutes, a laptop or phone. |
 | collecting-fandom/lego | An hour | Under $25 | Solo, A friend | Build a small set | 1 hour, a set or a bin of bricks. |
 | collecting-fandom/vinyl | An hour | Under $25 | Solo, A friend | Listen to an album on vinyl | 1 hour, a record store. |
-| travel-adventure/backpacking | Tonight | Free | A friend, New people | Walk two miles with a day bag | 1 hour, a day bag with the 10 essentials. |
-| travel-adventure/skiing | An hour | Free | A friend, New people | Practice the snowplow stance | 15 minutes, floor space at home. |
+| travel-adventure/backpacking | Tonight | Free | Solo, A friend | Walk two miles with a day bag | 1 hour, a day bag with the 10 essentials. |
+| travel-adventure/skiing | An hour | Free | Solo | Practice the snowplow stance | 15 minutes, floor space at home. |
 | travel-adventure/exploration | An hour | Free | Solo, A friend | Walk a neighborhood you have never visited | 15 minutes, a neighborhood new to you. |
 | art-creative/illustration | An hour | Free | Solo | Illustrate one thing from your day | 30 minutes, paper and a pen. |
 | crafts-making/zines | An hour | Free | Solo, A friend | Fold and fill a mini zine | 30 minutes, one sheet of paper and a pen. |
 | crafts-making/upcycling | An hour | Free | Solo | Flip an old T-shirt | 1 hour, an old T-shirt and scissors. |
 | crafts-making/pottery | Tonight | Treat me | Solo, A friend | Take a beginner wheel class | 2 hours, a local studio. |
-| sports-fitness/boxing | An hour | Under $25 | A friend, New people | Take a beginner boxing class | 1 hour, a boxing gym. |
+| sports-fitness/boxing | An hour | Treat me | A friend, New people | Take a beginner boxing class | 1 hour, a boxing gym. |
 | sports-fitness/skateboarding | An hour | Under $25 | Solo, A friend | Practice pushing on a skateboard | 30 minutes, a flat quiet path and a helmet. |
 | sports-fitness/soccer | An hour | Under $25 | A friend, New people | Join a pickup game | 1 hour, a local field. |
 | sports-fitness/basketball | An hour | Under $25 | Solo, A friend | Shoot hoops at a public court | 1 hour, a public court. |
 | home-garden/composting | An hour | Under $25 | Solo | Start a kitchen scrap bin | 30 minutes, a small bin, greens and browns. |
 | nature-outdoors/surfing | Weekend | Treat me | Solo, A friend | Take a beginner surf lesson | 3 hours, a surf school on the coast. |
-| nature-outdoors/kayaking | Weekend | Under $25 | Solo, A friend | Take a guided kayak tour | 3 hours, calm water and a tour company. |
+| nature-outdoors/kayaking | Weekend | Treat me | Solo, A friend | Take a guided kayak tour | 3 hours, calm water and a tour company. |
 | music/choir | Tonight | Free | A friend, New people | Go to an open choir rehearsal | 2 hours, a community choir. |
-| music/karaoke | Tonight | Under $25 | A friend, New people | Book a karaoke room | 2 hours, a karaoke venue and a few friends. |
+| music/karaoke | Tonight | Treat me | A friend | Book a karaoke room | 2 hours, a karaoke venue and a few friends. |
 | music/live-music | Tonight | Under $25 | A friend, New people | See a small local gig | 3 hours, a small venue. |
-| art-creative/improv | Tonight | Under $25 | A friend, New people | Join a beginner improv workshop | 2 hours, a local workshop. |
+| art-creative/improv | Tonight | Treat me | A friend, New people | Join a beginner improv workshop | 2 hours, a local workshop. |
 | food-cooking/pasta | An hour | Under $25 | Solo, A friend | Roll fresh pasta by hand | 1 hour, your kitchen, flour and eggs. |
-| health-wellness/sauna-cold-plunge | Tonight | Under $25 | A friend, New people | Try a sauna or bathhouse session | 2 hours, a sauna or bathhouse. |
+| health-wellness/sauna-cold-plunge | Tonight | Treat me | A friend, New people | Try a sauna or bathhouse session | 2 hours, a sauna or bathhouse. |
 | gaming-tabletop/trivia | Tonight | Under $25 | A friend, New people | Join a quiz night with a team | 2 hours, a bar or café with a quiz night. |
 | travel-adventure/volunteering | Weekend | Free | A friend, New people | Sign up for a volunteer shift | 3 hours, a local cause. |
 | home-garden/interior-design | Tonight | Free | Solo | Make a moodboard for one room | 2 hours, your room and a few photos. |
@@ -188,31 +220,31 @@ How many ideas each combination matches (Solo / A friend / New people), before t
 | tech-building/game-development | Tonight | Free | Solo | Make a one screen game | 2 hours, a laptop and a beginner engine. |
 | collecting-fandom/antiques | Tonight | Under $25 | Solo, A friend | Pick one piece at a flea market | 2 hours, a flea market or antique fair. |
 | collecting-fandom/anime | An hour | Free | Solo, A friend | Watch a first episode with a friend | 30 minutes, a screen and a friend. |
-| travel-adventure/travel | Weekend | Under $25 | Solo, A friend | Plan a day trip | A full day, a town you have never visited. |
-| travel-adventure/road-trips | Weekend | Under $25 | A friend, New people | Plan a one day loop | A full day, a car and a crew. |
+| travel-adventure/travel | Weekend | Treat me | Solo, A friend | Plan a day trip | A full day, a town you have never visited. |
+| travel-adventure/road-trips | Weekend | Treat me | A friend | Plan a one day loop | A full day, a car and a crew. |
 | sports-fitness/climbing | Tonight | Treat me | A friend, New people | Try an intro bouldering session | 90 minutes, a climbing gym. |
-| sports-fitness/dance | An hour | Under $25 | A friend, New people | Try a salsa, swing or bachata class | 1 hour, a dance studio. |
+| sports-fitness/dance | An hour | Treat me | A friend, New people | Try a salsa, swing or bachata class | 1 hour, a dance studio. |
 | nature-outdoors/wild-swimming | Weekend | Under $25 | Solo, A friend | Find a safe swim spot | 2 hours, a known and safe swim spot. |
 | music/make-a-beat | An hour | Under $25 | Solo | Make a beat | 30 minutes, a beat-making app. |
 | art-creative/life-drawing | Tonight | Under $25 | A friend, New people | Go to a drop-in life drawing session | 2 hours, a local studio. |
 | travel-adventure/city-walks | An hour | Free | Solo, A friend | Walk a neighborhood you have never walked | 1 hour, a neighborhood new to you. |
 | photography-film/film-clubs | Tonight | Free | A friend, New people | Pick a film and watch it together | 3 hours, a screen or cinema and some friends. |
 | food-cooking/food-tours | Tonight | Under $25 | Solo, A friend | Eat your way down one street | 2 hours, a street or market known for food. |
-| gaming-tabletop/mahjong | An hour | Under $25 | A friend, New people | Learn the tiles | 1 hour, a rules guide and a set. |
-| travel-adventure/rafting | Weekend | Under $25 | A friend, New people | Pick a beginner river stretch | A full day, a guided trip. |
+| gaming-tabletop/mahjong | An hour | Under $25 | Solo, A friend | Learn the tiles | 1 hour, a rules guide and a set. |
+| travel-adventure/rafting | Weekend | Treat me | A friend, New people | Pick a beginner river stretch | A full day, a guided trip. |
 | books-writing/letter-writing | An hour | Free | Solo, A friend | Write a letter by hand | 30 minutes, paper, a pen and a stamp. |
-| sports-fitness/hyrox | An hour | Under $25 | A friend, New people | Learn the eight Hyrox stations | 1 hour, a gym. |
+| sports-fitness/hyrox | An hour | Under $25 | Solo, A friend | Learn the eight Hyrox stations | 1 hour, a gym. |
 | sports-fitness/walking-clubs | An hour | Free | A friend, New people | Join a walking group | 1 hour, a meetup point near you. |
-| sports-fitness/badminton | An hour | Under $25 | A friend, New people | Rally with a racket and shuttles | 45 minutes, a court or park. |
+| sports-fitness/badminton | An hour | Under $25 | A friend | Rally with a racket and shuttles | 45 minutes, a court or park. |
 | sports-fitness/skating | An hour | Under $25 | Solo, A friend | Rent skates for a first go | 1 hour, a rink. |
-| sports-fitness/ultimate-frisbee | An hour | Under $25 | A friend, New people | Learn the backhand throw | 30 minutes, a disc and a friend in a park. |
+| sports-fitness/ultimate-frisbee | An hour | Under $25 | A friend | Learn the backhand throw | 30 minutes, a disc and a friend in a park. |
 | sports-fitness/cricket | An hour | Under $25 | A friend, New people | Ask for a turn at a local game | 1 hour, a local ground or park. |
-| gaming-tabletop/carrom | An hour | Under $25 | A friend, New people | Play a game of carrom | 30 minutes, a board and a friend. |
-| sports-fitness/table-tennis | An hour | Under $25 | A friend, New people | Rally on a table | 30 minutes, a table and a friend. |
+| gaming-tabletop/carrom | An hour | Under $25 | A friend | Play a game of carrom | 30 minutes, a board and a friend. |
+| sports-fitness/table-tennis | An hour | Under $25 | A friend | Rally on a table | 30 minutes, a table and a friend. |
 | art-creative/open-mics | Tonight | Under $25 | A friend, New people | Watch an open mic | 2 hours, a local venue. |
 | art-creative/indian-classical-dance | An hour | Under $25 | Solo, A friend | Watch a recital and pick a style | 1 hour, a recital or a video of one. |
 | music/indian-classical-music | An hour | Under $25 | Solo, A friend | Listen to Carnatic and Hindustani pieces | 30 minutes, headphones and two recordings. |
 | music/piano | An hour | Under $25 | Solo | Pick out a simple tune | 20 minutes, a piano or keyboard. |
-| health-wellness/sound-baths | Tonight | Under $25 | A friend, New people | Book a group sound bath | 90 minutes, a studio or hall. |
+| health-wellness/sound-baths | Tonight | Treat me | A friend, New people | Book a group sound bath | 90 minutes, a studio or hall. |
 | nature-outdoors/stargazing | An hour | Free | Solo, A friend | Look up after dark | 10 minutes, a dark spot away from bright lights. |
 | crafts-making/block-printing | An hour | Under $25 | Solo, A friend | Print a simple shape with a potato | 20 minutes, a cut potato, ink and paper. |

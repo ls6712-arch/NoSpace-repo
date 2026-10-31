@@ -3,9 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
-import { useSocial } from "../context/SocialContext";
-import { fetchFollowingIds } from "../lib/profileFollows";
-import { supabase } from "../../lib/supabase";
+import { useFeedInputs } from "../lib/useFeedInputs";
 import type { Post } from "../data/posts";
 import { buildFeed } from "../lib/homeFeed";
 import { FeedCard } from "../components/home/FeedCard";
@@ -47,11 +45,7 @@ export function HomeFeed() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { publicFeed, postsStatus, reloadPosts } = useContent();
-  const social = useSocial();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [followingIds, setFollowingIds] = useState<string[]>([]);
-  const [spacePostIds, setSpacePostIds] = useState<Set<number>>(new Set());
-  const [loaded, setLoaded] = useState(!user);
   const [refreshing, setRefreshing] = useState(false);
   const [pull, setPull] = useState(0);
   const [cardStates, setCardStates] = useState<Record<string, CardState>>({});
@@ -59,39 +53,8 @@ export function HomeFeed() {
   const home = useHomeData(user?.id);
   const touchStart = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    fetchFollowingIds(user.id)
-      .then(setFollowingIds)
-      .finally(() => setLoaded(true));
-  }, [user?.id]);
-
-  useEffect(() => {
-    const client = supabase;
-    if (!user || !client) return;
-    let cancelled = false;
-    (async () => {
-      const { data: memberships } = await client.from("space_members").select("space_id").eq("user_id", user.id).eq("status", "active");
-      const spaceIds = (memberships ?? []).map((m) => m.space_id as string);
-      if (spaceIds.length === 0) return;
-      const { data: moments } = await client
-        .from("space_moments")
-        .select("post_id")
-        .in("space_id", spaceIds)
-        .eq("status", "approved")
-        .eq("removed_by_host", false);
-      if (!cancelled) setSpacePostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
-    })().catch((err) => console.warn("[HomeFeed] Space Moments load failed:", err));
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
-
-  const followedCorners = useMemo(() => new Set(social.followedHobbies), [social.followedHobbies]);
-  const feed = useMemo(
-    () => buildFeed(publicFeed, { meId: user?.id, followingIds, spacePostIds, followedCorners }),
-    [publicFeed, user?.id, followingIds, spacePostIds, followedCorners],
-  );
+  const { inputs: feedInputs, loaded } = useFeedInputs();
+  const feed = useMemo(() => buildFeed(publicFeed, feedInputs), [publicFeed, feedInputs]);
 
   const openId = searchParams.get("m") ? Number(searchParams.get("m")) : null;
   const openPost = openId != null ? (publicFeed.find((p) => p.id === openId) ?? null) : null;

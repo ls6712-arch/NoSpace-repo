@@ -1,623 +1,453 @@
-import { cornerPath } from "../lib/cornerPath";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
-import { useHistoryState, useRowScrollMemory } from "../lib/useHistoryState";
-import { cornerStyle } from "../lib/categoryStyle";
-import { PAGE_X, SECTION_GAP, TITLE_GAP } from "../lib/pageGrid";
-import { PressLink } from "../components/afterhours/PressLink";
-import { Reveal } from "../components/afterhours/Reveal";
-import { MomentTile } from "../components/afterhours/MomentTile";
-import {
-  Compass,
-  LayoutGrid,
-  PenLine,
-  Search,
-  ShoppingBag,
-  UserRound,
-  X,
-} from "lucide-react";
-import { marketplaceEnabled } from "../config";
-import { hobbies, subHobbyLabel } from "../data/hobbies";
-import { Post } from "../data/posts";
-import { Product } from "../data/products";
-import { useContent } from "../context/ContentContext";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router";
+import { Search } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
-import { useCorners, isBrowsableOnDiscover } from "../context/CornersContext";
-import { useCategories } from "../context/CategoriesContext";
-import { fetchFollowingIds } from "../lib/profileFollows";
-import { supabase } from "../../lib/supabase";
-import { track } from "../lib/analytics";
+import { cornerFollowKey } from "../context/CornersContext";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { MomentDetail } from "../components/MomentDetail";
-import { ProductCard } from "../components/ProductCard";
-import { SpacesBrowser } from "../components/SpacesBrowser";
-import { Loadable } from "../components/ui/skeleton";
-import { MomentGridSkeleton } from "../components/Skeletons";
-import { EmptyState, ErrorNotice } from "../components/StateViews";
-import { Button } from "../components/ui/button";
-import { PeopleBrowser } from "./People";
-import { useEventTickets } from "../components/door/useEventTickets";
-import { doorFor } from "../lib/doorList";
+import { SignUpPrompt } from "../components/SignUpPrompt";
+import { Skeleton } from "../components/ui/skeleton";
+import { notifyError } from "../components/ui/toaster";
 import { DiscoverHeader } from "../components/discover/DiscoverHeader";
-import { HeroCard } from "../components/discover/HeroCard";
-import { FriendsDoing } from "../components/discover/FriendsDoing";
-import { BrowseTiles } from "../components/discover/BrowseTiles";
+import { JumpChips } from "../components/discover/JumpChips";
+import { IdeaPills } from "../components/discover/IdeaPills";
+import { IdeasRow } from "../components/discover/IdeasRow";
+import { CornerTearCard } from "../components/discover/CornerTearCard";
+import { SpacesRow } from "../components/discover/SpacesRow";
+import { CityFeed } from "../components/discover/CityFeed";
+import { SectionBoundary } from "../components/discover/SectionBoundary";
 import { InterestsSheet } from "../components/discover/InterestsSheet";
 import { useInterests } from "../lib/interests";
-import { heroCandidates } from "../lib/discoverHero";
-import { fetchFriendPursuits, type FriendPursuit } from "../lib/friendPursuits";
-import { Skeleton } from "../components/ui/skeleton";
-import { plural } from "../lib/plural";
+import { useUnifiedSearch, type SearchGroup, type SearchHit } from "../lib/search";
+import { fetchPasses, fetchTaste, type Taste } from "../lib/tasteRemote";
+import type { Pass } from "../lib/tasteModel";
+import { fetchHomeSuggestions } from "../lib/homeSuggestions";
+import { follow } from "../lib/profileFollows";
+import { requestOrJoinSpace } from "../lib/spaces";
+import { ideasFor, type IdeaPills as Pills } from "../lib/ideaMatch";
+import { defaultPills, loosenSpend, passTagFor, type PassCorners } from "../lib/discoverIdeas";
+import { cornerCandidates, cornerCardModel, visitorCorners, type CornerCardModel } from "../lib/discoverCorners";
+import { discoverFeed, feedCornerChips, postCornerKey } from "../lib/discoverFeed";
+import {
+  fetchCornerAffinity,
+  fetchDiscoverCorners,
+  fetchDiscoverMoments,
+  fetchDiscoverSpaces,
+  fetchPassCornerMap,
+  fetchPublicSpaces,
+  logDiscoverEvent,
+  orEmpty,
+  type DiscoverCorner,
+  type DiscoverKind,
+  type DiscoverMoment,
+  type DiscoverSpace,
+} from "../lib/discover";
+import { useFeedInputs } from "../lib/useFeedInputs";
+import { PAGE_X } from "../lib/pageGrid";
+import type { Post } from "../data/posts";
 
-/**
- * Discover has an end. That is the whole design: a bounded gallery of work,
- * then a deliberate choice about what to do next — explore a space, create
- * something of your own — rather than another page of work loading itself
- * under your thumb.
- *
- * PAGE_SIZE is the whole of All Moments: 30, then "You're caught up". Nothing
- * here loads on scroll.
- */
-const PAGE_SIZE = 30;
+const SEARCH_GROUPS: SearchGroup[] = ["corner", "space", "person"];
+const SEARCH_TITLES: Record<string, string> = { corner: "Corners", space: "Spaces", person: "People" };
+const FEED_PAGE = 20;
+const CORNER_SHOWN = 3;
+const CORNER_FETCHED = 6;
 
-const HOUR = 3_600_000;
-
-/** Corners / Spaces / People / Marketplace — Discover's own front door, kept
- * in ?tab= so it's shareable and survives a back button, same as any other
- * page state.
- *
- * Spec change ("Corners carry discovery"): Corners is default now, not
- * Spaces — Categories (what the old "Spaces" tab actually browsed) are
- * internal-only, nobody picks one directly.
- * `spaces` is real now (Phase 5: Create Space, the Space page,
- * SpacesBrowser) — host-created communities, unrelated to the old
- * Category-browsing "Spaces" this same tab id used to mean. */
-const DISCOVER_TABS = [
-  // "Corners" is not a tab here: it is a link to the Corners page (/corners). This id is only the
-  // default view, the door list, shown when no other tab is open.
-  { id: "corners", label: "Corners", icon: Compass, hidden: true },
-  { id: "spaces", label: "Spaces", icon: LayoutGrid, hidden: false },
-  { id: "people", label: "People", icon: UserRound, hidden: false },
-  { id: "marketplace", label: "Marketplace", icon: ShoppingBag, hidden: !marketplaceEnabled },
-] as const;
-type DiscoverTab = (typeof DISCOVER_TABS)[number]["id"];
-const VISIBLE_DISCOVER_TABS = DISCOVER_TABS.filter((t) => !t.hidden);
-
-/** The box searches what the open tab lists, so the placeholder says that. The
- * Corners tab also filters the Moments list below it. */
-const SEARCH_PLACEHOLDER: Record<DiscoverTab, string> = {
-  corners: "Search Corners and Moments",
-  spaces: "Search Spaces",
-  people: "Search people",
-  marketplace: "Search the marketplace",
-};
-
-const FEED_TABS = [
-  { id: "forYou", label: "For you" },
-  { id: "following", label: "Following" },
-  { id: "recent", label: "Recent" },
-] as const;
-type FeedTab = (typeof FEED_TABS)[number]["id"];
-
-/**
- * Shared look for every navigational tab/filter on this page: plain
- * small-caps text, letter-spaced, no pill background — active means a thin
- * underline plus darker text, not a fill. Deliberately not used for
- * "Log a Moment" or any other primary action button,
- * which stay solid — this is for choosing what you're looking at, not
- * doing something.
- */
-function tabLabelClass(active: boolean, size: "sm" | "xs" = "sm") {
-  return `min-h-11 border-b-2 font-semibold [font-family:var(--font-body)] transition-colors ${
-    size === "sm" ? "text-body" : "text-small"
-  } ${
-    active
-      ? "border-[var(--accent)] text-foreground"
-      : "border-transparent text-muted-foreground hover:text-foreground"
-  }`;
-}
-
-/**
- * Featured Moments selection: recency first, a small boost for hobbies
- * you're actually in — no engagement/like term. Counts (reaction or legacy
- * `likes`) never sort, rank, filter or promote anything here, per
- * docs/moment-card-and-reactions-spec.md §4.6; "Featured Moments stays
- * curated," not a popularity ranking. Then the result is spread across
- * creators and Spaces so one Moment or one Space can't fill the whole row.
- * No score is ever shown; it only decides the order.
- */
-/**
- * "For You"'s own ranking — real signals (who you actually follow, your
- * Interest Corners, Spaces you're an active member of), not an ML model:
- * there's no training pipeline or event log behind this app to build one
- * on, and the honest version of "personalized" here is a short, named list
- * of real connections, same spirit as scorePost's own hobby/tag bonus in
- * ContentContext.tsx. Deliberately NOT engagement-weighted — no love/in/
- * thought count anywhere in this score — per the same guardrail scorePost
- * already follows (docs/moment-card-and-reactions-spec.md §4.6). Kept
- * local to this tab rather than folded into scorePost/publicFeed, which
- * every other surface (My Space, Space pages, "Recent"/"Following") reads
- * too — this only ever changes what "For You" itself shows.
- */
-function scoreForYou(
-  post: Post,
-  followingIds: Set<string>,
-  followedHobbySlugs: Set<string>,
-  memberSpacePostIds: Set<number>,
-): number {
-  const ageHours = (Date.now() - post.createdAt) / HOUR;
-  const recencyScore = Math.max(0, 240 - ageHours); // same ~10-day decay as scorePost
-  const fromSomeoneYouFollow = !!post.userId && followingIds.has(post.userId);
-  // Same hobby-follow set + the same "match post.hobbySlug directly" rule
-  // the "Following" tab already uses just below (social.followedHobbies
-  // mixes space/hobby/Corner-level keys; a plain hobby slug is the only
-  // shape that lines up with post.hobbySlug).
-  const inYourInterests = followedHobbySlugs.has(post.hobbySlug);
-  const fromYourSpace = memberSpacePostIds.has(post.id);
-  // Three independent, additive bonuses rather than one flag — a Moment
-  // that's both from someone you follow AND in a Space you're part of is
-  // more relevant than either alone, not capped at the same bump.
-  const bonus = (fromSomeoneYouFollow ? 90 : 0) + (inYourInterests ? 50 : 0) + (fromYourSpace ? 40 : 0);
-  return recencyScore + bonus;
-}
-
-/**
- * Discover's own Marketplace tab — the one place, alongside a Space's own
- * Marketplace tab, where product listings are actually browsable rather
- * than reachable only by an accidental search hit. Grouped by Space, with
- * each group linking on to that Space's full listing set on /shop rather
- * than duplicating pagination here.
- */
-function MarketplaceTab({ query }: { query: string }) {
-  const { listings } = useContent();
-  const q = query.trim().toLowerCase();
-  const matching = q
-    ? listings.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.creator.toLowerCase().includes(q),
-      )
-    : listings;
-
-  const bySpace = new Map<string, Product[]>();
-  for (const product of matching) {
-    bySpace.set(product.hobbySlug, [...(bySpace.get(product.hobbySlug) ?? []), product]);
-  }
-
-  if (matching.length === 0) {
-    return (
-      <p className="rounded-card border border-dashed border-border px-5 py-6 text-center text-small text-muted-foreground">
-        {q ? `No listings match “${query}” yet.` : "Nothing for sale yet"}
-      </p>
-    );
-  }
-
+function SectionHeading({ id, title, sub, action }: { id: string; title: string; sub?: string; action?: { label: string; to: string } }) {
   return (
-    <>
-      {[...bySpace.entries()].map(([hobbySlug, list]) => {
-        const hobby = hobbies.find((h) => h.slug === hobbySlug);
-        return (
-          <section key={hobbySlug} className="mb-12">
-            <div className="mb-3 flex items-end justify-between gap-4">
-              <h2 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-                {hobby?.name ?? hobbySlug}
-              </h2>
-              <Link
-                to={`/shop?hobby=${hobbySlug}`}
-                className="text-caption text-muted-foreground transition-colors hover:text-foreground"
-              >
-                See all in {hobby?.shortName ?? hobbySlug} →
-              </Link>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {list.slice(0, 4).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
-        );
-      })}
-    </>
+    <div className="mb-4 flex items-end justify-between gap-4">
+      <div className="min-w-0">
+        <h2 id={id} className="font-[family-name:var(--font-display)] text-title font-bold">
+          {title}
+        </h2>
+        {sub && <p className="text-small text-muted-foreground">{sub}</p>}
+      </div>
+      {action && (
+        <Link to={action.to} className="inline-flex min-h-11 shrink-0 items-center text-small font-semibold text-accent-text">
+          {action.label}
+        </Link>
+      )}
+    </div>
   );
 }
 
-/**
- * Corners tab — every Corner across every (internal) Category, flat,
- * name-only tiles (no thumbnail — the name itself, large and in its own
- * color, is the whole tile). Discover's own rule: no empty Corner is ever
- * shown, curated or not (isBrowsableOnDiscover) — a threshold of recent
- * Moments or an active Space, never a bypass for editorial signage. Ordered
- * by 30-day activity, never by follower/member counts. Category is
- * internal-only now, so nothing here names one — just the Corner.
- */
-function AllCornersBrowser({ query }: { query: string }) {
-  const { cornersFor, cornerThreshold } = useCorners();
-  useCategories();
-  const q = query.trim().toLowerCase();
-
-  const allCorners = hobbies
-    .filter((h) => !h.hidden)
-    .flatMap((hobby) => cornersFor(hobby.slug).map((c) => ({ ...c, spaceSlug: hobby.slug })));
-
-  const matching = (q ? allCorners.filter((c) => c.name.toLowerCase().includes(q)) : allCorners)
-    .filter((c) => isBrowsableOnDiscover(c, cornerThreshold))
-    .sort((a, b) => b.momentCount30d - a.momentCount30d);
-
-  if (matching.length === 0) {
-    // No active filter (nothing searched) — there's nothing to say "no
-    // matches" about, so hide the row entirely rather than show an empty
-    // box with a message that presupposes a search happened. The message
-    // below is only ever seen when a search genuinely comes up empty.
-    if (!q) return null;
-    return (
-      <EmptyState line="No Corners match that." hint="Try a broader word." />
-    );
-  }
-
+function SectionSkeleton({ cards }: { cards: number }) {
   return (
-    // Search results: names set large, hairlines between, a dot in the
-    // category's colour. (Browsing is the category grid.)
-    <ul className="mb-10 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3 md:mb-12">
-      {matching.map((c, i) => (
-        <li key={`${c.spaceSlug}-${c.slug}`} style={cornerStyle(c.spaceSlug, c.slug)}>
-          <Reveal index={Math.min(i, 11)}>
-            <PressLink
-              to={cornerPath(c.spaceSlug, c.slug)}
-              aria-label={`Browse the ${c.name} Corner`}
-              className="group flex min-h-14 items-center justify-between gap-4 border-t border-border py-3"
-            >
-              <span className="text-title text-foreground transition-colors duration-fast group-hover:text-[var(--accent-text)]">
-                {c.name}
-              </span>
-              <span className="size-2 shrink-0 rounded-full bg-[var(--cat)]" aria-hidden="true" />
-            </PressLink>
-          </Reveal>
-        </li>
+    <div className="flex gap-3 overflow-hidden" aria-hidden="true">
+      {Array.from({ length: cards }, (_, i) => (
+        <Skeleton key={i} className="h-60 w-[260px] shrink-0 rounded-card" />
       ))}
-    </ul>
+    </div>
   );
 }
 
+const initials = (name: string) => name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+
+function SearchRow({ hit }: { hit: SearchHit }) {
+  return (
+    <li>
+      <Link to={hit.to} className="flex min-h-14 items-center gap-3 rounded-card bg-card p-3">
+        <Avatar className="size-10 shrink-0">
+          {hit.avatarUrl && <AvatarImage src={hit.avatarUrl} alt="" />}
+          <AvatarFallback className="text-small">{initials(hit.label)}</AvatarFallback>
+        </Avatar>
+        <span className="min-w-0">
+          <span className="block truncate text-body font-semibold">{hit.label}</span>
+          {hit.sub && <span className="block truncate text-small text-muted-foreground">{hit.sub}</span>}
+        </span>
+      </Link>
+    </li>
+  );
+}
+
+/**
+ * Discover v2: the world, not your world. Home is what is yours (dated plans,
+ * people you follow, Spaces you joined); this is what is not yet: undated ideas,
+ * Corners new to you, Spaces near you, and Moments from people you do not follow.
+ * One scrolling page: a header with the city, search over Corners, Spaces and
+ * people, jump chips, then the four sections. Every section loads and fails on
+ * its own, and a Moment, Corner or Space is never on both Home and Discover.
+ * Signed out, everything is read only and any action opens the sign up prompt.
+ */
 export function Discover() {
-  const { publicFeed, postsStatus, reloadPosts, myPosts } = useContent();
   const { user } = useAuth();
-  // Subscribing re-renders this page when admin Space changes load.
-  const { spaceRows } = useCategories();
+  const { publicFeed } = useContent();
   const social = useSocial();
+  const interests = useInterests();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get("about") ?? "");
-  // Opening a Featured Moment is how you react to it or leave a thought —
-  // same "media opens MomentDetail" contract MomentCard gives every other
-  // surface (docs/moment-card-and-reactions-spec.md §2.3).
-  const [openPost, setOpenPost] = useState<Post | null>(null);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [prompt, setPrompt] = useState(false);
+  const [query, setQuery] = useState("");
+  const q = query.trim();
+  const { groups, loading: searching } = useUnifiedSearch(q);
+  const { inputs: feedInputs, loaded: feedInputsLoaded } = useFeedInputs();
 
-  // Tapping what a post is about lands here with that subject already searched.
-  useEffect(() => {
-    const about = searchParams.get("about");
-    if (about) setQuery(about);
-  }, [searchParams]);
+  /** Runs `act` for a signed-in person, and opens the sign up prompt for a visitor. */
+  const needAccount = useCallback(
+    (act: () => void) => {
+      if (!user) setPrompt(true);
+      else act();
+    },
+    [user],
+  );
 
-  const tab: DiscoverTab =
-    (searchParams.get("tab") as DiscoverTab | null) &&
-    VISIBLE_DISCOVER_TABS.some((t) => t.id === searchParams.get("tab"))
-      ? (searchParams.get("tab") as DiscoverTab)
-      : "corners";
+  const log = useCallback(
+    (kind: DiscoverKind, refId: string, position: number, action: Parameters<typeof logDiscoverEvent>[0]["action"], cornerKey?: string | null) => {
+      if (user) void logDiscoverEvent({ kind, refId, cornerKey, position, action });
+    },
+    [user],
+  );
 
-  function setTab(next: DiscoverTab) {
-    const params = new URLSearchParams(searchParams);
-    if (next === "corners") params.delete("tab");
-    else params.set("tab", next);
-    setSearchParams(params, { replace: true });
-  }
-
-  // Kept across Back so returning from a Moment or Corner finds the list as
-  // long as you left it (see useHistoryState).
-  const [feedTab, setFeedTab] = useHistoryState<FeedTab>("discover.feedTab", "forYou");
-  const tabsRow = useRowScrollMemory("discover.tabs");
-
-  // "For You" personalization signals — real ones, not an ML model: who you
-  // actually follow (accepted profile_follows) and which Spaces you're an
-  // active member of. Fetched once per account, same guard pattern
-  // MySpaceGrid.tsx already uses for both of these exact queries.
-  const [followingIds, setFollowingIds] = useState<string[]>([]);
-  const [memberSpacePostIds, setMemberSpacePostIds] = useState<Set<number>>(new Set());
+  // ---------- Ideas: local, instant ----------
+  const [taste, setTaste] = useState<Taste | null>(null);
+  const [passes, setPasses] = useState<Pass[]>([]);
+  const [passCorners, setPassCorners] = useState<PassCorners>({});
+  const [affinity, setAffinity] = useState<Map<string, number>>(new Map());
+  const windowParam = searchParams.get("window") ?? "";
+  const [pills, setPills] = useState<Pills>(() => {
+    const base = defaultPills(null, Date.now());
+    // "Find something" on the Week view opens Discover for one free window.
+    return windowParam ? { ...base, time: /^(sat|sun)-/.test(windowParam) ? "weekend" : "tonight" } : base;
+  });
+  const touched = useRef(Boolean(windowParam));
 
   useEffect(() => {
     if (!user) return;
-    fetchFollowingIds(user.id).then(setFollowingIds);
-  }, [user?.id]);
-
-  useEffect(() => {
-    const client = supabase;
-    if (!user || !client) return;
-    let cancelled = false;
-    (async () => {
-      const { data: memberships } = await client
-        .from("space_members")
-        .select("space_id")
-        .eq("user_id", user.id)
-        .eq("status", "active");
-      const spaceIds = (memberships ?? []).map((m) => m.space_id as string);
-      if (spaceIds.length === 0) {
-        if (!cancelled) setMemberSpacePostIds(new Set());
-        return;
-      }
-      const { data: moments } = await client
-        .from("space_moments")
-        .select("post_id")
-        .in("space_id", spaceIds)
-        .eq("status", "approved")
-        .eq("removed_by_host", false);
-      if (!cancelled) setMemberSpacePostIds(new Set((moments ?? []).map((m) => m.post_id as number)));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
-
-  const q = query.trim().toLowerCase();
-
-  // The front door: a hero Corner from what the person wants more of (their
-  // moods; with none chosen, the Corners that suit this time of day), preferring
-  // one with an event coming up, then friends' Pursuits and the Browse tiles.
-  const interests = useInterests();
-  const [interestsOpen, setInterestsOpen] = useState(false);
-  const door = useMemo(
-    () => doorFor(new Date(), user && postsStatus !== "loading" ? myPosts.length : null),
-    [user, postsStatus, myPosts.length],
-  );
-  const candidates = useMemo(() => heroCandidates(interests.moods, door.mood), [interests.moods, door.mood]);
-  const { ticketFor } = useEventTickets(candidates, user?.id);
-  const hero = useMemo(() => candidates.find((c) => ticketFor(c)) ?? candidates[0] ?? null, [candidates, ticketFor]);
-
-  const [friendPursuits, setFriendPursuits] = useState<FriendPursuit[] | null>(null);
-  useEffect(() => {
-    if (!user) {
-      setFriendPursuits([]);
-      return;
-    }
-    if (followingIds.length === 0) {
-      setFriendPursuits([]);
-      return;
-    }
     let live = true;
-    void fetchFriendPursuits(followingIds).then((list) => live && setFriendPursuits(list));
+    void fetchTaste(user.id).then((t) => {
+      if (!live) return;
+      setTaste(t);
+      if (!touched.current) setPills(defaultPills(t, Date.now()));
+    });
+    void fetchPasses(user.id).then((p) => live && setPasses(p));
+    void fetchPassCornerMap().then((m) => live && setPassCorners(m));
+    void fetchCornerAffinity().then((a) => live && setAffinity(a));
     return () => {
       live = false;
     };
-  }, [user?.id, followingIds]);
+  }, [user?.id]);
 
-  // Category is internal-only now (never shown), but its name/keywords
-  // still feed search matching — see spaceScoped's own text match below.
-  const hobbyBySlug = useMemo(() => new Map(hobbies.map((h) => [h.slug, h])), [spaceRows]);
+  const ideas = useMemo(() => ideasFor(pills, { picks: taste?.picks, affinity }), [pills, taste?.picks, affinity]);
+  const changePills = (next: Pills) => {
+    touched.current = true;
+    setPills(next);
+  };
 
-  const feedBase = useMemo(() => {
-    if (feedTab === "recent") return [...publicFeed].sort((a, b) => b.createdAt - a.createdAt);
-    // "Following" reuses hobby-follows honestly — see the TODO on
-    // SocialContext's followedHobbies until people can follow people.
-    if (feedTab === "following") {
-      const followed = new Set(social.followedHobbies);
-      return publicFeed.filter((p) => followed.has(p.hobbySlug));
-    }
-    // "For You" — real personalization: people you follow, hobbies you
-    // follow, Spaces you're a member of (see scoreForYou above). Every post
-    // still shows (never narrowed like "Following" is), just reordered —
-    // this is a re-sort, not a filter, so it degrades to plain recency for
-    // a signed-out visitor or anyone with no connections yet, rather than
-    // ever showing an empty "For You" tab.
-    if (feedTab === "forYou") {
-      const followingSet = new Set(followingIds);
-      const followedHobbySet = new Set(social.followedHobbies);
-      return [...publicFeed].sort(
-        (a, b) =>
-          scoreForYou(b, followingSet, followedHobbySet, memberSpacePostIds) -
-          scoreForYou(a, followingSet, followedHobbySet, memberSpacePostIds),
-      );
-    }
-    return publicFeed;
-  }, [publicFeed, feedTab, social.followedHobbies, followingIds, memberSpacePostIds]);
-
-  // Once per meaningful signal change, not per render/keystroke — how many
-  // real personalization signals this account actually has right now.
+  // ---------- Corners new to you ----------
+  const [corners, setCorners] = useState<DiscoverCorner[] | null>(null);
+  const [hiddenCorners, setHiddenCorners] = useState<Set<string>>(new Set());
   useEffect(() => {
-    if (feedTab !== "forYou") return;
-    const signalCount = (followingIds.length > 0 ? 1 : 0) + (memberSpacePostIds.size > 0 ? 1 : 0);
-    track({ name: "discover_for_you_personalized", signalCount });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feedTab, followingIds.length, memberSpacePostIds.size]);
+    let live = true;
+    if (user) {
+      void orEmpty(fetchDiscoverCorners(CORNER_FETCHED, cornerCandidates())).then((list) => live && setCorners(list));
+    } else {
+      // A visitor has no taste to rank by, so Corners from different categories, each tab opening the Corner page.
+      setCorners(visitorCorners(CORNER_FETCHED).map((cornerKey) => ({ cornerKey, hasHome: true, hasGroup: true, hasPlace: true })));
+    }
+    return () => {
+      live = false;
+    };
+  }, [user?.id]);
+  const cornerCards = useMemo(
+    () =>
+      (corners ?? [])
+        .filter((c) => !hiddenCorners.has(c.cornerKey))
+        .flatMap((c) => {
+          try {
+            return [cornerCardModel(c)];
+          } catch {
+            return []; // a Corner the app cannot describe is left out, not the section
+          }
+        })
+        .slice(0, CORNER_SHOWN),
+    [corners, hiddenCorners],
+  );
 
-  // The feed, narrowed only by the search (the All Moments row is For you,
-  // Following or Recent; there are no other filters).
-  const filtered = useMemo(() => {
-    if (!q) return feedBase;
-    return feedBase.filter((p) => {
-      const hobby = hobbyBySlug.get(p.hobbySlug);
-      return (
-        p.caption.toLowerCase().includes(q) ||
-        p.creator.toLowerCase().includes(q) ||
-        (p.interest ?? "").toLowerCase().includes(q) ||
-        (p.subHobby ? (subHobbyLabel(p.subHobby) ?? "").toLowerCase().includes(q) : false) ||
-        (hobby ? hobby.shortName.toLowerCase().includes(q) || hobby.name.toLowerCase().includes(q) : false)
-      );
+  const followCorner = (m: CornerCardModel, position: number) =>
+    needAccount(() => {
+      setHiddenCorners((prev) => new Set(prev).add(m.key));
+      log("corner", m.key, position, "followed", m.key);
+      void social.toggleHobbyFollow(cornerFollowKey(m.spaceSlug, m.slug), m.name);
     });
-  }, [feedBase, q, hobbyBySlug]);
 
-  // 30 and no more: the end of the page is a stop, not another load.
-  const visible = filtered.slice(0, PAGE_SIZE);
+  // ---------- Spaces near you ----------
+  const [spaces, setSpaces] = useState<DiscoverSpace[] | null>(null);
+  const [hiddenSpaces, setHiddenSpaces] = useState<Set<string>>(new Set());
+  const [homeEventKeys, setHomeEventKeys] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let live = true;
+    void orEmpty(user ? fetchDiscoverSpaces(10) : fetchPublicSpaces(10)).then((list) => live && setSpaces(list));
+    if (user) {
+      // A dated event Home ranks in its top four is never shown on Discover.
+      void fetchHomeSuggestions(8).then((list) => {
+        if (live) setHomeEventKeys(new Set(list.slice(0, 4).filter((s) => s.kind === "event").map((s) => `${s.spaceSlug}|${s.title}|${s.startsAt}`)));
+      });
+    }
+    return () => {
+      live = false;
+    };
+  }, [user?.id]);
+  const visibleSpaces = useMemo(() => (spaces ?? []).filter((s) => !hiddenSpaces.has(s.id)), [spaces, hiddenSpaces]);
+
+  const joinSpace = (space: DiscoverSpace, position: number) =>
+    needAccount(() => {
+      setHiddenSpaces((prev) => new Set(prev).add(space.id));
+      log("space", space.id, position, "joined", space.cornerKey);
+      void requestOrJoinSpace(space.id).then(({ error }) => {
+        if (error) {
+          setHiddenSpaces((prev) => {
+            const next = new Set(prev);
+            next.delete(space.id);
+            return next;
+          });
+          notifyError(error);
+        }
+      });
+    });
+
+  // ---------- What {city} is making ----------
+  const [corner, setCorner] = useState<string | null>(null);
+  const [moments, setMoments] = useState<DiscoverMoment[]>([]);
+  const [momentsLoading, setMomentsLoading] = useState(true);
+  const [momentsDone, setMomentsDone] = useState(false);
+  const [chips, setChips] = useState<string[]>([]);
+  const [followed, setFollowed] = useState<Set<string>>(new Set());
+  const requestId = useRef(0);
+  const cursor = useRef<string | null>(null);
+
+  const loadMoments = useCallback(
+    async (reset: boolean) => {
+      if (!user) {
+        setMomentsLoading(false);
+        setMomentsDone(true);
+        return;
+      }
+      const id = reset ? ++requestId.current : requestId.current;
+      if (reset) {
+        cursor.current = null;
+        setMoments([]);
+        setMomentsDone(false);
+      }
+      setMomentsLoading(true);
+      const page = await fetchDiscoverMoments({ corner, cursor: cursor.current, limit: FEED_PAGE });
+      if (id !== requestId.current) return;
+      if (page.length > 0) cursor.current = page[page.length - 1].createdAt;
+      setMoments((prev) => (reset ? page : [...prev, ...page]));
+      setMomentsDone(page.length < FEED_PAGE);
+      setMomentsLoading(false);
+    },
+    [user, corner],
+  );
+  useEffect(() => {
+    void loadMoments(true);
+  }, [loadMoments]);
+
+  const posts = useMemo(() => discoverFeed(moments, publicFeed, feedInputs, followed), [moments, publicFeed, feedInputs, followed]);
+  // The chips come from the whole feed, so filtering to one Corner does not collapse them.
+  useEffect(() => {
+    if (corner === null && posts.length > 0) setChips(feedCornerChips(posts, Date.now()));
+  }, [posts, corner]);
+
+  const followAuthor = (post: Post) =>
+    needAccount(() => {
+      if (!user || !post.userId) return;
+      const authorId = post.userId;
+      void follow(user.id, authorId).then((ok) => {
+        if (!ok) return notifyError("Something went wrong. Try again.");
+        // Their Moments leave this page at once; Home shows them once the follow is accepted.
+        setFollowed((prev) => new Set(prev).add(authorId));
+        log("moment", String(post.id), 0, "followed", postCornerKey(post));
+      });
+    });
+
+  const openId = searchParams.get("m") ? Number(searchParams.get("m")) : null;
+  const openPost = openId != null ? (publicFeed.find((p) => p.id === openId) ?? null) : null;
+  const setOpen = (id: number | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (id == null) next.delete("m");
+    else next.set("m", String(id));
+    setSearchParams(next, { replace: true });
+  };
+
+  const city = interests.city.trim();
+  const cornersLoading = corners === null;
+  const spacesLoading = spaces === null;
 
   return (
     <div className="ns-afterhours min-h-viewport">
-      {tab === "corners" && !query.trim() && (
-        <div className={`${PAGE_X} flex flex-col gap-10 pt-6`}>
-          <DiscoverHeader city={interests.city} onEdit={() => setInterestsOpen(true)} />
-          {hero ? (
-            <HeroCard card={hero} ticket={ticketFor(hero)} />
-          ) : (
-            <Skeleton className="aspect-[4/5] w-full rounded-card sm:aspect-[16/9] lg:aspect-[21/9]" />
-          )}
-          <FriendsDoing pursuits={friendPursuits ?? []} />
-          <BrowseTiles />
+      <div className={`${PAGE_X} flex flex-col gap-8 pb-16 pt-6`}>
+        <DiscoverHeader city={city} onEdit={() => needAccount(() => setCityOpen(true))} />
+
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <input
+            type="search"
+            aria-label="Search Corners, Spaces, people"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search Corners, Spaces, people"
+            className="min-h-12 w-full rounded-full border border-border bg-card py-3 pl-11 pr-4 text-body text-foreground outline-none focus-visible:border-accent"
+          />
+        </div>
+
+        {q ? (
+          <div className="flex flex-col gap-6" aria-busy={searching}>
+            {SEARCH_GROUPS.map((group) =>
+              groups[group].length > 0 ? (
+                <section key={group} aria-labelledby={`search-${group}`}>
+                  <h2 id={`search-${group}`} className="mb-2 text-small font-semibold text-muted-foreground">
+                    {SEARCH_TITLES[group]}
+                  </h2>
+                  <ul className="flex flex-col gap-2">
+                    {groups[group].slice(0, 8).map((hit) => (
+                      <SearchRow key={hit.key} hit={hit} />
+                    ))}
+                  </ul>
+                </section>
+              ) : null,
+            )}
+          </div>
+        ) : (
+          <>
+            <JumpChips withMoments={!!user} />
+
+            <SectionBoundary>
+              <section id="discover-ideas" aria-labelledby="ideas-title" className="scroll-mt-24">
+                <SectionHeading id="ideas-title" title="What could you do?" sub="Ideas for what you’ve got. Tap a pill to change it." />
+                <div className="mb-4">
+                  <IdeaPills pills={pills} onChange={changePills} />
+                </div>
+                <IdeasRow
+                  ideas={ideas}
+                  passTagFor={(key) => passTagFor(key, passes, passCorners)}
+                  onShown={(key, i) => log("idea", key, i, "shown", key)}
+                  onOpen={(key, i) => log("idea", key, i, "opened", key)}
+                  onLoosen={() => changePills(loosenSpend(pills))}
+                />
+              </section>
+            </SectionBoundary>
+
+            <SectionBoundary>
+              {cornersLoading ? (
+                <section id="discover-corners" className="scroll-mt-24" aria-hidden="true">
+                  <Skeleton className="h-64 w-full rounded-card" />
+                </section>
+              ) : cornerCards.length > 0 ? (
+                <section id="discover-corners" aria-labelledby="corners-title" className="scroll-mt-24">
+                  <SectionHeading id="corners-title" title="Corners new to you" sub="Three ways into each one" action={{ label: "See all", to: "/corners" }} />
+                  <ul className="flex flex-col gap-3">
+                    {cornerCards.map((m, i) => (
+                      <CornerTearCard
+                        key={m.key}
+                        model={m}
+                        position={i}
+                        onFollow={followCorner}
+                        onShown={(c, pos) => log("corner", c.key, pos, "shown", c.key)}
+                        onOpen={(c, pos) => log("corner", c.key, pos, "opened", c.key)}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+            </SectionBoundary>
+
+            <SectionBoundary>
+              {spacesLoading ? (
+                <section id="discover-spaces" className="scroll-mt-24" aria-hidden="true">
+                  <SectionSkeleton cards={2} />
+                </section>
+              ) : visibleSpaces.length > 0 ? (
+                <section id="discover-spaces" aria-labelledby="spaces-title" className="scroll-mt-24">
+                  <SectionHeading id="spaces-title" title="Spaces near you" sub="Studios, cafés and groups that host things" />
+                  <SpacesRow
+                    spaces={visibleSpaces}
+                    homeEventKeys={homeEventKeys}
+                    onJoin={joinSpace}
+                    onShown={(s, i) => log("space", s.id, i, "shown", s.cornerKey)}
+                    onOpen={(s, i) => log("space", s.id, i, "opened", s.cornerKey)}
+                  />
+                </section>
+              ) : null}
+            </SectionBoundary>
+
+            {user && (
+              <SectionBoundary>
+                <section id="discover-moments" aria-labelledby="moments-title" className="scroll-mt-24">
+                  <SectionHeading id="moments-title" title={city ? `What ${city} is making` : "What your city is making"} sub="From people you don’t follow yet" />
+                  <CityFeed
+                    posts={posts}
+                    chips={chips}
+                    corner={corner}
+                    onCorner={setCorner}
+                    loading={momentsLoading || !feedInputsLoaded}
+                    hasMore={!momentsDone}
+                    onMore={() => void loadMoments(false)}
+                    followed={followed}
+                    onFollow={followAuthor}
+                    onOpen={(post) => setOpen(post.id)}
+                    onTry={(post, i) => log("moment", String(post.id), i, "tried", postCornerKey(post))}
+                    onShown={(post, i) => log("moment", String(post.id), i, "shown", postCornerKey(post))}
+                  />
+                </section>
+              </SectionBoundary>
+            )}
+          </>
+        )}
+      </div>
+
+      <InterestsSheet open={cityOpen} onOpenChange={setCityOpen} />
+      <MomentDetail post={openPost} owned={false} onOpenChange={(o) => !o && setOpen(null)} />
+
+      {prompt && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
+          <SignUpPrompt
+            title="Make an account to do that"
+            body="Browsing stays open. An account is for following, joining and keeping what you make."
+            onKeepLooking={() => setPrompt(false)}
+          />
         </div>
       )}
-      <InterestsSheet open={interestsOpen} onOpenChange={setInterestsOpen} />
-
-      {/* One search only: the top bar's, on a wide screen. Where there is no
-          top-bar search (a phone), this one field stands in for it. */}
-      <div className={`${PAGE_X} ${tab === "corners" && !query.trim() ? "pt-10" : "pt-4"} lg:hidden`}>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              if (searchParams.get("about")) setSearchParams({}, { replace: true });
-            }}
-            placeholder={SEARCH_PLACEHOLDER[tab]}
-            aria-label={SEARCH_PLACEHOLDER[tab]}
-            className="h-11 w-full rounded-control border-0 bg-surface pl-10 pr-11 text-body text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="absolute right-0 top-0 flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="pb-24 pt-2 lg:pt-8">
-        <div className={PAGE_X}>
-          {/* Corners / Spaces / People / Marketplace — Discover's own front
-              door. These tabs never fit a phone-width pill at once, so this scrolls
-              horizontally (edge-to-edge, bleeding past the container's own
-              padding) instead of overflowing the screen or wrapping into a
-              second, layout-shifting row. */}
-          <div {...tabsRow} className="-mx-4 mb-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
-            <div className="inline-flex w-max items-center gap-6">
-              <PressLink to="/corners" className={`flex shrink-0 items-center gap-1.5 ${tabLabelClass(false)}`}>
-                <Compass className="size-3.5" strokeWidth={1.8} />
-                Corners
-              </PressLink>
-              <div role="tablist" aria-label="Discover" className="inline-flex w-max items-center gap-6">
-              {VISIBLE_DISCOVER_TABS.map(({ id, label, icon: Icon }) => {
-                const active = tab === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => setTab(id)}
-                    className={`flex shrink-0 items-center gap-1.5 ${tabLabelClass(active)}`}
-                  >
-                    <Icon className="size-3.5" strokeWidth={1.8} />
-                    {label}
-                  </button>
-                );
-              })}
-              </div>
-            </div>
-          </div>
-
-          {tab === "people" && <PeopleBrowser query={query} />}
-          {tab === "marketplace" && <MarketplaceTab query={query} />}
-          {tab === "spaces" && <SpacesBrowser query={query} />}
-
-          {tab === "corners" && (
-            <>
-              {/* Ideas, not search results: hidden while a search is open. */}
-              {/* The front door sits above the page: see below. */}
-              {/* While searching, the matching Corners come first. */}
-              {query.trim() && <AllCornersBrowser query={query} />}
-
-              {/* All Moments */}
-              <div id="all-moments" className={`${TITLE_GAP} flex flex-wrap items-center justify-between gap-4`}>
-                <h2 className="text-title">All Moments</h2>
-                <ul role="tablist" aria-label="All Moments" className="flex gap-1 rounded-control border border-border bg-card p-1">
-                  {FEED_TABS.map(({ id, label }) => {
-                    const active = feedTab === id;
-                    return (
-                      <li key={id}>
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={active}
-                          onClick={() => {
-                            setFeedTab(id);
-                          }}
-                          className={`min-h-9 rounded-control px-3.5 text-small font-semibold transition-colors ${
-                            active
-                              ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              {q && filtered.length > 0 && (
-                <p className="mb-6 text-small text-muted-foreground">{`${plural(filtered.length, "Moment")} matching “${query}”`}</p>
-              )}
-
-              <Loadable loading={postsStatus === "loading"} skeleton={<MomentGridSkeleton count={6} />}>
-              {postsStatus === "error" && publicFeed.length === 0 ? (
-                <ErrorNotice onRetry={reloadPosts} />
-              ) : visible.length === 0 ? (
-                feedTab === "following" ? (
-                  <EmptyState
-                    line="Nothing from your Interests yet."
-                    hint="Tag a Moment with a Corner to start building your list."
-                    action={{ label: "Log a Moment", to: "/create" }}
-                  />
-                ) : (
-                  <EmptyState line="Nothing matches that yet." hint="Try a broader word or a different filter." />
-                )
-              ) : (
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                  {visible.map((post, i) => (
-                    <Reveal key={post.id} index={i % 8}>
-                      <MomentTile post={post} onOpen={() => setOpenPost(post)} />
-                    </Reveal>
-                  ))}
-                </div>
-              )}
-              </Loadable>
-
-              {/* The end of the gallery: a stop, not more scroll */}
-              {visible.length > 0 && (
-                <div className="mt-10 rounded-card border border-border bg-card px-6 py-9 text-center">
-                  <p className="mb-1 text-lead">You’re caught up</p>
-                  <p className="mb-5 text-small text-muted-foreground">Log a Moment of your own.</p>
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    <Link to="/create">
-                      <Button variant="coral">
-                        <PenLine className="size-4" />
-                        Log a Moment
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      <MomentDetail
-        post={openPost}
-        owned={!!user && openPost?.userId === user.id}
-        onOpenChange={(o) => !o && setOpenPost(null)}
-      />
     </div>
   );
 }
