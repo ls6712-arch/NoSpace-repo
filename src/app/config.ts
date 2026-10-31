@@ -11,13 +11,19 @@
 export const APP_NAME = "Soosh";
 
 // The one place the live domain is written. Every other file reads it from
-// here (the invite link, the "not the live site" preview banner). When the
-// Soosh domain is bought, change SITE_DOMAIN and nothing else in src/.
+// here (the invite link, the "not the live site" preview banner).
 // Outside src/, two things still have to be changed by hand: the Supabase
 // Auth "Site URL" and redirect URLs, and the Vercel production domain.
-export const SITE_DOMAIN = "trynospace.com";
+//
+// Two sites, one Vercel project (docs/deploys.md):
+//   onsoosh.com     live: built from `main`
+//   trynospace.com  staging: built from `staging`; test there, then merge
+//                   `staging` into `main` to ship
+export const SITE_DOMAIN = "onsoosh.com";
 export const SITE_ORIGIN = `https://www.${SITE_DOMAIN}`;
 export const PRODUCTION_HOSTNAMES: readonly string[] = [SITE_DOMAIN, `www.${SITE_DOMAIN}`];
+export const STAGING_DOMAIN = "trynospace.com";
+export const STAGING_HOSTNAMES: readonly string[] = [STAGING_DOMAIN, `www.${STAGING_DOMAIN}`];
 
 // Buying/selling isn't live (no payments, fees, tax, refunds, or seller
 // identity behind any listing yet) — every marketplace surface (the
